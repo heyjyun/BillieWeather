@@ -1,0 +1,16 @@
+<% content_for :title, "Choose a new password" %>
+<section class="bw-auth-wrap">
+  <div class="bw-panel bw-auth-card">
+    <p class="bw-eyebrow">A FRESH START</p>
+    <h1>Choose a new password</h1>
+    <p class="bw-muted">Use a unique password to protect your financial workspace.</p>
+    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: {class: "bw-form", method: :put, data: {turbo: false}}) do |form| %>
+      <% if resource.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= resource.errors.full_messages.to_sentence %></div><% end %>
+      <%= form.hidden_field :reset_password_token %>
+      <div class="bw-field"><%= form.label :password, "New password" %><%= form.password_field :password, required: true, autocomplete: "new-password", autofocus: true, minlength: @minimum_password_length, maxlength: 128 %><small>Use at least <%= @minimum_password_length %> characters.</small></div>
+      <div class="bw-field"><%= form.label :password_confirmation, "Confirm new password" %><%= form.password_field :password_confirmation, required: true, autocomplete: "new-password" %></div>
+      <%= form.submit "Update password", class: "bw-button bw-button-dark" %>
+    <% end %>
+    <div class="bw-auth-links"><%= link_to "Back to log in", new_user_session_path %></div>
+  </div>
+</section>

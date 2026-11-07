@@ -1,0 +1,14 @@
+<% content_for :title, "Reset your password" %>
+<section class="bw-auth-wrap">
+  <div class="bw-panel bw-auth-card">
+    <p class="bw-eyebrow">BACK TO A CLEARER OUTLOOK</p>
+    <h1>Reset your password</h1>
+    <p class="bw-muted">Enter your account email to request a password reset link.</p>
+    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: {class: "bw-form", method: :post, data: {turbo: false}}) do |form| %>
+      <% if resource.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= resource.errors.full_messages.to_sentence %></div><% end %>
+      <div class="bw-field"><%= form.label :email %><%= form.email_field :email, required: true, autocomplete: "email", autofocus: true %></div>
+      <%= form.submit "Send reset link", class: "bw-button bw-button-dark" %>
+    <% end %>
+    <div class="bw-auth-links"><%= link_to "Back to log in", new_user_session_path %><%= link_to "Create an account", new_user_registration_path %></div>
+  </div>
+</section>

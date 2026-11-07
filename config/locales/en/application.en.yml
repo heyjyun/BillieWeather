@@ -1,0 +1,14 @@
+en:
+  application:
+    name: BillieWeather
+    owner: BillieWeather
+    description: "A clearer forecast for your finances. Import statements, understand spending, and plan ahead."
+    keywords: cash flow, personal finance, transactions, financial insights
+    support_email: support@billieweather.local
+    key: billieweather
+  webhooks/outgoing/endpoints:
+    fields:
+      api_version:
+        options:
+          1: V1
+          # 🚅 super scaffolding will insert new api versions above this line.

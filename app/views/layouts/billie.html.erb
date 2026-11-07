@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for?(:title) ? "#{yield(:title)} · BillieWeather" : "BillieWeather — a clearer financial forecast" %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Turn statements into a clearer picture of your transactions, cash flow, and financial next steps.">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "/billie.css" %>
+  </head>
+  <% landing_page = controller_path == "public/home"; public_page = landing_page || devise_controller? || !user_signed_in? %>
+  <body class="<%= public_page ? 'billie-public' : 'billie-app' %>">
+    <a class="bw-skip-link" href="#main-content">Skip to content</a>
+    <% if public_page %>
+      <header class="bw-public-header">
+        <%= link_to root_path, class: "bw-brand", "aria-label": "BillieWeather home" do %><span class="bw-brand-mark">b<small>·</small></span><span>BillieWeather</span><% end %>
+        <nav class="bw-public-links" aria-label="Main navigation"><a href="<%= root_path(anchor: "how-it-works") %>">How it works</a><a href="<%= root_path(anchor: "features") %>">Features</a></nav>
+        <div class="bw-header-actions">
+          <% if user_signed_in? %><%= link_to "Open dashboard", finance_dashboard_path, class: "bw-button bw-button-dark" %><% else %><%= link_to "Log in", new_user_session_path, class: "bw-text-link" %><%= link_to "Get started", new_user_registration_path, class: "bw-button bw-button-dark" %><% end %>
+        </div>
+      </header>
+    <% else %>
+      <aside class="bw-sidebar">
+        <%= link_to root_path, class: "bw-brand", "aria-label": "BillieWeather home" do %><span class="bw-brand-mark">b<small>·</small></span><span>BillieWeather</span><% end %>
+        <div class="bw-workspace"><span class="bw-workspace-avatar"><%= current_user.email.to_s.first.upcase %></span><div><strong>My workspace</strong><small>Personal finances</small></div></div>
+        <span class="bw-nav-label">WORKSPACE</span>
+        <nav class="bw-nav" aria-label="Workspace navigation">
+          <%= finance_nav "Dashboard", finance_dashboard_path, "dashboard", active: controller_name == "dashboard" %>
+          <%= finance_nav "Upload statements", finance_statements_path, "upload", active: controller_name == "statements" %>
+          <%= finance_nav "Transactions", finance_transactions_path, "transactions", active: controller_name == "transactions" %>
+          <%= finance_nav "Cash flow forecast", finance_forecast_path, "forecast", active: controller_name == "forecast" %>
+          <%= finance_nav "Billie Insights", finance_insights_path, "insights", active: controller_name == "insights" %>
+        </nav>
+        <div class="bw-sidebar-bottom">
+          <div class="bw-sidebar-note"><%= finance_icon "sun", size: 26 %><strong>A little clarity goes a long way.</strong><p>Your next step starts with understanding your numbers.</p></div>
+          <div class="bw-user"><div><strong><%= current_user.first_name.presence || "Your account" %></strong><small title="<%= current_user.email %>"><%= current_user.email %></small></div><%= button_to destroy_user_session_path, method: :delete, class: "bw-icon-button", title: "Log out", form: {data: {turbo: false}}, "aria-label": "Log out" do %><%= finance_icon "logout" %><% end %></div>
+        </div>
+      </aside>
+    <% end %>
+    <div class="<%= public_page ? 'bw-public-shell' : 'bw-main-shell' %>">
+      <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb">Workspace <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : "Overview" %></strong></div><span class="bw-topbar-label"><span class="bw-status-dot"></span> Your financial outlook</span></header><% end %>
+      <main id="main-content" class="<%= 'bw-main' unless public_page %>">
+        <% flash.each do |type, message| %><div class="bw-flash <%= 'bw-flash-error' if type.to_s == 'alert' %>" role="<%= type.to_s == 'alert' ? 'alert' : 'status' %>"><%= message %></div><% end %>
+        <%= yield %>
+      </main>
+      <% unless public_page %><footer class="bw-app-footer"><span>BillieWeather</span><span>Clarity today. Confidence for what’s next.</span></footer><% end %>
+    </div>
+  </body>
+</html>
