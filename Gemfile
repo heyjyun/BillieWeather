@@ -262,7 +262,10 @@ gem "active_hash"
 # YOUR GEMS
 gem "csv", "~> 3.3"
 gem "pdf-reader", "~> 2.15"
+gem "omniauth-google-oauth2", "~> 1.2", ">= 1.2.3"
 # You can add any Ruby gems you need below. By keeping them separate from our gems above, you'll avoid the likelihood
 # that you run into a merge conflict in the future.
 
 # 🚅 super scaffolding will insert new oauth providers above this line.
+
+gem "prophet-rb", "~> 0.7.0"

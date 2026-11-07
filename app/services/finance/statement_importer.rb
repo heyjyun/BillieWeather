@@ -6,10 +6,33 @@ module Finance
   class StatementImporter
     class ImportError < StandardError; end
 
+    class DateColumnRequired < ImportError
+      attr_reader :date_columns
+
+      def initialize(date_columns)
+        @date_columns = date_columns
+        super("That date column is not available in this CSV. Use automatic date detection or choose a listed column, then select the file again.")
+      end
+    end
+
+    attr_reader :date_column_used
+
+    # True when this call only filled in missing account/balance details on a statement that
+    # was already imported, instead of importing anything new.
+    def refreshed?
+      !!@refreshed
+    end
+
     MAX_BYTES = 2 * 1024 * 1024
     MAX_ROWS = 5_000
+    DATE_COLUMN_PRIORITY = ["transaction date", "date", "post date", "posting date", "posted date", "booked on", "booking date"].freeze
+    # Optional. Read only to find the closing balance; never required, and a column that
+    # cannot be read is ignored rather than failing the import.
+    # "closing balance" is the name used throughout the app; banks also print "ending balance", so it is accepted too.
+    BALANCE_HEADERS = ["closing balance", "ending balance", "running balance", "balance after", "balance after transaction", "post transaction balance",
+      "ledger balance", "current balance", "account balance", "available balance", "balance"].freeze
     HEADER_ALIASES = {
-      date: ["date", "transaction date", "posting date", "posted date", "booked on", "booking date"],
+      date: DATE_COLUMN_PRIORITY,
       description: ["description", "transaction description", "details", "memo", "merchant", "payee", "name"],
       amount: ["amount", "transaction amount", "net amount"],
       debit: ["debit", "debit amount", "withdrawal", "withdrawals", "money out"],
@@ -18,23 +41,18 @@ module Finance
       currency: ["currency", "currency code"],
       type: ["type", "transaction type", "debit credit", "credit debit"]
     }.freeze
-    CATEGORIZATION_RULES = {
-      "Transfers" => /\b(transfer|payment thank you|credit card payment|opening balance|balance forward)\b/i,
-      "Housing" => /\b(rent|mortgage|property management)\b/i,
-      "Food & dining" => /\b(grocery|groceries|supermarket|restaurant|coffee|cafe|dining|whole foods|trader joe|starbucks)\b/i,
-      "Transport" => /\b(uber|lyft|transit|metro|parking|fuel|gas station|shell|exxon)\b/i,
-      "Utilities" => /\b(electric|electricity|water bill|internet|utility|utilities|comcast|verizon|at&t|phone bill)\b/i,
-      "Health" => /\b(pharmacy|medical|doctor|hospital|dental|cvs|walgreens)\b/i,
-      "Business" => /\b(office supplies|software|adobe|notion|github|hosting|business insurance)\b/i,
-      "Shopping" => /\b(amazon|target|walmart|shopping|clothing|apparel)\b/i
-    }.freeze
 
-    def initialize(user:, file:, currency: "USD", source_sha256: nil, source_filename: nil)
+    def initialize(user:, file:, currency: "USD", source_sha256: nil, source_filename: nil, date_column: nil, closing_balance: nil, closing_balance_on: nil, bank_account: nil, balance_observed_on: nil)
       @user = user
       @file = file
       @currency = currency.to_s.strip.upcase
       @source_sha256 = source_sha256
       @source_filename = source_filename
+      @requested_date_column = normalize_header(date_column).presence
+      @categorizer = Categorizer.new(user: user)
+      @given_closing = closing_balance.nil? ? nil : [closing_balance, closing_balance_on]
+      @given_bank_account = bank_account
+      @given_observed_on = balance_observed_on
     end
 
     def call
@@ -77,17 +95,25 @@ module Finance
 
       # Serialize imports and currency changes for this account, while keeping
       # file parsing outside the database transaction.
-      @user.with_lock do
+      statement = @user.with_lock do
         profile = Profile.find_or_create_by!(user_id: @user.id) { |record| record.currency = @currency }
         if profile.currency != @currency
           raise ImportError, "This account uses #{profile.currency}. Convert the statement before importing another currency."
         end
-        if Statement.exists?(user_id: @user.id, sha256: checksum)
-          raise ImportError, "This exact statement has already been imported."
+        if (existing = Statement.find_by(user_id: @user.id, sha256: checksum))
+          # Uploading the same file again fills in what an earlier import could not read
+          # (for example before account or balance columns were recognized). Nothing is
+          # imported twice, and details that are already saved are never replaced.
+          next refresh_missing_details(existing)
         end
 
+        closing_balance, closing_balance_on = @given_closing || detected_closing_balance
+        bank_account = @given_bank_account || BankAccount.resolve(user: @user, identity: @account_identity)
+        observed_on = @given_observed_on || rows.map { |row| row[:booked_on] }.max
         statement = Statement.create!(user: @user, filename: filename, currency: @currency,
-          sha256: checksum, status: "imported", transaction_count: rows.length)
+          sha256: checksum, status: "imported", transaction_count: rows.length,
+          closing_balance: closing_balance, closing_balance_on: closing_balance_on,
+          bank_account: bank_account, balance_observed_on: observed_on)
         # Every imported field is validated while parsing above. Bulk inserts
         # avoid thousands of round trips to the external Neon database, while
         # the enclosing transaction keeps every batch atomic.
@@ -99,15 +125,36 @@ module Finance
         end
         statement
       end
+      # Clean up older Uncategorized rows with the latest rules and remembered merchants.
+      Categorizer.recategorize_uncategorized!(user: @user)
+      BalanceSync.call(user: @user)
+      statement
     rescue CSV::MalformedCSVError
       raise ImportError, "The CSV could not be read. Check quotes, commas, and the header row."
     rescue ActiveRecord::RecordNotUnique
       raise ImportError, "This exact statement has already been imported."
     rescue ActiveRecord::RecordInvalid => error
-      raise ImportError, "The statement could not be imported: #{error.record.errors.full_messages.join(', ')}."
+      raise ImportError, "The statement could not be imported: #{error.record.errors.full_messages.join(", ")}."
     end
 
     private
+
+    def refresh_missing_details(existing)
+      updates = {}
+      if existing.bank_account_id.nil?
+        account = @given_bank_account || BankAccount.resolve(user: @user, identity: @account_identity)
+        updates[:bank_account] = account if account
+      end
+      if existing.closing_balance.nil?
+        balance, balance_on = @given_closing || detected_closing_balance
+        updates.merge!(closing_balance: balance, closing_balance_on: balance_on) if balance
+      end
+      raise ImportError, "This exact statement has already been imported." if updates.empty?
+
+      existing.update!(updates)
+      @refreshed = true
+      existing
+    end
 
     def parse_rows(text)
       csv = CSV.new(text, headers: true, skip_blanks: true)
@@ -117,11 +164,13 @@ module Finance
       if normalized_headers.reject(&:blank?).uniq.length != normalized_headers.reject(&:blank?).length
         raise ImportError, "Column names must be unique. Remove duplicate headers."
       end
-      @columns = HEADER_ALIASES.transform_values do |aliases|
+      @columns = HEADER_ALIASES.except(:date).transform_values do |aliases|
         matches = normalized_headers.each_index.select { |index| aliases.include?(normalized_headers[index]) }
         raise ImportError, "Use only one #{aliases.first} column." if matches.length > 1
         matches.first
       end
+      @columns[:date] = resolve_date_column(first_row.headers, normalized_headers)
+      @date_column_used = first_row.headers[@columns[:date]] if @columns[:date]
       unless @columns[:date] && @columns[:description] && (@columns[:amount] || (@columns[:debit] && @columns[:credit]))
         raise ImportError, "CSV needs Date, Description, Amount columns, or Date, Description, Debit, Credit columns."
       end
@@ -129,6 +178,10 @@ module Finance
         raise ImportError, "Use either a signed Amount column or Debit and Credit columns, not both."
       end
 
+      balance_header = BALANCE_HEADERS.find { |name| normalized_headers.include?(name) }
+      @columns[:balance] = balance_header && normalized_headers.index(balance_header)
+      @balance_points = []
+      identity_rows = []
       parsed = []
       row = first_row
       line = 2
@@ -139,16 +192,37 @@ module Finance
             raise ImportError, "Row #{line}: more values than headers. Quote amounts containing commas."
           end
           parsed << parse_row(row.fields, line)
+          note_balance(parsed.last[:booked_on], value(row.fields, :balance), parsed.length - 1)
+          identity_rows << row.fields
         end
         row = csv.shift
         line += 1
       end
       raise ImportError, "The statement contains no transactions." if parsed.empty?
+      @account_identity = StatementAccountIdentity.from_csv(headers: first_row.headers, rows: identity_rows)
       parsed
     end
 
     def normalize_header(value)
       value.to_s.strip.downcase.gsub(/[_\-\/]+/, " ").gsub(/\s+/, " ")
+    end
+
+    def resolve_date_column(headers, normalized_headers)
+      matches = normalized_headers.each_index.select { |index| HEADER_ALIASES[:date].include?(normalized_headers[index]) }
+      choices = matches.map { |index| headers[index].to_s }
+      if @requested_date_column && matches.empty?
+        raise ImportError, "The selected date column was not found. Use a Date, Transaction Date, or Posting Date header."
+      end
+      if @requested_date_column
+        selected = matches.find { |index| normalized_headers[index] == @requested_date_column }
+        raise DateColumnRequired, choices unless selected
+        selected
+      else
+        # Prefer the transaction's occurrence date consistently across the file.
+        # Header order does not affect the selected date column.
+        preferred = DATE_COLUMN_PRIORITY.find { |name| normalized_headers.include?(name) }
+        normalized_headers.index(preferred) if preferred
+      end
     end
 
     def parse_row(fields, line)
@@ -184,7 +258,7 @@ module Finance
       category = if @columns[:category] && value(fields, :category).present?
         Transaction::CATEGORIES.find { |candidate| candidate.casecmp?(value(fields, :category).strip) } || "Uncategorized"
       else
-        categorize(description, amount)
+        @categorizer.categorize(description, amount)
       end
       {booked_on: parse_date(value(fields, :date), line), description: description,
        amount: amount, category: category, tax_review: category == "Business", excluded: false}
@@ -210,9 +284,35 @@ module Finance
       raise ImportError, "Row #{line}: use a valid date in YYYY-MM-DD or MM/DD/YYYY format (month first)."
     end
 
+    def note_balance(date, raw, index)
+      balance = lenient_balance(raw)
+      @balance_points << [date, balance, index]
+    end
+
+    # A running-balance cell like "1,234.56", "$1,234.56" or "(50.00)"; nil if it is not clearly a number.
+    def lenient_balance(raw)
+      value = raw.to_s.strip
+      return nil if value.empty?
+      negative = value.start_with?("(") && value.end_with?(")")
+      value = value.delete("()").sub(/\A([+-]?)[$£€¥]/) { Regexp.last_match(1) }.delete(",")
+      return nil unless /\A[+-]?\d+(?:\.\d{1,2})?\z/.match?(value)
+      number = BigDecimal(value)
+      number = -number.abs if negative
+      (number.abs < 10**13) ? number : nil
+    end
+
+    # The balance on the latest-dated row. When several rows share that date, the file's own
+    # order decides: the last of them for oldest-first files, the first for newest-first files.
+    def detected_closing_balance
+      return [nil, nil] if @balance_points.blank?
+      newest_first = @balance_points.first[0] > @balance_points.last[0]
+      point = @balance_points.max_by { |date, _balance, index| [date, newest_first ? -index : index] }
+      point[1] ? [point[1], point[0]] : [nil, nil]
+    end
+
     def parse_money(raw, line, blank_zero: false)
       value = raw.strip
-      return BigDecimal("0") if value.empty? && blank_zero
+      return BigDecimal(0) if value.empty? && blank_zero
       if /\A\([^()]+\)\z/.match?(value)
         value = "-#{value[1...-1]}"
       end
@@ -230,12 +330,6 @@ module Finance
         raise ImportError, "Row #{line}: amount exceeds the supported limit."
       end
       amount
-    end
-
-    def categorize(description, amount)
-      return "Transfers" if CATEGORIZATION_RULES["Transfers"].match?(description)
-      return "Income" if amount.positive?
-      CATEGORIZATION_RULES.find { |category, pattern| category != "Transfers" && pattern.match?(description) }&.first || "Uncategorized"
     end
   end
 end

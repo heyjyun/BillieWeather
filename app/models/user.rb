@@ -5,7 +5,10 @@ class User < ApplicationRecord
   has_many :finance_statements, class_name: "Finance::Statement", dependent: :destroy
   has_many :finance_transactions, class_name: "Finance::Transaction", dependent: :destroy
   has_many :finance_insights, class_name: "Finance::Insight", dependent: :destroy
+  has_many :finance_merchant_rules, class_name: "Finance::MerchantRule", dependent: :destroy
   has_many :finance_statement_drafts, class_name: "Finance::StatementDraft", dependent: :destroy
+  has_many :finance_bank_accounts, class_name: "Finance::BankAccount", dependent: :destroy
+  validates :google_uid, length: {maximum: 255}, uniqueness: true, allow_nil: true
 
   # Welcome mail is optional; account creation does not depend on paid email delivery.
   def send_welcome_email

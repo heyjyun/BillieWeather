@@ -4,13 +4,14 @@ Rails.application.routes.draw do
 
   namespace :finance, path: "app" do
     get "/", to: "dashboard#index", as: :dashboard
-    resources :statements, only: [:index, :create, :destroy] do
+    resources :statements, only: [:index, :create, :update, :destroy] do
       get :sample, on: :collection
     end
     resources :statement_drafts, only: [:show, :destroy] do
       post :confirm, on: :member
     end
     resources :transactions, only: [:index, :edit, :update]
+    resources :bank_accounts, only: :update
     resource :forecast, only: :show, controller: :forecast
     resource :profile, only: :update
     resource :insights, only: :show, controller: :insights do

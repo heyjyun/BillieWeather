@@ -31,15 +31,61 @@ class Finance::PdfStatementExtractorTest < ActiveSupport::TestCase
     assert draft.warnings.any? { |warning| warning.include?("wrapped descriptions") }
   end
 
-  test "unsigned values are blank and dates without years require an explicit year" do
+  test "unsigned values are blank and an unconfirmed year is flagged for review" do
     pdf = finance_statement_pdf(["11/01 Merchant $1,234.56"])
-    error = assert_raises(Finance::PdfStatementExtractor::ImportError) { extract(pdf) }
-    assert_includes error.message, "statement year"
-    draft = extract(pdf, year: 2026)
+    draft = extract(pdf)
     assert_equal "2026-11-01", draft.rows.first["booked_on"]
     assert_equal "", draft.rows.first["amount"]
     assert draft.warnings.any? { |warning| warning.include?("no debit/credit sign") }
+    assert draft.warnings.any? { |warning| warning.include?("could not be confirmed") }
+    refute draft.auto_importable?
+  end
+
+  test "an explicit year override is still honored and flagged" do
+    draft = extract(finance_statement_pdf(["11/01 Merchant -12.00"]), year: 2024)
+    assert_equal "2024-11-01", draft.rows.first["booked_on"]
     assert draft.warnings.any? { |warning| warning.include?("December and January") }
+    refute draft.auto_importable?
+  end
+
+  test "the statement year is detected from the period so no year has to be typed" do
+    draft = extract(finance_statement_pdf([
+      "Statement Period: 10/01/2025 - 10/31/2025",
+      "10/05 Coffee -4.50",
+      "10/20 Salary +1,000.00"
+    ]))
+    assert_equal ["2025-10-05", "2025-10-20"], draft.rows.map { |row| row["booked_on"] }
+    assert_equal ["-4.50", "+1000.00"], draft.rows.map { |row| row["amount"] }
+    assert_empty draft.actionable_warnings
+    assert draft.auto_importable?
+  end
+
+  test "statements spanning December and January get the right year for each row" do
+    draft = extract(finance_statement_pdf([
+      "Statement Period: 12/15/2025 - 01/14/2026",
+      "12/20 Gift shop -30.00",
+      "01/05 Refund +10.00"
+    ]))
+    assert_equal ["2025-12-20", "2026-01-05"], draft.rows.map { |row| row["booked_on"] }
+    assert draft.auto_importable?
+  end
+
+  test "a later print date does not change the statement year" do
+    draft = extract(finance_statement_pdf([
+      "Statement Period: 10/01/2025 - 10/31/2025",
+      "Printed on 11/05/2026",
+      "10/05 Coffee -4.50"
+    ]))
+    assert_equal "2025-10-05", draft.rows.first["booked_on"]
+    assert draft.auto_importable?
+  end
+
+  test "a clear statement is auto importable but any unclear amount needs review" do
+    clear = extract(finance_statement_pdf(["Statement Period: 10/01/2025 - 10/31/2025", "10/05 Coffee -4.50"]))
+    assert clear.auto_importable?
+    unclear = Finance::StatementDraft.new(rows: [{"booked_on" => "2025-10-05", "description" => "Coffee", "amount" => ""}],
+      warnings: Finance::PdfStatementExtractor::GENERIC_NOTICES.dup)
+    refute unclear.auto_importable?
   end
 
   test "explicit debit and credit markers are preserved but running balances are never chosen" do

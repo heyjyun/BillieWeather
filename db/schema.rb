@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_000900) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_07_001400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -84,6 +84,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_000900) do
     t.index ["addressable_type", "addressable_id"], name: "index_addresses_on_addressable"
   end
 
+  create_table "finance_bank_accounts", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "identity_key", null: false
+    t.string "bank_name", null: false
+    t.string "name", null: false
+    t.string "last4", null: false
+    t.string "kind", default: "unknown", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "custom_name"
+    t.index ["user_id", "identity_key"], name: "index_finance_bank_accounts_on_user_id_and_identity_key", unique: true
+    t.index ["user_id"], name: "index_finance_bank_accounts_on_user_id"
+  end
+
   create_table "finance_insights", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "source", null: false
@@ -97,6 +111,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_000900) do
     t.index ["user_id"], name: "index_finance_insights_on_user_id"
   end
 
+  create_table "finance_merchant_rules", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "merchant_key", null: false
+    t.boolean "income", default: false, null: false
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "merchant_key", "income"], name: "index_finance_merchant_rules_on_user_merchant_direction", unique: true
+    t.index ["user_id"], name: "index_finance_merchant_rules_on_user_id"
+  end
+
   create_table "finance_profiles", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "currency", default: "USD", null: false
@@ -105,6 +130,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_000900) do
     t.string "tax_profile", default: "personal"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "balance_source"
+    t.date "balance_as_of"
+    t.decimal "cash_on_hand", precision: 15, scale: 2, default: "0.0", null: false
+    t.date "cash_on_hand_on"
     t.index ["user_id"], name: "index_finance_profiles_on_user_id", unique: true
   end
 
@@ -118,6 +147,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_000900) do
     t.datetime "expires_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "closing_balance", precision: 15, scale: 2
+    t.date "closing_balance_on"
+    t.bigint "bank_account_id"
+    t.date "balance_observed_on"
+    t.index ["bank_account_id"], name: "index_finance_statement_drafts_on_bank_account_id"
     t.index ["expires_at"], name: "index_finance_statement_drafts_on_expires_at"
     t.index ["user_id"], name: "index_finance_statement_drafts_on_user_id"
   end
@@ -131,6 +165,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_000900) do
     t.integer "transaction_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "closing_balance", precision: 15, scale: 2
+    t.date "closing_balance_on"
+    t.bigint "bank_account_id"
+    t.date "balance_observed_on"
+    t.index ["bank_account_id"], name: "index_finance_statements_on_bank_account_id"
     t.index ["user_id", "sha256"], name: "index_finance_statements_on_user_id_and_sha256", unique: true
     t.index ["user_id"], name: "index_finance_statements_on_user_id"
   end
@@ -338,7 +377,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_000900) do
     t.integer "failed_attempts", default: 0, null: false
     t.string "unlock_token"
     t.datetime "locked_at"
+    t.string "google_uid"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["google_uid"], name: "index_users_on_google_uid", unique: true, where: "(google_uid IS NOT NULL)"
     t.index ["platform_agent_of_id"], name: "index_users_on_platform_agent_of_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
@@ -419,9 +460,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_000900) do
   add_foreign_key "account_onboarding_invitation_lists", "teams"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "finance_bank_accounts", "users"
   add_foreign_key "finance_insights", "users"
+  add_foreign_key "finance_merchant_rules", "users"
   add_foreign_key "finance_profiles", "users"
+  add_foreign_key "finance_statement_drafts", "finance_bank_accounts", column: "bank_account_id"
   add_foreign_key "finance_statement_drafts", "users"
+  add_foreign_key "finance_statements", "finance_bank_accounts", column: "bank_account_id"
   add_foreign_key "finance_statements", "users"
   add_foreign_key "finance_transactions", "finance_statements", column: "statement_id"
   add_foreign_key "finance_transactions", "users"

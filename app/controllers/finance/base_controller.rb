@@ -9,7 +9,14 @@ module Finance
 
     def load_finance_profile
       @profile = Profile.find_or_create_by!(user: current_user)
+      load_account_balances
       current_user.finance_statement_drafts.where("expires_at < ?", Time.current).delete_all unless controller_name == "statement_drafts"
+    end
+
+    def load_account_balances
+      @balance_summary = BalanceSync.call(user: current_user)
+      @profile.reload
+      @bank_accounts = current_user.finance_bank_accounts.order(:bank_name, :name, :last4).to_a
     end
 
     def prevent_financial_page_caching

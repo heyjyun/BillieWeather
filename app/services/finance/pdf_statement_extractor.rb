@@ -14,13 +14,23 @@ module Finance
     MAX_ROWS = StatementDraft::MAX_ROWS
     MAX_TEXT_BYTES = 512 * 1024
     TIMEOUT_SECONDS = 12
+    # Always shown on the review page. They are advice about every PDF, not a sign
+    # that something specific went wrong, so they never block automatic import.
+    GENERIC_NOTICES = [
+      "PDF layouts vary. Only date-prefixed lines are extracted; wrapped descriptions, continuation lines, and other layouts may be omitted. Compare every row, transaction count, and totals with the original statement before confirming.",
+      "Positive means money in; negative means money out. Unsigned amounts and multiple amount columns are left blank instead of guessing. Verify every debit/credit direction."
+    ].freeze
     DATE_TOKEN = '(?:\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}(?:/\d{4})?)'
     NUMBER_TOKEN = '(?:\d{1,3}(?:,\d{3})+|\d+)\.\d{2}'
     MONEY_TOKEN = "(?:\\(\\s*[$£€¥]?#{NUMBER_TOKEN}\\s*\\)|[+-]?\\s*[$£€¥]?\\s*#{NUMBER_TOKEN}|[$£€¥]\\s*[+-]?#{NUMBER_TOKEN})(?:\\s*(?:DR|CR|[+-]))?"
+    # "Ending balance $1,234.56", "Closing balance: (50.00)", "Ending balance 10/31/2025 1,234.56 CR".
+    # Only ending/closing balances count; a credit card's "new balance" is money owed, not cash.
+    CLOSING_BALANCE = /\b(?:ending|closing)\s+balance\b[^\d()+-]*?(?<amount>[-+]?\(?\s*[$£€¥]?\s*[-+]?#{NUMBER_TOKEN}\)?)(?:\s*(?<mark>CR|DR)\b)?/i
     DATE_PREFIX = /\A(?<date>#{DATE_TOKEN})\s+(?<rest>.+)\z/
     TRAILING_MONEY = /(?<!\S)(?<token>#{MONEY_TOKEN})\s*\z/i
     SUMMARY_DESCRIPTION = /\A(?:(?:beginning|opening|ending|closing|available|current|previous)\s+(?:daily\s+)?balance|balance\s+(?:forward|brought forward)|total\s+(?:credits|debits|deposits|withdrawals|payments))\b/i
 
+    # `year` is an optional override. Normally the year is detected from the PDF.
     def initialize(user:, file:, currency: "USD", year: nil)
       @user = user
       @file = file
@@ -64,7 +74,10 @@ module Finance
         # drafts whenever this account starts a new PDF review.
         StatementDraft.where(user_id: @user.id).where("expires_at <= ?", Time.current).delete_all
         StatementDraft.create!(user: @user, filename: filename, sha256: checksum, currency: @currency,
-          rows: rows, warnings: warnings, expires_at: 30.minutes.from_now)
+          rows: rows, warnings: warnings, expires_at: 30.minutes.from_now,
+          closing_balance: @closing_balance, closing_balance_on: @closing_balance_on,
+          bank_account: BankAccount.resolve(user: @user, identity: @account_identity),
+          balance_observed_on: @balance_observed_on)
       end
     rescue ExtractionTimeout
       raise ImportError, "This PDF took too long to read. Try fewer pages or export the transactions as CSV."
@@ -73,7 +86,7 @@ module Finance
     rescue PDF::Reader::MalformedPDFError, PDF::Reader::UnsupportedFeatureError, Zlib::Error, EOFError
       raise ImportError, "This PDF could not be read. Export a fresh text-based PDF or CSV from your bank."
     rescue ActiveRecord::RecordInvalid => error
-      raise ImportError, "The PDF review could not be prepared: #{error.record.errors.full_messages.join(', ')}."
+      raise ImportError, "The PDF review could not be prepared: #{error.record.errors.full_messages.join(", ")}."
     end
 
     private
@@ -82,7 +95,7 @@ module Finance
       Timeout.timeout(TIMEOUT_SECONDS, ExtractionTimeout) { parse_document(raw) }
     rescue ImportError, ExtractionTimeout, PDF::Reader::EncryptedPDFError
       raise
-    rescue StandardError
+    rescue
       # The PDF library can raise lower-level errors for unsupported fonts,
       # invalid encodings, or malformed object structures. Do not expose file
       # contents or parser internals in the upload response.
@@ -123,17 +136,20 @@ module Finance
     def extract_rows(text)
       rows = []
       warnings = [
-        "PDF layouts vary. Only date-prefixed lines are extracted; wrapped descriptions, continuation lines, and other layouts may be omitted. Compare every row, transaction count, and totals with the original statement before confirming.",
-        "Positive means money in; negative means money out. Unsigned amounts and multiple amount columns are left blank instead of guessing. Verify every debit/credit direction."
+        *GENERIC_NOTICES
       ]
       normalized_text = text.encode("UTF-8", invalid: :replace, undef: :replace)
         .tr("\u00A0\u2212", " -").gsub(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/, "")
+      @resolver = StatementYearResolver.new(normalized_text)
+      @account_identity = StatementAccountIdentity.from_pdf(text: normalized_text)
+      @closing_balance = detect_closing_balance(normalized_text)
+      @closing_balance_on = (@closing_balance && @resolver.confident?) ? @resolver.end_date : nil
       normalized_text.each_line do |line|
         match = DATE_PREFIX.match(line.strip)
         next unless match
         date_text = match[:date]
         rest = match[:rest].strip
-        next if /\A(?:through|to|[-–—])\s*#{DATE_TOKEN}\z/i.match?(rest)
+        next if /\A(?:through|to|[-–—])\s*#{DATE_TOKEN}\z/io.match?(rest)
         if SUMMARY_DESCRIPTION.match?(rest)
           warnings << "A dated balance or summary line was skipped. Check statement totals separately."
           next
@@ -142,7 +158,7 @@ module Finance
 
         number = rows.length + 1
         booked_on = parse_date(date_text, number)
-        if (second_date = /\A#{DATE_TOKEN}\s+/.match(rest))
+        if (second_date = /\A#{DATE_TOKEN}\s+/o.match(rest))
           rest = rest[second_date.end(0)..].strip
           warnings << "Row #{number}: two dates were found; the first was used. Verify the transaction date."
         end
@@ -171,20 +187,41 @@ module Finance
         rows << {"booked_on" => booked_on.iso8601, "description" => rest, "amount" => amount}
       end
       if @used_partial_dates
-        warnings << "Dates without a year use your supplied year #{@year}. Check every year, especially statements spanning December and January."
+        if @year
+          warnings << "Dates without a year use the year #{@year}. Check every year, especially statements spanning December and January."
+        elsif !@resolver.confident?
+          warnings << "The statement year could not be confirmed from the PDF, so dates without a year assume it ends around #{@resolver.end_date.iso8601}. Check every year, especially statements spanning December and January."
+        end
       end
       warnings = warnings.uniq
+      @balance_observed_on = @resolver.confident? ? @resolver.end_date : rows.map { |row| Date.iso8601(row["booked_on"]) }.max
       if warnings.length > 1_000
         warnings = warnings.first(999) + ["Further row-specific warnings were omitted. Verify every date, description, sign, and amount before confirming."]
       end
       [rows, warnings]
     end
 
+    # The statement's closing balance, or nil when none is found or the PDF disagrees with itself
+    # (for example several accounts in one file).
+    def detect_closing_balance(text)
+      found = text.each_line.filter_map do |line|
+        match = CLOSING_BALANCE.match(line.gsub(/#{DATE_TOKEN}/o, " "))
+        next unless match
+        token = match[:amount]
+        negative = token.include?("(") || token.include?("-") || match[:mark].to_s.casecmp?("DR")
+        number = BigDecimal(token.gsub(/[^\d.]/, ""))
+        negative ? -number : number
+      end
+      (found.uniq.length == 1 && found.first.abs < 10**13) ? found.first : nil
+    end
+
     def parse_date(value, number)
       if /\A\d{1,2}\/\d{1,2}\z/.match?(value)
-        raise ImportError, "This PDF has MM/DD dates. Enter the statement year and upload again." unless @year
         @used_partial_dates = true
-        value = "#{value}/#{@year}"
+        month, day = value.split("/").map(&:to_i)
+        year = @year || @resolver.year_for(month, day)
+        raise ArgumentError unless year
+        value = "#{value}/#{year}"
       end
       date = if value.include?("-")
         Date.strptime(value, "%Y-%m-%d")
@@ -216,7 +253,7 @@ module Finance
       return ["", "the amount exceeds the supported limit."] if number.abs >= 10**13
       whole, fraction = number.to_s("F").split(".")
       sign = negative ? "-" : "+"
-      ["#{sign}#{whole}.#{fraction.to_s.ljust(2, '0')}", nil]
+      ["#{sign}#{whole}.#{fraction.to_s.ljust(2, "0")}", nil]
     rescue ArgumentError
       ["", "the amount could not be interpreted. Enter it from the original statement."]
     end

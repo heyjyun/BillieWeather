@@ -5,6 +5,17 @@ Devise.setup do |config|
   config.responder.redirect_status = :see_other
 
   config.omniauth :stripe_connect, ENV["STRIPE_CLIENT_ID"], ENV["STRIPE_SECRET_KEY"], scope: "read_write"
+  config.omniauth :google_oauth2, ENV["GOOGLE_CLIENT_ID"], ENV["GOOGLE_CLIENT_SECRET"],
+    scope: "openid,email,profile", access_type: "online", prompt: "select_account", pkce: true,
+    provider_ignores_state: false, overridable_authorize_options: [],
+    setup: lambda { |env|
+      unless ENV["GOOGLE_CLIENT_ID"].to_s.strip.present? && ENV["GOOGLE_CLIENT_SECRET"].to_s.strip.present?
+        raise OmniAuth::Error, "Google sign-in is currently unavailable."
+      end
+      strategy = env.fetch("omniauth.strategy")
+      strategy.options.client_id = ENV.fetch("GOOGLE_CLIENT_ID").strip
+      strategy.options.client_secret = ENV.fetch("GOOGLE_CLIENT_SECRET").strip
+    }
   # 🚅 super scaffolding will insert new oauth providers above this line.
 
   if two_factor_authentication_enabled?

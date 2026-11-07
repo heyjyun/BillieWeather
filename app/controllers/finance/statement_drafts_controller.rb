@@ -1,6 +1,3 @@
-require "csv"
-require "stringio"
-
 module Finance
   class StatementDraftsController < BaseController
     before_action :load_draft
@@ -26,15 +23,7 @@ module Finance
       included_rows = rows.select { |row| row["include"] == "1" }
       return review_error("Select at least one transaction to import.") if included_rows.empty?
 
-      csv = CSV.generate do |output|
-        output << ["Date", "Description", "Amount", "Currency"]
-        included_rows.each { |row| output << [row["booked_on"], row["description"], row["amount"], @draft.currency] }
-      end
-      stream = StringIO.new(csv)
-      stream.define_singleton_method(:original_filename) { "reviewed-transactions.csv" }
-      statement = StatementImporter.new(user: current_user, file: stream, currency: @draft.currency,
-        source_sha256: @draft.sha256, source_filename: @draft.filename).call
-      @draft.destroy!
+      statement = DraftImport.new(user: current_user, draft: @draft, rows: rows).call
       @profile.touch
       redirect_to finance_transactions_path, notice: "Imported #{statement.transaction_count} reviewed PDF transactions."
     rescue StatementImporter::ImportError => error

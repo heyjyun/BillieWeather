@@ -4,6 +4,7 @@
     <p class="bw-eyebrow">WELCOME BACK</p>
     <h1>Your financial outlook awaits.</h1>
     <p class="bw-muted">Log in to your BillieWeather workspace.</p>
+    <%= render "devise/shared/google_sign_in" %>
     <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: {data: {turbo: false}}) do |form| %>
       <div class="bw-form-field"><%= form.label :email %><%= form.email_field :email, required: true, autocomplete: "email", autofocus: true %></div>
       <div class="bw-form-field"><%= form.label :password %><%= form.password_field :password, required: true, autocomplete: "current-password" %></div>

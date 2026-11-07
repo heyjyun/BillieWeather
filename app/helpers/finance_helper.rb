@@ -8,6 +8,97 @@ module FinanceHelper
     value.present? ? value.to_date.strftime(format) : "—"
   end
 
+  def finance_balance_available?(profile, summary = @balance_summary)
+    profile.balance_source == "manual" ||
+      (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?) ||
+      summary&.dig(:total).present?
+  end
+
+  def finance_balance_display(profile, summary = @balance_summary)
+    return "Not available" unless finance_balance_available?(profile, summary)
+
+    balance = if profile.balance_source == "manual" || (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?)
+      profile.current_balance
+    else
+      summary[:total]
+    end
+    finance_money(balance, profile.currency)
+  end
+
+  # How old the balance is. A statement balance is a snapshot, so activity after its date is not included.
+  def finance_balance_age_note(profile, summary = @balance_summary, today: Date.current)
+    return unless finance_balance_available?(profile, summary)
+    manual = profile.balance_source == "manual" || (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?)
+    as_of = manual ? profile.balance_as_of : summary&.dig(:as_of_start)
+    return unless as_of
+    days = (today - as_of.to_date).to_i
+    return "Balance is as of today." if days <= 0
+    "Balance is as of #{finance_date(as_of)}#{" (#{pluralize(days, "day")} ago); activity after that date is not included" if days > 1}."
+  end
+
+  def finance_balance_note(profile, summary = @balance_summary)
+    if profile.balance_source == "manual" || (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?)
+      return "Entered by you#{" on #{finance_date(profile.balance_as_of)}" if profile.balance_as_of}. This overrides automatic account totals."
+    end
+    return finance_balance_setup_message(summary) unless summary&.dig(:total).present?
+
+    count = Array(summary[:accounts]).count { |item| item[:status].to_s == "known" }
+    note = "Automatically totals the latest balance for #{pluralize(count, "cash account")}."
+    if summary[:as_of_start].present?
+      dates = finance_date(summary[:as_of_start])
+      dates += " – #{finance_date(summary[:as_of_end])}" if summary[:as_of_end].present? && summary[:as_of_end] != summary[:as_of_start]
+      note += " Statement dates: #{dates}."
+    end
+    note += " Partial total: some accounts or balances still need attention." unless summary[:complete]
+    note
+  end
+
+  def finance_balance_setup_message(summary = @balance_summary)
+    unassigned = Array(summary&.dig(:unassigned_statements))
+    accounts = Array(summary&.dig(:accounts))
+    if unassigned.any?
+      dated_balances = unassigned.count { |statement| !statement.closing_balance.nil? && statement.closing_balance_on.present? }
+      if dated_balances.positive?
+        return "Dated closing balances are saved for #{pluralize(dated_balances, "statement")}, but their accounts are not identified. Choose their accounts in Statement history to include them in the automatic total."
+      end
+      if unassigned.any? { |statement| !statement.closing_balance.nil? }
+        return "Closing balances were saved, but their accounts and balance dates still need confirmation. Review Statement history; a transaction date alone does not confirm the balance date."
+      end
+      if accounts.empty?
+        return "Transactions were imported from your #{pluralize(unassigned.length, "statement")}, but no account details or closing balances are saved. If your files have account details and a balance column, upload them again: the missing details are filled in automatically and nothing is imported twice. You can also enter your balance yourself."
+      end
+    end
+    cash_accounts = accounts.reject { |item| item[:status].to_s == "excluded_credit" }
+    if accounts.any? && cash_accounts.empty? && unassigned.empty?
+      return "Only credit accounts are identified. Their balances are money owed, so they are excluded from starting cash. A dated checking or savings balance is needed."
+    end
+    if cash_accounts.any? { |item| item[:status].to_s == "future_date" }
+      return "Cash account balance dates are in the future. Review the dates in the account breakdown before using these balances."
+    end
+    if cash_accounts.any? { |item| item[:status].to_s == "missing_date" }
+      return "Cash account balances have no confirmed dates. Review the balance dates in Statement history before using them."
+    end
+    if cash_accounts.any? { |item| item[:status].to_s == "missing_balance" }
+      return "The latest statements for your cash accounts have no usable closing balances saved. Check the original statements for their dated balances; older balances are not silently substituted."
+    end
+    if cash_accounts.any? { |item| item[:status].to_s == "unknown_kind" }
+      return "The account types are not confirmed. Identify checking or savings accounts in Statement history to calculate starting cash."
+    end
+    "No dated cash account balance is available yet. Import a statement with account details and a closing balance to calculate this automatically."
+  end
+
+  def finance_account_balance_status(item)
+    case item[:status].to_s
+    when "known" then "Included in cash total"
+    when "missing_balance" then "Latest statement has no readable closing balance"
+    when "missing_date" then "Balance date needs confirmation"
+    when "future_date" then "Future-dated balance is not included"
+    when "excluded_credit" then "Credit card balance · excluded from cash"
+    when "unknown_kind" then "Confirm whether this is a cash account or credit card"
+    else "Not included in cash total"
+    end
+  end
+
   def finance_period(snapshot)
     return "No statement data yet" unless snapshot[:period_start].present? && snapshot[:period_end].present?
     "#{finance_date(snapshot[:period_start])} – #{finance_date(snapshot[:period_end])}"
@@ -37,20 +128,40 @@ module FinanceHelper
   end
 
   def finance_nav(label, path, icon, active:)
-    link_to(path, class: "bw-nav-link #{'is-active' if active}", "aria-current": ("page" if active)) do
+    link_to(path, class: "bw-nav-link #{"is-active" if active}", "aria-current": ("page" if active)) do
       safe_join([finance_icon(icon), content_tag(:span, label)])
     end
   end
 
-  def finance_chart_points(points)
+  # Points for one series. The y-scale spans every series in the chart (including the
+  # forecast band when present) so the line and band stay aligned.
+  def finance_chart_points(points, key: :balance)
     return "" if points.blank?
-    values = points.map { |point| point[:balance].to_f }
-    low, high = values.minmax
+    low, high = finance_chart_range(points)
     spread = [high - low, 1.0].max
     points.each_with_index.map do |point, index|
-      x = 20 + (index.to_f / [points.length - 1, 1].max * 760)
-      y = 210 - ((point[:balance].to_f - low) / spread * 170)
-      "#{x.round(2)},#{y.round(2)}"
+      "#{finance_chart_x(index, points.length)},#{finance_chart_y(point[key], low, spread)}"
     end.join(" ")
+  end
+
+  # Closed polygon between the lower and upper forecast bounds, or "" without a band.
+  def finance_chart_band(points)
+    return "" unless points.present? && points.all? { |point| point[:lower] && point[:upper] }
+    upper = finance_chart_points(points, key: :upper)
+    lower = finance_chart_points(points, key: :lower).split(" ").reverse.join(" ")
+    "#{upper} #{lower}"
+  end
+
+  def finance_chart_range(points)
+    values = points.flat_map { |point| [point[:balance], point[:lower], point[:upper]].compact.map(&:to_f) }
+    values.minmax
+  end
+
+  def finance_chart_x(index, count)
+    (20 + (index.to_f / [count - 1, 1].max * 760)).round(2)
+  end
+
+  def finance_chart_y(value, low, spread)
+    (210 - ((value.to_f - low) / spread * 170)).round(2)
   end
 end

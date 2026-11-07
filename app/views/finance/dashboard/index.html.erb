@@ -1,9 +1,164 @@
 <% content_for :title, "Dashboard" %>
-<div class="bw-page-heading"><div><span class="bw-eyebrow">YOUR MONEY, IN FOCUS</span><h1>A clearer financial picture.</h1><p><%= finance_period(@snapshot) %> <span class="bw-dot-divider">·</span> <%= @profile.currency %></p></div><%= link_to finance_statements_path, class: "bw-button bw-button-dark" do %><%= finance_icon "upload", size: 17 %> Upload statement<% end %></div>
-<div class="bw-metrics"><article class="bw-metric"><span>Total income <i class="bw-metric-symbol bw-positive"><%= finance_icon "down", size: 18 %></i></span><strong><%= finance_money(@snapshot[:income], @profile.currency) %></strong><small>Across imported statement dates</small></article><article class="bw-metric"><span>Total expenses <i class="bw-metric-symbol"><%= finance_icon "up", size: 18 %></i></span><strong><%= finance_money(@snapshot[:expenses], @profile.currency) %></strong><small>Transfers and excluded items omitted</small></article><article class="bw-metric"><span>Net cash flow <i class="bw-metric-symbol"><%= finance_icon "transactions", size: 18 %></i></span><strong class="<%= 'bw-positive' if @snapshot[:net].to_d >= 0 %>"><%= finance_money(@snapshot[:net], @profile.currency) %></strong><small>Income minus expenses</small></article><article class="bw-metric bw-metric-mint"><span>Current cash balance <i class="bw-metric-symbol"><%= finance_icon "wallet", size: 18 %></i></span><strong><%= finance_money(@profile.current_balance, @profile.currency) %></strong><%= link_to "Set your balance →", finance_forecast_path, class: "bw-metric-link" %></article></div>
-<% if @snapshot[:transaction_count].zero? %>
-  <section class="bw-welcome-card"><div class="bw-welcome-icon"><%= finance_icon "sun", size: 42 %></div><div><span class="bw-eyebrow">A FRESH START</span><h2>Your financial story starts here.</h2><p>Upload your first CSV or text-based PDF statement to see income, spending, and a cash flow forecast based on your own transactions.</p><%= link_to "Upload your first statement", finance_statements_path, class: "bw-button bw-button-dark" %><%= link_to "Download sample CSV", sample_finance_statements_path(format: :csv), class: "bw-text-link" %></div></section>
+<div class="bw-page-heading">
+  <div>
+    <span class="bw-eyebrow">YOUR MONEY, IN FOCUS</span>
+    <h1>A clearer financial picture.</h1>
+    <p>
+      <% if @date_filter_error %>
+        Date range not applied
+      <% elsif @period.filtered? %>
+        <%= finance_date(@period.start_date) %> – <%= finance_date(@period.end_date) %>
+      <% else %>
+        <%= finance_period(@snapshot) %>
+      <% end %>
+      <span class="bw-dot-divider">·</span> <%= @profile.currency %>
+    </p>
+  </div>
+  <%= link_to finance_statements_path, class: "bw-button bw-button-dark" do %>
+    <%= finance_icon "upload", size: 17 %> Upload statement
+  <% end %>
+</div>
+
+<section class="bw-dashboard-period" aria-labelledby="dashboard-period-heading">
+  <div class="bw-dashboard-period-heading">
+    <h2 id="dashboard-period-heading">Time period</h2>
+    <p>Choose the dates for your income, expenses, and transactions.</p>
+  </div>
+  <nav class="bw-period-presets" aria-label="Dashboard time periods">
+    <% [["All time", "all_time"], ["This month", "this_month"], ["Last month", "last_month"], ["Last 30 days", "last_30_days"], ["This year", "this_year"], ["Last year", "last_year"]].each do |label, preset| %>
+      <%= link_to label, finance_dashboard_path(preset: preset), class: "bw-period-preset#{' is-active' if @period.preset == preset}", aria: {current: (@period.preset == preset ? "true" : nil)} %>
+    <% end %>
+  </nav>
+  <%= form_with url: finance_dashboard_path, method: :get, class: "bw-period-custom", id: "dashboard-period-filter", local: true do %>
+    <%= hidden_field_tag :preset, "custom" %>
+    <div class="bw-field">
+      <%= label_tag :start_date, "Start date" %>
+      <%= date_field_tag :start_date, @filter_values[:start_date], required: true, aria: {invalid: (@date_filter_error ? "true" : nil), describedby: ("dashboard-period-error" if @date_filter_error)} %>
+    </div>
+    <div class="bw-field">
+      <%= label_tag :end_date, "End date" %>
+      <%= date_field_tag :end_date, @filter_values[:end_date], required: true, aria: {invalid: (@date_filter_error ? "true" : nil), describedby: ("dashboard-period-error" if @date_filter_error)} %>
+    </div>
+    <%= submit_tag "Apply dates", class: "bw-button bw-button-dark", name: nil %>
+  <% end %>
+  <% if @date_filter_error %>
+    <p class="bw-period-error" id="dashboard-period-error" role="alert"><%= @date_filter_error %></p>
+  <% end %>
+</section>
+
+<% unless @date_filter_error %>
+<div class="bw-metrics">
+  <article class="bw-metric" id="dashboard-income">
+    <span>Total income <i class="bw-metric-symbol bw-positive"><%= finance_icon "down", size: 18 %></i></span>
+    <strong><%= finance_money(@snapshot[:income], @profile.currency) %></strong>
+    <small><%= @period.filtered? ? "In the selected period" : "Across imported statement dates" %></small>
+  </article>
+  <article class="bw-metric" id="dashboard-expenses">
+    <span>Total expenses <i class="bw-metric-symbol"><%= finance_icon "up", size: 18 %></i></span>
+    <strong><%= finance_money(@snapshot[:expenses], @profile.currency) %></strong>
+    <small>Transfers and excluded items omitted</small>
+  </article>
+  <article class="bw-metric" id="dashboard-net">
+    <span>Net cash flow <i class="bw-metric-symbol"><%= finance_icon "transactions", size: 18 %></i></span>
+    <strong class="<%= 'bw-positive' if @snapshot[:net].to_d >= 0 %>"><%= finance_money(@snapshot[:net], @profile.currency) %></strong>
+    <small>Income minus expenses</small>
+  </article>
+  <article class="bw-metric bw-metric-mint" id="dashboard-balance">
+    <span>Cash balance from statements <i class="bw-metric-symbol"><%= finance_icon "wallet", size: 18 %></i></span>
+    <strong><%= finance_balance_display(@profile) %></strong>
+    <small><%= finance_balance_note(@profile) %></small>
+    <% age_note = finance_balance_age_note(@profile) %>
+    <% if age_note %><small class="bw-balance-age"><%= age_note %></small><% end %>
+    <% if @balance_summary && @balance_summary[:credit_total].present? %><small class="bw-credit-owed">Owed on credit cards: <strong><%= finance_money(@balance_summary[:credit_total], @profile.currency) %></strong> (<%= pluralize(@balance_summary[:credit_count], "card") %>)</small><% end %>
+    <%= link_to "View account balances →", finance_forecast_path(anchor: "account-balances"), class: "bw-metric-link" %>
+    <%= link_to "✎ Enter or edit balance", finance_forecast_path(edit: "1", anchor: "balance"), class: "bw-metric-link" %>
+  </article>
+</div>
+
+<%= render "finance/dashboard/accounts" %>
+
+<% if !@has_transactions %>
+  <section class="bw-welcome-card">
+    <div class="bw-welcome-icon"><%= finance_icon "sun", size: 42 %></div>
+    <div>
+      <span class="bw-eyebrow">A FRESH START</span>
+      <h2>Your financial story starts here.</h2>
+      <p>Upload your first CSV or text-based PDF statement to see income, spending, and a cash flow forecast based on your own transactions.</p>
+      <%= link_to "Upload your first statement", finance_statements_path, class: "bw-button bw-button-dark" %>
+      <%= link_to "Download sample CSV", sample_finance_statements_path(format: :csv), class: "bw-text-link" %>
+    </div>
+  </section>
+<% elsif @snapshot[:transaction_count].zero? %>
+  <section class="bw-panel bw-empty-state" id="dashboard-period-empty">
+    <span class="bw-empty-icon"><%= finance_icon "transactions", size: 28 %></span>
+    <h2>No transactions in this period.</h2>
+    <p>Choose different dates or view all your imported transactions.</p>
+    <%= link_to "View all dates", finance_dashboard_path(preset: "all_time"), class: "bw-button bw-button-outline" %>
+  </section>
 <% else %>
-  <div class="bw-two-column"><section class="bw-panel"><div class="bw-panel-heading"><div><h2>Money in. Money out.</h2><p>Monthly totals from your imported transactions</p></div><div class="bw-legend"><span><i class="bw-legend-income"></i>Income</span><span><i class="bw-legend-expense"></i>Expenses</span></div></div><% monthly = @snapshot[:monthly].last(6); maximum = [monthly.flat_map { |month| [month[:income].to_f, month[:expenses].to_f] }.max.to_f, 1].max %><div class="bw-bar-chart" role="img" aria-label="Monthly income and expenses"><% monthly.each do |month| %><div class="bw-bar-group"><div class="bw-bars"><div class="bw-bar bw-bar-income" style="height:<%= [(month[:income].to_f / maximum * 100).round(2), 1].max %>%" title="Income: <%= finance_money(month[:income], @profile.currency) %>"></div><div class="bw-bar bw-bar-expense" style="height:<%= [(month[:expenses].to_f / maximum * 100).round(2), 1].max %>%" title="Expenses: <%= finance_money(month[:expenses], @profile.currency) %>"></div></div><span><%= finance_date(month[:month], "%b %Y") %></span></div><% end %></div><details class="bw-chart-details"><summary>View monthly figures</summary><% monthly.each do |month| %><p><%= finance_date(month[:month], "%b %Y") %>: income <%= finance_money(month[:income], @profile.currency) %> · expenses <%= finance_money(month[:expenses], @profile.currency) %></p><% end %></details></section><section class="bw-panel"><div class="bw-panel-heading"><div><h2>Where it goes</h2><p>Your expense categories</p></div><%= finance_icon "transactions" %></div><div class="bw-category-list"><% @snapshot[:categories].first(6).each_with_index do |category, index| %><div><div class="bw-category-row"><span><i class="bw-category-dot tone-<%= index % 4 %>"></i><%= category[:name] %></span><strong><%= finance_money(category[:amount], @profile.currency) %></strong></div><div class="bw-category-track"><span class="tone-<%= index % 4 %>" style="width:<%= [(@snapshot[:expenses].to_f.positive? ? category[:amount].to_f / @snapshot[:expenses].to_f * 100 : 0).round(2), 100].min %>%"></span></div></div><% end %><% if @snapshot[:categories].empty? %><p class="bw-muted">No categorized expenses yet.</p><% end %></div></section></div>
+  <div class="bw-two-column">
+    <section class="bw-panel">
+      <div class="bw-panel-heading">
+        <div>
+          <h2>Money in. Money out.</h2>
+          <p><%= @snapshot[:monthly].size > 6 ? "Latest 6 months with transactions in this period" : "Monthly totals from your imported transactions" %></p>
+        </div>
+        <div class="bw-legend"><span><i class="bw-legend-income"></i>Income</span><span><i class="bw-legend-expense"></i>Expenses</span></div>
+      </div>
+      <% monthly = @snapshot[:monthly].last(6); maximum = [monthly.flat_map { |month| [month[:income].to_f, month[:expenses].to_f] }.max.to_f, 1].max %>
+      <div class="bw-bar-chart" role="img" aria-label="Monthly income and expenses">
+        <% monthly.each do |month| %>
+          <div class="bw-bar-group">
+            <div class="bw-bars">
+              <div class="bw-bar bw-bar-income" style="height:<%= [(month[:income].to_f / maximum * 100).round(2), 1].max %>%" title="Income: <%= finance_money(month[:income], @profile.currency) %>"></div>
+              <div class="bw-bar bw-bar-expense" style="height:<%= [(month[:expenses].to_f / maximum * 100).round(2), 1].max %>%" title="Expenses: <%= finance_money(month[:expenses], @profile.currency) %>"></div>
+            </div>
+            <span><%= finance_date(month[:month], "%b %Y") %></span>
+          </div>
+        <% end %>
+      </div>
+      <details class="bw-chart-details">
+        <summary>View monthly figures</summary>
+        <% @snapshot[:monthly].each do |month| %>
+          <p><%= finance_date(month[:month], "%b %Y") %>: income <%= finance_money(month[:income], @profile.currency) %> · expenses <%= finance_money(month[:expenses], @profile.currency) %></p>
+        <% end %>
+      </details>
+    </section>
+    <section class="bw-panel">
+      <div class="bw-panel-heading"><div><h2>Where it goes</h2><p>Your expense categories</p></div><%= finance_icon "transactions" %></div>
+      <div class="bw-category-list">
+        <% @snapshot[:categories].first(6).each_with_index do |category, index| %>
+          <div>
+            <div class="bw-category-row"><span><i class="bw-category-dot tone-<%= index % 4 %>"></i><%= category[:name] %></span><strong><%= finance_money(category[:amount], @profile.currency) %></strong></div>
+            <div class="bw-category-track"><span class="tone-<%= index % 4 %>" style="width:<%= [(@snapshot[:expenses].to_f.positive? ? category[:amount].to_f / @snapshot[:expenses].to_f * 100 : 0).round(2), 100].min %>%"></span></div>
+          </div>
+        <% end %>
+        <% if @snapshot[:categories].empty? %><p class="bw-muted">No categorized expenses yet.</p><% end %>
+      </div>
+    </section>
+  </div>
 <% end %>
-<div class="bw-two-column bw-two-column-bottom"><section class="bw-panel bw-panel-flush"><div class="bw-panel-heading"><div><h2>Recent transactions</h2><p><%= pluralize(@snapshot[:transaction_count], "transaction") %> in your financial picture</p></div><%= link_to "View all →", finance_transactions_path, class: "bw-text-link" %></div><% if @recent_transactions.any? %><%= render "finance/shared/transactions_table", transactions: @recent_transactions, currency: @profile.currency %><% else %><div class="bw-small-empty"><%= finance_icon "transactions", size: 28 %><p>Your latest transactions will appear here.</p></div><% end %></section><section class="bw-insight-promo"><span class="bw-feature-icon"><%= finance_icon "insights", size: 26 %></span><span class="bw-eyebrow">A FRESH PERSPECTIVE</span><h2>Let your numbers<br>tell you more.</h2><p>Explore spending observations and practical next steps. Organize transactions that may need a closer look at tax time.</p><%= link_to finance_insights_path, class: "bw-button bw-button-dark" do %>Explore insights <%= finance_icon "arrow", size: 17 %><% end %><% if @snapshot[:uncategorized_count].positive? %><small><%= pluralize(@snapshot[:uncategorized_count], "transaction") %> still need a category.</small><% end %></section></div>
+
+<div class="bw-two-column bw-two-column-bottom">
+  <section class="bw-panel bw-panel-flush">
+    <div class="bw-panel-heading">
+      <div><h2>Recent transactions</h2><p><%= pluralize(@snapshot[:transaction_count], "transaction") %> <%= @period.filtered? ? "in the selected period" : "in your financial picture" %></p></div>
+      <%= link_to "View all →", finance_transactions_path(start_date: @period.start_date&.iso8601, end_date: @period.end_date&.iso8601), class: "bw-text-link" %>
+    </div>
+    <% if @recent_transactions.any? %>
+      <%= render "finance/shared/transactions_table", transactions: @recent_transactions, currency: @profile.currency %>
+    <% else %>
+      <div class="bw-small-empty"><%= finance_icon "transactions", size: 28 %><p><%= @has_transactions ? "No transactions match these dates." : "Your latest transactions will appear here." %></p></div>
+    <% end %>
+  </section>
+  <section class="bw-insight-promo">
+    <span class="bw-feature-icon"><%= finance_icon "insights", size: 26 %></span>
+    <span class="bw-eyebrow">A FRESH PERSPECTIVE</span>
+    <h2>Let your numbers<br>tell you more.</h2>
+    <p>Explore spending observations and practical next steps. Organize transactions that may need a closer look at tax time.</p>
+    <% if @period.filtered? %><p>Insights use your full imported history.</p><% end %>
+    <%= link_to finance_insights_path, class: "bw-button bw-button-dark" do %>Explore insights <%= finance_icon "arrow", size: 17 %><% end %>
+    <% if @snapshot[:uncategorized_count].positive? %><small><%= pluralize(@snapshot[:uncategorized_count], "transaction") %> still need a category.</small><% end %>
+  </section>
+</div>
+<% end %>

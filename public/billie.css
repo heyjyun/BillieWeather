@@ -203,6 +203,14 @@ strong { font-weight: 600; }
 .bw-numbered-list p { margin: 5px 0 0; font-size: 10px; color: #6a7560; line-height: 1.8; }
 .bw-count { display: inline-flex; min-width: 25px; height: 25px; padding-inline: 8px; align-items: center; justify-content: center; border-radius: 20px; background: #f0f4e9; color: #6a765c; font-size: 10px; }
 .bw-badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 20px; padding: 4px 9px; color: #4a7d57; background: #eaf4e6; font-size: 10px; white-space: nowrap; }
+.bw-badge-review { color: #806326; background: #faf0d5; }
+.bw-badge-failed { color: #994f3c; background: #f9e9e3; }
+.bw-upload-results { margin-bottom: 24px; }
+.bw-import-filename { display: block; min-width: 130px; color: var(--bw-ink); }
+.bw-import-detail { min-width: 200px; max-width: 390px; line-height: 1.7; }
+.bw-import-detail small { display: block; margin-top: 4px; font-size: 10px; color: #6c746e; }
+.bw-review-actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; white-space: nowrap; }
+.bw-review-actions .bw-text-link { font-size: 11px; }
 .bw-danger-link { border: none; padding: 5px; background: none; color: #896c5d; font-size: 10px; }
 .bw-danger-link:hover { color: #a3422f; text-decoration: underline; }
 .bw-filter-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 22px 24px; border-bottom: 1px solid var(--bw-line); }
@@ -348,6 +356,15 @@ strong { font-weight: 600; }
 .bw-auth-card .bw-checkbox input { accent-color: #356b4f; }
 .bw-auth-card .bw-auth-switch { margin: 24px 0 0; padding-top: 20px; border-top: 1px solid #e3ebd8; font-size: 11px; }
 .bw-auth-switch a { color: #507a43; font-weight: 600; }
+.bw-google-sign-in { margin-top: 25px; }
+.bw-auth-card .bw-google-form { display: block; margin: 0; }
+.bw-google-button { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #747775; border-radius: 7px; background: #fff; color: #1f1f1f; font-family: "Google Sans", Arial, sans-serif; font-size: 14px; font-weight: 500; line-height: 20px; }
+.bw-google-button:not(:disabled):hover { background: #f8faff; border-color: #444746; box-shadow: 0 1px 2px #1f1f1f15; }
+.bw-google-button:disabled { opacity: .65; }
+.bw-google-logo { display: block; width: 20px; height: auto; flex-shrink: 0; }
+.bw-auth-card .bw-google-unavailable { margin: 9px 0 0; color: var(--bw-muted); font-size: 11px; line-height: 1.65; text-align: center; }
+.bw-auth-divider { display: flex; align-items: center; gap: 12px; margin: 23px 0 0; color: var(--bw-muted); font-size: 11px; text-align: center; }
+.bw-auth-divider::before, .bw-auth-divider::after { content: ""; height: 1px; background: var(--bw-line); flex: 1; }
 .bw-form-field small { font-size: 10px; line-height: 1.8; color: #68765d; }
 .bw-review-notice { display: flex; gap: 20px; align-items: flex-start; padding: 25px; border-radius: 10px; background: #f4f0e3; border: 1px solid #e8dfc7; }
 .bw-review-notice .bw-feature-icon { flex-shrink: 0; background: #e8e0c9; border-color: #dfd3af; color: #7d7042; margin: 0; }
@@ -374,3 +391,72 @@ strong { font-weight: 600; }
 .bw-icon-button { min-height: 44px; min-width: 44px; }
 .bw-header-actions .bw-text-link { min-height: 44px; }
 .bw-table-link { display: inline-flex; min-height: 36px; align-items: center; padding-inline: 4px; }
+
+.bw-dashboard-period { padding: 20px 24px; margin-bottom: 24px; border: 1px solid var(--bw-line); border-radius: 10px; background: white; }
+.bw-dashboard-period-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-bottom: 13px; }
+.bw-dashboard-period-heading h2 { margin: 0; font-size: 13px; letter-spacing: -.2px; }
+.bw-dashboard-period-heading p { margin: 0; font-size: 11px; }
+.bw-period-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 17px; }
+.bw-period-preset { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 8px 13px; border: 1px solid var(--bw-line); border-radius: 7px; font-size: 11px; color: var(--bw-muted); }
+.bw-period-preset:hover { background: #f4f7f2; color: var(--bw-ink); }
+.bw-period-preset.is-active { color: #245e48; border-color: #c9dfd0; background: #e5f1e8; font-weight: 600; }
+.bw-period-custom { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.bw-period-custom .bw-field { flex: 0 1 190px; min-width: 145px; }
+.bw-period-custom input[aria-invalid="true"] { border-color: #b86d5c; }
+.bw-period-error { margin: 15px 0 0; padding: 11px 14px; border: 1px solid #efd8d1; border-radius: 7px; background: #fff0eb; color: #923e32; font-size: 12px; }
+@media (max-width: 600px) { .bw-dashboard-period { padding: 18px; }.bw-period-presets { gap: 6px; }.bw-period-preset { min-height: 44px; flex: 1 0 auto; padding-inline: 10px; }.bw-period-custom .bw-field { flex: 1 1 140px; min-width: 0; }.bw-period-custom > .bw-button { flex-basis: 100%; } }
+
+/* Current balance line with an inline Edit control */
+.bw-balance-line { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin: 6px 0 4px; }
+.bw-balance-line strong { display: block; font-size: 26px; font-variant-numeric: tabular-nums; margin: 4px 0 0; }
+.bw-balance-line small { display: block; font-size: 11px; color: var(--bw-muted); line-height: 1.7; margin: 6px 0 0; max-width: 360px; }
+.bw-balance-edit summary { cursor: pointer; list-style: none; }
+.bw-balance-edit summary::-webkit-details-marker { display: none; }
+.bw-balance-edit form { margin-top: 12px; }
+
+/* Account balances and one-time statement account matching. */
+.bw-balance-notice { border: 1px solid #e9dbb5; background: #fff8e7; color: #77613e; border-radius: 9px; padding: 15px 18px; margin-bottom: 20px; font-size: 12px; line-height: 1.8; }
+.bw-balance-notice strong { display: block; }
+.bw-balance-notice .bw-text-link { display: inline-block; margin-left: 5px; }
+.bw-balance-empty { padding-block: 25px; }
+.bw-balance-empty p { max-width: 520px; margin-inline: auto; }
+.bw-manual-override { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--bw-line); }
+.bw-manual-override summary { font-size: 11px; }
+.bw-auto-balance-form { margin-top: 16px; }
+.bw-account-source { display: block; margin-top: 5px; font-size: 10px; color: var(--bw-muted); line-height: 1.7; overflow-wrap: anywhere; }
+.bw-account-balances-table td:first-child { min-width: 200px; }
+.bw-account-balances-table td:last-child { min-width: 210px; }
+.bw-account-total { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 18px 24px; background: #eff5ea; border-top: 1px solid var(--bw-line); color: #4a664a; font-size: 12px; }
+.bw-account-total strong { font-size: 24px; font-variant-numeric: tabular-nums; }
+.bw-unassigned-statements { padding: 20px 24px; border-top: 1px solid var(--bw-line); background: #fffaf0; }
+.bw-unassigned-statements h3 { font-size: 15px; margin: 0 0 8px; color: #78603a; }
+.bw-unassigned-statements p, .bw-unassigned-statements li { font-size: 11px; line-height: 1.8; color: #7c6b4b; }
+.bw-unassigned-statements ul { padding-left: 18px; margin-bottom: 0; }
+.bw-unassigned-statements a { text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.bw-statement-account { min-width: 230px; max-width: 320px; }
+.bw-statement-account > strong { font-size: 11px; }
+.bw-account-assignment { margin-top: 10px; }
+.bw-account-assignment > summary { cursor: pointer; color: #4d7756; font-size: 11px; min-height: 32px; padding-block: 8px; }
+.bw-account-assignment .bw-form { margin-top: 12px; gap: 12px; }
+.bw-account-assignment .bw-field input, .bw-account-assignment .bw-field select { min-width: 195px; }
+.bw-account-assignment .bw-caption { margin-block: 14px 0; }
+.bw-account-assignment .bw-field label { font-size: 11px; }
+.bw-account-assignment .bw-field small { white-space: normal; }
+.bw-account-assignment .bw-field .bw-account-separate-label { display: flex; align-items: flex-start; gap: 8px; line-height: 1.7; }
+.bw-account-assignment .bw-field .bw-account-separate-label input { min-width: auto; width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; accent-color: #396f51; }
+.bw-account-assignment .bw-button { min-height: 40px; font-size: 10px; }
+@media (max-width: 600px) { .bw-account-total, .bw-unassigned-statements { padding-inline: 20px; }.bw-account-total strong { font-size: 21px; }.bw-balance-notice .bw-text-link { margin-left: 0; } }
+
+/* Dashboard: accounts overview */
+.bw-section-heading-inline h2 { margin: 0 0 4px; font-size: 20px; }
+.bw-section-heading-inline p { margin: 0 0 14px; font-size: 12px; color: var(--bw-muted); }
+.bw-account-list { list-style: none; margin: 0; padding: 0; }
+.bw-account-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 14px 20px; border-top: 1px solid var(--bw-line, #e7e9e2); }
+.bw-account-main strong { display: block; }
+.bw-account-amount { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bw-account-amount small { display: block; font-weight: 400; font-size: 11px; color: var(--bw-muted); margin-top: 3px; }
+.bw-inline-edit { margin-top: 6px; }
+.bw-inline-edit summary { cursor: pointer; list-style: none; }
+.bw-inline-edit summary::-webkit-details-marker { display: none; }
+.bw-inline-edit form { margin-top: 10px; max-width: 340px; }
+.bw-inline-edit small { display: block; margin-top: 6px; font-size: 11px; color: var(--bw-muted); line-height: 1.6; }

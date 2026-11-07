@@ -93,6 +93,19 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "CSV with transaction_date and posted_date imports automatically on the first attempt" do
+    sign_in @user
+    csv = "posted_date,transaction_date,Description,Amount\n2026-01-03,2025-12-31,Coffee,-5\n"
+    upload_csv(csv) do |file|
+      assert_difference "Finance::Transaction.count", 1 do
+        post finance_statements_path, params: {file: file}
+      end
+    end
+    assert_redirected_to finance_transactions_path
+    assert_equal Date.new(2025, 12, 31), @user.finance_transactions.last.booked_on
+    assert_includes flash[:notice], "transaction_date"
+  end
+
   test "accounts cannot inspect modify or delete another users financial data" do
     other_user = create(:user)
     other_statement = Finance::Statement.create!(user: other_user, filename: "private.csv", currency: "USD", sha256: "a" * 64, transaction_count: 1)
@@ -169,6 +182,121 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
       end
     end
     assert_response :unprocessable_entity
+  end
+
+  test "a clear PDF imports automatically without asking for a year or a review" do
+    sign_in @user
+    pdf = finance_statement_pdf(["Statement Period: 10/01/2025 - 10/31/2025", "10/05 Salary +1,000.00", "10/20 Grocery market -25.50"])
+    upload_pdf(pdf) do |file|
+      assert_no_difference "Finance::StatementDraft.count" do
+        assert_difference "Finance::Transaction.count", 2 do
+          post finance_statements_path, params: {file: file}
+        end
+      end
+    end
+    assert_redirected_to finance_transactions_path
+    assert_includes flash[:notice], "automatically"
+    assert_equal [Date.new(2025, 10, 5), Date.new(2025, 10, 20)], @user.finance_transactions.order(:booked_on).pluck(:booked_on)
+    assert_equal ["Income", "Food & dining"], @user.finance_transactions.order(:booked_on).pluck(:category)
+    get finance_statements_path
+    assert_select "input[name='statement_year']", count: 0
+  end
+
+  test "a PDF with an unclear amount or year still goes to review" do
+    sign_in @user
+    pdf = finance_statement_pdf(["10/05 Salary +1,000.00", "10/20 Grocery market -25.50"])
+    upload_pdf(pdf) do |file|
+      assert_difference "Finance::StatementDraft.count", 1 do
+        assert_no_difference "Finance::Transaction.count" do
+          post finance_statements_path, params: {file: file}
+        end
+      end
+    end
+    assert_redirected_to finance_statement_draft_path(@user.finance_statement_drafts.last)
+  end
+
+  test "correcting one category teaches future imports and is private to the account" do
+    sign_in @user
+    csv = "Date,Description,Amount\n#{Date.current.iso8601},ZXQ WIDGETS 111,-10.00\n#{Date.current.iso8601},ZXQ WIDGETS 222,-12.00\n"
+    upload_csv(csv) { |file| post finance_statements_path, params: {file: file} }
+    assert_equal ["Uncategorized"], @user.finance_transactions.pluck(:category).uniq
+
+    first = @user.finance_transactions.order(:id).first
+    patch finance_transaction_path(first), params: {finance_transaction: {category: "Health"}}
+    assert_redirected_to finance_transactions_path
+    assert_includes flash[:notice], "future"
+    assert_includes flash[:notice], "updated 1 similar transaction"
+    assert_equal ["Health"], @user.finance_transactions.pluck(:category).uniq
+
+    csv_two = "Date,Description,Amount\n#{Date.current.iso8601},Zxq Widgets 999,-5.00\n"
+    upload_csv(csv_two) { |file| post finance_statements_path, params: {file: file} }
+    assert_equal "Health", @user.finance_transactions.find_by(description: "Zxq Widgets 999").category
+
+    sign_out @user
+    other = create(:user)
+    sign_in other
+    upload_csv(csv_two) { |file| post finance_statements_path, params: {file: file} }
+    assert_equal "Uncategorized", other.finance_transactions.first.category
+  end
+
+  test "the balance fills itself in from a statement, can be edited, and can go back to the statement" do
+    sign_in @user
+    csv = "Date,Description,Amount,Balance,Bank,Account Number,Account Type\n#{(Date.current - 1).iso8601},Coffee,-4.50,812.34,Chase,1111,Checking\n"
+    upload_csv(csv) { |file| post finance_statements_path, params: {file: file} }
+    get finance_dashboard_path
+    assert_select "#dashboard-balance strong", text: "$812.34"
+    assert_select "#dashboard-balance small", text: /Automatically totals/
+    assert_select "#dashboard-balance a", text: /View account balances/
+    assert_select "#dashboard-balance .bw-balance-age", text: /Balance is as of/
+    assert_select "#dashboard-balance a[href*='edit=1']", text: /Enter or edit balance/
+    get finance_forecast_path
+    assert_select "#forecast-starting-balance", text: /The forecast starts today/
+    assert_select "#forecast-starting-balance .bw-balance-age", text: /Balance is as of/
+    assert_select "#balance details summary", text: /Enter or edit balance/
+    assert_select "#balance details[open]", count: 0
+    assert_select "#balance input[name='finance_profile[current_balance]']"
+    get finance_forecast_path(edit: "1")
+    assert_select "#balance details[open]", count: 1
+
+    patch finance_profile_path, params: {finance_profile: {current_balance: "1000.00"}, return_to: "forecast"}
+    assert_redirected_to finance_forecast_path
+    assert_equal "manual", @user.finance_profile.reload.balance_source
+    get finance_dashboard_path
+    assert_select "#dashboard-balance small", text: /Entered by you/
+    get finance_forecast_path
+    assert_select "#balance form button", text: /automatic account total/i
+
+    # Saving tax details from the insights page must not mark the balance as manual or change it.
+    patch finance_profile_path, params: {finance_profile: {tax_country: "Canada"}, return_to: "insights"}
+    assert_equal BigDecimal("1000.00"), @user.finance_profile.reload.current_balance
+
+    patch finance_profile_path, params: {use_statement_balance: "1", return_to: "forecast"}
+    assert_redirected_to finance_forecast_path
+    profile = @user.finance_profile.reload
+    assert_equal BigDecimal("812.34"), profile.current_balance
+    assert_equal "statement", profile.balance_source
+  end
+
+  test "asking for the statement balance when none exists explains and keeps the entered balance" do
+    sign_in @user
+    patch finance_profile_path, params: {finance_profile: {current_balance: "50.00"}, return_to: "forecast"}
+    patch finance_profile_path, params: {use_statement_balance: "1", return_to: "forecast"}
+    assert_redirected_to finance_forecast_path
+    assert_includes flash[:alert], "closing balance"
+    profile = @user.finance_profile.reload
+    assert_equal BigDecimal("50.00"), profile.current_balance
+    assert_equal "manual", profile.balance_source
+  end
+
+  test "deleting a statement removes the balance that came from it" do
+    sign_in @user
+    csv = "Date,Description,Amount,Balance,Bank,Account Number,Account Type\n#{(Date.current - 1).iso8601},Coffee,-4.50,812.34,Chase,1111,Checking\n"
+    upload_csv(csv) { |file| post finance_statements_path, params: {file: file} }
+    assert_equal BigDecimal("812.34"), @user.finance_profile.reload.current_balance
+    delete finance_statement_path(@user.finance_statements.last)
+    profile = @user.finance_profile.reload
+    assert_equal BigDecimal("0"), profile.current_balance
+    assert_nil profile.balance_source
   end
 
   test "PDF review drafts are scoped to owner and expired drafts cannot be confirmed" do

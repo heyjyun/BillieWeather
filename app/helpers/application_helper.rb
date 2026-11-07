@@ -4,4 +4,8 @@ module ApplicationHelper
   def current_theme
     :light
   end
+
+  def google_sign_in_enabled?
+    GoogleSignIn.configured?
+  end
 end

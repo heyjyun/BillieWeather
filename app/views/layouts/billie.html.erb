@@ -26,7 +26,6 @@
         <span class="bw-nav-label">WORKSPACE</span>
         <nav class="bw-nav" aria-label="Workspace navigation">
           <%= finance_nav "Dashboard", finance_dashboard_path, "dashboard", active: controller_name == "dashboard" %>
-          <%= finance_nav "Upload statements", finance_statements_path, "upload", active: controller_name == "statements" %>
           <%= finance_nav "Transactions", finance_transactions_path, "transactions", active: controller_name == "transactions" %>
           <%= finance_nav "Cash flow forecast", finance_forecast_path, "forecast", active: controller_name == "forecast" %>
           <%= finance_nav "Billie Insights", finance_insights_path, "insights", active: controller_name == "insights" %>

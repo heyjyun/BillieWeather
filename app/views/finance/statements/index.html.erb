@@ -1,4 +1,284 @@
 <% content_for :title, "Upload statements" %>
-<div class="bw-page-heading"><div><span class="bw-eyebrow">FROM STATEMENTS TO CLARITY</span><h1>Bring your numbers together.</h1><p>Import a CSV or text-based PDF bank statement. We’ll organize the transactions into your financial picture.</p></div><%= link_to "View transactions →", finance_transactions_path, class: "bw-button bw-button-outline" %></div>
-<div class="bw-two-column"><section class="bw-panel"><div class="bw-panel-heading"><div><h2>Upload a statement</h2><p>Your transactions are processed as you import</p></div><%= finance_icon "upload" %></div><%= form_with url: finance_statements_path, multipart: true, data: {turbo: false}, class: "bw-form" do |form| %><div class="bw-upload-box"><span class="bw-upload-icon"><%= finance_icon "upload", size: 32 %></span><h3>A clearer outlook is one file away.</h3><p>Choose a CSV export or text-based PDF from your bank.</p><%= form.label :file, "Statement CSV or PDF", class: "bw-sr-only" %><%= form.file_field :file, accept: ".csv,.pdf,text/csv,application/pdf", required: true, class: "bw-file-input" %><small>CSV up to 2 MB · text-based PDF · review PDF rows before importing</small></div><div class="bw-form-note"><%= finance_icon "file", size: 18 %><span>Transactions are saved to your account. The original file is not retained.</span></div><%= form.hidden_field :currency, value: @profile.currency %><div class="bw-field"><%= form.label :statement_year, "Statement year (for PDFs with short dates)" %><%= form.number_field :statement_year, value: Date.current.year, min: 1900, max: Date.current.year + 1, required: true %><small>Use the year printed on your PDF statement. Check cross-year dates in the review step.</small></div><div class="bw-form-footer"><span>Statement currency: <strong><%= @profile.currency %></strong></span><%= form.submit "Import statement", class: "bw-button bw-button-dark" %></div><% end %></section><aside class="bw-panel bw-panel-soft"><span class="bw-eyebrow">A QUICK GUIDE</span><h2>Before you upload</h2><ol class="bw-numbered-list"><li><strong>Export a statement from your bank</strong><p>CSV and text-based PDFs are supported. Scanned or image-only PDFs need a text-based PDF or CSV export; OCR is not available.</p></li><li><strong>CSV: check the columns</strong><p>Use Date, Description, and Amount. Separate Debit and Credit columns are also supported.</p></li><li><strong>PDF: review the extraction</strong><p>Every PDF goes through an editable review step. Income is positive; expenses are negative. CSV dates use YYYY-MM-DD or MM/DD/YYYY.</p></li><li><strong>Use one currency</strong><p>Your current workspace uses <%= @profile.currency %>. Currency conversion is not applied.</p></li></ol><%= link_to sample_finance_statements_path(format: :csv), class: "bw-button bw-button-outline bw-full-width" do %><%= finance_icon "file", size: 17 %> Download sample CSV<% end %><p class="bw-caption">Sample transactions are examples. Import them only if you want to try the workflow.</p></aside></div>
-<section class="bw-panel bw-panel-flush bw-section-gap"><div class="bw-panel-heading"><div><h2>Statement history</h2><p>Your imported files and their transaction counts</p></div><span class="bw-count"><%= @statements.size %></span></div><% if @statements.any? %><div class="bw-table-scroll"><table class="bw-table"><thead><tr><th scope="col">Statement</th><th scope="col">Imported</th><th scope="col">Transactions</th><th scope="col">Status</th><th scope="col"><span class="bw-sr-only">Action</span></th></tr></thead><tbody><% @statements.each do |statement| %><tr><td><div class="bw-transaction-name"><span class="bw-transaction-icon"><%= finance_icon "file", size: 18 %></span><div><strong><%= statement.filename %></strong><small><%= statement.currency %></small></div></div></td><td class="bw-nowrap"><%= finance_date(statement.created_at) %></td><td><%= number_with_delimiter(statement.transaction_count) %></td><td><span class="bw-badge"><%= finance_icon "check", size: 13 %> Imported</span></td><td class="bw-text-right"><%= button_to "Remove", finance_statement_path(statement), method: :delete, class: "bw-danger-link", form: {data: {turbo: false}}, title: "Remove this statement and its transactions" %></td></tr><% end %></tbody></table></div><p class="bw-table-footnote">Removing a statement also removes all transactions imported from it.</p><% else %><div class="bw-empty-state"><span class="bw-empty-icon"><%= finance_icon "file", size: 32 %></span><h3>No statements yet.</h3><p>Upload your first statement to start connecting the dots.</p></div><% end %></section>
+
+<div class="bw-page-heading">
+  <div>
+    <span class="bw-eyebrow">FROM STATEMENTS TO CLARITY</span>
+    <h1>Bring your numbers together.</h1>
+    <p>Import CSV or text-based PDF bank statements together. We’ll organize the transactions into your financial picture.</p>
+  </div>
+  <%= link_to "View transactions →", finance_transactions_path, class: "bw-button bw-button-outline" %>
+</div>
+
+<% if @import_results.present? %>
+  <section id="import-results" class="bw-panel bw-panel-flush bw-upload-results" aria-labelledby="import-results-title">
+    <div class="bw-panel-heading">
+      <div>
+        <h2 id="import-results-title">Your upload results</h2>
+        <p>Each file is processed separately. A failed file does not affect successful imports.</p>
+      </div>
+      <span class="bw-count"><%= @import_results.size %></span>
+    </div>
+    <div class="bw-table-scroll">
+      <table class="bw-table">
+        <thead>
+          <tr>
+            <th scope="col">Statement</th>
+            <th scope="col">Result</th>
+            <th scope="col">Transactions</th>
+            <th scope="col">Details</th>
+            <th scope="col"><span class="bw-sr-only">Action</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @import_results.each do |result| %>
+            <tr data-import-status="<%= result[:status] %>" data-import-filename="<%= result[:filename] %>">
+              <td><strong class="bw-import-filename"><%= result[:filename] %></strong></td>
+              <td>
+                <% if result[:status] == "imported" %>
+                  <span class="bw-badge"><%= finance_icon "check", size: 13 %> Imported</span>
+                <% elsif result[:status] == "review" %>
+                  <span class="bw-badge bw-badge-review">Needs review</span>
+                <% else %>
+                  <span class="bw-badge bw-badge-failed">Not imported</span>
+                <% end %>
+              </td>
+              <td><%= result[:transaction_count].present? ? number_with_delimiter(result[:transaction_count]) : "—" %></td>
+              <td class="bw-import-detail">
+                <%= result[:message] %>
+                <% if result[:date_column].present? %>
+                  <small>Dates use the <%= result[:date_column] %> column.</small>
+                <% end %>
+              </td>
+              <td class="bw-text-right">
+                <% if result[:status] == "review" && result[:draft].present? %>
+                  <%= link_to "Review →", finance_statement_draft_path(result[:draft]), class: "bw-text-link" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="bw-table-footnote">Retry only the files that were not imported. PDFs marked “Needs review” are saved below until they expire.</p>
+  </section>
+<% end %>
+
+<div class="bw-two-column">
+  <section class="bw-panel">
+    <div class="bw-panel-heading">
+      <div>
+        <h2>Upload statements</h2>
+        <p>Transactions are organized and categorized automatically as you import</p>
+      </div>
+      <%= finance_icon "upload" %>
+    </div>
+    <%= form_with url: finance_statements_path, multipart: true, data: {turbo: false}, class: "bw-form" do |form| %>
+      <div class="bw-upload-box">
+        <span class="bw-upload-icon"><%= finance_icon "upload", size: 32 %></span>
+        <h3>A clearer outlook starts here.</h3>
+        <p>Choose one or more CSV exports or text-based PDFs from your bank.</p>
+        <%= form.label :files, "Statement CSV or PDF files", class: "bw-sr-only" %>
+        <%= form.file_field :files, multiple: true, accept: ".csv,.pdf,text/csv,application/pdf", required: true, class: "bw-file-input", aria: {describedby: "statement-file-limits"} %>
+        <small id="statement-file-limits">Up to 10 files · 2 MB per file · 10 MB total · CSV and text-based PDF</small>
+      </div>
+      <div class="bw-form-note">
+        <%= finance_icon "file", size: 18 %>
+        <span>Each file has its own result. Transactions are saved to your account; original files are not retained.</span>
+      </div>
+      <% if @date_columns.present? %>
+        <div class="bw-field">
+          <%= form.label :date_column, "Date column (optional override)" %>
+          <%= form.select :date_column, @date_columns.map { |column| [column, column] }, {include_blank: "Automatic (transaction date first)", selected: params[:date_column]} %>
+          <small>Automatic detection prefers Transaction Date, then Date, then posting dates. Choose only the CSV you want to retry when using an override.</small>
+        </div>
+      <% end %>
+      <%= form.hidden_field :currency, value: @profile.currency %>
+      <div class="bw-form-footer">
+        <span>Statement currency: <strong><%= @profile.currency %></strong></span>
+        <%= form.submit "Import statements", class: "bw-button bw-button-dark" %>
+      </div>
+    <% end %>
+  </section>
+
+  <aside class="bw-panel bw-panel-soft">
+    <span class="bw-eyebrow">A QUICK GUIDE</span>
+    <h2>Before you upload</h2>
+    <ol class="bw-numbered-list">
+      <li>
+        <strong>Choose statements from your bank</strong>
+        <p>Select several files at once, including a mix of CSVs and text-based PDFs. Scanned or image-only PDFs need a text-based PDF or CSV export; OCR is not available.</p>
+      </li>
+      <li>
+        <strong>CSV: check the columns</strong>
+        <p>Use Date, Description, and Amount. Separate Debit and Credit columns are also supported. Dates are detected automatically: Transaction Date first, then Date, then posting dates. Each import result names the column used.</p>
+        <p>Date, Description, and Amount import transaction activity. Automatic cash balances also need a Balance column and account details such as Bank, Account Number, and Account Type (Checking, Savings, or Credit Card). These additional columns are optional for importing transactions.</p>
+      </li>
+      <li>
+        <strong>PDF: review anything unclear</strong>
+        <p>PDFs are imported automatically when everything is clear, including the statement year and each amount's sign. Anything unclear gets its own review step. Income is positive; expenses are negative. CSV dates use YYYY-MM-DD or MM/DD/YYYY.</p>
+      </li>
+      <li>
+        <strong>Bring each bank account together</strong>
+        <p>When account details and a dated balance are present, we total the latest balance for each cash account. If an account is unclear, choose it in Statement history. Credit cards are excluded from cash.</p>
+      </li>
+      <li>
+        <strong>Use one currency</strong>
+        <p>Your current workspace uses <%= @profile.currency %>. Currency conversion is not applied.</p>
+      </li>
+    </ol>
+    <%= link_to sample_finance_statements_path(format: :csv), class: "bw-button bw-button-outline bw-full-width" do %>
+      <%= finance_icon "file", size: 17 %> Download sample CSV
+    <% end %>
+    <p class="bw-caption">Sample transactions are examples. Import them only if you want to try the workflow.</p>
+  </aside>
+</div>
+
+<% if @pending_drafts.present? %>
+  <section id="pending-reviews" class="bw-panel bw-panel-flush bw-section-gap" aria-labelledby="pending-reviews-title">
+    <div class="bw-panel-heading">
+      <div>
+        <h2 id="pending-reviews-title">PDFs waiting for review</h2>
+        <p>Check each PDF’s extracted rows before adding its transactions.</p>
+      </div>
+      <span class="bw-count"><%= @pending_drafts.size %></span>
+    </div>
+    <div class="bw-table-scroll">
+      <table class="bw-table">
+        <thead>
+          <tr>
+            <th scope="col">Statement</th>
+            <th scope="col">Extracted rows</th>
+            <th scope="col">Review expires</th>
+            <th scope="col"><span class="bw-sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @pending_drafts.each do |draft| %>
+            <tr data-pending-draft-id="<%= draft.id %>">
+              <td>
+                <div class="bw-transaction-name">
+                  <span class="bw-transaction-icon"><%= finance_icon "file", size: 18 %></span>
+                  <div><strong><%= draft.filename %></strong><small><%= draft.currency %> · Not imported yet</small></div>
+                </div>
+              </td>
+              <td><%= number_with_delimiter(draft.rows.size) %></td>
+              <td class="bw-nowrap"><%= time_tag draft.expires_at, "In #{distance_of_time_in_words(Time.current, draft.expires_at)}" %></td>
+              <td>
+                <div class="bw-review-actions">
+                  <%= link_to "Review →", finance_statement_draft_path(draft), class: "bw-text-link" %>
+                  <%= button_to "Discard", finance_statement_draft_path(draft), method: :delete, class: "bw-danger-link", form: {data: {turbo: false}}, title: "Discard this PDF review" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="bw-table-footnote">Reviews expire 30 minutes after upload. If one expires, upload that PDF again. Discarding a review does not affect imported statements.</p>
+  </section>
+<% end %>
+
+<section class="bw-panel bw-panel-flush bw-section-gap" id="statement-history">
+  <div class="bw-panel-heading">
+    <div><h2>Statement history</h2><p>Your imported files, accounts, and transaction counts</p></div>
+    <span class="bw-count"><%= @statements.size %></span>
+  </div>
+  <% if @statements.any? %>
+    <div class="bw-table-scroll">
+      <table class="bw-table">
+        <thead>
+          <tr>
+            <th scope="col">Statement</th>
+            <th scope="col">Bank account</th>
+            <th scope="col">Saved balance</th>
+            <th scope="col">Imported</th>
+            <th scope="col">Transactions</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="bw-sr-only">Action</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @statements.each do |statement| %>
+            <tr id="statement-<%= statement.id %>">
+              <td>
+                <div class="bw-transaction-name">
+                  <span class="bw-transaction-icon"><%= finance_icon "file", size: 18 %></span>
+                  <div><strong><%= statement.filename %></strong><small><%= statement.currency %></small></div>
+                </div>
+              </td>
+              <td class="bw-statement-account">
+                <% if statement.bank_account.present? %>
+                  <strong><%= statement.bank_account.display_name %></strong>
+                  <small class="bw-account-source"><%= statement.bank_account.kind == "credit" ? "Credit card · excluded from cash" : (statement.bank_account.kind == "cash" ? "Cash account" : "Account type needs confirmation") %></small>
+                <% else %>
+                  <span class="bw-badge bw-badge-review">Choose account</span>
+                  <small class="bw-account-source"><%= statement.closing_balance.nil? ? "Account unidentified; no closing balance saved" : "Not included in automatic cash total" %></small>
+                <% end %>
+                <details class="bw-account-assignment">
+                  <summary><%= statement.bank_account.present? ? "Change account" : "Identify this account" %></summary>
+                  <% if @bank_accounts.any? %>
+                    <%= form_with url: finance_statement_path(statement), method: :patch, data: {turbo: false}, class: "bw-form" do %>
+                      <div class="bw-field">
+                        <%= label_tag "statement_#{statement.id}_bank_account_id", "Use an existing account" %>
+                        <%= select_tag :bank_account_id, options_for_select(@bank_accounts.map { |account| [account.display_name, account.id] }, statement.bank_account_id), include_blank: "Choose account", required: true, id: "statement_#{statement.id}_bank_account_id" %>
+                      </div>
+                      <%= submit_tag "Use this account", class: "bw-button bw-button-outline" %>
+                    <% end %>
+                    <p class="bw-caption">Or add an account:</p>
+                  <% end %>
+                  <%= form_with url: finance_statement_path(statement), method: :patch, data: {turbo: false}, class: "bw-form" do %>
+                    <div class="bw-field">
+                      <%= label_tag "statement_#{statement.id}_bank_name", "Bank name" %>
+                      <%= text_field_tag "bank_account[bank_name]", nil, required: true, maxlength: 100, placeholder: "e.g. Chase", id: "statement_#{statement.id}_bank_name" %>
+                    </div>
+                    <div class="bw-field">
+                      <%= label_tag "statement_#{statement.id}_account_name", "Account label" %>
+                      <%= text_field_tag "bank_account[name]", nil, required: true, maxlength: 100, placeholder: "e.g. Everyday checking", id: "statement_#{statement.id}_account_name" %>
+                    </div>
+                    <div class="bw-field">
+                      <%= label_tag "statement_#{statement.id}_last4", "Last four account digits" %>
+                      <%= text_field_tag "bank_account[last4]", nil, required: true, inputmode: "numeric", pattern: "[0-9]{4}", minlength: 4, maxlength: 4, autocomplete: "off", id: "statement_#{statement.id}_last4" %>
+                      <small>Use the same bank and last four digits for every statement from this account. Do not enter the full account number.</small>
+                    </div>
+                    <div class="bw-field">
+                      <%= label_tag "statement_#{statement.id}_kind", "Account type" %>
+                      <%= select_tag "bank_account[kind]", options_for_select([["Checking / savings (cash)", "cash"], ["Credit card", "credit"]]), include_blank: "Choose account type", required: true, id: "statement_#{statement.id}_kind" %>
+                    </div>
+                    <% if @bank_accounts.any? %>
+                      <div class="bw-field">
+                        <%= label_tag "statement_#{statement.id}_separate_account", class: "bw-account-separate-label" do %>
+                          <%= check_box_tag "bank_account[separate_account]", "1", false, id: "statement_#{statement.id}_separate_account" %>
+                          This is a different account with the same bank and last four digits
+                        <% end %>
+                      </div>
+                    <% end %>
+                    <%= submit_tag "Save account", class: "bw-button bw-button-outline" %>
+                  <% end %>
+                </details>
+              </td>
+              <td>
+                <% if statement.closing_balance.nil? %>
+                  <span>No closing balance saved</span>
+                <% else %>
+                  <strong class="bw-nowrap"><%= finance_money(statement.closing_balance, statement.currency) %></strong>
+                  <small class="bw-account-source"><%= statement.closing_balance_on.present? ? finance_date(statement.closing_balance_on) : "Balance date not saved" %></small>
+                <% end %>
+              </td>
+              <td class="bw-nowrap"><%= finance_date(statement.created_at) %></td>
+              <td><%= number_with_delimiter(statement.transaction_count) %></td>
+              <td><span class="bw-badge"><%= finance_icon "check", size: 13 %> Imported</span></td>
+              <td class="bw-text-right"><%= button_to "Remove", finance_statement_path(statement), method: :delete, class: "bw-danger-link", form: {data: {turbo: false}}, title: "Remove this statement and its transactions" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="bw-table-footnote">Statements from the same account contribute only the latest balance. Removing a statement also removes its transactions and recalculates the account total. <%= link_to "View account balances →", finance_forecast_path(anchor: "account-balances"), class: "bw-text-link" %></p>
+  <% else %>
+    <div class="bw-empty-state">
+      <span class="bw-empty-icon"><%= finance_icon "file", size: 32 %></span>
+      <h3>No statements yet.</h3>
+      <p>Upload your first statement to start connecting the dots.</p>
+    </div>
+  <% end %>
+</section>

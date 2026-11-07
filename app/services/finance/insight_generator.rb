@@ -156,7 +156,7 @@ module Finance
       else
         [item("Give your cash flow a plan", "Compare the imported surplus with upcoming bills and savings goals. Check that your statements cover all relevant accounts before relying on the totals.")]
       end
-      actions << item("Set a current balance", "Enter a verified current cash balance on Cash Flow Forecast. Transaction net flow alone cannot establish how much cash is available.")
+      actions << item("Review account balances", "Cash Flow Forecast automatically sums each identified cash account’s latest dated statement balance. Check its account breakdown for missing balances and older dates. Transaction net flow alone cannot establish how much cash is available.")
       if @snapshot.fetch(:uncategorized_count).positive?
         actions << item("Review uncategorized activity", "Uncategorized included transactions: #{@snapshot.fetch(:uncategorized_count)}. Review their categories in Transactions to improve your summaries.")
       end

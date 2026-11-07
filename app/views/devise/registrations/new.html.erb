@@ -4,6 +4,7 @@
     <p class="bw-eyebrow">A CLEARER FINANCIAL FORECAST</p>
     <h1>Create your account</h1>
     <p class="bw-muted">Bring your finances into focus, one statement at a time.</p>
+    <%= render "devise/shared/google_sign_in" %>
     <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: {data: {turbo: false}}) do |form| %>
       <% if resource.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= resource.errors.full_messages.to_sentence %></div><% end %>
       <div class="bw-form-field"><%= form.label :first_name %><%= form.text_field :first_name, required: true, autocomplete: "given-name", maxlength: 80 %></div>

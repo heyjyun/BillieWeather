@@ -28,6 +28,9 @@ services:
         value: "3"
       - key: RAILS_ENV
         value: production
+      # Optional Google sign-in: add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+      # in this web service's Environment settings after creating a Google OAuth
+      # Web application client and registering its HTTPS callback URL.
 
 envVarGroups:
   - name: settings

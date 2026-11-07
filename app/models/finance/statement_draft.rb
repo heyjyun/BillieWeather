@@ -4,6 +4,7 @@ module Finance
 
     MAX_ROWS = 500
     belongs_to :user
+    belongs_to :bank_account, class_name: "Finance::BankAccount", optional: true
 
     scope :active, -> { where("expires_at > ?", Time.current) }
 
@@ -14,9 +15,24 @@ module Finance
     validate :valid_review_rows
     validate :valid_warnings
     validate :future_expiration, on: :create
+    validate do
+      errors.add(:bank_account, "must belong to you") if bank_account && bank_account.user_id != user_id
+    end
 
     def expired?
       expires_at.nil? || expires_at <= Time.current
+    end
+
+    # Warnings that point at something specific (an unclear amount, a guessed year, a
+    # skipped line). The generic notices shown with every PDF do not count.
+    def actionable_warnings
+      warnings - Finance::PdfStatementExtractor::GENERIC_NOTICES
+    end
+
+    # True when nothing needs a person's attention: every amount was read with a clear
+    # sign, the year came from the statement, and no line was skipped or shortened.
+    def auto_importable?
+      actionable_warnings.empty? && rows.present? && rows.all? { |row| row["amount"].present? }
     end
 
     private

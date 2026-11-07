@@ -233,6 +233,8 @@ GEM
       faraday-follow_redirects (~> 0.5)
       faraday-multipart (~> 1.0, >= 1.0.4)
       ostruct
+    cmdstan (0.6.1)
+      csv
     code_analyzer (0.5.5)
       sexp_processor
     coderay (1.1.3)
@@ -430,6 +432,7 @@ GEM
       racc (~> 1.4)
     nokogiri (1.19.7-x86_64-linux-gnu)
       racc (~> 1.4)
+    numo-narray-alt (0.12.0)
     oauth2 (2.0.25)
       anonymous_loader (~> 0.1, >= 0.1.3)
       auth-sanitizer (~> 0.2, >= 0.2.3)
@@ -446,6 +449,11 @@ GEM
       logger
       rack (>= 2.2.3)
       rack-protection
+    omniauth-google-oauth2 (1.2.3)
+      jwt (>= 2.9.2, < 4)
+      oauth2 (~> 2.0)
+      omniauth (~> 2.0)
+      omniauth-oauth2 (~> 1.8)
     omniauth-oauth2 (1.9.0)
       oauth2 (>= 2.0.2, < 3)
       omniauth (~> 2.0)
@@ -489,6 +497,11 @@ GEM
     prism (1.9.0)
     prop_initializer (0.4.0)
       zeitwerk (>= 2.6.18)
+    prophet-rb (0.7.0)
+      cmdstan (>= 0.5)
+      logger
+      numo-narray-alt (>= 0.10)
+      rover-df (>= 1)
     propshaft (1.3.2)
       actionpack (>= 7.0.0)
       activesupport (>= 7.0.0)
@@ -590,6 +603,8 @@ GEM
       railties (>= 7.0)
     rexml (3.4.4)
     rotp (6.3.0)
+    rover-df (1.1.0)
+      numo-narray-alt (>= 0.10)
     rqrcode (3.2.0)
       chunky_png (~> 1.0)
       rqrcode_core (~> 2.0)
@@ -756,10 +771,12 @@ DEPENDENCIES
   minitest
   minitest-reporters
   minitest-retry
+  omniauth-google-oauth2 (~> 1.2, >= 1.2.3)
   parallel_tests
   pdf-reader (~> 2.15)
   pg (>= 0.18, < 2.0)
   premailer-rails
+  prophet-rb (~> 0.7.0)
   propshaft
   pry
   puma (~> 8.0)
@@ -782,7 +799,7 @@ DEPENDENCIES
   web-console
 
 RUBY VERSION
-   ruby 4.0.3
+  ruby 4.0.3
 
 BUNDLED WITH
-   2.4.10
+  4.0.24

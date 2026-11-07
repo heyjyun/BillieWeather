@@ -1,7 +1,12 @@
 module Finance
   class ProfilesController < BaseController
     def update
-      attributes = params.require(:finance_profile).permit(:currency, :current_balance, :tax_country, :tax_profile)
+      return use_statement_balance if params[:use_statement_balance] == "1"
+
+      attributes = params.require(:finance_profile).permit(:currency, :current_balance, :cash_on_hand, :tax_country, :tax_profile)
+      # Typing a balance makes it yours: automatic updates from statements stop until you ask for them back.
+      attributes = attributes.merge(balance_source: "manual", balance_as_of: Date.current) if attributes.key?(:current_balance)
+      attributes = attributes.merge(cash_on_hand_on: Date.current) if attributes.key?(:cash_on_hand)
       saved = current_user.with_lock do
         @profile.reload
         @profile.update(attributes)
@@ -15,8 +20,23 @@ module Finance
 
     private
 
+    def use_statement_balance
+      unless BalanceSync.statement_balance_available?(current_user)
+        return redirect_to return_path, alert: "No identified cash account has a dated closing balance yet. Assign accounts in Statement history and upload statements that include closing balances."
+      end
+      current_user.with_lock do
+        @profile.reload.update!(balance_source: nil, balance_as_of: nil)
+        BalanceSync.call(user: current_user)
+      end
+      redirect_to return_path, notice: "Your balance now automatically totals the latest balance from each cash account."
+    end
+
     def return_path
-      params[:return_to] == "insights" ? finance_insights_path : finance_forecast_path
+      case params[:return_to]
+      when "insights" then finance_insights_path
+      when "dashboard" then finance_dashboard_path(anchor: "accounts")
+      else finance_forecast_path
+      end
     end
   end
 end

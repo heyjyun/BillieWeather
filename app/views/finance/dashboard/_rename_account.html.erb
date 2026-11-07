@@ -1,0 +1,11 @@
+<details class="bw-inline-edit">
+  <summary class="bw-text-link">✎ Rename</summary>
+  <%= form_with model: account, scope: :bank_account, url: finance_bank_account_path(account), method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
+    <div class="bw-field">
+      <%= form.label :custom_name, "Name for this account", for: "bank_account_#{account.id}_custom_name" %>
+      <%= form.text_field :custom_name, id: "bank_account_#{account.id}_custom_name", maxlength: 60, placeholder: account.auto_name %>
+      <small>Read from your statement: <%= account.auto_name %>. Leave empty to use that name.</small>
+    </div>
+    <%= form.submit "Save name", class: "bw-button bw-button-outline" %>
+  <% end %>
+</details>

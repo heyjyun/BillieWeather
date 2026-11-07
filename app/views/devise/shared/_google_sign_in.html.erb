@@ -1,0 +1,15 @@
+<div class="bw-google-sign-in" id="google-sign-in">
+  <% if google_sign_in_enabled? %>
+    <%= button_to user_google_oauth2_omniauth_authorize_path, method: :post, class: "bw-google-button", form: {class: "bw-google-form", data: {turbo: false}} do %>
+      <%= image_tag "/google-g.png", alt: "", width: 20, height: 20, class: "bw-google-logo", aria: {hidden: true} %>
+      <span>Continue with Google</span>
+    <% end %>
+  <% else %>
+    <button type="button" class="bw-google-button" disabled aria-describedby="google-sign-in-unavailable">
+      <%= image_tag "/google-g.png", alt: "", width: 20, height: 20, class: "bw-google-logo", aria: {hidden: true} %>
+      <span>Continue with Google</span>
+    </button>
+    <p class="bw-google-unavailable" id="google-sign-in-unavailable">Google sign-in is currently unavailable. Use email to continue.</p>
+  <% end %>
+  <div class="bw-auth-divider"><span>or continue with email</span></div>
+</div>
