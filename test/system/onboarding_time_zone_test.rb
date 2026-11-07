@@ -45,6 +45,7 @@ class OnboardingTimeZoneTest < ApplicationSystemTestCase
 
   def detected_time_zone
     browser_time_zone = page.evaluate_script("jstz.determine().name()")
-    ActiveSupport::TimeZone::MAPPING.invert.fetch(browser_time_zone)
+    # Rails' MAPPING only has "Etc/UTC" for UTC, but jstz reports "UTC" (e.g. on CI runners).
+    ActiveSupport::TimeZone::MAPPING.key(browser_time_zone) || ActiveSupport::TimeZone.new(browser_time_zone).name
   end
 end

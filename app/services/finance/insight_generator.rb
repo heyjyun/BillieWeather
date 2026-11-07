@@ -362,7 +362,13 @@ module Finance
       end
       valid &&= content["limitations"].is_a?(Array) && content["limitations"].length.between?(1, 6) && content["limitations"].all? { |entry| valid_text?(entry, 1000) }
       unless valid
-        shape = content.is_a?(Hash) ? content.transform_values { |v| v.is_a?(Array) ? "Array(#{v.length})" : "#{v.class}(#{v.to_s.length})" } : content.class
+        shape = if content.is_a?(Hash)
+          content.transform_values do |value|
+            value.is_a?(Array) ? "Array(#{value.length})" : "#{value.class}(#{value.to_s.length})"
+          end
+        else
+          content.class
+        end
         Rails.logger.warn("[Finance::InsightGenerator] invalid #{@provider}/#{@kind} content shape: #{shape.inspect}")
         raise Error, "The analysis result was invalid. #{retry_hint}"
       end
