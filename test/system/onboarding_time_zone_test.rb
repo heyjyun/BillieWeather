@@ -6,46 +6,49 @@ class OnboardingTimeZoneTest < ApplicationSystemTestCase
     login_as(@user, scope: :user)
   end
 
-  device_test "browser time zone is selected before the optional widget exists" do
-    visit edit_account_onboarding_user_detail_path(@user)
-    expected_time_zone = detected_time_zone
-    page.execute_script <<~JS
-      document.querySelector("#select2-user_time_zone-container")?.remove();
-      document.querySelector("#user_time_zone").value = #{((expected_time_zone == "UTC") ? "Tokyo" : "UTC").to_json};
-    JS
+  {"UTC" => "UTC", "Etc/UTC" => "UTC", "Asia/Tokyo" => "Tokyo"}.each do |browser_time_zone, expected_time_zone|
+    device_test "browser time zone #{browser_time_zone} is selected before the optional widget exists" do
+      visit edit_account_onboarding_user_detail_path(@user)
+      set_detected_time_zone(browser_time_zone)
+      page.execute_script <<~JS
+        document.querySelector("#select2-user_time_zone-container")?.remove();
+        document.querySelector("#user_time_zone").value = #{((expected_time_zone == "UTC") ? "Tokyo" : "UTC").to_json};
+      JS
 
-    assert_no_js_errors do
-      page.execute_script("btSetUserTimeZone()")
+      assert_no_js_errors do
+        page.execute_script("btSetUserTimeZone()")
+      end
+
+      assert_equal expected_time_zone, find("#user_time_zone", visible: :all).value
     end
 
-    assert_equal expected_time_zone, find("#user_time_zone", visible: :all).value
-  end
+    device_test "browser time zone #{browser_time_zone} refreshes the optional widget label and title" do
+      visit edit_account_onboarding_user_detail_path(@user)
+      set_detected_time_zone(browser_time_zone)
+      widget = find("#select2-user_time_zone-container")
+      page.execute_script <<~JS
+        const widget = document.querySelector("#select2-user_time_zone-container");
+        widget.title = "Previous time zone";
+        widget.textContent = "Previous time zone";
+      JS
 
-  device_test "browser time zone refreshes the optional widget label and title" do
-    visit edit_account_onboarding_user_detail_path(@user)
-    expected_time_zone = detected_time_zone
-    widget = find("#select2-user_time_zone-container")
-    page.execute_script <<~JS
-      const widget = document.querySelector("#select2-user_time_zone-container");
-      widget.title = "Previous time zone";
-      widget.textContent = "Previous time zone";
-    JS
+      assert_no_js_errors do
+        page.execute_script("btSetUserTimeZone()")
+      end
 
-    assert_no_js_errors do
-      page.execute_script("btSetUserTimeZone()")
+      assert_equal expected_time_zone, find("#user_time_zone", visible: :all).value
+      selected_label = page.evaluate_script('document.querySelector("#user_time_zone").selectedOptions[0].text')
+      assert_equal selected_label, widget.text
+      assert_equal selected_label, widget[:title]
     end
-
-    assert_equal expected_time_zone, find("#user_time_zone", visible: :all).value
-    selected_label = page.evaluate_script('document.querySelector("#user_time_zone").selectedOptions[0].text')
-    assert_equal selected_label, widget.text
-    assert_equal selected_label, widget[:title]
   end
 
   private
 
-  def detected_time_zone
-    browser_time_zone = page.evaluate_script("jstz.determine().name()")
-    # Rails' MAPPING only has "Etc/UTC" for UTC, but jstz reports "UTC" (e.g. on CI runners).
-    ActiveSupport::TimeZone::MAPPING.key(browser_time_zone) || ActiveSupport::TimeZone.new(browser_time_zone).name
+  def set_detected_time_zone(time_zone)
+    page.execute_script <<~JS, time_zone
+      const timeZone = arguments[0];
+      jstz.determine = () => ({name: () => timeZone});
+    JS
   end
 end

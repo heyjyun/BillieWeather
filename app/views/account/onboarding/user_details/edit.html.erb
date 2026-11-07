@@ -57,8 +57,9 @@
       <% end %>
     }
 
-    // figure out the rails timezone value.
-    var railsValue = jsTimezoneMapping[jstz.determine().name()];
+    // jstz can report a Rails option directly, e.g. "UTC" instead of "Etc/UTC".
+    var browserTimeZone = jstz.determine().name();
+    var railsValue = jsTimezoneMapping[browserTimeZone] || browserTimeZone;
 
     var useBrowserTimeZone = document.querySelector("#user_time_zone").dataset.useBrowserTimeZone
 
