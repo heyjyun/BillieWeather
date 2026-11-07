@@ -28,6 +28,11 @@ default: &default
 development:
   <<: *default
   database: untitled_application_development
+  # Neon: when DATABASE_URL is set (from .env.local), Rails uses it instead of the local database above.
+  # DATABASE_URL is Neon's pooled (PgBouncer, transaction mode) endpoint, which does not
+  # support session-level advisory locks or session-scoped prepared statements.
+  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>advisory_locks: false<% end %>
+  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>prepared_statements: false<% end %>
   # On MacOS some users are reporting crashes when first trying to access
   # the database. This workaround was suggested in this issue on `ruby-pg`:
   # https://github.com/ged/ruby-pg/issues/538
@@ -103,6 +108,10 @@ test:
 #
 #   production:
 #     url: <%= ENV['DATABASE_URL'] %>
+  # Neon's pooled endpoint (PgBouncer, transaction mode) doesn't support advisory locks
+  # or session-scoped prepared statements. Migrations use DATABASE_URL_UNPOOLED (see lib/tasks/neon.rake).
+  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>advisory_locks: false<% end %>
+  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>prepared_statements: false<% end %>
 #
 production:
   <<: *default
@@ -110,3 +119,7 @@ production:
   username: untitled_application
   password: <%= ENV['UNTITLED_APPLICATION_DATABASE_PASSWORD'] %>
   url: <%= ENV['DATABASE_URL'] %>
+  # Neon's pooled endpoint (PgBouncer, transaction mode) doesn't support advisory locks
+  # or session-scoped prepared statements. Migrations use DATABASE_URL_UNPOOLED (see lib/tasks/neon.rake).
+  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>advisory_locks: false<% end %>
+  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>prepared_statements: false<% end %>

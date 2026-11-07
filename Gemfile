@@ -75,6 +75,9 @@ group :development, :test do
 end
 
 group :development do
+  # Loads .env.local (written by `neon deploy`/`neon env pull`) into ENV in development only.
+  gem "dotenv-rails", require: "dotenv/load"
+
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
 
