@@ -21,10 +21,12 @@ class InvitationListsTest < ApplicationSystemTestCase
 
   device_test "visitors can send bulk invitations upon signing up" do
     new_registration_page_for(display_details)
-    fill_in "Your Email Address", with: "hanako.tanaka@gmail.com"
-    fill_in "Set Password", with: example_password
-    fill_in "Confirm Password", with: example_password
-    click_on "Sign Up"
+    fill_registration_form(first_name: "Hanako", last_name: "Tanaka", email: "hanako.tanaka@gmail.com")
+    click_on "Create account"
+    assert_current_path finance_dashboard_path
+
+    user = User.find_by!(email: "hanako.tanaka@gmail.com")
+    visit edit_account_onboarding_user_detail_path(user)
 
     assert_text("Tell us about you")
     fill_in "First Name", with: "Hanako"

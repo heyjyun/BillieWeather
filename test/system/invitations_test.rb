@@ -7,13 +7,13 @@ class InvitationsTest < ApplicationSystemTestCase
     visit user_session_path
     new_registration_page_for(display_details)
 
-    # try non-matching passwords.
-    fill_in "Your Email Address", with: "hanako.tanaka@gmail.com"
-    fill_in "Set Password", with: example_password
-    fill_in "Confirm Password", with: example_password
-    click_on "Sign Up"
+    fill_registration_form(first_name: "Hanako", last_name: "Tanaka", email: "hanako.tanaka@gmail.com")
+    click_button "Create account"
+    assert_current_path finance_dashboard_path
 
-    # we should now be on an onboarding step.
+    # Team settings are managed separately from BillieWeather registration.
+    membership_user = User.find_by!(email: "hanako.tanaka@gmail.com")
+    visit edit_account_onboarding_user_detail_path(membership_user)
     assert_text("Tell us about you")
     fill_in "First Name", with: "Hanako"
     fill_in "Last Name", with: "Tanaka"
@@ -66,6 +66,7 @@ class InvitationsTest < ApplicationSystemTestCase
       fill_in "Last Name", with: "Yamaguchi"
       find("label", text: "Invite as Team Administrator").click
       click_on "Create Invitation"
+      wait_for_team_page account_team_memberships_path(hanakos_team)
       assert_text("Invitation was successfully created.")
     end
 
@@ -85,6 +86,7 @@ class InvitationsTest < ApplicationSystemTestCase
     assert_difference "all_emails.count", 1 do
       perform_enqueued_jobs do
         click_on "Resend"
+        wait_for_team_page account_team_memberships_path(hanakos_team)
         assert_text("Invitation was successfully resent.")
       end
     end
@@ -99,16 +101,20 @@ class InvitationsTest < ApplicationSystemTestCase
       click_on "Details"
     end
 
+    wait_for_team_page account_membership_path(invited_membership)
     assert_text("Invitation Details")
 
     accept_alert { click_on "Remove from Team" }
+    wait_for_team_page account_team_memberships_path(hanakos_team)
     assert_text("That user has been successfully removed from the team.")
 
     # We shouldn't be able to resend invitations for memberships that aren't on the team anymore.
     within_window new_window do
       click_on "Resend"
-      assert_text("Sorry, we couldn't find an invitation to resend.")
+      assert_current_path finance_dashboard_path
+      assert_selector "[role='alert']", text: "Sorry, we couldn't find an invitation to resend."
     end
+    new_window.close
 
     # click the link in the email.
     # yes, this is a totally valid thing to do if you have access to the invitation email.
@@ -117,14 +123,15 @@ class InvitationsTest < ApplicationSystemTestCase
     open_email "takashi.yamaguchi@gmail.com"
     current_email.click_link "Join The Testing Team"
 
-    # if we're back on the team's dashboard, then we're *not* on the accept invitation page, which means the
-    # invitation wasn't claimable.
-    assert_text("The Testing Team’s Dashboard")
-    assert_text("Sorry, but we couldn't find your invitation.")
+    # An expired invitation returns to the dashboard without granting membership.
+    assert_current_path finance_dashboard_path
+    assert_selector "[role='alert']", text: "Sorry, but we couldn't find your invitation."
+    visit account_team_path(hanakos_team)
     within_team_menu_for(display_details) do
       click_on "Team Members"
     end
 
+    wait_for_team_page account_team_memberships_path(hanakos_team)
     assert_text("The Testing Team Team Members")
 
     perform_enqueued_jobs do
@@ -135,11 +142,11 @@ class InvitationsTest < ApplicationSystemTestCase
         within_membership_row(invited_membership) do
           assert page.has_no_content?("Invited")
           assert_text("Team Administrator")
+          accept_alert { click_link "Re-Invite to Team", exact: true }
         end
       end
 
-      assert_text("Re-Invite to Team")
-      accept_alert { click_on "Re-Invite to Team" }
+      wait_for_team_page account_team_memberships_path(hanakos_team)
       assert_text("The user has been successfully re-invited. They will receive an email to rejoin the team.")
     end
 
@@ -147,6 +154,7 @@ class InvitationsTest < ApplicationSystemTestCase
     assert_difference "all_emails.count", 1 do
       perform_enqueued_jobs do
         click_on "Resend"
+        wait_for_team_page account_team_memberships_path(hanakos_team)
         assert_text("Invitation was successfully resent.")
       end
     end
@@ -158,26 +166,21 @@ class InvitationsTest < ApplicationSystemTestCase
     open_email "takashi.yamaguchi@gmail.com"
     current_email.click_link "Join The Testing Team"
 
-    assert_text("Create Your Account")
+    assert_selector "h1", text: "Create your account", exact_text: true
     # this email address is purposefully different than the one they were invited via.
-    fill_in "Your Email Address", with: "takashi@yamaguchi.com"
-    fill_in "Set Password", with: another_example_password
-    fill_in "Confirm Password", with: another_example_password
-    click_on "Sign Up"
+    # The first name is also different from the invitation's name.
+    fill_registration_form(first_name: "Taka", last_name: "Yamaguchi", email: "takashi@yamaguchi.com",
+      password: another_example_password)
+    click_button "Create account"
 
     # The email was sent to takashi.yamaguchi@gmail.com,
     # but since the user signed up with the email takashi@yamaguchi.com,
     # we have to confirm that we actually want to join the team under this account.
     click_on "Join The Testing Team"
 
-    # this first name is purposefully different than the name they were invited with.
-    # assert_text('Create Your Account')
-    assert_text("Tell us about you")
-    fill_in "First Name", with: "Taka"
-    fill_in "Last Name", with: "Yamaguchi"
-    click_on "Next"
-
-    assert_text("The Testing Team’s Dashboard")
+    assert_current_path finance_dashboard_path
+    assert_selector "[role='status']", text: "Welcome to The Testing Team!"
+    visit account_team_path(hanakos_team)
     within_team_menu_for(display_details) do
       click_on "Team Members"
     end
@@ -230,6 +233,7 @@ class InvitationsTest < ApplicationSystemTestCase
         # this is specifically a different email address than the one they signed up with originally.
         fill_in "Email Address", with: "hanako@some-company.com"
         click_on "Create Invitation"
+        wait_for_team_page account_team_memberships_path(membership_user.reload.current_team)
         assert_text("Invitation was successfully created.")
       end
 
@@ -242,14 +246,15 @@ class InvitationsTest < ApplicationSystemTestCase
       open_email "hanako@some-company.com"
       current_email.click_link "Join Another Team"
 
-      assert_text("Create Your Account")
-      click_link "Already have an account?"
+      assert_selector "h1", text: "Create your account", exact_text: true
+      within ".bw-auth-switch" do
+        click_link "Log in"
+      end
 
-      assert_text("Sign In")
-      fill_in "Your Email Address", with: "hanako.tanaka@gmail.com"
-      click_on "Next" if two_factor_authentication_enabled?
-      fill_in "Your Password", with: example_password
-      click_on "Sign In"
+      assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
+      fill_in "user_email", with: "hanako.tanaka@gmail.com"
+      fill_in "user_password", with: example_password
+      click_button "Log in"
 
       assert_text("Join Another Team")
       assert_text("Taka Yamaguchi has invited you to join Another Team")
@@ -257,7 +262,10 @@ class InvitationsTest < ApplicationSystemTestCase
       assert_text("but you're currently signed in as hanako.tanaka@gmail.com")
       click_on "Join Another Team"
 
-      assert_text("Welcome to Another Team!")
+      assert_current_path finance_dashboard_path
+      assert_selector "[role='status']", text: "Welcome to Another Team!"
+      membership_user = User.find_by!(email: "hanako.tanaka@gmail.com")
+      visit account_team_path(membership_user.current_team)
 
       within_team_menu_for(display_details) do
         click_on "Team Members"
@@ -274,20 +282,23 @@ class InvitationsTest < ApplicationSystemTestCase
         end
       end
 
+      wait_for_team_page account_membership_path(last_membership)
       accept_alert { click_on "Leave This Team" }
 
-      assert_text("You've successfully removed yourself from Another Team.")
-
+      assert_current_path finance_dashboard_path
+      assert_selector "[role='status']", text: "You've successfully removed yourself from Another Team."
+      visit account_team_path(hanakos_team)
       assert_text("The Testing Team’s Dashboard")
     end
 
     # Make sure we're actually signed in as Hanako and on the Team Members page.
     sign_out_for(display_details)
     new_session_page_for(display_details)
-    fill_in "Your Email Address", with: "hanako.tanaka@gmail.com"
-    click_on "Next" if two_factor_authentication_enabled?
-    fill_in "Your Password", with: example_password
-    click_on "Sign In"
+    fill_in "user_email", with: "hanako.tanaka@gmail.com"
+    fill_in "user_password", with: example_password
+    click_button "Log in"
+    assert_current_path finance_dashboard_path
+    visit account_team_path(hanakos_team)
     within_team_menu_for(display_details) do
       click_on "Team Members"
     end
@@ -301,9 +312,11 @@ class InvitationsTest < ApplicationSystemTestCase
       end
     end
 
+    wait_for_team_page account_membership_path(first_membership)
     assert_text("Hanako Tanaka’s Membership on The Testing Team")
     accept_alert { click_on "Demote from Admin" }
 
+    wait_for_team_page account_team_memberships_path(hanakos_team)
     assert_text("The Testing Team Team Members")
     within_current_memberships_table do
       assert_text("Hanako Tanaka")
@@ -313,6 +326,7 @@ class InvitationsTest < ApplicationSystemTestCase
       end
     end
 
+    wait_for_team_page account_membership_path(first_membership)
     assert_text("Hanako Tanaka’s Membership on The Testing Team")
 
     # since the user is no longer an admin, they shouldn't see either of these options anymore.
@@ -334,5 +348,21 @@ class InvitationsTest < ApplicationSystemTestCase
     assert_text("Create a new team")
 
     click_on "Logout"
+  end
+
+  private
+
+  def wait_for_team_page(path)
+    assert_current_path path
+    page.document.synchronize do
+      ready = page.evaluate_script(<<~JS)
+        window.Turbo?.session?.started === true &&
+          !window.Turbo.navigator.currentVisit &&
+          !document.documentElement.hasAttribute("data-turbo-preview")
+      JS
+      raise Capybara::ElementNotFound, "Waiting for the final team page and its confirmation handlers" unless ready
+    end
+    # Turn can still animate rendered content before confirmation links are ready.
+    assert_selector "html:not(.turn-advance):not(.turn-replace):not(.turn-restore):not([data-turbo-preview])"
   end
 end

@@ -205,12 +205,16 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   # sign out.
   def sign_out(display_details = self.display_details)
-    if display_details[:mobile]
-      open_mobile_menu
+    if page.has_button?("Log out", wait: 0)
+      click_button "Log out"
     else
-      find("#user").hover
+      if display_details[:mobile]
+        open_mobile_menu
+      else
+        find("#user").hover
+      end
+      click_on "Logout"
     end
-    click_on "Logout"
 
     # make sure we're actually signed out.
     assert_text(/Signed out successfully|You need to sign in or sign up before continuing/)
@@ -224,7 +228,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
     # this forces capybara to wait until the proper page loads.
     # otherwise our tests will immediately start trying to match things before the page even loads.
-    assert_text("Sign In")
+    assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
   end
   alias_method :new_session_page_for, :new_session_page
 
@@ -245,15 +249,23 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
     if invitation_only?
       assert_text("You need to sign in or sign up before continuing.")
-      refute_text("Create Your Account")
+      refute_text("Create your account")
       visit invitation_path(key: ENV["INVITATION_KEYS"].split(",\s+").first)
     end
 
     # this forces capybara to wait until the proper page loads.
     # otherwise our tests will immediately start trying to match things before the page even loads.
-    assert_text("Create Your Account")
+    assert_selector "h1", text: "Create your account", exact_text: true
   end
   alias_method :new_registration_page_for, :new_registration_page
+
+  def fill_registration_form(first_name:, last_name:, email:, password: example_password, password_confirmation: password)
+    fill_in "user_first_name", with: first_name
+    fill_in "user_last_name", with: last_name
+    fill_in "user_email", with: email
+    fill_in "user_password", with: password
+    fill_in "user_password_confirmation", with: password_confirmation
+  end
 
   def sign_up_from_homepage(display_details = self.display_details)
     puts "#{__callee__} is deprecated".red
@@ -341,14 +353,12 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   end
 
   private def assert_no_js_errors_selenium &block
-    last_timestamp = page.driver.browser.logs.get(:browser)
-      .map(&:timestamp)
-      .last || 0
+    # Reading Selenium's browser log drains it, so discard entries from before the block.
+    page.driver.browser.logs.get(:browser)
 
     yield
 
     errors = page.driver.browser.logs.get(:browser)
-    errors = errors.reject { |e| e.timestamp > last_timestamp } if last_timestamp > 0
     errors = errors.reject { |e| e.level == "WARNING" }
 
     assert errors.length.zero?, "Expected no js errors, but these errors where found: #{errors.join(", ")}"

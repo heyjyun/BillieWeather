@@ -98,7 +98,7 @@ module Finance
     def result(file, status, message:, transaction_count: nil, date_column: nil, draft: nil)
       filename = File.basename(file.original_filename.to_s.tr("\\", "/"))
       {filename: filename, status: status, message: message, transaction_count: transaction_count,
-        date_column: date_column, draft: draft}
+       date_column: date_column, draft: draft}
     end
 
     def monotonic_time

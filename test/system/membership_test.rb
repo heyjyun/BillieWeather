@@ -7,13 +7,12 @@ class MembershipSystemTest < ApplicationSystemTestCase
     visit root_path
     new_registration_page_for(display_details)
 
-    # try non-matching passwords.
-    fill_in "Your Email Address", with: "jane.smith@gmail.com"
-    fill_in "Set Password", with: example_password
-    fill_in "Confirm Password", with: example_password
-    click_on "Sign Up"
+    fill_registration_form(first_name: "Jane", last_name: "Smith", email: "jane.smith@gmail.com")
+    click_on "Create account"
+    assert_current_path finance_dashboard_path
 
-    # we should now be on an onboarding step.
+    user = User.find_by!(email: "jane.smith@gmail.com")
+    visit edit_account_onboarding_user_detail_path(user)
     assert_text("Tell us about you")
     fill_in "First Name", with: "Jane"
     fill_in "Last Name", with: "Smith"

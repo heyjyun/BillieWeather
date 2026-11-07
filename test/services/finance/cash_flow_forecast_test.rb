@@ -13,10 +13,10 @@ class Finance::CashFlowForecastTest < ActiveSupport::TestCase
       transaction("-100", Date.current)
       result = Finance::CashFlowForecast.new(user: @user, days: 30).to_h
       assert_equal 10, result[:history_days]
-      assert_equal BigDecimal("30"), result[:daily_income]
-      assert_equal BigDecimal("10"), result[:daily_expenses]
-      assert_equal BigDecimal("1600"), result[:projected_balance]
-      assert_equal BigDecimal("1000"), result[:points].first[:balance]
+      assert_equal BigDecimal(30), result[:daily_income]
+      assert_equal BigDecimal(10), result[:daily_expenses]
+      assert_equal BigDecimal(1600), result[:projected_balance]
+      assert_equal BigDecimal(1000), result[:points].first[:balance]
       assert_equal Date.current + 30, result[:points].last[:date]
     end
   end
@@ -25,9 +25,9 @@ class Finance::CashFlowForecastTest < ActiveSupport::TestCase
     transaction("300", Date.current - 9)
     transaction("-100", Date.current)
     result = Finance::CashFlowForecast.new(user: @user, days: 10, income_adjustment: -100, expense_adjustment: 100).to_h
-    assert_equal BigDecimal("0"), result[:daily_income]
-    assert_equal BigDecimal("20"), result[:daily_expenses]
-    assert_equal BigDecimal("800"), result[:projected_balance]
+    assert_equal BigDecimal(0), result[:daily_income]
+    assert_equal BigDecimal(20), result[:daily_expenses]
+    assert_equal BigDecimal(800), result[:projected_balance]
   end
 
   test "transfers excluded and future transactions do not drive forecasts" do
@@ -37,7 +37,7 @@ class Finance::CashFlowForecastTest < ActiveSupport::TestCase
     result = Finance::CashFlowForecast.new(user: @user).to_h
     assert_equal 0, result[:history_days]
     refute result[:has_history]
-    assert_equal BigDecimal("1000"), result[:projected_balance]
+    assert_equal BigDecimal(1000), result[:projected_balance]
   end
 
   test "historical average uses the latest available data instead of counting a stale gap as zero" do
@@ -47,9 +47,9 @@ class Finance::CashFlowForecastTest < ActiveSupport::TestCase
       transaction("999", Date.current - 600) # older than 90 days before the latest transaction
       result = Finance::CashFlowForecast.new(user: @user, days: 30, engine: "linear").to_h
       assert_equal 10, result[:history_days]
-      assert_equal BigDecimal("30"), result[:daily_income]
-      assert_equal BigDecimal("10"), result[:daily_expenses]
-      assert_equal BigDecimal("1600"), result[:projected_balance]
+      assert_equal BigDecimal(30), result[:daily_income]
+      assert_equal BigDecimal(10), result[:daily_expenses]
+      assert_equal BigDecimal(1600), result[:projected_balance]
       assert result[:assumptions].any? { |a| a.include?("latest transaction is on") }
     end
   end
@@ -72,14 +72,14 @@ class Finance::CashFlowForecastTest < ActiveSupport::TestCase
       (0..119).each do |offset|
         date = Date.current - offset
         transaction("2000", date) if date.day == 1
-        transaction("-#{date.wday >= 5 ? 90 : 40}", date, category: "Food & dining")
+        transaction("-#{(date.wday >= 5) ? 90 : 40}", date, category: "Food & dining")
       end
       result = Finance::CashFlowForecast.new(user: @user, days: 30).to_h
       assert_equal :prophet, result[:method]
       assert_equal 31, result[:points].size
       assert_equal Date.current, result[:points].first[:date]
       assert_equal Date.current + 30, result[:points].last[:date]
-      assert_equal BigDecimal("1000"), result[:points].first[:balance]
+      assert_equal BigDecimal(1000), result[:points].first[:balance]
       assert result[:points].all? { |pt| pt[:lower] <= pt[:balance] + 0.01 && pt[:balance] <= pt[:upper] + 0.01 }
       assert_operator result[:daily_expenses], :>, 0
 

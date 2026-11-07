@@ -9,41 +9,41 @@ class TwoFactorAuthentication < ApplicationSystemTestCase
 
     device_test "a user can log in with a valid OTP" do
       visit new_user_session_path
-      assert_text("Sign In")
+      assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
 
-      fill_in "Your Email Address", with: @jane.email
-      click_on "Next"
-      fill_in "Your Password", with: @jane.password
-      fill_in "Two-Factor Authentication Code", with: @jane.otp.now
+      fill_in "user_email", with: @jane.email
+      fill_in "user_password", with: @jane.password
+      fill_in "Authentication code (if enabled)", with: @jane.otp.now
 
-      click_on "Sign In"
+      click_button "Log in"
 
-      assert_text("Dashboard")
+      assert_current_path finance_dashboard_path
     end
 
     device_test "a user cannot log in with an invalid OTP" do
       visit new_user_session_path
-      assert_text("Sign In")
+      assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
 
-      fill_in "Your Email Address", with: @jane.email
-      click_on "Next"
-      fill_in "Your Password", with: @jane.password
-      fill_in "Two-Factor Authentication Code", with: "000000"
+      fill_in "user_email", with: @jane.email
+      fill_in "user_password", with: @jane.password
+      fill_in "Authentication code (if enabled)", with: "invalid-code"
 
-      click_on "Sign In"
+      click_button "Log in"
 
-      refute_text("Dashboard")
+      assert_text("Invalid email address or password.")
+      assert_current_path new_user_session_path
     end
 
-    device_test "OTP input is invisible to a user with OTP authentication disabled" do
+    device_test "a user without OTP enabled can log in without an authentication code" do
       visit new_user_session_path
-      assert_text("Sign In")
+      assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
 
-      fill_in "Your Email Address", with: @john.email
-      click_on "Next"
-      fill_in "Your Password", with: @john.password
+      fill_in "user_email", with: @john.email
+      fill_in "user_password", with: @john.password
 
-      refute_text("Two-Factor Authentication Code")
+      assert_field "Authentication code (if enabled)", with: ""
+      click_button "Log in"
+      assert_current_path finance_dashboard_path
     end
   end
 end

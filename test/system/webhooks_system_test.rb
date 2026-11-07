@@ -36,7 +36,7 @@ class WebhooksSystemTest < ApplicationSystemTestCase
       end
     end
 
-    visit account_dashboard_path
+    visit account_team_path(@user.current_team)
 
     # create the endpoint.
     if disable_developer_menu?
@@ -136,7 +136,7 @@ class WebhooksSystemTest < ApplicationSystemTestCase
       end
     end
 
-    visit account_dashboard_path
+    visit account_team_path(@another_user.current_team)
 
     # trigger the webhook event.
     within_primary_menu_for(display_details) do

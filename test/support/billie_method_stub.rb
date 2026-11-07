@@ -2,7 +2,7 @@
 module BillieMethodStub
   def stub_method(object, name, replacement)
     singleton = object.singleton_class
-    originally_local = singleton.instance_methods(false).include?(name)
+    originally_local = singleton.method_defined?(name, false)
     original = singleton.instance_method(name) if originally_local
     singleton.define_method(name) do |*args, **kwargs, &block|
       replacement.respond_to?(:call) ? replacement.call(*args, **kwargs, &block) : replacement

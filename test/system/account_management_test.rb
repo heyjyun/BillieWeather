@@ -7,12 +7,12 @@ class AccountManagementSystemTest < ApplicationSystemTestCase
     visit root_path
     new_registration_page_for(display_details)
 
-    fill_in "Email", with: "andrew.culver@gmail.com"
-    fill_in "Set Password", with: example_password
-    fill_in "Confirm Password", with: example_password
-    click_on "Sign Up"
+    fill_registration_form(first_name: "Testy", last_name: "McTesterson", email: "andrew.culver@gmail.com")
+    click_on "Create account"
+    assert_current_path finance_dashboard_path
 
-    # we should now be on an onboarding step.
+    user = User.find_by!(email: "andrew.culver@gmail.com")
+    visit edit_account_onboarding_user_detail_path(user)
     assert_text("Tell us about you")
     fill_in "First Name", with: "Testy"
     fill_in "Last Name", with: "McTesterson"
@@ -28,8 +28,6 @@ class AccountManagementSystemTest < ApplicationSystemTestCase
     end
 
     assert_text("The Testing Team’s Dashboard")
-
-    user = User.find_by(email: "andrew.culver@gmail.com")
 
     visit edit_account_user_path(user)
 

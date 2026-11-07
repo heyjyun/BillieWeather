@@ -1,5 +1,6 @@
 class SessionsController < Devise::SessionsController
   include Sessions::ControllerBase
+
   layout "billie"
   # Bullet Train reads current_user in its callbacks. On a login POST that can
   # authenticate the password and rotate the CSRF token, so verify the form first.

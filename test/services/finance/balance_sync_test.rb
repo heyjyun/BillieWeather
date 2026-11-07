@@ -120,14 +120,14 @@ class Finance::BalanceSyncTest < ActiveSupport::TestCase
     import("Date,Description,Amount,Balance\n2025-10-05,Coffee,-4.50,0.00\n")
 
     summary = Finance::BalanceSync.summary(user: @user)
-    assert_equal BigDecimal("0"), summary[:total]
+    assert_equal BigDecimal(0), summary[:total]
     assert summary[:complete]
     assert Finance::BalanceSync.statement_balance_available?(@user)
     assert @profile.reload.balance_available?
     assert_equal "statement", @profile.balance_source
     forecast = Finance::CashFlowForecast.new(user: @user).to_h
     assert forecast[:balance_available]
-    assert_equal BigDecimal("0"), forecast[:points].first[:balance]
+    assert_equal BigDecimal(0), forecast[:points].first[:balance]
   end
 
   test "overdrafts reduce the total rather than being omitted or made positive" do

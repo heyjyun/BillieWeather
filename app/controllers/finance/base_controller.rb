@@ -4,6 +4,7 @@ module Finance
     before_action :authenticate_user!
     before_action :load_finance_profile
     after_action :prevent_financial_page_caching
+    after_action :preserve_flash_for_turbo_reload
 
     private
 
@@ -21,6 +22,12 @@ module Finance
 
     def prevent_financial_page_caching
       response.headers["Cache-Control"] = "no-store, private"
+    end
+
+    def preserve_flash_for_turbo_reload
+      # Leaving the account layout's tracked assets triggers a second, full HTML
+      # request. Keep messages until that request displays them in the finance UI.
+      flash.keep if request.format.turbo_stream?
     end
   end
 end

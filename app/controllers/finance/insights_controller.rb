@@ -13,8 +13,14 @@ module Finance
         flash.now[:alert] = "Please wait one minute before requesting more Billie Insights."
         return render :show, status: :too_many_requests
       end
-      InsightGenerator.new(user: current_user, provider: provider, consent: params[:consent] == "1", kind: kind).call
-      redirect_to finance_insights_path, notice: generated_notice(kind, provider)
+      generator = InsightGenerator.new(user: current_user, provider: provider, consent: params[:consent] == "1", kind: kind)
+      generator.call
+      notice = if generator.fallback_used?
+        "Prepend's credit limit was reached. Billie generated these insights with OpenAI."
+      else
+        generated_notice(kind, provider)
+      end
+      redirect_to finance_insights_path, notice: notice
     rescue InsightGenerator::Error => error
       load_insights
       flash.now[:alert] = error.message

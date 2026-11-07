@@ -13,20 +13,11 @@ class ReactivitySystemTest < ApplicationSystemTestCase
   end
 
   device_test "create a new tangible thing and update it" do
-    visit user_session_path
-
-    invitation_only? ? be_invited_to_sign_up : click_on("Don't have an account?")
-    assert_text("Create Your Account")
-    fill_in "Your Email Address", with: "me@acme.com"
-    fill_in "Set Password", with: example_password
-    fill_in "Confirm Password", with: example_password
-    click_on "Sign Up"
-    fill_in "Your First Name", with: "John"
-    fill_in "Your Last Name", with: "Doe"
-    fill_in "Your Team Name", with: "My Super Team"
-    page.select "Brisbane", from: "Your Time Zone"
-    click_on "Next"
-    click_on "Skip" if bulk_invitations_enabled?
+    user = create :onboarded_user, first_name: "John", last_name: "Doe", time_zone: "Brisbane"
+    @team = user.current_team
+    @team.update!(name: "My Super Team")
+    login_as(user, scope: :user)
+    visit account_team_path(@team)
 
     if billing_enabled?
       unless freemium_enabled?
@@ -34,9 +25,7 @@ class ReactivitySystemTest < ApplicationSystemTestCase
       end
     end
 
-    # Ensure the user was able to sign up successfully.
     assert_text "My Super Team’s Dashboard"
-    @team = Team.find_by(name: "My Super Team")
 
     visit account_team_scaffolding_absolutely_abstract_creative_concepts_path(@team)
     assert_text "If you're wondering what this"

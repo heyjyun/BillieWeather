@@ -25,8 +25,8 @@ module Finance
       monthly = included.order(:booked_on).pluck(:booked_on, :amount)
         .group_by { |date, _amount| date.beginning_of_month }
         .map do |month, values|
-          incoming = values.sum(BigDecimal("0")) { |_date, amount| amount.positive? ? amount : 0 }
-          outgoing = -values.sum(BigDecimal("0")) { |_date, amount| amount.negative? ? amount : 0 }
+          incoming = values.sum(BigDecimal(0)) { |_date, amount| amount.positive? ? amount : 0 }
+          outgoing = -values.sum(BigDecimal(0)) { |_date, amount| amount.negative? ? amount : 0 }
           {month: month, income: incoming, expenses: outgoing, net: incoming - outgoing}
         end
       categories = included.where("amount < 0").group(:category).sum(:amount)
@@ -35,7 +35,7 @@ module Finance
 
       {
         currency: profile&.currency || "USD",
-        current_balance: profile&.current_balance || BigDecimal("0"),
+        current_balance: profile&.current_balance || BigDecimal(0),
         income: income,
         expenses: expenses,
         net: income - expenses,

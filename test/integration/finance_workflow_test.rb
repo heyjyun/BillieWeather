@@ -31,7 +31,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
   test "sign up creates a real account and login returns to the dashboard" do
     assert_difference "User.count", 1 do
       post user_registration_path, params: {user: {email: "new-finance-user@example.com", first_name: "Alex", last_name: "River",
-        password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}}
+                                                   password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}}
     end
     assert_redirected_to finance_dashboard_path
     follow_redirect!
@@ -295,7 +295,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal BigDecimal("812.34"), @user.finance_profile.reload.current_balance
     delete finance_statement_path(@user.finance_statements.last)
     profile = @user.finance_profile.reload
-    assert_equal BigDecimal("0"), profile.current_balance
+    assert_equal BigDecimal(0), profile.current_balance
     assert_nil profile.balance_source
   end
 
@@ -381,14 +381,71 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "OTHER-USER-SECRET"
   end
 
+  test "AI consent discloses Prepend and its optional OpenAI credit fallback" do
+    sign_in @user
+    with_openai_env("prepend-test-token", "test-model", base_url: "https://prepend.me/api.openai.com/v1",
+      fallback_api_key: "native-test-key", fallback_on_quota_exhausted: "true") do
+      get finance_insights_path
+      assert_response :success
+      assert_select "label", text: /OpenAI via Prepend, with OpenAI if its credit runs out/, count: 2
+    end
+  end
+
+  test "an explicit Prepend credit limit uses OpenAI once and tells the user" do
+    sign_in @user
+    content = {
+      "summary" => "A summary of the supplied financial activity.",
+      "observations" => [{"title" => "Check coverage", "body" => "Review the dates covered by your statements."}],
+      "actions" => [{"title" => "Review categories", "body" => "Check the suggested transaction categories."}],
+      "tax_preparation" => [{"title" => "Keep records", "body" => "Retain supporting records for review."}],
+      "limitations" => ["Based only on the supplied aggregate data."]
+    }
+    quota = Net::HTTPTooManyRequests.new("1.1", "429", "Too Many Requests")
+    quota.define_singleton_method(:body) { JSON.generate(error: {code: "credit_balance_exhausted"}) }
+    ok = Net::HTTPOK.new("1.1", "200", "OK")
+    ok.define_singleton_method(:body) do
+      JSON.generate(status: "completed", output: [{type: "message", content: [{type: "output_text", text: JSON.generate(content)}]}])
+    end
+    calls = []
+    transport = lambda do |host, _port|
+      http = Object.new
+      http.define_singleton_method(:request) do |request|
+        calls << {host: host, authorization: request["Authorization"]}
+        (host == "prepend.me") ? quota : ok
+      end
+      %i[use_ssl= open_timeout= read_timeout= write_timeout= max_retries=].each { |name| http.define_singleton_method(name) { |_| } }
+      http
+    end
+
+    with_openai_env("prepend-test-token", "test-model", base_url: "https://prepend.me/api.openai.com/v1",
+      fallback_api_key: "native-test-key", fallback_on_quota_exhausted: "true") do
+      stub_method(Net::HTTP, :new, transport) do
+        assert_difference "Finance::Insight.count", 1 do
+          post generate_finance_insights_path, params: {provider: "openai", consent: "1"}
+        end
+      end
+      assert_redirected_to finance_insights_path
+      assert_includes flash[:notice], "Prepend's credit limit was reached"
+      assert_includes flash[:notice], "OpenAI"
+    end
+    assert_equal [
+      {host: "prepend.me", authorization: "Bearer prepend-test-token"},
+      {host: "api.openai.com", authorization: "Bearer native-test-key"}
+    ], calls
+  end
+
   private
 
-  def with_openai_env(key, model)
-    previous = ENV.values_at("OPENAI_API_KEY", "OPENAI_MODEL")
-    {"OPENAI_API_KEY" => key, "OPENAI_MODEL" => model}.each { |name, value| value.nil? ? ENV.delete(name) : ENV[name] = value }
-    yield
+  def with_openai_env(key, model, base_url: nil, fallback_api_key: nil, fallback_on_quota_exhausted: nil)
+    values = {"OPENAI_API_KEY" => key, "OPENAI_MODEL" => model, "OPENAI_BASE_URL" => base_url,
+              "OPENAI_REASONING_EFFORT" => nil, "OPENAI_FALLBACK_API_KEY" => fallback_api_key,
+              "OPENAI_FALLBACK_ON_QUOTA_EXHAUSTED" => fallback_on_quota_exhausted,
+              "OPENAI_FALLBACK_MODEL" => nil, "OPENAI_FALLBACK_REASONING_EFFORT" => nil}
+    previous = ENV.values_at(*values.keys)
+    values.each { |name, value| value.nil? ? ENV.delete(name) : ENV[name] = value }
+    stub_method(Rails.application, :credentials, {}) { yield }
   ensure
-    %w[OPENAI_API_KEY OPENAI_MODEL].zip(previous).each { |name, value| value.nil? ? ENV.delete(name) : ENV[name] = value }
+    values.keys.zip(previous).each { |name, value| value.nil? ? ENV.delete(name) : ENV[name] = value }
   end
 
   def upload_csv(content)

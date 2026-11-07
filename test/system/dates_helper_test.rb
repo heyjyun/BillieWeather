@@ -13,21 +13,10 @@ class DatesHelperTest < ApplicationSystemTestCase
   end
 
   device_test "Time is displayed correctly" do
-    be_invited_to_sign_up
-    visit root_path
-
-    # Sign up and log in
-    new_registration_page_for(display_details)
-    fill_in "Your Email Address", with: "bullettrain@gmail.com"
-    fill_in "Set Password", with: example_password
-    fill_in "Confirm Password", with: example_password
-    click_on "Sign Up"
-    fill_in "First Name", with: "Testy"
-    fill_in "Last Name", with: "McTesterson"
-    fill_in "Your Team Name", with: "The Testing Team"
-    select "(GMT+00:00) UTC", from: "Your Time Zone"
-    click_on "Next"
-    click_on "Skip" if bulk_invitations_enabled?
+    user = create :onboarded_user, first_name: "Testy", last_name: "McTesterson", time_zone: "UTC"
+    team = user.current_team
+    login_as(user, scope: :user)
+    visit account_team_path(team)
 
     if billing_enabled?
       unless freemium_enabled?
@@ -72,8 +61,7 @@ class DatesHelperTest < ApplicationSystemTestCase
 
     # No need to check the strings on the page if the record
     # is successfully created and the times below are different.
-    team_path = account_team_path(Team.find_by(name: "The Testing Team"))
-    visit team_path
+    visit account_team_path(team)
     click_on "Test Concept"
     click_on "Add New Tangible Thing"
     fill_in "Text Field Value", with: "Another Test Tangible Thing"

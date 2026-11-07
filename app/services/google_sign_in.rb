@@ -1,5 +1,6 @@
 class GoogleSignIn
   class Error < StandardError; end
+
   class LinkRequired < Error
     attr_reader :identity
 

@@ -5,7 +5,7 @@ module FinancePdfFixture
     page_ids = pages.times.map { |index| 4 + index * 2 }
     objects = [
       "<< /Type /Catalog /Pages 2 0 R >>",
-      "<< /Type /Pages /Kids [#{page_ids.map { |id| "#{id} 0 R" }.join(' ')}] /Count #{pages} >>",
+      "<< /Type /Pages /Kids [#{page_ids.map { |id| "#{id} 0 R" }.join(" ")}] /Count #{pages} >>",
       "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
     ]
     pages.times do |index|

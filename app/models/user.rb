@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   include Users::Base
   include Roles::User
+
   has_one :finance_profile, class_name: "Finance::Profile", dependent: :destroy
   has_many :finance_statements, class_name: "Finance::Statement", dependent: :destroy
   has_many :finance_transactions, class_name: "Finance::Transaction", dependent: :destroy

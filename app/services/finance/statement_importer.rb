@@ -147,7 +147,10 @@ module Finance
       end
       if existing.closing_balance.nil?
         balance, balance_on = @given_closing || detected_closing_balance
-        updates.merge!(closing_balance: balance, closing_balance_on: balance_on) if balance
+        if balance
+          updates[:closing_balance] = balance
+          updates[:closing_balance_on] = balance_on
+        end
       end
       raise ImportError, "This exact statement has already been imported." if updates.empty?
 
@@ -161,7 +164,7 @@ module Finance
       first_row = csv.shift
       raise ImportError, "Include a header row and at least one transaction." unless first_row
       normalized_headers = first_row.headers.map { |header| normalize_header(header) }
-      if normalized_headers.reject(&:blank?).uniq.length != normalized_headers.reject(&:blank?).length
+      if normalized_headers.compact_blank.uniq.length != normalized_headers.compact_blank.length
         raise ImportError, "Column names must be unique. Remove duplicate headers."
       end
       @columns = HEADER_ALIASES.except(:date).transform_values do |aliases|
@@ -171,7 +174,8 @@ module Finance
       end
       @columns[:date] = resolve_date_column(first_row.headers, normalized_headers)
       @date_column_used = first_row.headers[@columns[:date]] if @columns[:date]
-      unless @columns[:date] && @columns[:description] && (@columns[:amount] || (@columns[:debit] && @columns[:credit]))
+      has_amount = @columns[:amount] || (@columns[:debit] && @columns[:credit])
+      unless @columns[:date] && @columns[:description] && has_amount
         raise ImportError, "CSV needs Date, Description, Amount columns, or Date, Description, Debit, Credit columns."
       end
       if @columns[:amount] && (@columns[:debit] || @columns[:credit])

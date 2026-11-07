@@ -42,9 +42,9 @@ class BilliePostmarkDelivery
       raise Error, "The email service could not confirm delivery. Please try again later."
     end
     mail
-  rescue JSON::ParserError, JSON::NestingError
+  rescue JSON::ParserError
     raise Error, "The email service returned an invalid delivery result."
-  rescue Timeout::Error, SocketError, EOFError, IOError, SystemCallError, OpenSSL::SSL::SSLError, Net::HTTPError
+  rescue Timeout::Error, SocketError, IOError, SystemCallError, OpenSSL::SSL::SSLError, Net::HTTPError
     raise Error, "The email service is temporarily unavailable. Please try again later."
   end
 

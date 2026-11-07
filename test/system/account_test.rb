@@ -43,9 +43,8 @@ class AccountTest < ApplicationSystemTestCase
     sign_out_for(display_details)
     visit new_user_session_path
     fill_in "Email", with: @jane.email
-    click_on "Next" if two_factor_authentication_enabled?
-    fill_in "Your Password", with: another_example_password
-    click_on "Sign In"
+    fill_in "user_password", with: another_example_password
+    click_button "Log in"
     assert_text("Signed in successfully.")
   end
 
@@ -60,9 +59,8 @@ class AccountTest < ApplicationSystemTestCase
     sign_out_for(display_details)
     visit new_user_session_path
     fill_in "Email", with: @jane.email
-    click_on "Next" if two_factor_authentication_enabled?
-    fill_in "Your Password", with: another_example_password
-    click_on "Sign In"
+    fill_in "user_password", with: another_example_password
+    click_button "Log in"
     # TODO: At some point when devise is updated their translations should capitalize password.
     # That will make this next line fail. At that point we should capitalize 'password' below and remove these comments.
     # See: https://github.com/heartcombo/devise/pull/5454

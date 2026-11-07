@@ -11,9 +11,9 @@ class PlatformApplicationAndApiTest < ApplicationSystemTestCase
   device_test "user can register api application and use credentials to fetch team details" do
     # Sign in as the user
     login_as(@user, scope: :user)
-    visit account_dashboard_path
+    visit account_team_path(@team)
 
-    # Navigate to API section from the application dashboard
+    # Navigate to API section from the team dashboard
     if disable_developer_menu?
       visit account_team_platform_applications_path(@team)
     else

@@ -37,10 +37,10 @@ class Finance::StatementAccountIdentityTest < ActiveSupport::TestCase
 
   test "CSV mixed accounts and invalid metadata remain unresolved" do
     headers = ["Institution", "Account Number", "Account Type"]
-    [[['Chase', '1234', 'Checking'], ['Chase', '5678', 'Checking']],
-      [['Chase', '1234', 'Checking'], ['Wells Fargo', '1234', 'Checking']],
-      [['Chase', '1234', 'Checking'], ['Chase', 'not available', 'Checking']],
-      [['Chase', '1234', 'Checking'], ['Chase', '1234', 'Credit Card']]].each do |rows|
+    [[["Chase", "1234", "Checking"], ["Chase", "5678", "Checking"]],
+      [["Chase", "1234", "Checking"], ["Wells Fargo", "1234", "Checking"]],
+      [["Chase", "1234", "Checking"], ["Chase", "not available", "Checking"]],
+      [["Chase", "1234", "Checking"], ["Chase", "1234", "Credit Card"]]].each do |rows|
       identity = Finance::StatementAccountIdentity.from_csv(headers: headers, rows: rows)
       assert_nil identity[:account_key]
       assert_equal "unknown", identity[:account_kind]

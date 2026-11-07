@@ -18,7 +18,7 @@ class Finance::StatementImporterTest < ActiveSupport::TestCase
 
   test "debit and credit columns have explicit opposite signs" do
     statement = import("Date,Description,Debit,Credit\n2026-11-01,Rent,1200.00,\n2026-11-02,Salary,,3000.00\n")
-    assert_equal [BigDecimal("-1200"), BigDecimal("3000")], statement.transactions.order(:id).pluck(:amount)
+    assert_equal [BigDecimal("-1200"), BigDecimal(3000)], statement.transactions.order(:id).pluck(:amount)
   end
 
   test "automatically uses transaction_date when posted_date is also present" do
@@ -97,7 +97,7 @@ class Finance::StatementImporterTest < ActiveSupport::TestCase
 
   test "amount type column can specify debit and credit" do
     statement = import("Date,Description,Amount,Type\n2026-11-01,Rent,1200,debit\n2026-11-02,Salary,3000,credit\n")
-    assert_equal [BigDecimal("-1200"), BigDecimal("3000")], statement.transactions.order(:id).pluck(:amount)
+    assert_equal [BigDecimal("-1200"), BigDecimal(3000)], statement.transactions.order(:id).pluck(:amount)
   end
 
   test "a bad row rolls back the complete statement" do

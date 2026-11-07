@@ -87,7 +87,7 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
     exported_rows = CSV.parse(response.body, headers: true)
     assert_equal ["October account transfer", "October excluded purchase", "October groceries", "October salary", "October utilities"],
       exported_rows.map { |row| row["Description"] }.sort
-    assert exported_rows.all? { |row| row["Date"] >= "2026-10-01" && row["Date"] <= "2026-10-31" }
+    assert exported_rows.all? { |row| row["Date"].between?("2026-10-01", "2026-10-31") }
     assert_equal before_records, Finance::Transaction.order(:id).map(&:attributes)
     assert_equal BigDecimal("2500.00"), @profile.reload.current_balance
   end

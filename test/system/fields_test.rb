@@ -13,19 +13,9 @@ class FieldsTest < ApplicationSystemTestCase
   end
 
   device_test "simulate restoring behavior of form fields on page restore" do
-    new_session_page_for(display_details)
-    invitation_only? ? be_invited_to_sign_up : click_on("Don't have an account?")
-    assert_text("Create Your Account")
-    fill_in "Your Email Address", with: "me@acme.com"
-    fill_in "Set Password", with: example_password
-    fill_in "Confirm Password", with: example_password
-    click_on "Sign Up"
-    fill_in "Your First Name", with: "John"
-    fill_in "Your Last Name", with: "Doe"
-    fill_in "Your Team Name", with: "My Super Team"
-    page.select "Brisbane", from: "Your Time Zone"
-    click_on "Next"
-    click_on "Skip" if bulk_invitations_enabled?
+    user = create :onboarded_user, first_name: "John", last_name: "Doe", time_zone: "Brisbane"
+    login_as(user, scope: :user)
+    visit account_team_path(user.current_team)
 
     if billing_enabled?
       unless freemium_enabled?

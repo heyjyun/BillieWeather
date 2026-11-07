@@ -1,4 +1,5 @@
 require "test_helper"
+require "stringio"
 require_relative "../../support/billie_method_stub"
 
 class Finance::InsightGeneratorTest < ActiveSupport::TestCase
@@ -7,6 +8,7 @@ class Finance::InsightGeneratorTest < ActiveSupport::TestCase
     assert_equal "12345678901234567.89", generator.send(:decimal_string, BigDecimal("12345678901234567.89"))
   end
   include BillieMethodStub
+
   class SnapshotDouble
     def initialize(data)
       @data = data
@@ -126,9 +128,13 @@ class Finance::InsightGeneratorTest < ActiveSupport::TestCase
 
   test "AI analysis sends only aggregate data with no response storage and saves validated content" do
     http = HttpDouble.new(response: success_response(valid_content))
+    connections = []
     with_ai_configuration do
       with_snapshot do
-        stub_method(Net::HTTP, :new, http) do
+        stub_method(Net::HTTP, :new, ->(host, port) {
+          connections << [host, port]
+          http
+        }) do
           insight = Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true).call
           assert_equal "openai", insight.source
           assert_equal valid_content, insight.content
@@ -137,11 +143,13 @@ class Finance::InsightGeneratorTest < ActiveSupport::TestCase
     end
 
     assert_equal 1, http.requests.length
+    assert_equal [["api.openai.com", 443]], connections
     request = http.requests.first
     assert_equal "/v1/responses", request.path
     assert_equal "Bearer test-secret-never-log", request["Authorization"]
     payload = JSON.parse(request.body)
     assert_equal "test-configured-model", payload.fetch("model")
+    refute payload.key?("reasoning")
     assert_equal false, payload.fetch("store")
     assert_equal true, payload.dig("text", "format", "strict")
     assert_equal "json_schema", payload.dig("text", "format", "type")
@@ -156,6 +164,360 @@ class Finance::InsightGeneratorTest < ActiveSupport::TestCase
     assert_equal 0, http.max_retries
   end
 
+  test "encrypted AI credentials take precedence over environment settings" do
+    credentials = {openai: {api_key: " credential-secret-never-log ", model: " credential-model ",
+                            reasoning_effort: " high ", base_url: " https://prepend.me/api.openai.com/v1/ "}}
+
+    with_ai_configuration(key: "environment-secret-never-log", model: "environment-model",
+      reasoning_effort: "low", base_url: "https://api.openai.com/v1", credentials: credentials) do
+      assert_equal "credential-secret-never-log", Finance::InsightGenerator.api_key
+      assert_equal "credential-model", Finance::InsightGenerator.model
+      assert_equal "high", Finance::InsightGenerator.reasoning_effort
+      assert_equal URI("https://prepend.me/api.openai.com/v1/responses"), Finance::InsightGenerator.endpoint
+    end
+  end
+
+  test "missing encrypted AI settings fall back to environment settings" do
+    credentials = {openai: {api_key: " ", model: nil, reasoning_effort: "", base_url: nil}}
+
+    with_ai_configuration(reasoning_effort: "medium", base_url: "https://prepend.me/api.openai.com/v1/", credentials: credentials) do
+      assert_equal "test-secret-never-log", Finance::InsightGenerator.api_key
+      assert_equal "test-configured-model", Finance::InsightGenerator.model
+      assert_equal "medium", Finance::InsightGenerator.reasoning_effort
+      assert_equal URI("https://prepend.me/api.openai.com/v1/responses"), Finance::InsightGenerator.endpoint
+    end
+  end
+
+  test "Prepend receives the configured Responses request and reasoning effort" do
+    http = HttpDouble.new(response: success_response(valid_content))
+    connections = []
+
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1/", reasoning_effort: "high") do
+      assert_equal "OpenAI via Prepend", Finance::InsightGenerator.ai_service_name
+      with_snapshot do
+        stub_method(Net::HTTP, :new, ->(host, port) {
+          connections << [host, port]
+          http
+        }) do
+          insight = Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true).call
+          assert_equal valid_content, insight.content
+          assert_equal "openai", insight.source
+        end
+      end
+    end
+
+    assert_equal [["prepend.me", 443]], connections
+    assert_equal 1, http.requests.length
+    request = http.requests.first
+    assert_equal "/api.openai.com/v1/responses", request.path
+    assert_equal "Bearer test-secret-never-log", request["Authorization"]
+    payload = JSON.parse(request.body)
+    assert_equal({"effort" => "high"}, payload.fetch("reasoning"))
+    assert_equal false, payload.fetch("store")
+    assert_equal true, payload.dig("text", "format", "strict")
+    refute_includes request.body, @user.email
+    refute_includes request.body, "test-secret-never-log"
+    assert_equal true, http.use_ssl
+    assert_equal 0, http.max_retries
+  end
+
+  test "AI service names describe the configured destination" do
+    with_ai_configuration do
+      assert_equal URI("https://api.openai.com/v1/responses"), Finance::InsightGenerator.endpoint
+      assert_equal "OpenAI", Finance::InsightGenerator.ai_service_name
+    end
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1") do
+      assert_equal "OpenAI via Prepend", Finance::InsightGenerator.ai_service_name
+    end
+    with_ai_configuration(base_url: "https://provider.example.test/v1") do
+      assert_equal "the configured AI provider", Finance::InsightGenerator.ai_service_name
+    end
+  end
+
+  test "invalid AI base URLs fail safely before sending financial data" do
+    invalid_urls = [
+      "http://prepend.me/api.openai.com/v1",
+      "https:///v1",
+      "/api.openai.com/v1",
+      "not a URL",
+      "https://user:secret-never-log@prepend.me/api.openai.com/v1",
+      "https://prepend.me/api.openai.com/v1?api_key=secret-never-log",
+      "https://prepend.me/api.openai.com/v1#secret-never-log"
+    ]
+
+    invalid_urls.each do |base_url|
+      with_ai_configuration(base_url: base_url) do
+        with_snapshot do
+          stub_method(Net::HTTP, :new, ->(*) { flunk "Invalid provider URLs must not create an HTTP connection" }) do
+            assert_no_difference("Finance::Insight.count") do
+              error = assert_raises(Finance::InsightGenerator::Error) do
+                Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true).call
+              end
+              refute_includes error.message, "secret-never-log"
+              refute_includes error.message, base_url
+            end
+          end
+        end
+      end
+    end
+  end
+
+  test "a failed Prepend request does not retry or fall back to another provider" do
+    response = http_response(Net::HTTPServiceUnavailable, "503", "Service Unavailable",
+      '{"error":{"message":"private provider diagnostic test-secret-never-log"}}')
+    http = HttpDouble.new(response: response)
+    connections = []
+    log = StringIO.new
+
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1/") do
+      with_snapshot do
+        stub_method(Rails, :logger, ActiveSupport::Logger.new(log)) do
+          stub_method(Net::HTTP, :new, ->(host, port) {
+            connections << [host, port]
+            http
+          }) do
+            assert_no_difference("Finance::Insight.count") do
+              error = assert_raises(Finance::InsightGenerator::Error) do
+                Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true).call
+              end
+              refute_includes error.message, "test-secret-never-log"
+              refute_includes error.message, "private provider diagnostic"
+            end
+          end
+        end
+      end
+    end
+
+    assert_equal [["prepend.me", 443]], connections
+    assert_equal 1, http.requests.length
+    assert_equal 0, http.max_retries
+    refute_includes log.string, "test-secret-never-log"
+    refute_includes log.string, "private provider diagnostic"
+  end
+
+  test "quota fallback needs an explicit flag, a separate key, and a Prepend primary" do
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "native-secret-never-log") do
+      refute Finance::InsightGenerator.fallback_available?
+    end
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_on_quota_exhausted: true) do
+      refute Finance::InsightGenerator.fallback_available?
+    end
+    with_ai_configuration(fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: true) do
+      refute Finance::InsightGenerator.fallback_available?
+    end
+    with_ai_configuration(base_url: "https://provider.example.test/v1", fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: true) do
+      refute Finance::InsightGenerator.fallback_available?
+    end
+    with_ai_configuration(base_url: "https://prepend.me/v1", fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: true) do
+      refute Finance::InsightGenerator.fallback_available?
+    end
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "test-secret-never-log", fallback_on_quota_exhausted: true) do
+      refute Finance::InsightGenerator.fallback_available?
+    end
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: "TrUe") do
+      assert Finance::InsightGenerator.fallback_available?
+      assert_equal "OpenAI via Prepend, with OpenAI if its credit runs out", Finance::InsightGenerator.ai_service_name
+    end
+  end
+
+  test "an encrypted false fallback flag overrides an environment opt in" do
+    credentials = {openai: {fallback_on_quota_exhausted: false}}
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "native-secret-never-log",
+      fallback_on_quota_exhausted: true, credentials: credentials) do
+      refute Finance::InsightGenerator.fallback_available?
+      assert_equal "OpenAI via Prepend", Finance::InsightGenerator.ai_service_name
+    end
+  end
+
+  test "successful Prepend requests never contact the configured native fallback" do
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: true) do
+      with_prepend_responses(success_response(valid_content)) do |primary, fallback, connections|
+        assert_difference("Finance::Insight.count", 1) do
+          generator = Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true)
+          generator.call
+          refute generator.fallback_used?
+        end
+        assert_equal [["prepend.me", 443]], connections
+        assert_equal 1, primary.requests.length
+        assert_empty fallback.requests
+        assert_equal "Bearer test-secret-never-log", primary.requests.first["Authorization"]
+      end
+    end
+  end
+
+  test "Prepend credit exhaustion uses native OpenAI once with its own credentials and payload settings" do
+    credentials = {openai: {fallback_api_key: "credential-native-secret-never-log", fallback_model: "credential-native-model",
+                            fallback_reasoning_effort: "low", fallback_on_quota_exhausted: true}}
+    quota_response = http_response(Net::HTTPPaymentRequired, "402", "Payment Required", JSON.generate(error: {code: "credit_balance_exhausted"}))
+
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1/", model: "primary-model", reasoning_effort: "high",
+      fallback_key: "environment-native-secret-never-log", fallback_model: "environment-native-model", fallback_reasoning_effort: "medium",
+      fallback_on_quota_exhausted: false, credentials: credentials) do
+      with_prepend_responses(quota_response, fallback_response: success_response(valid_content)) do |primary, fallback, connections|
+        assert_difference("Finance::Insight.count", 1) do
+          generator = Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true)
+          insight = generator.call
+          assert generator.fallback_used?
+          assert_equal valid_content, insight.content
+          assert_equal "openai", insight.source
+        end
+        assert_equal [["prepend.me", 443], ["api.openai.com", 443]], connections
+        assert_equal 1, primary.requests.length
+        assert_equal 1, fallback.requests.length
+        primary_request = primary.requests.first
+        fallback_request = fallback.requests.first
+        assert_equal "/api.openai.com/v1/responses", primary_request.path
+        assert_equal "/v1/responses", fallback_request.path
+        assert_equal "Bearer test-secret-never-log", primary_request["Authorization"]
+        assert_equal "Bearer credential-native-secret-never-log", fallback_request["Authorization"]
+        primary_payload = JSON.parse(primary_request.body)
+        fallback_payload = JSON.parse(fallback_request.body)
+        assert_equal "primary-model", primary_payload.fetch("model")
+        assert_equal "high", primary_payload.dig("reasoning", "effort")
+        assert_equal "credential-native-model", fallback_payload.fetch("model")
+        assert_equal "low", fallback_payload.dig("reasoning", "effort")
+        assert_equal primary_payload.except("model", "reasoning"), fallback_payload.except("model", "reasoning")
+        [primary_request, fallback_request].each do |request|
+          refute_includes request.body, @user.email
+          refute_includes request.body, "secret-never-log"
+          assert_equal false, JSON.parse(request.body).fetch("store")
+        end
+        [primary, fallback].each do |http|
+          assert_equal true, http.use_ssl
+          assert_equal 0, http.max_retries
+        end
+      end
+    end
+  end
+
+  test "tax quota fallback preserves the tax schema and defaults to the primary model and reasoning" do
+    quota_response = http_response(Net::HTTPTooManyRequests, "429", "Too Many Requests", JSON.generate(error: {code: "insufficient_quota"}))
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", reasoning_effort: "high",
+      fallback_key: "native-secret-never-log", fallback_model: " ", fallback_reasoning_effort: " ", fallback_on_quota_exhausted: true) do
+      with_prepend_responses(quota_response, fallback_response: success_response(valid_tax_content)) do |primary, fallback, connections|
+        assert_difference("Finance::Insight.tax.count", 1) do
+          insight = Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true, kind: "tax").call
+          assert_equal valid_tax_content, insight.content
+          assert_equal "tax", insight.kind
+        end
+        assert_equal [["prepend.me", 443], ["api.openai.com", 443]], connections
+        payload = JSON.parse(fallback.requests.first.body)
+        assert_equal "test-configured-model", payload.fetch("model")
+        assert_equal "high", payload.dig("reasoning", "effort")
+        assert_equal "billie_tax_preparation", payload.dig("text", "format", "name")
+        assert_equal false, payload.fetch("store")
+        assert_equal 1, primary.requests.length
+        assert_equal 1, fallback.requests.length
+      end
+    end
+  end
+
+  test "explicit organization and project quota limits also permit one native fallback" do
+    %w[organization_spend_limit_exceeded project_spend_limit_exceeded organization_usage_limit_exceeded].each do |code|
+      quota_response = http_response(Net::HTTPForbidden, "403", "Forbidden", JSON.generate(error: {code: code}))
+      with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: true) do
+        with_prepend_responses(quota_response, fallback_response: success_response(valid_content)) do |primary, fallback, connections|
+          assert_difference("Finance::Insight.count", 1) do
+            Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true).call
+          end
+          assert_equal [["prepend.me", 443], ["api.openai.com", 443]], connections
+          assert_equal 1, primary.requests.length
+          assert_equal 1, fallback.requests.length
+          refute JSON.parse(fallback.requests.first.body).key?("reasoning")
+        end
+      end
+    end
+  end
+
+  test "quota exhaustion does not switch providers without both opt in and a fallback key" do
+    configurations = [{fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: false},
+      {fallback_key: " ", fallback_on_quota_exhausted: true},
+      {fallback_key: "test-secret-never-log", fallback_on_quota_exhausted: true}]
+    configurations.each do |configuration|
+      quota_response = http_response(Net::HTTPPaymentRequired, "402", "Payment Required", JSON.generate(error: {code: "insufficient_quota"}))
+      with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", **configuration) do
+        with_prepend_responses(quota_response) do |primary, fallback, connections|
+          assert_no_difference("Finance::Insight.count") do
+            assert_raises(Finance::InsightGenerator::Error) do
+              Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true).call
+            end
+          end
+          assert_equal [["prepend.me", 443]], connections
+          assert_equal 1, primary.requests.length
+          assert_empty fallback.requests
+        end
+      end
+    end
+  end
+
+  test "authentication rate limit server and unrecognized provider errors never trigger quota fallback" do
+    failures = [
+      [Net::HTTPUnauthorized, "401", JSON.generate(error: {code: "invalid_api_key"})],
+      [Net::HTTPUnauthorized, "401", JSON.generate(error: {code: "insufficient_quota"})],
+      [Net::HTTPTooManyRequests, "429", JSON.generate(error: {code: "rate_limit_exceeded"})],
+      [Net::HTTPServiceUnavailable, "503", JSON.generate(error: {code: "insufficient_quota"})],
+      [Net::HTTPPaymentRequired, "402", "not JSON"],
+      [Net::HTTPPaymentRequired, "402", JSON.generate(error: {message: "Insufficient quota"})],
+      [Net::HTTPPaymentRequired, "402", JSON.generate(error: {code: 123})],
+      [Net::HTTPPaymentRequired, "402", JSON.generate(error: "insufficient_quota")],
+      [Net::HTTPPaymentRequired, "402", JSON.generate("insufficient_quota")],
+      [Net::HTTPPaymentRequired, "402", JSON.generate(error: {code: "insufficient_quota", message: "x" * 100_000})],
+      [Net::HTTPTooManyRequests, "not-a-status", JSON.generate(error: {code: "insufficient_quota"})]
+    ]
+    failures.each do |response_class, status, body|
+      with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: true) do
+        with_prepend_responses(http_response(response_class, status, "Provider Error", body)) do |primary, fallback, connections|
+          assert_no_difference("Finance::Insight.count") do
+            assert_raises(Finance::InsightGenerator::Error) do
+              Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true).call
+            end
+          end
+          assert_equal [["prepend.me", 443]], connections
+          assert_equal 1, primary.requests.length
+          assert_empty fallback.requests
+        end
+      end
+    end
+  end
+
+  test "a failed native fallback makes no third request and saves no analysis or secrets" do
+    primary_response = http_response(Net::HTTPPaymentRequired, "402", "Payment Required", JSON.generate(error: {code: "insufficient_quota"}))
+    fallback_response = http_response(Net::HTTPTooManyRequests, "429", "Too Many Requests",
+      JSON.generate(error: {code: "insufficient_quota", message: "private provider diagnostic test-secret-never-log native-secret-never-log"}))
+    log = StringIO.new
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: true) do
+      stub_method(Rails, :logger, ActiveSupport::Logger.new(log)) do
+        with_prepend_responses(primary_response, fallback_response: fallback_response) do |primary, fallback, connections|
+          assert_no_difference("Finance::Insight.count") do
+            error = assert_raises(Finance::InsightGenerator::Error) do
+              Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true).call
+            end
+            refute_includes error.message, "secret-never-log"
+            refute_includes error.message, "private provider diagnostic"
+          end
+          assert_equal [["prepend.me", 443], ["api.openai.com", 443]], connections
+          assert_equal 1, primary.requests.length
+          assert_equal 1, fallback.requests.length
+          assert_equal "Bearer native-secret-never-log", fallback.requests.first["Authorization"]
+        end
+      end
+    end
+    refute_includes log.string, "secret-never-log"
+    refute_includes log.string, "private provider diagnostic"
+  end
+
+  test "quota fallback configuration never bypasses consent" do
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: true) do
+      stub_method(Net::HTTP, :new, ->(*) { flunk "Neither provider may be contacted without consent" }) do
+        assert_no_difference("Finance::Insight.count") do
+          assert_raises(Finance::InsightGenerator::Error) do
+            Finance::InsightGenerator.new(user: @user, provider: "openai", consent: false).call
+          end
+        end
+      end
+    end
+  end
+
   test "HTTP errors produce a safe message without persisting fake AI output" do
     response = http_response(Net::HTTPUnauthorized, "401", "Unauthorized", '{"error":{"message":"private provider diagnostic test-secret-never-log"}}')
     http = HttpDouble.new(response: response)
@@ -166,7 +528,7 @@ class Finance::InsightGeneratorTest < ActiveSupport::TestCase
             error = assert_raises(Finance::InsightGenerator::Error) do
               Finance::InsightGenerator.new(user: @user, provider: "openai", consent: true).call
             end
-            assert_includes error.message, "try again"
+            assert_includes error.message, "Check its API key"
             refute_includes error.message, "test-secret-never-log"
             refute_includes error.message, "private provider diagnostic"
           end
@@ -177,7 +539,7 @@ class Finance::InsightGeneratorTest < ActiveSupport::TestCase
 
   test "network timeout is safe and does not retry or save an insight" do
     http = HttpDouble.new(error: Net::ReadTimeout.new("private network details"))
-    with_ai_configuration do
+    with_ai_configuration(base_url: "https://prepend.me/api.openai.com/v1", fallback_key: "native-secret-never-log", fallback_on_quota_exhausted: true) do
       with_snapshot do
         stub_method(Net::HTTP, :new, http) do
           assert_no_difference("Finance::Insight.count") do
@@ -313,13 +675,36 @@ class Finance::InsightGeneratorTest < ActiveSupport::TestCase
     stub_method(Finance::Snapshot, :new, SnapshotDouble.new(@snapshot), &block)
   end
 
-  def with_ai_configuration(key: "test-secret-never-log", model: "test-configured-model")
-    previous = ENV.values_at("OPENAI_API_KEY", "OPENAI_MODEL")
-    ENV["OPENAI_API_KEY"] = key
-    ENV["OPENAI_MODEL"] = model
-    yield
+  def with_ai_configuration(key: "test-secret-never-log", model: "test-configured-model", base_url: nil, reasoning_effort: nil,
+    fallback_key: nil, fallback_model: nil, fallback_reasoning_effort: nil, fallback_on_quota_exhausted: nil, credentials: {})
+    settings = {"OPENAI_API_KEY" => key, "OPENAI_MODEL" => model, "OPENAI_BASE_URL" => base_url, "OPENAI_REASONING_EFFORT" => reasoning_effort,
+                "OPENAI_FALLBACK_API_KEY" => fallback_key, "OPENAI_FALLBACK_MODEL" => fallback_model,
+                "OPENAI_FALLBACK_REASONING_EFFORT" => fallback_reasoning_effort, "OPENAI_FALLBACK_ON_QUOTA_EXHAUSTED" => fallback_on_quota_exhausted}
+    previous = settings.keys.to_h { |name| [name, ENV[name]] }
+    settings.each { |name, value| value.nil? ? ENV.delete(name) : ENV[name] = value.to_s }
+    stub_method(Rails.application, :credentials, credentials) { yield }
   ensure
-    %w[OPENAI_API_KEY OPENAI_MODEL].zip(previous).each { |name, value| value.nil? ? ENV.delete(name) : ENV[name] = value }
+    previous.each { |name, value| value.nil? ? ENV.delete(name) : ENV[name] = value }
+  end
+
+  def with_prepend_responses(primary_response, fallback_response: nil)
+    primary = HttpDouble.new(response: primary_response)
+    fallback = HttpDouble.new(response: fallback_response)
+    connections = []
+    transport = lambda do |host, port|
+      connections << [host, port]
+      case host
+      when "prepend.me" then primary
+      when "api.openai.com"
+        flunk "The request must stay with Prepend" unless fallback_response
+        fallback
+      else
+        flunk "Unexpected provider connection"
+      end
+    end
+    with_snapshot do
+      stub_method(Net::HTTP, :new, transport) { yield primary, fallback, connections }
+    end
   end
 
   def valid_content

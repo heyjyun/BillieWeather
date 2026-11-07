@@ -12,6 +12,10 @@ module Finance
     TAX_SECTION_KEYS = %w[tax_preparation questions].freeze
     TAX_CONTENT_KEYS = %w[summary tax_preparation questions limitations].freeze
     MAX_RESPONSE_BYTES = 100_000
+    QUOTA_EXHAUSTED_CODES = %w[
+      insufficient_quota credit_balance_exhausted organization_spend_limit_exceeded
+      project_spend_limit_exceeded organization_usage_limit_exceeded
+    ].freeze
 
     ITEM_SCHEMA = {
       type: "object",
@@ -95,8 +99,58 @@ module Finance
     TEXT
 
     def self.ai_available?
-      ENV["OPENAI_API_KEY"].to_s.strip.present? && ENV["OPENAI_MODEL"].to_s.strip.present?
+      api_key.present? && model.present?
     end
+
+    # Encrypted credentials (openai: api_key/model/reasoning_effort) win; ENV is the fallback.
+    def self.openai_setting(name)
+      Rails.application.credentials.dig(:openai, name).to_s.strip.presence || ENV["OPENAI_#{name.to_s.upcase}"].to_s.strip
+    end
+
+    def self.api_key = openai_setting(:api_key)
+
+    # Optional openai.base_url (e.g. https://host/v1) for an OpenAI-compatible provider.
+    def self.endpoint
+      base = openai_setting(:base_url).delete_suffix("/")
+      return ENDPOINT if base.empty?
+
+      uri = URI("#{base}/responses")
+      unless uri.is_a?(URI::HTTPS) && uri.host.present? && uri.userinfo.nil? && uri.query.nil? && uri.fragment.nil?
+        raise Error, "The AI service URL is invalid. Configure an HTTPS API base URL."
+      end
+      uri
+    rescue URI::InvalidURIError
+      raise Error, "The AI service URL is invalid. Configure an HTTPS API base URL."
+    end
+
+    def self.ai_service_name
+      case endpoint.host
+      when "api.openai.com" then "OpenAI"
+      when "prepend.me"
+        fallback_available? ? "OpenAI via Prepend, with OpenAI if its credit runs out" : "OpenAI via Prepend"
+      else "the configured AI provider"
+      end
+    rescue Error
+      "the configured AI provider"
+    end
+
+    def self.model = openai_setting(:model)
+
+    def self.reasoning_effort = openai_setting(:reasoning_effort)
+
+    def self.fallback_api_key = openai_setting(:fallback_api_key)
+
+    def self.fallback_model = openai_setting(:fallback_model).presence || model
+
+    def self.fallback_reasoning_effort = openai_setting(:fallback_reasoning_effort).presence || reasoning_effort
+
+    def self.fallback_available?
+      endpoint.host == "prepend.me" && endpoint.path == "/api.openai.com/v1/responses" &&
+        openai_setting(:fallback_on_quota_exhausted).casecmp?("true") &&
+        fallback_api_key.present? && fallback_api_key != api_key
+    end
+
+    def fallback_used? = @fallback_used == true
 
     def initialize(user:, provider: "rules", consent: false, kind: "general")
       @user = user
@@ -106,6 +160,7 @@ module Finance
     end
 
     def call
+      @fallback_used = false
       raise Error, "Choose basic analysis or Billie Insights." unless %w[rules openai].include?(@provider)
       raise Error, "Choose a valid analysis type." unless Finance::Insight::KINDS.include?(@kind)
       raise Error, "Billie's tax preparation insights need the AI service." if tax? && @provider != "openai"
@@ -198,15 +253,35 @@ module Finance
 
     def ai_content
       payload = {
-        model: ENV.fetch("OPENAI_MODEL").strip,
+        model: self.class.model,
         store: false,
         max_output_tokens: 3500,
         instructions: tax? ? TAX_INSTRUCTIONS : INSTRUCTIONS,
         input: [{role: "user", content: JSON.generate(aggregate_data)}],
         text: {format: {type: "json_schema", name: tax? ? "billie_tax_preparation" : "billieweather_insights", strict: true, schema: tax? ? TAX_OUTPUT_SCHEMA : OUTPUT_SCHEMA}}
       }
+      payload[:reasoning] = {effort: self.class.reasoning_effort} if self.class.reasoning_effort.present?
       response = request_response(payload)
+      if quota_exhausted?(response) && self.class.fallback_available?
+        @fallback_used = true
+        fallback_payload = payload.merge(model: self.class.fallback_model)
+        effort = self.class.fallback_reasoning_effort
+        fallback_payload.delete(:reasoning)
+        fallback_payload[:reasoning] = {effort: effort} if effort.present?
+        response = request_response(fallback_payload, endpoint: ENDPOINT, api_key: self.class.fallback_api_key)
+      end
       unless response.is_a?(Net::HTTPSuccess)
+        service = if @fallback_used
+          "OpenAI"
+        else
+          ((self.class.endpoint.host == "prepend.me") ? "Prepend" : "The AI service")
+        end
+        if response.code == "401"
+          raise Error, "#{service} could not authenticate this request. Check its API key."
+        end
+        if quota_exhausted?(response)
+          raise Error, "#{service} has reached its credit or usage limit. Add credit or review its usage limit."
+        end
         raise Error, "The AI service could not complete this request. #{retry_hint}"
       end
       raw_body = response.body.to_s
@@ -225,23 +300,33 @@ module Finance
       end.flatten
       raise Error, "The AI service did not return an analysis. #{retry_hint}" if texts.empty?
       JSON.parse(texts.join)
-    rescue JSON::ParserError, JSON::NestingError
+    rescue JSON::ParserError
       raise Error, "The AI service returned an invalid result. #{retry_hint}"
     end
 
-    def request_response(payload)
-      request = Net::HTTP::Post.new(ENDPOINT)
-      request["Authorization"] = "Bearer #{ENV.fetch("OPENAI_API_KEY").strip}"
+    def quota_exhausted?(response)
+      return false unless %w[402 403 429].include?(response.code)
+      raw_body = response.body.to_s
+      return false if raw_body.bytesize > MAX_RESPONSE_BYTES
+      result = JSON.parse(raw_body)
+      result.is_a?(Hash) && result["error"].is_a?(Hash) && QUOTA_EXHAUSTED_CODES.include?(result.dig("error", "code"))
+    rescue JSON::ParserError
+      false
+    end
+
+    def request_response(payload, endpoint: self.class.endpoint, api_key: self.class.api_key)
+      request = Net::HTTP::Post.new(endpoint)
+      request["Authorization"] = "Bearer #{api_key}"
       request["Content-Type"] = "application/json"
       request.body = JSON.generate(payload)
-      http = Net::HTTP.new(ENDPOINT.host, ENDPOINT.port)
-      http.use_ssl = true
+      http = Net::HTTP.new(endpoint.host, endpoint.port)
+      http.use_ssl = endpoint.scheme == "https"
       http.open_timeout = 5
       http.read_timeout = 20
       http.write_timeout = 5
       http.max_retries = 0
       Timeout.timeout(20) { http.request(request) }
-    rescue Timeout::Error, SocketError, EOFError, IOError, SystemCallError, OpenSSL::SSL::SSLError, Net::HTTPError
+    rescue Timeout::Error, SocketError, IOError, SystemCallError, OpenSSL::SSL::SSLError, Net::HTTPError
       raise Error, "The AI service is temporarily unavailable. #{retry_hint}"
     end
 
@@ -276,7 +361,11 @@ module Finance
         end
       end
       valid &&= content["limitations"].is_a?(Array) && content["limitations"].length.between?(1, 6) && content["limitations"].all? { |entry| valid_text?(entry, 1000) }
-      raise Error, "The analysis result was invalid. #{retry_hint}" unless valid
+      unless valid
+        shape = content.is_a?(Hash) ? content.transform_values { |v| v.is_a?(Array) ? "Array(#{v.length})" : "#{v.class}(#{v.to_s.length})" } : content.class
+        Rails.logger.warn("[Finance::InsightGenerator] invalid #{@provider}/#{@kind} content shape: #{shape.inspect}")
+        raise Error, "The analysis result was invalid. #{retry_hint}"
+      end
     end
 
     def tax?
@@ -301,7 +390,7 @@ module Finance
 
     def decimal_string(value)
       whole, fraction = BigDecimal(value.to_s).round(2).to_s("F").split(".")
-      "#{whole}.#{fraction.to_s.ljust(2, '0')}"
+      "#{whole}.#{fraction.to_s.ljust(2, "0")}"
     end
 
     def money(value)

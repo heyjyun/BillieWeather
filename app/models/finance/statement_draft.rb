@@ -43,9 +43,10 @@ module Finance
         return
       end
       rows.each_with_index do |row, index|
-        unless row.is_a?(Hash) && row["description"].is_a?(String) && row["description"].length.between?(1, 500) &&
-            row["booked_on"].is_a?(String) && /\A\d{4}-\d{2}-\d{2}\z/.match?(row["booked_on"]) &&
-            row["amount"].is_a?(String) && (row["amount"].blank? || /\A[+-]?\d{1,13}(?:\.\d{1,2})?\z/.match?(row["amount"]))
+        valid_row = row.is_a?(Hash) && row["description"].is_a?(String) && row["description"].length.between?(1, 500) &&
+          row["booked_on"].is_a?(String) && /\A\d{4}-\d{2}-\d{2}\z/.match?(row["booked_on"]) &&
+          row["amount"].is_a?(String) && (row["amount"].blank? || /\A[+-]?\d{1,13}(?:\.\d{1,2})?\z/.match?(row["amount"]))
+        unless valid_row
           errors.add(:rows, "contain invalid details at row #{index + 1}")
           break
         end

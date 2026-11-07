@@ -16,7 +16,7 @@ module Finance
         end
       end
       if @filters["search"].present?
-        scope = scope.where("description ILIKE ?", "%#{Transaction.sanitize_sql_like(@filters['search'].to_s.first(200))}%")
+        scope = scope.where("description ILIKE ?", "%#{Transaction.sanitize_sql_like(@filters["search"].to_s.first(200))}%")
       end
       scope = scope.where(category: @filters["category"]) if @categories.include?(@filters["category"])
       case @filters["kind"]
@@ -89,7 +89,7 @@ module Finance
     end
 
     def csv_safe(value)
-      value.to_s.match?(/\A[\s]*[=+\-@\t\r]/) ? "'#{value}" : value
+      value.to_s.match?(/\A\s*[=+\-@\t\r]/) ? "'#{value}" : value
     end
   end
 end

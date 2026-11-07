@@ -63,7 +63,7 @@ module Finance
       kinds = values[:kind].map { |value| kind(value) }.uniq
       kinds = values[:name].map { |value| kind(value) }.uniq if kinds.empty?
       kinds.reject! { |value| value == "unknown" }
-      build(bank: banks.one? ? banks.first : nil, last4: numbers.one? && !invalid_number ? numbers.first : nil,
+      build(bank: banks.one? ? banks.first : nil, last4: (numbers.one? && !invalid_number) ? numbers.first : nil,
         kind: kinds.one? ? kinds.first : "unknown", names: values[:kind] + values[:name],
         ambiguous: banks.length > 1 || numbers.length > 1 || kinds.length > 1 || invalid_number || conflicting_numbers)
     end

@@ -13,20 +13,10 @@ class TangibleThingTest < ApplicationSystemTestCase
   end
 
   device_test "create a new tangible thing and update it" do
-    visit user_session_path
-
-    invitation_only? ? be_invited_to_sign_up : click_on("Don't have an account?")
-    assert_text("Create Your Account")
-    fill_in "Your Email Address", with: "me@acme.com"
-    fill_in "Set Password", with: example_password
-    fill_in "Confirm Password", with: example_password
-    click_on "Sign Up"
-    fill_in "Your First Name", with: "John"
-    fill_in "Your Last Name", with: "Doe"
-    fill_in "Your Team Name", with: "My Super Team"
-    page.select "Brisbane", from: "Your Time Zone"
-    click_on "Next"
-    click_on "Skip" if bulk_invitations_enabled?
+    user = create :onboarded_user, first_name: "John", last_name: "Doe", email: "me@acme.com", time_zone: "Brisbane"
+    user.current_team.update!(name: "My Super Team")
+    login_as(user, scope: :user)
+    visit account_team_path(user.current_team)
 
     if billing_enabled?
       unless freemium_enabled?
@@ -34,13 +24,11 @@ class TangibleThingTest < ApplicationSystemTestCase
       end
     end
 
-    edit_user_path = edit_account_user_path(User.find_by!(email: "me@acme.com"))
-    visit edit_user_path
+    visit edit_account_user_path(user)
     assert_text "Update Your Profile"
     page.select "Tokyo", from: "Your Time Zone"
     click_on "Update Profile"
-    team_path = account_teams_path(Team.find_by!(name: "My Super Team"))
-    visit team_path
+    visit account_team_path(user.current_team)
     assert_text "My Super Team’s Dashboard"
 
     click_on "Add New Creative Concept"

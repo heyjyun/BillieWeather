@@ -98,3 +98,6 @@ CLAUDE.md
 .env.*
 !.env.example
 .neon
+
+# Ignore key files for decrypting credentials and more.
+/config/*.key
