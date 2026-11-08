@@ -152,7 +152,8 @@
         "analysis_invalid": "分析结果无效。%{hint}",
         "merchant_remembered": " 今后“%{merchant}”的交易将归入“%{category}”",
         "similar_updated": {
-          "other": "，并已更新 %{count} 笔类似交易。"
+          "other": "，并已更新 %{count} 笔类似交易。",
+          "one": "，并已更新 %{count} 笔类似交易。"
         },
         "basic_empty_summary": "上传账单后即可了解收入、支出和现金流。这是基于规则生成的基础分析。",
         "basic_start_title": "从这里了解财务状况",
@@ -192,15 +193,43 @@
         "basic_limit_advice": "分类建议需要核对。本分析提供一般预算与资料准备信息，不构成专业财务或税务建议。",
         "basic_limit_snapshot": "本应用不计算税款、不判定资格，也不提交申报。本分析为已保存的快照，不会自动更新。",
         "basic_limit_wages": "银行入账不一定是应税收入，工资到账也不能替代税务表格中的工资金额。",
-        "basic_excluded_summary": "已导入 %{count} 笔交易，但目前均未计入收支汇总。得出现金流结论前，请检查转账和已排除的交易。",
-        "basic_summary": "已导入记录中的收入为 %{income}，支出为 %{expenses}，净流量为 %{net}。共 %{count} 笔已导入交易；汇总不包含转账和已排除项目。净流量不等于账户余额。",
+        "basic_excluded_summary": "已导入 %{count} %{transactions}，但目前均未计入收支汇总。得出现金流结论前，请检查转账和已排除的交易。",
+        "basic_summary": "已导入记录中的收入为 %{income}，支出为 %{expenses}，净流量为 %{net}。共 %{count} %{transactions}；汇总不包含转账和已排除项目。净流量不等于账户余额。",
         "basic_flow_body": "在已导入数据中，%{direction}。缺失账户或不完整的账单可能改变这一情况。",
         "basic_largest_body": "已导入支出中，“%{category}”合计 %{amount}。制定支出目标前，请核对该分类的交易。",
         "basic_uncategorized_body": "计入统计的未分类交易：%{count} 笔。请在交易页面核对分类，以完善汇总。",
         "basic_flagged_body": "标记为税务复核的交易：%{count} 笔。请为每笔对应相关凭证，并向报税人员确认处理方式。",
         "basic_tax_questions_body": "已保存的税务信息为 %{country} / %{profile}。请向合资格专业人士咨询适用的记录和分类，本应用不验证当地税务规则。",
         "pdf_generic_1": "PDF 布局各异。本应用仅提取以日期开头的行，换行描述、续行或其他布局可能被遗漏。请对照原始账单核对每行、交易笔数和总额后再确认。",
-        "pdf_generic_2": "正数表示收入，负数表示支出。无正负号的金额和存在多个金额列的项目会留空，请逐一核对借贷方向。"
+        "pdf_generic_2": "正数表示收入，负数表示支出。无正负号的金额和存在多个金额列的项目会留空，请逐一核对借贷方向。",
+        "transaction_noun": {
+          "one": "笔交易",
+          "other": "笔交易"
+        },
+        "chronos_invalid_url": "Chronos-2 服务地址无效，请检查 BILLIEFORECAST_URL。",
+        "chronos_invalid_response": "Chronos-2 服务返回的预测无效。",
+        "chronos_service_unavailable": "Chronos-2 服务暂不可用，请检查 BillieForecast 后重试。",
+        "chronos_http_error": "Chronos-2 服务返回 HTTP %{status}，请检查 BillieForecast 后重试。",
+        "categories": {
+          "Income": "收入",
+          "Housing": "住房",
+          "Food & dining": "餐饮",
+          "Transport": "交通",
+          "Utilities": "水电通信",
+          "Shopping": "购物",
+          "Health": "健康",
+          "Business": "商务",
+          "Transfers": "转账",
+          "Uncategorized": "未分类"
+        },
+        "tax_profiles": {
+          "personal": "个人",
+          "self_employed": "自雇",
+          "business": "企业"
+        },
+        "chronos_short_month": "历史不足 30 天，可能无法识别每月重复的规律。",
+        "chronos_clipped_predictions": "收入或支出的负数预测已调整为零。",
+        "chronos_average_active": "当前使用平均值模式，此预测并非由 Chronos-2 生成。"
       }
     }
   }

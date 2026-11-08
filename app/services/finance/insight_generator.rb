@@ -184,9 +184,9 @@ module Finance
       summary = if count.zero?
         I18n.t("billie.backend.basic_empty_summary")
       elsif @snapshot[:period_start].nil?
-        I18n.t("billie.backend.basic_excluded_summary", count: count, transactions: "transaction".pluralize(count))
+        I18n.t("billie.backend.basic_excluded_summary", count: count, transactions: I18n.t("billie.backend.transaction_noun", count: count))
       else
-        I18n.t("billie.backend.basic_summary", income: money(@snapshot.fetch(:income)), expenses: money(@snapshot.fetch(:expenses)), net: money(net), count: count, transactions: "transaction".pluralize(count))
+        I18n.t("billie.backend.basic_summary", income: money(@snapshot.fetch(:income)), expenses: money(@snapshot.fetch(:expenses)), net: money(net), count: count, transactions: I18n.t("billie.backend.transaction_noun", count: count))
       end
 
       observations = if count.zero?
@@ -199,7 +199,7 @@ module Finance
 
       largest = @snapshot.fetch(:categories).first
       if largest && @snapshot.fetch(:expenses).positive?
-        observations << item(I18n.t("billie.backend.basic_largest_title"), I18n.t("billie.backend.basic_largest_body", category: I18n.t("billie.labels.#{largest.fetch(:name)}", default: largest.fetch(:name)), amount: money(largest.fetch(:amount))))
+        observations << item(I18n.t("billie.backend.basic_largest_title"), I18n.t("billie.backend.basic_largest_body", category: I18n.t("billie.backend.categories.#{largest.fetch(:name)}", default: largest.fetch(:name)), amount: money(largest.fetch(:amount))))
       end
 
       actions = if count.zero?
@@ -234,7 +234,7 @@ module Finance
       if @profile&.tax_country.blank? || @profile&.tax_profile.blank?
         tax_preparation.unshift(item(I18n.t("billie.backend.basic_tax_context_title"), I18n.t("billie.backend.basic_tax_context_body")))
       elsif !us_personal_tax_context?
-        tax_preparation << item(I18n.t("billie.backend.basic_tax_questions_title"), I18n.t("billie.backend.basic_tax_questions_body", country: @profile.tax_country, profile: I18n.t("billie.labels.#{@profile.tax_profile}", default: @profile.tax_profile.tr("_", " "))))
+        tax_preparation << item(I18n.t("billie.backend.basic_tax_questions_title"), I18n.t("billie.backend.basic_tax_questions_body", country: @profile.tax_country, profile: I18n.t("billie.backend.tax_profiles.#{@profile.tax_profile}", default: @profile.tax_profile.tr("_", " "))))
       end
 
       {

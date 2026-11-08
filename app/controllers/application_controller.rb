@@ -19,8 +19,8 @@ class ApplicationController < ActionController::Base
   def set_locale(&action)
     requested_locale = request.query_parameters["locale"]
     if requested_locale.is_a?(String) && I18n.available_locales.include?(requested_locale.to_sym)
-      cookies.permanent.signed[:billie_locale] = {
-        value: requested_locale, httponly: true, same_site: :lax, secure: request.ssl?
+      cookies.signed[:billie_locale] = {
+        value: requested_locale, expires: 1.year.from_now, httponly: true, same_site: :lax, secure: request.ssl?
       }
     end
     locale = [
@@ -28,7 +28,7 @@ class ApplicationController < ActionController::Base
       cookies.signed[:billie_locale],
       current_user&.locale,
       current_user&.current_team&.locale,
-      http_accept_language.compatible_language_from(I18n.available_locales),
+      http_accept_language.compatible_language_from(I18n.available_locales)&.to_s,
       I18n.default_locale.to_s
     ].find { |value| value.is_a?(String) && I18n.available_locales.include?(value.to_sym) }
     I18n.with_locale(locale, &action)

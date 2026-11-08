@@ -13,7 +13,7 @@
               <li class="bw-account-row" data-account-id="<%= account.id %>" data-account-kind="cash">
                 <div class="bw-account-main">
                   <strong><%= account.display_name %></strong>
-                  <small class="bw-account-source"><%= account.name %></small>
+                  <small class="bw-account-source"><%= account.localized_account_type %></small>
                   <%= render "finance/dashboard/rename_account", account: account %>
                 </div>
                 <div class="bw-account-amount"><%= row[:status].to_s == "known" ? finance_money(row[:balance], @profile.currency) : t("billie.finance.ui.balance_not_readable") %><small><%= t("billie.finance.ui.as_of_date", date: finance_date(row[:as_of])) %></small></div>
@@ -53,7 +53,7 @@
             <li class="bw-account-row" data-account-id="<%= account.id %>" data-account-kind="credit">
               <div class="bw-account-main">
                 <strong><%= account.display_name %></strong>
-                <small class="bw-account-source"><%= account.name %></small>
+                <small class="bw-account-source"><%= account.localized_account_type %></small>
                 <%= render "finance/dashboard/rename_account", account: account %>
               </div>
               <div class="bw-account-amount"><%= overview.credit_balance(row) ? t("billie.finance.ui.owed_amount", amount: finance_money(overview.credit_balance(row), @profile.currency)) : t("billie.finance.ui.balance_not_readable") %><small><%= t("billie.finance.ui.as_of_date", date: finance_date(row[:as_of])) %></small></div>

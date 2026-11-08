@@ -66,7 +66,7 @@ module Finance
         points = [{date: today, balance: current_balance.round(2)}] + days.map do |day|
           {date: Date.iso8601(day.fetch("date")), balance: BigDecimal(day.fetch("balance").to_s)}
         end
-        @model_notice = Array(projection["warnings"]).join(" ").presence
+        @model_notice = Array(projection["warnings"]).map { |warning| localized_model_warning(warning) }.join(" ").presence
       end
 
       assumptions = [
@@ -86,7 +86,7 @@ module Finance
       ]
       assumptions << I18n.t("billie.backend.forecast_no_transactions") unless last_known
       if method == :linear && last_known && last_known < today - 89
-        assumptions << I18n.t("billie.backend.forecast_stale_history", date: I18n.l(last_known, format: :long))
+        assumptions << I18n.t("billie.backend.forecast_stale_history", date: I18n.l(last_known, format: I18n.locale.to_s == "zh-CN" ? "%Y年%-m月%-d日" : "%b %-d, %Y"))
       end
       assumptions << I18n.t("billie.backend.forecast_no_balance") unless balance_available
       assumptions << I18n.t("billie.backend.forecast_partial_balance") if balance_available && profile.balance_source == "statement" && !balance_summary[:complete]
@@ -113,6 +113,15 @@ module Finance
     end
 
     private
+
+    def localized_model_warning(warning)
+      key = {
+        "Fewer than 30 days of history; recurring monthly patterns may be missed." => "chronos_short_month",
+        "Negative income or expense predictions were clipped to zero." => "chronos_clipped_predictions",
+        "Average mode is active; this forecast was not produced by Chronos-2." => "chronos_average_active"
+      }[warning]
+      key ? I18n.t("billie.backend.#{key}") : warning
+    end
 
     def prophet_projection(today)
       scope = Transaction.where(user_id: @user.id).included.where(booked_on: ..today)

@@ -15,12 +15,12 @@ module Finance
       @url = URI.parse(url.to_s)
       unless @url.is_a?(URI::HTTP) && @url.host.to_s.length.positive? &&
           @url.userinfo.nil? && @url.query.nil? && @url.fragment.nil?
-        raise Unavailable, "Chronos-2 service URL is invalid. Check BILLIEFORECAST_URL."
+        raise Unavailable, I18n.t("billie.backend.chronos_invalid_url")
       end
       @url.path = "#{@url.path.sub(%r{/+\z}, "")}/v1/forecast"
       @api_key = api_key
     rescue URI::InvalidURIError, URI::InvalidComponentError
-      raise Unavailable, "Chronos-2 service URL is invalid. Check BILLIEFORECAST_URL."
+      raise Unavailable, I18n.t("billie.backend.chronos_invalid_url")
     end
 
     def call(history:, starting_balance:, days: 30, currency: "USD",
@@ -31,11 +31,11 @@ module Finance
       validate_result!(result, payload)
       result
     rescue JSON::ParserError, KeyError, ArgumentError, TypeError, RangeError
-      raise Unavailable, "Chronos-2 service returned an invalid forecast."
+      raise Unavailable, I18n.t("billie.backend.chronos_invalid_response")
     rescue Timeout::Error, SocketError, IOError, SystemCallError,
       OpenSSL::SSL::SSLError, Net::HTTPBadResponse,
       Net::HTTPHeaderSyntaxError, Net::ProtocolError
-      raise Unavailable, "Chronos-2 service is temporarily unavailable. Check BillieForecast and try again."
+      raise Unavailable, I18n.t("billie.backend.chronos_service_unavailable")
     end
 
     private
@@ -80,7 +80,7 @@ module Finance
       Timeout.timeout(125) do
         http.request(request) do |response|
           unless response.is_a?(Net::HTTPSuccess)
-            raise Unavailable, "Chronos-2 service returned HTTP #{response.code}. Check BillieForecast and try again."
+            raise Unavailable, I18n.t("billie.backend.chronos_http_error", status: response.code)
           end
           response.read_body do |chunk|
             body << chunk
@@ -132,7 +132,7 @@ module Finance
     end
 
     def invalid_result!
-      raise Unavailable, "Chronos-2 service returned an invalid forecast."
+      raise Unavailable, I18n.t("billie.backend.chronos_invalid_response")
     end
   end
 end

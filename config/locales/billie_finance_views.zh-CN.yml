@@ -397,4 +397,8 @@ zh-CN:
         income_amount: 收入：%{amount}
         expenses_amount: 支出：%{amount}
         transactions_found:
+          one: 笔交易
           other: 笔交易
+        tax_context_personal: 个人
+        tax_context_self_employed: 自雇
+        tax_context_business: 企业

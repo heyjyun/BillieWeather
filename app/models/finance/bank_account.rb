@@ -32,7 +32,13 @@ module Finance
 
     # The name read from the statement: bank, account type and last four digits.
     def auto_name
-      "#{bank_name} · #{name} · ••#{last4}"
+      "#{bank_name} · #{localized_account_type} · ••#{last4}"
+    end
+
+    def localized_account_type
+      key = {"Checking" => "checking", "Savings" => "savings", "Credit account" => "credit_account",
+             "Cash account" => "cash_account", "Account" => "account"}[name]
+      key ? I18n.t("billie.helpers.labels.#{key}") : name
     end
   end
 end

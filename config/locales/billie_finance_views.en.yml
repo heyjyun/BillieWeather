@@ -474,3 +474,6 @@ en:
         transactions_found:
           one: transaction found
           other: transactions found
+        tax_context_personal: Personal
+        tax_context_self_employed: Self employed
+        tax_context_business: Business

@@ -69,7 +69,7 @@ module Finance
       return notice if similar.nil?
 
       merchant = Categorizer.merchant_key(@transaction.description).titleize
-      notice + I18n.t("billie.backend.merchant_remembered", merchant: merchant, category: I18n.t("billie.labels.#{@transaction.category}", default: @transaction.category)) + ((similar > 0) ? I18n.t("billie.backend.similar_updated", count: similar) : ".")
+      notice + I18n.t("billie.backend.merchant_remembered", merchant: merchant, category: I18n.t("billie.backend.categories.#{@transaction.category}", default: @transaction.category)) + ((similar > 0) ? I18n.t("billie.backend.similar_updated", count: similar) : ".")
     end
 
     def load_transaction

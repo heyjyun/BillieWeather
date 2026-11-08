@@ -28,7 +28,12 @@ class SessionsController < Devise::SessionsController
 
     # Reject the request without replaying credentials or clearing a valid login.
     prevent_sign_in_caching
+    # CSRF verification runs before set_locale. Choose only visitor preferences
+    # here: reading current_user could authenticate the rejected credentials.
+    locale = [request.query_parameters["locale"], cookies.signed[:billie_locale],
+      http_accept_language.compatible_language_from(I18n.available_locales)&.to_s, I18n.default_locale.to_s]
+      .find { |value| value.is_a?(String) && I18n.available_locales.include?(value.to_sym) }
     redirect_to new_user_session_path, status: :see_other,
-      alert: t("billie.auth.page_expired")
+      alert: I18n.t("billie.auth.page_expired", locale: locale)
   end
 end

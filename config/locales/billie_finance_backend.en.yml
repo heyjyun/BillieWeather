@@ -201,7 +201,35 @@
         "basic_flagged_body": "Transactions marked for tax review: %{count}. Match each one to supporting records and confirm its treatment with your tax preparer.",
         "basic_tax_questions_body": "Your saved tax context is %{country} / %{profile}. Ask a qualified professional which records and classifications apply to your situation; this app does not verify local tax rules.",
         "pdf_generic_1": "PDF layouts vary. Only date-prefixed lines are extracted; wrapped descriptions, continuation lines, and other layouts may be omitted. Compare every row, transaction count, and totals with the original statement before confirming.",
-        "pdf_generic_2": "Positive means money in; negative means money out. Unsigned amounts and multiple amount columns are left blank instead of guessing. Verify every debit/credit direction."
+        "pdf_generic_2": "Positive means money in; negative means money out. Unsigned amounts and multiple amount columns are left blank instead of guessing. Verify every debit/credit direction.",
+        "transaction_noun": {
+          "one": "transaction",
+          "other": "transactions"
+        },
+        "chronos_invalid_url": "Chronos-2 service URL is invalid. Check BILLIEFORECAST_URL.",
+        "chronos_invalid_response": "Chronos-2 service returned an invalid forecast.",
+        "chronos_service_unavailable": "Chronos-2 service is temporarily unavailable. Check BillieForecast and try again.",
+        "chronos_http_error": "Chronos-2 service returned HTTP %{status}. Check BillieForecast and try again.",
+        "categories": {
+          "Income": "Income",
+          "Housing": "Housing",
+          "Food & dining": "Food & dining",
+          "Transport": "Transport",
+          "Utilities": "Utilities",
+          "Shopping": "Shopping",
+          "Health": "Health",
+          "Business": "Business",
+          "Transfers": "Transfers",
+          "Uncategorized": "Uncategorized"
+        },
+        "tax_profiles": {
+          "personal": "personal",
+          "self_employed": "self employed",
+          "business": "business"
+        },
+        "chronos_short_month": "Fewer than 30 days of history; recurring monthly patterns may be missed.",
+        "chronos_clipped_predictions": "Negative income or expense predictions were clipped to zero.",
+        "chronos_average_active": "Average mode is active; this forecast was not produced by Chronos-2."
       }
     }
   }

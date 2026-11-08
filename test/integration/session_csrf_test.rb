@@ -52,6 +52,24 @@ class SessionCsrfTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
+  test "an expired Chinese sign-in page keeps its language without authenticating rejected credentials" do
+    get new_user_session_path(locale: "zh-CN")
+    assert_response :success
+    before_authentication = authentication_state
+
+    post user_session_path, params: login_params(token: "expired-token")
+
+    assert_rejected_sign_in(self)
+    assert_equal "登录页面已过期，请重新输入登录信息。", flash[:alert]
+    assert_equal before_authentication, authentication_state
+    follow_redirect!
+    assert_response :success
+    assert_select 'html[lang="zh-CN"]'
+    assert_includes response.body, "登录页面已过期，请重新输入登录信息。"
+    get finance_dashboard_path
+    assert_redirected_to new_user_session_path
+  end
+
   test "a token from another browser is rejected and a fresh form can then sign in" do
     original_browser_token = sign_in_form_token
     other_browser = open_session

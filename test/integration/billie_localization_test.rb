@@ -13,7 +13,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     assert_select "html[lang='en']"
     get new_user_session_path, headers: {"HTTP_ACCEPT_LANGUAGE" => "zh-CN"}
     assert_select "html[lang='en']"
-    assert_select "h1", text: /Welcome back/
+    assert_select "h1", text: "Your financial outlook awaits."
 
     get new_user_registration_path, params: {locale: "zh-CN"}
     assert_select "html[lang='zh-CN']"
@@ -51,11 +51,12 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     assert_select "html[lang='zh-CN']"
     assert_includes response.body, "餐饮"
     assert_includes response.body, "Original merchant 商户"
+    assert_includes response.body, Date.current.strftime("%Y年%-m月%-d日")
     assert_select ".bw-language-switcher a[aria-current='true']", text: "中文"
 
     get finance_transactions_path, params: {category: "Food & dining", search: "Original merchant"}
     assert_response :success
-    assert_select "option[value='Food &amp; dining'][selected]", text: "餐饮"
+    assert_select "option[value='Food & dining'][selected]", text: "餐饮"
     assert_select ".bw-language-switcher a[lang='en']" do |links|
       query = Rack::Utils.parse_nested_query(URI.parse(links.first["href"]).query)
       assert_equal "en", query["locale"]
@@ -71,6 +72,11 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     end
     assert_equal "Food & dining", transaction.reload.category
     assert_equal BigDecimal("-25.50"), transaction.amount
+
+    delete destroy_user_session_path
+    get new_user_session_path
+    assert_response :success
+    assert_select "html[lang='zh-CN']"
   end
 
   test "Chinese validation and forecast errors are localized" do
@@ -90,10 +96,14 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     catalogs = Dir[Rails.root.join("config/locales/billie*.en.yml")]
     assert catalogs.any?
     flatten = lambda do |value, prefix = []|
-      value.flat_map do |key, item|
+      value.each_with_object({}) do |(key, item), result|
         path = prefix + [key.to_s]
-        item.is_a?(Hash) ? flatten.call(item, path) : [[path.join("."), item]]
-      end.to_h
+        if item.is_a?(Hash)
+          result.merge!(flatten.call(item, path))
+        else
+          result[path.join(".")] = item
+        end
+      end
     end
     catalogs.each do |english_path|
       chinese_path = english_path.sub(/\.en\.yml\z/, ".zh-CN.yml")

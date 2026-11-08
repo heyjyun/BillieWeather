@@ -6,6 +6,9 @@ module FinanceHelper
 
   def finance_date(value, format = nil)
     return "—" if value.blank?
+    if I18n.locale.to_s == "zh-CN" && format
+      format = {"%b %Y" => "%Y年%-m月", "%b %-d" => "%-m月%-d日", "%b %-d, %Y" => "%Y年%-m月%-d日"}.fetch(format, format)
+    end
     l(value.to_date, format: format || t("billie.helpers.date_format"))
   end
 
