@@ -6,6 +6,7 @@ en:
         intro: Turn your bank statements into a clear view of your spending and a simple cash flow forecast.
         dashboard: Go to dashboard
         no_bank_login: No bank login required
+        future_bank_sync: In the future, if our user base grows and we secure more funding, we will consider partnering with banks to automatically sync all statements directly.
         free_analysis: Free basic analysis
         art_label: Import a statement, review your transactions, and see your cash flow forecast
         outlook: YOUR FINANCIAL OUTLOOK

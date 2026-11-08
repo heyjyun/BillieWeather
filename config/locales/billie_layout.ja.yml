@@ -1,0 +1,35 @@
+{
+  "ja": {
+    "billie": {
+      "layout": {
+        "title": "BillieWeather — お金の見通しを、もっと明確に",
+        "description": "明細書から取引やキャッシュフローを把握し、これからのお金の計画に役立てましょう。",
+        "skip": "本文へ移動",
+        "home": "BillieWeather ホーム",
+        "main_navigation": "メインナビゲーション",
+        "how_it_works": "使い方",
+        "features": "機能",
+        "open_dashboard": "ダッシュボードを開く",
+        "log_in": "ログイン",
+        "get_started": "はじめる",
+        "my_workspace": "マイワークスペース",
+        "personal_finances": "個人のお金の管理",
+        "workspace_label": "ワークスペース",
+        "workspace_navigation": "ワークスペースのナビゲーション",
+        "dashboard": "ダッシュボード",
+        "transactions": "取引履歴",
+        "forecast": "キャッシュフロー予測",
+        "insights": "Billie インサイト",
+        "clarity": "お金が見えると、次の一歩も見えてくる。",
+        "next_step": "収支を把握することから、次の一歩を始めましょう。",
+        "your_account": "アカウント",
+        "log_out": "ログアウト",
+        "workspace": "ワークスペース",
+        "overview": "概要",
+        "outlook": "これからのお金の見通し",
+        "footer": "今を知り、これからを安心して考える。",
+        "language": "言語"
+      }
+    }
+  }
+}

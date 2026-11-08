@@ -11,6 +11,7 @@ module Finance
     CONTENT_KEYS = %w[summary observations actions tax_preparation limitations].freeze
     TAX_SECTION_KEYS = %w[tax_preparation questions].freeze
     TAX_CONTENT_KEYS = %w[summary tax_preparation questions limitations].freeze
+    OUTPUT_LANGUAGES = {"en" => "English", "zh-CN" => "Simplified Chinese", "ja" => "Japanese", "ko" => "Korean"}.freeze
     MAX_RESPONSE_BYTES = 100_000
     QUOTA_EXHAUSTED_CODES = %w[
       insufficient_quota credit_balance_exhausted organization_spend_limit_exceeded
@@ -256,7 +257,7 @@ module Finance
         model: self.class.model,
         store: false,
         max_output_tokens: 3500,
-        instructions: (tax? ? TAX_INSTRUCTIONS : INSTRUCTIONS) + "\nWrite all user-facing JSON string values in #{I18n.locale.to_s == "zh-CN" ? "Simplified Chinese" : "English"}. Keep the schema keys unchanged.",
+        instructions: (tax? ? TAX_INSTRUCTIONS : INSTRUCTIONS) + "\nWrite all user-facing JSON string values in #{OUTPUT_LANGUAGES.fetch(I18n.locale.to_s, "English")}. Keep the schema keys unchanged.",
         input: [{role: "user", content: JSON.generate(aggregate_data)}],
         text: {format: {type: "json_schema", name: tax? ? "billie_tax_preparation" : "billieweather_insights", strict: true, schema: tax? ? TAX_OUTPUT_SCHEMA : OUTPUT_SCHEMA}}
       }

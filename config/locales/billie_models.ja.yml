@@ -1,0 +1,75 @@
+{
+  "ja": {
+    "errors": {
+      "messages": {
+        "cent_precision": "は小数点以下2桁以内で入力してください",
+        "currency_in_use": "は別の通貨の明細書があるため変更できません",
+        "same_owner": "は自分の口座を指定してください",
+        "same_statement_owner": "は同じユーザーの明細書を指定してください",
+        "object_required": "はオブジェクトである必要があります",
+        "control_characters": "に制御文字は使用できません",
+        "review_row_count": "には確認可能な取引を1〜%{count}件含めてください",
+        "review_row_invalid": "の%{row}行目に無効な情報があります",
+        "review_date_invalid": "の%{row}行目の日付が無効です",
+        "review_save_failed": "を確認用に保存できませんでした",
+        "review_expiration": "は今から30分以内を指定してください",
+        "inclusion": "は選択肢から選んでください",
+        "exclusion": "は使用できません",
+        "not_an_integer": "は整数で入力してください",
+        "greater_than": "は%{count}より大きい値にしてください",
+        "greater_than_or_equal_to": "は%{count}以上にしてください",
+        "less_than": "は%{count}より小さい値にしてください",
+        "less_than_or_equal_to": "は%{count}以下にしてください",
+        "equal_to": "は%{count}にしてください",
+        "other_than": "は%{count}以外の値にしてください",
+        "accepted": "を承認してください",
+        "present": "は空にしてください",
+        "required": "を指定してください",
+        "too_long": "は%{count}文字以内で入力してください",
+        "wrong_length": "は%{count}文字で入力してください"
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "finance/profile": {
+          "currency": "通貨",
+          "current_balance": "現在の残高",
+          "cash_on_hand": "手元の現金",
+          "tax_country": "税務上の国・地域",
+          "tax_profile": "納税者区分",
+          "balance_source": "残高の取得元"
+        },
+        "finance/transaction": {
+          "booked_on": "取引日",
+          "description": "取引内容",
+          "amount": "金額",
+          "category": "カテゴリ",
+          "tax_review": "税務確認",
+          "excluded": "除外設定",
+          "statement": "明細書"
+        },
+        "finance/bank_account": {
+          "bank_name": "銀行名",
+          "name": "口座名",
+          "custom_name": "表示名",
+          "last4": "口座番号の下4桁",
+          "kind": "口座の種類"
+        },
+        "finance/statement": {
+          "bank_account": "銀行口座",
+          "filename": "ファイル名",
+          "currency": "通貨",
+          "transaction_count": "取引件数"
+        },
+        "finance/statement_draft": {
+          "bank_account": "銀行口座",
+          "filename": "ファイル名",
+          "currency": "通貨",
+          "rows": "確認対象の取引",
+          "warnings": "注意事項",
+          "expires_at": "有効期限"
+        }
+      }
+    }
+  }
+}

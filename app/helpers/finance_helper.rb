@@ -6,9 +6,8 @@ module FinanceHelper
 
   def finance_date(value, format = nil)
     return "—" if value.blank?
-    if I18n.locale.to_s == "zh-CN" && format
-      format = {"%b %Y" => "%Y年%-m月", "%b %-d" => "%-m月%-d日", "%b %-d, %Y" => "%Y年%-m月%-d日"}.fetch(format, format)
-    end
+    format_key = {"%b %Y" => "month_format", "%b %-d" => "month_day_format", "%b %-d, %Y" => "date_format"}[format]
+    format = t("billie.helpers.#{format_key}") if format_key
     l(value.to_date, format: format || t("billie.helpers.date_format"))
   end
 
@@ -24,8 +23,7 @@ module FinanceHelper
   end
 
   def finance_count(count, noun, plural = nil)
-    return pluralize(count, noun, plural) unless I18n.locale.to_s == "zh-CN"
-    t("billie.helpers.counts.#{noun.to_s.tr(' ', '_')}", count: count, default: "#{count} #{noun}")
+    t("billie.helpers.counts.#{noun.to_s.tr(' ', '_')}", count: count, default: pluralize(count, noun, plural))
   end
 
   def finance_balance_available?(profile, summary = @balance_summary)

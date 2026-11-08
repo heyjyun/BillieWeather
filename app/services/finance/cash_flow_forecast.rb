@@ -86,7 +86,7 @@ module Finance
       ]
       assumptions << I18n.t("billie.backend.forecast_no_transactions") unless last_known
       if method == :linear && last_known && last_known < today - 89
-        assumptions << I18n.t("billie.backend.forecast_stale_history", date: I18n.l(last_known, format: I18n.locale.to_s == "zh-CN" ? "%Y年%-m月%-d日" : "%b %-d, %Y"))
+        assumptions << I18n.t("billie.backend.forecast_stale_history", date: I18n.l(last_known, format: I18n.t("billie.helpers.date_format")))
       end
       assumptions << I18n.t("billie.backend.forecast_no_balance") unless balance_available
       assumptions << I18n.t("billie.backend.forecast_partial_balance") if balance_available && profile.balance_source == "statement" && !balance_summary[:complete]

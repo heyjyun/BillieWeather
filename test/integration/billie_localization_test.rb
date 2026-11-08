@@ -52,7 +52,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "餐饮"
     assert_includes response.body, "Original merchant 商户"
     assert_includes response.body, Date.current.strftime("%Y年%-m月%-d日")
-    assert_select ".bw-language-switcher a[aria-current='true']", text: "中文"
+    assert_select ".bw-language-switcher a[aria-current='true']", text: "简体中文"
 
     get finance_transactions_path, params: {category: "Food & dining", search: "Original merchant"}
     assert_response :success
@@ -98,25 +98,97 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     flatten = lambda do |value, prefix = []|
       value.each_with_object({}) do |(key, item), result|
         path = prefix + [key.to_s]
-        if item.is_a?(Hash)
+        if item.is_a?(Hash) && item.key?("other") && (item.keys - %w[zero one two few many other]).empty?
+          result[path.join(".")] = item.values
+        elsif item.is_a?(Hash)
           result.merge!(flatten.call(item, path))
         else
-          result[path.join(".")] = item
+          result[path.join(".")] = [item]
         end
       end
     end
     catalogs.each do |english_path|
-      chinese_path = english_path.sub(/\.en\.yml\z/, ".zh-CN.yml")
-      assert File.exist?(chinese_path), "Missing #{chinese_path}"
-      english = flatten.call(YAML.safe_load_file(english_path).fetch("en").fetch("billie", {}))
-      chinese = flatten.call(YAML.safe_load_file(chinese_path).fetch("zh-CN").fetch("billie", {}))
-      # The Chinese helper catalog also contains Chinese-only count labels.
-      english.each do |key, value|
-        assert chinese.key?(key), "Missing Chinese key #{key} in #{chinese_path}"
-        next unless value.is_a?(String)
-        assert_equal value.scan(/%\{(\w+)\}/).sort, chinese[key].scan(/%\{(\w+)\}/).sort,
-          "Interpolation mismatch for #{key}"
+      english = flatten.call(YAML.safe_load_file(english_path).fetch("en"))
+      %w[zh-CN ja ko].each do |locale|
+        translated_path = english_path.sub(/\.en\.yml\z/, ".#{locale}.yml")
+        assert File.exist?(translated_path), "Missing #{translated_path}"
+        translated = flatten.call(YAML.safe_load_file(translated_path).fetch(locale))
+        english.each do |key, values|
+          assert translated.key?(key), "Missing #{locale} key #{key} in #{translated_path}"
+          variables = values.first.scan(/%\{(\w+)\}/).sort
+          translated.fetch(key).each do |value|
+            assert_equal variables, value.scan(/%\{(\w+)\}/).sort,
+              "Interpolation mismatch for #{locale}.#{key}"
+          end
+        end
       end
+    end
+  end
+
+  %w[ja ko].each do |locale|
+    test "#{locale} browser detection authentication and language menu work" do
+      get root_path, headers: {"HTTP_ACCEPT_LANGUAGE" => "#{locale}-#{locale == 'ja' ? 'JP' : 'KR'},en;q=0.8"}
+      assert_response :success
+      assert_select "html[lang='#{locale}']"
+      assert_select "details.bw-language-menu > summary", text: /#{locale == 'ja' ? '日本語' : '한국어'}/
+      assert_select ".bw-language-switcher a", count: 4
+      %w[en zh-CN ja ko].each { |option| assert_select ".bw-language-switcher a[lang='#{option}']" }
+
+      get new_user_session_path, params: {locale: locale}
+      assert_select "html[lang='#{locale}']"
+      assert_select "label", text: I18n.t("billie.auth.email", locale: locale)
+      post user_session_path, params: {user: {email: "missing@example.com", password: "invalid-password"}}
+      assert_response :unprocessable_entity
+      assert_select "html[lang='#{locale}']"
+      assert_select "[role='alert']", text: I18n.t("devise.failure.invalid", locale: locale,
+        authentication_keys: I18n.t("activerecord.attributes.user.email", locale: locale))
+      assert_select ".bw-language-switcher a[lang='en'][href='#{new_user_session_path(locale: 'en')}']"
+    end
+
+    test "#{locale} finance pages reports and validation use localized text with canonical data" do
+      user = create(:user)
+      statement = Finance::Statement.create!(user: user, filename: "multilingual.csv", currency: "USD", sha256: "7" * 64, transaction_count: 1)
+      transaction = Finance::Transaction.create!(user: user, statement: statement, booked_on: Date.current,
+        description: "Original merchant 商户 お店 가게", amount: "-25.50", category: "Food & dining")
+      account = Finance::BankAccount.create!(user: user, identity_key: "9" * 64, bank_name: "Chase", name: "Checking", last4: "1234", kind: "cash")
+      statement.update!(bank_account: account, closing_balance: "800.00", closing_balance_on: Date.current)
+      sign_in user
+      get finance_dashboard_path, params: {locale: locale}
+      assert_response :success
+      assert_select "html[lang='#{locale}']"
+      assert_includes response.body, I18n.t("billie.helpers.labels.food", locale: locale)
+      assert_includes response.body, I18n.l(Date.current, locale: locale, format: I18n.t("billie.helpers.date_format", locale: locale))
+      assert_includes response.body, I18n.t("billie.helpers.labels.checking", locale: locale)
+
+      [finance_statements_path, finance_transactions_path, finance_forecast_path(engine: "linear"), finance_insights_path,
+       edit_finance_transaction_path(transaction)].each do |path|
+        get path
+        assert_response :success
+        assert_select "html[lang='#{locale}']"
+        assert_no_match(/translation_missing|Translation missing/, response.body)
+      end
+      get finance_forecast_path, params: {engine: "invalid"}
+      assert_response :unprocessable_entity
+      assert_select "[role='alert']", text: I18n.t("billie.backend.choose_forecast_model", locale: locale)
+
+      post generate_finance_insights_path, params: {provider: "rules"}
+      assert_redirected_to finance_insights_path
+      content = user.finance_insights.last.content
+      assert_includes content.fetch("observations").map { |item| item["body"] }.join, I18n.t("billie.helpers.labels.food", locale: locale)
+      assert_not_includes content.fetch("summary"), "Your imported activity"
+      I18n.with_locale(locale) do
+        profile = Finance::Profile.new(user: user, current_balance: "1.234")
+        assert_not profile.valid?
+        assert_includes profile.errors.full_messages.join, I18n.t("errors.messages.cent_precision")
+      end
+      assert_equal "Checking", account.reload.name
+      assert_equal "Food & dining", transaction.reload.category
+      assert_equal "Original merchant 商户 お店 가게", transaction.description
+      assert_equal BigDecimal("-25.50"), transaction.amount
+
+      delete destroy_user_session_path
+      get new_user_session_path
+      assert_select "html[lang='#{locale}']"
     end
   end
 end

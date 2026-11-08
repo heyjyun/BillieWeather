@@ -1,0 +1,395 @@
+---
+ja:
+  billie:
+    finance:
+      ui:
+        a_clearer_financial_picture: 家計の全体像を、もっと明確に。
+        a_clearer_outlook_starts_here: 見通しを立てる第一歩。
+        a_fresh_perspective: 新しい視点で
+        a_fresh_perspective_on_your_finances: 家計を新しい視点で見つめる。
+        a_fresh_start: 新たなスタート
+        a_manual_override_pauses_automatic_updates_until_you_switch_back_to_the_account: 手動で設定すると、口座合計に戻すまで自動更新が停止します。
+        a_projection_using_your_account_balances_and_the_patterns_in_your_income_and_spe: 口座残高と過去の収支パターンに基づく予測です。
+        a_quick_guide: かんたんガイド
+        a_useful_record: 記録を整理するために。
+        account: 口座
+        account_label: 口座の表示名
+        account_type: 口座の種類
+        account_type_needs_confirmation: 口座の種類を確認してください
+        account_unidentified_no_closing_balance_saved: 口座が未特定です。期末残高は保存されていません
+        across_imported_statement_dates: 取り込んだ明細の対象期間
+        action: 操作
+        actions: 操作
+        actions_to_consider: 検討したいこと
+        adjust_the_outlook_without_changing_your_actual_transactions: 実際の取引を変更せずに、条件を変えて見通しを確認できます。
+        after_your_scenario_adjustments: シナリオの調整後
+        all_categories: すべてのカテゴリ
+        all_time: 全期間
+        all_transactions: すべての取引
+        amount: 金額
+        amounts_in: 表示通貨
+        analysis_can_be_incomplete_or_incorrect_it_is_for_financial_organization_and_gen: 分析には不足や誤りが含まれる場合があります。家計の整理と一般的な情報提供を目的としており、個別の投資・法律・税務の助言ではありません。重要な判断や最新の税務ルールは、適切な専門家に確認してください。
+        analysis_consent: この分析のため、表示中の集計概要と税務情報を %{service} に送信することに同意します。
+        analysis_privacy: 基本分析は合計額とカテゴリを使用します。任意の Billie Insights は集計した財務概要を %{service} に送信します。元の明細、取引内容、アカウントのメールアドレスは送信しません。
+        apply_dates: 期間を適用
+        apply_filters: 絞り込む
+        as_of_date: "%{date} 時点"
+        ask_billie_again: Billie にもう一度相談
+        ask_billie_for_tax_preparation_insights: Billie に申告準備について相談
+        auto_assigned_categories_are_a_starting_point_you_can_change_them_here: 自動分類されたカテゴリは目安です。ここで変更できます。
+        automatic_cash_total: 現金残高の自動合計
+        automatic_detection_prefers_transaction_date_then_date_then_posting_dates_choose: 日付列は Transaction Date、Date、記帳日の順に自動検出されます。列を指定して再試行する場合は、対象の CSV のみを選択してください。
+        automatic_transaction_date_first: 自動検出（取引日を優先）
+        average_daily_net_cash_flow: 1日あたりの平均収支
+        back_to_transactions: "← 取引一覧へ"
+        back_to_upload: "← アップロード画面へ"
+        balance: 残高
+        balance_date: 残高の日付
+        balance_date_not_saved: 残高の日付は未保存
+        balance_not_readable: 残高を読み取れません
+        bank_account: 銀行口座
+        bank_deposits_are_not_automatically_taxable_income_this_is_a_preparation_checkli: 銀行への入金がすべて課税所得になるわけではありません。これは準備用のチェックリストであり、完成した申告書ではありません。
+        bank_name: 銀行名
+        basic_analysis: 基本分析
+        basic_analysis_rules_based: 基本分析 · ルールに基づく分析
+        before_you_upload: アップロードの前に
+        billie_insights: Billie Insights
+        billie_insights_2: "· Billie Insights"
+        billie_is_not_connected_yet_basic_analysis_is_available_without_an_ai_service: Billie はまだ接続されていません。AI サービスがなくても基本分析を利用できます。
+        billie_is_not_connected_yet_the_checklist_below_is_available_without_an_ai_servi: Billie はまだ接続されていません。下のチェックリストは AI サービスがなくても利用できます。
+        billie_reviews_your_financial_summary_and_your_saved_tax_context_to_help_you_org: Billie が財務概要と保存済みの税務情報を確認し、記録の整理や税務専門家への質問の準備をお手伝いします。
+        bring_each_bank_account_together: 銀行口座をまとめて把握
+        bring_your_numbers_together: 収支をひとつにまとめる。
+        cancel: キャンセル
+        cancel_import: 取り込みを中止
+        cash_account: 現金口座
+        cash_accounts: 現金口座
+        cash_balance: 現金残高
+        cash_balance_currency: 現金残高（%{currency}）
+        cash_balance_from_statements: 明細に基づく現金残高
+        cash_entered_date: "%{date} に入力"
+        cash_flow_forecast: キャッシュフロー予測
+        cash_on_hand: 手元の現金
+        cash_on_hand_currency: 手元にある現金（%{currency}）
+        categories_and_context: カテゴリと設定情報
+        categories_help_organize_records_they_do_not_determine_tax_deductibility_transfe: カテゴリは記録を整理するためのもので、税務上の控除可否を決めるものではありません。振替と除外した取引は、収入・支出の合計に含まれません。
+        category: カテゴリ
+        change_account: 口座を変更
+        change_dates: 期間を変更
+        check_each_pdf_s_extracted_rows_before_adding_its_transactions: 取引を追加する前に、各 PDF から抽出された行を確認してください。
+        check_every_row_against_your_statement: すべての行を元の明細と照合してください。
+        check_uncategorized_transactions_transfers_and_any_business_related_items: 未分類の取引、振替、事業に関係する取引を確認してください。
+        checking_savings_and_cash_you_hold: チェッキング口座、貯蓄口座、手元の現金
+        checking_savings_cash: チェッキング口座 / 貯蓄口座（現金）
+        choose_account: 口座を選択
+        choose_account_type: 口座の種類を選択
+        choose_different_dates_or_view_all_your_imported_transactions: 別の期間を選択するか、取り込んだすべての取引を表示してください。
+        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: 銀行から出力した CSV またはテキスト形式の PDF を1つ以上選択してください。
+        choose_statements_from_your_bank: 銀行の明細を選択
+        choose_the_account_type: 口座の種類を選択 →
+        choose_the_dates_for_your_income_expenses_and_transactions: 収入・支出・取引を確認する期間を選択してください。
+        clarity_starts_with_context: 背景を知ると、見通しが立つ。
+        collect_applicable_w_2_and_1099_forms_mortgage_or_student_loan_interest_statemen: 該当する W-2・1099 フォーム、住宅ローンや学生ローンの利息明細、医療保険の記録、領収書、前年の申告書を集めてください。
+        confirm_and_import_transactions: 確認して取引を取り込む
+        confirm_sign_and_amount: 金額と正負を確認
+        context: "· 設定："
+        credit_card: クレジットカード
+        credit_card_excluded_from_cash: クレジットカード · 現金残高には含まれません
+        credit_cards: クレジットカード
+        credit_owed_excluded: カードの未払額 · %{count}（現金残高には含まれません）
+        csv_check_the_columns: CSV：列を確認
+        dashboard: ダッシュボード
+        date: 日付
+        date_column_optional_override: 日付列（必要な場合のみ指定）
+        date_description_and_amount_import_transaction_activity_automatic_cash_balances: Date、Description、Amount の列で取引を取り込めます。現金残高を自動計算するには、Balance 列に加え、Bank、Account Number、Account Type（Checking、Savings、Credit Card）などの口座情報が必要です。これらの追加列は、取引の取り込みだけなら任意です。
+        date_range_not_applied: 期間を適用できませんでした
+        dates_use_column: 日付には %{column} 列を使用します。
+        description: 内容
+        details: 詳細
+        discard: 破棄
+        discard_this_pdf_review: この PDF の確認データを破棄
+        download_sample_csv: サンプル CSV をダウンロード
+        e_g_chase: 例：Chase
+        e_g_everyday_checking: 例：日常用チェッキング口座
+        each_cash_account_contributes_its_latest_statement_balance_once_older_statements: 各現金口座の最新の明細残高を1回だけ合計します。同じ口座の古い明細は重複加算しません。
+        each_file_has_its_own_result_transactions_are_saved_to_your_account_original_fil: 結果はファイルごとに表示されます。取引はアカウントに保存されますが、元のファイルは保存されません。
+        each_file_is_processed_separately_a_failed_file_does_not_affect_successful_impor: ファイルは個別に処理されます。失敗したファイルがあっても、正常な取り込みには影響しません。
+        end_date: 終了日
+        enter_or_edit_amount: "✎ 金額を入力・編集"
+        enter_or_edit_balance: "✎ 残高を入力・編集"
+        entered_by_you_physical_cash_is_not_on_any_statement: 手動で入力した金額です。手元の現金は銀行明細には記載されません。
+        estimate_not_a_guarantee: 予測値であり、保証ではありません
+        every_transaction_has_a_story: 一つひとつの取引から見えてくる。
+        example_10_means_10_less_spending: 例：−10 を指定すると、支出が10%減ります。
+        example_10_means_10_more_income: 例：10 を指定すると、収入が10%増えます。
+        exclude_from_totals_and_forecasts: 合計と予測から除外
+        excluded: "· 除外："
+        excluded_2: 除外
+        excluded_from_totals: 合計から除外
+        expense_change: 支出の変化率（%）
+        expenses: 支出
+        expenses_2: "· 支出"
+        expires_in: "%{duration} 後"
+        explore_a_scenario: 条件を変えて試す
+        explore_insights: 分析を確認
+        explore_spending_observations_and_practical_next_steps_organize_transactions_tha: 支出の傾向と、次にできることを確認しましょう。申告時に詳しい確認が必要な取引も整理できます。
+        export_csv: CSV を出力
+        export_records: 記録を出力
+        extracted_rows: 抽出された行
+        extraction_notes: 抽出に関する注意（%{count}件）
+        financial_context: 財務情報
+        financial_observations: 収支からわかること
+        flag_for_tax_review: 税務確認の対象にする
+        flagged_for_tax_review: 税務確認の対象
+        flagging_a_transaction_does_not_make_it_deductible_save_receipts_and_supporting: 取引に印を付けても、控除対象になるとは限りません。領収書と証拠書類を保管し、お住まいの地域で適用される取り扱いを確認してください。
+        forecast_chart_description: 本日の残高 %{current} から %{days} 日後の %{projected} までの予測
+        forecast_horizon: 予測期間
+        forecast_model: 予測モデル
+        forecast_starts_today: 予測は本日、%{date} から始まります。
+        from_statements_to_clarity: 明細から、わかりやすい家計へ
+        gather_u_s_personal_tax_documents: 米国の個人所得税の書類を集める
+        generate_an_analysis_to_see_observations_and_actions_based_on_your_imported_tran: 分析を作成すると、取り込んだ取引に基づく傾向と行動のヒントを確認できます。
+        generate_basic_analysis: 基本分析を作成
+        generate_billie_insights: Billie Insights を作成
+        generated: 作成日
+        get_your_tax_records_ready: 申告に向けて記録を整理
+        historical_average: 過去の平均
+        history_days_coverage: 過去 %{days} 日分のデータに基づく
+        i_checked_the_dates_descriptions_and_signed_amounts_excluded_rows_will_not_be_im: 日付、内容、金額の正負を確認しました。除外した行は取り込まれません。
+        i_reviewed_the_included_rows_against_my_statement: 取り込み対象の行を元の明細と照合しました。
+        identify_this_account: この口座を特定
+        if_the_selected_model_is_unavailable_the_result_shows_the_model_used_and_explain: 選択したモデルを利用できない場合は、実際に使用したモデルと変更理由を結果に表示します。
+        illustrative_range: 参考範囲
+        import_a_statement_first_so_billie_has_something_to_review: Billie が確認できるよう、まず明細を取り込んでください。
+        import_a_statement_first_to_generate_an_analysis: 分析を作成するには、まず明細を取り込んでください。
+        import_a_statement_to_see_your_income_and_expenses_in_one_place: 明細を取り込むと、収入と支出をまとめて確認できます。
+        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: CSV やテキスト形式の PDF の銀行明細をまとめて取り込めます。取引を整理し、家計の全体像を表示します。
+        import_statements: 明細を取り込む
+        imported: 取り込み済み
+        in_days: "%{days} 日後"
+        in_the_selected_period: 選択した期間
+        in_the_selected_period_2: "（選択した期間）"
+        in_your_financial_picture: "（取り込み済み）"
+        include: 含める
+        include_row: "%{number} 行目を含める"
+        include_this_transaction_in_the_records_you_review_with_your_tax_professional: 税務専門家と確認する記録に、この取引を含めます。
+        income: 収入
+        income_2: "：収入"
+        income_change: 収入の変化率（%）
+        income_minus_expenses: 収入から支出を引いた金額
+        insights_use_your_full_imported_history: 分析には取り込んだ全期間の履歴を使用します。
+        irs_gather_your_documents: IRS：必要書類を集める →
+        keep_this_analysis_in_perspective: 分析を読む際の注意
+        keep_this_in_perspective: ご利用にあたって
+        keep_your_records_accurate_and_mark_anything_that_needs_a_closer_look: 記録を正確に保ち、詳しく確認したい項目に印を付けましょう。
+        known_cash_balances_partial_total: 確認済みの現金残高 · 一部の合計
+        last_30_days: 過去30日
+        last_four_account_digits: 口座番号の下4桁
+        last_month: 先月
+        last_year: 昨年
+        latest_6_months_with_transactions_in_this_period: 選択期間内で取引がある直近6か月
+        latest_statement_per_account_summed_automatically_credit_card_balances_are_exclu: 各口座の最新の明細残高を自動合計します。クレジットカード残高は現金残高に含めません。
+        let_your_numbers: 収支の記録から
+        make_room_for_what_s_next: これからのために、ゆとりを
+        make_the_details_yours: 自分に合うように整える
+        match_records_to_official_tax_documents_and_review_your_individual_circumstances: 記録を正式な税務書類と照合し、個別の事情について資格を持つ税務専門家に確認してください。
+        model: モデル：
+        money_in_money_out: 入るお金。出ていくお金。
+        month: 月
+        monthly_aggregate_totals_included_in_analysis: 分析に使用する月別合計
+        monthly_totals_from_your_imported_transactions: 取り込んだ取引の月別合計
+        name_for_this_account: この口座の表示名
+        names_are_read_from_your_statements_use_to_rename_one_the_name_you_type_is_alway: 口座名は明細から読み取ります。✎ で変更すると、入力した名前が常に表示されます。
+        needs_review: 確認が必要
+        net: 差引額
+        net_cash_flow: 純キャッシュフロー
+        next: 次へ →
+        next_30_days: 今後30日
+        next_60_days: 今後60日
+        next_90_days: 今後90日
+        no_categorized_expenses_yet: 分類済みの支出はまだありません。
+        no_closing_balance_saved: 期末残高は未保存
+        no_credit_cards_identified_yet_upload_a_credit_card_statement_that_includes_the: クレジットカードはまだ特定されていません。銀行名とカード番号の下4桁が記載された明細をアップロードしてください。
+        no_identified_accounts_yet: 特定された口座はまだありません。
+        no_matching_transactions: 一致する取引がありません。
+        no_statements_yet: 明細はまだありません。
+        no_transactions_in_this_period: この期間の取引はありません。
+        no_transactions_match_these_dates: この期間に該当する取引はありません。
+        not_a_tax_decision: 税務上の判断を行うものではありません。
+        not_available: 利用できません
+        not_entered_yet: 未入力
+        not_imported: 未取り込み
+        not_imported_yet: "· 未取り込み"
+        not_included: 含めない
+        not_included_in_automatic_cash_total: 現金残高の自動合計には含まれません
+        not_linked_to_an_account_yet: は口座にまだ関連付けられていません。
+        not_specified: 未設定
+        nothing_appears_in_your_dashboard_until_you_confirm_this_import: 取り込みを確定するまで、ダッシュボードには表示されません。
+        open_statement_history: 明細履歴を開く →
+        or_add_an_account: または口座を追加：
+        owed: 未払額
+        owed_amount: 未払額 %{amount}
+        owed_on_credit_cards: カードの未払額：
+        page_of_total: "%{total} ページ中 %{page} ページ"
+        pdf_extraction_can_confuse_dates_amounts_running_balances_and_deposit_or_withdra: PDF の抽出では、日付、金額、取引後残高、入出金の正負を誤認する場合があります。下で誤りを修正し、集計行を除外して、確認できた取引だけを取り込んでください。正の金額は入金、負の金額は出金です。
+        pdf_review_anything_unclear: PDF：不明な箇所を確認
+        pdfs_are_imported_automatically_when_everything_is_clear_including_the_statement: 明細の年と各金額の正負を含め、すべて明確な PDF は自動で取り込まれます。不明な点があれば個別に確認します。収入は正、支出は負の金額です。CSV の日付形式は YYYY-MM-DD または MM/DD/YYYY です。
+        pdfs_waiting_for_review: 確認待ちの PDF
+        personal: 個人
+        preparation_guidance_depends_on_your_circumstances: 準備の内容は個別の状況によって異なります。
+        previous: "← 前へ"
+        projected_balance_in_days: "%{days} 日後の予測残高"
+        projected_cash_balance: 予測現金残高
+        questions_for_your_tax_professional: 税務専門家に確認したいこと
+        recent_transactions: 最近の取引
+        records_to_organize: 整理する記録
+        remove: 削除
+        remove_this_statement_and_its_transactions: この明細と関連する取引を削除
+        rename: "✎ 名前を変更"
+        reset: リセット
+        result: 結果
+        retry_only_the_files_that_were_not_imported_pdfs_marked_needs_review_are_saved_b: 未取り込みのファイルだけを再試行してください。「確認が必要」の PDF は、期限まで下に保存されます。
+        review: 確認
+        review_2: 確認 →
+        review_account_balances: 口座残高を確認 →
+        review_expires: 確認期限
+        review_federal_and_state_requirements: 連邦と州の要件を確認
+        review_flagged_transactions: 確認対象の取引を見る →
+        review_pdf_statement: PDF 明細を確認
+        review_transaction: 取引を確認
+        review_transaction_2: 取引を確認。
+        review_transaction_description: "%{description} を確認"
+        review_your_extracted_transactions: 抽出された取引を確認。
+        review_your_spending_refine_categories_and_flag_records_for_tax_preparation: 支出を確認し、カテゴリを整え、申告準備に必要な記録に印を付けましょう。
+        review_your_transaction_categories: 取引のカテゴリを確認
+        reviews_expire_30_minutes_after_upload_if_one_expires_upload_that_pdf_again_disc: 確認データの有効期限はアップロードから30分です。期限が切れた場合は、その PDF を再度アップロードしてください。確認データを破棄しても、取り込み済みの明細には影響しません。
+        row_date: "%{number} 行目の日付"
+        row_description: "%{number} 行目の内容"
+        row_signed_amount: "%{number} 行目の金額（正負を含む）"
+        sample_transactions_are_examples_import_them_only_if_you_want_to_try_the_workflo: サンプル取引は例です。操作を試したい場合にのみ取り込んでください。
+        save_account: 口座を保存
+        save_balance: 残高を保存
+        save_cash_on_hand: 手元の現金を保存
+        save_changes: 変更を保存
+        save_name: 名前を保存
+        save_tax_context: 税務情報を保存
+        saved_balance: 保存済みの残高
+        search_transactions: 取引を検索
+        search_transactions_2: 取引を検索…
+        see_a_little_further_ahead: 少し先の家計を見通す。
+        see_the_account_breakdown: 口座別の内訳を見る ↓
+        select_several_files_at_once_including_a_mix_of_csvs_and_text_based_pdfs_scanned: CSV とテキスト形式の PDF を組み合わせて、複数のファイルを一度に選択できます。スキャンや画像のみの PDF は、テキスト形式の PDF または CSV に置き換えてください。OCR には対応していません。
+        self_employed: 自営業
+        showing: 表示中
+        signed_amount_currency: 金額（正負を含む、%{currency}）
+        small_business: 小規模事業
+        small_steps_clearer_direction: 小さな一歩で、見通しを明確に
+        some_statements_need_an_account: 口座の指定が必要な明細があります
+        some_statements_still_need_an_account_or_a_readable_dated_balance: 口座、または日付付きの読み取れる残高が必要な明細があります。
+        start_date: 開始日
+        starting_cash_balance: 開始時の現金残高
+        statement: 明細
+        statement_account_name: 明細から読み取った名前：%{name}。この名前を使う場合は空欄にしてください。
+        statement_csv_or_pdf_files: 明細の CSV または PDF ファイル
+        statement_currency: 明細の通貨：
+        statement_history: 明細履歴
+        statements_from_the_same_account_contribute_only_the_latest_balance_removing_a_s: 同じ口座の明細は、最新の残高だけを合計します。明細を削除すると関連する取引も削除され、口座合計を再計算します。
+        status: 状態
+        still_need_a_category: はカテゴリの指定が必要です。
+        still_need_a_type_cash_or_credit: は種類（現金またはクレジット）の確認が必要です。
+        summary_used_for_analysis: 分析に使用する概要
+        tax_country_or_jurisdiction: 税務上の国・地域
+        tax_jurisdiction: 税務上の管轄：
+        tax_preparation: 申告準備
+        tax_review: "· 税務確認："
+        tax_review_2: 税務確認
+        tell_you_more: 家計をもっと知る。
+        the_everyday_details: 日々の取引
+        the_original_date_and_amount_stay_tied_to_the_imported_statement_remove_and_re_i: 元の日付と金額は取り込んだ明細に紐づいています。変更が必要な場合は、明細を削除して修正済みのファイルを取り込み直してください。
+        the_shaded_envelope_combines_daily_income_and_spending_bounds_it_has_no_calibrat: 網掛けの範囲は日ごとの収入と支出の上下限を組み合わせたものです。現金残高全体について校正された確率を示すものではありません。
+        these_are_balances_on_the_dates_shown_upload_newer_statements_to_refresh_them_th: 表示された日付時点の残高です。更新するには、より新しい明細をアップロードしてください。このアプリは銀行に接続せず、リアルタイムの残高も取得しません。
+        these_statements_are_not_included_in_the_automatic_total_choose_an_existing_acco: これらの明細は自動合計に含まれていません。明細履歴で既存の口座を選ぶか、銀行名と口座番号の下4桁を追加してください。口座を選択しても、不足している期末残高は補完されません。「保存済みの残高」列で確認できる内容をご覧ください。
+        this_draft_expires_after_30_minutes: この確認データの有効期限は30分です。
+        this_forecast_starts_from_a_partial_account_total: この予測の開始残高は、一部の口座のみの合計です。
+        this_information_adds_context_to_the_next_analysis_billieweather_does_not_calcul: この情報は次回の分析に使用します。BillieWeather は税額計算や税務申告を行いません。
+        this_is_a_different_account_with_the_same_bank_and_last_four_digits: 銀行名と下4桁が同じ別の口座です
+        this_line_is_based_on_patterns_in_your_past_transactions_not_bill_due_dates_or_c: この線は、請求の支払期日や確定した将来の支払いではなく、過去の取引パターンに基づきます。明細残高は記載日当日の値であり、リアルタイムの銀行残高ではありません。
+        this_month: 今月
+        this_year: 今年
+        time_period: 期間
+        today: 今日
+        total_cash: 現金合計
+        total_cash_partial_some_accounts_need_attention: 現金合計 · 一部のみ。確認が必要な口座があります
+        total_expenses: 支出合計
+        total_income: 収入合計
+        total_owed_on_credit_cards: カードの未払額合計 ·
+        transaction: 取引
+        transaction_type: 取引の種類
+        transactions: 取引
+        transactions_are_organized_and_categorized_automatically_as_you_import: 取り込んだ取引を自動で整理・分類します
+        transfers: "· 振替："
+        transfers_and_excluded_items_omitted: 振替と除外項目を除く
+        try_another_search_or_clear_your_filters: 検索条件を変えるか、絞り込みを解除してください。
+        turn_information_into_next_steps: 情報から、次の一歩へ
+        u_s_personal_tax_preparation: 米国の個人所得税の申告準備
+        uncategorized: 未分類：
+        understand_patterns_consider_practical_actions_and_get_your_records_ready_for_ta: 収支の傾向を知り、できることを検討し、申告に向けて記録を整理しましょう。
+        united_states: 米国
+        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: 最大10ファイル · 1ファイル2 MB · 合計10 MB · CSV・テキスト形式 PDF
+        update_forecast: 予測を更新
+        upload_a_statement: 明細をアップロード
+        upload_a_statement_review_your_categories_then_generate_your_first_analysis: 明細をアップロードし、カテゴリを確認して、最初の分析を作成しましょう。
+        upload_statement: 明細をアップロード
+        upload_statements: 明細をアップロード →
+        upload_statements_2: 明細をアップロード
+        upload_your_first_csv_or_text_based_pdf_statement_to_see_income_spending_and_a_c: 最初の CSV またはテキスト形式 PDF の明細をアップロードすると、自分の取引に基づく収入、支出、キャッシュフロー予測を確認できます。
+        upload_your_first_statement: 最初の明細をアップロード
+        upload_your_first_statement_to_start_connecting_the_dots: 最初の明細をアップロードして、家計を把握しましょう。
+        use_an_existing_account: 既存の口座を使用
+        use_automatic_account_total: 口座の自動合計を使用
+        use_date_description_and_amount_separate_debit_and_credit_columns_are_also_suppo: Date、Description、Amount の列を使用してください。Debit と Credit が別々の列でも対応しています。日付は Transaction Date、Date、記帳日の順に自動検出し、取り込み結果に使用した列を表示します。
+        use_for_duplicates_or_items_that_should_not_affect_your_financial_picture: 重複や、収支に反映したくない項目に使用します。
+        use_one_currency: 通貨を統一
+        use_the_same_bank_and_last_four_digits_for_every_statement_from_this_account_do: この口座のすべての明細に、同じ銀行名と下4桁を使用してください。口座番号全桁は入力しないでください。
+        use_this_account: この口座を使用
+        view_account_balances: 口座残高を見る →
+        view_all: すべて見る →
+        view_all_dates: 全期間を表示
+        view_monthly_figures: 月別の数値を見る
+        view_transactions: 取引を見る →
+        waiting_for_a_usable_starting_balance: 利用できる開始残高が必要です
+        what_goes_into_this_estimate: この予測の前提
+        what_you_owe_on_each_card: カードごとの未払額
+        what_your_numbers_say: 収支からわかること
+        when_account_details_and_a_dated_balance_are_present_we_total_the_latest_balance: 口座情報と日付付きの残高がある場合、各現金口座の最新残高を合計します。口座が不明な場合は、明細履歴で選択してください。クレジットカードは現金残高に含めません。
+        where_it_goes: 支出の内訳
+        workspace_currency: 現在のワークスペースの通貨は %{currency} です。通貨換算は行いません。
+        you_have_the_final_say: 最後は自分で確認
+        your_account_balances: 口座残高
+        your_accounts: 口座一覧
+        your_cash_flow_outlook: キャッシュフローの見通し
+        your_expense_categories: 支出カテゴリ
+        your_financial_outlook: 家計の見通し
+        your_financial_story_starts_here: 家計を知る第一歩。
+        your_imported_files_accounts_and_transaction_counts: 取り込んだファイル、口座、取引件数
+        your_latest_transactions_will_appear_here: 最近の取引がここに表示されます。
+        your_money_in_focus: 家計を、くっきりと
+        your_next_insight_is_in_your_numbers: 次の発見は、収支の記録の中に。
+        your_numbers_thoughtfully_explained: 収支をわかりやすく読み解く
+        your_records_or_profile_changed_since_billie_prepared_these_tax_insights_ask_bil: この税務分析の作成後に、記録または設定が変更されています。最新の情報を反映するには、Billie にもう一度相談してください。
+        your_records_or_profile_changed_since_this_analysis_was_generated_generate_a_new: この分析の作成後に、記録または設定が変更されています。最新の情報を反映するには、分析を作成し直してください。
+        your_starting_balance_is_not_available_yet: 開始残高はまだ利用できません。
+        your_starting_point: 開始時点
+        your_tax_context: 税務情報
+        your_transactions_belong_here: 取引をここにまとめましょう。
+        your_upload_results: アップロード結果
+        dashboard_periods: ダッシュボードの表示期間
+        monthly_income_expenses: 月別の収入と支出
+        income_amount: 収入：%{amount}
+        expenses_amount: 支出：%{amount}
+        transactions_found:
+          one: 件の取引が見つかりました
+          other: 件の取引が見つかりました
+        tax_context_personal: 個人
+        tax_context_self_employed: 自営業
+        tax_context_business: 事業

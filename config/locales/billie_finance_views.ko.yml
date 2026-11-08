@@ -1,0 +1,395 @@
+---
+ko:
+  billie:
+    finance:
+      ui:
+        a_clearer_financial_picture: 더 명확해지는 나의 재무 현황.
+        a_clearer_outlook_starts_here: 더 선명한 재무 전망, 여기서 시작하세요.
+        a_fresh_perspective: 새로운 관점
+        a_fresh_perspective_on_your_finances: 나의 재무를 새로운 관점으로.
+        a_fresh_start: 새로운 시작
+        a_manual_override_pauses_automatic_updates_until_you_switch_back_to_the_account: 잔액을 직접 입력하면 자동 업데이트가 일시 중지됩니다. 계좌 합계로 다시 전환하면 자동 업데이트가 재개됩니다.
+        a_projection_using_your_account_balances_and_the_patterns_in_your_income_and_spe: 계좌 잔액과 과거 수입·지출 패턴을 바탕으로 한 예상치입니다.
+        a_quick_guide: 빠른 안내
+        a_useful_record: 유용한 기록입니다.
+        account: 계좌
+        account_label: 계좌 이름
+        account_type: 계좌 유형
+        account_type_needs_confirmation: 계좌 유형 확인 필요
+        account_unidentified_no_closing_balance_saved: 계좌 미확인 · 저장된 기말 잔액 없음
+        across_imported_statement_dates: 가져온 명세서의 전체 기간
+        action: 작업
+        actions: 작업
+        actions_to_consider: 검토할 다음 단계
+        adjust_the_outlook_without_changing_your_actual_transactions: 실제 거래를 바꾸지 않고 예상 시나리오를 조정하세요.
+        after_your_scenario_adjustments: 시나리오 조정 적용 후
+        all_categories: 모든 분류
+        all_time: 전체 기간
+        all_transactions: 모든 거래
+        amount: 금액
+        amounts_in: '금액 단위:'
+        analysis_can_be_incomplete_or_incorrect_it_is_for_financial_organization_and_gen: 분석은 불완전하거나 부정확할 수 있습니다. 재무 정리와 일반적인 정보 제공을 위한 것으로, 개인별 투자·법률·세무 자문이 아닙니다. 중요한 결정과 현행 세법은 해당 분야의 전문가에게 확인하세요.
+        analysis_consent: 이번 분석을 위해 표시된 재무 요약과 세무 관련 정보를 %{service}에 전송하는 데 동의합니다.
+        analysis_privacy: 기본 분석은 합계와 분류를 사용합니다. 선택 기능인 Billie Insights는 재무 요약을 %{service}에 전송하며, 원본 명세서·거래 설명·계정 이메일은 전송하지 않습니다.
+        apply_dates: 기간 적용
+        apply_filters: 필터 적용
+        as_of_date: "%{date} 기준"
+        ask_billie_again: Billie에게 다시 요청
+        ask_billie_for_tax_preparation_insights: Billie에게 세금 신고 준비 분석 요청
+        auto_assigned_categories_are_a_starting_point_you_can_change_them_here: 자동 분류는 참고용입니다. 여기서 직접 수정할 수 있습니다.
+        automatic_cash_total: 자동 현금 합계
+        automatic_detection_prefers_transaction_date_then_date_then_posting_dates_choose: 자동 감지는 Transaction Date, Date, 전기일 열 순서로 날짜를 선택합니다. 날짜 열을 직접 지정해 다시 시도할 때는 해당 CSV만 선택하세요.
+        automatic_transaction_date_first: 자동 감지(거래일 우선)
+        average_daily_net_cash_flow: 일평균 순현금흐름
+        back_to_transactions: "← 거래 목록으로"
+        back_to_upload: "← 업로드로"
+        balance: 잔액
+        balance_date: 잔액 기준일
+        balance_date_not_saved: 잔액 기준일이 저장되지 않음
+        balance_not_readable: 잔액을 읽을 수 없음
+        bank_account: 은행 계좌
+        bank_deposits_are_not_automatically_taxable_income_this_is_a_preparation_checkli: 은행 입금액이 모두 과세 소득인 것은 아닙니다. 이 목록은 신고 준비용이며, 완성된 세금 신고서가 아닙니다.
+        bank_name: 은행명
+        basic_analysis: 기본 분석
+        basic_analysis_rules_based: 기본 분석 · 규칙 기반
+        before_you_upload: 업로드 전 확인 사항
+        billie_insights: Billie Insights
+        billie_insights_2: "· Billie Insights"
+        billie_is_not_connected_yet_basic_analysis_is_available_without_an_ai_service: Billie가 아직 연결되지 않았습니다. 기본 분석은 AI 서비스 없이도 사용할 수 있습니다.
+        billie_is_not_connected_yet_the_checklist_below_is_available_without_an_ai_servi: Billie가 아직 연결되지 않았습니다. 아래 체크리스트는 AI 서비스 없이도 사용할 수 있습니다.
+        billie_reviews_your_financial_summary_and_your_saved_tax_context_to_help_you_org: Billie는 재무 요약과 저장된 세무 관련 정보를 검토하여 기록을 정리하고 세무 전문가에게 물어볼 질문을 준비하도록 돕습니다.
+        bring_each_bank_account_together: 은행 계좌를 한곳에 모아보세요
+        bring_your_numbers_together: 흩어진 재무 정보를 한눈에.
+        cancel: 취소
+        cancel_import: 가져오기 취소
+        cash_account: 현금 계좌
+        cash_accounts: 현금 계좌
+        cash_balance: 현금 잔액
+        cash_balance_currency: 현금 잔액(%{currency})
+        cash_balance_from_statements: 명세서 기준 현금 잔액
+        cash_entered_date: "%{date} 입력"
+        cash_flow_forecast: 현금흐름 예측
+        cash_on_hand: 보유 현금
+        cash_on_hand_currency: 직접 보유한 현금(%{currency})
+        categories_and_context: 분류 및 관련 정보
+        categories_help_organize_records_they_do_not_determine_tax_deductibility_transfe: 분류는 기록 정리를 돕는 용도이며 세금 공제 여부를 결정하지 않습니다. 이체와 제외된 거래는 수입·지출 합계에 포함되지 않습니다.
+        category: 분류
+        change_account: 계좌 변경
+        change_dates: 기간 변경
+        check_each_pdf_s_extracted_rows_before_adding_its_transactions: 거래를 추가하기 전에 각 PDF에서 추출한 행을 확인하세요.
+        check_every_row_against_your_statement: 명세서 원본과 각 행을 대조하세요.
+        check_uncategorized_transactions_transfers_and_any_business_related_items: 미분류 거래, 이체, 사업 관련 항목을 확인하세요.
+        checking_savings_and_cash_you_hold: 체킹·저축 계좌와 직접 보유한 현금
+        checking_savings_cash: 체킹 / 저축(현금)
+        choose_account: 계좌 선택
+        choose_account_type: 계좌 유형 선택
+        choose_different_dates_or_view_all_your_imported_transactions: 다른 기간을 선택하거나 가져온 모든 거래를 확인하세요.
+        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: 은행에서 내보낸 CSV 또는 텍스트 기반 PDF를 하나 이상 선택하세요.
+        choose_statements_from_your_bank: 은행 명세서를 선택하세요
+        choose_the_account_type: 계좌 유형 선택 →
+        choose_the_dates_for_your_income_expenses_and_transactions: 수입·지출·거래를 확인할 기간을 선택하세요.
+        clarity_starts_with_context: 관련 정보를 알면 재무가 더 선명해집니다.
+        collect_applicable_w_2_and_1099_forms_mortgage_or_student_loan_interest_statemen: 해당하는 W-2 및 1099 양식, 주택담보대출·학자금대출 이자 명세서, 건강보험 기록, 영수증과 전년도 신고서를 모으세요.
+        confirm_and_import_transactions: 확인 후 거래 가져오기
+        confirm_sign_and_amount: 부호와 금액 확인
+        context: "· 관련 정보:"
+        credit_card: 신용카드
+        credit_card_excluded_from_cash: 신용카드 · 현금에서 제외
+        credit_cards: 신용카드
+        credit_owed_excluded: 신용카드 미상환액 · %{count}(현금에 포함되지 않음)
+        csv_check_the_columns: 'CSV: 열 확인'
+        dashboard: 재무 현황
+        date: 날짜
+        date_column_optional_override: 날짜 열(필요 시 직접 지정)
+        date_description_and_amount_import_transaction_activity_automatic_cash_balances: Date, Description, Amount 열로 거래 내역을 가져옵니다. 현금 잔액을 자동 계산하려면 Balance 열과 Bank, Account Number, Account Type(Checking, Savings, Credit Card) 등의 계좌 정보도 필요합니다. 거래만 가져올 때는 추가 열이 없어도 됩니다.
+        date_range_not_applied: 기간이 적용되지 않음
+        dates_use_column: 날짜에 %{column} 열을 사용합니다.
+        description: 설명
+        details: 상세 정보
+        discard: 삭제
+        discard_this_pdf_review: 이 PDF 검토 내용 삭제
+        download_sample_csv: 예시 CSV 다운로드
+        e_g_chase: '예: Chase'
+        e_g_everyday_checking: '예: 생활비 계좌'
+        each_cash_account_contributes_its_latest_statement_balance_once_older_statements: 각 현금 계좌의 최신 명세서 잔액을 한 번만 합산합니다. 같은 계좌의 이전 명세서는 중복 합산하지 않습니다.
+        each_file_has_its_own_result_transactions_are_saved_to_your_account_original_fil: 파일별로 결과를 표시합니다. 거래는 내 계정에 저장되며 원본 파일은 보관하지 않습니다.
+        each_file_is_processed_separately_a_failed_file_does_not_affect_successful_impor: 각 파일을 개별 처리합니다. 일부 파일이 실패해도 정상적으로 가져온 파일에는 영향을 주지 않습니다.
+        end_date: 종료일
+        enter_or_edit_amount: "✎ 금액 입력 또는 수정"
+        enter_or_edit_balance: "✎ 잔액 입력 또는 수정"
+        entered_by_you_physical_cash_is_not_on_any_statement: 직접 입력한 금액입니다. 실물 현금은 명세서에 표시되지 않습니다.
+        estimate_not_a_guarantee: 예상치이며 보장된 결과가 아닙니다
+        every_transaction_has_a_story: 모든 거래에는 이야기가 있습니다.
+        example_10_means_10_less_spending: '예: −10은 지출 10% 감소를 의미합니다.'
+        example_10_means_10_more_income: '예: 10은 수입 10% 증가를 의미합니다.'
+        exclude_from_totals_and_forecasts: 합계 및 예측에서 제외
+        excluded: "· 제외:"
+        excluded_2: 제외됨
+        excluded_from_totals: 합계에서 제외됨
+        expense_change: 지출 변화(%)
+        expenses: 지출
+        expenses_2: "· 지출"
+        expires_in: "%{duration} 후"
+        explore_a_scenario: 시나리오 살펴보기
+        explore_insights: 분석 살펴보기
+        explore_spending_observations_and_practical_next_steps_organize_transactions_tha: 지출 패턴과 실천 가능한 다음 단계를 살펴보세요. 세금 신고 시 더 자세히 확인할 거래를 정리하세요.
+        export_csv: CSV 내보내기
+        export_records: 기록 내보내기
+        extracted_rows: 추출된 행
+        extraction_notes: 추출 참고 사항(%{count})
+        financial_context: 재무 관련 정보
+        financial_observations: 재무 분석 결과
+        flag_for_tax_review: 세무 검토 대상으로 표시
+        flagged_for_tax_review: 세무 검토 대상으로 표시됨
+        flagging_a_transaction_does_not_make_it_deductible_save_receipts_and_supporting: 표시했다고 해서 세금 공제 대상이 되는 것은 아닙니다. 영수증과 증빙 자료를 보관하고 관할 지역에서 적용되는 처리 방법을 확인하세요.
+        forecast_chart_description: 오늘 잔액 %{current}에서 %{days}일 후 %{projected}(으)로 예상되는 잔액
+        forecast_horizon: 예측 기간
+        forecast_model: 예측 모델
+        forecast_starts_today: 예측은 오늘(%{date})부터 시작합니다.
+        from_statements_to_clarity: 명세서에서 명확한 재무 현황으로
+        gather_u_s_personal_tax_documents: 미국 개인 세금 신고 서류 준비
+        generate_an_analysis_to_see_observations_and_actions_based_on_your_imported_tran: 분석을 생성하면 가져온 거래를 바탕으로 한 관찰 결과와 다음 단계를 확인할 수 있습니다.
+        generate_basic_analysis: 기본 분석 생성
+        generate_billie_insights: Billie Insights 생성
+        generated: 생성일
+        get_your_tax_records_ready: 세금 신고 기록을 준비하세요
+        historical_average: 과거 평균
+        history_days_coverage: "%{days}일의 과거 데이터 기준"
+        i_checked_the_dates_descriptions_and_signed_amounts_excluded_rows_will_not_be_im: 날짜, 설명, 금액의 양수·음수 부호를 확인했습니다. 제외된 행은 가져오지 않습니다.
+        i_reviewed_the_included_rows_against_my_statement: 포함된 행을 명세서 원본과 대조했습니다.
+        identify_this_account: 이 계좌 확인
+        if_the_selected_model_is_unavailable_the_result_shows_the_model_used_and_explain: 선택한 모델을 사용할 수 없으면 실제 사용한 모델과 변경 이유가 결과에 표시됩니다.
+        illustrative_range: 참고용 범위
+        import_a_statement_first_so_billie_has_something_to_review: Billie가 검토할 수 있도록 먼저 명세서를 가져오세요.
+        import_a_statement_first_to_generate_an_analysis: 분석을 생성하려면 먼저 명세서를 가져오세요.
+        import_a_statement_to_see_your_income_and_expenses_in_one_place: 명세서를 가져와 수입과 지출을 한곳에서 확인하세요.
+        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: CSV 또는 텍스트 기반 PDF 은행 명세서를 함께 가져오세요. 거래를 정리해 재무 현황을 보여드립니다.
+        import_statements: 명세서 가져오기
+        imported: 가져옴
+        in_days: "%{days}일 후"
+        in_the_selected_period: 선택한 기간
+        in_the_selected_period_2: "· 선택한 기간"
+        in_your_financial_picture: "· 재무 현황에 반영됨"
+        include: 포함
+        include_row: "%{number}번째 행 포함"
+        include_this_transaction_in_the_records_you_review_with_your_tax_professional: 세무 전문가와 검토할 기록에 이 거래를 포함하세요.
+        income: 수입
+        income_2: ": 수입"
+        income_change: 수입 변화(%)
+        income_minus_expenses: 수입에서 지출을 뺀 금액
+        insights_use_your_full_imported_history: 분석에는 가져온 전체 내역을 사용합니다.
+        irs_gather_your_documents: 'IRS: 필요 서류 준비 →'
+        keep_this_analysis_in_perspective: 이 분석의 한계도 확인하세요
+        keep_this_in_perspective: 참고 사항
+        keep_your_records_accurate_and_mark_anything_that_needs_a_closer_look: 기록을 정확히 관리하고 자세히 확인할 항목을 표시하세요.
+        known_cash_balances_partial_total: 확인된 현금 잔액 · 부분 합계
+        last_30_days: 최근 30일
+        last_four_account_digits: 계좌번호 끝 네 자리
+        last_month: 지난달
+        last_year: 작년
+        latest_6_months_with_transactions_in_this_period: 해당 기간 중 거래가 있는 최근 6개월
+        latest_statement_per_account_summed_automatically_credit_card_balances_are_exclu: 계좌별 최신 명세서의 잔액을 자동 합산합니다. 신용카드 잔액은 현금에서 제외됩니다.
+        let_your_numbers: 나의 재무 데이터로
+        make_room_for_what_s_next: 앞으로의 계획을 위한 여유
+        make_the_details_yours: 상세 정보를 내게 맞게
+        match_records_to_official_tax_documents_and_review_your_individual_circumstances: 공식 세무 서류와 기록을 대조하고, 개인 상황은 자격을 갖춘 세무 전문가와 검토하세요.
+        model: '모델:'
+        money_in_money_out: 들어온 돈, 나간 돈.
+        month: 월
+        monthly_aggregate_totals_included_in_analysis: 분석에 포함된 월별 합계
+        monthly_totals_from_your_imported_transactions: 가져온 거래의 월별 합계
+        name_for_this_account: 이 계좌의 이름
+        names_are_read_from_your_statements_use_to_rename_one_the_name_you_type_is_alway: 계좌 이름은 명세서에서 읽어옵니다. ✎를 눌러 이름을 변경하면 직접 입력한 이름이 항상 표시됩니다.
+        needs_review: 검토 필요
+        net: 순액
+        net_cash_flow: 순현금흐름
+        next: 다음 →
+        next_30_days: 향후 30일
+        next_60_days: 향후 60일
+        next_90_days: 향후 90일
+        no_categorized_expenses_yet: 분류된 지출이 아직 없습니다.
+        no_closing_balance_saved: 저장된 기말 잔액 없음
+        no_credit_cards_identified_yet_upload_a_credit_card_statement_that_includes_the: 확인된 신용카드가 아직 없습니다. 은행명과 카드번호 끝 네 자리가 포함된 신용카드 명세서를 업로드하세요.
+        no_identified_accounts_yet: 확인된 계좌가 아직 없습니다.
+        no_matching_transactions: 조건에 맞는 거래가 없습니다.
+        no_statements_yet: 아직 명세서가 없습니다.
+        no_transactions_in_this_period: 이 기간에는 거래가 없습니다.
+        no_transactions_match_these_dates: 선택한 날짜에 해당하는 거래가 없습니다.
+        not_a_tax_decision: 세무 판단을 대신하지 않습니다.
+        not_available: 확인할 수 없음
+        not_entered_yet: 아직 입력하지 않음
+        not_imported: 가져오지 않음
+        not_imported_yet: "· 아직 가져오지 않음"
+        not_included: 포함되지 않음
+        not_included_in_automatic_cash_total: 자동 현금 합계에 포함되지 않음
+        not_linked_to_an_account_yet: 아직 계좌에 연결되지 않았습니다.
+        not_specified: 지정되지 않음
+        nothing_appears_in_your_dashboard_until_you_confirm_this_import: 이 가져오기를 확인하기 전에는 재무 현황에 반영되지 않습니다.
+        open_statement_history: 명세서 내역 열기 →
+        or_add_an_account: '또는 계좌 추가:'
+        owed: 미상환액
+        owed_amount: 미상환액 %{amount}
+        owed_on_credit_cards: '신용카드 미상환액:'
+        page_of_total: "%{total}페이지 중 %{page}페이지"
+        pdf_extraction_can_confuse_dates_amounts_running_balances_and_deposit_or_withdra: PDF 추출 과정에서 날짜, 금액, 누적 잔액, 입출금 부호를 잘못 읽을 수 있습니다. 아래에서 오류를 수정하고 요약 행은 제외한 뒤, 확인할 수 있는 거래만 가져오세요. 양수는 입금, 음수는 출금을 의미합니다.
+        pdf_review_anything_unclear: 'PDF: 불명확한 항목 확인'
+        pdfs_are_imported_automatically_when_everything_is_clear_including_the_statement: 명세서 연도와 각 금액의 부호까지 모두 명확하면 PDF를 자동으로 가져옵니다. 불명확한 항목은 별도 검토 단계에서 확인합니다. 수입은 양수, 지출은 음수입니다. CSV 날짜는 YYYY-MM-DD 또는 MM/DD/YYYY 형식을 사용합니다.
+        pdfs_waiting_for_review: 검토 대기 중인 PDF
+        personal: 개인
+        preparation_guidance_depends_on_your_circumstances: 준비 안내는 개인 상황에 따라 달라집니다.
+        previous: "← 이전"
+        projected_balance_in_days: "%{days}일 후 예상 잔액"
+        projected_cash_balance: 예상 현금 잔액
+        questions_for_your_tax_professional: 세무 전문가에게 물어볼 질문
+        recent_transactions: 최근 거래
+        records_to_organize: 정리할 기록
+        remove: 삭제
+        remove_this_statement_and_its_transactions: 이 명세서와 연결된 거래 삭제
+        rename: "✎ 이름 변경"
+        reset: 초기화
+        result: 결과
+        retry_only_the_files_that_were_not_imported_pdfs_marked_needs_review_are_saved_b: 가져오지 못한 파일만 다시 시도하세요. “검토 필요” PDF는 만료될 때까지 아래에 저장됩니다.
+        review: 검토
+        review_2: 검토 →
+        review_account_balances: 계좌 잔액 확인 →
+        review_expires: 검토 만료
+        review_federal_and_state_requirements: 연방 및 주 요건 확인
+        review_flagged_transactions: 표시된 거래 검토 →
+        review_pdf_statement: PDF 명세서 검토
+        review_transaction: 거래 검토
+        review_transaction_2: 거래를 검토하세요.
+        review_transaction_description: "%{description} 검토"
+        review_your_extracted_transactions: 추출된 거래를 검토하세요.
+        review_your_spending_refine_categories_and_flag_records_for_tax_preparation: 지출을 확인하고 분류를 다듬은 뒤 세금 신고 준비에 필요한 기록을 표시하세요.
+        review_your_transaction_categories: 거래 분류를 확인하세요
+        reviews_expire_30_minutes_after_upload_if_one_expires_upload_that_pdf_again_disc: 검토 내용은 업로드 30분 후 만료됩니다. 만료되면 PDF를 다시 업로드하세요. 검토 내용을 삭제해도 이미 가져온 명세서는 영향을 받지 않습니다.
+        row_date: "%{number}번째 행 날짜"
+        row_description: "%{number}번째 행 설명"
+        row_signed_amount: "%{number}번째 행 부호가 있는 금액"
+        sample_transactions_are_examples_import_them_only_if_you_want_to_try_the_workflo: 예시 거래입니다. 기능을 체험하려는 경우에만 가져오세요.
+        save_account: 계좌 저장
+        save_balance: 잔액 저장
+        save_cash_on_hand: 보유 현금 저장
+        save_changes: 변경 사항 저장
+        save_name: 이름 저장
+        save_tax_context: 세무 관련 정보 저장
+        saved_balance: 저장된 잔액
+        search_transactions: 거래 검색
+        search_transactions_2: 거래 검색…
+        see_a_little_further_ahead: 앞으로의 재무를 조금 더 멀리.
+        see_the_account_breakdown: 계좌별 상세 내역 보기 ↓
+        select_several_files_at_once_including_a_mix_of_csvs_and_text_based_pdfs_scanned: CSV와 텍스트 기반 PDF를 함께 여러 개 선택할 수 있습니다. 스캔본이나 이미지로만 된 PDF는 텍스트 기반 PDF 또는 CSV로 다시 내보내야 합니다. OCR은 지원하지 않습니다.
+        self_employed: 자영업
+        showing: '조회 기간:'
+        signed_amount_currency: 부호가 있는 금액(%{currency})
+        small_business: 소규모 사업
+        small_steps_clearer_direction: 작은 실천으로 더 명확한 방향을
+        some_statements_need_an_account: 일부 명세서의 계좌 확인 필요
+        some_statements_still_need_an_account_or_a_readable_dated_balance: 일부 명세서는 계좌 또는 읽을 수 있는 날짜별 잔액이 아직 필요합니다.
+        start_date: 시작일
+        starting_cash_balance: 시작 현금 잔액
+        statement: 명세서
+        statement_account_name: '명세서에서 읽은 이름: %{name}. 이 이름을 사용하려면 비워 두세요.'
+        statement_csv_or_pdf_files: 명세서 CSV 또는 PDF 파일
+        statement_currency: '명세서 통화:'
+        statement_history: 명세서 내역
+        statements_from_the_same_account_contribute_only_the_latest_balance_removing_a_s: 같은 계좌의 명세서는 최신 잔액만 반영합니다. 명세서를 삭제하면 연결된 거래도 삭제되며 계좌 합계가 다시 계산됩니다.
+        status: 상태
+        still_need_a_category: 분류가 필요합니다.
+        still_need_a_type_cash_or_credit: 유형(현금 또는 신용)을 확인해야 합니다.
+        summary_used_for_analysis: 분석에 사용한 요약
+        tax_country_or_jurisdiction: 납세 국가 또는 관할 지역
+        tax_jurisdiction: '세무 관할 지역:'
+        tax_preparation: 세금 신고 준비
+        tax_review: "· 세무 검토:"
+        tax_review_2: 세무 검토
+        tell_you_more: 더 많은 것을 알아보세요.
+        the_everyday_details: 일상의 거래 내역
+        the_original_date_and_amount_stay_tied_to_the_imported_statement_remove_and_re_i: 원래 날짜와 금액은 가져온 명세서와 연결되어 있습니다. 이 값을 바꾸려면 명세서를 삭제한 뒤 수정한 파일을 다시 가져오세요.
+        the_shaded_envelope_combines_daily_income_and_spending_bounds_it_has_no_calibrat: 음영 범위는 일별 수입·지출의 상한과 하한을 조합한 참고치입니다. 전체 현금 잔액에 대해 검증된 확률을 나타내지는 않습니다.
+        these_are_balances_on_the_dates_shown_upload_newer_statements_to_refresh_them_th: 표시된 날짜 기준의 잔액입니다. 최신 명세서를 업로드하면 업데이트됩니다. 이 앱은 은행에 연결하거나 실시간 잔액을 조회하지 않습니다.
+        these_statements_are_not_included_in_the_automatic_total_choose_an_existing_acco: 이 명세서들은 자동 합계에 포함되지 않습니다. 명세서 내역에서 기존 계좌를 선택하거나 은행명과 계좌번호 끝 네 자리를 추가하세요. 계좌를 선택해도 누락된 기말 잔액이 채워지지는 않습니다. 저장된 잔액 열에서 확인 가능한 정보를 살펴보세요.
+        this_draft_expires_after_30_minutes: 이 검토 초안은 30분 후 만료됩니다.
+        this_forecast_starts_from_a_partial_account_total: 이 예측은 일부 계좌만 포함된 합계에서 시작합니다.
+        this_information_adds_context_to_the_next_analysis_billieweather_does_not_calcul: 이 정보는 다음 분석에 참고됩니다. BillieWeather는 세액을 계산하거나 세금 신고서를 제출하지 않습니다.
+        this_is_a_different_account_with_the_same_bank_and_last_four_digits: 은행과 계좌번호 끝 네 자리가 같지만 다른 계좌입니다
+        this_line_is_based_on_patterns_in_your_past_transactions_not_bill_due_dates_or_c: 이 선은 과거 거래 패턴을 바탕으로 하며, 청구서 납부일이나 확정된 향후 결제를 반영하지 않습니다. 명세서 잔액은 인쇄된 날짜 기준의 기록으로 실시간 은행 잔액이 아닙니다.
+        this_month: 이번 달
+        this_year: 올해
+        time_period: 기간
+        today: 오늘
+        total_cash: 총 현금
+        total_cash_partial_some_accounts_need_attention: 총 현금 · 일부 합계, 계좌 확인 필요
+        total_expenses: 총지출
+        total_income: 총수입
+        total_owed_on_credit_cards: 총 신용카드 미상환액 ·
+        transaction: 거래
+        transaction_type: 거래 유형
+        transactions: 거래
+        transactions_are_organized_and_categorized_automatically_as_you_import: 가져오는 동안 거래가 자동으로 정리되고 분류됩니다
+        transfers: "· 이체:"
+        transfers_and_excluded_items_omitted: 이체 및 제외 항목 미포함
+        try_another_search_or_clear_your_filters: 다른 검색어를 입력하거나 필터를 해제하세요.
+        turn_information_into_next_steps: 정보를 다음 행동으로
+        u_s_personal_tax_preparation: 미국 개인 세금 신고 준비
+        uncategorized: '미분류:'
+        understand_patterns_consider_practical_actions_and_get_your_records_ready_for_ta: 패턴을 파악하고 실천할 방법을 검토하며 세금 신고를 위한 기록을 준비하세요.
+        united_states: 미국
+        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: 최대 10개 파일 · 파일당 2 MB · 총 10 MB · CSV 및 텍스트 기반 PDF
+        update_forecast: 예측 업데이트
+        upload_a_statement: 명세서 업로드
+        upload_a_statement_review_your_categories_then_generate_your_first_analysis: 명세서를 업로드하고 분류를 확인한 다음 첫 분석을 생성하세요.
+        upload_statement: 명세서 업로드
+        upload_statements: 명세서 업로드 →
+        upload_statements_2: 명세서 업로드
+        upload_your_first_csv_or_text_based_pdf_statement_to_see_income_spending_and_a_c: 첫 CSV 또는 텍스트 기반 PDF 명세서를 업로드하면 실제 거래에 기반한 수입·지출과 현금흐름 예측을 확인할 수 있습니다.
+        upload_your_first_statement: 첫 명세서 업로드
+        upload_your_first_statement_to_start_connecting_the_dots: 첫 명세서를 업로드해 재무 정보를 연결해 보세요.
+        use_an_existing_account: 기존 계좌 사용
+        use_automatic_account_total: 자동 계좌 합계 사용
+        use_date_description_and_amount_separate_debit_and_credit_columns_are_also_suppo: Date, Description, Amount 열을 사용하세요. Debit과 Credit을 별도 열로 두는 형식도 지원합니다. 날짜는 Transaction Date, Date, 전기일 열 순서로 자동 감지됩니다. 가져오기 결과에 사용한 열이 표시됩니다.
+        use_for_duplicates_or_items_that_should_not_affect_your_financial_picture: 중복 거래나 재무 현황에 반영하지 않을 항목에 사용하세요.
+        use_one_currency: 하나의 통화 사용
+        use_the_same_bank_and_last_four_digits_for_every_statement_from_this_account_do: 같은 계좌의 모든 명세서에 동일한 은행명과 계좌번호 끝 네 자리를 사용하세요. 전체 계좌번호는 입력하지 마세요.
+        use_this_account: 이 계좌 사용
+        view_account_balances: 계좌 잔액 보기 →
+        view_all: 모두 보기 →
+        view_all_dates: 전체 기간 보기
+        view_monthly_figures: 월별 수치 보기
+        view_transactions: 거래 보기 →
+        waiting_for_a_usable_starting_balance: 사용 가능한 시작 잔액 대기 중
+        what_goes_into_this_estimate: 이 예상치의 계산 기준
+        what_you_owe_on_each_card: 카드별 미상환액
+        what_your_numbers_say: 나의 재무 데이터가 보여주는 것
+        when_account_details_and_a_dated_balance_are_present_we_total_the_latest_balance: 계좌 정보와 날짜가 있는 잔액을 확인할 수 있으면 현금 계좌별 최신 잔액을 합산합니다. 계좌가 불명확하면 명세서 내역에서 선택하세요. 신용카드는 현금에서 제외됩니다.
+        where_it_goes: 지출 내역
+        workspace_currency: 현재 작업 공간의 통화는 %{currency}입니다. 환율 변환은 적용되지 않습니다.
+        you_have_the_final_say: 최종 결정은 직접
+        your_account_balances: 계좌 잔액
+        your_accounts: 내 계좌
+        your_cash_flow_outlook: 나의 현금흐름 전망
+        your_expense_categories: 지출 분류
+        your_financial_outlook: 나의 재무 전망
+        your_financial_story_starts_here: 나의 재무 이야기, 여기서 시작하세요.
+        your_imported_files_accounts_and_transaction_counts: 가져온 파일, 계좌 및 거래 건수
+        your_latest_transactions_will_appear_here: 최근 거래가 여기에 표시됩니다.
+        your_money_in_focus: 한눈에 보는 나의 재무
+        your_next_insight_is_in_your_numbers: 다음 인사이트는 나의 재무 데이터에 있습니다.
+        your_numbers_thoughtfully_explained: 재무 데이터를 알기 쉽게
+        your_records_or_profile_changed_since_billie_prepared_these_tax_insights_ask_bil: Billie가 세무 분석을 생성한 후 기록 또는 프로필이 변경되었습니다. 최신 정보를 반영하려면 Billie에게 다시 요청하세요.
+        your_records_or_profile_changed_since_this_analysis_was_generated_generate_a_new: 이 분석을 생성한 후 기록 또는 프로필이 변경되었습니다. 최신 정보를 반영하려면 분석을 다시 생성하세요.
+        your_starting_balance_is_not_available_yet: 시작 잔액을 아직 확인할 수 없습니다.
+        your_starting_point: 시작점
+        your_tax_context: 나의 세무 관련 정보
+        your_transactions_belong_here: 내 거래를 한곳에.
+        your_upload_results: 업로드 결과
+        dashboard_periods: 재무 현황 조회 기간
+        monthly_income_expenses: 월별 수입 및 지출
+        income_amount: '수입: %{amount}'
+        expenses_amount: '지출: %{amount}'
+        transactions_found:
+          one: 건의 거래를 찾았습니다
+          other: 건의 거래를 찾았습니다
+        tax_context_personal: 개인
+        tax_context_self_employed: 자영업
+        tax_context_business: 사업

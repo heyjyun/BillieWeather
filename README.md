@@ -20,9 +20,9 @@ Register a new account; no shared demo login or preloaded financial data is crea
 
 ## Languages
 
-The main app supports English and Simplified Chinese. Use the **English / 中文** switch in the header on the home, authentication, or finance pages. The first visit follows the browser language; an explicit choice is remembered in this browser for one year and takes priority over browser and account defaults. It remains selected after signing in or out. Language links preserve current search and date filters.
+The main app supports English, Simplified Chinese, Japanese, and Korean. Open the language menu in the header on the home, authentication, or finance pages and choose **English / 简体中文 / 日本語 / 한국어**. The first visit follows the browser language; an explicit choice is remembered in this browser for one year and takes priority over browser and account defaults. It remains selected after signing in or out. Language links preserve current search and date filters.
 
-Navigation, forms, dates, categories, validation messages, forecast explanations, and newly generated basic/AI analysis use the selected language. Previously saved analysis and PDF-specific warnings retain their original language; generate a new analysis to use the current language. User-provided descriptions, bank names, and custom account names remain as entered. CSV headers, stored categories, currencies, and financial calculations stay consistent between languages. Chinese mode does not change the app's U.S. tax-preparation scope. Restart Rails after adding the new locale configuration.
+Navigation, forms, dates, categories, validation messages, forecast explanations, and newly generated basic/AI analysis use the selected language. Previously saved analysis and PDF-specific warnings retain their original language; generate a new analysis to use the current language. User-provided descriptions, bank names, and custom account names remain as entered. CSV headers, stored categories, currencies, and financial calculations stay consistent between languages. Changing the interface language does not change the app's U.S. tax-preparation scope or add support for other countries' bank statement formats. Restart Rails after adding the new locale configuration.
 
 ## Working flows
 

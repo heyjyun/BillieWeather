@@ -1,0 +1,188 @@
+{
+  "ja": {
+    "billie": {
+      "auth": {
+        "home": {
+          "eyebrow": "お金の流れを、もっと明確に",
+          "intro": "銀行明細から支出を把握し、シンプルなキャッシュフロー予測を確認できます。",
+          "dashboard": "ダッシュボードへ",
+          "no_bank_login": "銀行へのログインは不要",
+          "future_bank_sync": "今後、ユーザー数が増え、資金基盤が整えば、銀行との提携により、すべての明細書を直接自動同期できるようにすることを検討します。",
+          "free_analysis": "無料の基本分析",
+          "art_label": "明細を取り込み、取引を確認し、キャッシュフローを予測",
+          "outlook": "あなたのお金の見通し",
+          "clear_view_html": "お金の流れを、<br>すっきり把握。",
+          "in_one_place_html": "明細も取引もキャッシュフローも、<br>ひとつの場所で。",
+          "step_import": "明細を取り込む",
+          "step_review": "取引を確認する",
+          "step_forecast": "キャッシュフロー予測を見る",
+          "real_numbers": "あなたの実際のデータが出発点",
+          "less_guesswork": "憶測を減らし、",
+          "more_room": "計画にゆとりを。",
+          "clarity": "明細から、わかりやすい見通しへ",
+          "what_it_does": "できること",
+          "import_title": "明細を取り込む。",
+          "import_description": "銀行の CSV またはテキスト形式の PDF 明細をアップロードし、取引ごとに内容とカテゴリを確認できます。",
+          "spending_title": "お金の使い道を知る。",
+          "spending_description": "ダッシュボードで収入、支出、カテゴリ、最近の取引をまとめて確認できます。",
+          "forecast_title": "キャッシュフローを予測する。",
+          "forecast_description": "現在の残高を設定すると、最近の収支傾向が続いた場合の残高推移を確認できます。",
+          "one_step": "一歩ずつ、始めましょう",
+          "how_it_works": "使い方",
+          "how_signup": "アカウントを作成してログイン。",
+          "how_upload": "銀行明細をアップロード。",
+          "how_no_bank_login": "銀行へのログインは不要です。",
+          "how_review": "取り込んだ取引を確認。",
+          "how_open": "ダッシュボードと予測を確認。",
+          "tax_title": "申告に向けて記録を整理。",
+          "tax_description": "確認が必要な取引に印を付け、税務の専門家と共有する記録を整理できます。",
+          "analysis_title": "無料の基本分析。",
+          "analysis_description": "必要なときに支出傾向の要約を作成できます。基本分析には有料 AI サービスは不要です。",
+          "disclaimer": "BillieWeather は財務記録の整理と概算のみを提供します。個別の財務・法律・税務アドバイスではありません。"
+        },
+        "create_an_account": "アカウントを作成",
+        "log_in": "ログイン",
+        "welcome_back": "おかえりなさい",
+        "outlook_awaits": "お金の見通しを、ここから。",
+        "login_description": "BillieWeather のワークスペースにログインします。",
+        "email": "メールアドレス",
+        "password": "パスワード",
+        "remember_me": "ログイン状態を保持",
+        "authentication_code": "認証コード（設定している場合）",
+        "new_here": "BillieWeather を初めてお使いですか？",
+        "forgot_password": "パスワードをお忘れですか？",
+        "create_your_account": "アカウントを作成",
+        "signup_eyebrow": "お金の見通しを、もっと明確に",
+        "signup_description": "一枚の明細から、お金の流れを見える形に。",
+        "first_name": "名",
+        "last_name": "姓",
+        "unique_password_hint": "%{count} 文字以上で、他のサイトと異なるパスワードを設定してください。",
+        "confirm_password": "パスワードの確認",
+        "create_account": "アカウントを作成",
+        "already_have_account": "すでにアカウントをお持ちですか？",
+        "reset_password": "パスワードを再設定",
+        "recovery_eyebrow": "もう一度、明確な見通しへ",
+        "reset_description": "登録したメールアドレスを入力すると、再設定用のリンクを送信します。",
+        "send_reset_link": "再設定リンクを送信",
+        "back_to_login": "ログインに戻る",
+        "choose_password": "新しいパスワードを設定",
+        "fresh_start": "新たなスタート",
+        "protect_workspace": "他のサイトと異なるパスワードで、財務ワークスペースを保護しましょう。",
+        "new_password": "新しいパスワード",
+        "password_hint": "%{count} 文字以上で入力してください。",
+        "confirm_new_password": "新しいパスワードの確認",
+        "update_password": "パスワードを更新",
+        "google_continue": "Google で続ける",
+        "google_unavailable": "現在 Google ログインは利用できません。メールアドレスで続けてください。",
+        "email_continue": "またはメールアドレスで続ける",
+        "sign_in": "ログイン",
+        "recovery_unavailable": "現在、パスワードの再設定は利用できません。しばらくしてからお試しください。",
+        "google_connected": "ログインしました。今後は Google でもログインできます。",
+        "page_expired": "ログインページの有効期限が切れました。もう一度入力してください。",
+        "google_signed_in": "Google でログインしました。",
+        "google_incomplete": "Google ログインが完了しませんでした。再試行するか、メールアドレスとパスワードでログインしてください。",
+        "google_link_required": "このメールアドレスのアカウントはすでにあります。一度、既存のパスワードでログインすると Google を連携できます。",
+        "google_service_unavailable": "現在 Google ログインは利用できません。メールアドレスとパスワードをお使いください。",
+        "google_sign_out_first": "別の Google アカウントを使うには、先にログアウトしてください。",
+        "google_sign_out_before_signup": "別のメールアドレスでアカウントを作成するには、先にログアウトしてください。",
+        "registration_unavailable": "現在、新規登録は受け付けていません。招待されたアカウントをお使いください。",
+        "google_failed": "Google ログインを完了できませんでした。再試行するか、既存のパスワードでログインしてください。",
+        "google_unverified_identity": "Google から認証済みの本人情報を取得できませんでした。もう一度お試しください。",
+        "google_unverified_email": "Google から確認済みメールアドレスを取得できませんでした。もう一度お試しください。",
+        "account_unavailable": "現在、このアカウントではログインできません。メールアドレスでのログイン画面をお使いください。",
+        "authentication_code_required": "このアカウントには認証コードが必要です。メールアドレス、パスワード、認証コードでログインしてください。",
+        "google_other_account": "このアカウントは別の Google アカウントと連携されています。現在のログイン方法をお使いください。"
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "user": {
+          "email": "メールアドレス",
+          "password": "パスワード",
+          "password_confirmation": "パスワードの確認",
+          "first_name": "名",
+          "last_name": "姓",
+          "reset_password_token": "パスワード再設定トークン",
+          "confirmation_token": "確認トークン",
+          "unlock_token": "ロック解除トークン"
+        }
+      }
+    },
+    "errors": {
+      "format": "%{attribute}%{message}",
+      "messages": {
+        "blank": "を入力してください",
+        "taken": "はすでに使われています",
+        "invalid": "が正しくありません",
+        "confirmation": "が%{attribute}と一致しません",
+        "too_short": "は %{count} 文字以上で入力してください",
+        "too_long": "は %{count} 文字以内で入力してください",
+        "not_saved": "を保存できませんでした",
+        "not_found": "が見つかりません",
+        "already_confirmed": "は確認済みです。ログインしてください",
+        "confirmation_period_expired": "は %{period} 以内に確認する必要があります。もう一度申請してください",
+        "expired": "の有効期限が切れています。もう一度申請してください",
+        "not_locked": "はロックされていません",
+        "not_a_number": "は数値で入力してください",
+        "pwned_password": "はデータ漏えいで確認されています。別のパスワードを使ってください"
+      },
+      "attributes": {}
+    },
+    "devise": {
+      "failure": {
+        "already_authenticated": "すでにログインしています。",
+        "inactive": "アカウントがまだ有効になっていません。",
+        "invalid": "%{authentication_keys}またはパスワードが正しくありません。",
+        "locked": "アカウントがロックされています。",
+        "last_attempt": "次にログインに失敗すると、アカウントがロックされます。",
+        "not_found_in_database": "%{authentication_keys}またはパスワードが正しくありません。",
+        "timeout": "ログインの有効期限が切れました。もう一度ログインしてください。",
+        "unauthenticated": "ログインまたは新規登録をしてください。",
+        "unconfirmed": "メールアドレスを確認してください。"
+      },
+      "sessions": {
+        "signed_in": "ログインしました。",
+        "signed_out": "ログアウトしました。",
+        "already_signed_out": "ログアウトしました。",
+        "warn_pwned": "お使いのパスワードがデータ漏えいで確認されています。すぐに変更することをおすすめします。"
+      },
+      "registrations": {
+        "signed_up": "登録が完了しました。ようこそ！",
+        "signed_up_but_inactive": "登録が完了しました。アカウントが有効になるとログインできます。",
+        "signed_up_but_locked": "登録は完了しましたが、アカウントがロックされています。",
+        "signed_up_but_unconfirmed": "確認メールを送信しました。メール内のリンクからアカウントを有効にしてください。",
+        "updated": "アカウント情報を更新しました。",
+        "update_needs_confirmation": "アカウント情報を更新しました。新しいメールアドレスを確認してください。",
+        "destroyed": "アカウントを削除しました。"
+      },
+      "passwords": {
+        "no_token": "パスワード再設定メール内のリンクから、このページを開いてください。",
+        "send_instructions": "パスワードの再設定方法を記載したメールをまもなくお届けします。",
+        "send_paranoid_instructions": "登録済みのメールアドレスであれば、パスワード再設定のメールをお届けします。",
+        "updated": "パスワードを更新し、ログインしました。",
+        "updated_not_active": "パスワードを更新しました。"
+      },
+      "confirmations": {
+        "confirmed": "メールアドレスを確認しました。",
+        "send_instructions": "メールアドレスの確認方法を記載したメールをまもなくお届けします。",
+        "send_paranoid_instructions": "登録済みのメールアドレスであれば、確認メールをお届けします。"
+      },
+      "unlocks": {
+        "send_instructions": "アカウントのロック解除方法を記載したメールをまもなくお届けします。",
+        "send_paranoid_instructions": "該当するアカウントがある場合、ロック解除のメールをお届けします。",
+        "unlocked": "アカウントのロックを解除しました。ログインしてください。"
+      },
+      "omniauth_callbacks": {
+        "failure": "%{kind}でログインできませんでした：%{reason}。",
+        "success": "%{kind}でログインしました。"
+      }
+    },
+    "support": {
+      "array": {
+        "words_connector": "、",
+        "two_words_connector": "と",
+        "last_word_connector": "、"
+      }
+    }
+  }
+}

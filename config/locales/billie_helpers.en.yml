@@ -49,6 +49,46 @@
           "excluded_credit": "Credit card balance · excluded from cash",
           "unknown_kind": "Confirm whether this is a cash account or credit card",
           "excluded": "Not included in cash total"
+        },
+        "month_format": "%b %Y",
+        "month_day_format": "%b %-d",
+        "counts": {
+          "transaction": {
+            "one": "%{count} transaction",
+            "other": "%{count} transactions"
+          },
+          "statement": {
+            "one": "%{count} statement",
+            "other": "%{count} statements"
+          },
+          "account": {
+            "one": "%{count} account",
+            "other": "%{count} accounts"
+          },
+          "card": {
+            "one": "%{count} card",
+            "other": "%{count} cards"
+          },
+          "cash_account": {
+            "one": "%{count} cash account",
+            "other": "%{count} cash accounts"
+          },
+          "day": {
+            "one": "%{count} day",
+            "other": "%{count} days"
+          },
+          "file": {
+            "one": "%{count} file",
+            "other": "%{count} files"
+          },
+          "row": {
+            "one": "%{count} row",
+            "other": "%{count} rows"
+          },
+          "month": {
+            "one": "%{count} month",
+            "other": "%{count} months"
+          }
         }
       }
     }

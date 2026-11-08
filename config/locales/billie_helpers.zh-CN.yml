@@ -60,7 +60,9 @@
           "excluded_credit": "信用卡余额 · 不计入现金",
           "unknown_kind": "请确认这是现金账户还是信用卡",
           "excluded": "未计入现金合计"
-        }
+        },
+        "month_format": "%Y年%-m月",
+        "month_day_format": "%-m月%-d日"
       }
     },
     "date": {

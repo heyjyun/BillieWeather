@@ -1,0 +1,75 @@
+{
+  "ko": {
+    "errors": {
+      "messages": {
+        "cent_precision": "소수점 이하 두 자리까지 입력할 수 있습니다",
+        "currency_in_use": "다른 통화의 명세서가 있어 변경할 수 없습니다",
+        "same_owner": "본인 소유여야 합니다",
+        "same_statement_owner": "동일한 사용자 소유여야 합니다",
+        "object_required": "객체여야 합니다",
+        "control_characters": "제어 문자를 사용할 수 없습니다",
+        "review_row_count": "검토 가능한 거래가 1~%{count}건 있어야 합니다",
+        "review_row_invalid": "%{row}행에 잘못된 정보가 있습니다",
+        "review_date_invalid": "%{row}행에 잘못된 날짜가 있습니다",
+        "review_save_failed": "검토용으로 저장하지 못했습니다",
+        "review_expiration": "현재부터 30분 이내여야 합니다",
+        "inclusion": "선택 가능한 값이어야 합니다",
+        "exclusion": "사용할 수 없는 값입니다",
+        "not_an_integer": "정수여야 합니다",
+        "greater_than": "%{count}보다 커야 합니다",
+        "greater_than_or_equal_to": "%{count} 이상이어야 합니다",
+        "less_than": "%{count}보다 작아야 합니다",
+        "less_than_or_equal_to": "%{count} 이하여야 합니다",
+        "equal_to": "%{count}여야 합니다",
+        "other_than": "%{count}일 수 없습니다",
+        "accepted": "동의해야 합니다",
+        "present": "비워 두어야 합니다",
+        "required": "필수입니다",
+        "too_long": "%{count}자 이하여야 합니다",
+        "wrong_length": "%{count}자여야 합니다"
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "finance/profile": {
+          "currency": "통화",
+          "current_balance": "현재 잔액",
+          "cash_on_hand": "보유 현금",
+          "tax_country": "세금 관할 국가·지역",
+          "tax_profile": "납세자 유형",
+          "balance_source": "잔액 출처"
+        },
+        "finance/transaction": {
+          "booked_on": "거래 날짜",
+          "description": "거래 설명",
+          "amount": "금액",
+          "category": "분류",
+          "tax_review": "세금 검토",
+          "excluded": "제외 설정",
+          "statement": "명세서"
+        },
+        "finance/bank_account": {
+          "bank_name": "은행명",
+          "name": "계좌명",
+          "custom_name": "사용자 지정 이름",
+          "last4": "계좌번호 끝 4자리",
+          "kind": "계좌 유형"
+        },
+        "finance/statement": {
+          "bank_account": "은행 계좌",
+          "filename": "파일명",
+          "currency": "통화",
+          "transaction_count": "거래 건수"
+        },
+        "finance/statement_draft": {
+          "bank_account": "은행 계좌",
+          "filename": "파일명",
+          "currency": "통화",
+          "rows": "검토할 거래",
+          "warnings": "주의 사항",
+          "expires_at": "만료 시각"
+        }
+      }
+    }
+  }
+}

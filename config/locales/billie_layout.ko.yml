@@ -1,0 +1,35 @@
+{
+  "ko": {
+    "billie": {
+      "layout": {
+        "title": "BillieWeather — 더 선명한 재무 전망",
+        "description": "명세서에서 거래와 현금 흐름을 파악하고 앞으로의 재무 계획을 세워 보세요.",
+        "skip": "본문으로 이동",
+        "home": "BillieWeather 홈",
+        "main_navigation": "주 메뉴",
+        "how_it_works": "이용 방법",
+        "features": "기능",
+        "open_dashboard": "대시보드 열기",
+        "log_in": "로그인",
+        "get_started": "시작하기",
+        "my_workspace": "내 워크스페이스",
+        "personal_finances": "개인 재무 관리",
+        "workspace_label": "워크스페이스",
+        "workspace_navigation": "워크스페이스 메뉴",
+        "dashboard": "대시보드",
+        "transactions": "거래 내역",
+        "forecast": "현금 흐름 예측",
+        "insights": "Billie 인사이트",
+        "clarity": "재무를 이해하면 다음 단계가 보입니다.",
+        "next_step": "수입과 지출을 파악하는 것부터 시작해 보세요.",
+        "your_account": "내 계정",
+        "log_out": "로그아웃",
+        "workspace": "워크스페이스",
+        "overview": "개요",
+        "outlook": "나의 재무 전망",
+        "footer": "현재를 이해하고, 다음을 자신 있게 준비하세요.",
+        "language": "언어"
+      }
+    }
+  }
+}

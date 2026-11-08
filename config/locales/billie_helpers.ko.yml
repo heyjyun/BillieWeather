@@ -1,0 +1,129 @@
+{
+  "ko": {
+    "billie": {
+      "helpers": {
+        "date_format": "%Y년 %-m월 %-d일",
+        "month_format": "%Y년 %-m월",
+        "month_day_format": "%-m월 %-d일",
+        "unavailable": "데이터 없음",
+        "balance_today": "오늘 기준 잔액입니다.",
+        "balance_dated": "%{date} 기준 잔액입니다.",
+        "balance_aged": "%{date}(%{days} 전) 기준 잔액입니다. 이후 거래는 포함되지 않습니다.",
+        "manual": "직접 입력한 잔액입니다. 자동 계좌 합계보다 우선 적용됩니다.",
+        "manual_dated": "%{date}에 직접 입력한 잔액입니다. 자동 계좌 합계보다 우선 적용됩니다.",
+        "automatic_total": "%{accounts}의 최신 잔액을 자동으로 합산합니다.",
+        "statement_dates": " 명세서 날짜: %{dates}.",
+        "partial_total": " 일부 합계입니다. 확인이 필요한 계좌나 잔액이 있습니다.",
+        "no_statement_data": "아직 명세서 데이터가 없습니다",
+        "labels": {
+          "income": "수입",
+          "housing": "주거비",
+          "food": "식비·외식",
+          "transport": "교통비",
+          "utilities": "공과금·통신비",
+          "shopping": "쇼핑",
+          "health": "의료·건강",
+          "business": "사업 관련",
+          "transfers": "이체",
+          "uncategorized": "미분류",
+          "checking": "체킹 계좌",
+          "savings": "저축 계좌",
+          "credit_account": "신용 계좌",
+          "cash_account": "현금 계좌",
+          "account": "계좌"
+        },
+        "counts": {
+          "transaction": "거래 %{count}건",
+          "statement": "명세서 %{count}건",
+          "account": "계좌 %{count}개",
+          "card": "카드 %{count}장",
+          "cash_account": "현금 계좌 %{count}개",
+          "day": "%{count}일",
+          "file": "파일 %{count}개",
+          "row": "%{count}행",
+          "month": "%{count}개월"
+        },
+        "setup": {
+          "unassigned": "%{statements}에 날짜가 있는 기말 잔액이 저장되어 있지만 계좌가 확인되지 않았습니다. 명세서 내역에서 계좌를 선택하면 자동 합계에 포함됩니다.",
+          "unconfirmed": "기말 잔액이 저장되었지만 계좌와 잔액 날짜를 확인해야 합니다. 명세서 내역을 확인하세요. 거래 날짜만으로 잔액 날짜를 확정할 수는 없습니다.",
+          "no_details": "%{statements}에서 거래를 가져왔지만 계좌 정보나 기말 잔액이 저장되지 않았습니다. 파일에 계좌 정보와 잔액 열이 있다면 다시 업로드하세요. 누락된 정보가 자동으로 채워지며 거래가 중복으로 추가되지 않습니다. 잔액을 직접 입력할 수도 있습니다.",
+          "only_credit": "신용 계좌만 확인되었습니다. 신용 계좌 잔액은 부채이므로 시작 현금에 포함되지 않습니다. 날짜가 있는 체킹 또는 저축 계좌 잔액이 필요합니다.",
+          "future_date": "현금 계좌의 잔액 날짜가 미래로 되어 있습니다. 사용하기 전에 계좌 내역에서 날짜를 확인하세요.",
+          "missing_date": "현금 계좌 잔액의 날짜가 확인되지 않았습니다. 명세서 내역에서 잔액 날짜를 먼저 확인하세요.",
+          "missing_balance": "현금 계좌의 최신 명세서에 사용할 수 있는 기말 잔액이 저장되어 있지 않습니다. 원본 명세서에서 날짜와 잔액을 확인하세요. 이전 잔액으로 자동 대체하지 않습니다.",
+          "unknown_kind": "계좌 유형이 확인되지 않았습니다. 명세서 내역에서 체킹 또는 저축 계좌를 지정하면 시작 현금을 계산할 수 있습니다.",
+          "no_balance": "날짜가 있는 현금 계좌 잔액이 아직 없습니다. 계좌 정보와 기말 잔액이 포함된 명세서를 가져오면 자동으로 계산됩니다."
+        },
+        "balance_status": {
+          "known": "현금 합계에 포함됨",
+          "missing_balance": "최신 명세서의 기말 잔액을 읽을 수 없음",
+          "missing_date": "잔액 날짜 확인 필요",
+          "future_date": "미래 날짜의 잔액은 제외됨",
+          "excluded_credit": "신용카드 잔액 · 현금에서 제외",
+          "unknown_kind": "현금 계좌인지 신용카드인지 확인하세요",
+          "excluded": "현금 합계에서 제외됨"
+        }
+      }
+    },
+    "date": {
+      "formats": {
+        "default": "%Y년 %-m월 %-d일",
+        "short": "%-m월 %-d일",
+        "long": "%Y년 %-m월 %-d일"
+      },
+      "day_names": [
+        "일요일",
+        "월요일",
+        "화요일",
+        "수요일",
+        "목요일",
+        "금요일",
+        "토요일"
+      ],
+      "abbr_day_names": [
+        "일",
+        "월",
+        "화",
+        "수",
+        "목",
+        "금",
+        "토"
+      ],
+      "month_names": [
+        null,
+        "1월",
+        "2월",
+        "3월",
+        "4월",
+        "5월",
+        "6월",
+        "7월",
+        "8월",
+        "9월",
+        "10월",
+        "11월",
+        "12월"
+      ],
+      "abbr_month_names": [
+        null,
+        "1월",
+        "2월",
+        "3월",
+        "4월",
+        "5월",
+        "6월",
+        "7월",
+        "8월",
+        "9월",
+        "10월",
+        "11월",
+        "12월"
+      ],
+      "order": [
+        "year",
+        "month",
+        "day"
+      ]
+    }
+  }
+}

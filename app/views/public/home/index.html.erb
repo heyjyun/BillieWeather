@@ -13,6 +13,7 @@
       <% end %>
     </div>
     <div class="bw-hero-details"><span><%= finance_icon "check", size: 16 %> <%= t("billie.auth.home.no_bank_login") %></span><span><%= finance_icon "check", size: 16 %> <%= t("billie.auth.home.free_analysis") %></span></div>
+    <p class="bw-caption bw-bank-sync-note"><%= t("billie.auth.home.future_bank_sync") %></p>
   </div>
   <div class="bw-hero-art" aria-label="<%= t("billie.auth.home.art_label") %>">
     <span class="bw-art-orbit bw-orbit-one"></span><span class="bw-art-orbit bw-orbit-two"></span>
@@ -35,7 +36,7 @@
   </div>
 </section>
 <section class="bw-marketing-section bw-marketing-split" id="how-it-works">
-  <div><span class="bw-eyebrow"><%= t("billie.auth.home.one_step") %></span><h2><%= t("billie.auth.home.how_it_works") %></h2><ol class="bw-numbered-list"><li><strong><%= t("billie.auth.home.how_signup") %></strong></li><li><strong><%= t("billie.auth.home.how_upload") %></strong><p><%= t("billie.auth.home.how_no_bank_login") %></p></li><li><strong><%= t("billie.auth.home.how_review") %></strong></li><li><strong><%= t("billie.auth.home.how_open") %></strong></li></ol></div>
+  <div><span class="bw-eyebrow"><%= t("billie.auth.home.one_step") %></span><h2><%= t("billie.auth.home.how_it_works") %></h2><ol class="bw-numbered-list"><li><strong><%= t("billie.auth.home.how_signup") %></strong></li><li><strong><%= t("billie.auth.home.how_upload") %></strong><p><%= t("billie.auth.home.how_no_bank_login") %></p><p class="bw-bank-sync-note"><%= t("billie.auth.home.future_bank_sync") %></p></li><li><strong><%= t("billie.auth.home.how_review") %></strong></li><li><strong><%= t("billie.auth.home.how_open") %></strong></li></ol></div>
   <div class="bw-feature-list">
     <article><%= finance_icon "file", size: 24 %><div><h3><%= t("billie.auth.home.tax_title") %></h3><p><%= t("billie.auth.home.tax_description") %></p></div></article>
     <article><%= finance_icon "insights", size: 24 %><div><h3><%= t("billie.auth.home.analysis_title") %></h3><p><%= t("billie.auth.home.analysis_description") %></p></div></article>

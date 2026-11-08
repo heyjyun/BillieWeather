@@ -118,7 +118,7 @@ class FinanceLocalizedWorkflowTest < ActionDispatch::IntegrationTest
     assert_equal chinese_report.content, chinese_report.reload.content
   end
 
-  test "new AI analysis requests Chinese values with unchanged schema keys and aggregate categories" do
+  test "new AI analysis requests the selected language with unchanged schema keys and aggregate categories" do
     content = {
       "summary" => "请核对已导入的财务记录。",
       "observations" => [{"title" => "检查范围", "body" => "请核对账单日期范围。"}],
@@ -137,14 +137,54 @@ class FinanceLocalizedWorkflowTest < ActionDispatch::IntegrationTest
     end
     stub_method(Finance::InsightGenerator, :ai_available?, true) do
       stub_method(Finance::InsightGenerator, :model, "test-model") do
-        I18n.with_locale(:"zh-CN") { generator.call }
+        %w[en zh-CN ja ko].each { |locale| I18n.with_locale(locale) { generator.call } }
       end
     end
-    assert_equal 1, payloads.length
-    assert_includes payloads.first.fetch(:instructions), "Simplified Chinese"
-    assert_includes payloads.first.fetch(:instructions), "Keep the schema keys unchanged"
-    assert_equal Finance::InsightGenerator::OUTPUT_SCHEMA, payloads.first.dig(:text, :format, :schema)
+    assert_equal 4, payloads.length
+    %w[English].concat(["Simplified Chinese", "Japanese", "Korean"]).each_with_index do |language, index|
+      assert_includes payloads[index].fetch(:instructions), language
+      assert_includes payloads[index].fetch(:instructions), "Keep the schema keys unchanged"
+      assert_equal Finance::InsightGenerator::OUTPUT_SCHEMA, payloads[index].dig(:text, :format, :schema)
+    end
     assert_equal content, @user.finance_insights.last.content
+  end
+
+  %w[ja ko].each do |locale|
+    test "#{locale} CSV and PDF imports keep canonical data and localize errors" do
+      get finance_statements_path, params: {locale: locale}
+      csv = "Date,Description,Amount,Category\n#{Date.current.iso8601},商户 お店 가게,-25.50,Food & dining\n"
+      with_upload(csv, "international.csv", "text/csv") do |file|
+        assert_difference "@user.finance_transactions.count", 1 do
+          post finance_statements_path, params: {file: file}
+        end
+      end
+      assert_redirected_to finance_transactions_path
+      assert_equal "Food & dining", @user.finance_transactions.last.category
+      assert_equal "商户 お店 가게", @user.finance_transactions.last.description
+
+      with_upload("Date,Description,Amount\n#{Date.current.iso8601},Invalid,abc\n", "invalid.csv", "text/csv") do |file|
+        assert_no_difference "@user.finance_transactions.count" do
+          post finance_statements_path, params: {file: file}
+        end
+      end
+      assert_response :unprocessable_entity
+      assert_select "html[lang='#{locale}']"
+      assert_select "[role='alert']", text: locale == "ja" ? /[\p{Hiragana}\p{Katakana}]/ : /\p{Hangul}/
+
+      clear_pdf = finance_statement_pdf(["Statement Period: 10/01/2025 - 10/31/2025", "10/05 Salary +1,000.00", "10/20 Grocery market -25.50"])
+      with_upload(clear_pdf, "international.pdf", "application/pdf") do |file|
+        assert_no_difference "@user.finance_statement_drafts.count" do
+          assert_difference "@user.finance_transactions.count", 2 do
+            post finance_statements_path, params: {file: file}
+          end
+        end
+      end
+      assert_redirected_to finance_transactions_path
+      follow_redirect!
+      assert_response :success
+      assert_select "html[lang='#{locale}']"
+      assert_no_match(/translation_missing|Translation missing/, response.body)
+    end
   end
 
   private
