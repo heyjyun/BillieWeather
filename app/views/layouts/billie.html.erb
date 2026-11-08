@@ -31,6 +31,7 @@
           <%= finance_nav t('billie.layout.transactions'), finance_transactions_path, "transactions", active: controller_name == "transactions" %>
           <%= finance_nav t('billie.layout.forecast'), finance_forecast_path, "forecast", active: controller_name == "forecast" %>
           <%= finance_nav t('billie.layout.insights'), finance_insights_path, "insights", active: controller_name == "insights" %>
+          <%= finance_nav t('billie.region.nav'), finance_settings_path, "settings", active: controller_name == "settings" %>
         </nav>
         <div class="bw-sidebar-bottom">
           <div class="bw-sidebar-note"><%= finance_icon "sun", size: 26 %><strong><%= t('billie.layout.clarity') %></strong><p><%= t('billie.layout.next_step') %></p></div>

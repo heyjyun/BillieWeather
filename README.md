@@ -24,6 +24,12 @@ The main app supports English, Simplified Chinese, Japanese, and Korean. Open th
 
 Navigation, forms, dates, categories, validation messages, forecast explanations, and newly generated basic/AI analysis use the selected language. Previously saved analysis and PDF-specific warnings retain their original language; generate a new analysis to use the current language. User-provided descriptions, bank names, and custom account names remain as entered. CSV headers, stored categories, currencies, and financial calculations stay consistent between languages. Changing the interface language does not change the app's U.S. tax-preparation scope or add support for other countries' bank statement formats. Restart Rails after adding the new locale configuration.
 
+## Usage country or region
+
+Users may select a usage country or region during email registration or later in **Settings** (`/app/settings`). The field is optional, and existing and Google-created accounts can leave it blank. Account profile editing uses the same list. The list contains 249 ISO 3166-1 country/region codes, displayed in the selected interface language. Only the two-letter code (for example, `US`, `CN`, `JP`, or `KR`) is stored as nullable `users.usage_region`.
+
+Both Rails validation and a PostgreSQL check constraint reject values outside the list. Clearing the selection stores `NULL`. This is a usage preference; tax jurisdiction remains a separate profile setting. Country list changes require updating the catalog and the database constraint through a new migration. Apply migrations before running the updated app; restart an already running Rails process afterward.
+
 ## Working flows
 
 | Page | Behavior |

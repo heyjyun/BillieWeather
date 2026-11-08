@@ -1,1 +1,6 @@
+<div class="sm:col-span-2">
+  <%= form.label :usage_region, class: "block mb-2 text-sm font-medium" do %><%= t("billie.region.label") %> (<%= t("billie.region.optional") %>)<% end %>
+  <%= form.select :usage_region, usage_region_options, {include_blank: t("billie.region.blank")}, {class: "w-full rounded-md border-gray-300", autocomplete: "country", "aria-describedby": "user_usage_region_help"} %>
+  <p id="user_usage_region_help" class="mt-2 text-sm text-gray-500"><%= t("billie.region.help") %></p>
+</div>
 <%# 🚅 super scaffolding will insert new fields above this line. %>

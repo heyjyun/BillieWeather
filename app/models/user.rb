@@ -10,6 +10,8 @@ class User < ApplicationRecord
   has_many :finance_statement_drafts, class_name: "Finance::StatementDraft", dependent: :destroy
   has_many :finance_bank_accounts, class_name: "Finance::BankAccount", dependent: :destroy
   validates :google_uid, length: {maximum: 255}, uniqueness: true, allow_nil: true
+  before_validation :normalize_usage_region
+  validates :usage_region, inclusion: {in: UsageRegion::CODES}, allow_nil: true
 
   # Welcome mail is optional; account creation does not depend on paid email delivery.
   def send_welcome_email
@@ -37,4 +39,10 @@ class User < ApplicationRecord
   # 🚅 add delegations above.
 
   # 🚅 add methods above.
+
+  private
+
+  def normalize_usage_region
+    self.usage_region = usage_region.to_s.strip.upcase.presence
+  end
 end

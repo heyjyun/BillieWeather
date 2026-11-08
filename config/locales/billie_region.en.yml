@@ -1,0 +1,35 @@
+{
+  "en": {
+    "billie": {
+      "region": {
+        "label": "Usage country or region",
+        "optional": "optional",
+        "blank": "Not specified",
+        "help": "Choose the country or region where you mainly use this app, or leave it blank.",
+        "heading": "Account settings",
+        "intro": "Choose where you mainly use BillieWeather. You can update or clear this selection at any time.",
+        "save": "Save region",
+        "saved": "Your usage region has been saved.",
+        "nav": "Settings"
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "user": {
+          "usage_region": "Usage country or region"
+        }
+      },
+      "errors": {
+        "models": {
+          "user": {
+            "attributes": {
+              "usage_region": {
+                "inclusion": "must be a country or region from the list"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

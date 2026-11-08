@@ -35,6 +35,7 @@ class ApplicationController < ActionController::Base
   end
 
   def configure_billie_authentication
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:first_name, :last_name])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:first_name, :last_name, :usage_region])
+    devise_parameter_sanitizer.permit(:account_update, keys: [:usage_region])
   end
 end

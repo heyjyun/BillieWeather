@@ -1,0 +1,35 @@
+{
+  "ja": {
+    "billie": {
+      "region": {
+        "label": "利用する国・地域",
+        "optional": "任意",
+        "blank": "未選択",
+        "help": "主にこのアプリを利用する国・地域を選択してください。未選択のままでも利用できます。",
+        "heading": "アカウント設定",
+        "intro": "主に BillieWeather を利用する国・地域を選択してください。この設定はいつでも変更・解除できます。",
+        "save": "国・地域を保存",
+        "saved": "利用する国・地域を保存しました。",
+        "nav": "設定"
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "user": {
+          "usage_region": "利用する国・地域"
+        }
+      },
+      "errors": {
+        "models": {
+          "user": {
+            "attributes": {
+              "usage_region": {
+                "inclusion": "は一覧から選択してください"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

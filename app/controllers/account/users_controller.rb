@@ -5,6 +5,7 @@ class Account::UsersController < Account::ApplicationController
 
   def permitted_fields
     [
+      :usage_region,
       # 🚅 super scaffolding will insert new fields above this line.
     ]
   end

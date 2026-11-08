@@ -9,6 +9,11 @@ module ApplicationHelper
     GoogleSignIn.configured?
   end
 
+  def usage_region_options
+    UsageRegion::CODES.map { |code| [t("usage_regions.#{code}"), code] }
+      .sort_by { |label, _code| label.downcase }
+  end
+
   def billie_language_path(locale)
     # Failed form submissions may render at a URL without a GET action.
     path = if request.get?

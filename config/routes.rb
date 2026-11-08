@@ -14,6 +14,7 @@ Rails.application.routes.draw do
     resources :bank_accounts, only: :update
     resource :forecast, only: :show, controller: :forecast
     resource :profile, only: :update
+    resource :settings, only: [:show, :update], controller: :settings
     resource :insights, only: :show, controller: :insights do
       post :generate
     end
