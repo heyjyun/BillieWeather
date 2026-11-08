@@ -1,18 +1,18 @@
-<% content_for :title, "Log in" %>
+<% content_for :title, t("billie.auth.log_in") %>
 <section class="bw-auth-wrap">
   <div class="bw-panel bw-auth-card">
-    <p class="bw-eyebrow">WELCOME BACK</p>
-    <h1>Your financial outlook awaits.</h1>
-    <p class="bw-muted">Log in to your BillieWeather workspace.</p>
+    <p class="bw-eyebrow"><%= t("billie.auth.welcome_back") %></p>
+    <h1><%= t("billie.auth.outlook_awaits") %></h1>
+    <p class="bw-muted"><%= t("billie.auth.login_description") %></p>
     <%= render "devise/shared/google_sign_in" %>
     <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: {data: {turbo: false}}) do |form| %>
-      <div class="bw-form-field"><%= form.label :email %><%= form.email_field :email, required: true, autocomplete: "email", autofocus: true %></div>
-      <div class="bw-form-field"><%= form.label :password %><%= form.password_field :password, required: true, autocomplete: "current-password" %></div>
-      <label class="bw-checkbox"><%= form.check_box :remember_me %> Keep me signed in</label>
-      <% if defined?(two_factor_authentication_enabled?) && two_factor_authentication_enabled? %><div class="bw-form-field"><%= form.label :otp_attempt, "Authentication code (if enabled)" %><%= form.text_field :otp_attempt, autocomplete: "one-time-code", inputmode: "numeric" %></div><% end %>
-      <%= form.submit "Log in", class: "bw-button bw-button-dark" %>
+      <div class="bw-form-field"><%= form.label :email, t("billie.auth.email") %><%= form.email_field :email, required: true, autocomplete: "email", autofocus: true %></div>
+      <div class="bw-form-field"><%= form.label :password, t("billie.auth.password") %><%= form.password_field :password, required: true, autocomplete: "current-password" %></div>
+      <label class="bw-checkbox"><%= form.check_box :remember_me %> <%= t("billie.auth.remember_me") %></label>
+      <% if defined?(two_factor_authentication_enabled?) && two_factor_authentication_enabled? %><div class="bw-form-field"><%= form.label :otp_attempt, t("billie.auth.authentication_code") %><%= form.text_field :otp_attempt, autocomplete: "one-time-code", inputmode: "numeric" %></div><% end %>
+      <%= form.submit t("billie.auth.log_in"), class: "bw-button bw-button-dark" %>
     <% end %>
-    <p class="bw-auth-switch">New to BillieWeather? <%= link_to "Create an account", new_user_registration_path %></p>
-    <% if !Rails.env.production? || (ENV["POSTMARK_API_TOKEN"].present? && ENV["MAIL_FROM"].present?) %><p><%= link_to "Forgot your password?", new_user_password_path %></p><% end %>
+    <p class="bw-auth-switch"><%= t("billie.auth.new_here") %> <%= link_to t("billie.auth.create_an_account"), new_user_registration_path %></p>
+    <% if !Rails.env.production? || (ENV["POSTMARK_API_TOKEN"].present? && ENV["MAIL_FROM"].present?) %><p><%= link_to t("billie.auth.forgot_password"), new_user_password_path %></p><% end %>
   </div>
 </section>

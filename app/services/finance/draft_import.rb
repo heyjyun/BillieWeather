@@ -12,7 +12,7 @@ module Finance
 
     def call
       included_rows = @rows.select { |row| row["include"] == "1" }
-      raise StatementImporter::ImportError, "Select at least one transaction to import." if included_rows.empty?
+      raise StatementImporter::ImportError, I18n.t("billie.backend.select_transaction") if included_rows.empty?
 
       csv = CSV.generate do |output|
         output << ["Date", "Description", "Amount", "Currency"]

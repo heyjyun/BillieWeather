@@ -12,7 +12,7 @@ class SessionsController < Devise::SessionsController
     super do |user|
       identity = session.delete(:pending_google_identity)
       if identity && GoogleSignIn.connect_after_password_sign_in!(user: user, identity: identity)
-        flash[:notice] = "Signed in. Google is now connected for future logins."
+        flash[:notice] = t("billie.auth.google_connected")
       end
     end
   end
@@ -29,6 +29,6 @@ class SessionsController < Devise::SessionsController
     # Reject the request without replaying credentials or clearing a valid login.
     prevent_sign_in_caching
     redirect_to new_user_session_path, status: :see_other,
-      alert: "Your sign-in page expired. Please enter your details again."
+      alert: t("billie.auth.page_expired")
   end
 end

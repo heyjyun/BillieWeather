@@ -4,8 +4,25 @@ module FinanceHelper
     number_to_currency(amount || 0, unit: units.fetch(currency, "#{currency} "), precision: 2)
   end
 
-  def finance_date(value, format = "%b %-d, %Y")
-    value.present? ? value.to_date.strftime(format) : "—"
+  def finance_date(value, format = nil)
+    return "—" if value.blank?
+    l(value.to_date, format: format || t("billie.helpers.date_format"))
+  end
+
+  def finance_label(value)
+    labels = {
+      "Income" => "income", "Housing" => "housing", "Food & dining" => "food", "Transport" => "transport",
+      "Utilities" => "utilities", "Shopping" => "shopping", "Health" => "health", "Business" => "business",
+      "Transfers" => "transfers", "Uncategorized" => "uncategorized", "Checking" => "checking",
+      "Savings" => "savings", "Credit account" => "credit_account", "Cash account" => "cash_account", "Account" => "account"
+    }
+    key = labels[value.to_s]
+    key ? t("billie.helpers.labels.#{key}") : value
+  end
+
+  def finance_count(count, noun, plural = nil)
+    return pluralize(count, noun, plural) unless I18n.locale.to_s == "zh-CN"
+    t("billie.helpers.counts.#{noun.to_s.tr(' ', '_')}", count: count, default: "#{count} #{noun}")
   end
 
   def finance_balance_available?(profile, summary = @balance_summary)
@@ -15,7 +32,7 @@ module FinanceHelper
   end
 
   def finance_balance_display(profile, summary = @balance_summary)
-    return "Not available" unless finance_balance_available?(profile, summary)
+    return t("billie.helpers.unavailable") unless finance_balance_available?(profile, summary)
 
     balance = if profile.balance_source == "manual" || (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?)
       profile.current_balance
@@ -32,24 +49,24 @@ module FinanceHelper
     as_of = manual ? profile.balance_as_of : summary&.dig(:as_of_start)
     return unless as_of
     days = (today - as_of.to_date).to_i
-    return "Balance is as of today." if days <= 0
-    "Balance is as of #{finance_date(as_of)}#{" (#{pluralize(days, "day")} ago); activity after that date is not included" if days > 1}."
+    return t("billie.helpers.balance_today") if days <= 0
+    t("billie.helpers.#{days > 1 ? 'balance_aged' : 'balance_dated'}", date: finance_date(as_of), days: finance_count(days, "day"))
   end
 
   def finance_balance_note(profile, summary = @balance_summary)
     if profile.balance_source == "manual" || (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?)
-      return "Entered by you#{" on #{finance_date(profile.balance_as_of)}" if profile.balance_as_of}. This overrides automatic account totals."
+      return t("billie.helpers.#{profile.balance_as_of ? 'manual_dated' : 'manual'}", date: finance_date(profile.balance_as_of))
     end
     return finance_balance_setup_message(summary) unless summary&.dig(:total).present?
 
     count = Array(summary[:accounts]).count { |item| item[:status].to_s == "known" }
-    note = "Automatically totals the latest balance for #{pluralize(count, "cash account")}."
+    note = t("billie.helpers.automatic_total", accounts: finance_count(count, "cash account"))
     if summary[:as_of_start].present?
       dates = finance_date(summary[:as_of_start])
       dates += " – #{finance_date(summary[:as_of_end])}" if summary[:as_of_end].present? && summary[:as_of_end] != summary[:as_of_start]
-      note += " Statement dates: #{dates}."
+      note += t("billie.helpers.statement_dates", dates: dates)
     end
-    note += " Partial total: some accounts or balances still need attention." unless summary[:complete]
+    note += t("billie.helpers.partial_total") unless summary[:complete]
     note
   end
 
@@ -59,48 +76,42 @@ module FinanceHelper
     if unassigned.any?
       dated_balances = unassigned.count { |statement| !statement.closing_balance.nil? && statement.closing_balance_on.present? }
       if dated_balances.positive?
-        return "Dated closing balances are saved for #{pluralize(dated_balances, "statement")}, but their accounts are not identified. Choose their accounts in Statement history to include them in the automatic total."
+        return t("billie.helpers.setup.unassigned", statements: finance_count(dated_balances, "statement"))
       end
       if unassigned.any? { |statement| !statement.closing_balance.nil? }
-        return "Closing balances were saved, but their accounts and balance dates still need confirmation. Review Statement history; a transaction date alone does not confirm the balance date."
+        return t("billie.helpers.setup.unconfirmed")
       end
       if accounts.empty?
-        return "Transactions were imported from your #{pluralize(unassigned.length, "statement")}, but no account details or closing balances are saved. If your files have account details and a balance column, upload them again: the missing details are filled in automatically and nothing is imported twice. You can also enter your balance yourself."
+        return t("billie.helpers.setup.no_details", statements: finance_count(unassigned.length, "statement"))
       end
     end
     cash_accounts = accounts.reject { |item| item[:status].to_s == "excluded_credit" }
     if accounts.any? && cash_accounts.empty? && unassigned.empty?
-      return "Only credit accounts are identified. Their balances are money owed, so they are excluded from starting cash. A dated checking or savings balance is needed."
+      return t("billie.helpers.setup.only_credit")
     end
     if cash_accounts.any? { |item| item[:status].to_s == "future_date" }
-      return "Cash account balance dates are in the future. Review the dates in the account breakdown before using these balances."
+      return t("billie.helpers.setup.future_date")
     end
     if cash_accounts.any? { |item| item[:status].to_s == "missing_date" }
-      return "Cash account balances have no confirmed dates. Review the balance dates in Statement history before using them."
+      return t("billie.helpers.setup.missing_date")
     end
     if cash_accounts.any? { |item| item[:status].to_s == "missing_balance" }
-      return "The latest statements for your cash accounts have no usable closing balances saved. Check the original statements for their dated balances; older balances are not silently substituted."
+      return t("billie.helpers.setup.missing_balance")
     end
     if cash_accounts.any? { |item| item[:status].to_s == "unknown_kind" }
-      return "The account types are not confirmed. Identify checking or savings accounts in Statement history to calculate starting cash."
+      return t("billie.helpers.setup.unknown_kind")
     end
-    "No dated cash account balance is available yet. Import a statement with account details and a closing balance to calculate this automatically."
+    t("billie.helpers.setup.no_balance")
   end
 
   def finance_account_balance_status(item)
-    case item[:status].to_s
-    when "known" then "Included in cash total"
-    when "missing_balance" then "Latest statement has no readable closing balance"
-    when "missing_date" then "Balance date needs confirmation"
-    when "future_date" then "Future-dated balance is not included"
-    when "excluded_credit" then "Credit card balance · excluded from cash"
-    when "unknown_kind" then "Confirm whether this is a cash account or credit card"
-    else "Not included in cash total"
-    end
+    status = item[:status].to_s
+    key = %w[known missing_balance missing_date future_date excluded_credit unknown_kind].include?(status) ? status : "excluded"
+    t("billie.helpers.balance_status.#{key}")
   end
 
   def finance_period(snapshot)
-    return "No statement data yet" unless snapshot[:period_start].present? && snapshot[:period_end].present?
+    return t("billie.helpers.no_statement_data") unless snapshot[:period_start].present? && snapshot[:period_end].present?
     "#{finance_date(snapshot[:period_start])} – #{finance_date(snapshot[:period_end])}"
   end
 

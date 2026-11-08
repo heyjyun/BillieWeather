@@ -1,0 +1,35 @@
+{
+  "zh-CN": {
+    "billie": {
+      "layout": {
+        "title": "BillieWeather — 让财务前景更清晰",
+        "description": "从账单了解交易和现金流，为下一步财务规划提供参考。",
+        "skip": "跳转到正文",
+        "home": "BillieWeather 首页",
+        "main_navigation": "主导航",
+        "how_it_works": "使用方法",
+        "features": "功能",
+        "open_dashboard": "打开总览",
+        "log_in": "登录",
+        "get_started": "开始使用",
+        "my_workspace": "我的工作区",
+        "personal_finances": "个人财务",
+        "workspace_label": "工作区",
+        "workspace_navigation": "工作区导航",
+        "dashboard": "财务总览",
+        "transactions": "交易记录",
+        "forecast": "现金流预测",
+        "insights": "Billie 财务洞察",
+        "clarity": "看清财务，才能从容规划。",
+        "next_step": "了解自己的收支，是迈出下一步的开始。",
+        "your_account": "你的账户",
+        "log_out": "退出登录",
+        "workspace": "工作区",
+        "overview": "总览",
+        "outlook": "你的财务前景",
+        "footer": "看清当下，从容迎接未来。",
+        "language": "语言"
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 <% if any_oauth_enabled? %>
-  <% verb ||= 'Sign In' %>
+  <% verb ||= t("billie.auth.sign_in") %>
 
   <%= render 'account/shared/decision_line' %>
   <div class="grid grid-cols-1 gap-2">

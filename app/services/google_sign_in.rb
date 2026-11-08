@@ -6,7 +6,7 @@ class GoogleSignIn
 
     def initialize(user:, uid:, email:)
       @identity = {"user_id" => user.id, "uid" => uid, "email" => email, "expires_at" => 10.minutes.from_now.to_i}
-      super("This email already has an account. Log in with your existing password once to connect Google.")
+      super(I18n.t("billie.auth.google_link_required"))
     end
   end
 
@@ -25,12 +25,12 @@ class GoogleSignIn
   end
 
   def call
-    raise Error, "Google sign-in is currently unavailable. Please use email and password." unless self.class.configured?
+    raise Error, I18n.t("billie.auth.google_service_unavailable") unless self.class.configured?
     read_verified_identity!
     linked = User.find_by(google_uid: @uid)
     if linked
       if @current_user && @current_user.id != linked.id
-        raise Error, "Sign out before using a different Google account."
+        raise Error, I18n.t("billie.auth.google_sign_out_first")
       end
       verify_login_allowed!(linked)
       return linked
@@ -41,8 +41,8 @@ class GoogleSignIn
       verify_login_allowed!(existing)
       raise LinkRequired.new(user: existing, uid: @uid, email: @email)
     end
-    raise Error, "Sign out before creating an account with a different email." if @current_user
-    raise Error, "New account registration is not available. Please use an invited account." unless @allow_signup
+    raise Error, I18n.t("billie.auth.google_sign_out_before_signup") if @current_user
+    raise Error, I18n.t("billie.auth.registration_unavailable") unless @allow_signup
 
     user = User.transaction do
       password = Devise.friendly_token(48)
@@ -55,7 +55,7 @@ class GoogleSignIn
     user
   rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
     # Concurrent signups must never bind an identity to a different existing user.
-    raise Error, "Google sign-in could not complete. Please try again or log in with your existing password."
+    raise Error, I18n.t("billie.auth.google_failed")
   end
 
   # Called only after Devise has authenticated the account's password (and OTP,
@@ -80,17 +80,17 @@ class GoogleSignIn
   private
 
   def read_verified_identity!
-    raise Error, "Google did not return a verified identity. Please try again." unless @auth.respond_to?(:dig) && @auth["provider"] == "google_oauth2"
+    raise Error, I18n.t("billie.auth.google_unverified_identity") unless @auth.respond_to?(:dig) && @auth["provider"] == "google_oauth2"
     claims = @auth.dig("extra", "id_info")
     @uid = @auth["uid"]
     verified = claims.is_a?(Hash) && claims["email_verified"].in?([true, "true"])
     unless verified && @uid.is_a?(String) && @uid.length.between?(1, 255) && !@uid.match?(/\s/) && claims["sub"] == @uid
-      raise Error, "Google did not return a verified identity. Please try again."
+      raise Error, I18n.t("billie.auth.google_unverified_identity")
     end
     @email = claims["email"].to_s.strip.downcase
     info_email = @auth.dig("info", "email").to_s.strip.downcase
     unless @email.length <= 254 && Devise.email_regexp.match?(@email) && info_email == @email
-      raise Error, "Google did not return a verified email address. Please try again."
+      raise Error, I18n.t("billie.auth.google_unverified_email")
     end
   end
 
@@ -99,12 +99,12 @@ class GoogleSignIn
   end
 
   def verify_login_allowed!(user)
-    raise Error, "This account cannot sign in right now. Please use the email login page." unless user.active_for_authentication?
+    raise Error, I18n.t("billie.auth.account_unavailable") unless user.active_for_authentication?
     if user.otp_required_for_login?
-      raise Error, "This account requires an authentication code. Please sign in with email, password, and your authentication code."
+      raise Error, I18n.t("billie.auth.authentication_code_required")
     end
     if user.google_uid.present? && user.google_uid != @uid
-      raise Error, "This account is connected to a different Google account. Please use your existing login."
+      raise Error, I18n.t("billie.auth.google_other_account")
     end
   end
 end

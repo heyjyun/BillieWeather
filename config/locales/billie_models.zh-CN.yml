@@ -1,0 +1,75 @@
+{
+  "zh-CN": {
+    "errors": {
+      "messages": {
+        "cent_precision": "最多保留两位小数",
+        "currency_in_use": "无法更改，因为已有其他币种的账单",
+        "same_owner": "必须属于你",
+        "same_statement_owner": "必须属于同一账户",
+        "object_required": "必须为对象",
+        "control_characters": "不能包含控制字符",
+        "review_row_count": "必须包含 1 至 %{count} 笔可核对的交易",
+        "review_row_invalid": "第 %{row} 行包含无效信息",
+        "review_date_invalid": "第 %{row} 行包含无效日期",
+        "review_save_failed": "无法保存以供核对",
+        "review_expiration": "必须在接下来的 30 分钟内",
+        "inclusion": "不在可选范围内",
+        "exclusion": "为保留值",
+        "not_an_integer": "必须为整数",
+        "greater_than": "必须大于 %{count}",
+        "greater_than_or_equal_to": "必须大于或等于 %{count}",
+        "less_than": "必须小于 %{count}",
+        "less_than_or_equal_to": "必须小于或等于 %{count}",
+        "equal_to": "必须等于 %{count}",
+        "other_than": "不能等于 %{count}",
+        "accepted": "必须接受",
+        "present": "必须为空",
+        "required": "必须存在",
+        "too_long": "长度最多为 %{count} 个字符",
+        "wrong_length": "长度必须为 %{count} 个字符"
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "finance/profile": {
+          "currency": "币种",
+          "current_balance": "当前余额",
+          "cash_on_hand": "手头现金",
+          "tax_country": "税务国家或地区",
+          "tax_profile": "税务身份",
+          "balance_source": "余额来源"
+        },
+        "finance/transaction": {
+          "booked_on": "交易日期",
+          "description": "交易描述",
+          "amount": "金额",
+          "category": "分类",
+          "tax_review": "税务复核",
+          "excluded": "排除标记",
+          "statement": "账单"
+        },
+        "finance/bank_account": {
+          "bank_name": "银行名称",
+          "name": "账户名称",
+          "custom_name": "自定义名称",
+          "last4": "账户尾号",
+          "kind": "账户类型"
+        },
+        "finance/statement": {
+          "bank_account": "银行账户",
+          "filename": "文件名",
+          "currency": "币种",
+          "transaction_count": "交易笔数"
+        },
+        "finance/statement_draft": {
+          "bank_account": "银行账户",
+          "filename": "文件名",
+          "currency": "币种",
+          "rows": "待核对交易",
+          "warnings": "提示",
+          "expires_at": "到期时间"
+        }
+      }
+    }
+  }
+}

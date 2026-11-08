@@ -1,0 +1,35 @@
+{
+  "en": {
+    "billie": {
+      "layout": {
+        "title": "BillieWeather — a clearer financial forecast",
+        "description": "Turn statements into a clearer picture of your transactions, cash flow, and financial next steps.",
+        "skip": "Skip to content",
+        "home": "BillieWeather home",
+        "main_navigation": "Main navigation",
+        "how_it_works": "How it works",
+        "features": "Features",
+        "open_dashboard": "Open dashboard",
+        "log_in": "Log in",
+        "get_started": "Get started",
+        "my_workspace": "My workspace",
+        "personal_finances": "Personal finances",
+        "workspace_label": "WORKSPACE",
+        "workspace_navigation": "Workspace navigation",
+        "dashboard": "Dashboard",
+        "transactions": "Transactions",
+        "forecast": "Cash flow forecast",
+        "insights": "Billie Insights",
+        "clarity": "A little clarity goes a long way.",
+        "next_step": "Your next step starts with understanding your numbers.",
+        "your_account": "Your account",
+        "log_out": "Log out",
+        "workspace": "Workspace",
+        "overview": "Overview",
+        "outlook": "Your financial outlook",
+        "footer": "Clarity today. Confidence for what’s next.",
+        "language": "Language"
+      }
+    }
+  }
+}

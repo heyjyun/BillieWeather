@@ -18,7 +18,7 @@ module Finance
     private
 
     def content_is_an_object
-      errors.add(:content, "must be an object") unless content.is_a?(Hash)
+      errors.add(:content, :object_required) unless content.is_a?(Hash)
     end
   end
 end

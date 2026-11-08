@@ -10,13 +10,13 @@ module Finance
       provider = (kind == "tax" || params[:provider] == "openai") ? "openai" : "rules"
       if provider == "openai" && current_user.finance_insights.where(source: "openai", kind: kind).where("generated_at > ?", 1.minute.ago).exists?
         load_insights
-        flash.now[:alert] = "Please wait one minute before requesting more Billie Insights."
+        flash.now[:alert] = I18n.t("billie.backend.analysis_wait")
         return render :show, status: :too_many_requests
       end
       generator = InsightGenerator.new(user: current_user, provider: provider, consent: params[:consent] == "1", kind: kind)
       generator.call
       notice = if generator.fallback_used?
-        "Prepend's credit limit was reached. Billie generated these insights with OpenAI."
+        I18n.t("billie.backend.analysis_fallback")
       else
         generated_notice(kind, provider)
       end
@@ -30,8 +30,8 @@ module Finance
     private
 
     def generated_notice(kind, provider)
-      return "Billie prepared your tax preparation insights from your financial summary." if kind == "tax"
-      (provider == "openai") ? "Billie Insights generated from your financial summary." : "Basic analysis refreshed from your transactions."
+      return I18n.t("billie.backend.tax_analysis_generated") if kind == "tax"
+      (provider == "openai") ? I18n.t("billie.backend.analysis_generated") : I18n.t("billie.backend.basic_analysis_refreshed")
     end
 
     def load_insights

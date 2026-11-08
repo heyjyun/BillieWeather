@@ -12,7 +12,7 @@ module Finance
         @profile.update(attributes)
       end
       if saved
-        redirect_to return_path, notice: "Financial profile saved."
+        redirect_to return_path, notice: I18n.t("billie.backend.profile_saved")
       else
         redirect_to return_path, alert: @profile.errors.full_messages.to_sentence
       end
@@ -22,13 +22,13 @@ module Finance
 
     def use_statement_balance
       unless BalanceSync.statement_balance_available?(current_user)
-        return redirect_to return_path, alert: "No identified cash account has a dated closing balance yet. Assign accounts in Statement history and upload statements that include closing balances."
+        return redirect_to return_path, alert: I18n.t("billie.backend.automatic_balance_unavailable")
       end
       current_user.with_lock do
         @profile.reload.update!(balance_source: nil, balance_as_of: nil)
         BalanceSync.call(user: current_user)
       end
-      redirect_to return_path, notice: "Your balance now automatically totals the latest balance from each cash account."
+      redirect_to return_path, notice: I18n.t("billie.backend.automatic_balance_enabled")
     end
 
     def return_path

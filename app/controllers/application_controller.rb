@@ -14,6 +14,26 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # Keep the visitor's explicit choice across navigation, sign-in and sign-out.
+  # with_locale also restores the previous locale when a request raises an error.
+  def set_locale(&action)
+    requested_locale = request.query_parameters["locale"]
+    if requested_locale.is_a?(String) && I18n.available_locales.include?(requested_locale.to_sym)
+      cookies.permanent.signed[:billie_locale] = {
+        value: requested_locale, httponly: true, same_site: :lax, secure: request.ssl?
+      }
+    end
+    locale = [
+      requested_locale,
+      cookies.signed[:billie_locale],
+      current_user&.locale,
+      current_user&.current_team&.locale,
+      http_accept_language.compatible_language_from(I18n.available_locales),
+      I18n.default_locale.to_s
+    ].find { |value| value.is_a?(String) && I18n.available_locales.include?(value.to_sym) }
+    I18n.with_locale(locale, &action)
+  end
+
   def configure_billie_authentication
     devise_parameter_sanitizer.permit(:sign_up, keys: [:first_name, :last_name])
   end

@@ -1,13 +1,13 @@
 <% overview = Finance::AccountOverview.new(summary: @balance_summary, profile: @profile) %>
 <section class="bw-section-gap" id="accounts" aria-labelledby="accounts-title">
   <div class="bw-section-heading-inline">
-    <h2 id="accounts-title">Your accounts</h2>
-    <p>Names are read from your statements. Use ✎ to rename one; the name you type is always the one shown.</p>
+    <h2 id="accounts-title"><%= t("billie.finance.ui.your_accounts") %></h2>
+    <p><%= t("billie.finance.ui.names_are_read_from_your_statements_use_to_rename_one_the_name_you_type_is_alway") %></p>
   </div>
   <div class="bw-two-column">
     <section class="bw-panel bw-panel-flush" id="cash-accounts">
-      <div class="bw-panel-heading"><div><h3>Cash accounts</h3><p>Checking, savings, and cash you hold</p></div><%= finance_icon "wallet" %></div>
-      <ul class="bw-account-list" aria-label="Cash accounts">
+      <div class="bw-panel-heading"><div><h3><%= t("billie.finance.ui.cash_accounts") %></h3><p><%= t("billie.finance.ui.checking_savings_and_cash_you_hold") %></p></div><%= finance_icon "wallet" %></div>
+      <ul class="bw-account-list" aria-label="<%= t("billie.finance.ui.cash_accounts") %>">
             <% overview.cash_rows.each do |row| %>
               <% account = row[:account] %>
               <li class="bw-account-row" data-account-id="<%= account.id %>" data-account-kind="cash">
@@ -16,38 +16,38 @@
                   <small class="bw-account-source"><%= account.name %></small>
                   <%= render "finance/dashboard/rename_account", account: account %>
                 </div>
-                <div class="bw-account-amount"><%= row[:status].to_s == "known" ? finance_money(row[:balance], @profile.currency) : "Balance not readable" %><small>As of <%= finance_date(row[:as_of]) %></small></div>
+                <div class="bw-account-amount"><%= row[:status].to_s == "known" ? finance_money(row[:balance], @profile.currency) : t("billie.finance.ui.balance_not_readable") %><small><%= t("billie.finance.ui.as_of_date", date: finance_date(row[:as_of])) %></small></div>
               </li>
             <% end %>
             <li class="bw-account-row" id="cash-on-hand" data-account-kind="cash-on-hand">
               <div class="bw-account-main">
-                <strong>Cash on hand</strong>
-                <small class="bw-account-source">Entered by you. Physical cash is not on any statement.</small>
+                <strong><%= t("billie.finance.ui.cash_on_hand") %></strong>
+                <small class="bw-account-source"><%= t("billie.finance.ui.entered_by_you_physical_cash_is_not_on_any_statement") %></small>
                 <details class="bw-inline-edit">
-                  <summary class="bw-text-link">✎ Enter or edit amount</summary>
+                  <summary class="bw-text-link"><%= t("billie.finance.ui.enter_or_edit_amount") %></summary>
                   <%= form_with model: @profile, scope: :finance_profile, url: finance_profile_path, method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
                     <%= hidden_field_tag :return_to, "dashboard" %>
                     <div class="bw-field">
-                      <%= form.label :cash_on_hand, "Cash you are holding (#{@profile.currency})" %>
+                      <%= form.label :cash_on_hand, t("billie.finance.ui.cash_on_hand_currency", currency: @profile.currency) %>
                       <%= form.number_field :cash_on_hand, step: "0.01", min: "0", required: true %>
                     </div>
-                    <%= form.submit "Save cash on hand", class: "bw-button bw-button-outline" %>
+                    <%= form.submit t("billie.finance.ui.save_cash_on_hand"), class: "bw-button bw-button-outline" %>
                   <% end %>
                 </details>
               </div>
-              <div class="bw-account-amount"><%= finance_money(overview.cash_on_hand, @profile.currency) %><small><%= @profile.cash_on_hand_on ? "Entered #{finance_date(@profile.cash_on_hand_on)}" : "Not entered yet" %></small></div>
+              <div class="bw-account-amount"><%= finance_money(overview.cash_on_hand, @profile.currency) %><small><%= @profile.cash_on_hand_on ? t("billie.finance.ui.cash_entered_date", date: finance_date(@profile.cash_on_hand_on)) : t("billie.finance.ui.not_entered_yet") %></small></div>
             </li>
       </ul>
       <div class="bw-account-total" id="total-cash">
-        <span><%= overview.cash_total_partial? ? "Total cash · partial, some accounts need attention" : "Total cash" %></span>
+        <span><%= overview.cash_total_partial? ? t("billie.finance.ui.total_cash_partial_some_accounts_need_attention") : t("billie.finance.ui.total_cash") %></span>
         <strong><%= finance_money(overview.total_cash, @profile.currency) %></strong>
       </div>
     </section>
 
     <section class="bw-panel bw-panel-flush" id="credit-accounts">
-      <div class="bw-panel-heading"><div><h3>Credit cards</h3><p>What you owe on each card</p></div><%= finance_icon "transactions" %></div>
+      <div class="bw-panel-heading"><div><h3><%= t("billie.finance.ui.credit_cards") %></h3><p><%= t("billie.finance.ui.what_you_owe_on_each_card") %></p></div><%= finance_icon "transactions" %></div>
       <% if overview.credit_rows.any? %>
-        <ul class="bw-account-list" aria-label="Credit cards">
+        <ul class="bw-account-list" aria-label="<%= t("billie.finance.ui.credit_cards") %>">
           <% overview.credit_rows.each do |row| %>
             <% account = row[:account] %>
             <li class="bw-account-row" data-account-id="<%= account.id %>" data-account-kind="credit">
@@ -56,24 +56,24 @@
                 <small class="bw-account-source"><%= account.name %></small>
                 <%= render "finance/dashboard/rename_account", account: account %>
               </div>
-              <div class="bw-account-amount"><%= overview.credit_balance(row) ? "Owed #{finance_money(overview.credit_balance(row), @profile.currency)}" : "Balance not readable" %><small>As of <%= finance_date(row[:as_of]) %></small></div>
+              <div class="bw-account-amount"><%= overview.credit_balance(row) ? t("billie.finance.ui.owed_amount", amount: finance_money(overview.credit_balance(row), @profile.currency)) : t("billie.finance.ui.balance_not_readable") %><small><%= t("billie.finance.ui.as_of_date", date: finance_date(row[:as_of])) %></small></div>
             </li>
           <% end %>
         </ul>
         <div class="bw-account-total bw-account-total-owed" id="total-credit-owed">
-          <span>Total owed on credit cards · <%= pluralize(overview.credit_count, "card") %></span>
-          <strong><%= overview.credit_total.present? ? finance_money(overview.credit_total, @profile.currency) : "Not available" %></strong>
+          <span><%= t("billie.finance.ui.total_owed_on_credit_cards") %> <%= finance_count(overview.credit_count, "card") %></span>
+          <strong><%= overview.credit_total.present? ? finance_money(overview.credit_total, @profile.currency) : t("billie.finance.ui.not_available") %></strong>
         </div>
       <% else %>
-        <div class="bw-small-empty"><p>No credit cards identified yet. Upload a credit card statement that includes the bank and the last four digits.</p></div>
+        <div class="bw-small-empty"><p><%= t("billie.finance.ui.no_credit_cards_identified_yet_upload_a_credit_card_statement_that_includes_the") %></p></div>
       <% end %>
     </section>
   </div>
   <% if overview.unknown_rows.any? || overview.unassigned_count.positive? %>
     <p class="bw-table-footnote" id="accounts-attention">
-      <% if overview.unknown_rows.any? %><%= pluralize(overview.unknown_rows.size, "account") %> still need a type (cash or credit). <% end %>
-      <% if overview.unassigned_count.positive? %><%= pluralize(overview.unassigned_count, "statement") %> not linked to an account yet. <% end %>
-      <%= link_to "Open Statement history →", finance_statements_path(anchor: "statement-history"), class: "bw-text-link" %>
+      <% if overview.unknown_rows.any? %><%= finance_count(overview.unknown_rows.size, "account") %> <%= t("billie.finance.ui.still_need_a_type_cash_or_credit") %> <% end %>
+      <% if overview.unassigned_count.positive? %><%= finance_count(overview.unassigned_count, "statement") %> <%= t("billie.finance.ui.not_linked_to_an_account_yet") %> <% end %>
+      <%= link_to t("billie.finance.ui.open_statement_history"), finance_statements_path(anchor: "statement-history"), class: "bw-text-link" %>
     </p>
   <% end %>
 </section>

@@ -1,0 +1,56 @@
+{
+  "en": {
+    "billie": {
+      "helpers": {
+        "date_format": "%b %-d, %Y",
+        "unavailable": "Not available",
+        "balance_today": "Balance is as of today.",
+        "balance_dated": "Balance is as of %{date}.",
+        "balance_aged": "Balance is as of %{date} (%{days} ago); activity after that date is not included.",
+        "manual": "Entered by you. This overrides automatic account totals.",
+        "manual_dated": "Entered by you on %{date}. This overrides automatic account totals.",
+        "automatic_total": "Automatically totals the latest balance for %{accounts}.",
+        "statement_dates": " Statement dates: %{dates}.",
+        "partial_total": " Partial total: some accounts or balances still need attention.",
+        "no_statement_data": "No statement data yet",
+        "labels": {
+          "income": "Income",
+          "housing": "Housing",
+          "food": "Food & dining",
+          "transport": "Transport",
+          "utilities": "Utilities",
+          "shopping": "Shopping",
+          "health": "Health",
+          "business": "Business",
+          "transfers": "Transfers",
+          "uncategorized": "Uncategorized",
+          "checking": "Checking",
+          "savings": "Savings",
+          "credit_account": "Credit account",
+          "cash_account": "Cash account",
+          "account": "Account"
+        },
+        "setup": {
+          "unassigned": "Dated closing balances are saved for %{statements}, but their accounts are not identified. Choose their accounts in Statement history to include them in the automatic total.",
+          "unconfirmed": "Closing balances were saved, but their accounts and balance dates still need confirmation. Review Statement history; a transaction date alone does not confirm the balance date.",
+          "no_details": "Transactions were imported from your %{statements}, but no account details or closing balances are saved. If your files have account details and a balance column, upload them again: the missing details are filled in automatically and nothing is imported twice. You can also enter your balance yourself.",
+          "only_credit": "Only credit accounts are identified. Their balances are money owed, so they are excluded from starting cash. A dated checking or savings balance is needed.",
+          "future_date": "Cash account balance dates are in the future. Review the dates in the account breakdown before using these balances.",
+          "missing_date": "Cash account balances have no confirmed dates. Review the balance dates in Statement history before using them.",
+          "missing_balance": "The latest statements for your cash accounts have no usable closing balances saved. Check the original statements for their dated balances; older balances are not silently substituted.",
+          "unknown_kind": "The account types are not confirmed. Identify checking or savings accounts in Statement history to calculate starting cash.",
+          "no_balance": "No dated cash account balance is available yet. Import a statement with account details and a closing balance to calculate this automatically."
+        },
+        "balance_status": {
+          "known": "Included in cash total",
+          "missing_balance": "Latest statement has no readable closing balance",
+          "missing_date": "Balance date needs confirmation",
+          "future_date": "Future-dated balance is not included",
+          "excluded_credit": "Credit card balance · excluded from cash",
+          "unknown_kind": "Confirm whether this is a cash account or credit card",
+          "excluded": "Not included in cash total"
+        }
+      }
+    }
+  }
+}

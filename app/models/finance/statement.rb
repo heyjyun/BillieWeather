@@ -16,7 +16,7 @@ module Finance
     private
 
     def bank_account_belongs_to_user
-      errors.add(:bank_account, "must belong to you") if bank_account && bank_account.user_id != user_id
+      errors.add(:bank_account, :same_owner) if bank_account && bank_account.user_id != user_id
     end
   end
 end

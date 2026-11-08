@@ -1,0 +1,166 @@
+zh-CN:
+  billie:
+    auth:
+      home:
+        eyebrow: 让财务一目了然
+        intro: 导入银行账单，清晰了解支出，并查看直观的现金流预测。
+        dashboard: 进入总览
+        no_bank_login: 无需登录银行账户
+        free_analysis: 免费基础分析
+        art_label: 导入账单、核对交易并查看现金流预测
+        outlook: 你的财务展望
+        clear_view_html: 清晰掌握<br>每一笔收支。
+        in_one_place_html: 账单、交易与现金流，<br>尽在一处。
+        step_import: 导入账单
+        step_review: 核对交易
+        step_forecast: 查看现金流预测
+        real_numbers: 基于你的真实数据
+        less_guesswork: 少一些猜测。
+        more_room: 多一些规划。
+        clarity: 从账单到清晰洞察
+        what_it_does: 功能介绍
+        import_title: 导入账单。
+        import_description: 上传银行的 CSV 或文本型 PDF 账单，核对每笔交易，并选择合适的分类。
+        spending_title: 了解钱花在哪里。
+        spending_description: 在总览中集中查看收入、支出、分类和近期交易。
+        forecast_title: 预测现金流。
+        forecast_description: 设置当前余额，了解近期收支规律持续时余额可能如何变化。
+        one_step: 一步一步，轻松开始
+        how_it_works: 使用方法
+        how_signup: 创建账户并登录。
+        how_upload: 上传银行账单。
+        how_no_bank_login: 无需登录银行账户。
+        how_review: 核对导入的交易。
+        how_open: 打开总览和预测页面。
+        tax_title: 为报税做好准备。
+        tax_description: 标记需要复核的交易，整理记录，方便与税务专业人士沟通。
+        analysis_title: 免费基础分析。
+        analysis_description: 随时生成收支规律的文字总结。基础分析无需付费 AI 服务。
+        disclaimer: BillieWeather 仅提供财务整理与估算，不提供针对个人的财务、法律或税务建议。
+      create_an_account: 创建账户
+      log_in: 登录
+      welcome_back: 欢迎回来
+      outlook_awaits: 开启你的财务展望。
+      login_description: 登录你的 BillieWeather 工作区。
+      email: 电子邮箱
+      password: 密码
+      remember_me: 保持登录
+      authentication_code: 验证码（如已启用）
+      new_here: 初次使用 BillieWeather？
+      forgot_password: 忘记密码？
+      create_your_account: 创建你的账户
+      signup_eyebrow: 更清晰的财务展望
+      signup_description: 从每一份账单开始，让财务逐渐清晰。
+      first_name: 名
+      last_name: 姓
+      unique_password_hint: 请使用至少 %{count} 个字符、且未在其他网站使用过的密码。
+      confirm_password: 确认密码
+      create_account: 创建账户
+      already_have_account: 已有账户？
+      reset_password: 重置密码
+      recovery_eyebrow: 重新开启清晰展望
+      reset_description: 输入账户邮箱，获取密码重置链接。
+      send_reset_link: 发送重置链接
+      back_to_login: 返回登录
+      choose_password: 设置新密码
+      fresh_start: 重新开始
+      protect_workspace: 使用独立密码保护你的财务工作区。
+      new_password: 新密码
+      password_hint: 请使用至少 %{count} 个字符。
+      confirm_new_password: 确认新密码
+      update_password: 更新密码
+      google_continue: 使用 Google 继续
+      google_unavailable: Google 登录暂不可用，请使用邮箱继续。
+      email_continue: 或使用邮箱继续
+      sign_in: 登录
+      recovery_unavailable: 密码找回功能暂不可用，请稍后重试。
+      google_connected: 登录成功，已关联 Google，今后可使用 Google 登录。
+      page_expired: 登录页面已过期，请重新输入登录信息。
+      google_signed_in: 已通过 Google 登录。
+      google_incomplete: Google 登录未完成，请重试，或使用邮箱和密码登录。
+      google_link_required: 此邮箱已有账户，请先使用现有密码登录一次以关联 Google。
+      google_service_unavailable: Google 登录暂不可用，请使用邮箱和密码登录。
+      google_sign_out_first: 使用其他 Google 账户前，请先退出登录。
+      google_sign_out_before_signup: 使用其他邮箱创建账户前，请先退出登录。
+      registration_unavailable: 当前不开放新账户注册，请使用受邀账户。
+      google_failed: Google 登录未能完成，请重试，或使用现有密码登录。
+      google_unverified_identity: 未收到 Google 验证的身份信息，请重试。
+      google_unverified_email: 未收到 Google 验证的邮箱地址，请重试。
+      account_unavailable: 此账户目前无法登录，请使用邮箱登录页面。
+      authentication_code_required: 此账户需要验证码，请使用邮箱、密码和验证码登录。
+      google_other_account: 此账户已关联其他 Google 账户，请使用现有方式登录。
+  activerecord:
+    attributes:
+      user:
+        email: 电子邮箱
+        password: 密码
+        password_confirmation: 密码确认
+        first_name: 名
+        last_name: 姓
+        reset_password_token: 密码重置令牌
+        confirmation_token: 确认令牌
+        unlock_token: 解锁令牌
+  errors:
+    format: '%{attribute}%{message}'
+    messages:
+      blank: 不能为空
+      taken: 已被使用
+      invalid: 无效
+      confirmation: 与%{attribute}不一致
+      too_short: 长度至少为 %{count} 个字符
+      too_long: 长度最多为 %{count} 个字符
+      not_saved: 保存失败
+      not_found: 不存在
+      already_confirmed: 已确认，请直接登录
+      confirmation_period_expired: 需要在 %{period} 内确认，请重新申请
+      expired: 已过期，请重新申请
+      not_locked: 未被锁定
+      not_a_number: 必须为数字
+      pwned_password: 曾在数据泄露中出现，请使用其他密码
+    attributes: {}
+  devise:
+    failure:
+      already_authenticated: 你已登录。
+      inactive: 账户尚未激活。
+      invalid: '%{authentication_keys}或密码不正确。'
+      locked: 账户已锁定。
+      last_attempt: 再次登录失败后，账户将被锁定。
+      not_found_in_database: '%{authentication_keys}或密码不正确。'
+      timeout: 登录已过期，请重新登录。
+      unauthenticated: 请先登录或注册。
+      unconfirmed: 请先确认邮箱。
+    sessions:
+      signed_in: 登录成功。
+      signed_out: 已退出登录。
+      already_signed_out: 已退出登录。
+      warn_pwned: 你的密码曾在数据泄露中出现，建议立即更改密码。
+    registrations:
+      signed_up: 注册成功，欢迎使用！
+      signed_up_but_inactive: 注册成功，账户激活后即可登录。
+      signed_up_but_locked: 注册成功，但账户已被锁定。
+      signed_up_but_unconfirmed: 确认邮件已发送，请按邮件中的链接激活账户。
+      updated: 账户信息已更新。
+      update_needs_confirmation: 账户信息已更新，请确认新邮箱。
+      destroyed: 账户已删除。
+    passwords:
+      no_token: 请通过密码重置邮件中的链接打开此页面。
+      send_instructions: 你将很快收到包含密码重置说明的邮件。
+      send_paranoid_instructions: 如果该邮箱已注册，你将收到密码重置邮件。
+      updated: 密码已更新，你已登录。
+      updated_not_active: 密码已更新。
+    confirmations:
+      confirmed: 邮箱已确认。
+      send_instructions: 你将很快收到包含邮箱确认说明的邮件。
+      send_paranoid_instructions: 如果该邮箱已注册，你将收到确认邮件。
+    unlocks:
+      send_instructions: 你将很快收到包含账户解锁说明的邮件。
+      send_paranoid_instructions: 如果该账户存在，你将收到解锁邮件。
+      unlocked: 账户已解锁，请登录。
+    omniauth_callbacks:
+      failure: 无法通过 %{kind} 登录：%{reason}。
+      success: 已通过 %{kind} 登录。
+  support:
+    array:
+      words_connector: 、
+      two_words_connector: 和
+      last_word_connector: 和

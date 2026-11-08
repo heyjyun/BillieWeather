@@ -1,20 +1,20 @@
-<% content_for :title, "Upload statements" %>
+<% content_for :title, t("billie.finance.ui.upload_statements_2") %>
 
 <div class="bw-page-heading">
   <div>
-    <span class="bw-eyebrow">FROM STATEMENTS TO CLARITY</span>
-    <h1>Bring your numbers together.</h1>
-    <p>Import CSV or text-based PDF bank statements together. We’ll organize the transactions into your financial picture.</p>
+    <span class="bw-eyebrow"><%= t("billie.finance.ui.from_statements_to_clarity") %></span>
+    <h1><%= t("billie.finance.ui.bring_your_numbers_together") %></h1>
+    <p><%= t("billie.finance.ui.import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac") %></p>
   </div>
-  <%= link_to "View transactions →", finance_transactions_path, class: "bw-button bw-button-outline" %>
+  <%= link_to t("billie.finance.ui.view_transactions"), finance_transactions_path, class: "bw-button bw-button-outline" %>
 </div>
 
 <% if @import_results.present? %>
   <section id="import-results" class="bw-panel bw-panel-flush bw-upload-results" aria-labelledby="import-results-title">
     <div class="bw-panel-heading">
       <div>
-        <h2 id="import-results-title">Your upload results</h2>
-        <p>Each file is processed separately. A failed file does not affect successful imports.</p>
+        <h2 id="import-results-title"><%= t("billie.finance.ui.your_upload_results") %></h2>
+        <p><%= t("billie.finance.ui.each_file_is_processed_separately_a_failed_file_does_not_affect_successful_impor") %></p>
       </div>
       <span class="bw-count"><%= @import_results.size %></span>
     </div>
@@ -22,11 +22,11 @@
       <table class="bw-table">
         <thead>
           <tr>
-            <th scope="col">Statement</th>
-            <th scope="col">Result</th>
-            <th scope="col">Transactions</th>
-            <th scope="col">Details</th>
-            <th scope="col"><span class="bw-sr-only">Action</span></th>
+            <th scope="col"><%= t("billie.finance.ui.statement") %></th>
+            <th scope="col"><%= t("billie.finance.ui.result") %></th>
+            <th scope="col"><%= t("billie.finance.ui.transactions") %></th>
+            <th scope="col"><%= t("billie.finance.ui.details") %></th>
+            <th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th>
           </tr>
         </thead>
         <tbody>
@@ -35,23 +35,23 @@
               <td><strong class="bw-import-filename"><%= result[:filename] %></strong></td>
               <td>
                 <% if result[:status] == "imported" %>
-                  <span class="bw-badge"><%= finance_icon "check", size: 13 %> Imported</span>
+                  <span class="bw-badge"><%= finance_icon "check", size: 13 %> <%= t("billie.finance.ui.imported") %></span>
                 <% elsif result[:status] == "review" %>
-                  <span class="bw-badge bw-badge-review">Needs review</span>
+                  <span class="bw-badge bw-badge-review"><%= t("billie.finance.ui.needs_review") %></span>
                 <% else %>
-                  <span class="bw-badge bw-badge-failed">Not imported</span>
+                  <span class="bw-badge bw-badge-failed"><%= t("billie.finance.ui.not_imported") %></span>
                 <% end %>
               </td>
               <td><%= result[:transaction_count].present? ? number_with_delimiter(result[:transaction_count]) : "—" %></td>
               <td class="bw-import-detail">
                 <%= result[:message] %>
                 <% if result[:date_column].present? %>
-                  <small>Dates use the <%= result[:date_column] %> column.</small>
+                  <small><%= t("billie.finance.ui.dates_use_column", column: result[:date_column]) %></small>
                 <% end %>
               </td>
               <td class="bw-text-right">
                 <% if result[:status] == "review" && result[:draft].present? %>
-                  <%= link_to "Review →", finance_statement_draft_path(result[:draft]), class: "bw-text-link" %>
+                  <%= link_to t("billie.finance.ui.review_2"), finance_statement_draft_path(result[:draft]), class: "bw-text-link" %>
                 <% end %>
               </td>
             </tr>
@@ -59,7 +59,7 @@
         </tbody>
       </table>
     </div>
-    <p class="bw-table-footnote">Retry only the files that were not imported. PDFs marked “Needs review” are saved below until they expire.</p>
+    <p class="bw-table-footnote"><%= t("billie.finance.ui.retry_only_the_files_that_were_not_imported_pdfs_marked_needs_review_are_saved_b") %></p>
   </section>
 <% end %>
 
@@ -67,69 +67,69 @@
   <section class="bw-panel">
     <div class="bw-panel-heading">
       <div>
-        <h2>Upload statements</h2>
-        <p>Transactions are organized and categorized automatically as you import</p>
+        <h2><%= t("billie.finance.ui.upload_statements_2") %></h2>
+        <p><%= t("billie.finance.ui.transactions_are_organized_and_categorized_automatically_as_you_import") %></p>
       </div>
       <%= finance_icon "upload" %>
     </div>
     <%= form_with url: finance_statements_path, multipart: true, data: {turbo: false}, class: "bw-form" do |form| %>
       <div class="bw-upload-box">
         <span class="bw-upload-icon"><%= finance_icon "upload", size: 32 %></span>
-        <h3>A clearer outlook starts here.</h3>
-        <p>Choose one or more CSV exports or text-based PDFs from your bank.</p>
-        <%= form.label :files, "Statement CSV or PDF files", class: "bw-sr-only" %>
+        <h3><%= t("billie.finance.ui.a_clearer_outlook_starts_here") %></h3>
+        <p><%= t("billie.finance.ui.choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank") %></p>
+        <%= form.label :files, t("billie.finance.ui.statement_csv_or_pdf_files"), class: "bw-sr-only" %>
         <%= form.file_field :files, multiple: true, accept: ".csv,.pdf,text/csv,application/pdf", required: true, class: "bw-file-input", aria: {describedby: "statement-file-limits"} %>
-        <small id="statement-file-limits">Up to 10 files · 2 MB per file · 10 MB total · CSV and text-based PDF</small>
+        <small id="statement-file-limits"><%= t("billie.finance.ui.up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf") %></small>
       </div>
       <div class="bw-form-note">
         <%= finance_icon "file", size: 18 %>
-        <span>Each file has its own result. Transactions are saved to your account; original files are not retained.</span>
+        <span><%= t("billie.finance.ui.each_file_has_its_own_result_transactions_are_saved_to_your_account_original_fil") %></span>
       </div>
       <% if @date_columns.present? %>
         <div class="bw-field">
-          <%= form.label :date_column, "Date column (optional override)" %>
-          <%= form.select :date_column, @date_columns.map { |column| [column, column] }, {include_blank: "Automatic (transaction date first)", selected: params[:date_column]} %>
-          <small>Automatic detection prefers Transaction Date, then Date, then posting dates. Choose only the CSV you want to retry when using an override.</small>
+          <%= form.label :date_column, t("billie.finance.ui.date_column_optional_override") %>
+          <%= form.select :date_column, @date_columns.map { |column| [column, column] }, {include_blank: t("billie.finance.ui.automatic_transaction_date_first"), selected: params[:date_column]} %>
+          <small><%= t("billie.finance.ui.automatic_detection_prefers_transaction_date_then_date_then_posting_dates_choose") %></small>
         </div>
       <% end %>
       <%= form.hidden_field :currency, value: @profile.currency %>
       <div class="bw-form-footer">
-        <span>Statement currency: <strong><%= @profile.currency %></strong></span>
-        <%= form.submit "Import statements", class: "bw-button bw-button-dark" %>
+        <span><%= t("billie.finance.ui.statement_currency") %> <strong><%= @profile.currency %></strong></span>
+        <%= form.submit t("billie.finance.ui.import_statements"), class: "bw-button bw-button-dark" %>
       </div>
     <% end %>
   </section>
 
   <aside class="bw-panel bw-panel-soft">
-    <span class="bw-eyebrow">A QUICK GUIDE</span>
-    <h2>Before you upload</h2>
+    <span class="bw-eyebrow"><%= t("billie.finance.ui.a_quick_guide") %></span>
+    <h2><%= t("billie.finance.ui.before_you_upload") %></h2>
     <ol class="bw-numbered-list">
       <li>
-        <strong>Choose statements from your bank</strong>
-        <p>Select several files at once, including a mix of CSVs and text-based PDFs. Scanned or image-only PDFs need a text-based PDF or CSV export; OCR is not available.</p>
+        <strong><%= t("billie.finance.ui.choose_statements_from_your_bank") %></strong>
+        <p><%= t("billie.finance.ui.select_several_files_at_once_including_a_mix_of_csvs_and_text_based_pdfs_scanned") %></p>
       </li>
       <li>
-        <strong>CSV: check the columns</strong>
-        <p>Use Date, Description, and Amount. Separate Debit and Credit columns are also supported. Dates are detected automatically: Transaction Date first, then Date, then posting dates. Each import result names the column used.</p>
-        <p>Date, Description, and Amount import transaction activity. Automatic cash balances also need a Balance column and account details such as Bank, Account Number, and Account Type (Checking, Savings, or Credit Card). These additional columns are optional for importing transactions.</p>
+        <strong><%= t("billie.finance.ui.csv_check_the_columns") %></strong>
+        <p><%= t("billie.finance.ui.use_date_description_and_amount_separate_debit_and_credit_columns_are_also_suppo") %></p>
+        <p><%= t("billie.finance.ui.date_description_and_amount_import_transaction_activity_automatic_cash_balances") %></p>
       </li>
       <li>
-        <strong>PDF: review anything unclear</strong>
-        <p>PDFs are imported automatically when everything is clear, including the statement year and each amount's sign. Anything unclear gets its own review step. Income is positive; expenses are negative. CSV dates use YYYY-MM-DD or MM/DD/YYYY.</p>
+        <strong><%= t("billie.finance.ui.pdf_review_anything_unclear") %></strong>
+        <p><%= t("billie.finance.ui.pdfs_are_imported_automatically_when_everything_is_clear_including_the_statement") %></p>
       </li>
       <li>
-        <strong>Bring each bank account together</strong>
-        <p>When account details and a dated balance are present, we total the latest balance for each cash account. If an account is unclear, choose it in Statement history. Credit cards are excluded from cash.</p>
+        <strong><%= t("billie.finance.ui.bring_each_bank_account_together") %></strong>
+        <p><%= t("billie.finance.ui.when_account_details_and_a_dated_balance_are_present_we_total_the_latest_balance") %></p>
       </li>
       <li>
-        <strong>Use one currency</strong>
-        <p>Your current workspace uses <%= @profile.currency %>. Currency conversion is not applied.</p>
+        <strong><%= t("billie.finance.ui.use_one_currency") %></strong>
+        <p><%= t("billie.finance.ui.workspace_currency", currency: @profile.currency) %></p>
       </li>
     </ol>
     <%= link_to sample_finance_statements_path(format: :csv), class: "bw-button bw-button-outline bw-full-width" do %>
-      <%= finance_icon "file", size: 17 %> Download sample CSV
+      <%= finance_icon "file", size: 17 %> <%= t("billie.finance.ui.download_sample_csv") %>
     <% end %>
-    <p class="bw-caption">Sample transactions are examples. Import them only if you want to try the workflow.</p>
+    <p class="bw-caption"><%= t("billie.finance.ui.sample_transactions_are_examples_import_them_only_if_you_want_to_try_the_workflo") %></p>
   </aside>
 </div>
 
@@ -137,8 +137,8 @@
   <section id="pending-reviews" class="bw-panel bw-panel-flush bw-section-gap" aria-labelledby="pending-reviews-title">
     <div class="bw-panel-heading">
       <div>
-        <h2 id="pending-reviews-title">PDFs waiting for review</h2>
-        <p>Check each PDF’s extracted rows before adding its transactions.</p>
+        <h2 id="pending-reviews-title"><%= t("billie.finance.ui.pdfs_waiting_for_review") %></h2>
+        <p><%= t("billie.finance.ui.check_each_pdf_s_extracted_rows_before_adding_its_transactions") %></p>
       </div>
       <span class="bw-count"><%= @pending_drafts.size %></span>
     </div>
@@ -146,10 +146,10 @@
       <table class="bw-table">
         <thead>
           <tr>
-            <th scope="col">Statement</th>
-            <th scope="col">Extracted rows</th>
-            <th scope="col">Review expires</th>
-            <th scope="col"><span class="bw-sr-only">Actions</span></th>
+            <th scope="col"><%= t("billie.finance.ui.statement") %></th>
+            <th scope="col"><%= t("billie.finance.ui.extracted_rows") %></th>
+            <th scope="col"><%= t("billie.finance.ui.review_expires") %></th>
+            <th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.actions") %></span></th>
           </tr>
         </thead>
         <tbody>
@@ -158,15 +158,15 @@
               <td>
                 <div class="bw-transaction-name">
                   <span class="bw-transaction-icon"><%= finance_icon "file", size: 18 %></span>
-                  <div><strong><%= draft.filename %></strong><small><%= draft.currency %> · Not imported yet</small></div>
+                  <div><strong><%= draft.filename %></strong><small><%= draft.currency %> <%= t("billie.finance.ui.not_imported_yet") %></small></div>
                 </div>
               </td>
               <td><%= number_with_delimiter(draft.rows.size) %></td>
-              <td class="bw-nowrap"><%= time_tag draft.expires_at, "In #{distance_of_time_in_words(Time.current, draft.expires_at)}" %></td>
+              <td class="bw-nowrap"><%= time_tag draft.expires_at, t("billie.finance.ui.expires_in", duration: distance_of_time_in_words(Time.current, draft.expires_at)) %></td>
               <td>
                 <div class="bw-review-actions">
-                  <%= link_to "Review →", finance_statement_draft_path(draft), class: "bw-text-link" %>
-                  <%= button_to "Discard", finance_statement_draft_path(draft), method: :delete, class: "bw-danger-link", form: {data: {turbo: false}}, title: "Discard this PDF review" %>
+                  <%= link_to t("billie.finance.ui.review_2"), finance_statement_draft_path(draft), class: "bw-text-link" %>
+                  <%= button_to t("billie.finance.ui.discard"), finance_statement_draft_path(draft), method: :delete, class: "bw-danger-link", form: {data: {turbo: false}}, title: t("billie.finance.ui.discard_this_pdf_review") %>
                 </div>
               </td>
             </tr>
@@ -174,13 +174,13 @@
         </tbody>
       </table>
     </div>
-    <p class="bw-table-footnote">Reviews expire 30 minutes after upload. If one expires, upload that PDF again. Discarding a review does not affect imported statements.</p>
+    <p class="bw-table-footnote"><%= t("billie.finance.ui.reviews_expire_30_minutes_after_upload_if_one_expires_upload_that_pdf_again_disc") %></p>
   </section>
 <% end %>
 
 <section class="bw-panel bw-panel-flush bw-section-gap" id="statement-history">
   <div class="bw-panel-heading">
-    <div><h2>Statement history</h2><p>Your imported files, accounts, and transaction counts</p></div>
+    <div><h2><%= t("billie.finance.ui.statement_history") %></h2><p><%= t("billie.finance.ui.your_imported_files_accounts_and_transaction_counts") %></p></div>
     <span class="bw-count"><%= @statements.size %></span>
   </div>
   <% if @statements.any? %>
@@ -188,13 +188,13 @@
       <table class="bw-table">
         <thead>
           <tr>
-            <th scope="col">Statement</th>
-            <th scope="col">Bank account</th>
-            <th scope="col">Saved balance</th>
-            <th scope="col">Imported</th>
-            <th scope="col">Transactions</th>
-            <th scope="col">Status</th>
-            <th scope="col"><span class="bw-sr-only">Action</span></th>
+            <th scope="col"><%= t("billie.finance.ui.statement") %></th>
+            <th scope="col"><%= t("billie.finance.ui.bank_account") %></th>
+            <th scope="col"><%= t("billie.finance.ui.saved_balance") %></th>
+            <th scope="col"><%= t("billie.finance.ui.imported") %></th>
+            <th scope="col"><%= t("billie.finance.ui.transactions") %></th>
+            <th scope="col"><%= t("billie.finance.ui.status") %></th>
+            <th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th>
           </tr>
         </thead>
         <tbody>
@@ -209,76 +209,76 @@
               <td class="bw-statement-account">
                 <% if statement.bank_account.present? %>
                   <strong><%= statement.bank_account.display_name %></strong>
-                  <small class="bw-account-source"><%= statement.bank_account.kind == "credit" ? "Credit card · excluded from cash" : (statement.bank_account.kind == "cash" ? "Cash account" : "Account type needs confirmation") %></small>
+                  <small class="bw-account-source"><%= statement.bank_account.kind == "credit" ? t("billie.finance.ui.credit_card_excluded_from_cash") : (statement.bank_account.kind == "cash" ? t("billie.finance.ui.cash_account") : t("billie.finance.ui.account_type_needs_confirmation")) %></small>
                 <% else %>
-                  <span class="bw-badge bw-badge-review">Choose account</span>
-                  <small class="bw-account-source"><%= statement.closing_balance.nil? ? "Account unidentified; no closing balance saved" : "Not included in automatic cash total" %></small>
+                  <span class="bw-badge bw-badge-review"><%= t("billie.finance.ui.choose_account") %></span>
+                  <small class="bw-account-source"><%= statement.closing_balance.nil? ? t("billie.finance.ui.account_unidentified_no_closing_balance_saved") : t("billie.finance.ui.not_included_in_automatic_cash_total") %></small>
                 <% end %>
                 <details class="bw-account-assignment">
-                  <summary><%= statement.bank_account.present? ? "Change account" : "Identify this account" %></summary>
+                  <summary><%= statement.bank_account.present? ? t("billie.finance.ui.change_account") : t("billie.finance.ui.identify_this_account") %></summary>
                   <% if @bank_accounts.any? %>
                     <%= form_with url: finance_statement_path(statement), method: :patch, data: {turbo: false}, class: "bw-form" do %>
                       <div class="bw-field">
-                        <%= label_tag "statement_#{statement.id}_bank_account_id", "Use an existing account" %>
-                        <%= select_tag :bank_account_id, options_for_select(@bank_accounts.map { |account| [account.display_name, account.id] }, statement.bank_account_id), include_blank: "Choose account", required: true, id: "statement_#{statement.id}_bank_account_id" %>
+                        <%= label_tag "statement_#{statement.id}_bank_account_id", t("billie.finance.ui.use_an_existing_account") %>
+                        <%= select_tag :bank_account_id, options_for_select(@bank_accounts.map { |account| [account.display_name, account.id] }, statement.bank_account_id), include_blank: t("billie.finance.ui.choose_account"), required: true, id: "statement_#{statement.id}_bank_account_id" %>
                       </div>
-                      <%= submit_tag "Use this account", class: "bw-button bw-button-outline" %>
+                      <%= submit_tag t("billie.finance.ui.use_this_account"), class: "bw-button bw-button-outline" %>
                     <% end %>
-                    <p class="bw-caption">Or add an account:</p>
+                    <p class="bw-caption"><%= t("billie.finance.ui.or_add_an_account") %></p>
                   <% end %>
                   <%= form_with url: finance_statement_path(statement), method: :patch, data: {turbo: false}, class: "bw-form" do %>
                     <div class="bw-field">
-                      <%= label_tag "statement_#{statement.id}_bank_name", "Bank name" %>
-                      <%= text_field_tag "bank_account[bank_name]", nil, required: true, maxlength: 100, placeholder: "e.g. Chase", id: "statement_#{statement.id}_bank_name" %>
+                      <%= label_tag "statement_#{statement.id}_bank_name", t("billie.finance.ui.bank_name") %>
+                      <%= text_field_tag "bank_account[bank_name]", nil, required: true, maxlength: 100, placeholder: t("billie.finance.ui.e_g_chase"), id: "statement_#{statement.id}_bank_name" %>
                     </div>
                     <div class="bw-field">
-                      <%= label_tag "statement_#{statement.id}_account_name", "Account label" %>
-                      <%= text_field_tag "bank_account[name]", nil, required: true, maxlength: 100, placeholder: "e.g. Everyday checking", id: "statement_#{statement.id}_account_name" %>
+                      <%= label_tag "statement_#{statement.id}_account_name", t("billie.finance.ui.account_label") %>
+                      <%= text_field_tag "bank_account[name]", nil, required: true, maxlength: 100, placeholder: t("billie.finance.ui.e_g_everyday_checking"), id: "statement_#{statement.id}_account_name" %>
                     </div>
                     <div class="bw-field">
-                      <%= label_tag "statement_#{statement.id}_last4", "Last four account digits" %>
+                      <%= label_tag "statement_#{statement.id}_last4", t("billie.finance.ui.last_four_account_digits") %>
                       <%= text_field_tag "bank_account[last4]", nil, required: true, inputmode: "numeric", pattern: "[0-9]{4}", minlength: 4, maxlength: 4, autocomplete: "off", id: "statement_#{statement.id}_last4" %>
-                      <small>Use the same bank and last four digits for every statement from this account. Do not enter the full account number.</small>
+                      <small><%= t("billie.finance.ui.use_the_same_bank_and_last_four_digits_for_every_statement_from_this_account_do") %></small>
                     </div>
                     <div class="bw-field">
-                      <%= label_tag "statement_#{statement.id}_kind", "Account type" %>
-                      <%= select_tag "bank_account[kind]", options_for_select([["Checking / savings (cash)", "cash"], ["Credit card", "credit"]]), include_blank: "Choose account type", required: true, id: "statement_#{statement.id}_kind" %>
+                      <%= label_tag "statement_#{statement.id}_kind", t("billie.finance.ui.account_type") %>
+                      <%= select_tag "bank_account[kind]", options_for_select([[t("billie.finance.ui.checking_savings_cash"), "cash"], [t("billie.finance.ui.credit_card"), "credit"]]), include_blank: t("billie.finance.ui.choose_account_type"), required: true, id: "statement_#{statement.id}_kind" %>
                     </div>
                     <% if @bank_accounts.any? %>
                       <div class="bw-field">
                         <%= label_tag "statement_#{statement.id}_separate_account", class: "bw-account-separate-label" do %>
                           <%= check_box_tag "bank_account[separate_account]", "1", false, id: "statement_#{statement.id}_separate_account" %>
-                          This is a different account with the same bank and last four digits
+                          <%= t("billie.finance.ui.this_is_a_different_account_with_the_same_bank_and_last_four_digits") %>
                         <% end %>
                       </div>
                     <% end %>
-                    <%= submit_tag "Save account", class: "bw-button bw-button-outline" %>
+                    <%= submit_tag t("billie.finance.ui.save_account"), class: "bw-button bw-button-outline" %>
                   <% end %>
                 </details>
               </td>
               <td>
                 <% if statement.closing_balance.nil? %>
-                  <span>No closing balance saved</span>
+                  <span><%= t("billie.finance.ui.no_closing_balance_saved") %></span>
                 <% else %>
                   <strong class="bw-nowrap"><%= finance_money(statement.closing_balance, statement.currency) %></strong>
-                  <small class="bw-account-source"><%= statement.closing_balance_on.present? ? finance_date(statement.closing_balance_on) : "Balance date not saved" %></small>
+                  <small class="bw-account-source"><%= statement.closing_balance_on.present? ? finance_date(statement.closing_balance_on) : t("billie.finance.ui.balance_date_not_saved") %></small>
                 <% end %>
               </td>
               <td class="bw-nowrap"><%= finance_date(statement.created_at) %></td>
               <td><%= number_with_delimiter(statement.transaction_count) %></td>
-              <td><span class="bw-badge"><%= finance_icon "check", size: 13 %> Imported</span></td>
-              <td class="bw-text-right"><%= button_to "Remove", finance_statement_path(statement), method: :delete, class: "bw-danger-link", form: {data: {turbo: false}}, title: "Remove this statement and its transactions" %></td>
+              <td><span class="bw-badge"><%= finance_icon "check", size: 13 %> <%= t("billie.finance.ui.imported") %></span></td>
+              <td class="bw-text-right"><%= button_to t("billie.finance.ui.remove"), finance_statement_path(statement), method: :delete, class: "bw-danger-link", form: {data: {turbo: false}}, title: t("billie.finance.ui.remove_this_statement_and_its_transactions") %></td>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
-    <p class="bw-table-footnote">Statements from the same account contribute only the latest balance. Removing a statement also removes its transactions and recalculates the account total. <%= link_to "View account balances →", finance_forecast_path(anchor: "account-balances"), class: "bw-text-link" %></p>
+    <p class="bw-table-footnote"><%= t("billie.finance.ui.statements_from_the_same_account_contribute_only_the_latest_balance_removing_a_s") %> <%= link_to t("billie.finance.ui.view_account_balances"), finance_forecast_path(anchor: "account-balances"), class: "bw-text-link" %></p>
   <% else %>
     <div class="bw-empty-state">
       <span class="bw-empty-icon"><%= finance_icon "file", size: 32 %></span>
-      <h3>No statements yet.</h3>
-      <p>Upload your first statement to start connecting the dots.</p>
+      <h3><%= t("billie.finance.ui.no_statements_yet") %></h3>
+      <p><%= t("billie.finance.ui.upload_your_first_statement_to_start_connecting_the_dots") %></p>
     </div>
   <% end %>
 </section>

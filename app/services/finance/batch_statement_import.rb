@@ -18,7 +18,7 @@ module Finance
       started_at = monotonic_time
       @files.map do |file|
         if monotonic_time - started_at >= MAX_PROCESSING_SECONDS
-          result(file, "failed", message: "Not processed because this batch reached its processing time limit. Upload this file again in a smaller batch.")
+          result(file, "failed", message: I18n.t("billie.backend.batch_timed_out"))
         else
           import_file(file)
         end
@@ -29,24 +29,24 @@ module Finance
 
     def validate_batch!
       unless @files.is_a?(Array)
-        raise StatementImporter::ImportError, "Choose one or more CSV or PDF files."
+        raise StatementImporter::ImportError, I18n.t("billie.backend.choose_files")
       end
       @files = @files.reject { |file| file.nil? || file == "" }
-      raise StatementImporter::ImportError, "Choose one or more CSV or PDF files." if @files.empty?
+      raise StatementImporter::ImportError, I18n.t("billie.backend.choose_files") if @files.empty?
       if @files.length > MAX_FILES
-        raise StatementImporter::ImportError, "Choose at most #{MAX_FILES} files per upload. No files from this batch were imported."
+        raise StatementImporter::ImportError, I18n.t("billie.backend.batch_file_limit", count: MAX_FILES)
       end
       unless @files.all? { |file| file.respond_to?(:read) && file.respond_to?(:rewind) && file.respond_to?(:size) && file.respond_to?(:original_filename) }
-        raise StatementImporter::ImportError, "The selected files could not be read. Choose your CSV or PDF files again."
+        raise StatementImporter::ImportError, I18n.t("billie.backend.unreadable_files")
       end
       if @files.sum(&:size) > MAX_TOTAL_BYTES
-        raise StatementImporter::ImportError, "The selected files exceed the 10 MB batch limit. No files from this batch were imported."
+        raise StatementImporter::ImportError, I18n.t("billie.backend.batch_size_limit")
       end
     end
 
     def import_file(file)
       if file.size > StatementImporter::MAX_BYTES
-        raise StatementImporter::ImportError, "Each statement must be 2 MB or smaller."
+        raise StatementImporter::ImportError, I18n.t("billie.backend.file_size_limit")
       end
       file.rewind
       prefix = file.read(5)
@@ -59,10 +59,10 @@ module Finance
         statement = Statement.transaction { importer.call }
         if importer.refreshed?
           result(file, "imported", date_column: importer.date_column_used,
-            message: "Already imported. Added the missing account and balance details; no transactions were duplicated.")
+            message: I18n.t("billie.backend.import_details_refreshed"))
         else
           result(file, "imported", transaction_count: statement.transaction_count, date_column: importer.date_column_used,
-            message: "Imported successfully.")
+            message: I18n.t("billie.backend.import_success"))
         end
       end
     rescue StatementImporter::ImportError => error
@@ -73,20 +73,20 @@ module Finance
       checksum = Digest::SHA256.hexdigest(file.read(StatementImporter::MAX_BYTES + 1))
       file.rewind
       if Statement.exists?(user: @user, sha256: checksum)
-        raise StatementImporter::ImportError, "This exact statement has already been imported."
+        raise StatementImporter::ImportError, I18n.t("billie.backend.statement_duplicate")
       end
       draft = StatementDraft.active.find_by(user: @user, sha256: checksum, currency: @currency)
       existing_review = draft.present?
       draft ||= PdfStatementExtractor.new(user: @user, file: file, currency: @currency).call
       unless draft.auto_importable?
         return result(file, "review", draft: draft, transaction_count: draft.rows.length,
-          message: existing_review ? "This PDF is already awaiting review. Open the existing draft below." : "Review the unclear dates or amounts before importing.")
+          message: existing_review ? I18n.t("billie.backend.pdf_existing_review") : I18n.t("billie.backend.pdf_review_unclear"))
       end
 
       # Draft deletion and the imported rows must succeed together.
       statement = Statement.transaction { DraftImport.new(user: @user, draft: draft).call }
       result(file, "imported", transaction_count: statement.transaction_count,
-        message: "PDF imported automatically. Compare its transaction count with your statement.")
+        message: I18n.t("billie.backend.pdf_auto_imported"))
     rescue StatementImporter::ImportError => error
       if draft&.persisted?
         result(file, "review", draft: draft, transaction_count: draft.rows.length, message: error.message)

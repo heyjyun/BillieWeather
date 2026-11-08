@@ -11,7 +11,7 @@ module Finance
     validates :bank_name, :name, presence: true, length: {maximum: 100}
     validates :last4, format: {with: /\A\d{4}\z/}
     validates :kind, inclusion: {in: KINDS}
-    validates :custom_name, length: {maximum: 60}, format: {with: /\A[^\p{Cc}]*\z/, message: "can't contain control characters"}, allow_nil: true
+    validates :custom_name, length: {maximum: 60}, format: {with: /\A[^\p{Cc}]*\z/, message: :control_characters}, allow_nil: true
 
     before_validation { self.custom_name = custom_name.to_s.squish.presence }
 

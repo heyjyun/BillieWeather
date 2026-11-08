@@ -1,0 +1,19 @@
+{
+  "en": {
+    "errors": {
+      "messages": {
+        "cent_precision": "must have at most two decimal places",
+        "currency_in_use": "cannot change while statements in another currency exist",
+        "same_owner": "must belong to you",
+        "same_statement_owner": "must belong to the same account",
+        "object_required": "must be an object",
+        "control_characters": "can't contain control characters",
+        "review_row_count": "must contain 1–%{count} reviewable transactions",
+        "review_row_invalid": "contain invalid details at row %{row}",
+        "review_date_invalid": "contain an invalid date at row %{row}",
+        "review_save_failed": "could not be saved for review",
+        "review_expiration": "must be within the next 30 minutes"
+      }
+    }
+  }
+}

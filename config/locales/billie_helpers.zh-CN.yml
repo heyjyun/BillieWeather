@@ -1,0 +1,127 @@
+{
+  "zh-CN": {
+    "billie": {
+      "helpers": {
+        "date_format": "%Y年%-m月%-d日",
+        "unavailable": "暂无数据",
+        "balance_today": "余额截至今天。",
+        "balance_dated": "余额截至 %{date}。",
+        "balance_aged": "余额截至 %{date}（%{days}前）；不包含此后的交易。",
+        "manual": "由你手动填写，将覆盖自动账户合计。",
+        "manual_dated": "由你手动填写，日期为 %{date}，将覆盖自动账户合计。",
+        "automatic_total": "自动合计 %{accounts}的最新余额。",
+        "statement_dates": " 账单日期：%{dates}。",
+        "partial_total": " 当前为部分合计：部分账户或余额仍需确认。",
+        "no_statement_data": "暂无账单数据",
+        "labels": {
+          "income": "收入",
+          "housing": "住房",
+          "food": "餐饮",
+          "transport": "交通",
+          "utilities": "生活缴费",
+          "shopping": "购物",
+          "health": "医疗健康",
+          "business": "业务支出",
+          "transfers": "转账",
+          "uncategorized": "未分类",
+          "checking": "支票账户",
+          "savings": "储蓄账户",
+          "credit_account": "信用账户",
+          "cash_account": "现金账户",
+          "account": "账户"
+        },
+        "counts": {
+          "transaction": "%{count} 笔交易",
+          "statement": "%{count} 份账单",
+          "account": "%{count} 个账户",
+          "card": "%{count} 张卡",
+          "cash_account": "%{count} 个现金账户",
+          "day": "%{count} 天",
+          "file": "%{count} 个文件",
+          "row": "%{count} 行",
+          "month": "%{count} 个月"
+        },
+        "setup": {
+          "unassigned": "已保存 %{statements}的带日期期末余额，但尚未识别所属账户。请在账单历史中选择账户，将其纳入自动合计。",
+          "unconfirmed": "已保存期末余额，但所属账户和余额日期仍需确认。请检查账单历史；交易日期不能单独作为余额日期。",
+          "no_details": "已从 %{statements}导入交易，但未保存账户信息或期末余额。如果文件包含账户信息和余额列，请重新上传：系统会自动补充缺失信息，不会重复导入交易。你也可以手动填写余额。",
+          "only_credit": "目前仅识别到信用账户，其余额属于欠款，不计入起始现金。请提供带日期的支票或储蓄账户余额。",
+          "future_date": "现金账户的余额日期在未来。使用这些余额前，请检查账户明细中的日期。",
+          "missing_date": "现金账户余额尚无已确认的日期。请先在账单历史中确认余额日期。",
+          "missing_balance": "现金账户的最新账单没有可用的期末余额。请查看原始账单，确认余额及其日期；系统不会自动使用较旧的余额代替。",
+          "unknown_kind": "账户类型尚未确认。请在账单历史中识别支票或储蓄账户，以计算起始现金。",
+          "no_balance": "暂无带日期的现金账户余额。导入包含账户信息和期末余额的账单后，系统会自动计算。"
+        },
+        "balance_status": {
+          "known": "已计入现金合计",
+          "missing_balance": "最新账单没有可读取的期末余额",
+          "missing_date": "余额日期待确认",
+          "future_date": "未来日期的余额未计入",
+          "excluded_credit": "信用卡余额 · 不计入现金",
+          "unknown_kind": "请确认这是现金账户还是信用卡",
+          "excluded": "未计入现金合计"
+        }
+      }
+    },
+    "date": {
+      "formats": {
+        "default": "%Y年%-m月%-d日",
+        "short": "%-m月%-d日",
+        "long": "%Y年%-m月%-d日"
+      },
+      "day_names": [
+        "星期日",
+        "星期一",
+        "星期二",
+        "星期三",
+        "星期四",
+        "星期五",
+        "星期六"
+      ],
+      "abbr_day_names": [
+        "周日",
+        "周一",
+        "周二",
+        "周三",
+        "周四",
+        "周五",
+        "周六"
+      ],
+      "month_names": [
+        null,
+        "一月",
+        "二月",
+        "三月",
+        "四月",
+        "五月",
+        "六月",
+        "七月",
+        "八月",
+        "九月",
+        "十月",
+        "十一月",
+        "十二月"
+      ],
+      "abbr_month_names": [
+        null,
+        "1月",
+        "2月",
+        "3月",
+        "4月",
+        "5月",
+        "6月",
+        "7月",
+        "8月",
+        "9月",
+        "10月",
+        "11月",
+        "12月"
+      ],
+      "order": [
+        "year",
+        "month",
+        "day"
+      ]
+    }
+  }
+}

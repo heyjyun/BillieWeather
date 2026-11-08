@@ -30,21 +30,21 @@ module Finance
     def cash_on_hand_has_cent_precision
       value = BigDecimal(cash_on_hand_before_type_cast.to_s, exception: false)
       if value&.finite? && value != value.round(2)
-        errors.add(:cash_on_hand, "must have at most two decimal places")
+        errors.add(:cash_on_hand, :cent_precision)
       end
     end
 
     def balance_has_cent_precision
       value = BigDecimal(current_balance_before_type_cast.to_s, exception: false)
       if value&.finite? && value != value.round(2)
-        errors.add(:current_balance, "must have at most two decimal places")
+        errors.add(:current_balance, :cent_precision)
       end
     end
 
     def currency_matches_existing_statements
       return unless currency_changed? && persisted?
       if Finance::Statement.where(user_id: user_id).where.not(currency: currency).exists?
-        errors.add(:currency, "cannot change while statements in another currency exist")
+        errors.add(:currency, :currency_in_use)
       end
     end
   end

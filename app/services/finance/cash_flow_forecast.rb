@@ -9,16 +9,16 @@ module Finance
       @user = user
       default_engine = ENV["FORECAST_ENGINE"].presence_in(ENGINES) || "prophet"
       @engine = (engine.presence || default_engine).to_s
-      raise InvalidScenario, "Choose a forecast model: Prophet, Chronos-2, or Historical average." unless ENGINES.include?(@engine)
+      raise InvalidScenario, I18n.t("billie.backend.choose_forecast_model") unless ENGINES.include?(@engine)
 
       @days = Integer(days.to_s, 10)
       @income_adjustment = BigDecimal(income_adjustment.to_s)
       @expense_adjustment = BigDecimal(expense_adjustment.to_s)
       unless @days.between?(1, 90) && [@income_adjustment, @expense_adjustment].all? { |value| value.finite? && value.between?(-100, 1000) }
-        raise InvalidScenario, "Choose 1–90 days and adjustments from -100% to 1000%."
+        raise InvalidScenario, I18n.t("billie.backend.scenario_bounds")
       end
     rescue ArgumentError, TypeError
-      raise InvalidScenario, "Enter valid days and percentage adjustments."
+      raise InvalidScenario, I18n.t("billie.backend.invalid_scenario")
     end
 
     def to_h
@@ -70,26 +70,26 @@ module Finance
       end
 
       assumptions = [
-        "Automatic starting cash adds the latest dated closing balance from each identified cash account once. Credit card balances are excluded; transaction totals are not a cash balance.",
-        "Statement balances are dated snapshots, not live bank balances. Missing accounts or balances make the total incomplete.",
+        I18n.t("billie.backend.forecast_balance_assumption"),
+        I18n.t("billie.backend.forecast_snapshot_assumption"),
         (case method
          when :prophet
-           "Uses Prophet to learn weekly and month-cycle patterns in your income and spending from #{history_days} days of your own history, including days with no transactions. The shaded envelope combines daily income and spending bounds; it is not a calibrated probability interval for the total cash balance."
+           I18n.t("billie.backend.forecast_prophet_assumption", days: history_days)
          when :chronos
-           "Uses Chronos-2 to predict daily income and spending from #{history_days} calendar days of available history (maximum 90 days), including days with no transactions. Projected balances accumulate daily point forecasts, not probability bounds."
+           I18n.t("billie.backend.forecast_chronos_assumption", days: history_days)
          else
-           "Uses average daily income and spending over #{history_days} calendar days of your most recent available data (maximum 90 days), including quiet days within that period."
+           I18n.t("billie.backend.forecast_average_assumption", days: history_days)
          end),
-        "Transfers and transactions marked excluded are omitted. Future-dated transactions are not historical observations.",
-        "Income adjustment: #{@income_adjustment.to_s("F")}%; spending adjustment: #{@expense_adjustment.to_s("F")}%.",
-        "This estimate does not know future bill dates, unexpected expenses, interest, or tax liabilities."
+        I18n.t("billie.backend.forecast_exclusions"),
+        I18n.t("billie.backend.forecast_adjustments", income: @income_adjustment.to_s("F"), expense: @expense_adjustment.to_s("F")),
+        I18n.t("billie.backend.forecast_unknowns")
       ]
-      assumptions << "No transactions found: the projection stays at the starting balance." unless last_known
+      assumptions << I18n.t("billie.backend.forecast_no_transactions") unless last_known
       if method == :linear && last_known && last_known < today - 89
-        assumptions << "Your latest transaction is on #{last_known.strftime("%b %-d, %Y")}. The average comes from the data ending then; upload newer statements for a current estimate."
+        assumptions << I18n.t("billie.backend.forecast_stale_history", date: I18n.l(last_known, format: :long))
       end
-      assumptions << "No usable cash balance yet: upload statements showing closing balances and identify their accounts." unless balance_available
-      assumptions << "Only accounts with usable balances are included; review the account breakdown before relying on this partial estimate." if balance_available && profile.balance_source == "statement" && !balance_summary[:complete]
+      assumptions << I18n.t("billie.backend.forecast_no_balance") unless balance_available
+      assumptions << I18n.t("billie.backend.forecast_partial_balance") if balance_available && profile.balance_source == "statement" && !balance_summary[:complete]
 
       {
         currency: profile&.currency || "USD",
@@ -119,7 +119,7 @@ module Finance
       daily_income = scope.where("amount > 0").group(:booked_on).sum(:amount)
       daily_expenses = scope.where("amount < 0").group(:booked_on).sum(:amount).transform_values(&:-@)
       unless ProphetProjector.eligible?(daily_income, daily_expenses, today: today)
-        @model_notice = "Prophet needs at least #{ProphetProjector::MIN_HISTORY_DAYS} days of history and #{ProphetProjector::MIN_ACTIVE_DAYS} days with transactions. Showing the historical average instead."
+        @model_notice = I18n.t("billie.backend.prophet_short_history", history_days: ProphetProjector::MIN_HISTORY_DAYS, active_days: ProphetProjector::MIN_ACTIVE_DAYS)
         return
       end
 
@@ -129,21 +129,21 @@ module Finance
       {rows: rows, first_date: (daily_income.keys + daily_expenses.keys).min}
     rescue => e
       Rails.logger.error("Prophet forecast failed, using historical average (#{e.class}).")
-      @model_notice = "Prophet is unavailable. Showing the historical average instead."
+      @model_notice = I18n.t("billie.backend.prophet_unavailable")
       nil
     end
 
     def chronos_projection(transactions, first_date, today, current_balance, balance_available, currency)
       unless balance_available
-        @model_notice = "Chronos-2 needs a starting cash balance. Add one to run this model."
+        @model_notice = I18n.t("billie.backend.chronos_no_balance")
         return
       end
       unless first_date
-        @model_notice = "Chronos-2 was not run: there are no included transactions in the past 90 days. Upload recent statements to use this model. Showing the historical average instead."
+        @model_notice = I18n.t("billie.backend.chronos_no_history")
         return
       end
       if (today - first_date).to_i + 1 < 3
-        @model_notice = "Chronos-2 needs at least 3 calendar days of history. Showing the historical average instead."
+        @model_notice = I18n.t("billie.backend.chronos_short_history")
         return
       end
 
@@ -158,7 +158,7 @@ module Finance
         expense_adjustment: @expense_adjustment)
     rescue => error
       Rails.logger.error("Chronos-2 forecast failed, using historical average (#{error.class}).")
-      @model_notice = "Chronos-2 is unavailable. Showing the historical average instead."
+      @model_notice = I18n.t("billie.backend.chronos_unavailable")
       nil
     end
 

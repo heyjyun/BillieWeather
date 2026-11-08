@@ -15,7 +15,7 @@ class PasswordsController < Devise::PasswordsController
 
   def recovery_temporarily_unavailable
     redirect_to new_user_session_path,
-      alert: "Password recovery is temporarily unavailable. Please try again later.",
+      alert: t("billie.auth.recovery_unavailable"),
       status: :see_other
   end
 end

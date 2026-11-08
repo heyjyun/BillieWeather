@@ -14,12 +14,12 @@ module Finance
         current_user.finance_statement_drafts.where("expires_at < ?", Time.current).delete_all
         draft = PdfStatementExtractor.new(user: current_user, file: file, currency: @profile.currency).call
         return import_pdf_automatically(draft) if draft.auto_importable?
-        return redirect_to finance_statement_draft_path(draft), notice: "PDF extracted. Something looked unclear, so please review the highlighted items before importing."
+        return redirect_to finance_statement_draft_path(draft), notice: I18n.t("billie.backend.pdf_needs_review")
       end
       importer = StatementImporter.new(user: current_user, file: params[:file], currency: @profile.currency, date_column: params[:date_column])
       statement = importer.call
       @profile.touch
-      redirect_to finance_transactions_path, notice: "Imported #{statement.transaction_count} transactions from #{statement.filename}. Dates use the #{importer.date_column_used} column."
+      redirect_to finance_transactions_path, notice: I18n.t("billie.backend.csv_imported", count: statement.transaction_count, filename: statement.filename, column: importer.date_column_used)
     rescue StatementImporter::ImportError => error
       load_statement_lists
       @date_columns = error.date_columns if error.is_a?(StatementImporter::DateColumnRequired)
@@ -32,7 +32,7 @@ module Finance
       statement.destroy!
       BalanceSync.call(user: current_user)
       @profile.touch
-      redirect_to finance_statements_path, status: :see_other, notice: "Statement and its transactions deleted."
+      redirect_to finance_statements_path, status: :see_other, notice: I18n.t("billie.backend.statement_deleted")
     end
 
     def update
@@ -44,20 +44,20 @@ module Finance
           details = params.require(:bank_account).permit(:bank_name, :name, :last4, :kind, :separate_account)
           unless details[:last4].to_s.match?(/\A\d{4}\z/) && details[:kind].in?(%w[cash credit]) &&
               details[:bank_name].to_s.strip.length.between?(1, 100) && details[:name].to_s.strip.length.between?(1, 100)
-            raise StatementImporter::ImportError, "Enter the bank, account name, four-digit account ending, and cash or credit account type. No balance entry is needed."
+            raise StatementImporter::ImportError, I18n.t("billie.backend.account_details_required")
           end
           identity = StatementAccountIdentity.from_details(bank_name: details[:bank_name], account_name: details[:name],
             account_last4: details[:last4], account_kind: details[:kind])
           identity[:account_name] = details[:name].strip
           identity[:account_key] = Digest::SHA256.hexdigest(SecureRandom.uuid) if details[:separate_account] == "1"
           BankAccount.resolve(user: current_user, identity: identity) ||
-            raise(StatementImporter::ImportError, "The account details could not be identified. Check the bank name and last four digits.")
+            raise(StatementImporter::ImportError, I18n.t("billie.backend.account_details_unidentified"))
         end
         statement.update!(bank_account: account)
         BalanceSync.call(user: current_user)
       end
       redirect_to finance_statements_path(anchor: "statement-history"), status: :see_other,
-        notice: "Account assigned. The automatic balance now uses each cash account’s latest statement."
+        notice: I18n.t("billie.backend.account_assigned")
     rescue StatementImporter::ImportError, ActiveRecord::RecordInvalid => error
       load_statement_lists
       flash.now[:alert] = error.is_a?(ActiveRecord::RecordInvalid) ? error.record.errors.full_messages.to_sentence : error.message
@@ -101,7 +101,7 @@ module Finance
     def import_pdf_automatically(draft)
       statement = DraftImport.new(user: current_user, draft: draft).call
       @profile.touch
-      redirect_to finance_transactions_path, notice: "Imported #{statement.transaction_count} transactions from #{statement.filename} automatically. Compare the count with your statement; if it looks wrong, delete it from Statement history and upload again."
+      redirect_to finance_transactions_path, notice: I18n.t("billie.backend.pdf_imported_automatically", count: statement.transaction_count, filename: statement.filename)
     rescue StatementImporter::ImportError => error
       redirect_to finance_statement_draft_path(draft), alert: error.message
     end

@@ -11,7 +11,7 @@ module Finance
 
       def initialize(date_columns)
         @date_columns = date_columns
-        super("That date column is not available in this CSV. Use automatic date detection or choose a listed column, then select the file again.")
+        super(I18n.t("billie.backend.invalid_date_column"))
       end
     end
 
@@ -56,40 +56,40 @@ module Finance
     end
 
     def call
-      raise ImportError, "Choose a CSV statement to upload." unless @file.respond_to?(:read)
+      raise ImportError, I18n.t("billie.backend.choose_csv") unless @file.respond_to?(:read)
       unless Profile::CURRENCIES.include?(@currency)
-        raise ImportError, "Choose a supported currency."
+        raise ImportError, I18n.t("billie.backend.unsupported_currency")
       end
 
       filename = @file.respond_to?(:original_filename) ? @file.original_filename.to_s : "statement.csv"
       filename = File.basename(filename.tr("\\", "/"))
       unless File.extname(filename).downcase == ".csv"
-        raise ImportError, "Upload a CSV file. PDF and spreadsheet files must first be exported to CSV."
+        raise ImportError, I18n.t("billie.backend.require_csv")
       end
-      raise ImportError, "The filename is too long." if filename.length > 255
+      raise ImportError, I18n.t("billie.backend.filename_too_long") if filename.length > 255
 
       @file.rewind if @file.respond_to?(:rewind)
       raw = @file.read(MAX_BYTES + 1)
-      raise ImportError, "The statement is empty." if raw.blank?
-      raise ImportError, "Statements must be 2 MB or smaller." if raw.bytesize > MAX_BYTES
+      raise ImportError, I18n.t("billie.backend.statement_empty") if raw.blank?
+      raise ImportError, I18n.t("billie.backend.statement_size_limit") if raw.bytesize > MAX_BYTES
 
       checksum = Digest::SHA256.hexdigest(raw)
       if @source_sha256 || @source_filename
         unless @source_sha256.is_a?(String) && /\A[0-9a-f]{64}\z/.match?(@source_sha256) && @source_filename.is_a?(String)
-          raise ImportError, "The original statement details could not be verified. Upload the statement again."
+          raise ImportError, I18n.t("billie.backend.source_unverified")
         end
         source_filename = File.basename(@source_filename.tr("\\", "/"))
         unless File.extname(source_filename).downcase == ".pdf" && source_filename.length.between?(1, 255)
-          raise ImportError, "The original PDF filename could not be verified. Upload the statement again."
+          raise ImportError, I18n.t("billie.backend.pdf_filename_unverified")
         end
         checksum = @source_sha256
         filename = source_filename
       end
       text = raw.dup.force_encoding(Encoding::UTF_8)
       unless text.valid_encoding?
-        raise ImportError, "Save the CSV with UTF-8 encoding and try again."
+        raise ImportError, I18n.t("billie.backend.csv_encoding")
       end
-      raise ImportError, "The file contains binary data. Export the statement as a UTF-8 CSV." if text.include?("\0")
+      raise ImportError, I18n.t("billie.backend.csv_binary") if text.include?("\0")
       text = text.delete_prefix("\uFEFF")
       rows = parse_rows(text)
 
@@ -98,7 +98,7 @@ module Finance
       statement = @user.with_lock do
         profile = Profile.find_or_create_by!(user_id: @user.id) { |record| record.currency = @currency }
         if profile.currency != @currency
-          raise ImportError, "This account uses #{profile.currency}. Convert the statement before importing another currency."
+          raise ImportError, I18n.t("billie.backend.currency_mismatch", currency: profile.currency)
         end
         if (existing = Statement.find_by(user_id: @user.id, sha256: checksum))
           # Uploading the same file again fills in what an earlier import could not read
@@ -130,11 +130,11 @@ module Finance
       BalanceSync.call(user: @user)
       statement
     rescue CSV::MalformedCSVError
-      raise ImportError, "The CSV could not be read. Check quotes, commas, and the header row."
+      raise ImportError, I18n.t("billie.backend.csv_unreadable")
     rescue ActiveRecord::RecordNotUnique
-      raise ImportError, "This exact statement has already been imported."
+      raise ImportError, I18n.t("billie.backend.statement_duplicate")
     rescue ActiveRecord::RecordInvalid => error
-      raise ImportError, "The statement could not be imported: #{error.record.errors.full_messages.join(", ")}."
+      raise ImportError, I18n.t("billie.backend.statement_import_failed", errors: error.record.errors.full_messages.join(", "))
     end
 
     private
@@ -152,7 +152,7 @@ module Finance
           updates[:closing_balance_on] = balance_on
         end
       end
-      raise ImportError, "This exact statement has already been imported." if updates.empty?
+      raise ImportError, I18n.t("billie.backend.statement_duplicate") if updates.empty?
 
       existing.update!(updates)
       @refreshed = true
@@ -162,24 +162,24 @@ module Finance
     def parse_rows(text)
       csv = CSV.new(text, headers: true, skip_blanks: true)
       first_row = csv.shift
-      raise ImportError, "Include a header row and at least one transaction." unless first_row
+      raise ImportError, I18n.t("billie.backend.csv_require_rows") unless first_row
       normalized_headers = first_row.headers.map { |header| normalize_header(header) }
       if normalized_headers.compact_blank.uniq.length != normalized_headers.compact_blank.length
-        raise ImportError, "Column names must be unique. Remove duplicate headers."
+        raise ImportError, I18n.t("billie.backend.csv_duplicate_headers")
       end
       @columns = HEADER_ALIASES.except(:date).transform_values do |aliases|
         matches = normalized_headers.each_index.select { |index| aliases.include?(normalized_headers[index]) }
-        raise ImportError, "Use only one #{aliases.first} column." if matches.length > 1
+        raise ImportError, I18n.t("billie.backend.one_column_only", column: aliases.first) if matches.length > 1
         matches.first
       end
       @columns[:date] = resolve_date_column(first_row.headers, normalized_headers)
       @date_column_used = first_row.headers[@columns[:date]] if @columns[:date]
       has_amount = @columns[:amount] || (@columns[:debit] && @columns[:credit])
       unless @columns[:date] && @columns[:description] && has_amount
-        raise ImportError, "CSV needs Date, Description, Amount columns, or Date, Description, Debit, Credit columns."
+        raise ImportError, I18n.t("billie.backend.csv_required_columns")
       end
       if @columns[:amount] && (@columns[:debit] || @columns[:credit])
-        raise ImportError, "Use either a signed Amount column or Debit and Credit columns, not both."
+        raise ImportError, I18n.t("billie.backend.csv_amount_columns")
       end
 
       balance_header = BALANCE_HEADERS.find { |name| normalized_headers.include?(name) }
@@ -191,9 +191,9 @@ module Finance
       line = 2
       while row
         unless row.fields.all? { |field| field.to_s.strip.empty? }
-          raise ImportError, "Statements can contain at most #{MAX_ROWS} transactions." if parsed.length >= MAX_ROWS
+          raise ImportError, I18n.t("billie.backend.statement_row_limit", count: MAX_ROWS) if parsed.length >= MAX_ROWS
           if row.fields.length > first_row.headers.length
-            raise ImportError, "Row #{line}: more values than headers. Quote amounts containing commas."
+            raise ImportError, I18n.t("billie.backend.csv_extra_values", row: line)
           end
           parsed << parse_row(row.fields, line)
           note_balance(parsed.last[:booked_on], value(row.fields, :balance), parsed.length - 1)
@@ -202,7 +202,7 @@ module Finance
         row = csv.shift
         line += 1
       end
-      raise ImportError, "The statement contains no transactions." if parsed.empty?
+      raise ImportError, I18n.t("billie.backend.statement_no_transactions") if parsed.empty?
       @account_identity = StatementAccountIdentity.from_csv(headers: first_row.headers, rows: identity_rows)
       parsed
     end
@@ -215,7 +215,7 @@ module Finance
       matches = normalized_headers.each_index.select { |index| HEADER_ALIASES[:date].include?(normalized_headers[index]) }
       choices = matches.map { |index| headers[index].to_s }
       if @requested_date_column && matches.empty?
-        raise ImportError, "The selected date column was not found. Use a Date, Transaction Date, or Posting Date header."
+        raise ImportError, I18n.t("billie.backend.csv_date_column_missing")
       end
       if @requested_date_column
         selected = matches.find { |index| normalized_headers[index] == @requested_date_column }
@@ -231,10 +231,10 @@ module Finance
 
     def parse_row(fields, line)
       description = value(fields, :description).strip
-      raise ImportError, "Row #{line}: description is required." if description.empty?
-      raise ImportError, "Row #{line}: description must be 500 characters or fewer." if description.length > 500
+      raise ImportError, I18n.t("billie.backend.row_description_required", row: line) if description.empty?
+      raise ImportError, I18n.t("billie.backend.row_description_length", row: line) if description.length > 500
       if @columns[:currency] && value(fields, :currency).strip.upcase != @currency
-        raise ImportError, "Row #{line}: currency must be #{@currency}. Mixed currencies are not combined."
+        raise ImportError, I18n.t("billie.backend.row_currency_mismatch", row: line, currency: @currency)
       end
 
       amount = if @columns[:amount]
@@ -245,7 +245,7 @@ module Finance
           when "debit", "withdrawal", "expense", "dr" then -parsed.abs
           when "credit", "deposit", "income", "cr" then parsed.abs
           when "" then parsed
-          else raise ImportError, "Row #{line}: Type must be debit or credit."
+          else raise ImportError, I18n.t("billie.backend.row_invalid_type", row: line)
           end
         else
           parsed
@@ -254,7 +254,7 @@ module Finance
         debit = parse_money(value(fields, :debit), line, blank_zero: true)
         credit = parse_money(value(fields, :credit), line, blank_zero: true)
         if debit.negative? || credit.negative? || (!debit.zero? && !credit.zero?)
-          raise ImportError, "Row #{line}: enter a positive value in either Debit or Credit, not both."
+          raise ImportError, I18n.t("billie.backend.row_debit_credit", row: line)
         end
         credit - debit
       end
@@ -285,7 +285,7 @@ module Finance
       raise ArgumentError unless date.year.between?(1900, 2100)
       date
     rescue ArgumentError
-      raise ImportError, "Row #{line}: use a valid date in YYYY-MM-DD or MM/DD/YYYY format (month first)."
+      raise ImportError, I18n.t("billie.backend.row_invalid_date", row: line)
     end
 
     def note_balance(date, raw, index)
@@ -323,15 +323,15 @@ module Finance
       symbol = value[/[$£€¥]/]
       symbol_currencies = {"$" => %w[USD CAD AUD NZD SGD HKD], "£" => ["GBP"], "€" => ["EUR"], "¥" => %w[JPY CNY]}
       if symbol && !symbol_currencies.fetch(symbol).include?(@currency)
-        raise ImportError, "Row #{line}: currency symbol does not match #{@currency}."
+        raise ImportError, I18n.t("billie.backend.row_currency_symbol", row: line, currency: @currency)
       end
       value = value.sub(/\A([+-]?)[$£€¥]/) { Regexp.last_match(1) }
       unless /\A[+-]?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?\z/.match?(value)
-        raise ImportError, "Row #{line}: amounts must be numbers with at most two decimals; use a dot decimal separator."
+        raise ImportError, I18n.t("billie.backend.row_invalid_money", row: line)
       end
       amount = BigDecimal(value.delete(","))
       if amount.abs >= 10**13
-        raise ImportError, "Row #{line}: amount exceeds the supported limit."
+        raise ImportError, I18n.t("billie.backend.row_money_limit", row: line)
       end
       amount
     end

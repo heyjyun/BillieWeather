@@ -1,44 +1,44 @@
 <% content_for :title, "BillieWeather" %>
 <section class="bw-hero">
   <div class="bw-hero-copy">
-    <span class="bw-eyebrow"><span class="bw-status-dot"></span> YOUR FINANCES, IN FOCUS</span>
+    <span class="bw-eyebrow"><span class="bw-status-dot"></span> <%= t("billie.auth.home.eyebrow") %></span>
     <h1 style="font-size: clamp(38px, 5.1vw, 71px);">BillieWeather</h1>
-    <p>Turn your bank statements into a clear view of your spending and a simple cash flow forecast.</p>
+    <p><%= t("billie.auth.home.intro") %></p>
     <div class="bw-hero-actions">
       <% if user_signed_in? %>
-        <%= link_to "Go to dashboard", finance_dashboard_path, class: "bw-button bw-button-dark bw-button-large" %>
+        <%= link_to t("billie.auth.home.dashboard"), finance_dashboard_path, class: "bw-button bw-button-dark bw-button-large" %>
       <% else %>
-        <%= link_to "Create an account", new_user_registration_path, class: "bw-button bw-button-dark bw-button-large" %>
-        <%= link_to "Log in", new_user_session_path, class: "bw-text-link" %>
+        <%= link_to t("billie.auth.create_an_account"), new_user_registration_path, class: "bw-button bw-button-dark bw-button-large" %>
+        <%= link_to t("billie.auth.log_in"), new_user_session_path, class: "bw-text-link" %>
       <% end %>
     </div>
-    <div class="bw-hero-details"><span><%= finance_icon "check", size: 16 %> No bank login required</span><span><%= finance_icon "check", size: 16 %> Free basic analysis</span></div>
+    <div class="bw-hero-details"><span><%= finance_icon "check", size: 16 %> <%= t("billie.auth.home.no_bank_login") %></span><span><%= finance_icon "check", size: 16 %> <%= t("billie.auth.home.free_analysis") %></span></div>
   </div>
-  <div class="bw-hero-art" aria-label="Import a statement, review your transactions, and see your cash flow forecast">
+  <div class="bw-hero-art" aria-label="<%= t("billie.auth.home.art_label") %>">
     <span class="bw-art-orbit bw-orbit-one"></span><span class="bw-art-orbit bw-orbit-two"></span>
     <div class="bw-outlook-card">
-      <div class="bw-outlook-top"><span class="bw-mini-brand">b·</span><span>YOUR FINANCIAL OUTLOOK</span><%= finance_icon "sun", size: 28 %></div>
-      <h2>A clear view of<br>your money.</h2>
-      <p>Your statements, transactions,<br>and cash flow in one place.</p>
-      <div class="bw-outlook-steps"><span><i>01</i> Import your statements <%= finance_icon "file", size: 17 %></span><span><i>02</i> Review your transactions <%= finance_icon "transactions", size: 17 %></span><span><i>03</i> See your cash flow forecast <%= finance_icon "forecast", size: 17 %></span></div>
-      <div class="bw-outlook-footer"><span class="bw-status-dot"></span> Built around your real numbers</div>
+      <div class="bw-outlook-top"><span class="bw-mini-brand">b·</span><span><%= t("billie.auth.home.outlook") %></span><%= finance_icon "sun", size: 28 %></div>
+      <h2><%= t("billie.auth.home.clear_view_html") %></h2>
+      <p><%= t("billie.auth.home.in_one_place_html") %></p>
+      <div class="bw-outlook-steps"><span><i>01</i> <%= t("billie.auth.home.step_import") %> <%= finance_icon "file", size: 17 %></span><span><i>02</i> <%= t("billie.auth.home.step_review") %> <%= finance_icon "transactions", size: 17 %></span><span><i>03</i> <%= t("billie.auth.home.step_forecast") %> <%= finance_icon "forecast", size: 17 %></span></div>
+      <div class="bw-outlook-footer"><span class="bw-status-dot"></span> <%= t("billie.auth.home.real_numbers") %></div>
     </div>
-    <div class="bw-floating-note"><span class="bw-note-icon"><%= finance_icon "insights", size: 22 %></span><div><strong>Less guesswork.</strong><small>More room to plan.</small></div></div>
+    <div class="bw-floating-note"><span class="bw-note-icon"><%= finance_icon "insights", size: 22 %></span><div><strong><%= t("billie.auth.home.less_guesswork") %></strong><small><%= t("billie.auth.home.more_room") %></small></div></div>
   </div>
 </section>
 <section class="bw-marketing-section" id="features">
-  <div class="bw-section-heading"><span class="bw-eyebrow">FROM STATEMENTS TO CLARITY</span><h2>What it does</h2></div>
+  <div class="bw-section-heading"><span class="bw-eyebrow"><%= t("billie.auth.home.clarity") %></span><h2><%= t("billie.auth.home.what_it_does") %></h2></div>
   <div class="bw-feature-grid">
-    <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon "upload", size: 26 %></div><h3>Import statements.</h3><p>Upload a CSV or a text-based PDF statement from your bank, review each transaction, and keep the categories that fit.</p></article>
-    <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon "dashboard", size: 26 %></div><h3>See where your money goes.</h3><p>A dashboard shows income, spending, categories, and recent activity in one place.</p></article>
-    <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon "forecast", size: 26 %></div><h3>Forecast your cash flow.</h3><p>Set your current balance and see how it could change if recent patterns continue.</p></article>
+    <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon "upload", size: 26 %></div><h3><%= t("billie.auth.home.import_title") %></h3><p><%= t("billie.auth.home.import_description") %></p></article>
+    <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon "dashboard", size: 26 %></div><h3><%= t("billie.auth.home.spending_title") %></h3><p><%= t("billie.auth.home.spending_description") %></p></article>
+    <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon "forecast", size: 26 %></div><h3><%= t("billie.auth.home.forecast_title") %></h3><p><%= t("billie.auth.home.forecast_description") %></p></article>
   </div>
 </section>
 <section class="bw-marketing-section bw-marketing-split" id="how-it-works">
-  <div><span class="bw-eyebrow">ONE STEP AT A TIME</span><h2>How it works</h2><ol class="bw-numbered-list"><li><strong>Create an account and sign in.</strong></li><li><strong>Upload a bank statement.</strong><p>No bank login is required.</p></li><li><strong>Review the imported transactions.</strong></li><li><strong>Open the dashboard and forecast.</strong></li></ol></div>
+  <div><span class="bw-eyebrow"><%= t("billie.auth.home.one_step") %></span><h2><%= t("billie.auth.home.how_it_works") %></h2><ol class="bw-numbered-list"><li><strong><%= t("billie.auth.home.how_signup") %></strong></li><li><strong><%= t("billie.auth.home.how_upload") %></strong><p><%= t("billie.auth.home.how_no_bank_login") %></p></li><li><strong><%= t("billie.auth.home.how_review") %></strong></li><li><strong><%= t("billie.auth.home.how_open") %></strong></li></ol></div>
   <div class="bw-feature-list">
-    <article><%= finance_icon "file", size: 24 %><div><h3>Prepare for tax season.</h3><p>Flag transactions for review and keep an organized record to share with your tax professional.</p></div></article>
-    <article><%= finance_icon "insights", size: 24 %><div><h3>Free basic analysis.</h3><p>Generate a written summary of your spending patterns when you want one. Basic analysis is available without a paid AI service.</p></div></article>
+    <article><%= finance_icon "file", size: 24 %><div><h3><%= t("billie.auth.home.tax_title") %></h3><p><%= t("billie.auth.home.tax_description") %></p></div></article>
+    <article><%= finance_icon "insights", size: 24 %><div><h3><%= t("billie.auth.home.analysis_title") %></h3><p><%= t("billie.auth.home.analysis_description") %></p></div></article>
   </div>
 </section>
-<footer class="bw-public-footer"><span class="bw-brand">BillieWeather</span><p>BillieWeather provides financial organization and estimates only. It is not individualized financial, legal, or tax advice.</p></footer>
+<footer class="bw-public-footer"><span class="bw-brand">BillieWeather</span><p><%= t("billie.auth.home.disclaimer") %></p></footer>

@@ -1,0 +1,400 @@
+zh-CN:
+  billie:
+    finance:
+      ui:
+        a_clearer_financial_picture: 财务全貌，一目了然。
+        a_clearer_outlook_starts_here: 从这里开始，看清财务走势。
+        a_fresh_perspective: 换个角度看财务
+        a_fresh_perspective_on_your_finances: 换个角度，看懂您的财务状况。
+        a_fresh_start: 新的开始
+        a_manual_override_pauses_automatic_updates_until_you_switch_back_to_the_account: 手动设置余额后将暂停自动更新，直到您切换回自动账户合计。
+        a_projection_using_your_account_balances_and_the_patterns_in_your_income_and_spe: 结合账户余额与历史收支规律，了解未来的现金流走势。
+        a_quick_guide: 快速指南
+        a_useful_record: 记录有助于整理，
+        account: 账户
+        account_label: 账户标签
+        account_type: 账户类型
+        account_type_needs_confirmation: 账户类型待确认
+        account_unidentified_no_closing_balance_saved: 账户未识别；未保存期末余额
+        across_imported_statement_dates: 已导入账单所覆盖的日期
+        action: 操作
+        actions: 操作
+        actions_to_consider: 可考虑的行动
+        adjust_the_outlook_without_changing_your_actual_transactions: 调整预测情景，查看收支变化的影响。
+        after_your_scenario_adjustments: 已应用情景调整
+        all_categories: 全部分类
+        all_time: 全部时间
+        all_transactions: 全部交易
+        amount: 金额
+        amounts_in: 金额币种：
+        analysis_can_be_incomplete_or_incorrect_it_is_for_financial_organization_and_gen: 分析可能存在遗漏或错误，仅用于财务整理和一般知识学习，不构成针对个人的投资、法律或税务建议。重要决策及现行税务规则请咨询相应的专业人士。
+        analysis_consent: 我同意将所显示的财务汇总和税务背景发送至 %{service}，用于本次分析。
+        analysis_privacy: 基础分析使用您的汇总与分类。可选的 Billie 洞察会将财务汇总发送至 %{service}，不包含原始账单、交易描述或账户邮箱。
+        apply_dates: 应用日期
+        apply_filters: 应用筛选
+        as_of_date: 截至 %{date}
+        ask_billie_again: 再次询问 Billie
+        ask_billie_for_tax_preparation_insights: 向 Billie 获取报税准备建议
+        auto_assigned_categories_are_a_starting_point_you_can_change_them_here: 自动分类仅作为起点，您可以在此修改。
+        automatic_cash_total: 自动现金合计
+        automatic_detection_prefers_transaction_date_then_date_then_posting_dates_choose: 自动识别依次优先使用 Transaction
+          Date、Date、入账日期列。手动指定日期列时，请只选择需要重试的 CSV。
+        automatic_transaction_date_first: 自动识别（优先交易日期）
+        average_daily_net_cash_flow: 日均净现金流
+        back_to_transactions: ← 返回交易
+        back_to_upload: ← 返回上传页面
+        balance: 余额
+        balance_date: 余额日期
+        balance_date_not_saved: 未保存余额日期
+        balance_not_readable: 无法识别余额
+        bank_account: 银行账户
+        bank_deposits_are_not_automatically_taxable_income_this_is_a_preparation_checkli: 银行入账不一定属于应税收入。此清单用于整理报税资料，并非已填好的纳税申报表。
+        bank_name: 银行名称
+        basic_analysis: 基础分析
+        basic_analysis_rules_based: 基础分析 · 基于规则
+        before_you_upload: 上传前须知
+        billie_insights: Billie 洞察
+        billie_insights_2: · Billie 洞察
+        billie_is_not_connected_yet_basic_analysis_is_available_without_an_ai_service: Billie 尚未连接。您仍可使用无需 AI 服务的基础分析。
+        billie_is_not_connected_yet_the_checklist_below_is_available_without_an_ai_servi: Billie 尚未连接。您仍可使用以下无需
+          AI 服务的清单。
+        billie_reviews_your_financial_summary_and_your_saved_tax_context_to_help_you_org: Billie 会参考财务摘要和已保存的税务背景，帮助您整理资料，并准备向税务专业人士咨询的问题。
+        bring_each_bank_account_together: 按银行账户汇总
+        bring_your_numbers_together: 把您的财务数据汇集到一起。
+        cancel: 取消
+        cancel_import: 取消导入
+        cash_account: 现金账户
+        cash_accounts: 现金账户
+        cash_balance: 现金余额
+        cash_balance_currency: 现金余额（%{currency}）
+        cash_balance_from_statements: 账单现金余额
+        cash_entered_date: 填写于 %{date}
+        cash_flow_forecast: 现金流预测
+        cash_on_hand: 手头现金
+        cash_on_hand_currency: 您持有的现金（%{currency}）
+        categories_and_context: 分类与背景
+        categories_help_organize_records_they_do_not_determine_tax_deductibility_transfe: 分类用于整理记录，并不能确定税务抵扣资格。收入和支出合计不包含转账及已排除的交易。
+        category: 分类
+        change_account: 更改账户
+        change_dates: 更改日期
+        check_each_pdf_s_extracted_rows_before_adding_its_transactions: 请先核对每份 PDF 提取的记录，再添加交易。
+        check_every_row_against_your_statement: 请对照原始账单逐行核对。
+        check_uncategorized_transactions_transfers_and_any_business_related_items: 检查未分类交易、转账及与业务相关的项目。
+        checking_savings_and_cash_you_hold: 支票账户、储蓄账户及手头现金
+        checking_savings_cash: 支票／储蓄（现金）
+        choose_account: 选择账户
+        choose_account_type: 选择账户类型
+        choose_different_dates_or_view_all_your_imported_transactions: 请选择其他日期，或查看全部已导入交易。
+        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: 选择一份或多份银行导出的 CSV 或文本型 PDF 文件。
+        choose_statements_from_your_bank: 选择银行提供的账单
+        choose_the_account_type: 选择账户类型 →
+        choose_the_dates_for_your_income_expenses_and_transactions: 选择要查看的收入、支出和交易日期。
+        clarity_starts_with_context: 了解背景，才能看懂数字。
+        collect_applicable_w_2_and_1099_forms_mortgage_or_student_loan_interest_statemen: 收集适用的 W-2、1099 表格、房贷或学生贷款利息账单、医疗保险记录、收据及上年度纳税申报表。
+        confirm_and_import_transactions: 确认并导入交易
+        confirm_sign_and_amount: 确认正负号与金额
+        context: · 财务背景：
+        credit_card: 信用卡
+        credit_card_excluded_from_cash: 信用卡 · 不计入现金
+        credit_cards: 信用卡
+        credit_owed_excluded: 信用卡欠款 · %{count}（不计入现金）
+        csv_check_the_columns: CSV：检查列名
+        dashboard: 总览
+        date: 日期
+        date_column_optional_override: 日期列（可选手动指定）
+        date_description_and_amount_import_transaction_activity_automatic_cash_balances: Date、Description 和 Amount
+          用于导入交易。自动计算现金余额还需要 Balance 列，以及 Bank、Account Number、Account Type（Checking、Savings 或 Credit Card）等账户信息。仅导入交易时，这些附加列可不提供。
+        date_range_not_applied: 日期范围未应用
+        dates_use_column: 日期使用 %{column} 列。
+        description: 描述
+        details: 详情
+        discard: 丢弃
+        discard_this_pdf_review: 丢弃此 PDF 复核草稿
+        download_sample_csv: 下载示例 CSV
+        e_g_chase: 例如 Chase
+        e_g_everyday_checking: 例如 日常支票账户
+        each_cash_account_contributes_its_latest_statement_balance_once_older_statements: 每个现金账户仅计入最新一期账单余额，同一账户的旧账单不会重复累加。
+        each_file_has_its_own_result_transactions_are_saved_to_your_account_original_fil: 每个文件均有独立结果。交易记录会保存到您的账户，原始文件不予保留。
+        each_file_is_processed_separately_a_failed_file_does_not_affect_successful_impor: 每个文件独立处理，单个文件失败不会影响其他成功导入的文件。
+        end_date: 结束日期
+        enter_or_edit_amount: ✎ 输入或修改金额
+        enter_or_edit_balance: ✎ 输入或修改余额
+        entered_by_you_physical_cash_is_not_on_any_statement: 由您手动填写，实体现金不会出现在银行账单中。
+        estimate_not_a_guarantee: 预测仅供参考
+        every_transaction_has_a_story: 每笔交易，都有迹可循。
+        example_10_means_10_less_spending: 例如：−10 表示支出减少 10%。
+        example_10_means_10_more_income: 例如：10 表示收入增加 10%。
+        exclude_from_totals_and_forecasts: 从合计和预测中排除
+        excluded: · 已排除：
+        excluded_2: 已排除
+        excluded_from_totals: 已从合计中排除
+        expense_change: 支出变化（%）
+        expenses: 支出
+        expenses_2: · 支出
+        expires_in: '%{duration}后'
+        explore_a_scenario: 探索不同情景
+        explore_insights: 探索洞察
+        explore_spending_observations_and_practical_next_steps_organize_transactions_tha: 了解支出情况和可行的下一步行动，整理报税时可能需要进一步核实的交易。
+        export_csv: 导出 CSV
+        export_records: 导出记录
+        extracted_rows: 提取的记录
+        extraction_notes: 提取说明（%{count}）
+        financial_context: 财务背景
+        financial_observations: 财务观察
+        flag_for_tax_review: 标记为税务复核
+        flagged_for_tax_review: 已标记为税务复核
+        flagging_a_transaction_does_not_make_it_deductible_save_receipts_and_supporting: 标记交易并不代表可以抵税。请保存收据和证明材料，并确认所在税务管辖地区的适用规则。
+        forecast_chart_description: 预计余额从今天的 %{current} 变为 %{days} 天后的 %{projected}
+        forecast_horizon: 预测时长
+        forecast_model: 预测模型
+        forecast_starts_today: 预测从今天（%{date}）开始。
+        from_statements_to_clarity: 汇集账单，看清收支
+        gather_u_s_personal_tax_documents: 收集美国个人报税资料
+        generate_an_analysis_to_see_observations_and_actions_based_on_your_imported_tran: 生成分析，查看基于已导入交易的财务观察与行动建议。
+        generate_basic_analysis: 生成基础分析
+        generate_billie_insights: 生成 Billie 洞察
+        generated: 生成于
+        get_your_tax_records_ready: 备齐报税资料
+        historical_average: 历史平均值
+        history_days_coverage: 基于 %{days} 天的历史数据
+        i_checked_the_dates_descriptions_and_signed_amounts_excluded_rows_will_not_be_im: 我已核对日期、描述及金额正负号。未勾选的记录不会导入。
+        i_reviewed_the_included_rows_against_my_statement: 我已对照账单复核勾选的记录。
+        identify_this_account: 确认此账户
+        if_the_selected_model_is_unavailable_the_result_shows_the_model_used_and_explain: 所选模型不可用时，结果会注明实际使用的模型及更换原因。
+        illustrative_range: 示意范围
+        import_a_statement_first_so_billie_has_something_to_review: 请先导入账单，以便 Billie 进行分析。
+        import_a_statement_first_to_generate_an_analysis: 请先导入账单，再生成分析。
+        import_a_statement_to_see_your_income_and_expenses_in_one_place: 导入账单，即可在一处查看所有收入和支出。
+        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: 可一起导入 CSV 或文本型 PDF 银行账单，我们会整理其中的交易，呈现您的财务全貌。
+        import_statements: 导入账单
+        imported: 已导入
+        in_days: '%{days} 天后'
+        in_the_selected_period: 所选时间范围内
+        in_the_selected_period_2: 位于所选时间范围内
+        in_your_financial_picture: 已计入财务概览
+        include: 导入
+        include_row: 导入第 %{number} 行
+        include_this_transaction_in_the_records_you_review_with_your_tax_professional: 将此交易加入与税务专业人士一起复核的记录。
+        income: 收入
+        income_2: ：收入
+        income_change: 收入变化（%）
+        income_minus_expenses: 收入减去支出
+        insights_use_your_full_imported_history: 洞察分析使用全部已导入历史记录。
+        irs_gather_your_documents: IRS：准备所需文件 →
+        keep_this_analysis_in_perspective: 请结合实际情况参考此分析
+        keep_this_in_perspective: 请结合实际情况参考
+        keep_your_records_accurate_and_mark_anything_that_needs_a_closer_look: 保持记录准确，并标记需要进一步核实的项目。
+        known_cash_balances_partial_total: 已知现金余额 · 部分合计
+        last_30_days: 最近 30 天
+        last_four_account_digits: 账号后四位
+        last_month: 上月
+        last_year: 去年
+        latest_6_months_with_transactions_in_this_period: 此期间最近 6 个有交易的月份
+        latest_statement_per_account_summed_automatically_credit_card_balances_are_exclu: 自动合计每个账户最新一期的账单余额，信用卡余额不计入现金。
+        let_your_numbers: 让数字
+        make_room_for_what_s_next: 为未来做好准备
+        make_the_details_yours: 让记录更贴合实际
+        match_records_to_official_tax_documents_and_review_your_individual_circumstances: 将记录与正式税务文件核对，并与合格的税务专业人士一起评估您的具体情况。
+        model: 模型：
+        money_in_money_out: 收入与支出。
+        month: 月份
+        monthly_aggregate_totals_included_in_analysis: 分析包含的月度汇总
+        monthly_totals_from_your_imported_transactions: 已导入交易的月度汇总
+        name_for_this_account: 账户名称
+        names_are_read_from_your_statements_use_to_rename_one_the_name_you_type_is_alway: 账户名称从账单中读取。点击 ✎ 可修改名称，之后将优先显示您设置的名称。
+        needs_review: 需要复核
+        net: 净额
+        net_cash_flow: 净现金流
+        next: 下一页 →
+        next_30_days: 未来 30 天
+        next_60_days: 未来 60 天
+        next_90_days: 未来 90 天
+        no_categorized_expenses_yet: 暂时没有已分类的支出。
+        no_closing_balance_saved: 未保存期末余额
+        no_credit_cards_identified_yet_upload_a_credit_card_statement_that_includes_the: 尚未识别出信用卡。请上传包含银行名称和账号后四位的信用卡账单。
+        no_identified_accounts_yet: 尚未识别出任何账户。
+        no_matching_transactions: 没有符合条件的交易。
+        no_statements_yet: 暂无账单。
+        no_transactions_in_this_period: 此时间范围内没有交易。
+        no_transactions_match_these_dates: 此日期范围内没有交易。
+        not_a_tax_decision: 税务结论需另行确认。
+        not_available: 暂无数据
+        not_entered_yet: 尚未填写
+        not_imported: 未导入
+        not_imported_yet: · 尚未导入
+        not_included: 未计入
+        not_included_in_automatic_cash_total: 未计入自动现金合计
+        not_linked_to_an_account_yet: 尚未关联账户。
+        not_specified: 未填写
+        nothing_appears_in_your_dashboard_until_you_confirm_this_import: 确认导入后，交易才会显示在总览中。
+        open_statement_history: 打开账单历史 →
+        or_add_an_account: 或添加新账户：
+        owed: 欠款
+        owed_amount: 欠款 %{amount}
+        owed_on_credit_cards: 信用卡欠款：
+        page_of_total: 第 %{page} 页，共 %{total} 页
+        pdf_extraction_can_confuse_dates_amounts_running_balances_and_deposit_or_withdra: PDF 提取可能混淆日期、金额、账户余额及存入或支出的正负号。请修正下方错误，排除汇总行，仅确认您认得的交易。正数表示收入，负数表示支出。
+        pdf_review_anything_unclear: PDF：复核不明确的内容
+        pdfs_are_imported_automatically_when_everything_is_clear_including_the_statement: 账单年份和各笔金额正负号等信息明确时，PDF
+          会自动导入；存在不明确的内容时，需要单独复核。收入为正数，支出为负数。CSV 日期格式为 YYYY-MM-DD 或 MM/DD/YYYY。
+        pdfs_waiting_for_review: 待复核的 PDF
+        personal: 个人
+        preparation_guidance_depends_on_your_circumstances: 报税准备建议需结合您的个人情况。
+        previous: ← 上一页
+        projected_balance_in_days: '%{days} 天后的预计余额'
+        projected_cash_balance: 预计现金余额
+        questions_for_your_tax_professional: 向税务专业人士咨询的问题
+        recent_transactions: 最近交易
+        records_to_organize: 需要整理的资料
+        remove: 删除
+        remove_this_statement_and_its_transactions: 删除此账单及其交易
+        rename: ✎ 重命名
+        reset: 重置
+        result: 结果
+        retry_only_the_files_that_were_not_imported_pdfs_marked_needs_review_are_saved_b: 仅需重试未导入的文件。标记为“需要复核”的
+          PDF 会保留在下方，直到过期。
+        review: 复核
+        review_2: 复核 →
+        review_account_balances: 查看账户余额 →
+        review_expires: 复核到期时间
+        review_federal_and_state_requirements: 查看联邦和州税务要求
+        review_flagged_transactions: 复核已标记交易 →
+        review_pdf_statement: 复核 PDF 账单
+        review_transaction: 复核交易
+        review_transaction_2: 复核交易。
+        review_transaction_description: 复核 %{description}
+        review_your_extracted_transactions: 复核提取的交易。
+        review_your_spending_refine_categories_and_flag_records_for_tax_preparation: 查看支出、调整分类，并标记需要用于报税准备的记录。
+        review_your_transaction_categories: 检查交易分类
+        reviews_expire_30_minutes_after_upload_if_one_expires_upload_that_pdf_again_disc: 复核草稿会在上传 30 分钟后过期，过期后请重新上传
+          PDF。丢弃复核草稿不会影响已导入的账单。
+        row_date: 第 %{number} 行的日期
+        row_description: 第 %{number} 行的描述
+        row_signed_amount: 第 %{number} 行带正负号的金额
+        sample_transactions_are_examples_import_them_only_if_you_want_to_try_the_workflo: 示例交易仅供体验流程时使用。
+        save_account: 保存账户
+        save_balance: 保存余额
+        save_cash_on_hand: 保存手头现金
+        save_changes: 保存更改
+        save_name: 保存名称
+        save_tax_context: 保存税务背景
+        saved_balance: 已保存余额
+        search_transactions: 搜索交易
+        search_transactions_2: 搜索交易…
+        see_a_little_further_ahead: 让未来的收支更清晰。
+        see_the_account_breakdown: 查看账户明细 ↓
+        select_several_files_at_once_including_a_mix_of_csvs_and_text_based_pdfs_scanned: 可同时选择多个 CSV 和文本型 PDF 文件。扫描件或仅含图片的
+          PDF 需改用文本型 PDF 或 CSV；暂不支持 OCR 文字识别。
+        self_employed: 自雇
+        showing: 当前显示
+        signed_amount_currency: 带正负号的金额（%{currency}）
+        small_business: 小型企业
+        small_steps_clearer_direction: 迈出小步，方向更清晰
+        some_statements_need_an_account: 部分账单需要确认账户
+        some_statements_still_need_an_account_or_a_readable_dated_balance: 部分账单仍需确认账户，或补充可识别且注明日期的余额。
+        start_date: 开始日期
+        starting_cash_balance: 起始现金余额
+        statement: 账单
+        statement_account_name: 账单中识别的名称：%{name}。留空即可使用该名称。
+        statement_csv_or_pdf_files: CSV 或 PDF 账单文件
+        statement_currency: 账单币种：
+        statement_history: 账单历史
+        statements_from_the_same_account_contribute_only_the_latest_balance_removing_a_s: 同一账户仅计入最新余额。删除账单时，也会删除其中的交易并重新计算账户合计。
+        status: 状态
+        still_need_a_category: 仍需分类。
+        still_need_a_type_cash_or_credit: 仍需确认类型（现金或信用卡）。
+        summary_used_for_analysis: 本次分析使用的摘要
+        tax_country_or_jurisdiction: 税务国家或管辖地区
+        tax_jurisdiction: 税务管辖地区：
+        tax_preparation: 报税准备
+        tax_review: · 税务复核：
+        tax_review_2: 税务复核
+        tell_you_more: 告诉您更多。
+        the_everyday_details: 每一天的收支细节
+        the_original_date_and_amount_stay_tied_to_the_imported_statement_remove_and_re_i: 原始日期和金额保留导入账单中的值。如需修改，请删除账单并重新导入更正后的文件。
+        the_shaded_envelope_combines_daily_income_and_spending_bounds_it_has_no_calibrat: 阴影区域由每日收入和支出范围组合而成，不代表总现金余额的已校准概率区间。
+        these_are_balances_on_the_dates_shown_upload_newer_statements_to_refresh_them_th: 余额截至所示日期，可通过上传更新的账单来更新。本应用不会连接您的银行或获取实时余额。
+        these_statements_are_not_included_in_the_automatic_total_choose_an_existing_acco: 这些账单尚未计入自动合计。请在账单历史中选择已有账户，或添加银行及账号后四位。选择账户不会补全缺失的期末余额，请查看“已保存余额”列了解可用数据。
+        this_draft_expires_after_30_minutes: 此草稿将在 30 分钟后过期。
+        this_forecast_starts_from_a_partial_account_total: 本次预测的起始余额仅包含部分账户。
+        this_information_adds_context_to_the_next_analysis_billieweather_does_not_calcul: 这些信息将用于下一次分析。BillieWeather
+          不计算应纳税额，也不代为申报。
+        this_is_a_different_account_with_the_same_bank_and_last_four_digits: 这是同一银行、后四位相同的另一个账户
+        this_line_is_based_on_patterns_in_your_past_transactions_not_bill_due_dates_or_c: 此曲线基于历史交易规律，未考虑账单到期日或已确认的未来付款。账单余额反映账单注明日期的情况，并非银行实时余额。
+        this_month: 本月
+        this_year: 今年
+        time_period: 时间范围
+        today: 今天
+        total_cash: 现金合计
+        total_cash_partial_some_accounts_need_attention: 现金合计 · 部分账户仍需处理
+        total_expenses: 总支出
+        total_income: 总收入
+        total_owed_on_credit_cards: 信用卡欠款合计 ·
+        transaction: 交易
+        transaction_type: 交易类型
+        transactions: 交易
+        transactions_are_organized_and_categorized_automatically_as_you_import: 导入时将自动整理交易并进行分类
+        transfers: · 转账：
+        transfers_and_excluded_items_omitted: 不含转账及已排除项目
+        try_another_search_or_clear_your_filters: 请尝试其他搜索条件，或清除筛选。
+        turn_information_into_next_steps: 从数据出发，找到下一步
+        u_s_personal_tax_preparation: 美国个人报税准备
+        uncategorized: 未分类：
+        understand_patterns_consider_practical_actions_and_get_your_records_ready_for_ta: 了解收支规律，考虑可行的行动，并为报税季整理资料。
+        united_states: 美国
+        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: 最多 10 个文件 · 每个 2 MB · 合计 10 MB · 支持 CSV
+          和文本型 PDF
+        update_forecast: 更新预测
+        upload_a_statement: 上传账单
+        upload_a_statement_review_your_categories_then_generate_your_first_analysis: 上传账单、检查分类，然后生成您的第一份分析。
+        upload_statement: 上传账单
+        upload_statements: 上传账单 →
+        upload_statements_2: 上传账单
+        upload_your_first_csv_or_text_based_pdf_statement_to_see_income_spending_and_a_c: 上传第一份 CSV 或文本型 PDF 账单，即可根据您的交易查看收入、支出和现金流预测。
+        upload_your_first_statement: 上传第一份账单
+        upload_your_first_statement_to_start_connecting_the_dots: 上传第一份账单，开始了解您的财务状况。
+        use_an_existing_account: 使用已有账户
+        use_automatic_account_total: 使用自动账户合计
+        use_date_description_and_amount_separate_debit_and_credit_columns_are_also_suppo: 请使用 Date、Description 和
+          Amount 列，也支持单独的 Debit 和 Credit 列。日期会自动识别，依次优先使用 Transaction Date、Date、入账日期列。导入结果会注明所用日期列。
+        use_for_duplicates_or_items_that_should_not_affect_your_financial_picture: 适用于重复记录，或不应影响财务汇总的项目。
+        use_one_currency: 使用同一币种
+        use_the_same_bank_and_last_four_digits_for_every_statement_from_this_account_do: 同一账户的每份账单请使用相同的银行名称和账号后四位，不要输入完整账号。
+        use_this_account: 使用此账户
+        view_account_balances: 查看账户余额 →
+        view_all: 查看全部 →
+        view_all_dates: 查看全部日期
+        view_monthly_figures: 查看月度数据
+        view_transactions: 查看交易 →
+        waiting_for_a_usable_starting_balance: 等待可用的起始余额
+        what_goes_into_this_estimate: 预测依据
+        what_you_owe_on_each_card: 每张信用卡的欠款
+        what_your_numbers_say: 数字告诉了我们什么
+        when_account_details_and_a_dated_balance_are_present_we_total_the_latest_balance: 具备账户信息和注明日期的余额时，我们会合计各现金账户的最新余额。账户信息不明确时，请在账单历史中选择。信用卡不计入现金。
+        where_it_goes: 钱花在了哪里
+        workspace_currency: 当前工作区使用 %{currency}，不进行货币换算。
+        you_have_the_final_say: 由您确认，才会导入
+        your_account_balances: 账户余额
+        your_accounts: 您的账户
+        your_cash_flow_outlook: 现金流展望
+        your_expense_categories: 支出分类
+        your_financial_outlook: 您的财务展望
+        your_financial_story_starts_here: 从这里开始，读懂您的财务故事。
+        your_imported_files_accounts_and_transaction_counts: 已导入的文件、账户及交易数量
+        your_latest_transactions_will_appear_here: 最近的交易将显示在这里。
+        your_money_in_focus: 聚焦您的每一笔收支
+        your_next_insight_is_in_your_numbers: 新的发现，就藏在您的数字里。
+        your_numbers_thoughtfully_explained: 让数字更容易理解
+        your_records_or_profile_changed_since_billie_prepared_these_tax_insights_ask_bil: Billie 生成这些税务建议后，您的记录或资料已发生变化。请重新询问以获取最新分析。
+        your_records_or_profile_changed_since_this_analysis_was_generated_generate_a_new: 此分析生成后，您的记录或资料已发生变化。请重新生成分析以反映最新信息。
+        your_starting_balance_is_not_available_yet: 暂时无法获取起始余额。
+        your_starting_point: 预测的起点
+        your_tax_context: 您的税务背景
+        your_transactions_belong_here: 在这里汇集您的交易。
+        your_upload_results: 上传结果
+        dashboard_periods: 总览时间范围
+        monthly_income_expenses: 每月收入与支出
+        income_amount: 收入：%{amount}
+        expenses_amount: 支出：%{amount}
+        transactions_found:
+          other: 笔交易

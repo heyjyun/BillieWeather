@@ -51,7 +51,7 @@ module Finance
 
     INSTRUCTIONS = <<~TEXT.freeze
       You help BillieWeather users understand imported financial activity and organize records.
-      Return plain English JSON matching the provided schema, with a short summary, 1-4 observations,
+      Return JSON matching the provided schema, with a short summary, 1-4 observations,
       1-4 practical actions, 1-4 tax preparation tasks, and 1-4 limitations. Titles must be under 120
       characters; other strings must be under 1500 characters. Refer only to the supplied aggregate
       data. Do not invent balances, recurring payments, income, missing records, or future outcomes.
@@ -76,7 +76,7 @@ module Finance
 
     TAX_INSTRUCTIONS = <<~TEXT.freeze
       You are Billie, the BillieWeather assistant. Help the user organize their records for tax
-      preparation. Return plain English JSON matching the provided schema: a short summary,
+      preparation. Return JSON matching the provided schema: a short summary,
       1-5 tax_preparation tasks, 1-5 questions to ask a qualified tax professional, and 1-4
       limitations. Titles must be under 120 characters; other strings must be under 1500 characters.
       Refer only to the supplied aggregate data. Do not invent income, balances, missing records,
@@ -116,22 +116,22 @@ module Finance
 
       uri = URI("#{base}/responses")
       unless uri.is_a?(URI::HTTPS) && uri.host.present? && uri.userinfo.nil? && uri.query.nil? && uri.fragment.nil?
-        raise Error, "The AI service URL is invalid. Configure an HTTPS API base URL."
+        raise Error, I18n.t("billie.backend.ai_invalid_url")
       end
       uri
     rescue URI::InvalidURIError
-      raise Error, "The AI service URL is invalid. Configure an HTTPS API base URL."
+      raise Error, I18n.t("billie.backend.ai_invalid_url")
     end
 
     def self.ai_service_name
       case endpoint.host
       when "api.openai.com" then "OpenAI"
       when "prepend.me"
-        fallback_available? ? "OpenAI via Prepend, with OpenAI if its credit runs out" : "OpenAI via Prepend"
-      else "the configured AI provider"
+        fallback_available? ? I18n.t("billie.backend.ai_via_prepend_fallback") : I18n.t("billie.backend.ai_via_prepend")
+      else I18n.t("billie.backend.ai_configured_provider")
       end
     rescue Error
-      "the configured AI provider"
+      I18n.t("billie.backend.ai_configured_provider")
     end
 
     def self.model = openai_setting(:model)
@@ -161,12 +161,12 @@ module Finance
 
     def call
       @fallback_used = false
-      raise Error, "Choose basic analysis or Billie Insights." unless %w[rules openai].include?(@provider)
-      raise Error, "Choose a valid analysis type." unless Finance::Insight::KINDS.include?(@kind)
-      raise Error, "Billie's tax preparation insights need the AI service." if tax? && @provider != "openai"
+      raise Error, I18n.t("billie.backend.choose_analysis") unless %w[rules openai].include?(@provider)
+      raise Error, I18n.t("billie.backend.invalid_analysis_kind") unless Finance::Insight::KINDS.include?(@kind)
+      raise Error, I18n.t("billie.backend.tax_ai_required") if tax? && @provider != "openai"
       if @provider == "openai"
-        raise Error, "Please consent to sharing your financial summary before generating Billie Insights." unless @consent
-        raise Error, "Billie Insights are not configured. Basic analysis is available without an API key." unless self.class.ai_available?
+        raise Error, I18n.t("billie.backend.ai_consent_required") unless @consent
+        raise Error, I18n.t("billie.backend.ai_not_configured") unless self.class.ai_available?
       end
 
       @snapshot = Finance::Snapshot.new(user: @user).to_h
@@ -182,59 +182,59 @@ module Finance
       count = @snapshot.fetch(:transaction_count)
       net = @snapshot.fetch(:net)
       summary = if count.zero?
-        "Upload a statement to see a picture of your income, spending, and cash flow. This is basic analysis, generated from rules rather than an AI model."
+        I18n.t("billie.backend.basic_empty_summary")
       elsif @snapshot[:period_start].nil?
-        "You have #{count} imported #{"transaction".pluralize(count)}, but none are currently included in income or spending totals. Review transfers and excluded transactions before drawing cash-flow conclusions."
+        I18n.t("billie.backend.basic_excluded_summary", count: count, transactions: "transaction".pluralize(count))
       else
-        "Your imported activity contains #{money(@snapshot.fetch(:income))} in income and #{money(@snapshot.fetch(:expenses))} in spending, for a net flow of #{money(net)}. You have #{count} imported #{"transaction".pluralize(count)}; transfers and excluded items are omitted from these totals. Net flow is not your account balance."
+        I18n.t("billie.backend.basic_summary", income: money(@snapshot.fetch(:income)), expenses: money(@snapshot.fetch(:expenses)), net: money(net), count: count, transactions: "transaction".pluralize(count))
       end
 
       observations = if count.zero?
-        [item("Your financial picture starts here", "No included transactions are available yet. An uploaded CSV supplies the data for this analysis.")]
+        [item(I18n.t("billie.backend.basic_start_title"), I18n.t("billie.backend.basic_start_body"))]
       elsif @snapshot[:period_start].nil?
-        [item("Review included activity", "Income and spending totals omit transfers and excluded items. Review those settings and your statement coverage before drawing conclusions.")]
+        [item(I18n.t("billie.backend.basic_review_title"), I18n.t("billie.backend.basic_review_body"))]
       else
-        [item("Imported cash flow", "#{net.negative? ? "Spending exceeds income" : "Income meets or exceeds spending"} within the imported data. Missing accounts or partial statements can change this picture.")]
+        [item(I18n.t("billie.backend.basic_flow_title"), I18n.t("billie.backend.basic_flow_body", direction: net.negative? ? I18n.t("billie.backend.basic_negative_flow") : I18n.t("billie.backend.basic_positive_flow")))]
       end
 
       largest = @snapshot.fetch(:categories).first
       if largest && @snapshot.fetch(:expenses).positive?
-        observations << item("Largest spending category", "#{largest.fetch(:name)} accounts for #{money(largest.fetch(:amount))} of imported spending. Review its transactions before setting a spending target.")
+        observations << item(I18n.t("billie.backend.basic_largest_title"), I18n.t("billie.backend.basic_largest_body", category: I18n.t("billie.labels.#{largest.fetch(:name)}", default: largest.fetch(:name)), amount: money(largest.fetch(:amount))))
       end
 
       actions = if count.zero?
-        [item("Add your first statement", "Upload a CSV from a bank or card account. Use the sample format to check date and amount conventions.")]
+        [item(I18n.t("billie.backend.basic_upload_title"), I18n.t("billie.backend.basic_upload_body"))]
       elsif @snapshot[:period_start].nil?
-        [item("Check transaction inclusion", "Review the excluded flags and transfer categories in Transactions. Import additional statements if this data does not include your income and spending.")]
+        [item(I18n.t("billie.backend.basic_inclusion_title"), I18n.t("billie.backend.basic_inclusion_body"))]
       elsif net.negative?
-        [item("Review your next cash needs", "Compare upcoming bills with available cash. Review flexible spending categories and use the forecast to test a lower-spending scenario.")]
+        [item(I18n.t("billie.backend.basic_cash_needs_title"), I18n.t("billie.backend.basic_cash_needs_body"))]
       else
-        [item("Give your cash flow a plan", "Compare the imported surplus with upcoming bills and savings goals. Check that your statements cover all relevant accounts before relying on the totals.")]
+        [item(I18n.t("billie.backend.basic_plan_title"), I18n.t("billie.backend.basic_plan_body"))]
       end
-      actions << item("Review account balances", "Cash Flow Forecast automatically sums each identified cash account’s latest dated statement balance. Check its account breakdown for missing balances and older dates. Transaction net flow alone cannot establish how much cash is available.")
+      actions << item(I18n.t("billie.backend.basic_balances_title"), I18n.t("billie.backend.basic_balances_body"))
       if @snapshot.fetch(:uncategorized_count).positive?
-        actions << item("Review uncategorized activity", "Uncategorized included transactions: #{@snapshot.fetch(:uncategorized_count)}. Review their categories in Transactions to improve your summaries.")
+        actions << item(I18n.t("billie.backend.basic_uncategorized_title"), I18n.t("billie.backend.basic_uncategorized_body", count: @snapshot.fetch(:uncategorized_count)))
       end
 
       tax_preparation = if us_personal_tax_context?
         [
-          item("Gather your U.S. personal tax records", "Collect Forms W-2, relevant Forms 1099, and your prior-year return if you filed. Keep applicable mortgage-interest Form 1098, Marketplace Form 1095-A, and supporting receipts together. Not every document applies to every person."),
-          item("Separate cash flow from taxable income", "Bank credits are not automatically taxable income, and payroll deposits do not replace W-2 wages. Reconcile tax forms with supporting records rather than copying bank income totals onto a return."),
-          item("Check dates and prepare a review export", "Group records by the tax year you are preparing. Check statement coverage, transfers, and review flags before sharing an export with your tax preparer. A bank export is not a completed return.")
+          item(I18n.t("billie.backend.basic_us_records_title"), I18n.t("billie.backend.basic_us_records_body")),
+          item(I18n.t("billie.backend.basic_tax_income_title"), I18n.t("billie.backend.basic_tax_income_body")),
+          item(I18n.t("billie.backend.basic_tax_dates_title"), I18n.t("billie.backend.basic_tax_dates_body"))
         ]
       else
         [
-          item("Organize supporting records", "Keep original statements, receipts, and income documents outside this app. Match relevant records to transactions; a category or review flag does not establish tax treatment."),
-          item("Reconcile before preparing a return", "Review duplicate imports, transfers, missing accounts, and the dates covered. Export your reviewed transactions to share with your tax preparer.")
+          item(I18n.t("billie.backend.basic_records_title"), I18n.t("billie.backend.basic_records_body")),
+          item(I18n.t("billie.backend.basic_reconcile_title"), I18n.t("billie.backend.basic_reconcile_body"))
         ]
       end
       if @snapshot.fetch(:tax_review_count, 0).positive?
-        tax_preparation << item("Review your flagged transactions", "Transactions marked for tax review: #{@snapshot.fetch(:tax_review_count)}. Match each one to supporting records and confirm its treatment with your tax preparer.")
+        tax_preparation << item(I18n.t("billie.backend.basic_flagged_title"), I18n.t("billie.backend.basic_flagged_body", count: @snapshot.fetch(:tax_review_count)))
       end
       if @profile&.tax_country.blank? || @profile&.tax_profile.blank?
-        tax_preparation.unshift(item("Choose your tax context", "Set your tax country and taxpayer type below so future preparation can use the right context. No jurisdiction-specific tax conclusions are made here."))
+        tax_preparation.unshift(item(I18n.t("billie.backend.basic_tax_context_title"), I18n.t("billie.backend.basic_tax_context_body")))
       elsif !us_personal_tax_context?
-        tax_preparation << item("Prepare questions for your tax professional", "Your saved tax context is #{@profile.tax_country} / #{@profile.tax_profile.tr("_", " ")}. Ask a qualified professional which records and classifications apply to your situation; this app does not verify local tax rules.")
+        tax_preparation << item(I18n.t("billie.backend.basic_tax_questions_title"), I18n.t("billie.backend.basic_tax_questions_body", country: @profile.tax_country, profile: I18n.t("billie.labels.#{@profile.tax_profile}", default: @profile.tax_profile.tr("_", " "))))
       end
 
       {
@@ -243,10 +243,10 @@ module Finance
         "actions" => actions,
         "tax_preparation" => tax_preparation,
         "limitations" => [
-          "Based only on included imported transactions; transfers and excluded items are omitted from cash-flow totals.",
-          "Categories are suggestions to review. This is general budgeting and record-preparation information, not professional financial or tax advice.",
-          "No tax calculation, eligibility decision, or filing is performed. This analysis is a saved snapshot and does not update automatically.",
-          "Bank credits are not necessarily taxable income. Payroll deposits are not a substitute for the wages reported on tax forms."
+          I18n.t("billie.backend.basic_limit_data"),
+          I18n.t("billie.backend.basic_limit_advice"),
+          I18n.t("billie.backend.basic_limit_snapshot"),
+          I18n.t("billie.backend.basic_limit_wages")
         ]
       }
     end
@@ -256,7 +256,7 @@ module Finance
         model: self.class.model,
         store: false,
         max_output_tokens: 3500,
-        instructions: tax? ? TAX_INSTRUCTIONS : INSTRUCTIONS,
+        instructions: (tax? ? TAX_INSTRUCTIONS : INSTRUCTIONS) + "\nWrite all user-facing JSON string values in #{I18n.locale.to_s == "zh-CN" ? "Simplified Chinese" : "English"}. Keep the schema keys unchanged.",
         input: [{role: "user", content: JSON.generate(aggregate_data)}],
         text: {format: {type: "json_schema", name: tax? ? "billie_tax_preparation" : "billieweather_insights", strict: true, schema: tax? ? TAX_OUTPUT_SCHEMA : OUTPUT_SCHEMA}}
       }
@@ -274,22 +274,22 @@ module Finance
         service = if @fallback_used
           "OpenAI"
         else
-          ((self.class.endpoint.host == "prepend.me") ? "Prepend" : "The AI service")
+          ((self.class.endpoint.host == "prepend.me") ? "Prepend" : I18n.t("billie.backend.ai_service"))
         end
         if response.code == "401"
-          raise Error, "#{service} could not authenticate this request. Check its API key."
+          raise Error, I18n.t("billie.backend.ai_auth_failed", service: service)
         end
         if quota_exhausted?(response)
-          raise Error, "#{service} has reached its credit or usage limit. Add credit or review its usage limit."
+          raise Error, I18n.t("billie.backend.ai_quota", service: service)
         end
-        raise Error, "The AI service could not complete this request. #{retry_hint}"
+        raise Error, I18n.t("billie.backend.ai_failed", hint: retry_hint)
       end
       raw_body = response.body.to_s
-      raise Error, "The AI service returned an invalid result. #{retry_hint}" if raw_body.bytesize > MAX_RESPONSE_BYTES
+      raise Error, I18n.t("billie.backend.ai_invalid_result", hint: retry_hint) if raw_body.bytesize > MAX_RESPONSE_BYTES
 
       result = JSON.parse(raw_body)
       unless result.is_a?(Hash) && result["status"] == "completed" && result["output"].is_a?(Array)
-        raise Error, "The AI analysis was incomplete. #{retry_hint}"
+        raise Error, I18n.t("billie.backend.ai_incomplete", hint: retry_hint)
       end
 
       texts = result["output"].filter_map do |output|
@@ -298,10 +298,10 @@ module Finance
           part["text"] if part.is_a?(Hash) && part["type"] == "output_text" && part["text"].is_a?(String)
         end
       end.flatten
-      raise Error, "The AI service did not return an analysis. #{retry_hint}" if texts.empty?
+      raise Error, I18n.t("billie.backend.ai_no_analysis", hint: retry_hint) if texts.empty?
       JSON.parse(texts.join)
     rescue JSON::ParserError
-      raise Error, "The AI service returned an invalid result. #{retry_hint}"
+      raise Error, I18n.t("billie.backend.ai_invalid_result", hint: retry_hint)
     end
 
     def quota_exhausted?(response)
@@ -327,7 +327,7 @@ module Finance
       http.max_retries = 0
       Timeout.timeout(20) { http.request(request) }
     rescue Timeout::Error, SocketError, IOError, SystemCallError, OpenSSL::SSL::SSLError, Net::HTTPError
-      raise Error, "The AI service is temporarily unavailable. #{retry_hint}"
+      raise Error, I18n.t("billie.backend.ai_unavailable", hint: retry_hint)
     end
 
     def aggregate_data
@@ -370,7 +370,7 @@ module Finance
           content.class
         end
         Rails.logger.warn("[Finance::InsightGenerator] invalid #{@provider}/#{@kind} content shape: #{shape.inspect}")
-        raise Error, "The analysis result was invalid. #{retry_hint}"
+        raise Error, I18n.t("billie.backend.analysis_invalid", hint: retry_hint)
       end
     end
 
@@ -379,7 +379,7 @@ module Finance
     end
 
     def retry_hint
-      tax? ? "Please try again." : "Please try again or use basic analysis."
+      tax? ? I18n.t("billie.backend.retry") : I18n.t("billie.backend.retry_or_basic")
     end
 
     def valid_text?(value, maximum)

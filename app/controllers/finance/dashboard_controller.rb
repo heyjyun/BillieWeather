@@ -9,7 +9,7 @@ module Finance
       @recent_transactions = @snapshot[:recent_transactions].first(6)
       @has_transactions = current_user.finance_transactions.exists?
     rescue DashboardPeriod::InvalidPeriod => error
-      @date_filter_error = "#{error.message} The date filter was not applied."
+      @date_filter_error = I18n.t("billie.backend.date_filter_not_applied", error: error.message)
       @period = DashboardPeriod.new(preset: "all_time")
       @snapshot = nil
       @recent_transactions = []

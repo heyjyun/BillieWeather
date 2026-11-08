@@ -23,13 +23,13 @@ module Finance
     def amount_has_cent_precision
       value = BigDecimal(amount_before_type_cast.to_s, exception: false)
       if value&.finite? && value != value.round(2)
-        errors.add(:amount, "must have at most two decimal places")
+        errors.add(:amount, :cent_precision)
       end
     end
 
     def same_owner_as_statement
       if statement && user_id != statement.user_id
-        errors.add(:statement, "must belong to the same account")
+        errors.add(:statement, :same_statement_owner)
       end
     end
   end

@@ -1,12 +1,12 @@
-<% content_for :title, "Cash flow forecast" %>
-<% forecast_model_labels = {prophet: "Prophet", chronos: "Chronos-2", linear: "Historical average"} %>
+<% content_for :title, t("billie.finance.ui.cash_flow_forecast") %>
+<% forecast_model_labels = {prophet: "Prophet", chronos: "Chronos-2", linear: t("billie.finance.ui.historical_average")} %>
 <div class="bw-page-heading">
   <div>
-    <span class="bw-eyebrow">MAKE ROOM FOR WHAT’S NEXT</span>
-    <h1>See a little further ahead.</h1>
-    <p>A projection using your account balances and the patterns in your income and spending.</p>
+    <span class="bw-eyebrow"><%= t("billie.finance.ui.make_room_for_what_s_next") %></span>
+    <h1><%= t("billie.finance.ui.see_a_little_further_ahead") %></h1>
+    <p><%= t("billie.finance.ui.a_projection_using_your_account_balances_and_the_patterns_in_your_income_and_spe") %></p>
   </div>
-  <span class="bw-pill"><%= finance_icon "forecast", size: 16 %> Estimate, not a guarantee</span>
+  <span class="bw-pill"><%= finance_icon "forecast", size: 16 %> <%= t("billie.finance.ui.estimate_not_a_guarantee") %></span>
 </div>
 <% if @forecast_error.present? %>
   <div class="bw-flash bw-flash-error" role="alert"><%= @forecast_error %></div>
@@ -16,42 +16,42 @@
 <% end %>
 <% if @profile.balance_source != "manual" && @balance_summary[:total].present? && !@balance_summary[:complete] %>
   <div class="bw-balance-notice" role="status">
-    <strong>This forecast starts from a partial account total.</strong>
-    Some statements still need an account or a readable, dated balance.
-    <%= link_to "Review account balances →", "#account-balances", class: "bw-text-link" %>
+    <strong><%= t("billie.finance.ui.this_forecast_starts_from_a_partial_account_total") %></strong>
+    <%= t("billie.finance.ui.some_statements_still_need_an_account_or_a_readable_dated_balance") %>
+    <%= link_to t("billie.finance.ui.review_account_balances"), "#account-balances", class: "bw-text-link" %>
   </div>
 <% end %>
 
 <div class="bw-metrics bw-metrics-three">
   <article class="bw-metric" id="forecast-starting-balance">
-    <span>Starting cash balance</span>
+    <span><%= t("billie.finance.ui.starting_cash_balance") %></span>
     <strong><%= finance_balance_display(@profile) %></strong>
     <small><%= finance_balance_note(@profile) %></small>
     <% age_note = finance_balance_age_note(@profile) %>
     <% if age_note %><small class="bw-balance-age"><%= age_note %></small><% end %>
-    <small>The forecast starts today, <%= finance_date(Date.current) %>.</small>
-    <%= link_to "✎ Enter or edit balance", finance_forecast_path(edit: "1", anchor: "balance"), class: "bw-metric-link" %>
+    <small><%= t("billie.finance.ui.forecast_starts_today", date: finance_date(Date.current)) %></small>
+    <%= link_to t("billie.finance.ui.enter_or_edit_balance"), finance_forecast_path(edit: "1", anchor: "balance"), class: "bw-metric-link" %>
   </article>
   <article class="bw-metric bw-metric-mint" id="forecast-projected-balance">
-    <span>Projected balance in <%= @forecast[:days] %> days</span>
-    <strong><%= @forecast[:balance_available] ? finance_money(@forecast[:projected_balance], @profile.currency) : "Not available" %></strong>
-    <small><%= @forecast[:balance_available] ? "Based on #{@forecast[:history_days]} days of historical coverage" : "Waiting for a usable starting balance" %></small>
+    <span><%= t("billie.finance.ui.projected_balance_in_days", days: @forecast[:days]) %></span>
+    <strong><%= @forecast[:balance_available] ? finance_money(@forecast[:projected_balance], @profile.currency) : t("billie.finance.ui.not_available") %></strong>
+    <small><%= @forecast[:balance_available] ? t("billie.finance.ui.history_days_coverage", days: @forecast[:history_days]) : t("billie.finance.ui.waiting_for_a_usable_starting_balance") %></small>
   </article>
   <article class="bw-metric">
-    <span>Average daily net cash flow</span>
+    <span><%= t("billie.finance.ui.average_daily_net_cash_flow") %></span>
     <strong><%= finance_money(@forecast[:daily_income].to_d - @forecast[:daily_expenses].to_d, @profile.currency) %></strong>
-    <small>After your scenario adjustments</small>
+    <small><%= t("billie.finance.ui.after_your_scenario_adjustments") %></small>
   </article>
 </div>
 
 <section class="bw-panel">
   <div class="bw-panel-heading">
     <div>
-      <h2>Your cash flow outlook</h2>
+      <h2><%= t("billie.finance.ui.your_cash_flow_outlook") %></h2>
       <p><%= finance_date(Date.current) %> – <%= finance_date(Date.current + @forecast[:days].to_i) %></p>
-      <p id="forecast-model">Model: <%= forecast_model_labels.fetch(@forecast[:method]) %></p>
+      <p id="forecast-model"><%= t("billie.finance.ui.model") %> <%= forecast_model_labels.fetch(@forecast[:method]) %></p>
     </div>
-    <% if @forecast[:balance_available] %><span class="bw-legend"><span><i class="bw-legend-income"></i>Projected cash balance</span><% if @forecast[:points].first&.key?(:lower) %><span>Illustrative range</span><% end %></span><% end %>
+    <% if @forecast[:balance_available] %><span class="bw-legend"><span><i class="bw-legend-income"></i><%= t("billie.finance.ui.projected_cash_balance") %></span><% if @forecast[:points].first&.key?(:lower) %><span><%= t("billie.finance.ui.illustrative_range") %></span><% end %></span><% end %>
   </div>
   <% if @forecast[:balance_available] && @forecast[:points].present? %>
     <div class="bw-line-chart">
@@ -60,7 +60,7 @@
         <span><%= finance_money(chart_high, @profile.currency) %></span>
         <span><%= finance_money(chart_low, @profile.currency) %></span>
       </div>
-      <svg viewBox="0 0 800 250" role="img" aria-label="Projected balance from <%= finance_money(@forecast[:current_balance], @profile.currency) %> today to <%= finance_money(@forecast[:projected_balance], @profile.currency) %> in <%= @forecast[:days] %> days" preserveAspectRatio="none">
+      <svg viewBox="0 0 800 250" role="img" aria-label="<%= t("billie.finance.ui.forecast_chart_description", current: finance_money(@forecast[:current_balance], @profile.currency), projected: finance_money(@forecast[:projected_balance], @profile.currency), days: @forecast[:days]) %>" preserveAspectRatio="none">
         <defs><linearGradient id="forecast-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#84c6af" stop-opacity="0.35"/><stop offset="100%" stop-color="#84c6af" stop-opacity="0.02"/></linearGradient></defs>
         <path d="M20 60H780 M20 130H780 M20 210H780" fill="none" stroke="#e9ece9" stroke-width="1" stroke-dasharray="5 5"/>
         <% band = finance_chart_band(@forecast[:points]) %>
@@ -69,84 +69,84 @@
         <polyline points="<%= finance_chart_points(@forecast[:points]) %>" fill="none" stroke="#297b63" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
       </svg>
     </div>
-    <div class="bw-chart-dates"><span>Today</span><span>In <%= @forecast[:days] %> days</span></div>
+    <div class="bw-chart-dates"><span><%= t("billie.finance.ui.today") %></span><span><%= t("billie.finance.ui.in_days", days: @forecast[:days]) %></span></div>
   <% else %>
     <div class="bw-empty-state bw-balance-empty">
       <span class="bw-empty-icon"><%= finance_icon "wallet", size: 28 %></span>
-      <h3>Your starting balance is not available yet.</h3>
+      <h3><%= t("billie.finance.ui.your_starting_balance_is_not_available_yet") %></h3>
       <p><%= finance_balance_setup_message(@balance_summary) %></p>
-      <%= link_to "Review account balances →", "#account-balances", class: "bw-button bw-button-outline" %>
+      <%= link_to t("billie.finance.ui.review_account_balances"), "#account-balances", class: "bw-button bw-button-outline" %>
     </div>
   <% end %>
   <div class="bw-forecast-caveat">
     <%= finance_icon "file", size: 18 %>
-    <p>This line is based on patterns in your past transactions, not bill due dates or confirmed future payments. Statement balances are snapshots on their printed dates, not live bank balances.</p>
-    <% if @forecast[:points].first&.key?(:lower) %><p>The shaded envelope combines daily income and spending bounds. It has no calibrated probability for the total cash balance.</p><% end %>
+    <p><%= t("billie.finance.ui.this_line_is_based_on_patterns_in_your_past_transactions_not_bill_due_dates_or_c") %></p>
+    <% if @forecast[:points].first&.key?(:lower) %><p><%= t("billie.finance.ui.the_shaded_envelope_combines_daily_income_and_spending_bounds_it_has_no_calibrat") %></p><% end %>
   </div>
 </section>
 
 <div class="bw-two-column bw-section-gap">
   <section class="bw-panel">
     <div class="bw-panel-heading">
-      <div><h2>Explore a scenario</h2><p>Adjust the outlook without changing your actual transactions.</p></div>
+      <div><h2><%= t("billie.finance.ui.explore_a_scenario") %></h2><p><%= t("billie.finance.ui.adjust_the_outlook_without_changing_your_actual_transactions") %></p></div>
       <%= finance_icon "settings" %>
     </div>
     <%= form_with url: finance_forecast_path, method: :get, data: {turbo: false}, class: "bw-form" do |form| %>
       <div class="bw-field">
-        <%= form.label :engine, "Forecast model" %>
-        <%= form.select :engine, options_for_select([["Prophet", "prophet"], ["Chronos-2", "chronos"], ["Historical average", "linear"]], @forecast[:requested_engine].to_s) %>
-        <small>If the selected model is unavailable, the result shows the model used and explains the change.</small>
+        <%= form.label :engine, t("billie.finance.ui.forecast_model") %>
+        <%= form.select :engine, options_for_select([["Prophet", "prophet"], ["Chronos-2", "chronos"], [t("billie.finance.ui.historical_average"), "linear"]], @forecast[:requested_engine].to_s) %>
+        <small><%= t("billie.finance.ui.if_the_selected_model_is_unavailable_the_result_shows_the_model_used_and_explain") %></small>
       </div>
       <div class="bw-field">
-        <%= form.label :days, "Forecast horizon" %>
-        <%= form.select :days, options_for_select([["Next 30 days", 30], ["Next 60 days", 60], ["Next 90 days", 90]], @forecast[:days]) %>
+        <%= form.label :days, t("billie.finance.ui.forecast_horizon") %>
+        <%= form.select :days, options_for_select([[t("billie.finance.ui.next_30_days"), 30], [t("billie.finance.ui.next_60_days"), 60], [t("billie.finance.ui.next_90_days"), 90]], @forecast[:days]) %>
       </div>
       <div class="bw-form-grid">
         <div class="bw-field">
-          <%= form.label :income_adjustment, "Income change (%)" %>
+          <%= form.label :income_adjustment, t("billie.finance.ui.income_change") %>
           <%= form.number_field :income_adjustment, value: params[:income_adjustment].presence || 0, min: -100, max: 200, step: 1 %>
-          <small>Example: 10 means 10% more income.</small>
+          <small><%= t("billie.finance.ui.example_10_means_10_more_income") %></small>
         </div>
         <div class="bw-field">
-          <%= form.label :expense_adjustment, "Expense change (%)" %>
+          <%= form.label :expense_adjustment, t("billie.finance.ui.expense_change") %>
           <%= form.number_field :expense_adjustment, value: params[:expense_adjustment].presence || 0, min: -100, max: 200, step: 1 %>
-          <small>Example: −10 means 10% less spending.</small>
+          <small><%= t("billie.finance.ui.example_10_means_10_less_spending") %></small>
         </div>
       </div>
-      <%= form.submit "Update forecast", class: "bw-button bw-button-dark" %>
+      <%= form.submit t("billie.finance.ui.update_forecast"), class: "bw-button bw-button-dark" %>
     <% end %>
   </section>
 
   <section class="bw-panel bw-panel-soft" id="balance">
     <div class="bw-panel-heading">
-      <div><h2>Your starting point</h2><p>Each cash account contributes its latest statement balance once. Older statements for the same account are not added again.</p></div>
+      <div><h2><%= t("billie.finance.ui.your_starting_point") %></h2><p><%= t("billie.finance.ui.each_cash_account_contributes_its_latest_statement_balance_once_older_statements") %></p></div>
       <%= finance_icon "wallet" %>
     </div>
     <div class="bw-balance-line">
       <div>
-        <span class="bw-caption">Cash balance</span>
+        <span class="bw-caption"><%= t("billie.finance.ui.cash_balance") %></span>
         <strong><%= finance_balance_display(@profile) %></strong>
         <small><%= finance_balance_note(@profile) %></small>
       </div>
     </div>
-    <%= link_to "See the account breakdown ↓", "#account-balances", class: "bw-text-link" %>
+    <%= link_to t("billie.finance.ui.see_the_account_breakdown"), "#account-balances", class: "bw-text-link" %>
     <% if @profile.balance_source == "manual" && @balance_summary[:total].present? %>
-      <%= button_to "Use automatic account total", finance_profile_path, method: :patch, params: {use_statement_balance: "1", return_to: "forecast"}, class: "bw-button bw-button-outline", form: {data: {turbo: false}, class: "bw-auto-balance-form"} %>
+      <%= button_to t("billie.finance.ui.use_automatic_account_total"), finance_profile_path, method: :patch, params: {use_statement_balance: "1", return_to: "forecast"}, class: "bw-button bw-button-outline", form: {data: {turbo: false}, class: "bw-auto-balance-form"} %>
     <% end %>
     <details class="bw-balance-edit bw-manual-override" <%= "open" if @profile.errors.any? || params[:edit] == "1" %>>
-      <summary class="bw-text-link">✎ Enter or edit balance</summary>
+      <summary class="bw-text-link"><%= t("billie.finance.ui.enter_or_edit_balance") %></summary>
       <%= form_with model: @profile, scope: :finance_profile, url: finance_profile_path, method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
         <%= hidden_field_tag :return_to, "forecast" %>
         <div class="bw-field">
-          <%= form.label :current_balance, "Cash balance (#{@profile.currency})" %>
+          <%= form.label :current_balance, t("billie.finance.ui.cash_balance_currency", currency: @profile.currency) %>
           <%= form.number_field :current_balance, step: "0.01", required: true %>
-          <small>A manual override pauses automatic updates until you switch back to the account total.</small>
+          <small><%= t("billie.finance.ui.a_manual_override_pauses_automatic_updates_until_you_switch_back_to_the_account") %></small>
         </div>
-        <%= form.submit "Save balance", class: "bw-button bw-button-outline" %>
+        <%= form.submit t("billie.finance.ui.save_balance"), class: "bw-button bw-button-outline" %>
       <% end %>
     </details>
     <div class="bw-assumptions">
-      <h3>What goes into this estimate</h3>
+      <h3><%= t("billie.finance.ui.what_goes_into_this_estimate") %></h3>
       <ul><% Array(@forecast[:assumptions]).each do |assumption| %><li><%= assumption %></li><% end %></ul>
     </div>
   </section>
@@ -155,25 +155,25 @@
 <section class="bw-panel bw-panel-flush bw-section-gap" id="account-balances" aria-labelledby="account-balances-title">
   <div class="bw-panel-heading">
     <div>
-      <h2 id="account-balances-title">Your account balances</h2>
-      <p>Latest statement per account, summed automatically. Credit card balances are excluded from cash.</p>
+      <h2 id="account-balances-title"><%= t("billie.finance.ui.your_account_balances") %></h2>
+      <p><%= t("billie.finance.ui.latest_statement_per_account_summed_automatically_credit_card_balances_are_exclu") %></p>
     </div>
-    <%= link_to "Upload statements →", finance_statements_path, class: "bw-text-link" %>
+    <%= link_to t("billie.finance.ui.upload_statements"), finance_statements_path, class: "bw-text-link" %>
   </div>
   <% if @balance_summary[:accounts].any? %>
     <div class="bw-table-scroll">
       <table class="bw-table bw-account-balances-table">
-        <thead><tr><th scope="col">Account</th><th scope="col">Balance date</th><th scope="col">Balance</th><th scope="col">Details</th></tr></thead>
+        <thead><tr><th scope="col"><%= t("billie.finance.ui.account") %></th><th scope="col"><%= t("billie.finance.ui.balance_date") %></th><th scope="col"><%= t("billie.finance.ui.balance") %></th><th scope="col"><%= t("billie.finance.ui.details") %></th></tr></thead>
         <tbody>
           <% @balance_summary[:accounts].each do |item| %>
             <tr data-account-id="<%= item[:account].id %>" data-balance-status="<%= item[:status] %>">
               <td><strong><%= item[:account].display_name %></strong><small class="bw-account-source"><%= item[:statement]&.filename %></small></td>
               <td class="bw-nowrap"><%= finance_date(item[:as_of]) %></td>
-              <td class="bw-nowrap"><% if item[:status].to_s == "known" %><%= finance_money(item[:balance], @profile.currency) %><% elsif item[:status].to_s == "excluded_credit" && item[:credit_balance] %>Owed <%= finance_money(item[:credit_balance], @profile.currency) %><% else %>Not included<% end %></td>
+              <td class="bw-nowrap"><% if item[:status].to_s == "known" %><%= finance_money(item[:balance], @profile.currency) %><% elsif item[:status].to_s == "excluded_credit" && item[:credit_balance] %><%= t("billie.finance.ui.owed") %> <%= finance_money(item[:credit_balance], @profile.currency) %><% else %><%= t("billie.finance.ui.not_included") %><% end %></td>
               <td>
                 <%= finance_account_balance_status(item) %>
                 <% if item[:status].to_s == "unknown_kind" && item[:statement].present? %>
-                  <small class="bw-account-source"><%= link_to "Choose the account type →", finance_statements_path(anchor: "statement-#{item[:statement].id}"), class: "bw-text-link" %></small>
+                  <small class="bw-account-source"><%= link_to t("billie.finance.ui.choose_the_account_type"), finance_statements_path(anchor: "statement-#{item[:statement].id}"), class: "bw-text-link" %></small>
                 <% end %>
               </td>
             </tr>
@@ -182,28 +182,28 @@
       </table>
     </div>
     <div class="bw-account-total">
-      <span><%= @balance_summary[:complete] ? "Automatic cash total" : "Known cash balances · partial total" %></span>
-      <strong><%= @balance_summary[:total].present? ? finance_money(@balance_summary[:total], @profile.currency) : "Not available" %></strong>
+      <span><%= @balance_summary[:complete] ? t("billie.finance.ui.automatic_cash_total") : t("billie.finance.ui.known_cash_balances_partial_total") %></span>
+      <strong><%= @balance_summary[:total].present? ? finance_money(@balance_summary[:total], @profile.currency) : t("billie.finance.ui.not_available") %></strong>
     </div>
     <% if @balance_summary[:credit_total].present? %>
       <div class="bw-account-total bw-account-total-owed" id="credit-owed">
-        <span>Owed on credit cards · <%= pluralize(@balance_summary[:credit_count], "card") %> (not part of cash)</span>
+        <span><%= t("billie.finance.ui.credit_owed_excluded", count: finance_count(@balance_summary[:credit_count], "card")) %></span>
         <strong><%= finance_money(@balance_summary[:credit_total], @profile.currency) %></strong>
       </div>
     <% end %>
   <% else %>
     <div class="bw-empty-state bw-balance-empty">
-      <h3>No identified accounts yet.</h3>
+      <h3><%= t("billie.finance.ui.no_identified_accounts_yet") %></h3>
       <p><%= finance_balance_setup_message(@balance_summary) %></p>
-      <%= link_to "Open Statement history →", finance_statements_path(anchor: "statement-history"), class: "bw-text-link" %>
+      <%= link_to t("billie.finance.ui.open_statement_history"), finance_statements_path(anchor: "statement-history"), class: "bw-text-link" %>
     </div>
   <% end %>
   <% if @balance_summary[:unassigned_statements].any? %>
     <div class="bw-unassigned-statements" id="unassigned-statements">
-      <h3>Some statements need an account</h3>
-      <p>These statements are not included in the automatic total. Choose an existing account or add its bank and last four digits in Statement history. Choosing an account does not fill in a missing closing balance; check the Saved balance column to see what is available.</p>
+      <h3><%= t("billie.finance.ui.some_statements_need_an_account") %></h3>
+      <p><%= t("billie.finance.ui.these_statements_are_not_included_in_the_automatic_total_choose_an_existing_acco") %></p>
       <ul><% @balance_summary[:unassigned_statements].each do |statement| %><li><%= link_to statement.filename, finance_statements_path(anchor: "statement-#{statement.id}") %></li><% end %></ul>
     </div>
   <% end %>
-  <p class="bw-table-footnote">These are balances on the dates shown. Upload newer statements to refresh them. This app does not connect to your banks or retrieve live balances.</p>
+  <p class="bw-table-footnote"><%= t("billie.finance.ui.these_are_balances_on_the_dates_shown_upload_newer_statements_to_refresh_them_th") %></p>
 </section>

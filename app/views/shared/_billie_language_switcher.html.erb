@@ -1,0 +1,6 @@
+<nav class="bw-language-switcher" aria-label="<%= t('billie.layout.language') %>">
+  <% {"en" => "English", "zh-CN" => "中文"}.each do |locale, label| %>
+    <%= link_to label, billie_language_path(locale), lang: locale, hreflang: locale,
+      "aria-current": ("true" if I18n.locale.to_s == locale), data: {turbo: false} %>
+  <% end %>
+</nav>

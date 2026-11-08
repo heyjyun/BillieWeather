@@ -1,0 +1,476 @@
+en:
+  billie:
+    finance:
+      ui:
+        a_clearer_financial_picture: A clearer financial picture.
+        a_clearer_outlook_starts_here: A clearer outlook starts here.
+        a_fresh_perspective: A FRESH PERSPECTIVE
+        a_fresh_perspective_on_your_finances: A fresh perspective on your finances.
+        a_fresh_start: A FRESH START
+        a_manual_override_pauses_automatic_updates_until_you_switch_back_to_the_account: A manual override pauses
+          automatic updates until you switch back to the account total.
+        a_projection_using_your_account_balances_and_the_patterns_in_your_income_and_spe: A projection using your
+          account balances and the patterns in your income and spending.
+        a_quick_guide: A QUICK GUIDE
+        a_useful_record: A useful record,
+        account: Account
+        account_label: Account label
+        account_type: Account type
+        account_type_needs_confirmation: Account type needs confirmation
+        account_unidentified_no_closing_balance_saved: Account unidentified; no closing balance saved
+        across_imported_statement_dates: Across imported statement dates
+        action: Action
+        actions: Actions
+        actions_to_consider: Actions to consider
+        adjust_the_outlook_without_changing_your_actual_transactions: Adjust the outlook without changing your actual
+          transactions.
+        after_your_scenario_adjustments: After your scenario adjustments
+        all_categories: All categories
+        all_time: All time
+        all_transactions: All transactions
+        amount: Amount
+        amounts_in: Amounts in
+        analysis_can_be_incomplete_or_incorrect_it_is_for_financial_organization_and_gen: Analysis can be incomplete
+          or incorrect. It is for financial organization and general education, not individualized investment, legal,
+          or tax advice. Verify important decisions and current tax rules with an appropriate professional.
+        analysis_consent: I agree to send the displayed aggregate summary and tax context to %{service} for this
+          analysis.
+        analysis_privacy: Basic analysis uses your totals and categories. Optional Billie Insights send an aggregate
+          financial summary to %{service}; it does not send your original statements, transaction descriptions,
+          or account email.
+        apply_dates: Apply dates
+        apply_filters: Apply filters
+        as_of_date: As of %{date}
+        ask_billie_again: Ask Billie again
+        ask_billie_for_tax_preparation_insights: Ask Billie for tax preparation insights
+        auto_assigned_categories_are_a_starting_point_you_can_change_them_here: Auto-assigned categories are a starting
+          point. You can change them here.
+        automatic_cash_total: Automatic cash total
+        automatic_detection_prefers_transaction_date_then_date_then_posting_dates_choose: Automatic detection prefers
+          Transaction Date, then Date, then posting dates. Choose only the CSV you want to retry when using an override.
+        automatic_transaction_date_first: Automatic (transaction date first)
+        average_daily_net_cash_flow: Average daily net cash flow
+        back_to_transactions: ← Back to transactions
+        back_to_upload: ← Back to upload
+        balance: Balance
+        balance_date: Balance date
+        balance_date_not_saved: Balance date not saved
+        balance_not_readable: Balance not readable
+        bank_account: Bank account
+        bank_deposits_are_not_automatically_taxable_income_this_is_a_preparation_checkli: Bank deposits are not
+          automatically taxable income. This is a preparation checklist, not a completed tax return.
+        bank_name: Bank name
+        basic_analysis: Basic analysis
+        basic_analysis_rules_based: Basic analysis · rules-based
+        before_you_upload: Before you upload
+        billie_insights: Billie Insights
+        billie_insights_2: · Billie Insights
+        billie_is_not_connected_yet_basic_analysis_is_available_without_an_ai_service: Billie is not connected yet.
+          Basic analysis is available without an AI service.
+        billie_is_not_connected_yet_the_checklist_below_is_available_without_an_ai_servi: Billie is not connected
+          yet. The checklist below is available without an AI service.
+        billie_reviews_your_financial_summary_and_your_saved_tax_context_to_help_you_org: Billie reviews your financial
+          summary and your saved tax context to help you organize records and prepare questions for a tax professional.
+        bring_each_bank_account_together: Bring each bank account together
+        bring_your_numbers_together: Bring your numbers together.
+        cancel: Cancel
+        cancel_import: Cancel import
+        cash_account: Cash account
+        cash_accounts: Cash accounts
+        cash_balance: Cash balance
+        cash_balance_currency: Cash balance (%{currency})
+        cash_balance_from_statements: Cash balance from statements
+        cash_entered_date: Entered %{date}
+        cash_flow_forecast: Cash flow forecast
+        cash_on_hand: Cash on hand
+        cash_on_hand_currency: Cash you are holding (%{currency})
+        categories_and_context: Categories and context
+        categories_help_organize_records_they_do_not_determine_tax_deductibility_transfe: Categories help organize
+          records; they do not determine tax deductibility. Transfers and excluded transactions are omitted from
+          income and expense totals.
+        category: Category
+        change_account: Change account
+        change_dates: Change dates
+        check_each_pdf_s_extracted_rows_before_adding_its_transactions: Check each PDF’s extracted rows before adding
+          its transactions.
+        check_every_row_against_your_statement: Check every row against your statement.
+        check_uncategorized_transactions_transfers_and_any_business_related_items: Check uncategorized transactions,
+          transfers, and any business-related items.
+        checking_savings_and_cash_you_hold: Checking, savings, and cash you hold
+        checking_savings_cash: Checking / savings (cash)
+        choose_account: Choose account
+        choose_account_type: Choose account type
+        choose_different_dates_or_view_all_your_imported_transactions: Choose different dates or view all your imported
+          transactions.
+        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: Choose one or more CSV exports or text-based
+          PDFs from your bank.
+        choose_statements_from_your_bank: Choose statements from your bank
+        choose_the_account_type: Choose the account type →
+        choose_the_dates_for_your_income_expenses_and_transactions: Choose the dates for your income, expenses,
+          and transactions.
+        clarity_starts_with_context: Clarity starts with context.
+        collect_applicable_w_2_and_1099_forms_mortgage_or_student_loan_interest_statemen: Collect applicable W-2
+          and 1099 forms, mortgage or student-loan interest statements, health coverage records, receipts, and your
+          prior-year return.
+        confirm_and_import_transactions: Confirm and import transactions
+        confirm_sign_and_amount: Confirm sign and amount
+        context: '· Context:'
+        credit_card: Credit card
+        credit_card_excluded_from_cash: Credit card · excluded from cash
+        credit_cards: Credit cards
+        credit_owed_excluded: Owed on credit cards · %{count} (not part of cash)
+        csv_check_the_columns: 'CSV: check the columns'
+        dashboard: Dashboard
+        date: Date
+        date_column_optional_override: Date column (optional override)
+        date_description_and_amount_import_transaction_activity_automatic_cash_balances: Date, Description, and
+          Amount import transaction activity. Automatic cash balances also need a Balance column and account details
+          such as Bank, Account Number, and Account Type (Checking, Savings, or Credit Card). These additional columns
+          are optional for importing transactions.
+        date_range_not_applied: Date range not applied
+        dates_use_column: Dates use the %{column} column.
+        description: Description
+        details: Details
+        discard: Discard
+        discard_this_pdf_review: Discard this PDF review
+        download_sample_csv: Download sample CSV
+        e_g_chase: e.g. Chase
+        e_g_everyday_checking: e.g. Everyday checking
+        each_cash_account_contributes_its_latest_statement_balance_once_older_statements: Each cash account contributes
+          its latest statement balance once. Older statements for the same account are not added again.
+        each_file_has_its_own_result_transactions_are_saved_to_your_account_original_fil: Each file has its own
+          result. Transactions are saved to your account; original files are not retained.
+        each_file_is_processed_separately_a_failed_file_does_not_affect_successful_impor: Each file is processed
+          separately. A failed file does not affect successful imports.
+        end_date: End date
+        enter_or_edit_amount: ✎ Enter or edit amount
+        enter_or_edit_balance: ✎ Enter or edit balance
+        entered_by_you_physical_cash_is_not_on_any_statement: Entered by you. Physical cash is not on any statement.
+        estimate_not_a_guarantee: Estimate, not a guarantee
+        every_transaction_has_a_story: Every transaction has a story.
+        example_10_means_10_less_spending: 'Example: −10 means 10% less spending.'
+        example_10_means_10_more_income: 'Example: 10 means 10% more income.'
+        exclude_from_totals_and_forecasts: Exclude from totals and forecasts
+        excluded: '· Excluded:'
+        excluded_2: Excluded
+        excluded_from_totals: Excluded from totals
+        expense_change: Expense change (%)
+        expenses: Expenses
+        expenses_2: · expenses
+        expires_in: In %{duration}
+        explore_a_scenario: Explore a scenario
+        explore_insights: Explore insights
+        explore_spending_observations_and_practical_next_steps_organize_transactions_tha: Explore spending observations
+          and practical next steps. Organize transactions that may need a closer look at tax time.
+        export_csv: Export CSV
+        export_records: Export records
+        extracted_rows: Extracted rows
+        extraction_notes: Extraction notes (%{count})
+        financial_context: Financial context
+        financial_observations: Financial observations
+        flag_for_tax_review: Flag for tax review
+        flagged_for_tax_review: Flagged for tax review
+        flagging_a_transaction_does_not_make_it_deductible_save_receipts_and_supporting: Flagging a transaction
+          does not make it deductible. Save receipts and supporting documents, and confirm the applicable treatment
+          for your jurisdiction.
+        forecast_chart_description: Projected balance from %{current} today to %{projected} in %{days} days
+        forecast_horizon: Forecast horizon
+        forecast_model: Forecast model
+        forecast_starts_today: The forecast starts today, %{date}.
+        from_statements_to_clarity: FROM STATEMENTS TO CLARITY
+        gather_u_s_personal_tax_documents: Gather U.S. personal tax documents
+        generate_an_analysis_to_see_observations_and_actions_based_on_your_imported_tran: Generate an analysis to
+          see observations and actions based on your imported transactions.
+        generate_basic_analysis: Generate basic analysis
+        generate_billie_insights: Generate Billie Insights
+        generated: Generated
+        get_your_tax_records_ready: Get your tax records ready
+        historical_average: Historical average
+        history_days_coverage: Based on %{days} days of historical coverage
+        i_checked_the_dates_descriptions_and_signed_amounts_excluded_rows_will_not_be_im: I checked the dates, descriptions,
+          and signed amounts. Excluded rows will not be imported.
+        i_reviewed_the_included_rows_against_my_statement: I reviewed the included rows against my statement.
+        identify_this_account: Identify this account
+        if_the_selected_model_is_unavailable_the_result_shows_the_model_used_and_explain: If the selected model
+          is unavailable, the result shows the model used and explains the change.
+        illustrative_range: Illustrative range
+        import_a_statement_first_so_billie_has_something_to_review: Import a statement first so Billie has something
+          to review.
+        import_a_statement_first_to_generate_an_analysis: Import a statement first to generate an analysis.
+        import_a_statement_to_see_your_income_and_expenses_in_one_place: Import a statement to see your income and
+          expenses in one place.
+        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: Import CSV or text-based
+          PDF bank statements together. We’ll organize the transactions into your financial picture.
+        import_statements: Import statements
+        imported: Imported
+        in_days: In %{days} days
+        in_the_selected_period: In the selected period
+        in_the_selected_period_2: in the selected period
+        in_your_financial_picture: in your financial picture
+        include: Include
+        include_row: Include row %{number}
+        include_this_transaction_in_the_records_you_review_with_your_tax_professional: Include this transaction
+          in the records you review with your tax professional.
+        income: Income
+        income_2: ': income'
+        income_change: Income change (%)
+        income_minus_expenses: Income minus expenses
+        insights_use_your_full_imported_history: Insights use your full imported history.
+        irs_gather_your_documents: 'IRS: gather your documents →'
+        keep_this_analysis_in_perspective: Keep this analysis in perspective
+        keep_this_in_perspective: Keep this in perspective
+        keep_your_records_accurate_and_mark_anything_that_needs_a_closer_look: Keep your records accurate and mark
+          anything that needs a closer look.
+        known_cash_balances_partial_total: Known cash balances · partial total
+        last_30_days: Last 30 days
+        last_four_account_digits: Last four account digits
+        last_month: Last month
+        last_year: Last year
+        latest_6_months_with_transactions_in_this_period: Latest 6 months with transactions in this period
+        latest_statement_per_account_summed_automatically_credit_card_balances_are_exclu: Latest statement per account,
+          summed automatically. Credit card balances are excluded from cash.
+        let_your_numbers: Let your numbers
+        make_room_for_what_s_next: MAKE ROOM FOR WHAT’S NEXT
+        make_the_details_yours: MAKE THE DETAILS YOURS
+        match_records_to_official_tax_documents_and_review_your_individual_circumstances: Match records to official
+          tax documents and review your individual circumstances with a qualified tax professional.
+        model: 'Model:'
+        money_in_money_out: Money in. Money out.
+        month: Month
+        monthly_aggregate_totals_included_in_analysis: Monthly aggregate totals included in analysis
+        monthly_totals_from_your_imported_transactions: Monthly totals from your imported transactions
+        name_for_this_account: Name for this account
+        names_are_read_from_your_statements_use_to_rename_one_the_name_you_type_is_alway: Names are read from your
+          statements. Use ✎ to rename one; the name you type is always the one shown.
+        needs_review: Needs review
+        net: Net
+        net_cash_flow: Net cash flow
+        next: Next →
+        next_30_days: Next 30 days
+        next_60_days: Next 60 days
+        next_90_days: Next 90 days
+        no_categorized_expenses_yet: No categorized expenses yet.
+        no_closing_balance_saved: No closing balance saved
+        no_credit_cards_identified_yet_upload_a_credit_card_statement_that_includes_the: No credit cards identified
+          yet. Upload a credit card statement that includes the bank and the last four digits.
+        no_identified_accounts_yet: No identified accounts yet.
+        no_matching_transactions: No matching transactions.
+        no_statements_yet: No statements yet.
+        no_transactions_in_this_period: No transactions in this period.
+        no_transactions_match_these_dates: No transactions match these dates.
+        not_a_tax_decision: not a tax decision.
+        not_available: Not available
+        not_entered_yet: Not entered yet
+        not_imported: Not imported
+        not_imported_yet: · Not imported yet
+        not_included: Not included
+        not_included_in_automatic_cash_total: Not included in automatic cash total
+        not_linked_to_an_account_yet: not linked to an account yet.
+        not_specified: Not specified
+        nothing_appears_in_your_dashboard_until_you_confirm_this_import: Nothing appears in your dashboard until
+          you confirm this import.
+        open_statement_history: Open Statement history →
+        or_add_an_account: 'Or add an account:'
+        owed: Owed
+        owed_amount: Owed %{amount}
+        owed_on_credit_cards: 'Owed on credit cards:'
+        page_of_total: Page %{page} of %{total}
+        pdf_extraction_can_confuse_dates_amounts_running_balances_and_deposit_or_withdra: PDF extraction can confuse
+          dates, amounts, running balances, and deposit or withdrawal signs. Edit errors below, leave out summary
+          lines, and confirm only the transactions you recognize. Positive amounts mean money in; negative amounts
+          mean money out.
+        pdf_review_anything_unclear: 'PDF: review anything unclear'
+        pdfs_are_imported_automatically_when_everything_is_clear_including_the_statement: PDFs are imported automatically
+          when everything is clear, including the statement year and each amount's sign. Anything unclear gets its
+          own review step. Income is positive; expenses are negative. CSV dates use YYYY-MM-DD or MM/DD/YYYY.
+        pdfs_waiting_for_review: PDFs waiting for review
+        personal: Personal
+        preparation_guidance_depends_on_your_circumstances: Preparation guidance depends on your circumstances.
+        previous: ← Previous
+        projected_balance_in_days: Projected balance in %{days} days
+        projected_cash_balance: Projected cash balance
+        questions_for_your_tax_professional: Questions for your tax professional
+        recent_transactions: Recent transactions
+        records_to_organize: Records to organize
+        remove: Remove
+        remove_this_statement_and_its_transactions: Remove this statement and its transactions
+        rename: ✎ Rename
+        reset: Reset
+        result: Result
+        retry_only_the_files_that_were_not_imported_pdfs_marked_needs_review_are_saved_b: Retry only the files that
+          were not imported. PDFs marked “Needs review” are saved below until they expire.
+        review: Review
+        review_2: Review →
+        review_account_balances: Review account balances →
+        review_expires: Review expires
+        review_federal_and_state_requirements: Review federal and state requirements
+        review_flagged_transactions: Review flagged transactions →
+        review_pdf_statement: Review PDF statement
+        review_transaction: Review transaction
+        review_transaction_2: Review transaction.
+        review_transaction_description: Review %{description}
+        review_your_extracted_transactions: Review your extracted transactions.
+        review_your_spending_refine_categories_and_flag_records_for_tax_preparation: Review your spending, refine
+          categories, and flag records for tax preparation.
+        review_your_transaction_categories: Review your transaction categories
+        reviews_expire_30_minutes_after_upload_if_one_expires_upload_that_pdf_again_disc: Reviews expire 30 minutes
+          after upload. If one expires, upload that PDF again. Discarding a review does not affect imported statements.
+        row_date: Date for row %{number}
+        row_description: Description for row %{number}
+        row_signed_amount: Signed amount for row %{number}
+        sample_transactions_are_examples_import_them_only_if_you_want_to_try_the_workflo: Sample transactions are
+          examples. Import them only if you want to try the workflow.
+        save_account: Save account
+        save_balance: Save balance
+        save_cash_on_hand: Save cash on hand
+        save_changes: Save changes
+        save_name: Save name
+        save_tax_context: Save tax context
+        saved_balance: Saved balance
+        search_transactions: Search transactions
+        search_transactions_2: Search transactions…
+        see_a_little_further_ahead: See a little further ahead.
+        see_the_account_breakdown: See the account breakdown ↓
+        select_several_files_at_once_including_a_mix_of_csvs_and_text_based_pdfs_scanned: Select several files at
+          once, including a mix of CSVs and text-based PDFs. Scanned or image-only PDFs need a text-based PDF or
+          CSV export; OCR is not available.
+        self_employed: Self-employed
+        showing: Showing
+        signed_amount_currency: Signed amount (%{currency})
+        small_business: Small business
+        small_steps_clearer_direction: SMALL STEPS, CLEARER DIRECTION
+        some_statements_need_an_account: Some statements need an account
+        some_statements_still_need_an_account_or_a_readable_dated_balance: Some statements still need an account
+          or a readable, dated balance.
+        start_date: Start date
+        starting_cash_balance: Starting cash balance
+        statement: Statement
+        statement_account_name: 'Read from your statement: %{name}. Leave empty to use that name.'
+        statement_csv_or_pdf_files: Statement CSV or PDF files
+        statement_currency: 'Statement currency:'
+        statement_history: Statement history
+        statements_from_the_same_account_contribute_only_the_latest_balance_removing_a_s: Statements from the same
+          account contribute only the latest balance. Removing a statement also removes its transactions and recalculates
+          the account total.
+        status: Status
+        still_need_a_category: still need a category.
+        still_need_a_type_cash_or_credit: still need a type (cash or credit).
+        summary_used_for_analysis: Summary used for analysis
+        tax_country_or_jurisdiction: Tax country or jurisdiction
+        tax_jurisdiction: 'Tax jurisdiction:'
+        tax_preparation: Tax preparation
+        tax_review: '· Tax review:'
+        tax_review_2: Tax review
+        tell_you_more: tell you more.
+        the_everyday_details: THE EVERYDAY DETAILS
+        the_original_date_and_amount_stay_tied_to_the_imported_statement_remove_and_re_i: The original date and
+          amount stay tied to the imported statement. Remove and re-import a corrected file if those values need
+          to change.
+        the_shaded_envelope_combines_daily_income_and_spending_bounds_it_has_no_calibrat: The shaded envelope combines
+          daily income and spending bounds. It has no calibrated probability for the total cash balance.
+        these_are_balances_on_the_dates_shown_upload_newer_statements_to_refresh_them_th: These are balances on
+          the dates shown. Upload newer statements to refresh them. This app does not connect to your banks or retrieve
+          live balances.
+        these_statements_are_not_included_in_the_automatic_total_choose_an_existing_acco: These statements are not
+          included in the automatic total. Choose an existing account or add its bank and last four digits in Statement
+          history. Choosing an account does not fill in a missing closing balance; check the Saved balance column
+          to see what is available.
+        this_draft_expires_after_30_minutes: This draft expires after 30 minutes.
+        this_forecast_starts_from_a_partial_account_total: This forecast starts from a partial account total.
+        this_information_adds_context_to_the_next_analysis_billieweather_does_not_calcul: This information adds
+          context to the next analysis. BillieWeather does not calculate tax liability or file tax returns.
+        this_is_a_different_account_with_the_same_bank_and_last_four_digits: This is a different account with the
+          same bank and last four digits
+        this_line_is_based_on_patterns_in_your_past_transactions_not_bill_due_dates_or_c: This line is based on
+          patterns in your past transactions, not bill due dates or confirmed future payments. Statement balances
+          are snapshots on their printed dates, not live bank balances.
+        this_month: This month
+        this_year: This year
+        time_period: Time period
+        today: Today
+        total_cash: Total cash
+        total_cash_partial_some_accounts_need_attention: Total cash · partial, some accounts need attention
+        total_expenses: Total expenses
+        total_income: Total income
+        total_owed_on_credit_cards: Total owed on credit cards ·
+        transaction: Transaction
+        transaction_type: Transaction type
+        transactions: Transactions
+        transactions_are_organized_and_categorized_automatically_as_you_import: Transactions are organized and categorized
+          automatically as you import
+        transfers: '· Transfers:'
+        transfers_and_excluded_items_omitted: Transfers and excluded items omitted
+        try_another_search_or_clear_your_filters: Try another search or clear your filters.
+        turn_information_into_next_steps: TURN INFORMATION INTO NEXT STEPS
+        u_s_personal_tax_preparation: U.S. PERSONAL TAX PREPARATION
+        uncategorized: 'Uncategorized:'
+        understand_patterns_consider_practical_actions_and_get_your_records_ready_for_ta: Understand patterns, consider
+          practical actions, and get your records ready for tax season.
+        united_states: United States
+        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: Up to 10 files · 2 MB per file · 10 MB
+          total · CSV and text-based PDF
+        update_forecast: Update forecast
+        upload_a_statement: Upload a statement
+        upload_a_statement_review_your_categories_then_generate_your_first_analysis: Upload a statement, review
+          your categories, then generate your first analysis.
+        upload_statement: Upload statement
+        upload_statements: Upload statements →
+        upload_statements_2: Upload statements
+        upload_your_first_csv_or_text_based_pdf_statement_to_see_income_spending_and_a_c: Upload your first CSV
+          or text-based PDF statement to see income, spending, and a cash flow forecast based on your own transactions.
+        upload_your_first_statement: Upload your first statement
+        upload_your_first_statement_to_start_connecting_the_dots: Upload your first statement to start connecting
+          the dots.
+        use_an_existing_account: Use an existing account
+        use_automatic_account_total: Use automatic account total
+        use_date_description_and_amount_separate_debit_and_credit_columns_are_also_suppo: 'Use Date, Description,
+          and Amount. Separate Debit and Credit columns are also supported. Dates are detected automatically: Transaction
+          Date first, then Date, then posting dates. Each import result names the column used.'
+        use_for_duplicates_or_items_that_should_not_affect_your_financial_picture: Use for duplicates or items that
+          should not affect your financial picture.
+        use_one_currency: Use one currency
+        use_the_same_bank_and_last_four_digits_for_every_statement_from_this_account_do: Use the same bank and last
+          four digits for every statement from this account. Do not enter the full account number.
+        use_this_account: Use this account
+        view_account_balances: View account balances →
+        view_all: View all →
+        view_all_dates: View all dates
+        view_monthly_figures: View monthly figures
+        view_transactions: View transactions →
+        waiting_for_a_usable_starting_balance: Waiting for a usable starting balance
+        what_goes_into_this_estimate: What goes into this estimate
+        what_you_owe_on_each_card: What you owe on each card
+        what_your_numbers_say: WHAT YOUR NUMBERS SAY
+        when_account_details_and_a_dated_balance_are_present_we_total_the_latest_balance: When account details and
+          a dated balance are present, we total the latest balance for each cash account. If an account is unclear,
+          choose it in Statement history. Credit cards are excluded from cash.
+        where_it_goes: Where it goes
+        workspace_currency: Your current workspace uses %{currency}. Currency conversion is not applied.
+        you_have_the_final_say: YOU HAVE THE FINAL SAY
+        your_account_balances: Your account balances
+        your_accounts: Your accounts
+        your_cash_flow_outlook: Your cash flow outlook
+        your_expense_categories: Your expense categories
+        your_financial_outlook: Your financial outlook
+        your_financial_story_starts_here: Your financial story starts here.
+        your_imported_files_accounts_and_transaction_counts: Your imported files, accounts, and transaction counts
+        your_latest_transactions_will_appear_here: Your latest transactions will appear here.
+        your_money_in_focus: YOUR MONEY, IN FOCUS
+        your_next_insight_is_in_your_numbers: Your next insight is in your numbers.
+        your_numbers_thoughtfully_explained: Your numbers, thoughtfully explained
+        your_records_or_profile_changed_since_billie_prepared_these_tax_insights_ask_bil: Your records or profile
+          changed since Billie prepared these tax insights. Ask Billie again to reflect the latest information.
+        your_records_or_profile_changed_since_this_analysis_was_generated_generate_a_new: Your records or profile
+          changed since this analysis was generated. Generate a new analysis to reflect the latest information.
+        your_starting_balance_is_not_available_yet: Your starting balance is not available yet.
+        your_starting_point: Your starting point
+        your_tax_context: Your tax context
+        your_transactions_belong_here: Your transactions belong here.
+        your_upload_results: Your upload results
+        dashboard_periods: Dashboard time periods
+        monthly_income_expenses: Monthly income and expenses
+        income_amount: 'Income: %{amount}'
+        expenses_amount: 'Expenses: %{amount}'
+        transactions_found:
+          one: transaction found
+          other: transactions found

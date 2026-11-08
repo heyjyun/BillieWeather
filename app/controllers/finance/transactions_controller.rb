@@ -62,14 +62,14 @@ module Finance
     # When the category changed, remember it for this merchant so future imports (and
     # other Uncategorized rows from the same merchant) are filed the same way.
     def update_notice
-      notice = "Transaction updated. Your totals and forecast now reflect this change."
+      notice = I18n.t("billie.backend.transaction_updated")
       return notice unless @transaction.saved_change_to_category?
 
       similar = MerchantRule.remember!(user: current_user, description: @transaction.description, amount: @transaction.amount, category: @transaction.category)
       return notice if similar.nil?
 
       merchant = Categorizer.merchant_key(@transaction.description).titleize
-      notice + " We'll file future “#{merchant}” transactions under #{@transaction.category}" + ((similar > 0) ? " and updated #{similar} similar transaction#{"s" unless similar == 1}." : ".")
+      notice + I18n.t("billie.backend.merchant_remembered", merchant: merchant, category: I18n.t("billie.labels.#{@transaction.category}", default: @transaction.category)) + ((similar > 0) ? I18n.t("billie.backend.similar_updated", count: similar) : ".")
     end
 
     def load_transaction

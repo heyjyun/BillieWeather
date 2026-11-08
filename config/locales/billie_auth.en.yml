@@ -1,0 +1,96 @@
+en:
+  billie:
+    auth:
+      home:
+        eyebrow: YOUR FINANCES, IN FOCUS
+        intro: Turn your bank statements into a clear view of your spending and a simple cash flow forecast.
+        dashboard: Go to dashboard
+        no_bank_login: No bank login required
+        free_analysis: Free basic analysis
+        art_label: Import a statement, review your transactions, and see your cash flow forecast
+        outlook: YOUR FINANCIAL OUTLOOK
+        clear_view_html: A clear view of<br>your money.
+        in_one_place_html: Your statements, transactions,<br>and cash flow in one place.
+        step_import: Import your statements
+        step_review: Review your transactions
+        step_forecast: See your cash flow forecast
+        real_numbers: Built around your real numbers
+        less_guesswork: Less guesswork.
+        more_room: More room to plan.
+        clarity: FROM STATEMENTS TO CLARITY
+        what_it_does: What it does
+        import_title: Import statements.
+        import_description: Upload a CSV or a text-based PDF statement from your bank, review each transaction,
+          and keep the categories that fit.
+        spending_title: See where your money goes.
+        spending_description: A dashboard shows income, spending, categories, and recent activity in one place.
+        forecast_title: Forecast your cash flow.
+        forecast_description: Set your current balance and see how it could change if recent patterns continue.
+        one_step: ONE STEP AT A TIME
+        how_it_works: How it works
+        how_signup: Create an account and sign in.
+        how_upload: Upload a bank statement.
+        how_no_bank_login: No bank login is required.
+        how_review: Review the imported transactions.
+        how_open: Open the dashboard and forecast.
+        tax_title: Prepare for tax season.
+        tax_description: Flag transactions for review and keep an organized record to share with your tax professional.
+        analysis_title: Free basic analysis.
+        analysis_description: Generate a written summary of your spending patterns when you want one. Basic analysis
+          is available without a paid AI service.
+        disclaimer: BillieWeather provides financial organization and estimates only. It is not individualized financial,
+          legal, or tax advice.
+      create_an_account: Create an account
+      log_in: Log in
+      welcome_back: WELCOME BACK
+      outlook_awaits: Your financial outlook awaits.
+      login_description: Log in to your BillieWeather workspace.
+      email: Email
+      password: Password
+      remember_me: Keep me signed in
+      authentication_code: Authentication code (if enabled)
+      new_here: New to BillieWeather?
+      forgot_password: Forgot your password?
+      create_your_account: Create your account
+      signup_eyebrow: A CLEARER FINANCIAL FORECAST
+      signup_description: Bring your finances into focus, one statement at a time.
+      first_name: First name
+      last_name: Last name
+      unique_password_hint: Use at least %{count} characters and a unique password.
+      confirm_password: Confirm password
+      create_account: Create account
+      already_have_account: Already have an account?
+      reset_password: Reset your password
+      recovery_eyebrow: BACK TO A CLEARER OUTLOOK
+      reset_description: Enter your account email to request a password reset link.
+      send_reset_link: Send reset link
+      back_to_login: Back to log in
+      choose_password: Choose a new password
+      fresh_start: A FRESH START
+      protect_workspace: Use a unique password to protect your financial workspace.
+      new_password: New password
+      password_hint: Use at least %{count} characters.
+      confirm_new_password: Confirm new password
+      update_password: Update password
+      google_continue: Continue with Google
+      google_unavailable: Google sign-in is currently unavailable. Use email to continue.
+      email_continue: or continue with email
+      sign_in: Sign In
+      recovery_unavailable: Password recovery is temporarily unavailable. Please try again later.
+      google_connected: Signed in. Google is now connected for future logins.
+      page_expired: Your sign-in page expired. Please enter your details again.
+      google_signed_in: Signed in with Google.
+      google_incomplete: Google sign-in was not completed. Please try again or use email and password.
+      google_link_required: This email already has an account. Log in with your existing password once to connect
+        Google.
+      google_service_unavailable: Google sign-in is currently unavailable. Please use email and password.
+      google_sign_out_first: Sign out before using a different Google account.
+      google_sign_out_before_signup: Sign out before creating an account with a different email.
+      registration_unavailable: New account registration is not available. Please use an invited account.
+      google_failed: Google sign-in could not complete. Please try again or log in with your existing password.
+      google_unverified_identity: Google did not return a verified identity. Please try again.
+      google_unverified_email: Google did not return a verified email address. Please try again.
+      account_unavailable: This account cannot sign in right now. Please use the email login page.
+      authentication_code_required: This account requires an authentication code. Please sign in with email, password,
+        and your authentication code.
+      google_other_account: This account is connected to a different Google account. Please use your existing login.

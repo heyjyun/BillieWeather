@@ -1,6 +1,7 @@
 locales: &locales
   # This is the canonical list of available languages.
   en: English
+  zh-CN: 简体中文
   # ja: 日本語
 
 # The language labels should be the same across all locales.
@@ -9,7 +10,7 @@ en:
     default: Default
     locales: *locales
 
-ja:
+zh-CN:
   locale:
-    default: デフォルト
+    default: 默认
     locales: *locales
