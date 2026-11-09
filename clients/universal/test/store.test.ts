@@ -11,7 +11,7 @@ describe("local SQLite store", () => {
     const { store } = await newStore();
     const bytes = fixtureBytes("basic-amount.csv");
     const result = await importFile(store, bytes, "basic-amount.csv", "USD");
-    expect(result.count).toBe(9);
+    expect(result).toMatchObject({ kind: "imported", format: "csv", count: 9 });
     expect((await store.transactions()).length).toBe(9);
     expect(await store.currency()).toBe("USD");
     await expect(importFile(store, bytes, "copy.csv", "USD")).rejects.toThrow("already imported");

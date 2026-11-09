@@ -44,9 +44,9 @@ export const ja: Messages = {
   },
   import: {
     eyebrow: "データを追加", title: "明細の取り込み",
-    intro: "銀行から書き出した CSV 明細を 1 つ以上選んでください。ファイルはこの端末で読み込まれ、アップロードされることはありません。",
+    intro: "銀行の CSV または PDF 明細を 1 つ以上選んでください。ファイルはこの端末で読み込まれ、アップロードされることはありません。",
     currency: "通貨", currencyLocked: "最初の取り込みで決まりました。変更するには設定でローカルデータを削除してください。",
-    choose: "CSV ファイルを選択", importing: "取り込み中…", requirements: "日付・内容・金額（または出金/入金）の列が必要です。1 ファイル 2 MB、5,000 行まで。",
+    choose: "CSV / PDF ファイルを選択", importing: "取り込み中…", requirements: "日付・内容・金額（または出金/入金）の列が必要です。1 ファイル 2 MB、5,000 行まで。PDF はテキストを選択できるもので 20 ページまで。不明確な行は取り込む前に確認できます。", reviewDiscarded: "{file}：確認を取り消しました。何も取り込まれていません。", reviewQueued: "ほかに {count} 件の PDF が確認待ちです。",
     success: "{file}：{count} 件の取引を取り込みました。", successBalance: "{file}：{count} 件の取引を取り込みました。期末残高 {balance}。",
     failed: "{file}：{message}", genericError: "ファイルを取り込めませんでした。", history: "この端末で取り込んだ明細", historyItem: "{count} 件の取引 · {date}",
     duplicate: "この明細はすでに取り込まれています。", currencyMismatch: "この端末の明細は {currency} です。通貨を変えるにはローカルデータを削除してください。",

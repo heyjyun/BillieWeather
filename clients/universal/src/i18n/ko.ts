@@ -44,9 +44,9 @@ export const ko: Messages = {
   },
   import: {
     eyebrow: "데이터 추가", title: "명세서 가져오기",
-    intro: "은행에서 내보낸 CSV 명세서를 하나 이상 선택하세요. 파일은 이 기기에서만 읽으며 업로드되지 않습니다.",
+    intro: "은행의 CSV 또는 PDF 명세서를 하나 이상 선택하세요. 파일은 이 기기에서만 읽으며 업로드되지 않습니다.",
     currency: "통화", currencyLocked: "처음 가져올 때 정해졌습니다. 바꾸려면 설정에서 로컬 데이터를 삭제하세요.",
-    choose: "CSV 파일 선택", importing: "가져오는 중…", requirements: "날짜, 내용, 금액(또는 출금/입금) 열이 필요합니다. 파일당 최대 2MB, 5,000행.",
+    choose: "CSV 또는 PDF 파일 선택", importing: "가져오는 중…", requirements: "날짜, 내용, 금액(또는 출금/입금) 열이 필요합니다. 파일당 최대 2MB, 5,000행. PDF는 텍스트를 선택할 수 있는 파일이어야 하며 최대 20페이지입니다. 불분명한 행은 가져오기 전에 검토합니다.", reviewDiscarded: "{file}: 검토를 취소했습니다. 아무것도 가져오지 않았습니다.", reviewQueued: "검토를 기다리는 PDF가 {count}개 더 있습니다.",
     success: "{file}: 거래 {count}건을 가져왔습니다.", successBalance: "{file}: 거래 {count}건을 가져왔습니다. 기말 잔액 {balance}.",
     failed: "{file}: {message}", genericError: "파일을 가져올 수 없습니다.", history: "이 기기에서 가져온 명세서", historyItem: "거래 {count}건 · {date}",
     duplicate: "이미 가져온 명세서입니다.", currencyMismatch: "이 기기의 명세서는 {currency}입니다. 통화를 바꾸려면 로컬 데이터를 삭제하세요.",

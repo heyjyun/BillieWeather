@@ -1,0 +1,48 @@
+{
+  "today": "2026-11-09",
+  "rows": [
+    {
+      "bookedOn": "2025-10-02",
+      "description": "Payroll ACME Corp",
+      "amount": "+2400.00"
+    },
+    {
+      "bookedOn": "2025-10-05",
+      "description": "Grocery Market #12",
+      "amount": "-86.35"
+    },
+    {
+      "bookedOn": "2025-10-09",
+      "description": "City Utilities",
+      "amount": "-120.00"
+    },
+    {
+      "bookedOn": "2025-10-15",
+      "description": "Coffee Shop",
+      "amount": "-4.50"
+    },
+    {
+      "bookedOn": "2025-10-20",
+      "description": "Refund Online Store",
+      "amount": "+19.99"
+    },
+    {
+      "bookedOn": "2025-10-28",
+      "description": "Rent Payment",
+      "amount": "-1400.00"
+    }
+  ],
+  "warnings": [
+    {
+      "code": "pdf_generic_1",
+      "vars": {}
+    },
+    {
+      "code": "pdf_generic_2",
+      "vars": {}
+    }
+  ],
+  "closingBalanceCents": 121364,
+  "closingBalanceOn": "2025-10-31",
+  "autoImportable": true
+}

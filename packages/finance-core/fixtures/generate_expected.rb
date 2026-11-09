@@ -61,4 +61,59 @@ errors = JSON.parse(File.read(File.join(root, "statements", "errors.json"))).map
   {name: item["name"], code: code}
 end
 File.write(File.join(out, "errors.json"), JSON.pretty_generate(errors) + "\n")
+
+# PDF statements: pdf/*.txt is the text of each page (pages separated by form feeds),
+# which is what pdf-reader hands to PdfStatementExtractor. Warnings keep their
+# variables so the TypeScript port can be compared message by message.
+module I18n
+  def self.t(key, **vars)
+    code = key.to_s.delete_prefix("billie.backend.")
+    vars.empty? ? code : [code, vars.transform_values { |value| value.is_a?(Date) ? value.iso8601 : value }]
+  end
+end
+
+def pdf_extract(pages)
+  extractor = Finance::PdfStatementExtractor.new(user: OpenStruct.new(id: 0), file: nil, currency: "USD")
+  raise Finance::StatementImporter::ImportError, I18n.t("billie.backend.pdf_no_text") if pages.all?(&:blank?)
+  rows, warnings = extractor.send(:extract_rows, pages.join("\n"))
+  raise Finance::StatementImporter::ImportError, I18n.t("billie.backend.pdf_no_rows") if rows.empty?
+  warnings << I18n.t("billie.backend.pdf_blank_pages") if pages.any?(&:blank?)
+  [extractor, rows, warnings.uniq]
+end
+
+def pdf_warning(warning)
+  index = Finance::PdfStatementExtractor::GENERIC_NOTICES.index(warning)
+  return {code: "pdf_generic_#{index + 1}", vars: {}} if index
+  code, vars = Array(warning)
+  # "Row N: <amount problem>" is one message in Rails; the port keeps the inner code.
+  return {code: Array(vars[:warning]).first, vars: {row: vars[:row]}.merge(Array(vars[:warning])[1] || {})} if code == "pdf_row_warning"
+  {code: code, vars: vars || {}}
+end
+
+pdf_out = File.join(out, "pdf")
+Dir.mkdir(pdf_out) unless Dir.exist?(pdf_out)
+Dir[File.join(root, "pdf", "*.txt")].sort.each do |path|
+  extractor, rows, warnings = pdf_extract(File.read(path, encoding: "UTF-8").split("\f", -1))
+  draft = Finance::StatementDraft.new(rows: rows, warnings: warnings.map { |w| w.is_a?(Array) ? w.first : w })
+  result = {
+    today: Date.current.iso8601,
+    rows: rows.map { |row| {bookedOn: row["booked_on"], description: row["description"], amount: row["amount"]} },
+    warnings: warnings.map { |warning| pdf_warning(warning) },
+    closingBalanceCents: cents.call(extractor.instance_variable_get(:@closing_balance)),
+    closingBalanceOn: extractor.instance_variable_get(:@closing_balance_on)&.iso8601,
+    autoImportable: draft.auto_importable?
+  }
+  File.write(File.join(pdf_out, "#{File.basename(path, ".txt")}.json"), JSON.pretty_generate(result) + "\n")
+end
+pdf_errors = JSON.parse(File.read(File.join(root, "pdf", "errors.json"))).map do |item|
+  code = begin
+    pdf_extract(item["pages"])
+    nil
+  rescue Finance::StatementImporter::ImportError => error
+    error.message.start_with?("[") ? error.message[/\w+/] : error.message # drop the variables
+  end
+  {name: item["name"], code: code}
+end
+File.write(File.join(pdf_out, "errors.json"), JSON.pretty_generate({today: Date.current.iso8601, cases: pdf_errors}) + "\n")
+
 puts "Wrote #{Dir[File.join(out, "*.json")].length} files to #{out}"

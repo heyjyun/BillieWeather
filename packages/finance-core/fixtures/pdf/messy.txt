@@ -1,0 +1,16 @@
+Sample Bank
+Statement summary
+2025-12-01 Opening balance 500.00
+12/03 Transfer from savings 300.00
+12/05 12/06 Bookstore -24.10
+12/08 Hardware 15.00 1,234.00
+12/10 Wire fee
+12/12 Imported goods -€12.00
+12/14 Odd markers (5.00) CR
+12/16 −10.00
+01/02 Payment received +40.00
+12/31/2025 to 01/15/2026
+Total deposits 340.00
+Closing balance: (50.00)
+Closing balance: (50.00)
+   

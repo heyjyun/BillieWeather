@@ -1,0 +1,12 @@
+Sample Credit Union
+Checking account ending 4321
+Statement period: October 1, 2025 through October 31, 2025
+
+Date        Description                         Amount
+10/02       Payroll ACME Corp                  +2,400.00
+10/05       Grocery Market #12                   -86.35
+10/09       City Utilities                      (120.00)
+10/15       Coffee Shop                           4.50 DR
+10/20       Refund Online Store                  19.99 CR
+10/28       Rent Payment                     $-1,400.00
+Ending balance                                 1,213.64

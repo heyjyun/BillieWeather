@@ -15,7 +15,10 @@ export type ImportErrorCode =
   | "csv_unreadable" | "csv_require_rows" | "csv_duplicate_headers" | "one_column_only" | "csv_required_columns" | "csv_amount_columns"
   | "statement_row_limit" | "csv_extra_values" | "statement_no_transactions" | "row_description_required" | "row_description_length"
   | "row_currency_mismatch" | "row_invalid_type" | "row_debit_credit" | "row_invalid_date" | "row_currency_symbol" | "row_invalid_money"
-  | "row_money_limit";
+  | "row_money_limit"
+  // PDF statements (pdf.ts)
+  | "pdf_filename_limit" | "pdf_empty" | "pdf_size_limit" | "pdf_not_readable" | "pdf_timeout" | "pdf_encrypted" | "pdf_unreadable"
+  | "pdf_page_limit" | "pdf_text_limit" | "pdf_no_text" | "pdf_no_rows" | "pdf_candidate_limit" | "pdf_invalid_row_date" | "select_transaction";
 
 const MESSAGES: Record<ImportErrorCode, string> = {
   require_csv: "Choose a .csv file.",
@@ -43,6 +46,20 @@ const MESSAGES: Record<ImportErrorCode, string> = {
   row_currency_symbol: "A row's currency symbol does not match the statement currency.",
   row_invalid_money: "A row has an amount that is not a number.",
   row_money_limit: "A row's amount is too large.",
+  pdf_filename_limit: "Choose a .pdf file with a name of 255 characters or fewer.",
+  pdf_empty: "The PDF is empty.",
+  pdf_size_limit: "The PDF is larger than 2 MB.",
+  pdf_not_readable: "The file is not a readable PDF.",
+  pdf_timeout: "The PDF took too long to read.",
+  pdf_encrypted: "Password-protected PDFs are not supported.",
+  pdf_unreadable: "The PDF could not be read.",
+  pdf_page_limit: "The PDF has too many pages.",
+  pdf_text_limit: "The PDF contains too much text.",
+  pdf_no_text: "The PDF has no selectable text.",
+  pdf_no_rows: "No transaction rows were recognized in the PDF.",
+  pdf_candidate_limit: "The PDF has too many candidate transactions.",
+  pdf_invalid_row_date: "A PDF row has an invalid date.",
+  select_transaction: "Select at least one transaction to import.",
 };
 
 export class ImportError extends Error {

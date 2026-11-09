@@ -62,6 +62,8 @@ it("adds a category, categorizes with AI after consent, and manages the category
   fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Sign in" })));
   const create = await screen.findByRole("button", { name: "Create database" });
+  // The name field is filled in with the device name asynchronously; an empty name is not submitted.
+  await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>("Database name").value).toBe("Test Mac"));
   await act(async () => fireEvent.click(create));
   await screen.findByRole("navigation");
 
@@ -142,6 +144,8 @@ it("explains a server without AI and an offline device, and changes nothing", as
   fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Sign in" })));
   const create = await screen.findByRole("button", { name: "Create database" });
+  // The name field is filled in with the device name asynchronously; an empty name is not submitted.
+  await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>("Database name").value).toBe("Test Mac"));
   await act(async () => fireEvent.click(create));
   await screen.findByRole("navigation");
   nav("Import");

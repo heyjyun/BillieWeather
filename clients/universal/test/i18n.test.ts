@@ -27,7 +27,7 @@ describe("translations", () => {
   it("import errors come from Rails for every language and code", () => {
     const table = importErrors as Record<string, Record<string, string>>;
     const codes = Object.keys(table.en);
-    expect(codes.length).toBe(27);
+    expect(codes.length).toBe(62);
     for (const locale of LOCALES) {
       expect(Object.keys(table[locale]).sort()).toEqual([...codes].sort());
       for (const code of codes) expect(placeholders(table[locale][code]), `${locale} ${code}`).toEqual(placeholders(table.en[code]));

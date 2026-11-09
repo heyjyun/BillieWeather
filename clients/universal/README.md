@@ -95,7 +95,11 @@ not set up yet.
   - Changing the password on the website signs out every app.
 - **Languages**:
   - English, 简体中文, 繁體中文, 日本語, 한국어 and Español, detected from the device and saved to the account.
-  - Import error messages are copied from the Rails translations with `npm run sync:translations`.
+  - Import error messages, PDF review warnings and the PDF review page text are copied from the Rails translations with `npm run sync:translations`.
+- **PDF statements** are read on the device with pdf.js (`src/services/pdfText.ts`, loaded only when a PDF is imported).
+  Rows are extracted by `packages/finance-core/src/pdf.ts`, a port of Rails' `PdfStatementExtractor`. A PDF where every
+  amount has a clear sign and the year is known is imported straight away; otherwise it opens a review (correct or leave
+  out rows, then confirm), like the website. Drafts stay in memory and are never saved or uploaded.
 - **Least privilege**: the app's permissions (`src-tauri/capabilities/default.json`) allow SQLite,
   the save dialog, and writing to the file the person picked. There is no file-system read scope;
   imports use the standard file picker.
@@ -153,6 +157,8 @@ Differences found while porting are encoded in the fixtures instead of being gue
 - Ruby's `\b` is Unicode-aware, so "ÉCAFE" is not "cafe".
 - `titleize` capitalizes a leading accented letter.
 - Rails accepts extra values in the *first* data row, because Ruby's CSV library pads the header row.
+- PDF amounts: Rails matches with a lookbehind, which Safari 15 cannot parse; the port captures the boundary instead.
+  PDF text itself comes from pdf.js rather than pdf-reader, so `fixtures/pdf/*.txt` pin the extraction from page text onward.
 
 When you change categorizer rules in Rails, regenerate the fixtures and update
 `packages/finance-core/src/categorizer.ts`.

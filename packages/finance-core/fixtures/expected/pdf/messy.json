@@ -1,0 +1,115 @@
+{
+  "today": "2026-11-09",
+  "rows": [
+    {
+      "bookedOn": "2025-12-03",
+      "description": "Transfer from savings",
+      "amount": ""
+    },
+    {
+      "bookedOn": "2025-12-05",
+      "description": "Bookstore",
+      "amount": "-24.10"
+    },
+    {
+      "bookedOn": "2025-12-08",
+      "description": "Hardware",
+      "amount": ""
+    },
+    {
+      "bookedOn": "2025-12-10",
+      "description": "Wire fee",
+      "amount": ""
+    },
+    {
+      "bookedOn": "2025-12-12",
+      "description": "Imported goods",
+      "amount": ""
+    },
+    {
+      "bookedOn": "2025-12-14",
+      "description": "Odd markers",
+      "amount": ""
+    },
+    {
+      "bookedOn": "2025-12-16",
+      "description": "Transaction - verify description",
+      "amount": "-10.00"
+    },
+    {
+      "bookedOn": "2026-01-02",
+      "description": "Payment received",
+      "amount": "+40.00"
+    }
+  ],
+  "warnings": [
+    {
+      "code": "pdf_generic_1",
+      "vars": {}
+    },
+    {
+      "code": "pdf_generic_2",
+      "vars": {}
+    },
+    {
+      "code": "pdf_skipped_balance",
+      "vars": {}
+    },
+    {
+      "code": "pdf_amount_unsigned",
+      "vars": {
+        "row": 1
+      }
+    },
+    {
+      "code": "pdf_row_two_dates",
+      "vars": {
+        "row": 2
+      }
+    },
+    {
+      "code": "pdf_row_multiple_amounts",
+      "vars": {
+        "row": 3
+      }
+    },
+    {
+      "code": "pdf_row_no_amount",
+      "vars": {
+        "row": 4
+      }
+    },
+    {
+      "code": "pdf_amount_currency",
+      "vars": {
+        "row": 5,
+        "currency": "USD"
+      }
+    },
+    {
+      "code": "pdf_amount_markers",
+      "vars": {
+        "row": 6
+      }
+    },
+    {
+      "code": "pdf_row_no_description",
+      "vars": {
+        "row": 7
+      }
+    },
+    {
+      "code": "pdf_uncertain_year",
+      "vars": {
+        "date": "2026-01-15"
+      }
+    },
+    {
+      "code": "pdf_blank_pages",
+      "vars": {}
+    }
+  ],
+  "closingBalanceCents": -5000,
+  "closingBalanceOn": null,
+  "autoImportable": false
+}

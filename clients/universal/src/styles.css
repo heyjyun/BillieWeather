@@ -245,3 +245,22 @@ p { margin: 0 0 10px; }
 .bw-consent h3, .bw-consent p { margin: 0; }
 .bw-consent-preview { margin: 0; padding-left: 18px; font-size: 13px; display: grid; gap: 4px; max-height: 220px; overflow: auto; }
 .bw-section-gap { margin-top: 18px; }
+
+/* PDF review */
+.bw-pdf-review { display: grid; gap: 16px; }
+.bw-pdf-review h3 { margin: 12px 0 4px; font-size: 14px; }
+.bw-pdf-review details { margin-top: 8px; font-size: 13px; }
+.bw-pdf-review summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+.bw-pdf-warnings { margin: 8px 0; padding: 10px 14px 10px 28px; border-radius: 10px; background: #fff4dc; color: #6b4f12; font-size: 13px; }
+.bw-review-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bw-review-table th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.bw-review-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.bw-review-table td:first-child { width: 44px; text-align: center; }
+.bw-review-table input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+.bw-review-table input:not([type="checkbox"]) { width: 100%; min-width: 110px; min-height: 40px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: inherit; font: inherit; }
+.bw-review-table td:nth-child(3) input { min-width: 220px; }
+.bw-review-table tr.is-flagged td { background: #fff7e3; }
+.bw-review-table tr.is-flagged input:not([type="checkbox"]):placeholder-shown { border-color: #e0b04a; }
+.bw-review-confirm { align-items: flex-start; font-size: 13px; }
+.bw-review-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+@media (prefers-color-scheme: dark) { .bw-pdf-warnings, .bw-review-table tr.is-flagged td { background: #33290f; color: #f1d9a0; } }

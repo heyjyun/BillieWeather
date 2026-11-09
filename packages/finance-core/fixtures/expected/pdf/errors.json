@@ -1,0 +1,21 @@
+{
+  "today": "2026-11-09",
+  "cases": [
+    {
+      "name": "impossible short date",
+      "code": "pdf_invalid_row_date"
+    },
+    {
+      "name": "no rows",
+      "code": "pdf_no_rows"
+    },
+    {
+      "name": "no text",
+      "code": "pdf_no_text"
+    },
+    {
+      "name": "invalid full date",
+      "code": "pdf_invalid_row_date"
+    }
+  ]
+}

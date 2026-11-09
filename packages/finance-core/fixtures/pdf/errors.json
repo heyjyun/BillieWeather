@@ -1,0 +1,6 @@
+[
+  {"name": "impossible short date", "pages": ["Statement period ending 2025-03-31\n13/45 Mystery -1.00\n"]},
+  {"name": "no rows", "pages": ["Just a letter from your bank.\nNothing dated here.\n"]},
+  {"name": "no text", "pages": ["   \n", ""]},
+  {"name": "invalid full date", "pages": ["2025-02-30 Leap -1.00\n"]}
+]
