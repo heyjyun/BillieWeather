@@ -19,6 +19,7 @@ vi.mock("../src/services/platform", () => ({
     migrate(db);
     return { driver: sqljsDriver(db), persistent: true };
   },
+  deviceName: async () => "Jyun's MacBook Pro",
   saveFile: async (filename: string, bytes: Uint8Array) => {
     saved.push({ filename, bytes });
     return true;
@@ -87,6 +88,14 @@ it("signs in, works with local data, switches language, and signs out", async ()
   await screen.findByText("That email and password don't match.");
   fireEvent.change(screen.getByLabelText("Password"), { target: { value: "right-password" } });
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Sign in" })));
+  // First time on this device: name its database. The device's own name is filled in,
+  // and nothing is downloaded until the database has a name.
+  await screen.findByRole("heading", { name: "Name this device's database" });
+  const nameField = screen.getByLabelText("Database name") as HTMLInputElement;
+  await waitFor(() => expect(nameField.value).toBe("Jyun's MacBook Pro"));
+  expect(requests.some((request) => request.url.includes("/finance"))).toBe(false);
+  fireEvent.change(nameField, { target: { value: "  Jyun's   laptop " } });
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Create database" })));
   // Website data is downloaded right after signing in.
   await screen.findByText("Downloaded from your website account: 1 new statement(s), 2 new and 0 updated transaction(s), 0 removed.");
   // The account had no language yet, so the one chosen on this device is saved to it.
@@ -133,10 +142,14 @@ it("signs in, works with local data, switches language, and signs out", async ()
   expect(workbook).toContain('name="概览"');
 
   // Delete local financial data (account untouched).
+  // Manage data one statement at a time (no "delete everything" button anywhere).
+  nav("数据管理");
+  const row = (await screen.findAllByText("basic-amount.csv"))[0].closest("li")! as HTMLElement;
+  fireEvent.click(within(row).getByRole("button", { name: "从本机移除" }));
+  expect(within(row).getByText(/只存在于这台设备上/)).toBeTruthy();
+  await act(async () => fireEvent.click(within(row).getByRole("button", { name: "移除" })));
+  await screen.findByText("已从本机移除「basic-amount.csv」。");
   nav("设置");
-  fireEvent.change(await screen.findByLabelText("输入 DELETE 确认"), { target: { value: "DELETE" } });
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "删除全部本地数据" })));
-  await screen.findByText("这台设备上的所有本地财务数据已删除。");
 
   // Sign out → back to the sign-in screen, token gone.
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "退出登录" })));

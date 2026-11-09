@@ -84,60 +84,193 @@
       <%= form.submit t("billie.region.save"), class: "bw-button bw-button-dark" %>
     <% end %>
   </section>
+  <%# Your database: what the cloud holds, managed one statement at a time. Sits right above
+      the "delete everything" buttons so smaller clean-ups are found first. %>
+  <% database = @database %>
+  <section class="bw-panel" id="settings-database" aria-labelledby="settings-database-heading">
+    <h2 id="settings-database-heading"><%= @user.cloud_database_name.presence || t("billie.database.default_name") %></h2>
+    <p><%= t("billie.database.intro") %></p>
+    <%= errors_for.call(:database) %>
+    <%= form_with model: @user, scope: :user, url: database_name_finance_settings_path, method: :patch, data: {turbo: false}, class: "bw-form bw-db-rename" do |form| %>
+      <div class="bw-field">
+        <%= form.label :cloud_database_name, t("billie.database.name") %>
+        <%= form.text_field :cloud_database_name, maxlength: 60, placeholder: t("billie.database.default_name"), autocomplete: "off", "aria-describedby": "user_cloud_database_name_help" %>
+        <small id="user_cloud_database_name_help"><%= t("billie.database.name_help") %></small>
+      </div>
+      <%= form.submit t("billie.database.save_name"), class: "bw-button bw-button-outline" %>
+    <% end %>
+    <dl class="bw-db-facts">
+      <div><dt><%= t("billie.database.size") %></dt><dd><%= t("billie.database.size_approx", size: database_size(database.storage_bytes)) %></dd></div>
+      <div><dt><%= t("billie.database.statements") %></dt><dd><%= database.statement_count %></dd></div>
+      <div><dt><%= t("billie.database.transactions") %></dt><dd><%= database.transaction_count %></dd></div>
+      <div><dt><%= t("billie.database.bank_accounts") %></dt><dd><%= database.bank_account_count %></dd></div>
+      <div><dt><%= t("billie.database.rules") %></dt><dd><%= database.rule_count %></dd></div>
+      <% if database.pending_import_count.positive? %>
+        <div><dt><%= t("billie.database.pending_imports") %></dt><dd><%= database.pending_import_count %></dd></div>
+      <% end %>
+      <% if database.insight_count.positive? %>
+        <div><dt><%= t("billie.database.insights") %></dt><dd><%= database.insight_count %></dd></div>
+      <% end %>
+      <div><dt><%= t("billie.database.dates") %></dt><dd><%= database_range(database.period_start, database.period_end) %></dd></div>
+      <% if (changed = database.last_updated_at) %>
+        <div><dt><%= t("billie.database.last_updated") %></dt><dd><%= finance_date(changed, "%b %-d, %Y") %></dd></div>
+      <% end %>
+    </dl>
+
+    <%# Local databases reported by the person's apps: display only, never controlled from here. %>
+    <% cloud_bytes = database.storage_bytes %>
+    <% local_bytes = @local_reports.sum(&:size_bytes) %>
+    <% combined = cloud_bytes + local_bytes %>
+    <div id="settings-local-databases" class="bw-local-dbs">
+      <h3><%= t("billie.database.local.storage") %></h3>
+      <% if combined.positive? %>
+        <div class="bw-usage-bar" role="img" aria-label="<%= t("billie.database.local.bar_label") %>">
+          <% if cloud_bytes.positive? %><span class="bw-usage-cloud" style="width: <%= (cloud_bytes.to_f / combined * 100).round(2) %>%"></span><% end %>
+          <% @local_reports.each_with_index do |report, index| %>
+            <% next unless report.size_bytes.positive? %>
+            <span class="bw-usage-local bw-usage-local-<%= index % 4 %>" style="width: <%= (report.size_bytes.to_f / combined * 100).round(2) %>%"></span>
+          <% end %>
+        </div>
+      <% end %>
+      <ul class="bw-usage-legend">
+        <li data-usage="cloud"><i class="bw-usage-cloud" aria-hidden="true"></i><span><%= @user.cloud_database_name.presence || t("billie.database.default_name") %> <small>(<%= t("billie.database.local.kind_cloud") %>)</small></span><strong><%= database_share(cloud_bytes, combined) %></strong><small><%= database_size(cloud_bytes) %></small></li>
+        <% @local_reports.each_with_index do |report, index| %>
+          <li data-usage="local-<%= report.database_id %>"><i class="bw-usage-local bw-usage-local-<%= index % 4 %>" aria-hidden="true"></i><span><%= report.name %> <small>(<%= t("billie.database.local.kind_local") %>)</small></span><strong><%= database_share(report.size_bytes, combined) %></strong><small><%= database_size(report.size_bytes) %></small></li>
+        <% end %>
+      </ul>
+      <p class="bw-caption" data-usage-totals>
+        <%= t("billie.database.local.cloud_total", size: database_size(cloud_bytes)) %>
+        <%= t("billie.database.local.local_total", size: database_size(local_bytes)) %>
+        <%= t("billie.database.local.not_uploaded") %>
+      </p>
+
+      <h3><%= t("billie.database.local.heading") %></h3>
+      <% if @local_reports.empty? %>
+        <p class="bw-caption bw-db-empty"><%= t("billie.database.local.empty") %></p>
+      <% else %>
+        <div class="bw-local-db-grid">
+          <% @local_reports.each do |report| %>
+            <article class="bw-local-db" data-local-database="<%= report.database_id %>">
+              <h4><%= report.name %></h4>
+              <span class="bw-tag bw-tag-muted"><%= t("billie.database.local.status_local") %></span>
+              <dl class="bw-db-facts">
+                <div><dt><%= t("billie.database.local.device") %></dt><dd><%= @local_devices[report.device_id]&.name.presence || t("billie.database.local.unknown_device") %></dd></div>
+                <div><dt><%= t("billie.database.local.storage_label") %></dt><dd><%= database_size(report.size_bytes) %></dd></div>
+                <div><dt><%= t("billie.database.statements") %></dt><dd><%= number_with_delimiter(report.statement_count) %></dd></div>
+                <div><dt><%= t("billie.database.transactions") %></dt><dd><%= number_with_delimiter(report.transaction_count) %></dd></div>
+                <div><dt><%= t("billie.database.rules") %></dt><dd><%= number_with_delimiter(report.rule_count) %></dd></div>
+                <div><dt><%= t("billie.database.dates") %></dt><dd><%= database_range(report.period_start, report.period_end) %></dd></div>
+                <% if report.modified_at %><div><dt><%= t("billie.database.local.modified") %></dt><dd><%= local_report_time(report.modified_at, @user) %></dd></div><% end %>
+                <% if report.opened_at %><div><dt><%= t("billie.database.local.opened") %></dt><dd><%= local_report_time(report.opened_at, @user) %></dd></div><% end %>
+                <div><dt><%= t("billie.database.local.reported") %></dt><dd><%= local_report_time(report.reported_at, @user) %></dd></div>
+              </dl>
+              <% if report.stale? %><p class="bw-message bw-message-warn" data-stale><%= t("billie.database.local.stale") %></p><% end %>
+              <p class="bw-caption"><%= t("billie.database.local.notice") %></p>
+            </article>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <% items = database.statements %>
+    <% if items.empty? %>
+      <p class="bw-caption bw-db-empty"><%= t("billie.database.no_statements") %></p>
+    <% else %>
+      <details class="bw-db-details">
+        <summary><%= t("billie.database.show_statements", count: items.size) %></summary>
+        <p class="bw-caption"><%= t("billie.database.statements_help") %></p>
+        <ul class="bw-db-list">
+          <% items.each do |item| %>
+            <% statement = item.statement %>
+            <li id="<%= dom_id(statement, :database) %>">
+              <div class="bw-db-name">
+                <strong><%= statement.filename %></strong>
+                <small><%= database_range(item.period_start, item.period_end) %> · <%= t("billie.database.transaction_count", count: statement.transaction_count) %></small>
+              </div>
+              <%= button_to t("billie.database.delete"), finance_statement_path(statement), method: :delete, params: {return_to: "settings"},
+                    class: "bw-button bw-button-danger-outline bw-button-small",
+                    form: {data: {turbo: false, confirm: t("billie.database.delete_confirm", name: statement.filename, count: statement.transaction_count)}},
+                    "aria-label": t("billie.database.delete_named", name: statement.filename) %>
+            </li>
+          <% end %>
+        </ul>
+      </details>
+    <% end %>
+
+    <p class="bw-caption bw-db-devices"><%= t("billie.database.devices") %> <%= link_to t("billie.database.get_apps"), billie_download_path, class: "bw-text-link" %></p>
+    <div class="bw-db-actions">
+      <%= link_to t("billie.database.manage_statements"), finance_statements_path, class: "bw-button bw-button-outline" %>
+      <%= link_to t("billie.export.button"), finance_report_path, class: "bw-button bw-button-outline" %>
+    </div>
+  </section>
+
+  <%# Privacy & data: two buttons only. The details and the confirmation live in small dialogs. %>
   <section class="bw-panel bw-panel-danger" id="settings-privacy" aria-labelledby="settings-privacy-heading">
     <h2 id="settings-privacy-heading"><%= t("billie.privacy.heading") %></h2>
-    <p><%= t("billie.privacy.intro") %></p>
-    <div class="bw-flash" role="note">
-      <%= t("billie.privacy.export_first") %>
-      <%= link_to t("billie.export.button"), finance_report_path, class: "bw-text-link" %>
+    <div class="bw-privacy-buttons">
+      <button type="button" class="bw-button bw-button-danger-outline" data-dialog-open="privacy-delete-data-dialog" aria-haspopup="dialog" aria-controls="privacy-delete-data-dialog"><%= t("billie.privacy.data.heading") %></button>
+      <button type="button" class="bw-button bw-button-danger-outline" data-dialog-open="privacy-delete-account-dialog" aria-haspopup="dialog" aria-controls="privacy-delete-account-dialog"><%= t("billie.privacy.account.heading") %></button>
     </div>
 
-    <div class="bw-privacy-action" id="privacy-delete-data">
-      <h3><%= t("billie.privacy.data.heading") %></h3>
-      <p class="bw-caption"><%= t("billie.privacy.data.summary", statements: @privacy_counts[:statements], transactions: @privacy_counts[:transactions], accounts: @privacy_counts[:accounts]) %></p>
-      <ul class="bw-privacy-list">
-        <% %w[transactions statements accounts rules insights profile].each do |item| %>
-          <li><%= t("billie.privacy.data.items.#{item}") %></li>
-        <% end %>
-      </ul>
-      <p class="bw-caption"><%= t("billie.privacy.data.kept") %></p>
-      <%= form_with url: finance_financial_data_path, method: :delete, scope: :financial_data, data: {turbo: false}, class: "bw-form" do |form| %>
-        <div class="bw-field">
-          <%= form.label :confirm_email, t("billie.privacy.type_email", email: @user.email) %>
-          <%= form.email_field :confirm_email, required: true, autocomplete: "off", value: nil %>
+    <dialog class="bw-modal" id="privacy-delete-data-dialog" aria-labelledby="privacy-delete-data-title">
+      <div class="bw-privacy-action" id="privacy-delete-data">
+        <div class="bw-modal-header">
+          <h3 id="privacy-delete-data-title"><%= t("billie.privacy.data.heading") %></h3>
+          <form method="dialog"><button type="submit" class="bw-icon-button bw-modal-close" aria-label="<%= t("billie.community.dialog.close") %>"><%= finance_icon "close" %></button></form>
         </div>
-        <%= form.submit t("billie.privacy.data.button"), class: "bw-button bw-button-danger" %>
-      <% end %>
-    </div>
-
-    <div class="bw-privacy-action" id="privacy-delete-account">
-      <h3><%= t("billie.privacy.account.heading") %></h3>
-      <ul class="bw-privacy-list">
-        <% %w[login financial teams].each do |item| %>
-          <li><%= t("billie.privacy.account.items.#{item}") %></li>
-        <% end %>
-      </ul>
-      <p class="bw-caption"><%= t("billie.privacy.backups_note") %></p>
-      <% blockers = @account_deletion.blockers %>
-      <% if blockers.any? %>
-        <div class="bw-flash bw-flash-error" role="alert" id="privacy-account-blocked">
-          <%= t("billie.privacy.account.blocked") %> <%= blockers.to_sentence %>
-        </div>
-      <% else %>
-        <%= form_with url: user_registration_path, method: :delete, scope: :user, data: {turbo: false}, class: "bw-form" do |form| %>
-          <div class="bw-field">
-            <%= form.label :confirm_email, t("billie.privacy.type_email", email: @user.email), for: "account_confirm_email" %>
-            <%= form.email_field :confirm_email, required: true, autocomplete: "off", value: nil, id: "account_confirm_email" %>
-          </div>
-          <% if @account_deletion.password_required? %>
-            <div class="bw-field">
-              <%= form.label :current_password, t("billie.account.current_password"), for: "account_current_password" %>
-              <%= form.password_field :current_password, required: true, autocomplete: "current-password", value: nil, id: "account_current_password" %>
-            </div>
+        <p class="bw-caption"><%= t("billie.privacy.data.summary", statements: @privacy_counts[:statements], transactions: @privacy_counts[:transactions], accounts: @privacy_counts[:accounts]) %></p>
+        <ul class="bw-privacy-list">
+          <% %w[transactions statements accounts rules insights profile].each do |item| %>
+            <li><%= t("billie.privacy.data.items.#{item}") %></li>
           <% end %>
-          <%= form.submit t("billie.privacy.account.button"), class: "bw-button bw-button-danger" %>
+        </ul>
+        <p class="bw-caption"><%= t("billie.privacy.data.kept") %></p>
+        <p class="bw-caption"><%= t("billie.privacy.data.devices") %></p>
+        <p class="bw-modal-note"><%= t("billie.privacy.export_first") %> <%= link_to t("billie.export.button"), finance_report_path, class: "bw-text-link" %></p>
+        <%= form_with url: finance_financial_data_path, method: :delete, scope: :financial_data, data: {turbo: false}, class: "bw-form" do |form| %>
+          <div class="bw-field">
+            <%= form.label :confirm_email, t("billie.privacy.type_email", email: @user.email) %>
+            <%= form.email_field :confirm_email, required: true, autocomplete: "off", value: nil %>
+          </div>
+          <%= form.submit t("billie.privacy.data.button"), class: "bw-button bw-button-danger" %>
         <% end %>
-      <% end %>
-    </div>
+      </div>
+    </dialog>
+
+    <dialog class="bw-modal" id="privacy-delete-account-dialog" aria-labelledby="privacy-delete-account-title">
+      <div class="bw-privacy-action" id="privacy-delete-account">
+        <div class="bw-modal-header">
+          <h3 id="privacy-delete-account-title"><%= t("billie.privacy.account.heading") %></h3>
+          <form method="dialog"><button type="submit" class="bw-icon-button bw-modal-close" aria-label="<%= t("billie.community.dialog.close") %>"><%= finance_icon "close" %></button></form>
+        </div>
+        <ul class="bw-privacy-list">
+          <% %w[login financial teams].each do |item| %>
+            <li><%= t("billie.privacy.account.items.#{item}") %></li>
+          <% end %>
+        </ul>
+        <p class="bw-caption"><%= t("billie.privacy.backups_note") %></p>
+        <p class="bw-modal-note"><%= t("billie.privacy.export_first") %> <%= link_to t("billie.export.button"), finance_report_path, class: "bw-text-link" %></p>
+        <% blockers = @account_deletion.blockers %>
+        <% if blockers.any? %>
+          <div class="bw-flash bw-flash-error" role="alert" id="privacy-account-blocked">
+            <%= t("billie.privacy.account.blocked") %> <%= blockers.to_sentence %>
+          </div>
+        <% else %>
+          <%= form_with url: user_registration_path, method: :delete, scope: :user, data: {turbo: false}, class: "bw-form" do |form| %>
+            <div class="bw-field">
+              <%= form.label :confirm_email, t("billie.privacy.type_email", email: @user.email), for: "account_confirm_email" %>
+              <%= form.email_field :confirm_email, required: true, autocomplete: "off", value: nil, id: "account_confirm_email" %>
+            </div>
+            <% if @account_deletion.password_required? %>
+              <div class="bw-field">
+                <%= form.label :current_password, t("billie.account.current_password"), for: "account_current_password" %>
+                <%= form.password_field :current_password, required: true, autocomplete: "current-password", value: nil, id: "account_current_password" %>
+              </div>
+            <% end %>
+            <%= form.submit t("billie.privacy.account.button"), class: "bw-button bw-button-danger" %>
+          <% end %>
+        <% end %>
+      </div>
+    </dialog>
   </section>
 </div>

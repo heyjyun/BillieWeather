@@ -25,6 +25,16 @@ module Finance
       end
     end
 
+    # Names the cloud database (the one the website and every app share).
+    def database_name
+      if @user.update(cloud_database_name: params.dig(:user, :cloud_database_name))
+        redirect_to finance_settings_path(anchor: "settings-database"), status: :see_other, notice: t("billie.database.name_saved")
+      else
+        @failed_section = :database
+        render :show, status: :unprocessable_entity
+      end
+    end
+
     # A Founding Patron's explicit opt-in to list their nickname on the Features & Membership page.
     def supporter_recognition
       public_listing = params.dig(:user, :supporter_recognition_public) == "1"
@@ -62,6 +72,10 @@ module Finance
     def load_user
       @user = current_user
       @account_deletion = AccountDeletion.new(@user)
+      @database = DatabaseOverview.new(@user)
+      # What the person's apps reported about their local databases (display only).
+      @local_reports = LocalDatabaseReport.where(user_id: @user.id).live.order(:device_id, :name, :id).to_a
+      @local_devices = LocalDevice.where(user_id: @user.id).index_by(&:device_id)
       @privacy_counts = {statements: @user.finance_statements.count, transactions: @user.finance_transactions.count,
                          accounts: @user.finance_bank_accounts.count}
     end

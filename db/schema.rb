@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_000200) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_000400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -156,6 +156,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000200) do
     t.index ["user_id", "generated_at"], name: "index_finance_insights_on_user_id_and_generated_at"
     t.index ["user_id", "kind", "generated_at"], name: "index_finance_insights_on_user_id_and_kind_and_generated_at"
     t.index ["user_id"], name: "index_finance_insights_on_user_id"
+  end
+
+  create_table "finance_local_database_reports", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "device_id", limit: 36, null: false
+    t.string "database_id", limit: 36, null: false
+    t.string "name", limit: 60
+    t.bigint "size_bytes"
+    t.integer "statement_count"
+    t.integer "transaction_count"
+    t.integer "rule_count"
+    t.date "period_start"
+    t.date "period_end"
+    t.datetime "modified_at"
+    t.datetime "opened_at"
+    t.bigint "sequence", null: false
+    t.datetime "reported_at", null: false
+    t.datetime "deleted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "device_id", "database_id"], name: "index_local_database_reports_on_owner_device_database", unique: true
+    t.index ["user_id"], name: "index_finance_local_database_reports_on_user_id"
+  end
+
+  create_table "finance_local_devices", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "device_id", limit: 36, null: false
+    t.string "name", limit: 80
+    t.bigint "purged_through", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "device_id"], name: "index_finance_local_devices_on_user_id_and_device_id", unique: true
+    t.index ["user_id"], name: "index_finance_local_devices_on_user_id"
   end
 
   create_table "finance_merchant_rules", force: :cascade do |t|
@@ -438,6 +471,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000200) do
     t.boolean "usage_region_pending", default: false, null: false
     t.string "nickname", limit: 40
     t.boolean "supporter_recognition_public", default: false, null: false
+    t.string "cloud_database_name", limit: 60
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["google_uid"], name: "index_users_on_google_uid", unique: true, where: "(google_uid IS NOT NULL)"
     t.index ["platform_agent_of_id"], name: "index_users_on_platform_agent_of_id"
@@ -531,6 +565,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000200) do
   add_foreign_key "community_support_accesses", "users", on_delete: :cascade
   add_foreign_key "finance_bank_accounts", "users"
   add_foreign_key "finance_insights", "users"
+  add_foreign_key "finance_local_database_reports", "users", on_delete: :cascade
+  add_foreign_key "finance_local_devices", "users", on_delete: :cascade
   add_foreign_key "finance_merchant_rules", "users"
   add_foreign_key "finance_profiles", "users"
   add_foreign_key "finance_statement_drafts", "finance_bank_accounts", column: "bank_account_id"

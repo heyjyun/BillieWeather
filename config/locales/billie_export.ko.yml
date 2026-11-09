@@ -103,6 +103,53 @@ ko:
           missing_date: 명세서 날짜 없음
           future_date: 명세서 날짜가 미래임
           missing_balance: 마감 잔액 없음
+    database:
+      local:
+        heading: "Local databases"
+        storage: "Storage"
+        storage_label: "Storage"
+        bar_label: "How storage is shared between the cloud database and your local databases"
+        kind_cloud: "Cloud"
+        kind_local: "Local"
+        cloud_total: "Cloud storage on BillieWeather's servers: %{size}."
+        local_total: "Local storage reported by your devices: %{size}."
+        not_uploaded: "Local sizes are reported by your apps and stay on your devices; they are not uploaded and do not count as cloud storage."
+        empty: "No local databases are shown. Turn on “Show My Local Databases on the Website” in the app's Settings to see them here."
+        device: "Device"
+        unknown_device: "Unknown device"
+        status_local: "Local Database"
+        modified: "Last modified on device"
+        opened: "App last opened"
+        reported: "Last reported"
+        notice: "This database is stored on your device. You can only open or modify it from that device."
+        stale: "Not updated for over 30 days. Information may be outdated."
+      default_name: "BillieWeather 클라우드"
+      name: "데이터베이스 이름"
+      name_help: "여기와 앱에 표시됩니다. 비워 두면 기본 이름을 사용합니다."
+      save_name: "이름 저장"
+      name_saved: "데이터베이스 이름을 저장했습니다."
+      heading: 내 데이터베이스
+      intro: BillieWeather가 클라우드에 보관하는 내 데이터입니다. 웹사이트와 모든 앱이 이 데이터베이스를 함께 씁니다. 여기서 명세서를 하나씩 정리할 수 있으며, 아래 버튼은 모든 것을 삭제합니다.
+      size: 크기
+      size_approx: 약 %{size}
+      statements: 명세서
+      transactions: 거래
+      bank_accounts: 은행 계좌
+      rules: 기억한 규칙
+      pending_imports: 검토 대기 중인 PDF
+      insights: 분석 및 세금 메모
+      dates: 기간
+      last_updated: 마지막 변경
+      no_statements: 아직 명세서가 없습니다.
+      show_statements: 명세서 %{count}개 보기
+      statements_help: 명세서를 삭제하면 해당 거래와 함께 클라우드에서 지워집니다. 앱은 다음에 확인할 때 내려받은 사본을 삭제합니다.
+      transaction_count: "거래 %{count}건"
+      delete: 삭제
+      delete_named: "“%{name}”을(를) 클라우드에서 삭제"
+      delete_confirm: "“%{name}”과(와) 거래 %{count}건을 클라우드에서 삭제할까요? 되돌릴 수 없습니다."
+      devices: "데스크톱·모바일 앱은 각 기기에도 자체 데이터베이스를 보관합니다(여러 개 만들 수 있습니다). 크기와 이름 확인, 데이터베이스 간 이동은 앱의 데이터 페이지에서 할 수 있습니다."
+      get_apps: 앱 받기
+      manage_statements: 명세서 관리
     privacy:
       heading: 개인정보 및 데이터
       intro: 언제든 금융 데이터를 삭제하거나 계정을 완전히 닫을 수 있습니다. 두 작업 모두 되돌릴 수 없습니다.
@@ -121,6 +168,7 @@ ko:
           insights: 생성된 인사이트와 세금 준비 메모
           profile: 잔액, 보유 현금, 통화, 세금 정보
         kept: 로그인, 닉네임, 비밀번호, 지역은 유지되므로 새로 시작할 수 있습니다.
+        devices: "여기서 삭제되는 것은 BillieWeather 클라우드에 저장된 데이터입니다. 데스크톱·모바일 앱은 기기마다 자체 데이터를 보관합니다. 웹에서 다운로드한 사본은 각 앱이 다음에 업데이트를 확인할 때 삭제되며, 앱에서 직접 가져온 명세서는 해당 기기에서 삭제할 때까지 남아 있습니다."
         button: 내 금융 데이터 삭제
         deleted: 금융 데이터를 삭제했습니다. 계정은 계속 사용할 수 있습니다.
         failed: 금융 데이터를 삭제하지 못했습니다. 아무것도 삭제되지 않았습니다. 다시 시도하세요.

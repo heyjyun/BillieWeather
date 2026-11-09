@@ -6,10 +6,10 @@ import type { SqlDriver } from "./store";
 
 export const isTauri = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
-export async function openDatabase(): Promise<{ driver: SqlDriver; persistent: boolean }> {
+export async function openDatabase(file = "billieweather.db"): Promise<{ driver: SqlDriver; persistent: boolean }> {
   if (isTauri()) {
     const { default: Database } = await import("@tauri-apps/plugin-sql");
-    const db = await Database.load("sqlite:billieweather.db");
+    const db = await Database.load(`sqlite:${file}`);
     return {
       persistent: true,
       driver: {
@@ -31,6 +31,33 @@ export async function openDatabase(): Promise<{ driver: SqlDriver; persistent: b
   const migrations = import.meta.glob("../../src-tauri/migrations/*.sql", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
   for (const path of Object.keys(migrations).sort()) db.exec(migrations[path]);
   return { driver: sqljsDriver(db), persistent: false };
+}
+
+/** A generic label from the WebView when the OS gives no name ("iPhone", "Android", …). */
+export function genericDeviceName(userAgent = typeof navigator === "undefined" ? "" : navigator.userAgent): string | null {
+  if (/iPad/.test(userAgent) || (/Macintosh/.test(userAgent) && typeof navigator !== "undefined" && navigator.maxTouchPoints > 1)) return "iPad";
+  if (/iPhone|iPod/.test(userAgent)) return "iPhone";
+  if (/Android/.test(userAgent)) return "Android";
+  if (/Macintosh|Mac OS X/.test(userAgent)) return "Mac";
+  if (/Windows/.test(userAgent)) return "Windows PC";
+  return null;
+}
+
+/**
+ * The device's own name (computer name on macOS/Windows, model on Android), used as the
+ * default name for this device's database. Null when nothing is known.
+ */
+export async function deviceName(): Promise<string | null> {
+  if (isTauri()) {
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const name = await invoke<string | null>("device_name");
+      if (name && name.trim()) return name.trim();
+    } catch {
+      // Fall back to the generic label below.
+    }
+  }
+  return genericDeviceName();
 }
 
 /** Saves bytes to a file the person chooses. Returns false if they cancelled. */

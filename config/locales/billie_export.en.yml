@@ -103,6 +103,53 @@ en:
           missing_date: Statement date missing
           future_date: Statement date is in the future
           missing_balance: Closing balance missing
+    database:
+      local:
+        heading: "Local databases"
+        storage: "Storage"
+        storage_label: "Storage"
+        bar_label: "How storage is shared between the cloud database and your local databases"
+        kind_cloud: "Cloud"
+        kind_local: "Local"
+        cloud_total: "Cloud storage on BillieWeather's servers: %{size}."
+        local_total: "Local storage reported by your devices: %{size}."
+        not_uploaded: "Local sizes are reported by your apps and stay on your devices; they are not uploaded and do not count as cloud storage."
+        empty: "No local databases are shown. Turn on “Show My Local Databases on the Website” in the app's Settings to see them here."
+        device: "Device"
+        unknown_device: "Unknown device"
+        status_local: "Local Database"
+        modified: "Last modified on device"
+        opened: "App last opened"
+        reported: "Last reported"
+        notice: "This database is stored on your device. You can only open or modify it from that device."
+        stale: "Not updated for over 30 days. Information may be outdated."
+      default_name: "BillieWeather cloud"
+      name: "Database name"
+      name_help: "Shown here and in your apps. Leave empty for the default name."
+      save_name: "Save name"
+      name_saved: "Database name saved."
+      heading: Your database
+      intro: Everything BillieWeather keeps for you in the cloud. The website and all your apps share this database. Clean it up one statement at a time here; the buttons below delete everything.
+      size: Size
+      size_approx: about %{size}
+      statements: Statements
+      transactions: Transactions
+      bank_accounts: Bank accounts
+      rules: Remembered rules
+      pending_imports: PDF imports waiting
+      insights: Analyses & tax notes
+      dates: Dates
+      last_updated: Last changed
+      no_statements: No statements yet.
+      show_statements: Show statements (%{count})
+      statements_help: Deleting a statement removes it and its transactions from the cloud. Apps remove their downloaded copy the next time they check.
+      transaction_count: "%{count} transaction(s)"
+      delete: Delete
+      delete_named: Delete “%{name}” from the cloud
+      delete_confirm: Delete “%{name}” and its %{count} transaction(s) from the cloud? This cannot be undone.
+      devices: "Each desktop and mobile app also keeps its own databases on its device (you can have several). See their size, name, and move data between them on the app's Data page."
+      get_apps: Get the apps
+      manage_statements: Manage statements
     privacy:
       heading: Privacy & data
       intro: Remove your financial data at any time, or close your account entirely. Both actions are permanent.
@@ -121,6 +168,7 @@ en:
           insights: Generated insights and tax-preparation notes
           profile: Balances, cash on hand, currency and tax context
         kept: Your login, nickname, password and region are kept, so you can start fresh.
+        devices: "This deletes the copy stored in the BillieWeather cloud. The desktop and mobile apps keep their own data on each device: copies they downloaded from the website are removed the next time each app checks for updates, and statements imported directly in an app stay on that device until you delete them there."
         button: Delete my financial data
         deleted: Your financial data has been deleted. Your account is still active.
         failed: Your financial data could not be deleted. Nothing was removed; please try again.

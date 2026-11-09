@@ -9,11 +9,9 @@ import { openExternal } from "../services/session";
 export function Settings() {
   const { m, t, locale } = useI18n();
   const { account, offline, signOut, savePreferences } = useAccount();
-  const { store, refresh, rules, statements, transactions, persistent, sync, syncEnabled, lastChecked, syncNow, setSyncEnabled } = useFinance();
+  const { store, refresh, rules, statements, transactions, persistent, sync, syncEnabled, lastChecked, syncNow, setSyncEnabled, reporting } = useFinance();
   const [nickname, setNickname] = useState(account?.nickname ?? "");
   const [accountStatus, setAccountStatus] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [status, setStatus] = useState("");
   const x = m.settings;
 
   async function save(preferences: Parameters<typeof savePreferences>[0]) {
@@ -25,12 +23,6 @@ export function Settings() {
     }
   }
 
-  async function deleteAll() {
-    await store.deleteAllData();
-    await refresh();
-    setConfirm("");
-    setStatus(x.deleted);
-  }
 
   const memberSince = account?.registeredAt ? new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(new Date(account.registeredAt)) : "—";
 
@@ -61,6 +53,16 @@ export function Settings() {
           <button type="button" className="bw-button bw-button-outline" onClick={() => signOut()}>{x.signOut}</button>
         </div>
       </section>
+
+      {persistent && (
+        <section className="bw-panel bw-report" aria-labelledby="report-heading">
+          <h2 id="report-heading">{m.report.title}</h2>
+          <p>{m.report.body}</p>
+          <label className="bw-check"><input type="checkbox" checked={reporting.enabled} onChange={(e) => void reporting.setEnabled(e.target.checked)} /> {m.report.title}</label>
+          {reporting.pendingRemoval && <p className="bw-caption" role="status">{m.report.pending}</p>}
+          {!reporting.enabled && !reporting.pendingRemoval && reporting.removalConfirmed && <p className="bw-caption" role="status">{m.report.removed}</p>}
+        </section>
+      )}
 
       <section className="bw-panel bw-web-sync" aria-labelledby="web-sync-heading">
         <h2 id="web-sync-heading">{m.sync.title}</h2>
@@ -101,14 +103,6 @@ export function Settings() {
         )}
       </section>
 
-      <section className="bw-panel bw-danger">
-        <h2>{x.deleteTitle}</h2>
-        <p>{x.deleteBody}</p>
-        {syncEnabled && <p className="bw-caption">{m.sync.deleteNote}</p>}
-        <label className="bw-field"><span>{x.deleteConfirm}</span><input value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" /></label>
-        <button className="bw-button bw-button-danger" disabled={confirm !== "DELETE"} onClick={deleteAll}>{x.deleteButton}</button>
-        <p role="status" aria-live="polite" className="bw-sr-status">{status}</p>
-      </section>
     </>
   );
 }

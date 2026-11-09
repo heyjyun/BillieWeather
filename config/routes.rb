@@ -50,6 +50,7 @@ Rails.application.routes.draw do
     resource :profile, only: :update
     resource :settings, only: [:show, :update], controller: :settings do
       patch :nickname
+      patch :database_name
       patch :password
       patch :supporter_recognition
       post :password_reset
@@ -94,13 +95,23 @@ Rails.application.routes.draw do
   end
 
   # API for the desktop and mobile apps (clients/universal): sign-in, account preferences,
-  # and a read-only download of the person's web financial data. Apps never upload financial data.
+  # the person's web financial data (download, statement upload for the Data page's database
+  # transfers, delete one statement or the whole cloud database after a typed confirmation).
   scope "api/client/v1", module: "client_api/v1", as: "client_api_v1", defaults: {format: :json} do
     resource :session, only: [:create, :destroy]
     resource :account, only: [:show, :update]
     # Read-only copy of the person's web financial data for the app's local database.
+    # One-way metadata from the app about its local databases (names, sizes, counts; never financial
+    # content). The website only displays it. There is deliberately no route that commands a device.
+    put "devices/:device_id/databases/:database_id", to: "local_databases#upsert", as: :local_database
+    delete "devices/:device_id/databases/:database_id", to: "local_databases#destroy"
+    delete "devices/:device_id", to: "local_databases#purge", as: :local_device
     get "finance", to: "finance#show", as: :finance
+    patch "finance", to: "finance#rename", as: :finance_rename
+    delete "finance", to: "finance#destroy_all", as: :finance_destroy_all
+    post "finance/statements", to: "finance#create_statement", as: :finance_statement_import
     get "finance/statements", to: "finance#statements", as: :finance_statements
+    delete "finance/statements/:id", to: "finance#destroy_statement", as: :finance_statement
     get "finance/transactions", to: "finance#transactions", as: :finance_transactions
     get "finance/rules", to: "finance#rules", as: :finance_rules
   end

@@ -103,6 +103,53 @@ zh-TW:
           missing_date: 缺少對帳單日期
           future_date: 對帳單日期在未來
           missing_balance: 缺少期末餘額
+    database:
+      local:
+        heading: "Local databases"
+        storage: "Storage"
+        storage_label: "Storage"
+        bar_label: "How storage is shared between the cloud database and your local databases"
+        kind_cloud: "Cloud"
+        kind_local: "Local"
+        cloud_total: "Cloud storage on BillieWeather's servers: %{size}."
+        local_total: "Local storage reported by your devices: %{size}."
+        not_uploaded: "Local sizes are reported by your apps and stay on your devices; they are not uploaded and do not count as cloud storage."
+        empty: "No local databases are shown. Turn on “Show My Local Databases on the Website” in the app's Settings to see them here."
+        device: "Device"
+        unknown_device: "Unknown device"
+        status_local: "Local Database"
+        modified: "Last modified on device"
+        opened: "App last opened"
+        reported: "Last reported"
+        notice: "This database is stored on your device. You can only open or modify it from that device."
+        stale: "Not updated for over 30 days. Information may be outdated."
+      default_name: "BillieWeather 雲端資料庫"
+      name: "資料庫名稱"
+      name_help: "會顯示在這裡和你的各個 App 中。留空則使用預設名稱。"
+      save_name: "儲存名稱"
+      name_saved: "資料庫名稱已儲存。"
+      heading: 我的資料庫
+      intro: BillieWeather 在雲端為你保存的全部資料。網站和你所有的 App 共用這個資料庫。可以在這裡逐份帳單清理；下面的按鈕會刪除全部內容。
+      size: 大小
+      size_approx: 約 %{size}
+      statements: 帳單
+      transactions: 交易
+      bank_accounts: 銀行帳戶
+      rules: 記住的規則
+      pending_imports: 待確認的 PDF
+      insights: 分析與報稅備註
+      dates: 日期範圍
+      last_updated: 最近變更
+      no_statements: 還沒有帳單。
+      show_statements: 查看 %{count} 份帳單
+      statements_help: 刪除帳單會把它和其中的交易從雲端移除。各個 App 下次檢查時會刪除已下載的副本。
+      transaction_count: "%{count} 筆交易"
+      delete: 刪除
+      delete_named: 從雲端刪除「%{name}」
+      delete_confirm: 從雲端刪除「%{name}」及其 %{count} 筆交易？此操作無法復原。
+      devices: "每個桌面和手機 App 也會在裝置上保存自己的資料庫（可以有多個）。在 App 的「資料」頁可以查看它們的大小和名稱，並在資料庫之間移動資料。"
+      get_apps: 下載 App
+      manage_statements: 管理帳單
     privacy:
       heading: 隱私與資料
       intro: 你可以隨時刪除財務資料，或徹底刪除帳號。兩項操作都無法復原。
@@ -121,6 +168,7 @@ zh-TW:
           insights: 產生的分析和報稅準備筆記
           profile: 餘額、手邊現金、幣別和稅務資訊
         kept: 你的登入資訊、暱稱、密碼和地區會保留，可以重新開始。
+        devices: "這裡刪除的是保存在 BillieWeather 雲端的資料。桌面版和手機版應用程式在每台裝置上各有自己的資料：它們從網頁版下載的副本，會在各應用程式下次檢查更新時移除；直接在應用程式裡匯入的帳單會留在那台裝置上，需要在該裝置上刪除。"
         button: 刪除我的財務資料
         deleted: 你的財務資料已刪除，帳號仍可繼續使用。
         failed: 無法刪除你的財務資料，未刪除任何內容，請重試。

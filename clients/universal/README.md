@@ -74,9 +74,17 @@ not set up yet.
 - **Storage**: `sqlite:billieweather.db` in the app's private data directory, created by Tauri's SQL
   plugin. On macOS that is `~/Library/Application Support/com.billieweather.client/`; on iOS and
   Android it is the app sandbox.
+- **Several databases**: a device can keep up to 8 local databases (the Data page creates them). Each
+  is its own SQLite file: `billieweather.db`, `billieweather-2.db`, … `billieweather-8.db`, all with the
+  same migrations (`src-tauri/src/lib.rs`; keep in step with `MAX_DATABASES` in `src/services/databases.ts`).
+  The list and which one is in use are kept in `localStorage` (`billie.databases`, slot numbers only).
+- **Database name**: every database has a name the person chose (the first one is named on first run,
+  pre-filled with the device's own name: macOS Computer Name, Windows computer name, Android model,
+  iOS "iPhone"/"iPad"). The name is only a label kept in that database's `settings` table. The cloud
+  database has a name too (`users.cloud_database_name`, also editable on the website under Settings).
 - **Network: account only**:
   - The app signs in to the BillieWeather Rails API (`/api/client/v1`, see `app/controllers/client_api/v1`). After that it only sends language, nickname and time-zone changes.
-  - **Statements and transactions never leave the device.** `src/services/account.ts` is the only code allowed to use the network, and it may not import any financial code (enforced by `test/privacy.test.ts`).
+  - **Statements and transactions leave the device only when the person syncs a database to the cloud** (see *Managing data*). `src/services/account.ts` may not import any financial code (enforced by `test/privacy.test.ts`).
   - The WebView Content Security Policy allows exactly one origin besides the local IPC bridge: the BillieWeather server chosen at build time.
 - **Accounts and preferences**:
   - Server side (existing Neon `users` columns, no migration): email, nickname, language, time zone, region, sign-up date and badges.
@@ -91,8 +99,17 @@ not set up yet.
   the save dialog, and writing to the file the person picked. There is no file-system read scope;
   imports use the standard file picker.
 - **No analytics, crash reporting, or financial sync.**
-- **Deleting data** (Settings → Delete local data) removes every row and runs `VACUUM` to reclaim
-  the freed pages.
+- **Managing data** (the Data page):
+  - Lists the cloud and every local database side by side, each with its name, size (actual SQLite size locally, approximate in the cloud), its share of the total, contents, date range and last change, plus a bar of the shares. Databases on other devices are stored there and are not counted.
+  - *Delete database* needs the typed confirmation word ("delete", localized) and says it cannot be undone. A local database is emptied and removed from the list (the last one is emptied and kept). The cloud database is deleted with `DELETE /api/client/v1/finance?confirm=delete`; website copies on devices become the devices' own data. Single statements can still be removed one at a time (`DELETE …/finance/statements/:id` in the cloud).
+  - *Sync* copies what one database has into another (local → local, cloud → local, local → cloud). Only statements the target does not have (matched by file hash) are added; nothing is deleted from either side, so it is safe to repeat. The panel shows each side's statement/transaction counts and last change, and previews what will be added. Local → local goes straight between the two files; it uses the cloud only if "Also keep a copy in the cloud" is ticked.
+  - **What leaves the device**: only when the person syncs *to the cloud* (or ticks the box), one statement per `POST …/finance/statements` request from `src/services/cloudUpload.ts` (the only code that sends statements; enforced by `test/privacy.test.ts`). Nothing is ever sent automatically.
+- **Local database metadata on the website** (Settings → "Show My Local Databases on the Website", **off by default**, kept per account on this device):
+  - When on, the app reports ONLY: a random database id, a random device id, the database name, the device name, size in bytes, statement/transaction/rule counts, first and last transaction date, last modified time and when the app session started. Never statement names, descriptions, amounts, balances, merchants, categories, accounts, paths or files. The request body is built from an explicit allowlist (`REPORT_FIELDS` in `src/services/localReport.ts`); the server rejects any other field; `test/privacy.test.ts` pins both.
+  - One-way: `PUT /api/client/v1/devices/:device/databases/:database`, `DELETE` the same path (a database was deleted) and `DELETE /devices/:device` (switched off, forget everything). The server only displays it; no route can command a device.
+  - Reported when the app opens and the person is signed in, and after creating, renaming or deleting a database, or finishing a sync. There is no timer and no background work. Unchanged data is not resent.
+  - Offline, everything keeps working. Removals (deleted databases, "stop sharing") are queued in `localStorage` and retried with their original sequence number until the server confirms; the UI says "pending" until then. Per-device sequence numbers make retries and late, older reports harmless on the server (a deleted database stays deleted).
+  - Database ids live in each database's `settings` table (`report_id`), stay the same across renames and disappear with the database.
 - **Migrations**: `src-tauri/migrations/NNNN_*.sql`, applied in order by the SQL plugin. Never
   edit a shipped file; add a new numbered one that migrates data in place. Tests apply the same
   files.

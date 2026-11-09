@@ -30,6 +30,22 @@ class PrivacyDataDeletionTest < ActionDispatch::IntegrationTest
     Finance::DataDeletion::MODELS.to_h { |model| [model.table_name, model.where(user_id: user.id).count] }
   end
 
+  test "settings show just two buttons; the explanations and forms live in dialogs that start closed" do
+    sign_in @user
+    get finance_settings_path, params: {locale: "en"}
+    assert_response :success
+    assert_select "#settings-privacy > .bw-privacy-buttons button[data-dialog-open]", count: 2
+    assert_select "#settings-privacy > .bw-privacy-buttons button[data-dialog-open='privacy-delete-data-dialog']", text: "Delete my financial data"
+    assert_select "#settings-privacy > .bw-privacy-buttons button[data-dialog-open='privacy-delete-account-dialog']"
+    # Nothing long is shown on the page itself: every list and form is inside a closed dialog.
+    assert_select "#settings-privacy > p", count: 0
+    assert_select "#settings-privacy > .bw-privacy-action", count: 0
+    assert_select "#settings-privacy dialog[open]", count: 0
+    assert_select "dialog#privacy-delete-data-dialog form[action='#{finance_financial_data_path}']"
+    assert_select "dialog#privacy-delete-account-dialog form[action='#{user_registration_path}']"
+    assert_equal "settings-privacy", css_select("main section.bw-panel").last["id"], "privacy is the last section"
+  end
+
   test "settings explain both actions, warn to export first and link to the export" do
     sign_in @user
     get finance_settings_path

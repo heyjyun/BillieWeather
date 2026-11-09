@@ -4,13 +4,21 @@
 import type { Category, Currency, MerchantRule, ParsedStatement, Statement, Transaction } from "@billie/shared-types";
 import { CURRENCIES } from "@billie/shared-types";
 import { Categorizer, recategorizeUncategorized, ruleFor, transactionsMatchingRule } from "@billie/finance-core";
+import { randomId } from "./ids";
 
 export interface SqlDriver {
   execute(sql: string, params?: unknown[]): Promise<{ rowsAffected: number; lastInsertId?: number }>;
   select<T>(sql: string, params?: unknown[]): Promise<T[]>;
 }
 
-export type StoreErrorCode = "statement_duplicate" | "currency_mismatch" | "unsupported_currency" | "not_found";
+export type StoreErrorCode = "statement_duplicate" | "currency_mismatch" | "unsupported_currency" | "not_found" | "invalid_name";
+
+export const DATABASE_NAME_MAX = 60;
+
+/** Collapses whitespace, drops control characters and limits the length of a database name. */
+export function normalizeDatabaseName(name: string): string {
+  return [...name.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim()].slice(0, DATABASE_NAME_MAX).join("").trim();
+}
 
 /** `code` matches a Rails billie.backend.* key where one exists, so the message can be translated. */
 export class StoreError extends Error {
@@ -50,6 +58,49 @@ export interface WebSyncResult {
   transactionsUpdated: number;
   transactionsRemoved: number;
   skippedDuplicates: number;
+}
+
+/** One statement with all its transactions, as it travels between databases. */
+export interface TransferStatement {
+  filename: string;
+  currency: Currency;
+  sha256: string;
+  closingBalanceCents: number | null;
+  closingBalanceOn: string | null;
+  importedAt: string;
+  rows: Array<{ bookedOn: string; description: string; amountCents: number; category: Category; taxReview: boolean; excluded: boolean }>;
+}
+
+export interface TransferData {
+  statements: TransferStatement[];
+  rules: MerchantRule[];
+}
+
+export interface MergeResult {
+  statementsAdded: number;
+  transactionsAdded: number;
+  rulesAdded: number;
+  /** Statements the target already had (same file hash). */
+  skipped: number;
+}
+
+export interface StatementInventoryItem {
+  id: number;
+  filename: string;
+  sha256: string;
+  source: "local" | "web";
+  transactionCount: number;
+  periodStart: string | null;
+  periodEnd: string | null;
+}
+
+export interface LocalSummary {
+  localStatements: number;
+  webStatements: number;
+  localTransactions: number;
+  webTransactions: number;
+  rules: number;
+  currency: Currency | null;
 }
 
 export interface WebSyncSettings {
@@ -97,6 +148,10 @@ export class FinanceStore {
       throw new StoreError("currency_mismatch", `This device keeps statements in ${existingCurrency}. Delete local data to switch currency.`, { currency: existingCurrency });
     }
     const duplicate = await this.db.select<Row>("SELECT id FROM statements WHERE sha256 = $1", [input.sha256]);
+    if (duplicate.length === 0) {
+      const skipped = await this.skippedHashes();
+      if (skipped.delete(input.sha256)) await this.setSetting("web_sync_skip", JSON.stringify([...skipped]));
+    }
     if (duplicate.length > 0) throw new StoreError("statement_duplicate", "This statement was already imported.");
 
     const stamp = now();
@@ -160,18 +215,234 @@ export class FinanceStore {
   }
 
   /**
-   * Permanently removes every statement, transaction and rule on this device. The only
-   * setting kept is whether website download is on (a preference, not financial data).
+   * Permanently removes every statement, transaction and rule in this database. The only
+   * settings kept are whether website download is on and the database's name
+   * (preferences, not financial data), unless `forgetName` clears those too.
    */
-  async deleteAllData(): Promise<void> {
+  async deleteAllData(options: { forgetName?: boolean } = {}): Promise<void> {
     for (const table of ["transactions", "statements", "merchant_rules"]) await this.db.execute(`DELETE FROM ${table}`);
-    await this.db.execute("DELETE FROM settings WHERE key <> $1", ["web_sync_enabled"]);
+    if (options.forgetName) await this.db.execute("DELETE FROM settings");
+    else await this.db.execute("DELETE FROM settings WHERE key NOT IN ($1, $2)", ["web_sync_enabled", "database_name"]);
     // Reclaim freed pages so deleted rows do not linger in the database file.
     try {
       await this.db.execute("VACUUM");
     } catch {
       // Some drivers refuse VACUUM while other connections are open; the rows are already gone.
     }
+  }
+
+  /** The name the person gave this device's database, or null before it has been named. */
+  async databaseName(): Promise<string | null> {
+    const [row] = await this.db.select<Row>("SELECT value FROM settings WHERE key = $1", ["database_name"]);
+    return row ? String(row.value) : null;
+  }
+
+  /** Names (or renames) this device's database. Returns the name as stored. */
+  async setDatabaseName(name: string): Promise<string> {
+    const clean = normalizeDatabaseName(name);
+    if (!clean) throw new StoreError("invalid_name", "Give this database a name.");
+    await this.setSetting("database_name", clean);
+    return clean;
+  }
+
+  /**
+   * This database's random identifier for the website's "Local databases" cards: made the first
+   * time it is needed, kept across renames, and gone when the database is deleted. It is not
+   * derived from a path, the device or anything personal.
+   */
+  async reportId(): Promise<string> {
+    const existing = await this.peekReportId();
+    if (existing) return existing;
+    const id = randomId();
+    await this.setSetting("report_id", id);
+    return id;
+  }
+
+  /** The identifier if one was ever made (so deleting a database that was never reported sends nothing). */
+  async peekReportId(): Promise<string | null> {
+    const [row] = await this.db.select<Row>("SELECT value FROM settings WHERE key = $1", ["report_id"]);
+    return row ? String(row.value) : null;
+  }
+
+  /**
+   * The basic facts about this database that may be shown on the website: its name, size and
+   * counts. Counts and dates only; no statement names, descriptions, amounts or categories.
+   */
+  async reportSummary(): Promise<{ name: string | null; sizeBytes: number; statements: number; transactions: number; rules: number; periodStart: string | null; periodEnd: string | null; modifiedAt: string | null }> {
+    const [info, counts, modifiedAt, name] = await Promise.all([
+      this.databaseInfo(),
+      this.db.select<Row>("SELECT (SELECT COUNT(*) FROM statements) AS statements, (SELECT COUNT(*) FROM transactions) AS transactions, (SELECT COUNT(*) FROM merchant_rules) AS rules"),
+      this.lastChanged(),
+      this.databaseName(),
+    ]);
+    return {
+      name, sizeBytes: info.sizeBytes, statements: Number(counts[0]?.statements ?? 0), transactions: Number(counts[0]?.transactions ?? 0),
+      rules: Number(counts[0]?.rules ?? 0), periodStart: info.periodStart, periodEnd: info.periodEnd, modifiedAt,
+    };
+  }
+
+  /** Size and coverage of this device's database. */
+  async databaseInfo(): Promise<{ sizeBytes: number; periodStart: string | null; periodEnd: string | null }> {
+    const [pages] = await this.db.select<Row>("SELECT page_count * page_size AS bytes FROM pragma_page_count(), pragma_page_size()");
+    const [range] = await this.db.select<Row>("SELECT MIN(booked_on) AS first, MAX(booked_on) AS last FROM transactions");
+    return { sizeBytes: Number(pages?.bytes ?? 0), periodStart: (range?.first as string | null) ?? null, periodEnd: (range?.last as string | null) ?? null };
+  }
+
+  /** When anything in this database last changed (a transaction edit or a statement import). */
+  async lastChanged(): Promise<string | null> {
+    const [row] = await this.db.select<Row>(`SELECT MAX(v) AS last FROM (
+      SELECT MAX(updated_at) AS v FROM transactions UNION ALL SELECT MAX(imported_at) FROM statements UNION ALL SELECT MAX(updated_at) FROM merchant_rules)`);
+    return (row?.last as string | null) ?? null;
+  }
+
+  /** Everything in this database, to copy into another one. Statements keep their file hash. */
+  async exportData(): Promise<TransferData> {
+    const statements = await this.statements();
+    const transactions = await this.transactions();
+    const byStatement = new Map<number, TransferStatement["rows"]>();
+    for (const t of [...transactions].reverse()) {
+      const rows = byStatement.get(t.statementId) ?? [];
+      rows.push({ bookedOn: t.bookedOn, description: t.description, amountCents: t.amountCents, category: t.category, taxReview: t.taxReview, excluded: t.excluded });
+      byStatement.set(t.statementId, rows);
+    }
+    return {
+      statements: statements.map((s) => ({
+        filename: s.filename, currency: s.currency, sha256: s.sha256, closingBalanceCents: s.closingBalanceCents,
+        closingBalanceOn: s.closingBalanceOn, importedAt: s.importedAt, rows: byStatement.get(s.id) ?? [],
+      })),
+      rules: await this.rules(),
+    };
+  }
+
+  /**
+   * Copies another database's data into this one. Statements this database already has
+   * (same file hash) are left alone, so running it twice changes nothing; rules this
+   * database already has win. Copies become this database's own statements. One database
+   * keeps one currency, like an import.
+   */
+  async mergeData(data: TransferData): Promise<MergeResult> {
+    const result: MergeResult = { statementsAdded: 0, transactionsAdded: 0, rulesAdded: 0, skipped: 0 };
+    const known = new Set((await this.db.select<Row>("SELECT sha256 FROM statements")).map((row) => String(row.sha256)));
+    const fresh = data.statements.filter((statement) => {
+      if (known.has(statement.sha256)) result.skipped += 1;
+      return !known.has(statement.sha256);
+    });
+    const currency = (await this.currency()) ?? fresh[0]?.currency ?? null;
+    const wrong = fresh.find((statement) => statement.currency !== currency);
+    if (currency && wrong) throw new StoreError("currency_mismatch", `This database keeps statements in ${currency}.`, { currency, web: wrong.currency });
+    const stamp = now();
+    const skipped = await this.skippedHashes();
+    for (const statement of fresh) {
+      const inserted = await this.db.execute(
+        "INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        [statement.filename, statement.currency, statement.sha256, statement.rows.length, statement.closingBalanceCents, statement.closingBalanceOn, statement.importedAt || stamp],
+      );
+      const statementId = Number(inserted.lastInsertId);
+      try {
+        for (let start = 0; start < statement.rows.length; start += 100) {
+          const batch = statement.rows.slice(start, start + 100);
+          const params: unknown[] = [];
+          const values = batch.map((row) => {
+            const base = params.length;
+            params.push(statementId, row.bookedOn, row.description, row.amountCents, row.category, row.taxReview ? 1 : 0, row.excluded ? 1 : 0, stamp);
+            return `(${Array.from({ length: 8 }, (_, i) => `$${base + i + 1}`).join(", ")})`;
+          });
+          await this.db.execute(
+            `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at) VALUES ${values.join(", ")}`,
+            params,
+          );
+        }
+      } catch (error) {
+        await this.db.execute("DELETE FROM transactions WHERE statement_id = $1", [statementId]);
+        await this.db.execute("DELETE FROM statements WHERE id = $1", [statementId]);
+        throw error;
+      }
+      skipped.delete(statement.sha256);
+      result.statementsAdded += 1;
+      result.transactionsAdded += statement.rows.length;
+    }
+    if (result.statementsAdded > 0) {
+      await this.setSetting("web_sync_skip", JSON.stringify([...skipped]));
+      if (!(await this.currency()) && currency) await this.setSetting("currency", currency);
+    }
+    for (const rule of data.rules) {
+      const added = await this.db.execute(
+        "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO NOTHING",
+        [rule.merchantKey, rule.income ? 1 : 0, rule.category, stamp],
+      );
+      result.rulesAdded += added.rowsAffected;
+    }
+    return result;
+  }
+
+  /** Every statement on this device with its transaction count and date range. */
+  async statementInventory(): Promise<StatementInventoryItem[]> {
+    const rows = await this.db.select<Row>(`SELECT s.id, s.filename, s.sha256, s.source, COUNT(t.id) AS transactions, MIN(t.booked_on) AS first, MAX(t.booked_on) AS last
+      FROM statements s LEFT JOIN transactions t ON t.statement_id = s.id GROUP BY s.id ORDER BY last DESC, s.id DESC`);
+    return rows.map((row) => ({
+      id: Number(row.id), filename: String(row.filename), sha256: String(row.sha256), source: row.source === "web" ? "web" : "local",
+      transactionCount: Number(row.transactions), periodStart: (row.first as string | null) ?? null, periodEnd: (row.last as string | null) ?? null,
+    }));
+  }
+
+  /**
+   * Removes one statement and its transactions from this device. If the same statement is
+   * in the cloud, it is remembered as "not on this device" so downloads don't bring it back.
+   */
+  async removeStatement(id: number): Promise<void> {
+    const [row] = await this.db.select<Row>("SELECT sha256 FROM statements WHERE id = $1", [id]);
+    if (!row) throw new StoreError("not_found", "Statement not found.");
+    await this.db.execute("DELETE FROM transactions WHERE statement_id = $1", [id]);
+    await this.db.execute("DELETE FROM statements WHERE id = $1", [id]);
+    const skipped = await this.skippedHashes();
+    skipped.add(String(row.sha256));
+    await this.setSetting("web_sync_skip", JSON.stringify([...skipped]));
+    if ((await this.db.select<Row>("SELECT 1 FROM statements LIMIT 1")).length === 0) {
+      await this.db.execute("DELETE FROM settings WHERE key = $1", ["currency"]);
+    }
+  }
+
+  /** Statements (by file hash) the person chose not to keep on this device. */
+  async skippedHashes(): Promise<Set<string>> {
+    const [row] = await this.db.select<Row>("SELECT value FROM settings WHERE key = $1", ["web_sync_skip"]);
+    try {
+      return new Set(row ? (JSON.parse(String(row.value)) as string[]) : []);
+    } catch {
+      return new Set();
+    }
+  }
+
+  /** Allows a cloud statement to be downloaded to this device again. */
+  async allowDownload(sha256: string): Promise<void> {
+    const skipped = await this.skippedHashes();
+    skipped.delete(sha256);
+    await this.setSetting("web_sync_skip", JSON.stringify([...skipped]));
+    await this.db.execute("DELETE FROM settings WHERE key = $1", ["web_sync_version"]);
+  }
+
+  /** What is stored on this device, split by where it came from. */
+  async localSummary(): Promise<LocalSummary> {
+    const [counts] = await this.db.select<Row>(`SELECT
+      (SELECT COUNT(*) FROM statements WHERE source = 'local') AS local_statements,
+      (SELECT COUNT(*) FROM statements WHERE source = 'web') AS web_statements,
+      (SELECT COUNT(*) FROM transactions WHERE remote_id IS NULL) AS local_transactions,
+      (SELECT COUNT(*) FROM transactions WHERE remote_id IS NOT NULL) AS web_transactions,
+      (SELECT COUNT(*) FROM merchant_rules) AS rules`);
+    return {
+      localStatements: Number(counts.local_statements), webStatements: Number(counts.web_statements),
+      localTransactions: Number(counts.local_transactions), webTransactions: Number(counts.web_transactions),
+      rules: Number(counts.rules), currency: await this.currency(),
+    };
+  }
+
+  /**
+   * After the cloud copy is deleted but this device should keep its data: website copies
+   * become ordinary local statements, so a later download no longer removes them.
+   */
+  async detachWebCopies(): Promise<void> {
+    await this.db.execute("UPDATE transactions SET remote_id = NULL WHERE remote_id IS NOT NULL");
+    await this.db.execute("UPDATE statements SET source = 'local', remote_id = NULL WHERE source = 'web'");
+    await this.db.execute("DELETE FROM settings WHERE key = $1", ["web_sync_version"]);
   }
 
   async webSyncSettings(): Promise<WebSyncSettings> {
@@ -209,9 +480,11 @@ export class FinanceStore {
     // Statements.
     const localRows = await this.db.select<Row>("SELECT id, sha256, source, remote_id FROM statements");
     const localHashes = new Set(localRows.filter((row) => row.source !== "web").map((row) => String(row.sha256)));
+    const skipped = await this.skippedHashes();
     const copies = new Map(localRows.filter((row) => row.source === "web").map((row) => [Number(row.remote_id), Number(row.id)]));
     const statementIdFor = new Map<number, number>();
     for (const statement of web.statements) {
+      if (skipped.has(statement.sha256)) continue; // the person removed it from this device
       if (localHashes.has(statement.sha256)) {
         result.skippedDuplicates += 1;
         continue;

@@ -103,6 +103,53 @@ ja:
           missing_date: 明細書の日付がありません
           future_date: 明細書の日付が未来です
           missing_balance: 締め残高がありません
+    database:
+      local:
+        heading: "Local databases"
+        storage: "Storage"
+        storage_label: "Storage"
+        bar_label: "How storage is shared between the cloud database and your local databases"
+        kind_cloud: "Cloud"
+        kind_local: "Local"
+        cloud_total: "Cloud storage on BillieWeather's servers: %{size}."
+        local_total: "Local storage reported by your devices: %{size}."
+        not_uploaded: "Local sizes are reported by your apps and stay on your devices; they are not uploaded and do not count as cloud storage."
+        empty: "No local databases are shown. Turn on “Show My Local Databases on the Website” in the app's Settings to see them here."
+        device: "Device"
+        unknown_device: "Unknown device"
+        status_local: "Local Database"
+        modified: "Last modified on device"
+        opened: "App last opened"
+        reported: "Last reported"
+        notice: "This database is stored on your device. You can only open or modify it from that device."
+        stale: "Not updated for over 30 days. Information may be outdated."
+      default_name: "BillieWeather クラウド"
+      name: "データベース名"
+      name_help: "ここと各アプリに表示されます。空欄にすると既定の名前になります。"
+      save_name: "名前を保存"
+      name_saved: "データベース名を保存しました。"
+      heading: データベース
+      intro: BillieWeather がクラウドに保存しているあなたのデータです。ウェブサイトとすべてのアプリがこのデータベースを共有します。ここでは明細書を 1 件ずつ整理できます。下のボタンはすべてを削除します。
+      size: サイズ
+      size_approx: 約 %{size}
+      statements: 明細書
+      transactions: 取引
+      bank_accounts: 銀行口座
+      rules: 記憶したルール
+      pending_imports: 確認待ちの PDF
+      insights: 分析と税務メモ
+      dates: 期間
+      last_updated: 最終更新
+      no_statements: 明細書はまだありません。
+      show_statements: 明細書 %{count} 件を表示
+      statements_help: 明細書を削除すると、その取引とともにクラウドから消えます。アプリは次に確認したときにダウンロード済みのコピーを削除します。
+      transaction_count: "%{count} 件の取引"
+      delete: 削除
+      delete_named: "「%{name}」をクラウドから削除"
+      delete_confirm: "「%{name}」と %{count} 件の取引をクラウドから削除しますか？元に戻せません。"
+      devices: "デスクトップ／モバイルアプリは、それぞれの端末にも自分のデータベースを持ちます（複数作成できます）。サイズや名前の確認、データベース間の移動はアプリの「データ」ページで行えます。"
+      get_apps: アプリを入手
+      manage_statements: 明細書を管理
     privacy:
       heading: プライバシーとデータ
       intro: 家計データはいつでも削除でき、アカウント自体を閉じることもできます。どちらも元に戻せません。
@@ -121,6 +168,7 @@ ja:
           insights: 作成された分析と税務準備メモ
           profile: 残高、手元の現金、通貨、税務情報
         kept: ログイン、ニックネーム、パスワード、地域は残るため、最初からやり直せます。
+        devices: "ここで削除されるのは BillieWeather クラウドに保存されたデータです。デスクトップ版・モバイル版アプリは端末ごとに自分のデータを持っています。ウェブ版からダウンロードしたコピーは各アプリが次に更新を確認したときに削除され、アプリで直接取り込んだ明細はその端末で削除するまで残ります。"
         button: 家計データを削除する
         deleted: 家計データを削除しました。アカウントは引き続き利用できます。
         failed: 家計データを削除できませんでした。何も削除されていません。もう一度お試しください。

@@ -9,16 +9,20 @@ class User < ApplicationRecord
   has_many :finance_merchant_rules, class_name: "Finance::MerchantRule", dependent: :destroy
   has_many :finance_statement_drafts, class_name: "Finance::StatementDraft", dependent: :destroy
   has_many :finance_bank_accounts, class_name: "Finance::BankAccount", dependent: :destroy
+  has_many :finance_local_database_reports, class_name: "Finance::LocalDatabaseReport", dependent: :delete_all
+  has_many :finance_local_devices, class_name: "Finance::LocalDevice", dependent: :delete_all
   # Honorary badges (not roles: they grant no permissions) and private support-payment access.
   has_many :community_honors, class_name: "Community::Honor", dependent: :destroy
   has_one :community_support_access, class_name: "Community::SupportAccess", dependent: :destroy
   validates :google_uid, length: {maximum: 255}, uniqueness: true, allow_nil: true
   before_validation :normalize_usage_region
   before_validation :normalize_nickname
+  before_validation :normalize_cloud_database_name
   after_save { @usage_region_selection_attempted = false }
   validates :usage_region, presence: true, if: :usage_region_selection_required?
   validates :usage_region, inclusion: {in: UsageRegion::CODES}, allow_nil: true
   validates :nickname, length: {maximum: 40}
+  validates :cloud_database_name, length: {maximum: 60}
 
   def usage_region=(value)
     @usage_region_selection_attempted = true
@@ -104,6 +108,10 @@ class User < ApplicationRecord
   def normalize_usage_region
     self[:usage_region] = usage_region.to_s.strip.upcase.presence
     self.usage_region_pending = false if usage_region.present?
+  end
+
+  def normalize_cloud_database_name
+    self.cloud_database_name = cloud_database_name.to_s.gsub(/[[:cntrl:]]/, "").squish.presence
   end
 
   def normalize_nickname

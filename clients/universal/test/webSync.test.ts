@@ -75,6 +75,63 @@ describe("merging website data into the local database", () => {
     expect(await store.rules()).toEqual([{ merchantKey: "zed bakers", income: false, category: "Food & dining" }]);
   });
 
+  it("summarizes this device by origin, and keeps website copies as device data after the cloud is deleted", async () => {
+    const { store } = await newStore();
+    await importFile(store, fixtureBytes("basic-amount.csv"), "basic-amount.csv", "USD");
+    await store.applyWebData(web());
+    await store.markWebChecked("v9");
+    expect(await store.localSummary()).toEqual({ localStatements: 1, webStatements: 1, localTransactions: 9, webTransactions: 3, rules: 1, currency: "USD" });
+
+    await store.detachWebCopies();
+    expect(await store.localSummary()).toMatchObject({ localStatements: 2, webStatements: 0, localTransactions: 12, webTransactions: 0 });
+    expect((await store.webSyncSettings()).version).toBeNull();
+    // An empty cloud no longer removes them.
+    await store.applyWebData(web({ statements: [], transactions: [], rules: [] }));
+    expect((await store.transactions()).length).toBe(12);
+  });
+
+  it("reports database size, dates, and a per-statement inventory", async () => {
+    const { store } = await newStore();
+    await importFile(store, fixtureBytes("basic-amount.csv"), "basic-amount.csv", "USD");
+    await store.applyWebData(web());
+    const info = await store.databaseInfo();
+    expect(info.sizeBytes).toBeGreaterThan(4096);
+    expect([info.periodStart, info.periodEnd]).toEqual(["2026-01-02", "2026-03-03"]);
+    expect((await store.statementInventory()).map((s) => [s.filename, s.source, s.transactionCount, s.periodStart, s.periodEnd])).toEqual([
+      ["web-checking.csv", "web", 3, "2026-03-01", "2026-03-03"],
+      ["basic-amount.csv", "local", 9, "2026-01-02", "2026-02-11"],
+    ]);
+  });
+
+  it("removing one statement keeps the rest, and a removed website copy is not downloaded again until allowed", async () => {
+    const { store } = await newStore();
+    await importFile(store, fixtureBytes("basic-amount.csv"), "basic-amount.csv", "USD");
+    await store.applyWebData(web());
+    const webCopy = (await store.statementInventory()).find((s) => s.source === "web")!;
+    await store.removeStatement(webCopy.id);
+    expect((await store.transactions()).length).toBe(9);
+    expect(await store.skippedHashes()).toEqual(new Set(["f".repeat(64)]));
+
+    // Even a changed website version does not bring it back.
+    expect(await store.applyWebData(web())).toMatchObject({ statementsAdded: 0, transactionsAdded: 0 });
+    expect((await store.statementInventory()).length).toBe(1);
+
+    await store.allowDownload("f".repeat(64));
+    expect(await store.applyWebData(web())).toMatchObject({ statementsAdded: 1, transactionsAdded: 3 });
+  });
+
+  it("removing a statement imported here deletes it; importing the file again brings it back", async () => {
+    const { store } = await newStore();
+    const bytes = fixtureBytes("basic-amount.csv");
+    await importFile(store, bytes, "basic-amount.csv", "USD");
+    await store.removeStatement((await store.statementInventory())[0].id);
+    expect(await store.transactions()).toEqual([]);
+    expect(await store.currency()).toBeNull(); // nothing left, so the currency is free again
+    await importFile(store, bytes, "basic-amount.csv", "USD");
+    expect((await store.transactions()).length).toBe(9);
+    expect((await store.skippedHashes()).size).toBe(0);
+  });
+
   it("migrating a version-1 database to version 2 keeps every row", async () => {
     const SQL = await initSqlJs();
     const db = new SQL.Database();

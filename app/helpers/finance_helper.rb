@@ -183,4 +183,37 @@ module FinanceHelper
   def finance_chart_y(value, low, spread)
     (210 - ((value.to_f - low) / spread * 170)).round(2)
   end
+
+  # "2.5 MB": sizes on Settings › Your database, the same units the apps show.
+  def database_size(bytes)
+    value = bytes.to_f
+    units = %w[B KB MB GB]
+    unit = 0
+    while value >= 1024 && unit < units.length - 1
+      value /= 1024
+      unit += 1
+    end
+    number = unit.zero? ? value.round.to_s : format("%.1f", value).delete_suffix(".0")
+    "#{number} #{units[unit]}"
+  end
+
+  def database_range(first, last)
+    return "—" unless first && last
+    (first == last) ? finance_date(first, "%b %-d, %Y") : "#{finance_date(first, "%b %-d, %Y")} – #{finance_date(last, "%b %-d, %Y")}"
+  end
+
+  # A time in the person's own time zone with its abbreviation ("November 9, 2026, 2:30 PM PST"), so a
+  # reported time is never ambiguous. Falls back to UTC when no zone is saved.
+  def local_report_time(time, user)
+    return "—" if time.blank?
+    zone = ActiveSupport::TimeZone[user.time_zone.to_s] || ActiveSupport::TimeZone["UTC"]
+    time.in_time_zone(zone).strftime("%B %-d, %Y, %-l:%M %p %Z")
+  end
+
+  # "12%" of the combined bar; "<1%" for something tiny but not empty.
+  def database_share(bytes, total)
+    return "0%" if total.to_i <= 0 || bytes.to_i <= 0
+    share = bytes.to_f / total * 100
+    (share < 1) ? "<1%" : "#{share.round}%"
+  end
 end

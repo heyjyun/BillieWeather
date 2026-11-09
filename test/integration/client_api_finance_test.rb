@@ -83,7 +83,115 @@ class ClientApiFinanceTest < ActionDispatch::IntegrationTest
     assert_equal third, version.call
   end
 
-  test "the apps cannot write financial data through this API" do
+  test "the summary includes counts, the date range, and approximate storage" do
+    get "/api/client/v1/finance", headers: @auth, as: :json
+    body = response.parsed_body
+    assert_equal [1, 9, 1, 0], body.values_at("statement_count", "transaction_count", "rule_count", "pending_import_count")
+    assert_equal ["2026-01-02", "2026-02-11"], body.values_at("period_start", "period_end")
+    assert body["storage_bytes"] > 500, "rows take real space"
+    assert body["last_updated_at"].present?
+    get "/api/client/v1/finance/statements", headers: @auth, as: :json
+    assert_equal ["2026-01-02", "2026-02-11"], response.parsed_body["statements"].first.values_at("period_start", "period_end")
+  end
+
+  test "deletes one cloud statement at a time, only the person's own" do
+    mine = Finance::Statement.find_by!(user_id: @user.id)
+    theirs = Finance::Statement.find_by!(user_id: @other.id)
+    delete "/api/client/v1/finance/statements/#{theirs.id}", headers: @auth, as: :json
+    assert_response :not_found
+    assert Finance::Statement.exists?(theirs.id)
+
+    delete "/api/client/v1/finance/statements/#{mine.id}", headers: @auth, as: :json
+    assert_response :success
+    assert_equal({"id" => mine.id, "transactions" => 9}, response.parsed_body["deleted"])
+    assert_equal 0, Finance::Transaction.where(user_id: @user.id).count
+    assert_equal 1, Finance::MerchantRule.where(user_id: @user.id).count, "rules and the rest of the account stay"
+    delete "/api/client/v1/finance/statements/#{theirs.id}", as: :json
+    assert_response :unauthorized
+  end
+
+  test "deleting the whole cloud database needs the typed confirmation and only touches this person" do
+    delete "/api/client/v1/finance", headers: @auth, as: :json
+    assert_response :unprocessable_entity
+    assert_equal 1, Finance::Statement.where(user_id: @user.id).count
+
+    @user.update!(cloud_database_name: "Family books")
+    delete "/api/client/v1/finance", params: {confirm: "delete"}, headers: @auth, as: :json
+    assert_response :success
+    assert_equal 0, Finance::Statement.where(user_id: @user.id).count
+    assert_equal 0, Finance::Transaction.where(user_id: @user.id).count
+    assert_equal 0, Finance::MerchantRule.where(user_id: @user.id).count
+    assert_equal 1, Finance::Statement.where(user_id: @other.id).count, "other accounts are untouched"
+    assert_equal "Family books", @user.reload.cloud_database_name, "the name stays"
+
+    delete "/api/client/v1/finance", params: {confirm: "delete"}, as: :json
+    assert_response :unauthorized
+  end
+
+  test "names the cloud database, and the summary returns the name" do
+    patch "/api/client/v1/finance", params: {name: "  Home   books \u0007 "}, headers: @auth, as: :json
+    assert_response :success
+    assert_equal "Home books", response.parsed_body["name"]
+    get "/api/client/v1/finance", headers: @auth, as: :json
+    assert_equal "Home books", response.parsed_body["name"]
+    patch "/api/client/v1/finance", params: {name: "x" * 61}, headers: @auth, as: :json
+    assert_response :unprocessable_entity
+    patch "/api/client/v1/finance", params: {name: ""}, headers: @auth, as: :json
+    assert_nil response.parsed_body["name"]
+  end
+
+  def upload(statement, headers: @auth)
+    post "/api/client/v1/finance/statements", params: {statement: statement}, headers: headers, as: :json
+  end
+
+  def statement_payload(sha: "a" * 64, currency: "USD", rows: nil)
+    {filename: "from-mac.csv", currency: currency, sha256: sha, closing_balance: "90.50", closing_balance_on: "2026-02-02",
+     transactions: rows || [
+       {booked_on: "2026-02-01", description: "Coffee", amount: "-4.50", category: "Food & dining", tax_review: false, excluded: false},
+       {booked_on: "2026-02-02", description: "Pay", amount: "95.00", category: "Income", tax_review: false, excluded: true}
+     ]}
+  end
+
+  test "uploads one statement from a local database, once" do
+    assert_difference -> { Finance::Statement.where(user_id: @user.id).count } => 1, -> { Finance::Transaction.where(user_id: @user.id).count } => 2 do
+      upload(statement_payload)
+    end
+    assert_response :created
+    assert_equal true, response.parsed_body["created"]
+    statement = Finance::Statement.find(response.parsed_body["id"])
+    assert_equal @user.id, statement.user_id
+    assert_equal 2, statement.transaction_count
+    assert_equal BigDecimal("90.50"), statement.closing_balance
+    assert_equal [BigDecimal("-4.5"), BigDecimal("95")], statement.transactions.order(:booked_on).pluck(:amount)
+    assert statement.transactions.find_by(description: "Pay").excluded
+
+    assert_no_difference -> { Finance::Statement.count } do
+      upload(statement_payload)
+    end
+    assert_response :success
+    assert_equal false, response.parsed_body["created"]
+    assert_equal statement.id, response.parsed_body["id"]
+  end
+
+  test "an upload is rejected when it would mix currencies or contains bad rows" do
+    assert_no_difference -> { Finance::Statement.count } do
+      upload(statement_payload(currency: "EUR"))
+      assert_response :conflict
+      assert_equal "USD", response.parsed_body["currency"]
+      upload(statement_payload(rows: [{booked_on: "2026-02-01", description: "x", amount: "1.001", category: "Income"}]))
+      assert_response :unprocessable_entity
+      upload(statement_payload(rows: [{booked_on: "2026-02-01", description: "x", amount: "1.00", category: "Nonsense"}]))
+      assert_response :unprocessable_entity
+      upload(statement_payload(rows: []))
+      assert_response :unprocessable_entity
+      upload(statement_payload(sha: "nothex"))
+      assert_response :unprocessable_entity
+      upload(statement_payload, headers: {})
+      assert_response :unauthorized
+    end
+  end
+
+  test "apps still cannot edit or replace individual transactions" do
     %w[post patch put delete].each do |verb|
       assert_raises(ActionController::RoutingError) { Rails.application.routes.recognize_path("/api/client/v1/finance/transactions", method: verb) }
     end

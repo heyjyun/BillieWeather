@@ -19,12 +19,20 @@ const all = [...SOURCES, RUST].flatMap(files);
 describe("data isolation", () => {
   it("found the source files", () => expect(all.length).toBeGreaterThan(10));
 
-  // Two reviewed exceptions may use the network, both only with the BillieWeather server:
+  // Six reviewed exceptions may use the network, all only with the BillieWeather server:
   // account.ts (sign-in and preferences, no financial code) and webSync.ts (read-only
   // download of the person's website data: GET only, never a request body).
   const ACCOUNT = join(ROOT, "src/services/account.ts");
   const WEB_SYNC = join(ROOT, "src/services/webSync.ts");
-  const NETWORK_FILES = [ACCOUNT, WEB_SYNC];
+  // cloudData.ts: what is in the cloud (counts, size, statement list) and deleting one statement at a time.
+  const CLOUD = join(ROOT, "src/services/cloudData.ts");
+  // cloudManage.ts: rename the cloud database, or delete it after the typed confirmation (no statements).
+  // cloudUpload.ts: the only code that sends statements, one per request, when the person starts a transfer to the cloud.
+  const MANAGE = join(ROOT, "src/services/cloudManage.ts");
+  const UPLOAD = join(ROOT, "src/services/cloudUpload.ts");
+  // localReport.ts: one-way metadata about local databases (names, sizes, counts) for the website's cards.
+  const REPORT = join(ROOT, "src/services/localReport.ts");
+  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT];
 
   it.each([
     ["fetch(", /\bfetch\s*\(/],
@@ -33,7 +41,7 @@ describe("data isolation", () => {
     ["sendBeacon", /sendBeacon/],
     ["EventSource", /\bEventSource\b/],
     ["tauri http plugin", /plugin-http|tauri_plugin_http|reqwest/],
-  ])("no network API outside the two reviewed services: %s", (_name, pattern) => {
+  ])("no network API outside the reviewed services: %s", (_name, pattern) => {
     expect(all.filter((file) => !NETWORK_FILES.includes(file) && pattern.test(readFileSync(file, "utf8")))).toEqual([]);
   });
 
@@ -54,7 +62,47 @@ describe("data isolation", () => {
     expect([...source.matchAll(/request<[^>]*>\("([^"]+)"/g)].map((match) => match[1]).sort()).toEqual(["/account", "/account", "/session", "/session"]);
   });
 
-  it("only the two reviewed services know the server API paths", () => {
+  it("the cloud-data service sends no request body, sees no financial code, and deletes only one statement", () => {
+    const source = readFileSync(CLOUD, "utf8");
+    expect(source.match(/^import .*$/gm)).toEqual(['import { API_ORIGIN, AccountError } from "./account";']);
+    expect(source).not.toMatch(/@billie\/|\bFinanceStore\b|amountCents|merchantKey/);
+    expect(source).not.toMatch(/\bbody\s*:|JSON\.stringify/);
+    expect(source).toMatch(/const FINANCE = `\$\{API_ORIGIN\}\/api\/client\/v1\/finance`/);
+    // The only DELETE targets a single statement id.
+    expect([...source.matchAll(/call\((`[^`]*`|"[^"]*"),\s*"DELETE"/g)].map((match) => match[1])).toEqual(["`/statements/${Math.trunc(id)}`"]);
+  });
+
+  it("the cloud-management service sends no financial data: it renames the database and deletes it with the confirm flag", () => {
+    const source = readFileSync(MANAGE, "utf8");
+    expect(source.match(/^import .*$/gm)).toEqual(['import { API_ORIGIN, AccountError } from "./account";']);
+    expect(source).not.toMatch(/@billie\/|\bFinanceStore\b|amountCents|merchantKey|\bStatement\b/);
+    expect([...source.matchAll(/call\((`[^`]*`|"[^"]*"),\s*"(\w+)"/g)].map((match) => `${match[2]} ${match[1]}`)).toEqual(['PATCH ""', 'DELETE "?confirm=delete"']);
+    expect(source).toMatch(/const FINANCE = `\$\{API_ORIGIN\}\/api\/client\/v1\/finance`/);
+  });
+
+  it("only the upload service sends statements: POST, one statement per request, to the statements endpoint", () => {
+    const source = readFileSync(UPLOAD, "utf8");
+    expect([...source.matchAll(/method:\s*"(\w+)"/g)].map((match) => match[1])).toEqual(["POST"]);
+    expect(source).toMatch(/const ENDPOINT = `\$\{API_ORIGIN\}\/api\/client\/v1\/finance\/statements`/);
+    expect(source.match(/fetch\(/g)?.length).toBe(1);
+    // Nothing else may call the upload.
+    const callers = all.filter((file) => file !== UPLOAD && /\buploadStatement\b/.test(readFileSync(file, "utf8")));
+    expect(callers).toEqual([join(ROOT, "src/services/transfer.ts")]);
+  });
+
+  it("the metadata report sends only the allowlisted fields and can never carry financial content", () => {
+    const source = readFileSync(REPORT, "utf8");
+    expect(source.match(/^import .*$/gm)).toEqual(['import { API_ORIGIN, AccountError } from "./account";']);
+    expect(source).not.toMatch(/@billie\/|\bFinanceStore\b|amountCents|merchantKey|description|filename|sha256|\bTransaction\b|\bStatement\b/);
+    expect(source).toMatch(/const DEVICES = `\$\{API_ORIGIN\}\/api\/client\/v1\/devices`/);
+    expect([...source.matchAll(/call\("(\w+)"/g)].map((match) => match[1])).toEqual(["PUT", "DELETE", "DELETE"]);
+    const fields = /REPORT_FIELDS = \[([^\]]+)\]/.exec(source)![1].match(/"(\w+)"/g)!.map((f) => f.replace(/"/g, ""));
+    expect(fields).toEqual(["name", "device_name", "size_bytes", "statement_count", "transaction_count", "rule_count", "period_start", "period_end", "modified_at", "opened_at", "sequence"]);
+    // The settings and queue code only ever reaches the network through this file.
+    expect(readFileSync(join(ROOT, "src/services/reporting.ts"), "utf8")).not.toMatch(/\bfetch\s*\(/);
+  });
+
+  it("only the reviewed services know the server API paths", () => {
     expect(all.filter((file) => !NETWORK_FILES.includes(file) && /api\/client\/v1/.test(readFileSync(file, "utf8")))).toEqual([]);
   });
 

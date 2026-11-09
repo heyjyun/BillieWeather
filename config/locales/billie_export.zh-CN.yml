@@ -103,6 +103,53 @@ zh-CN:
           missing_date: 缺少对账单日期
           future_date: 对账单日期在未来
           missing_balance: 缺少期末余额
+    database:
+      local:
+        heading: "Local databases"
+        storage: "Storage"
+        storage_label: "Storage"
+        bar_label: "How storage is shared between the cloud database and your local databases"
+        kind_cloud: "Cloud"
+        kind_local: "Local"
+        cloud_total: "Cloud storage on BillieWeather's servers: %{size}."
+        local_total: "Local storage reported by your devices: %{size}."
+        not_uploaded: "Local sizes are reported by your apps and stay on your devices; they are not uploaded and do not count as cloud storage."
+        empty: "No local databases are shown. Turn on “Show My Local Databases on the Website” in the app's Settings to see them here."
+        device: "Device"
+        unknown_device: "Unknown device"
+        status_local: "Local Database"
+        modified: "Last modified on device"
+        opened: "App last opened"
+        reported: "Last reported"
+        notice: "This database is stored on your device. You can only open or modify it from that device."
+        stale: "Not updated for over 30 days. Information may be outdated."
+      default_name: "BillieWeather 云端数据库"
+      name: "数据库名称"
+      name_help: "会显示在这里和你的各个 App 中。留空则使用默认名称。"
+      save_name: "保存名称"
+      name_saved: "数据库名称已保存。"
+      heading: 我的数据库
+      intro: BillieWeather 在云端为你保存的全部数据。网站和你所有的 App 共用这个数据库。可以在这里逐个账单清理；下面的按钮会删除全部内容。
+      size: 大小
+      size_approx: 约 %{size}
+      statements: 账单
+      transactions: 交易
+      bank_accounts: 银行账户
+      rules: 记住的规则
+      pending_imports: 待确认的 PDF
+      insights: 分析与报税备注
+      dates: 日期范围
+      last_updated: 最近更改
+      no_statements: 还没有账单。
+      show_statements: 查看 %{count} 份账单
+      statements_help: 删除账单会把它和其中的交易从云端移除。各个 App 下次检查时会删除已下载的副本。
+      transaction_count: "%{count} 笔交易"
+      delete: 删除
+      delete_named: 从云端删除“%{name}”
+      delete_confirm: 从云端删除“%{name}”及其 %{count} 笔交易？此操作无法撤销。
+      devices: "每个桌面和手机 App 也会在设备上保存自己的数据库（可以有多个）。在 App 的“数据”页可以查看它们的大小和名称，并在数据库之间移动数据。"
+      get_apps: 下载 App
+      manage_statements: 管理账单
     privacy:
       heading: 隐私与数据
       intro: 你可以随时删除财务数据，或彻底注销账户。两项操作都无法撤销。
@@ -121,6 +168,7 @@ zh-CN:
           insights: 生成的分析和报税准备笔记
           profile: 余额、手头现金、币种和税务信息
         kept: 你的登录信息、昵称、密码和地区会保留，可以重新开始。
+        devices: "这里删除的是保存在 BillieWeather 云端的数据。桌面版和手机版应用在每台设备上各有自己的数据：它们从网页版下载的副本，会在各应用下次检查更新时移除；直接在应用里导入的账单会留在那台设备上，需要在该设备上删除。"
         button: 删除我的财务数据
         deleted: 你的财务数据已删除，账户仍可继续使用。
         failed: 无法删除你的财务数据，未删除任何内容，请重试。

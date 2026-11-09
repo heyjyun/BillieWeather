@@ -103,6 +103,53 @@ es:
           missing_date: Falta la fecha del extracto
           future_date: La fecha del extracto es futura
           missing_balance: Falta el saldo de cierre
+    database:
+      local:
+        heading: "Local databases"
+        storage: "Storage"
+        storage_label: "Storage"
+        bar_label: "How storage is shared between the cloud database and your local databases"
+        kind_cloud: "Cloud"
+        kind_local: "Local"
+        cloud_total: "Cloud storage on BillieWeather's servers: %{size}."
+        local_total: "Local storage reported by your devices: %{size}."
+        not_uploaded: "Local sizes are reported by your apps and stay on your devices; they are not uploaded and do not count as cloud storage."
+        empty: "No local databases are shown. Turn on “Show My Local Databases on the Website” in the app's Settings to see them here."
+        device: "Device"
+        unknown_device: "Unknown device"
+        status_local: "Local Database"
+        modified: "Last modified on device"
+        opened: "App last opened"
+        reported: "Last reported"
+        notice: "This database is stored on your device. You can only open or modify it from that device."
+        stale: "Not updated for over 30 days. Information may be outdated."
+      default_name: "Nube de BillieWeather"
+      name: "Nombre de la base de datos"
+      name_help: "Se muestra aquí y en tus apps. Déjalo vacío para usar el nombre predeterminado."
+      save_name: "Guardar nombre"
+      name_saved: "Nombre de la base de datos guardado."
+      heading: Tu base de datos
+      intro: Todo lo que BillieWeather guarda para ti en la nube. El sitio web y todas tus apps comparten esta base de datos. Límpiala aquí extracto por extracto; los botones de abajo lo eliminan todo.
+      size: Tamaño
+      size_approx: unos %{size}
+      statements: Extractos
+      transactions: Transacciones
+      bank_accounts: Cuentas bancarias
+      rules: Reglas recordadas
+      pending_imports: Importaciones PDF pendientes
+      insights: Análisis y notas fiscales
+      dates: Fechas
+      last_updated: Último cambio
+      no_statements: Aún no hay extractos.
+      show_statements: Ver extractos (%{count})
+      statements_help: Eliminar un extracto lo borra de la nube junto con sus transacciones. Las apps eliminan su copia descargada la próxima vez que comprueban.
+      transaction_count: "%{count} transacción(es)"
+      delete: Eliminar
+      delete_named: Eliminar «%{name}» de la nube
+      delete_confirm: "¿Eliminar «%{name}» y sus %{count} transacción(es) de la nube? No se puede deshacer."
+      devices: "Cada app de escritorio y móvil también guarda sus propias bases de datos en el dispositivo (puedes tener varias). Consulta su tamaño y nombre, y mueve datos entre ellas en la página Datos de la app."
+      get_apps: Descargar las apps
+      manage_statements: Gestionar extractos
     privacy:
       heading: Privacidad y datos
       intro: Elimina tus datos financieros cuando quieras o cierra tu cuenta por completo. Ambas acciones son permanentes.
@@ -121,6 +168,7 @@ es:
           insights: Los análisis generados y las notas de preparación de impuestos
           profile: Saldos, efectivo en mano, moneda y contexto fiscal
         kept: Se conservan tu inicio de sesión, apodo, contraseña y región, para que puedas empezar de nuevo.
+        devices: "Esto borra la copia guardada en la nube de BillieWeather. Las apps de escritorio y móviles guardan sus propios datos en cada dispositivo: las copias descargadas del sitio web se eliminan la próxima vez que cada app busque actualizaciones, y los extractos importados directamente en una app se quedan en ese dispositivo hasta que los borres allí."
         button: Eliminar mis datos financieros
         deleted: Se eliminaron tus datos financieros. Tu cuenta sigue activa.
         failed: No se pudieron eliminar tus datos financieros. No se eliminó nada; inténtalo de nuevo.

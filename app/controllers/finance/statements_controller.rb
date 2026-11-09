@@ -32,7 +32,9 @@ module Finance
       statement.destroy!
       BalanceSync.call(user: current_user)
       @profile.touch
-      redirect_to finance_statements_path, status: :see_other, notice: I18n.t("billie.backend.statement_deleted")
+      # Settings › Your database deletes statements too, and returns there.
+      back = (params[:return_to] == "settings") ? finance_settings_path(anchor: "settings-database") : finance_statements_path
+      redirect_to back, status: :see_other, notice: I18n.t("billie.backend.statement_deleted")
     end
 
     def update
