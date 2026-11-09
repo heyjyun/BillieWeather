@@ -7,3 +7,4 @@ src-tauri/gen/schemas/
 *.db-*
 *.sqlite
 *.sqlite3
+src-tauri/tauri.api.conf.json

@@ -2,6 +2,7 @@ import type { Currency, MerchantRule, Statement, Transaction } from "@billie/sha
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { openDatabase } from "../services/platform";
 import { FinanceStore } from "../services/store";
+import { useI18n } from "../i18n";
 
 interface FinanceData {
   transactions: Transaction[];
@@ -19,6 +20,7 @@ interface FinanceContextValue extends FinanceData {
 const FinanceContext = createContext<FinanceContextValue | null>(null);
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
+  const { m } = useI18n();
   const [state, setState] = useState<{ store: FinanceStore; persistent: boolean } | null>(null);
   const [data, setData] = useState<FinanceData>({ transactions: [], statements: [], rules: [], currency: null });
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         await load(store);
         setState({ store, persistent });
       })
-      .catch(() => setError("The local database could not be opened."));
+      .catch(() => setError("dbError"));
   }, [load]);
 
   const value = useMemo(
@@ -43,8 +45,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     [data, state, load],
   );
 
-  if (error) return <div className="bw-boot" role="alert">{error}</div>;
-  if (!value) return <div className="bw-boot">Opening your local data…</div>;
+  if (error) return <div className="bw-boot" role="alert">{m.boot.dbError}</div>;
+  if (!value) return <div className="bw-boot">{m.boot.opening}</div>;
   return <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>;
 }
 

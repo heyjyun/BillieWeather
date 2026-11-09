@@ -4,46 +4,49 @@ import { excelReport, reportFilename, reportRows, transactionCsv } from "@billie
 import { useMemo, useState } from "react";
 import { Empty, PageHeading, PeriodPicker } from "../components/common";
 import { useFinance } from "../hooks/useFinance";
+import { useI18n } from "../i18n";
 import { saveFile } from "../services/platform";
 
 export function Reports() {
+  const { m, t } = useI18n();
   const { transactions, statements, currency } = useFinance();
   const [preset, setPreset] = useState<PeriodPreset>("all_time");
   const [status, setStatus] = useState("");
   const cur = currency ?? "USD";
   const period = useMemo(() => resolvePeriod(preset, { today: localToday() }), [preset]);
   const rows = useMemo(() => reportRows(transactions, statements, period), [transactions, statements, period]);
+  const x = m.reports;
 
+  // CSV keeps canonical English categories (same as the Rails export); Excel is translated.
   async function exportCsv() {
     const saved = await saveFile(reportFilename(period, localToday(), "csv"), new TextEncoder().encode(transactionCsv(rows)), "text/csv");
-    setStatus(saved ? "CSV saved." : "Export cancelled.");
+    setStatus(saved ? x.csvSaved : x.cancelled);
   }
   async function exportExcel() {
     const snapshot = buildSnapshot({ transactions, statements, period, currency: cur });
-    const bytes = excelReport({ snapshot, rows, period, currency: cur, generatedOn: localToday() });
+    const labels = { ...m.excel, disclaimer: m.footer, categoryNames: m.categories };
+    const bytes = excelReport({ snapshot, rows, period, currency: cur, generatedOn: localToday(), labels });
     const saved = await saveFile(reportFilename(period, localToday(), "xlsx"), bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    setStatus(saved ? "Excel report saved." : "Export cancelled.");
+    setStatus(saved ? x.xlsxSaved : x.cancelled);
   }
 
-  if (transactions.length === 0) return <><PageHeading eyebrow="TAKE IT WITH YOU" title="Reports" /><Empty title="Nothing to export yet" body="Import a statement first." /></>;
+  if (transactions.length === 0) return <><PageHeading eyebrow={x.eyebrow} title={x.title} /><Empty title={x.emptyTitle} body={x.emptyBody} /></>;
   return (
     <>
-      <PageHeading eyebrow="TAKE IT WITH YOU" title="Reports">
-        <PeriodPicker value={preset} onChange={setPreset} />
-      </PageHeading>
+      <PageHeading eyebrow={x.eyebrow} title={x.title}><PeriodPicker value={preset} onChange={setPreset} /></PageHeading>
       <div className="bw-two-column">
         <section className="bw-panel bw-export">
-          <h2>Categorized transactions (CSV)</h2>
-          <p>Every transaction in the range with its category, ready for any spreadsheet. Text that a spreadsheet could run as a formula is neutralized.</p>
-          <button className="bw-button bw-button-dark" onClick={exportCsv} disabled={rows.length === 0}>Export CSV</button>
+          <h2>{x.csvTitle}</h2>
+          <p>{x.csvBody}</p>
+          <button className="bw-button bw-button-dark" onClick={exportCsv} disabled={rows.length === 0}>{x.csvButton}</button>
         </section>
         <section className="bw-panel bw-export">
-          <h2>Financial report (Excel)</h2>
-          <p>Overview, monthly cash flow, spending by category, and all transactions in one .xlsx workbook.</p>
-          <button className="bw-button bw-button-dark" onClick={exportExcel} disabled={rows.length === 0}>Export Excel</button>
+          <h2>{x.xlsxTitle}</h2>
+          <p>{x.xlsxBody}</p>
+          <button className="bw-button bw-button-dark" onClick={exportExcel} disabled={rows.length === 0}>{x.xlsxButton}</button>
         </section>
       </div>
-      <p className="bw-caption">{rows.length} transactions in this range. Files are saved only where you choose.</p>
+      <p className="bw-caption">{t("reports.count", { count: rows.length })}</p>
       <p role="status" aria-live="polite" className="bw-sr-status">{status}</p>
     </>
   );

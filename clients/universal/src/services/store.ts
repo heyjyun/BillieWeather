@@ -10,7 +10,15 @@ export interface SqlDriver {
   select<T>(sql: string, params?: unknown[]): Promise<T[]>;
 }
 
-export class StoreError extends Error {}
+export type StoreErrorCode = "statement_duplicate" | "currency_mismatch" | "unsupported_currency" | "not_found";
+
+/** `code` matches a Rails billie.backend.* key where one exists, so the message can be translated. */
+export class StoreError extends Error {
+  constructor(public code: StoreErrorCode, message: string, public vars: Record<string, string | number> = {}) {
+    super(message);
+    this.name = "StoreError";
+  }
+}
 
 type Row = Record<string, unknown>;
 const now = () => new Date().toISOString();
@@ -59,13 +67,13 @@ export class FinanceStore {
    * for this statement is removed again.
    */
   async importStatement(input: { filename: string; currency: Currency; sha256: string; parsed: ParsedStatement }): Promise<{ statementId: number; recategorized: number }> {
-    if (!(CURRENCIES as readonly string[]).includes(input.currency)) throw new StoreError("That currency is not supported.");
+    if (!(CURRENCIES as readonly string[]).includes(input.currency)) throw new StoreError("unsupported_currency", "That currency is not supported.");
     const existingCurrency = await this.currency();
     if (existingCurrency && existingCurrency !== input.currency) {
-      throw new StoreError(`This device keeps statements in ${existingCurrency}. Delete local data to switch currency.`);
+      throw new StoreError("currency_mismatch", `This device keeps statements in ${existingCurrency}. Delete local data to switch currency.`, { currency: existingCurrency });
     }
     const duplicate = await this.db.select<Row>("SELECT id FROM statements WHERE sha256 = $1", [input.sha256]);
-    if (duplicate.length > 0) throw new StoreError("This statement was already imported.");
+    if (duplicate.length > 0) throw new StoreError("statement_duplicate", "This statement was already imported.");
 
     const stamp = now();
     const result = await this.db.execute(
@@ -105,7 +113,7 @@ export class FinanceStore {
    */
   async setCategory(id: number, category: Category, remember: boolean): Promise<number> {
     const [row] = await this.db.select<Row>("SELECT * FROM transactions WHERE id = $1", [id]);
-    if (!row) throw new StoreError("Transaction not found.");
+    if (!row) throw new StoreError("not_found", "Transaction not found.");
     const transaction = toTransaction(row);
     await this.applyCategories([{ id, category }]);
     if (!remember) return 0;

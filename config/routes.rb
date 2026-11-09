@@ -93,6 +93,12 @@ Rails.application.routes.draw do
     end
   end
 
+  # Account API for the desktop and mobile apps (clients/universal). Account data only.
+  scope "api/client/v1", module: "client_api/v1", as: "client_api_v1", defaults: {format: :json} do
+    resource :session, only: [:create, :destroy]
+    resource :account, only: [:show, :update]
+  end
+
   namespace :api do
     draw "api/v1"
     # 🚅 super scaffolding will insert new api versions above this line.

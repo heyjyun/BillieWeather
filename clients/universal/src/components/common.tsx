@@ -1,6 +1,7 @@
 import type { Category, PeriodPreset } from "@billie/shared-types";
 import { formatMoney } from "@billie/finance-core";
 import type { ReactNode } from "react";
+import { useI18n } from "../i18n";
 
 export function Money({ cents, currency, signed = false }: { cents: number; currency: string; signed?: boolean }) {
   const tone = signed ? (cents > 0 ? "bw-positive" : cents < 0 ? "bw-negative" : "") : "";
@@ -13,19 +14,19 @@ const CATEGORY_TONES: Record<Category, string> = {
 };
 
 export function CategoryBadge({ category }: { category: Category }) {
-  return <span className={`bw-category bw-tone-${CATEGORY_TONES[category]}`}>{category}</span>;
+  const { m } = useI18n();
+  return <span className={`bw-category bw-tone-${CATEGORY_TONES[category]}`}>{m.categories[category]}</span>;
 }
 
-export const PERIOD_LABELS: Record<Exclude<PeriodPreset, "custom">, string> = {
-  all_time: "All time", this_month: "This month", last_month: "Last month", last_30_days: "Last 30 days", this_year: "This year", last_year: "Last year",
-};
+const PRESETS: Array<Exclude<PeriodPreset, "custom">> = ["all_time", "this_month", "last_month", "last_30_days", "this_year", "last_year"];
 
 export function PeriodPicker({ value, onChange }: { value: PeriodPreset; onChange: (preset: PeriodPreset) => void }) {
+  const { m } = useI18n();
   return (
-    <div className="bw-segmented" role="group" aria-label="Date range">
-      {(Object.keys(PERIOD_LABELS) as Array<keyof typeof PERIOD_LABELS>).map((preset) => (
+    <div className="bw-segmented" role="group" aria-label={m.periods.label}>
+      {PRESETS.map((preset) => (
         <button key={preset} type="button" className={value === preset ? "is-active" : ""} aria-pressed={value === preset} onClick={() => onChange(preset)}>
-          {PERIOD_LABELS[preset]}
+          {m.periods[preset]}
         </button>
       ))}
     </div>

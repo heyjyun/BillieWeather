@@ -32,11 +32,15 @@ Requirements: Node 24 and npm. Desktop builds also need Rust (`cargo`).
 ```sh
 cd clients/universal
 npm install          # isolated from the Rails app's yarn install
-npm test             # 98 tests: Ruby parity, SQLite storage, full UI workflow, privacy guards
+npm test             # 120 tests: Ruby parity, SQLite storage, sign-in + full UI workflow, translations, privacy guards
 npm run typecheck
 npm run dev          # browser preview at http://localhost:1420 (in-memory, nothing saved)
-npm run desktop:dev  # the real app window with on-device SQLite
+npm run desktop:dev  # the real app window, signing in to http://localhost:3000
+BILLIE_API_URL=https://your-billieweather.example npm run desktop:build   # point a build at production
 ```
+
+The app needs the Rails server for sign-in. `scripts/tauri.mjs` bakes the server origin into the
+build and its Content Security Policy. Use `https` for anything that isn't localhost.
 
 Use **npm** inside `clients/universal`. The repository root uses yarn for Rails assets; the two
 installs never mix.
@@ -70,14 +74,23 @@ not set up yet.
 - **Storage**: `sqlite:billieweather.db` in the app's private data directory, created by Tauri's SQL
   plugin. On macOS that is `~/Library/Application Support/com.billieweather.client/`; on iOS and
   Android it is the app sandbox.
-- **No network**:
-  - The WebView Content Security Policy allows only Tauri's local IPC bridge (`connect-src ipc: http://ipc.localhost`).
-  - No HTTP plugin is installed.
-  - `test/privacy.test.ts` fails the build if code adds `fetch`, `XMLHttpRequest`, `WebSocket`, logging calls, or cloud credentials.
+- **Network: account only**:
+  - The app signs in to the BillieWeather Rails API (`/api/client/v1`, see `app/controllers/client_api/v1`). After that it only sends language, nickname and time-zone changes.
+  - **Statements and transactions never leave the device.** `src/services/account.ts` is the only code allowed to use the network, and it may not import any financial code (enforced by `test/privacy.test.ts`).
+  - The WebView Content Security Policy allows exactly one origin besides the local IPC bridge: the BillieWeather server chosen at build time.
+- **Accounts and preferences**:
+  - Server side (existing Neon `users` columns, no migration): email, nickname, language, time zone, region, sign-up date and badges.
+  - Device side:
+    - The sign-in token is in the macOS/iOS Keychain or Windows Credential Manager (an app-only file on Android).
+    - Account details are cached so the app opens offline after the first sign-in.
+  - Changing the password on the website signs out every app.
+- **Languages**:
+  - English, 简体中文, 繁體中文, 日本語, 한국어 and Español, detected from the device and saved to the account.
+  - Import error messages are copied from the Rails translations with `npm run sync:translations`.
 - **Least privilege**: the app's permissions (`src-tauri/capabilities/default.json`) allow SQLite,
   the save dialog, and writing to the file the person picked. There is no file-system read scope;
   imports use the standard file picker.
-- **No accounts, analytics, crash reporting, or sync.**
+- **No analytics, crash reporting, or financial sync.**
 - **Deleting data** (Settings → Delete local data) removes every row and runs `VACUUM` to reclaim
   the freed pages.
 - **Migrations**: `src-tauri/migrations/NNNN_*.sql`, applied in order by the SQL plugin. Never

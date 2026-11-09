@@ -17,6 +17,13 @@
 
 # Permit CORS from any origin for API routes
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  # The BillieWeather apps (Tauri WebViews on macOS/iOS, Windows/Android, and the dev server).
+  # Bearer tokens only; no cookies are sent cross-origin.
+  allow do
+    origins "tauri://localhost", "http://tauri.localhost", "https://tauri.localhost", "http://localhost:1420"
+    resource "/api/client/v1/*", headers: ["Authorization", "Content-Type", "Accept"], methods: [:get, :post, :patch, :delete, :options], max_age: 600
+  end
+
   allow do
     origins "*"
     resource "/api/*", headers: :any

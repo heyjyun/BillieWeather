@@ -1,6 +1,6 @@
 // Local-first guarantees, checked statically so they cannot quietly regress:
-// no network calls, no logging, no cloud credentials, and a WebView CSP that blocks
-// outbound connections. Phase 5 (optional AI) must add an explicit, reviewed exception.
+// financial code never touches the network, nothing is logged, no cloud credentials,
+// and the WebView CSP allows only the BillieWeather account server.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -19,6 +19,10 @@ const all = [...SOURCES, RUST].flatMap(files);
 describe("data isolation", () => {
   it("found the source files", () => expect(all.length).toBeGreaterThan(10));
 
+  // The account service is the single, reviewed exception: it talks to the BillieWeather
+  // account API. Everything else, including all financial code, must stay offline.
+  const ACCOUNT = join(ROOT, "src/services/account.ts");
+
   it.each([
     ["fetch(", /\bfetch\s*\(/],
     ["XMLHttpRequest", /XMLHttpRequest/],
@@ -26,8 +30,20 @@ describe("data isolation", () => {
     ["sendBeacon", /sendBeacon/],
     ["EventSource", /\bEventSource\b/],
     ["tauri http plugin", /plugin-http|tauri_plugin_http|reqwest/],
-  ])("no network API: %s", (_name, pattern) => {
-    expect(all.filter((file) => pattern.test(readFileSync(file, "utf8")))).toEqual([]);
+  ])("no network API outside the account service: %s", (_name, pattern) => {
+    expect(all.filter((file) => file !== ACCOUNT && pattern.test(readFileSync(file, "utf8")))).toEqual([]);
+  });
+
+  it("the account service cannot see financial data: it imports nothing", () => {
+    const source = readFileSync(ACCOUNT, "utf8");
+    expect(source.match(/^import .*$/gm) ?? []).toEqual([]);
+    expect(source).not.toMatch(/@billie\/|\bFinanceStore\b|\bTransaction\b|\bStatement\b|amountCents|merchantKey/);
+    // Only the account endpoints are ever called.
+    expect([...source.matchAll(/request<[^>]*>\("([^"]+)"/g)].map((match) => match[1]).sort()).toEqual(["/account", "/account", "/session", "/session"]);
+  });
+
+  it("only the account service touches the account API base URL", () => {
+    expect(all.filter((file) => file !== ACCOUNT && /api\/client\/v1/.test(readFileSync(file, "utf8")))).toEqual([]);
   });
 
   it("no console logging or Rust print macros (financial data must stay out of logs)", () => {
@@ -40,18 +56,27 @@ describe("data isolation", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("the app's Content Security Policy only allows the local IPC bridge", () => {
+  it("the base Content Security Policy allows only the local IPC bridge", () => {
     const config = JSON.parse(readFileSync(join(ROOT, "src-tauri/tauri.conf.json"), "utf8"));
     const csp: string = config.app.security.csp;
-    const connect = /connect-src ([^;]+)/.exec(csp)?.[1].trim().split(/\s+/) ?? [];
-    expect(connect.sort()).toEqual(["http://ipc.localhost", "ipc:"]);
+    expect((/connect-src ([^;]+)/.exec(csp)?.[1].trim().split(/\s+/) ?? []).sort()).toEqual(["http://ipc.localhost", "ipc:"]);
     expect(csp).toMatch(/default-src 'self'/);
+  });
+
+  it("builds add exactly one origin — the BillieWeather server — and only over https", async () => {
+    // @ts-expect-error plain JS build script
+    const { apiOrigin, cspWithOrigin } = await import("../scripts/tauri.mjs");
+    const config = JSON.parse(readFileSync(join(ROOT, "src-tauri/tauri.conf.json"), "utf8"));
+    const csp = cspWithOrigin(config.app.security.csp, apiOrigin("https://billieweather.example.com/some/path"));
+    expect((/connect-src ([^;]+)/.exec(csp)?.[1].trim().split(/\s+/) ?? []).sort()).toEqual(["http://ipc.localhost", "https://billieweather.example.com", "ipc:"]);
+    expect(apiOrigin(undefined)).toBe("http://localhost:3000");
+    expect(() => apiOrigin("http://billieweather.example.com")).toThrow(/https/);
   });
 
   it("the app requests no network, shell, or broad file-system permissions", () => {
     const capability = JSON.parse(readFileSync(join(ROOT, "src-tauri/capabilities/default.json"), "utf8"));
     const permissions: string[] = capability.permissions.map((p: string | { identifier: string }) => (typeof p === "string" ? p : p.identifier));
-    expect(permissions.filter((p) => /^(http|shell|fs:allow-read|fs:scope|fs:default)/.test(p))).toEqual([]);
+    expect(permissions.filter((p) => /^(http|shell|fs:allow-read|fs:scope|fs:default|opener:default)/.test(p))).toEqual([]);
   });
 
   it("the local database file and build output are git-ignored", () => {

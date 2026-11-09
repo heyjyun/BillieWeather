@@ -46,9 +46,13 @@ const MESSAGES: Record<ImportErrorCode, string> = {
 };
 
 export class ImportError extends Error {
-  constructor(public code: ImportErrorCode, public row?: number) {
+  /** Values for the translated message (Rails: billie.backend.<code>). */
+  public vars: Record<string, string | number>;
+
+  constructor(public code: ImportErrorCode, public row?: number, vars: Record<string, string | number> = {}) {
     super(row ? `Row ${row}: ${MESSAGES[code]}` : MESSAGES[code]);
     this.name = "ImportError";
+    this.vars = row ? { row, ...vars } : vars;
   }
 }
 
@@ -120,7 +124,7 @@ export function parseStatement(text: string, options: ImportOptions): ParsedStat
   const columns: Partial<Record<Column, number>> = {};
   for (const [name, aliases] of Object.entries(HEADER_ALIASES) as [keyof typeof HEADER_ALIASES, readonly string[]][]) {
     const matches = normalized.flatMap((header, index) => (aliases.includes(header) ? [index] : []));
-    if (matches.length > 1) throw new ImportError("one_column_only");
+    if (matches.length > 1) throw new ImportError("one_column_only", undefined, { column: aliases[0] });
     if (matches.length === 1) columns[name] = matches[0];
   }
   const preferredDate = DATE_COLUMN_PRIORITY.find((name) => normalized.includes(name));
@@ -146,7 +150,7 @@ export function parseStatement(text: string, options: ImportOptions): ParsedStat
   body.forEach((fields, offset) => {
     const line = offset + 2;
     if (fields.every((field) => field.trim() === "")) return;
-    if (rows.length >= MAX_ROWS) throw new ImportError("statement_row_limit");
+    if (rows.length >= MAX_ROWS) throw new ImportError("statement_row_limit", undefined, { count: MAX_ROWS });
     if (fields.length > headerWidth) throw new ImportError("csv_extra_values", line);
     const row = parseRow(fields, line);
     rows.push(row);
@@ -162,7 +166,7 @@ export function parseStatement(text: string, options: ImportOptions): ParsedStat
     if (description === "") throw new ImportError("row_description_required", line);
     if ([...description].length > 500) throw new ImportError("row_description_length", line);
     if (columns.currency !== undefined && value(fields, "currency").trim().toUpperCase() !== options.currency) {
-      throw new ImportError("row_currency_mismatch", line);
+      throw new ImportError("row_currency_mismatch", line, { currency: options.currency });
     }
 
     let amountCents: number;
@@ -197,7 +201,7 @@ export function parseStatement(text: string, options: ImportOptions): ParsedStat
     if (text === "" && blankZero) return 0;
     if (/^\([^()]+\)$/.test(text)) text = `-${text.slice(1, -1)}`;
     const symbol = /[$£€¥]/.exec(text)?.[0];
-    if (symbol && !SYMBOL_CURRENCIES[symbol].includes(options.currency)) throw new ImportError("row_currency_symbol", line);
+    if (symbol && !SYMBOL_CURRENCIES[symbol].includes(options.currency)) throw new ImportError("row_currency_symbol", line, { currency: options.currency });
     text = text.replace(/^([+-]?)[$£€¥]/, "$1");
     if (!/^[+-]?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/.test(text)) throw new ImportError("row_invalid_money", line);
     const cents = decimalToCents(text.replace(/,/g, ""));

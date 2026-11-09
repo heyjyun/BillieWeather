@@ -24,17 +24,17 @@ class DownloadsPageTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "iOS and Android are always greyed out, not clickable, and marked in development" do
+  test "iOS and Android always say coming soon, like the desktop cards without an installer" do
     with_env("DOWNLOAD_MAC_URL" => "https://example.com/mac.dmg", "DOWNLOAD_WINDOWS_URL" => "https://example.com/win.exe") do
       get billie_download_path, params: {locale: "zh-CN"}
       assert_response :success
       assert_select "h1", text: "下载 BillieWeather"
       %w[ios android].each do |key|
-        assert_select ".bw-download-card[data-platform='#{key}'].bw-download-in-development" do
+        assert_select ".bw-download-card[data-platform='#{key}'].bw-download-coming-soon" do
           assert_select "a", count: 0
-          assert_select ".bw-download-disabled[aria-disabled='true']"
-          assert_select ".bw-download-note", text: "开发中"
+          assert_select ".bw-download-disabled[aria-disabled='true']", text: "即将提供"
         end
+        assert_select ".bw-download-card[data-platform='#{key}'] .bw-download-note", count: 0
       end
     end
   end

@@ -1,9 +1,17 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Least privilege: local SQLite, a save dialog, and writing only to the file the person picked in that dialog.",
-  "windows": ["main"],
-  "platforms": ["macOS", "windows", "linux", "iOS", "android"],
+  "description": "Least privilege: local SQLite, a save dialog, writing only to the file the person picked, and opening BillieWeather web pages (sign-up, password reset) in the system browser.",
+  "windows": [
+    "main"
+  ],
+  "platforms": [
+    "macOS",
+    "windows",
+    "linux",
+    "iOS",
+    "android"
+  ],
   "permissions": [
     "core:default",
     "sql:allow-load",
@@ -11,6 +19,17 @@
     "sql:allow-select",
     "sql:allow-close",
     "dialog:allow-save",
-    "fs:allow-write-file"
+    "fs:allow-write-file",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "http://localhost:3000/*"
+        }
+      ]
+    }
   ]
 }

@@ -1,3 +1,5 @@
+mod session;
+
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 /// The local database lives in the app's private data directory on every platform.
@@ -23,6 +25,12 @@ pub fn run() {
         )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_opener::init())
+        .invoke_handler(tauri::generate_handler![
+            session::session_load,
+            session::session_save,
+            session::session_clear
+        ])
         .run(tauri::generate_context!())
         .expect("error while running BillieWeather");
 }
