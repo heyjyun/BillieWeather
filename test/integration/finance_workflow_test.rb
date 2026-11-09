@@ -22,7 +22,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     get new_user_session_path
     assert_response :success
     assert_select "input[name='user[password]']"
-    [finance_dashboard_path, finance_statements_path, finance_transactions_path, finance_forecast_path, finance_insights_path].each do |path|
+    [finance_dashboard_path, finance_statements_path, finance_transactions_path, finance_forecast_path, finance_insights_path, finance_tax_preparation_path].each do |path|
       get path
       assert_redirected_to new_user_session_path
     end
@@ -30,7 +30,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
 
   test "sign up creates a real account and login returns to the dashboard" do
     assert_difference "User.count", 1 do
-      post user_registration_path, params: {user: {email: "new-finance-user@example.com", first_name: "Alex", last_name: "River", usage_region: "US",
+      post user_registration_path, params: {user: {email: "new-finance-user@example.com", usage_region: "US",
                                                    password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}}
     end
     assert_redirected_to finance_dashboard_path
@@ -81,6 +81,9 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to finance_insights_path
     follow_redirect!
+    assert_response :success
+    assert_select "a[href='https://www.irs.gov/filing/gather-your-documents']", count: 0
+    get finance_tax_preparation_path
     assert_response :success
     assert_select "a[href='https://www.irs.gov/filing/gather-your-documents']"
     assert_equal "rules", @user.finance_insights.last.source
@@ -266,8 +269,9 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     get finance_forecast_path
     assert_select "#balance form button", text: /automatic account total/i
 
-    # Saving tax details from the insights page must not mark the balance as manual or change it.
-    patch finance_profile_path, params: {finance_profile: {tax_country: "Canada"}, return_to: "insights"}
+    # Saving tax details from the tax preparation page must not mark the balance as manual or change it.
+    patch finance_profile_path, params: {finance_profile: {tax_country: "Canada"}, return_to: "tax_preparation"}
+    assert_redirected_to finance_tax_preparation_path
     assert_equal BigDecimal("1000.00"), @user.finance_profile.reload.current_balance
 
     patch finance_profile_path, params: {use_statement_balance: "1", return_to: "forecast"}
@@ -322,14 +326,15 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     upload_csv(response.body) { |file| post finance_statements_path, params: {file: file} }
 
     with_openai_env(nil, nil) do
-      get finance_insights_path
+      get finance_tax_preparation_path
       assert_response :success
-      assert_select "#billie-tax-insights h2", text: "Tax preparation"
+      assert_select "h1", text: "Tax preparation"
+      assert_select "nav a.is-active", text: "Tax preparation"
       assert_select "#billie-tax-insights", text: /Billie is not connected yet/
       assert_select "#billie-tax-insights form", count: 0
 
       assert_no_difference "Finance::Insight.count" do
-        post generate_finance_insights_path, params: {kind: "tax", consent: "1"}
+        post generate_finance_tax_preparation_path, params: {consent: "1"}
       end
       assert_response :unprocessable_entity
     end
@@ -348,26 +353,31 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     %i[use_ssl= open_timeout= read_timeout= write_timeout= max_retries=].each { |name| http.define_singleton_method(name) { |_| } }
 
     with_openai_env("test-key", "test-model") do
-      get finance_insights_path
-      assert_select "#billie-tax-insights form input[name='kind'][value='tax']"
+      get finance_tax_preparation_path
+      assert_select "#billie-tax-insights form[action='#{generate_finance_tax_preparation_path}']"
 
       stub_method(Net::HTTP, :new, http) do
         assert_no_difference "Finance::Insight.general.count" do
           assert_difference "Finance::Insight.tax.count", 1 do
-            post generate_finance_insights_path, params: {kind: "tax", consent: "1"}
+            post generate_finance_tax_preparation_path, params: {consent: "1"}
           end
         end
       end
-      assert_redirected_to finance_insights_path
+      assert_redirected_to finance_tax_preparation_path
       follow_redirect!
       assert_select "#billie-tax-insights", text: /Gather income documents/
       assert_select "#billie-tax-insights", text: /Which records matter\?/
 
       # A rapid second tax request is rate limited, but does not block general analysis.
       assert_no_difference "Finance::Insight.count" do
-        post generate_finance_insights_path, params: {kind: "tax", consent: "1"}
+        post generate_finance_tax_preparation_path, params: {consent: "1"}
       end
       assert_response :too_many_requests
+
+      # The general insights page no longer shows the tax section.
+      get finance_insights_path
+      assert_select "#billie-tax-insights", count: 0
+      refute_includes response.body, "Gather income documents"
     end
   end
 
@@ -376,9 +386,11 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     Finance::Insight.create!(user: other, source: "openai", kind: "tax", generated_at: Time.current,
       content: {"summary" => "OTHER-USER-SECRET", "tax_preparation" => [], "questions" => [], "limitations" => []})
     sign_in @user
-    get finance_insights_path
-    assert_response :success
-    refute_includes response.body, "OTHER-USER-SECRET"
+    [finance_insights_path, finance_tax_preparation_path].each do |path|
+      get path
+      assert_response :success
+      refute_includes response.body, "OTHER-USER-SECRET"
+    end
   end
 
   test "AI consent discloses Prepend and its optional OpenAI credit fallback" do
@@ -387,7 +399,10 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
       fallback_api_key: "native-test-key", fallback_on_quota_exhausted: "true") do
       get finance_insights_path
       assert_response :success
-      assert_select "label", text: /OpenAI via Prepend, with OpenAI if its credit runs out/, count: 2
+      assert_select "label", text: /OpenAI via Prepend, with OpenAI if its credit runs out/, count: 1
+      get finance_tax_preparation_path
+      assert_response :success
+      assert_select "label", text: /OpenAI via Prepend, with OpenAI if its credit runs out/, count: 1
     end
   end
 

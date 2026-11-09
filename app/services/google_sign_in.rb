@@ -13,11 +13,10 @@ class GoogleSignIn
   class RegionRequired < Error
     attr_reader :identity
 
-    def initialize(uid:, email:, first_name:, last_name:)
+    def initialize(uid:, email:)
       # Only the verified identity is retained in the encrypted browser session.
-      # Google access/refresh tokens are never kept while waiting for a region.
-      @identity = {"uid" => uid, "email" => email, "first_name" => first_name, "last_name" => last_name,
-                   "expires_at" => 10.minutes.from_now.to_i}
+      # Google access/refresh tokens and profile names are never kept while waiting for a region.
+      @identity = {"uid" => uid, "email" => email, "expires_at" => 10.minutes.from_now.to_i}
       super(I18n.t("billie.google_region.intro"))
     end
   end
@@ -58,15 +57,14 @@ class GoogleSignIn
     raise Error, I18n.t("billie.auth.registration_unavailable") unless @allow_signup
 
     unless @usage_region
-      raise RegionRequired.new(uid: @uid, email: @email,
-        first_name: profile_name("first_name", "given_name"), last_name: profile_name("last_name", "family_name"))
+      raise RegionRequired.new(uid: @uid, email: @email)
     end
     raise Error, I18n.t("billie.google_region.invalid") unless UsageRegion::CODES.include?(@usage_region)
 
     user = User.transaction do
       password = Devise.friendly_token(48)
+      # Names from the Google profile are deliberately not stored.
       user = User.create!(email: @email, google_uid: @uid, password: password, password_confirmation: password,
-        first_name: profile_name("first_name", "given_name"), last_name: profile_name("last_name", "family_name"),
         usage_region: @usage_region)
       user.create_default_team if @create_team
       user
@@ -87,10 +85,9 @@ class GoogleSignIn
     email = identity["email"]
     return unless uid.is_a?(String) && uid.length.between?(1, 255) && !uid.match?(/\s/)
     return unless email.is_a?(String) && email.length <= 254 && email == email.strip.downcase && Devise.email_regexp.match?(email)
-    return unless %w[first_name last_name].all? { |key| identity[key].is_a?(String) && identity[key].length <= 80 }
 
     {"provider" => "google_oauth2", "uid" => uid,
-     "info" => {"email" => email, "first_name" => identity["first_name"], "last_name" => identity["last_name"]},
+     "info" => {"email" => email},
      "extra" => {"id_info" => {"sub" => uid, "email" => email, "email_verified" => true}}}
   end
 
@@ -128,10 +125,6 @@ class GoogleSignIn
     unless @email.length <= 254 && Devise.email_regexp.match?(@email) && info_email == @email
       raise Error, I18n.t("billie.auth.google_unverified_email")
     end
-  end
-
-  def profile_name(info_key, claim_key)
-    (@auth.dig("info", info_key).presence || @auth.dig("extra", "id_info", claim_key)).to_s.strip.truncate(80, omission: "")
   end
 
   def verify_login_allowed!(user)

@@ -9,6 +9,7 @@
           "no_bank_login": "은행 로그인 불필요",
           "future_bank_sync": "앞으로 사용자 수가 늘고 자금 기반이 마련되면, 은행과 협력해 모든 명세서를 직접 자동 동기화하는 방안을 검토하겠습니다.",
           "free_analysis": "무료 기본 분석",
+          "privacy_nickname": "Billie는 개인정보를 보호합니다. 실명 없이 닉네임만",
           "art_label": "명세서를 가져오고 거래를 검토한 후 현금 흐름 예측 확인",
           "outlook": "내 재정 전망",
           "clear_view_html": "내 돈의 흐름을<br>명확하게.",

@@ -1,0 +1,32 @@
+<% content_for :title, t("billie.about.title") %>
+<section class="bw-marketing-section bw-about-hero">
+  <div class="bw-section-heading">
+    <span class="bw-eyebrow"><%= t("billie.about.eyebrow") %></span>
+    <h1><%= t("billie.about.heading") %></h1>
+    <p><%= t("billie.about.intro") %></p>
+  </div>
+</section>
+<section class="bw-marketing-section" id="values">
+  <div class="bw-section-heading"><span class="bw-eyebrow"><%= t("billie.about.believe_eyebrow") %></span><h2><%= t("billie.about.believe_heading") %></h2></div>
+  <div class="bw-feature-grid">
+    <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon "settings", size: 26 %></div><h3><%= t("billie.about.privacy_title") %></h3><p><%= t("billie.about.privacy_body") %></p></article>
+    <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon "check", size: 26 %></div><h3><%= t("billie.about.control_title") %></h3><p><%= t("billie.about.control_body") %></p></article>
+    <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon "file", size: 26 %></div><h3><%= t("billie.about.honest_title") %></h3><p><%= t("billie.about.honest_body") %></p></article>
+  </div>
+</section>
+<section class="bw-marketing-section bw-marketing-split" id="name">
+  <div><span class="bw-eyebrow"><%= t("billie.about.name_eyebrow") %></span><h2><%= t("billie.about.name_heading") %></h2></div>
+  <div class="bw-about-story">
+    <p><%= t("billie.about.name_body") %></p>
+    <p><%= t("billie.about.name_body_2") %></p>
+  </div>
+</section>
+<section class="bw-marketing-cta">
+  <div><span class="bw-eyebrow"><%= t("billie.about.cta_eyebrow") %></span><h2><%= t("billie.about.cta_heading") %></h2></div>
+  <% if user_signed_in? %>
+    <%= link_to t("billie.auth.home.dashboard"), finance_dashboard_path, class: "bw-button bw-button-dark bw-button-large" %>
+  <% else %>
+    <%= link_to t("billie.auth.create_an_account"), new_user_registration_path, class: "bw-button bw-button-dark bw-button-large" %>
+  <% end %>
+</section>
+<footer class="bw-public-footer"><span class="bw-brand">BillieWeather</span><p><%= t("billie.auth.home.disclaimer") %></p></footer>

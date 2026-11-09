@@ -6,8 +6,10 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
   test "registration requires a fixed region selection and saves its code" do
     get new_user_registration_path
     assert_response :success
-    assert_select "select#user_usage_region[name='user[usage_region]'][required]" do
-      assert_select "option[value=''][disabled]"
+    assert_select "select#user_usage_region[name='user[usage_region]']" do
+      assert_select "option[value='']", count: 0
+      assert_select "option[selected]", count: 1
+      assert_select "option[value='XG'][selected]", text: "Global Citizen"
       assert_select "option[value='US']"
       assert_select "option[value='CN']", text: "Mainland China"
       assert_select "option[value='JP']"
@@ -31,7 +33,7 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
       end
       assert_response :unprocessable_entity
       assert_select "[role='alert']", text: /region/i
-      assert_select "select#user_usage_region[required]"
+      assert_select "select#user_usage_region"
     end
   end
 
@@ -79,13 +81,14 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
     user.update_columns(usage_region: nil, usage_region_pending: true)
     sign_in user
 
-    [finance_dashboard_path, finance_transactions_path, finance_forecast_path, finance_insights_path, finance_statements_path].each do |path|
+    [finance_dashboard_path, finance_transactions_path, finance_forecast_path, finance_insights_path, finance_tax_preparation_path, finance_statements_path].each do |path|
       get path
       assert_redirected_to finance_settings_path
     end
     get finance_settings_path
     assert_response :success
-    assert_select "select#user_usage_region[required] option[value=''][disabled][selected]"
+    # Global Citizen is preselected, but nothing is saved until the person submits.
+    assert_select "select#user_usage_region option[value='XG'][selected]"
     assert_nil user.reload.usage_region
 
     patch finance_settings_path, params: {user: {usage_region: "jp"}}
@@ -101,7 +104,7 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
     sign_in user
     get finance_settings_path
     assert_response :success
-    assert_select "select#user_usage_region[required] option[value='JP'][selected]"
+    assert_select "select#user_usage_region option[value='JP'][selected]"
 
     patch finance_settings_path, params: {user: {usage_region: "KR"}}
     assert_redirected_to finance_settings_path
@@ -152,7 +155,7 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
     sign_in user
     get edit_account_user_path(user)
     assert_response :success
-    assert_select "select#user_usage_region[name='user[usage_region]'][required]"
+    assert_select "select#user_usage_region[name='user[usage_region]']"
     assert_select "select#user_usage_region option[value='AU'][selected]"
 
     patch account_user_path(user), params: {user: {usage_region: "FR"}}
@@ -160,19 +163,24 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal "FR", user.reload.usage_region
   end
 
-  test "region labels are localized in all six languages while special choices stay explicit" do
+  test "region labels, including Mainland China and Global Citizen, are localized in all six languages" do
     user = create(:user, usage_region: "JP")
     sign_in user
     codes = nil
-    {"en" => ["Japan", "Usage region"], "zh-CN" => ["日本", "使用地区"], "zh-TW" => ["日本", "使用地區"],
-      "ja" => ["日本", "利用する地域"], "ko" => ["일본", "사용 지역"], "es" => ["Japón", "Región de uso"]}.each do |locale, (japan, label)|
+    {"en" => ["Japan", "Usage region", "Mainland China", "Global Citizen"],
+     "zh-CN" => ["日本", "使用地区", "中国大陆", "世界公民"], "zh-TW" => ["日本", "使用地區", "中國大陸", "世界公民"],
+     "ja" => ["日本", "利用する地域", "中国本土", "地球市民"], "ko" => ["일본", "사용 지역", "중국 본토", "세계 시민"],
+     "es" => ["Japón", "Región de uso", "China continental", "Ciudadanía global"]}.each do |locale, (japan, label, mainland, global)|
       get finance_settings_path, params: {locale: locale}
       assert_response :success
       assert_select "html[lang='#{locale}']"
       assert_select "label[for='user_usage_region']", text: label
       assert_select "select#user_usage_region option[value='JP']", text: japan
-      assert_select "select#user_usage_region option[value='CN']", text: "Mainland China"
-      assert_select "select#user_usage_region option[value='XG']", text: "Global Citizen"
+      assert_select "select#user_usage_region option[value='CN']", text: mainland
+      assert_select "select#user_usage_region option[value='XG']", text: global
+      # The English names stay searchable in every language.
+      assert_select "select#user_usage_region option[value='CN'][data-search*='Mainland China']"
+      assert_select "select#user_usage_region option[value='XG'][data-search*='Global Citizen']"
       assert_select "select#user_usage_region option[value='HK']"
       assert_select "select#user_usage_region option[value='TW']"
       assert_select "input[name='user[usage_region]']", count: 0
@@ -188,7 +196,7 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
   private
 
   def registration_params(email, **attributes)
-    {user: {first_name: "Alex", last_name: "River", email: email,
+    {user: {email: email,
       password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}.merge(attributes)}
   end
 end

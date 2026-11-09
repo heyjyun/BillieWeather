@@ -1,0 +1,28 @@
+---
+en:
+  billie:
+    account:
+      intro: Manage your nickname, password, and usage region.
+      profile_heading: Profile
+      nickname: Nickname
+      nickname_optional: Nickname (optional)
+      nickname_help: Up to 40 characters. Shown only to you in BillieWeather.
+      email_help: Your sign-in email. Contact support to change it.
+      save_nickname: Save nickname
+      nickname_saved: Your nickname has been saved.
+      password_heading: Password
+      password_intro: Enter your current password to choose a new one.
+      current_password: Current password
+      password_changed: Your password has been changed.
+      google_password_help: Signed up with Google? Your account was given a random password. We can email you a link to choose your own.
+      send_password_link: Email me a password link
+      password_reset_sent: We sent a link to set your password to %{email}.
+      password_reset_failed: The password email could not be sent right now. Please try again later.
+      region_search_placeholder: Type to search, e.g. Japan or JP
+      region_search_label: Search regions
+      region_search_empty: No region matches that search.
+  activerecord:
+    attributes:
+      user:
+        nickname: Nickname
+        current_password: Current password

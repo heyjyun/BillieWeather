@@ -8,6 +8,7 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "/billie.css" %>
+    <script src="/billie.js" defer></script>
   </head>
   <% landing_page = controller_path == "public/home"; public_page = landing_page || devise_controller? || !user_signed_in? %>
   <body class="<%= public_page ? 'billie-public' : 'billie-app' %>">
@@ -15,7 +16,7 @@
     <% if public_page %>
       <header class="bw-public-header">
         <%= link_to root_path, class: "bw-brand", "aria-label": t('billie.layout.home') do %><span class="bw-brand-mark">b<small>·</small></span><span>BillieWeather</span><% end %>
-        <nav class="bw-public-links" aria-label="<%= t('billie.layout.main_navigation') %>"><a href="<%= root_path(anchor: "how-it-works") %>"><%= t('billie.layout.how_it_works') %></a><a href="<%= root_path(anchor: "features") %>"><%= t('billie.layout.features') %></a></nav>
+        <nav class="bw-public-links" aria-label="<%= t('billie.layout.main_navigation') %>"><a href="<%= root_path(anchor: "how-it-works") %>"><%= t('billie.layout.how_it_works') %></a><a href="<%= root_path(anchor: "features") %>"><%= t('billie.layout.features') %></a><%= link_to t('billie.layout.about_us'), billie_about_path, "aria-current": ("page" if current_page?(billie_about_path)) %></nav>
         <div class="bw-header-actions">
           <%= render 'shared/billie_language_switcher' %>
           <% if user_signed_in? %><%= link_to t('billie.layout.open_dashboard'), finance_dashboard_path, class: "bw-button bw-button-dark" %><% else %><%= link_to t('billie.layout.log_in'), new_user_session_path, class: "bw-text-link" %><%= link_to t('billie.layout.get_started'), new_user_registration_path, class: "bw-button bw-button-dark" %><% end %>
@@ -31,11 +32,12 @@
           <%= finance_nav t('billie.layout.transactions'), finance_transactions_path, "transactions", active: controller_name == "transactions" %>
           <%= finance_nav t('billie.layout.forecast'), finance_forecast_path, "forecast", active: controller_name == "forecast" %>
           <%= finance_nav t('billie.layout.insights'), finance_insights_path, "insights", active: controller_name == "insights" %>
+          <%= finance_nav t('billie.layout.tax_preparation'), finance_tax_preparation_path, "file", active: controller_name == "tax_preparation" %>
           <%= finance_nav t('billie.region.nav'), finance_settings_path, "settings", active: controller_name == "settings" %>
         </nav>
         <div class="bw-sidebar-bottom">
           <div class="bw-sidebar-note"><%= finance_icon "sun", size: 26 %><strong><%= t('billie.layout.clarity') %></strong><p><%= t('billie.layout.next_step') %></p></div>
-          <div class="bw-user"><div><strong><%= current_user.first_name.presence || t('billie.layout.your_account') %></strong><small title="<%= current_user.email %>"><%= current_user.email %></small></div><%= button_to destroy_user_session_path, method: :delete, class: "bw-icon-button", title: t('billie.layout.log_out'), form: {data: {turbo: false}}, "aria-label": t('billie.layout.log_out') do %><%= finance_icon "logout" %><% end %></div>
+          <div class="bw-user"><div><strong><%= current_user.nickname.presence || t('billie.layout.your_account') %></strong><small title="<%= current_user.email %>"><%= current_user.email %></small></div><%= button_to destroy_user_session_path, method: :delete, class: "bw-icon-button", title: t('billie.layout.log_out'), form: {data: {turbo: false}}, "aria-label": t('billie.layout.log_out') do %><%= finance_icon "logout" %><% end %></div>
         </div>
       </aside>
     <% end %>

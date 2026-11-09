@@ -1,0 +1,22 @@
+---
+ko:
+  billie:
+    about:
+      title: 회사 소개
+      eyebrow: 회사 소개
+      heading: 일상의 재정을 더 선명하게
+      intro: BillieWeather는 필요 이상의 정보를 넘기지 않고도 자신의 돈을 이해할 수 있도록 돕습니다. 명세서를 올리면 돈이 어디로 가는지 보이고, 앞으로의 흐름을 차분하게 살펴볼 수 있습니다.
+      believe_eyebrow: 우리의 생각
+      believe_heading: 신뢰를 바탕으로
+      privacy_title: 개인정보 보호가 먼저입니다
+      privacy_body: Billie에는 닉네임만 있으면 됩니다. 실명은 필요 없습니다. 은행 로그인을 연결할 필요도 없고, 어떤 명세서를 올릴지는 직접 정합니다.
+      control_title: 주도권은 당신에게
+      control_body: 무엇을 가져오고, 확인하고, 수정할지 직접 결정합니다. AI 분석은 직접 요청하고 숫자 요약 공유에 동의했을 때만 실행됩니다.
+      honest_title: 한계도 솔직하게
+      honest_body: BillieWeather는 기록을 정리하고 추정치를 제공합니다. 금융·세무·법률 조언이 아니며, 이 점을 분명히 알려 드립니다.
+      name_eyebrow: 왜 '웨더'인가요
+      name_heading: 약속이 아닌 예보
+      name_body: 일기예보는 내일 무슨 일이 일어날지 단정하지 않습니다. 가능성이 높은 상황을 보여 주어 우산을 챙길지, 소풍을 갈지 정하도록 돕습니다.
+      name_body_2: BillieWeather도 현금 흐름에 대해 같은 일을 합니다. 최근 패턴을 바탕으로 잔액이 어디로 향할지 보여 주어, 놀라기 전에 미리 준비할 수 있게 합니다.
+      cta_eyebrow: 시작하기
+      cta_heading: 몇 분 만에 재정 전망을 확인해 보세요.

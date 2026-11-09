@@ -1,0 +1,22 @@
+---
+zh-TW:
+  billie:
+    about:
+      title: 關於我們
+      eyebrow: 關於我們
+      heading: 讓日常財務更清楚
+      intro: BillieWeather 幫助你看懂自己的錢，同時不讓你交出多餘的資訊。上傳一份帳單，看清錢花在哪裡，再從容地看看接下來可能會怎樣。
+      believe_eyebrow: 我們的理念
+      believe_heading: 以你的信任為本
+      privacy_title: 隱私放在第一位
+      privacy_body: Billie 只需要一個暱稱，不用留真實姓名。你不需要綁定網銀登入，上傳哪些帳單由你決定。
+      control_title: 一切由你掌控
+      control_body: 匯入什麼、檢查什麼、修改什麼，都由你決定。只有在你主動發起並同意分享數字摘要時，才會進行 AI 分析。
+      honest_title: 坦誠說明限制
+      honest_body: BillieWeather 幫你整理記錄並提供估算，但它不是理財、稅務或法律建議，這一點我們會明確告訴你。
+      name_eyebrow: 為什麼叫「天氣」
+      name_heading: 是預報，不是承諾
+      name_body: 天氣預報不會告訴你明天一定會發生什麼，但能幫你判斷大概率的情況，好決定要不要帶傘、能不能去野餐。
+      name_body_2: BillieWeather 對你的現金流也是這樣：根據近期的收支規律，呈現餘額可能的走向，讓你提前準備，而不是事後措手不及。
+      cta_eyebrow: 立即開始
+      cta_heading: 幾分鐘就能看到你的財務展望。

@@ -1,0 +1,22 @@
+---
+en:
+  billie:
+    about:
+      title: About us
+      eyebrow: ABOUT US
+      heading: Clarity for everyday finances
+      intro: BillieWeather helps people understand their money without handing over more than they need to. Upload a statement, see where your money goes, and get a calm look at what may come next.
+      believe_eyebrow: WHAT WE BELIEVE
+      believe_heading: Built around your trust
+      privacy_title: Your privacy comes first
+      privacy_body: Billie only needs a nickname, never your legal name. You don't connect your bank login — you choose which statements to upload.
+      control_title: You stay in control
+      control_body: You decide what to import, review, and correct. AI analysis only runs when you ask for it and agree to share a summary of your numbers.
+      honest_title: Honest about limits
+      honest_body: BillieWeather organizes your records and offers estimates. It is not financial, tax, or legal advice, and we say so plainly.
+      name_eyebrow: WHY "WEATHER"
+      name_heading: A forecast, not a promise
+      name_body: A weather forecast doesn't tell you exactly what will happen. It helps you see what's likely, so you can bring an umbrella or plan a picnic.
+      name_body_2: 'BillieWeather does the same for your cash flow: it looks at your recent patterns and shows where your balance may be heading, so you can prepare early instead of being surprised.'
+      cta_eyebrow: GET STARTED
+      cta_heading: See your financial outlook in a few minutes.

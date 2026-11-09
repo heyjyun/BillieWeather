@@ -1,21 +1,70 @@
 <% content_for :title, t("billie.region.heading") %>
+<% errors_for = ->(section) { (@failed_section == section && @user.errors.any?) ? tag.div(@user.errors.full_messages.to_sentence, class: "bw-flash bw-flash-error", role: "alert") : nil } %>
 <div class="bw-page-heading">
   <div>
     <span class="bw-eyebrow"><%= t("billie.region.nav") %></span>
     <h1><%= t("billie.region.heading") %></h1>
-    <p><%= t("billie.region.intro") %></p>
+    <p><%= t("billie.account.intro") %></p>
   </div>
 </div>
-<section class="bw-panel">
-  <% if @user.errors.any? %>
-    <div class="bw-flash bw-flash-error" role="alert"><%= @user.errors.full_messages.to_sentence %></div>
-  <% end %>
-  <%= form_with model: @user, scope: :user, url: finance_settings_path, method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
-    <div class="bw-field">
-      <%= form.label :usage_region, t("billie.region.label") %>
-      <%= form.select :usage_region, usage_region_options, {prompt: t("billie.region.blank"), disabled: "", selected: form.object.usage_region.presence || ""}, {required: true, autocomplete: "country", "aria-describedby": "user_usage_region_help"} %>
-      <small id="user_usage_region_help"><%= t("billie.region.help") %></small>
-    </div>
-    <%= form.submit t("billie.region.save"), class: "bw-button bw-button-dark" %>
-  <% end %>
-</section>
+<div class="bw-settings-stack">
+  <section class="bw-panel" id="settings-profile" aria-labelledby="settings-profile-heading">
+    <h2 id="settings-profile-heading"><%= t("billie.account.profile_heading") %></h2>
+    <%= errors_for.call(:nickname) %>
+    <%= form_with model: @user, scope: :user, url: nickname_finance_settings_path, method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
+      <div class="bw-field">
+        <%= form.label :nickname, t("billie.account.nickname") %>
+        <%= form.text_field :nickname, maxlength: 40, autocomplete: "nickname", "aria-describedby": "user_nickname_help" %>
+        <small id="user_nickname_help"><%= t("billie.account.nickname_help") %></small>
+      </div>
+      <div class="bw-field">
+        <label for="settings_email"><%= t("billie.auth.email") %></label>
+        <input id="settings_email" type="email" value="<%= @user.email %>" readonly aria-describedby="settings_email_help">
+        <small id="settings_email_help"><%= t("billie.account.email_help") %></small>
+      </div>
+      <%= form.submit t("billie.account.save_nickname"), class: "bw-button bw-button-dark" %>
+    <% end %>
+  </section>
+
+  <section class="bw-panel" id="settings-password" aria-labelledby="settings-password-heading">
+    <h2 id="settings-password-heading"><%= t("billie.account.password_heading") %></h2>
+    <p><%= t("billie.account.password_intro") %></p>
+    <%= errors_for.call(:password) %>
+    <%= form_with model: @user, scope: :user, url: password_finance_settings_path, method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
+      <div class="bw-field">
+        <%= form.label :current_password, t("billie.account.current_password") %>
+        <%= form.password_field :current_password, required: true, autocomplete: "current-password", value: nil %>
+      </div>
+      <div class="bw-field">
+        <%= form.label :password, t("billie.auth.new_password") %>
+        <%= form.password_field :password, required: true, autocomplete: "new-password", minlength: Devise.password_length.min, maxlength: Devise.password_length.max, value: nil, "aria-describedby": "user_password_help" %>
+        <small id="user_password_help"><%= t("billie.auth.unique_password_hint", count: Devise.password_length.min) %></small>
+      </div>
+      <div class="bw-field">
+        <%= form.label :password_confirmation, t("billie.auth.confirm_new_password") %>
+        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", value: nil %>
+      </div>
+      <%= form.submit t("billie.auth.update_password"), class: "bw-button bw-button-dark" %>
+    <% end %>
+    <% if @user.google_uid.present? %>
+      <div class="bw-section-gap">
+        <p class="bw-caption"><%= t("billie.account.google_password_help") %></p>
+        <%= button_to t("billie.account.send_password_link"), password_reset_finance_settings_path, method: :post, form: {data: {turbo: false}}, class: "bw-button bw-button-outline" %>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="bw-panel" id="settings-region" aria-labelledby="settings-region-heading">
+    <h2 id="settings-region-heading"><%= t("billie.region.label") %></h2>
+    <p><%= t("billie.region.intro") %></p>
+    <%= errors_for.call(:region) %>
+    <%= form_with model: @user, scope: :user, url: finance_settings_path, method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
+      <div class="bw-field">
+        <%= form.label :usage_region, t("billie.region.label") %>
+        <%= usage_region_select(form) %>
+        <small id="user_usage_region_help"><%= t("billie.region.help") %></small>
+      </div>
+      <%= form.submit t("billie.region.save"), class: "bw-button bw-button-dark" %>
+    <% end %>
+  </section>
+</div>

@@ -301,7 +301,7 @@ html[lang="ko"] :is(h1, h2, h3, p) { word-break: keep-all; overflow-wrap: anywhe
 .bw-hero .bw-eyebrow { font-size: 10px; margin-bottom: 24px; }
 .bw-hero-actions { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; }
 .bw-hero-actions .bw-text-link { font-size: 11px; color: #687655; }
-.bw-hero-details { display: flex; gap: 22px; margin-top: 25px; color: #6b7464; font-size: 10px; }
+.bw-hero-details { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 25px; color: #6b7464; font-size: 10px; }
 .bw-hero-details > span { display: flex; gap: 6px; align-items: center; }
 .bw-hero-art { position: relative; padding: 20px 15px 35px 35px; min-width: 0; }
 .bw-art-orbit { position: absolute; display: block; border: 1px solid #e1e8d6; border-radius: 50%; z-index: 0; pointer-events: none; }
@@ -474,3 +474,16 @@ html[lang="ko"] :is(h1, h2, h3, p) { word-break: keep-all; overflow-wrap: anywhe
 .bw-inline-edit summary::-webkit-details-marker { display: none; }
 .bw-inline-edit form { margin-top: 10px; max-width: 340px; }
 .bw-inline-edit small { display: block; margin-top: 6px; font-size: 11px; color: var(--bw-muted); line-height: 1.6; }
+.bw-region-picker { display: grid; gap: 7px; }
+.bw-region-picker select[size] { min-height: 0; padding: 4px; }
+.bw-region-picker select[size] option { padding: 6px 8px; border-radius: 5px; }
+.bw-region-picker [data-region-search-empty] { color: #9a4a35; }
+.bw-settings-stack { display: grid; gap: 20px; max-width: 640px; }
+.bw-settings-stack .bw-panel h2 { margin-bottom: 4px; }
+.bw-settings-stack .bw-panel > p { margin-bottom: 18px; }
+.bw-about-hero { padding-bottom: 10px; }
+.bw-about-hero .bw-section-heading { max-width: 720px; margin-bottom: 0; }
+.bw-about-hero h1 { font-size: clamp(34px, 4.6vw, 56px); letter-spacing: -1.8px; line-height: 1.12; margin-bottom: 0; }
+.bw-about-hero .bw-section-heading p { max-width: 560px; font-size: 14px; }
+.bw-about-story p { font-size: 14px; line-height: 1.9; max-width: 560px; }
+.bw-public-links a[aria-current="page"] { color: var(--bw-ink); font-weight: 600; }

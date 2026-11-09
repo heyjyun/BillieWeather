@@ -8,6 +8,7 @@ es:
         no_bank_login: No necesitas iniciar sesión en tu banco
         future_bank_sync: En el futuro, si nuestra base de usuarios crece y conseguimos más financiación, consideraremos colaborar con bancos para sincronizar todos los extractos directamente y de forma automática.
         free_analysis: Análisis básico gratuito
+        privacy_nickname: "Billie protege tu privacidad: solo un apodo, sin tu nombre real"
         art_label: Importa un extracto, revisa tus transacciones y consulta la previsión de tu flujo de caja
         outlook: TU PERSPECTIVA FINANCIERA
         clear_view_html: Una visión clara de<br>tu dinero.

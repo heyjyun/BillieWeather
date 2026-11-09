@@ -1,0 +1,28 @@
+---
+zh-CN:
+  billie:
+    account:
+      intro: 管理您的昵称、密码和使用地区。
+      profile_heading: 个人资料
+      nickname: 昵称
+      nickname_optional: 昵称（可选）
+      nickname_help: 最多 40 个字符，只在 BillieWeather 中显示给您自己。
+      email_help: 这是您的登录邮箱。如需更改，请联系客服。
+      save_nickname: 保存昵称
+      nickname_saved: 昵称已保存。
+      password_heading: 密码
+      password_intro: 输入当前密码后即可设置新密码。
+      current_password: 当前密码
+      password_changed: 密码已修改。
+      google_password_help: 通过 Google 注册？您的账户使用的是随机生成的密码。我们可以给您发一封邮件，通过链接设置自己的密码。
+      send_password_link: 发送设置密码的邮件
+      password_reset_sent: 设置密码的链接已发送至 %{email}。
+      password_reset_failed: 暂时无法发送密码邮件，请稍后再试。
+      region_search_placeholder: 输入搜索，例如 日本 或 JP
+      region_search_label: 搜索地区
+      region_search_empty: 没有找到匹配的地区。
+  activerecord:
+    attributes:
+      user:
+        nickname: 昵称
+        current_password: 当前密码

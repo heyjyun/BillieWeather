@@ -8,7 +8,7 @@
     <%= form_with model: @user, scope: :user, url: google_region_path, method: :post, data: {turbo: false}, class: "bw-form" do |form| %>
       <div class="bw-form-field bw-field">
         <%= form.label :usage_region, t("billie.region.label") %>
-        <%= form.select :usage_region, usage_region_options, {prompt: t("billie.region.blank"), disabled: "", selected: form.object.usage_region.presence || ""}, {required: true, autocomplete: "country", "aria-describedby": "user_usage_region_help"} %>
+        <%= usage_region_select(form) %>
         <small id="user_usage_region_help"><%= t("billie.region.help") %></small>
       </div>
       <%= form.submit t("billie.google_region.continue"), class: "bw-button bw-button-dark" %>

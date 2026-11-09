@@ -64,7 +64,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
       assert_equal "Original merchant", query["search"]
     end
 
-    [finance_statements_path, finance_forecast_path(engine: "linear"), finance_insights_path, edit_finance_transaction_path(transaction)].each do |path|
+    [finance_statements_path, finance_forecast_path(engine: "linear"), finance_insights_path, finance_tax_preparation_path, edit_finance_transaction_path(transaction)].each do |path|
       get path
       assert_response :success
       assert_select "html[lang='zh-CN']"
@@ -172,7 +172,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
       assert_includes response.body, I18n.l(Date.current, locale: locale, format: I18n.t("billie.helpers.date_format", locale: locale))
       assert_includes response.body, I18n.t("billie.helpers.labels.checking", locale: locale)
 
-      [finance_statements_path, finance_transactions_path, finance_forecast_path(engine: "linear"), finance_insights_path,
+      [finance_statements_path, finance_transactions_path, finance_forecast_path(engine: "linear"), finance_insights_path, finance_tax_preparation_path,
        edit_finance_transaction_path(transaction)].each do |path|
         get path
         assert_response :success

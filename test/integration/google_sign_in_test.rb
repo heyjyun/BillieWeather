@@ -106,8 +106,10 @@ class GoogleSignInTest < ActionDispatch::IntegrationTest
     assert_redirected_to finance_dashboard_path
     user = User.find_by!(google_uid: "google-subject-123")
     assert_equal "google-reader@example.com", user.email
-    assert_equal "Alex", user.first_name
-    assert_equal "River", user.last_name
+    # Names from the Google profile are never stored.
+    assert_nil user.first_name
+    assert_nil user.last_name
+    assert_nil user.nickname
     assert_equal "US", user.usage_region
     assert user.current_team
     assert_equal 1, user.teams.count

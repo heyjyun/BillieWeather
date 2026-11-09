@@ -11,13 +11,32 @@ class User < ApplicationRecord
   has_many :finance_bank_accounts, class_name: "Finance::BankAccount", dependent: :destroy
   validates :google_uid, length: {maximum: 255}, uniqueness: true, allow_nil: true
   before_validation :normalize_usage_region
+  before_validation :normalize_nickname
   after_save { @usage_region_selection_attempted = false }
   validates :usage_region, presence: true, if: :usage_region_selection_required?
   validates :usage_region, inclusion: {in: UsageRegion::CODES}, allow_nil: true
+  validates :nickname, length: {maximum: 40}
 
   def usage_region=(value)
     @usage_region_selection_attempted = true
     super
+  end
+
+  # BillieWeather does not ask for a legal name; people choose an optional nickname instead.
+  def name
+    nickname.presence || email
+  end
+
+  def full_name
+    nickname.to_s
+  end
+
+  def details_provided?
+    current_team&.name.present?
+  end
+
+  def formatted_email_address
+    email
   end
 
   def needs_usage_region?
@@ -56,6 +75,10 @@ class User < ApplicationRecord
   def normalize_usage_region
     self[:usage_region] = usage_region.to_s.strip.upcase.presence
     self.usage_region_pending = false if usage_region.present?
+  end
+
+  def normalize_nickname
+    self.nickname = nickname.to_s.squish.presence
   end
 
   def usage_region_selection_required?

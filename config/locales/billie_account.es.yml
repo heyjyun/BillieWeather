@@ -1,0 +1,28 @@
+---
+es:
+  billie:
+    account:
+      intro: Administra tu apodo, tu contraseña y tu región de uso.
+      profile_heading: Perfil
+      nickname: Apodo
+      nickname_optional: Apodo (opcional)
+      nickname_help: Hasta 40 caracteres. Solo tú lo verás en BillieWeather.
+      email_help: Tu correo de inicio de sesión. Contacta con soporte para cambiarlo.
+      save_nickname: Guardar apodo
+      nickname_saved: Tu apodo se ha guardado.
+      password_heading: Contraseña
+      password_intro: Introduce tu contraseña actual para elegir una nueva.
+      current_password: Contraseña actual
+      password_changed: Tu contraseña se ha cambiado.
+      google_password_help: "¿Te registraste con Google? Tu cuenta recibió una contraseña aleatoria. Podemos enviarte un enlace por correo para elegir la tuya."
+      send_password_link: Enviarme un enlace de contraseña
+      password_reset_sent: Enviamos un enlace para establecer tu contraseña a %{email}.
+      password_reset_failed: No se pudo enviar el correo de contraseña en este momento. Inténtalo más tarde.
+      region_search_placeholder: Escribe para buscar, p. ej. Japón o JP
+      region_search_label: Buscar regiones
+      region_search_empty: Ninguna región coincide con la búsqueda.
+  activerecord:
+    attributes:
+      user:
+        nickname: Apodo
+        current_password: Contraseña actual

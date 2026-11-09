@@ -7,11 +7,10 @@
     <%= render "devise/shared/google_sign_in" %>
     <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: {data: {turbo: false}}) do |form| %>
       <% if resource.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= resource.errors.full_messages.to_sentence %></div><% end %>
-      <div class="bw-form-field"><%= form.label :first_name, t("billie.auth.first_name") %><%= form.text_field :first_name, required: true, autocomplete: "given-name", maxlength: 80 %></div>
-      <div class="bw-form-field"><%= form.label :last_name, t("billie.auth.last_name") %><%= form.text_field :last_name, required: true, autocomplete: "family-name", maxlength: 80 %></div>
+      <div class="bw-form-field bw-field"><%= form.label :nickname, t("billie.account.nickname_optional") %><%= form.text_field :nickname, autocomplete: "nickname", maxlength: 40, "aria-describedby": "user_nickname_help" %><small id="user_nickname_help"><%= t("billie.account.nickname_help") %></small></div>
       <div class="bw-form-field bw-field">
         <%= form.label :usage_region, t("billie.region.label") %>
-        <%= form.select :usage_region, usage_region_options, {prompt: t("billie.region.blank"), disabled: "", selected: form.object.usage_region.presence || ""}, {required: true, autocomplete: "country", "aria-describedby": "user_usage_region_help"} %>
+        <%= usage_region_select(form) %>
         <small id="user_usage_region_help"><%= t("billie.region.help") %></small>
       </div>
       <div class="bw-form-field"><%= form.label :email, t("billie.auth.email") %><%= form.email_field :email, required: true, autocomplete: "email" %></div>

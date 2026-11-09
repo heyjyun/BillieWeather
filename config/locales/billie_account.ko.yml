@@ -1,0 +1,28 @@
+---
+ko:
+  billie:
+    account:
+      intro: 닉네임, 비밀번호, 사용 지역을 관리합니다.
+      profile_heading: 프로필
+      nickname: 닉네임
+      nickname_optional: 닉네임(선택)
+      nickname_help: 최대 40자. BillieWeather에서 본인에게만 표시됩니다.
+      email_help: 로그인 이메일입니다. 변경하려면 지원팀에 문의하세요.
+      save_nickname: 닉네임 저장
+      nickname_saved: 닉네임이 저장되었습니다.
+      password_heading: 비밀번호
+      password_intro: 새 비밀번호를 설정하려면 현재 비밀번호를 입력하세요.
+      current_password: 현재 비밀번호
+      password_changed: 비밀번호가 변경되었습니다.
+      google_password_help: Google로 가입하셨나요? 계정에는 임의의 비밀번호가 설정되어 있습니다. 직접 비밀번호를 정할 수 있는 링크를 이메일로 보내 드릴 수 있습니다.
+      send_password_link: 비밀번호 설정 링크 받기
+      password_reset_sent: "%{email}(으)로 비밀번호 설정 링크를 보냈습니다."
+      password_reset_failed: 지금은 비밀번호 이메일을 보낼 수 없습니다. 잠시 후 다시 시도하세요.
+      region_search_placeholder: '입력해서 검색 (예: 일본, JP)'
+      region_search_label: 지역 검색
+      region_search_empty: 검색과 일치하는 지역이 없습니다.
+  activerecord:
+    attributes:
+      user:
+        nickname: 닉네임
+        current_password: 현재 비밀번호

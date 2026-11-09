@@ -34,6 +34,7 @@ module Finance
     def return_path
       case params[:return_to]
       when "insights" then finance_insights_path
+      when "tax_preparation" then finance_tax_preparation_path
       when "dashboard" then finance_dashboard_path(anchor: "accounts")
       else finance_forecast_path
       end

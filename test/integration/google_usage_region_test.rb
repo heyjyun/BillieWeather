@@ -28,7 +28,8 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_google_region_path
     follow_redirect!
     assert_response :success
-    assert_select "select#user_usage_region[name='user[usage_region]'][required]"
+    assert_select "select#user_usage_region[name='user[usage_region]']"
+    assert_select "select#user_usage_region option[value='XG'][selected]", text: "Global Citizen"
     assert_select "option[value='CN']", text: "Mainland China"
     assert_select "input[name='user[email]'], input[name='uid'], input[name='auth']", count: 0
     refute_includes response.body, "private-google-token"
@@ -46,7 +47,8 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     user = User.find_by!(google_uid: "region-google-subject")
     assert_equal "JP", user.usage_region
     assert_equal "region-google@example.com", user.email
-    assert_equal "Alex", user.first_name
+    assert_nil user.first_name
+    assert_nil user.last_name
     assert_equal 1, user.teams.count
     refute User.exists?(email: "forged@example.com")
     refute_includes user.attributes.values.compact.map(&:to_s).join(" "), "private-google-token"
@@ -66,7 +68,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
       end
       assert_response :unprocessable_entity
       assert_select "[role='alert']"
-      assert_select "select#user_usage_region[required]"
+      assert_select "select#user_usage_region"
     end
     assert_difference "User.count", 1 do
       post google_region_path, params: {user: {usage_region: "HK"}}
@@ -167,7 +169,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     assert_nil user.reload.usage_region
     follow_redirect!
     assert_response :success
-    assert_select "select#user_usage_region[required]"
+    assert_select "select#user_usage_region"
     get finance_dashboard_path
     assert_redirected_to finance_settings_path
 

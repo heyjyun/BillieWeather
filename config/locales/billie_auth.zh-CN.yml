@@ -8,6 +8,7 @@ zh-CN:
         no_bank_login: 无需登录银行账户
         future_bank_sync: 未来如果我们有更多用户和资金基础，我们会考虑和银行合作直接自动化同步所有账单。
         free_analysis: 免费基础分析
+        privacy_nickname: "Billie保护个人信息，不用留真实姓名"
         art_label: 导入账单、核对交易并查看现金流预测
         outlook: 你的财务展望
         clear_view_html: 清晰掌握<br>每一笔收支。

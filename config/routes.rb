@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   get "/", to: "public/home#index", as: :billie_home
+  get "/about", to: "public/home#about", as: :billie_about
   get "/up", to: "rails/health#show", as: :billie_health
   get "/users/google/region", to: "google_regions#new", as: :new_google_region
   post "/users/google/region", to: "google_regions#create", as: :google_region
@@ -16,8 +17,15 @@ Rails.application.routes.draw do
     resources :bank_accounts, only: :update
     resource :forecast, only: :show, controller: :forecast
     resource :profile, only: :update
-    resource :settings, only: [:show, :update], controller: :settings
+    resource :settings, only: [:show, :update], controller: :settings do
+      patch :nickname
+      patch :password
+      post :password_reset
+    end
     resource :insights, only: :show, controller: :insights do
+      post :generate
+    end
+    resource :tax_preparation, only: :show, path: "tax", controller: :tax_preparation do
       post :generate
     end
   end

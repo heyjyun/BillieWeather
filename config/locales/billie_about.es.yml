@@ -1,0 +1,22 @@
+---
+es:
+  billie:
+    about:
+      title: Sobre nosotros
+      eyebrow: SOBRE NOSOTROS
+      heading: Claridad para las finanzas de cada día
+      intro: BillieWeather te ayuda a entender tu dinero sin pedirte más de lo necesario. Sube un extracto, mira en qué se va tu dinero y obtén una visión tranquila de lo que puede venir.
+      believe_eyebrow: EN QUÉ CREEMOS
+      believe_heading: Construido sobre tu confianza
+      privacy_title: Tu privacidad es lo primero
+      privacy_body: 'Billie solo necesita un apodo, nunca tu nombre real. No conectas el acceso a tu banco: tú eliges qué extractos subir.'
+      control_title: Tú tienes el control
+      control_body: Tú decides qué importar, revisar y corregir. El análisis con IA solo se ejecuta cuando lo pides y aceptas compartir un resumen de tus cifras.
+      honest_title: Honestos sobre los límites
+      honest_body: BillieWeather organiza tus registros y ofrece estimaciones. No es asesoramiento financiero, fiscal ni legal, y lo decimos con claridad.
+      name_eyebrow: ¿POR QUÉ "WEATHER"?
+      name_heading: Un pronóstico, no una promesa
+      name_body: Un pronóstico del tiempo no te dice exactamente qué pasará. Te ayuda a ver lo más probable para que decidas si llevar paraguas o planear un pícnic.
+      name_body_2: 'BillieWeather hace lo mismo con tu flujo de caja: analiza tus patrones recientes y muestra hacia dónde puede ir tu saldo, para que te prepares con tiempo en lugar de llevarte sorpresas.'
+      cta_eyebrow: EMPIEZA AHORA
+      cta_heading: Mira tu panorama financiero en pocos minutos.
