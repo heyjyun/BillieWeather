@@ -256,11 +256,10 @@ class FinanceCategoriesTest < ActionDispatch::IntegrationTest
   end
 
   def with_openai_env
-    names = %w[OPENAI_API_KEY OPENAI_MODEL OPENAI_BASE_URL OPENAI_REASONING_EFFORT]
+    names = %w[OPENAI_API_KEY OPENAI_MODEL OPENAI_REASONING_EFFORT]
     previous = ENV.values_at(*names)
     ENV["OPENAI_API_KEY"] = "test-key"
     ENV["OPENAI_MODEL"] = "test-model"
-    ENV.delete("OPENAI_BASE_URL")
     ENV.delete("OPENAI_REASONING_EFFORT")
     stub_method(Rails.application, :credentials, {}) { yield }
   ensure

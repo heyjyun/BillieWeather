@@ -103,17 +103,13 @@ module Finance
     end
 
     def self.request(payload)
-      endpoint = begin
-        InsightGenerator.endpoint
-      rescue InsightGenerator::Error
-        raise Error, :not_configured
-      end
+      endpoint = InsightGenerator::ENDPOINT
       http_request = Net::HTTP::Post.new(endpoint)
       http_request["Authorization"] = "Bearer #{InsightGenerator.api_key}"
       http_request["Content-Type"] = "application/json"
       http_request.body = JSON.generate(payload)
       http = Net::HTTP.new(endpoint.host, endpoint.port)
-      http.use_ssl = endpoint.scheme == "https"
+      http.use_ssl = true
       http.open_timeout = 5
       http.read_timeout = 45
       http.write_timeout = 5

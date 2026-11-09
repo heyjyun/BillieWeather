@@ -393,69 +393,22 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "AI consent discloses Prepend and its optional OpenAI credit fallback" do
+  test "AI consent names OpenAI as the service" do
     sign_in @user
-    with_openai_env("prepend-test-token", "test-model", base_url: "https://prepend.me/api.openai.com/v1",
-      fallback_api_key: "native-test-key", fallback_on_quota_exhausted: "true") do
+    with_openai_env("test-key", "test-model") do
       get finance_insights_path
       assert_response :success
-      assert_select "label", text: /OpenAI via Prepend, with OpenAI if its credit runs out/, count: 1
+      assert_select "label", text: /OpenAI/, count: 1
       get finance_tax_preparation_path
       assert_response :success
-      assert_select "label", text: /OpenAI via Prepend, with OpenAI if its credit runs out/, count: 1
+      assert_select "label", text: /OpenAI/, count: 1
     end
-  end
-
-  test "an explicit Prepend credit limit uses OpenAI once and tells the user" do
-    sign_in @user
-    content = {
-      "summary" => "A summary of the supplied financial activity.",
-      "observations" => [{"title" => "Check coverage", "body" => "Review the dates covered by your statements."}],
-      "actions" => [{"title" => "Review categories", "body" => "Check the suggested transaction categories."}],
-      "tax_preparation" => [{"title" => "Keep records", "body" => "Retain supporting records for review."}],
-      "limitations" => ["Based only on the supplied aggregate data."]
-    }
-    quota = Net::HTTPTooManyRequests.new("1.1", "429", "Too Many Requests")
-    quota.define_singleton_method(:body) { JSON.generate(error: {code: "credit_balance_exhausted"}) }
-    ok = Net::HTTPOK.new("1.1", "200", "OK")
-    ok.define_singleton_method(:body) do
-      JSON.generate(status: "completed", output: [{type: "message", content: [{type: "output_text", text: JSON.generate(content)}]}])
-    end
-    calls = []
-    transport = lambda do |host, _port|
-      http = Object.new
-      http.define_singleton_method(:request) do |request|
-        calls << {host: host, authorization: request["Authorization"]}
-        (host == "prepend.me") ? quota : ok
-      end
-      %i[use_ssl= open_timeout= read_timeout= write_timeout= max_retries=].each { |name| http.define_singleton_method(name) { |_| } }
-      http
-    end
-
-    with_openai_env("prepend-test-token", "test-model", base_url: "https://prepend.me/api.openai.com/v1",
-      fallback_api_key: "native-test-key", fallback_on_quota_exhausted: "true") do
-      stub_method(Net::HTTP, :new, transport) do
-        assert_difference "Finance::Insight.count", 1 do
-          post generate_finance_insights_path, params: {provider: "openai", consent: "1"}
-        end
-      end
-      assert_redirected_to finance_insights_path
-      assert_includes flash[:notice], "Prepend's credit limit was reached"
-      assert_includes flash[:notice], "OpenAI"
-    end
-    assert_equal [
-      {host: "prepend.me", authorization: "Bearer prepend-test-token"},
-      {host: "api.openai.com", authorization: "Bearer native-test-key"}
-    ], calls
   end
 
   private
 
-  def with_openai_env(key, model, base_url: nil, fallback_api_key: nil, fallback_on_quota_exhausted: nil)
-    values = {"OPENAI_API_KEY" => key, "OPENAI_MODEL" => model, "OPENAI_BASE_URL" => base_url,
-              "OPENAI_REASONING_EFFORT" => nil, "OPENAI_FALLBACK_API_KEY" => fallback_api_key,
-              "OPENAI_FALLBACK_ON_QUOTA_EXHAUSTED" => fallback_on_quota_exhausted,
-              "OPENAI_FALLBACK_MODEL" => nil, "OPENAI_FALLBACK_REASONING_EFFORT" => nil}
+  def with_openai_env(key, model)
+    values = {"OPENAI_API_KEY" => key, "OPENAI_MODEL" => model, "OPENAI_REASONING_EFFORT" => nil}
     previous = ENV.values_at(*values.keys)
     values.each { |name, value| value.nil? ? ENV.delete(name) : ENV[name] = value }
     stub_method(Rails.application, :credentials, {}) { yield }

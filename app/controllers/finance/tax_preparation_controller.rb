@@ -13,7 +13,7 @@ module Finance
       end
       generator = InsightGenerator.new(user: current_user, provider: "openai", consent: params[:consent] == "1", kind: "tax")
       generator.call
-      notice = generator.fallback_used? ? I18n.t("billie.backend.analysis_fallback") : I18n.t("billie.backend.tax_analysis_generated")
+      notice = I18n.t("billie.backend.tax_analysis_generated")
       redirect_to finance_tax_preparation_path, notice: notice
     rescue InsightGenerator::Error => error
       load_tax_preparation

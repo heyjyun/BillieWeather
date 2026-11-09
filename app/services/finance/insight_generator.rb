@@ -110,48 +110,14 @@ module Finance
 
     def self.api_key = openai_setting(:api_key)
 
-    # Optional openai.base_url (e.g. https://host/v1) for an OpenAI-compatible provider.
-    def self.endpoint
-      base = openai_setting(:base_url).delete_suffix("/")
-      return ENDPOINT if base.empty?
+    # Always the official OpenAI Responses API.
+    def self.endpoint = ENDPOINT
 
-      uri = URI("#{base}/responses")
-      unless uri.is_a?(URI::HTTPS) && uri.host.present? && uri.userinfo.nil? && uri.query.nil? && uri.fragment.nil?
-        raise Error, I18n.t("billie.backend.ai_invalid_url")
-      end
-      uri
-    rescue URI::InvalidURIError
-      raise Error, I18n.t("billie.backend.ai_invalid_url")
-    end
-
-    def self.ai_service_name
-      case endpoint.host
-      when "api.openai.com" then "OpenAI"
-      when "prepend.me"
-        fallback_available? ? I18n.t("billie.backend.ai_via_prepend_fallback") : I18n.t("billie.backend.ai_via_prepend")
-      else I18n.t("billie.backend.ai_configured_provider")
-      end
-    rescue Error
-      I18n.t("billie.backend.ai_configured_provider")
-    end
+    def self.ai_service_name = "OpenAI"
 
     def self.model = openai_setting(:model)
 
     def self.reasoning_effort = openai_setting(:reasoning_effort)
-
-    def self.fallback_api_key = openai_setting(:fallback_api_key)
-
-    def self.fallback_model = openai_setting(:fallback_model).presence || model
-
-    def self.fallback_reasoning_effort = openai_setting(:fallback_reasoning_effort).presence || reasoning_effort
-
-    def self.fallback_available?
-      endpoint.host == "prepend.me" && endpoint.path == "/api.openai.com/v1/responses" &&
-        openai_setting(:fallback_on_quota_exhausted).casecmp?("true") &&
-        fallback_api_key.present? && fallback_api_key != api_key
-    end
-
-    def fallback_used? = @fallback_used == true
 
     def initialize(user:, provider: "rules", consent: false, kind: "general")
       @user = user
@@ -161,7 +127,6 @@ module Finance
     end
 
     def call
-      @fallback_used = false
       raise Error, I18n.t("billie.backend.choose_analysis") unless %w[rules openai].include?(@provider)
       raise Error, I18n.t("billie.backend.invalid_analysis_kind") unless Finance::Insight::KINDS.include?(@kind)
       raise Error, I18n.t("billie.backend.tax_ai_required") if tax? && @provider != "openai"
@@ -263,20 +228,8 @@ module Finance
       }
       payload[:reasoning] = {effort: self.class.reasoning_effort} if self.class.reasoning_effort.present?
       response = request_response(payload)
-      if quota_exhausted?(response) && self.class.fallback_available?
-        @fallback_used = true
-        fallback_payload = payload.merge(model: self.class.fallback_model)
-        effort = self.class.fallback_reasoning_effort
-        fallback_payload.delete(:reasoning)
-        fallback_payload[:reasoning] = {effort: effort} if effort.present?
-        response = request_response(fallback_payload, endpoint: ENDPOINT, api_key: self.class.fallback_api_key)
-      end
       unless response.is_a?(Net::HTTPSuccess)
-        service = if @fallback_used
-          "OpenAI"
-        else
-          ((self.class.endpoint.host == "prepend.me") ? "Prepend" : I18n.t("billie.backend.ai_service"))
-        end
+        service = "OpenAI"
         if response.code == "401"
           raise Error, I18n.t("billie.backend.ai_auth_failed", service: service)
         end
@@ -315,13 +268,14 @@ module Finance
       false
     end
 
-    def request_response(payload, endpoint: self.class.endpoint, api_key: self.class.api_key)
+    def request_response(payload)
+      endpoint = ENDPOINT
       request = Net::HTTP::Post.new(endpoint)
-      request["Authorization"] = "Bearer #{api_key}"
+      request["Authorization"] = "Bearer #{self.class.api_key}"
       request["Content-Type"] = "application/json"
       request.body = JSON.generate(payload)
       http = Net::HTTP.new(endpoint.host, endpoint.port)
-      http.use_ssl = endpoint.scheme == "https"
+      http.use_ssl = true
       http.open_timeout = 5
       http.read_timeout = 20
       http.write_timeout = 5

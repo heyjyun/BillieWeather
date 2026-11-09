@@ -13,9 +13,7 @@ module Finance
       end
       generator = InsightGenerator.new(user: current_user, provider: provider, consent: params[:consent] == "1", kind: "general")
       generator.call
-      notice = if generator.fallback_used?
-        I18n.t("billie.backend.analysis_fallback")
-      elsif provider == "openai"
+      notice = if provider == "openai"
         I18n.t("billie.backend.analysis_generated")
       else
         I18n.t("billie.backend.basic_analysis_refreshed")
