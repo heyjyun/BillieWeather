@@ -1,0 +1,28 @@
+<% content_for :title, t("billie.downloads.heading") %>
+<section class="bw-marketing-section bw-downloads" id="download" aria-labelledby="download-heading">
+  <div class="bw-section-heading">
+    <span class="bw-eyebrow"><%= t("billie.downloads.eyebrow") %></span>
+    <h1 id="download-heading"><%= t("billie.downloads.heading") %></h1>
+    <p><%= t("billie.downloads.intro") %></p>
+  </div>
+  <ul class="bw-download-grid">
+    <% billie_download_platforms.each do |platform| %>
+      <li class="bw-download-card bw-download-<%= platform[:status].to_s.dasherize %>" data-platform="<%= platform[:key] %>">
+        <span class="bw-download-icon"><%= finance_icon platform[:icon], size: 26 %></span>
+        <h3><%= t("billie.downloads.platforms.#{platform[:key]}.name") %></h3>
+        <p><%= t("billie.downloads.platforms.#{platform[:key]}.requirements") %></p>
+        <% case platform[:status] %>
+        <% when :available %>
+          <a class="bw-button bw-button-dark bw-download-button" href="<%= platform[:url] %>" rel="noopener"><%= finance_icon "download", size: 16 %><span><%= t("billie.downloads.download") %></span></a>
+        <% when :coming_soon %>
+          <span class="bw-download-button bw-download-disabled" aria-disabled="true"><%= t("billie.downloads.coming_soon") %></span>
+        <% else %>
+          <span class="bw-download-button bw-download-disabled" aria-disabled="true"><%= finance_icon "download", size: 16 %><span><%= t("billie.downloads.download") %></span></span>
+          <span class="bw-download-note"><%= t("billie.downloads.in_development") %></span>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+  <p class="bw-download-footnote"><%= t("billie.downloads.footnote") %></p>
+</section>
+

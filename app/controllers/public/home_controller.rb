@@ -9,6 +9,11 @@ class Public::HomeController < Public::ApplicationController
   def about
   end
 
+  # `/download`: desktop and mobile apps. See app/views/public/home/download.html.erb
+  # and DownloadsHelper for how download links are configured.
+  def download
+  end
+
   # `/features`: product features, membership badges, and the voluntary support modal.
   # The modal itself is rendered by the layout on every public page (see
   # CommunityHelper#support_dialog_locals and app/views/community/_support_dialog.html.erb).

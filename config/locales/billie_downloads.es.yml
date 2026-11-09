@@ -1,0 +1,25 @@
+---
+es:
+  billie:
+    downloads:
+      eyebrow: EN TUS DISPOSITIVOS
+      heading: Descarga BillieWeather
+      intro: Las apps guardan tus datos financieros en tu propio dispositivo y funcionan sin conexión.
+      download: Descargar
+      coming_soon: Próximamente
+      in_development: En desarrollo
+      footnote: Las apps de escritorio guardan todo localmente y nunca suben tus extractos. Las apps móviles están en desarrollo.
+      platforms:
+        mac:
+          name: macOS
+          requirements: Mac con Apple silicon
+        windows:
+          name: Windows
+          requirements: Windows 10 y 11, 64 bits
+        ios:
+          name: iOS
+          requirements: iPhone y iPad
+        android:
+          name: Android
+          requirements: Teléfonos y tabletas Android
+      nav: Descargar

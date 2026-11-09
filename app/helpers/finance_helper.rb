@@ -135,6 +135,9 @@ module FinanceHelper
       "users" => "M9 11a4 4 0 100-8 4 4 0 000 8 M3 21v-1a6 6 0 0112 0v1 M16 3.1a4 4 0 010 7.8 M21 21v-1a6 6 0 00-4-5.6",
       "lock" => "M5 11h14v10H5z M8 11V7a4 4 0 018 0v4",
       "download" => "M12 3v13 M7 11l5 5 5-5 M3 15v5a1 1 0 001 1h16a1 1 0 001-1v-5",
+      "laptop" => "M4 5h16v10H4z M2 19h20 M9 19l1-2h4l1 2",
+      "monitor" => "M3 4h18v12H3z M8 20h8 M12 16v4",
+      "phone" => "M7 2h10a1 1 0 011 1v18a1 1 0 01-1 1H7a1 1 0 01-1-1V3a1 1 0 011-1z M11 18h2",
       "expand" => "M15 3h6v6 M9 21H3v-6 M21 3l-7 7 M3 21l7-7",
       "qr" => "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h3v3h-3z M20 14v.01 M14 20h.01 M17 17h4v4h-4"
     }

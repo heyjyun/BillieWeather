@@ -1,0 +1,25 @@
+---
+en:
+  billie:
+    downloads:
+      eyebrow: ON YOUR DEVICES
+      heading: Download BillieWeather
+      intro: The apps keep your financial data on your own device and work offline.
+      download: Download
+      coming_soon: Coming soon
+      in_development: In development
+      footnote: Desktop apps store everything locally and never upload your statements. Mobile apps are in development.
+      platforms:
+        mac:
+          name: macOS
+          requirements: Apple silicon Macs
+        windows:
+          name: Windows
+          requirements: Windows 10 and 11, 64-bit
+        ios:
+          name: iOS
+          requirements: iPhone and iPad
+        android:
+          name: Android
+          requirements: Android phones and tablets
+      nav: Download

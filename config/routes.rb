@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   get "/", to: "public/home#index", as: :billie_home
   get "/about", to: "public/home#about", as: :billie_about
   get "/features", to: "public/home#features", as: :billie_features
+  get "/download", to: "public/home#download", as: :billie_download
   # Payment QR images are only served here, after an authorization check.
   get "/support/payment-methods/:key/qr", to: "community/payment_qr_codes#show", as: :community_payment_qr,
     constraints: {key: /alipay|wechat_pay|zelle|venmo/}

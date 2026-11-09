@@ -1,0 +1,25 @@
+---
+ja:
+  billie:
+    downloads:
+      eyebrow: あなたのデバイスで
+      heading: BillieWeather をダウンロード
+      intro: アプリはお金のデータをあなたのデバイスだけに保存し、オフラインでも使えます。
+      download: ダウンロード
+      coming_soon: 近日公開
+      in_development: 開発中
+      footnote: デスクトップ版はすべてのデータを端末内に保存し、明細をアップロードすることはありません。モバイル版は開発中です。
+      platforms:
+        mac:
+          name: macOS
+          requirements: Apple シリコン搭載 Mac
+        windows:
+          name: Windows
+          requirements: Windows 10・11（64 ビット）
+        ios:
+          name: iOS
+          requirements: iPhone と iPad
+        android:
+          name: Android
+          requirements: Android スマートフォンとタブレット
+      nav: ダウンロード

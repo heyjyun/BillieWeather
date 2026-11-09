@@ -1,0 +1,25 @@
+---
+zh-TW:
+  billie:
+    downloads:
+      eyebrow: 在你的裝置上使用
+      heading: 下載 BillieWeather
+      intro: 應用程式把你的財務資料保存在你自己的裝置上，離線也能使用。
+      download: 下載
+      coming_soon: 即將提供
+      in_development: 開發中
+      footnote: 桌面版所有資料都保存在本機，絕不會上傳你的帳單。手機版正在開發中。
+      platforms:
+        mac:
+          name: macOS
+          requirements: Apple 晶片 Mac
+        windows:
+          name: Windows
+          requirements: Windows 10 和 11，64 位元
+        ios:
+          name: iOS
+          requirements: iPhone 和 iPad
+        android:
+          name: Android
+          requirements: Android 手機和平板
+      nav: 下載

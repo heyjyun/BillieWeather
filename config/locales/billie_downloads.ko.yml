@@ -1,0 +1,25 @@
+---
+ko:
+  billie:
+    downloads:
+      eyebrow: 내 기기에서
+      heading: BillieWeather 다운로드
+      intro: 앱은 금융 데이터를 내 기기에만 저장하며 오프라인에서도 작동합니다.
+      download: 다운로드
+      coming_soon: 곧 제공
+      in_development: 개발 중
+      footnote: 데스크톱 앱은 모든 데이터를 기기에 저장하며 명세서를 업로드하지 않습니다. 모바일 앱은 개발 중입니다.
+      platforms:
+        mac:
+          name: macOS
+          requirements: Apple 실리콘 Mac
+        windows:
+          name: Windows
+          requirements: Windows 10 및 11, 64비트
+        ios:
+          name: iOS
+          requirements: iPhone 및 iPad
+        android:
+          name: Android
+          requirements: Android 휴대폰 및 태블릿
+      nav: 다운로드

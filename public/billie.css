@@ -335,6 +335,25 @@ body.billie-public { min-height: 100vh; min-height: 100dvh; display: flex; flex-
 .bw-section-heading h2 { font-size: 39px; letter-spacing: -1.6px; line-height: 1.2; }
 .bw-section-heading p { font-size: 12px; max-width: 380px; margin: 18px auto 0; line-height: 1.9; color: #6a745e; }
 .bw-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 23px; }
+/* Homepage download section */
+.bw-downloads { padding-top: 70px; }
+.bw-downloads .bw-section-heading h1 { font-size: 42px; letter-spacing: -1.6px; line-height: 1.2; margin: 0; }
+@media (max-width: 760px) { .bw-downloads { padding-top: 36px; } .bw-downloads .bw-section-heading h1 { font-size: 32px; } }
+.bw-download-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.bw-download-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 28px 20px 24px; border: 1px solid #e5ebd9; border-radius: 14px; background: #fffefa; min-width: 0; }
+.bw-download-icon { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 14px; background: #d7e7d6; color: #2f5a44; margin-bottom: 4px; }
+.bw-download-card h3 { margin: 0; font-size: 17px; }
+.bw-download-card p { margin: 0; font-size: 11px; line-height: 1.7; color: #6a745e; min-height: 2.6em; }
+.bw-download-button { margin-top: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 0 20px; border-radius: 9px; font-size: 13px; font-weight: 600; }
+.bw-download-disabled { background: #eceee8; color: #9aa196; border: 1px solid #e0e3db; cursor: not-allowed; user-select: none; }
+.bw-download-in-development { background: #f6f7f3; border-color: #e8ebe3; }
+.bw-download-in-development .bw-download-icon { background: #e6e9e2; color: #9aa196; }
+.bw-download-in-development h3 { color: #8b9387; }
+.bw-download-in-development p { color: #a3aa9f; }
+.bw-download-note { font-size: 11px; font-weight: 600; color: #8b9387; letter-spacing: .3px; }
+.bw-download-footnote { margin: 22px auto 0; max-width: 620px; text-align: center; font-size: 11px; line-height: 1.8; color: #6a745e; }
+@media (max-width: 1000px) { .bw-download-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .bw-download-grid { grid-template-columns: 1fr; } .bw-download-card p { min-height: 0; } }
 .bw-feature-card { position: relative; border: 1px solid #e5ebd9; background: #fffefa; border-radius: 12px; padding: 29px; }
 .bw-feature-card .bw-feature-icon { height: 44px; width: 44px; background: #edf4e1; color: #617842; border-color: #e2ecd3; margin-bottom: 25px; }
 .bw-feature-card .bw-step { position: absolute; top: 30px; right: 26px; color: #6d7460; font-size: 10px; letter-spacing: .7px; }
