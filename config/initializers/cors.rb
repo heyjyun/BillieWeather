@@ -21,7 +21,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
   # Bearer tokens only; no cookies are sent cross-origin.
   allow do
     origins "tauri://localhost", "http://tauri.localhost", "https://tauri.localhost", "http://localhost:1420"
-    resource "/api/client/v1/*", headers: ["Authorization", "Content-Type", "Accept"], methods: [:get, :post, :patch, :delete, :options], max_age: 600
+    resource "/api/client/v1/*", headers: ["Authorization", "Content-Type", "Accept"], methods: [:get, :post, :put, :patch, :delete, :options], max_age: 600
   end
 
   allow do

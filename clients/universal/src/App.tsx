@@ -30,6 +30,12 @@ function Shell() {
   const { m } = useI18n();
   const { account } = useAccount();
   const [page, setPage] = useState<Page>("dashboard");
+  // A part of a page to bring into view after navigating (e.g. the sync panel on the Data page).
+  const [focus, setFocus] = useState<string | null>(null);
+  const go = (next: Page, part: string | null = null) => {
+    setFocus(part);
+    setPage(next);
+  };
   const { persistent } = useFinance();
   return (
     <div className="bw-app">
@@ -38,7 +44,7 @@ function Shell() {
         <ul>
           {NAV.map((item) => (
             <li key={item.page}>
-              <button type="button" className={page === item.page ? "is-active" : ""} aria-current={page === item.page ? "page" : undefined} onClick={() => setPage(item.page)}>
+              <button type="button" className={page === item.page ? "is-active" : ""} aria-current={page === item.page ? "page" : undefined} onClick={() => go(item.page)}>
                 <Icon d={item.icon} /><span>{m.nav[item.page]}</span>
               </button>
             </li>
@@ -52,11 +58,11 @@ function Shell() {
       <main className="bw-main" id="main">
         {!persistent && <p className="bw-preview-banner">{m.preview}</p>}
         <SyncStatus />
-        {page === "dashboard" && <Dashboard go={setPage} />}
+        {page === "dashboard" && <Dashboard go={go} />}
         {page === "transactions" && <Transactions />}
         {page === "import" && <Import />}
         {page === "reports" && <Reports />}
-        {page === "data" && <Data />}
+        {page === "data" && <Data focus={focus} />}
         {page === "settings" && <Settings />}
         <footer className="bw-footer">{m.footer}</footer>
       </main>

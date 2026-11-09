@@ -17,9 +17,9 @@ function regionName(code: string | null | undefined, locale: string, globalCitiz
 }
 
 export function Settings() {
-  const { m, t, locale } = useI18n();
+  const { m, locale } = useI18n();
   const { account, offline, signOut, savePreferences } = useAccount();
-  const { store, refresh, rules, statements, transactions, persistent, sync, syncEnabled, lastChecked, syncNow, setSyncEnabled, reporting } = useFinance();
+  const { store, refresh, rules } = useFinance();
   const [nickname, setNickname] = useState(account?.nickname ?? "");
   const [accountStatus, setAccountStatus] = useState("");
   const x = m.settings;
@@ -62,42 +62,6 @@ export function Settings() {
           <button type="button" className="bw-link-button" onClick={() => openExternal(websiteUrl("/app/settings", locale))}>{x.manageOnline} ↗</button>
           <button type="button" className="bw-button bw-button-outline" onClick={() => signOut()}>{x.signOut}</button>
         </div>
-      </section>
-
-      {persistent && (
-        <section className="bw-panel bw-report" aria-labelledby="report-heading">
-          <h2 id="report-heading">{m.report.title}</h2>
-          <p>{m.report.body}</p>
-          <label className="bw-check"><input type="checkbox" checked={reporting.enabled} onChange={(e) => void reporting.setEnabled(e.target.checked)} /> {m.report.title}</label>
-          <p className="bw-caption" data-fact="metadata">{m.data.metaUpdated}: {reporting.lastUpdatedAt ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(reporting.lastUpdatedAt)) : reporting.enabled ? m.data.metaNotYet : m.data.metaOff}</p>
-          <p className="bw-caption">{m.data.metaNote}</p>
-          {reporting.pendingRemoval && <p className="bw-caption" role="status">{m.report.pending}</p>}
-          {!reporting.enabled && !reporting.pendingRemoval && reporting.removalConfirmed && <p className="bw-caption" role="status">{m.report.removed}</p>}
-        </section>
-      )}
-
-      <section className="bw-panel bw-web-sync" aria-labelledby="web-sync-heading">
-        <h2 id="web-sync-heading">{m.sync.title}</h2>
-        <p>{m.sync.body}</p>
-        <label className="bw-check"><input type="checkbox" checked={syncEnabled} onChange={(e) => setSyncEnabled(e.target.checked)} /> {m.sync.toggle}</label>
-        <p className="bw-caption">{m.sync.rules}</p>
-        <div className="bw-account-actions">
-          <span className="bw-caption">{lastChecked ? t("sync.lastChecked", { time: new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(lastChecked)) }) : m.sync.never}</span>
-          <button type="button" className="bw-button bw-button-outline" disabled={!syncEnabled || sync.status === "checking"} onClick={() => syncNow(true)}>{sync.status === "checking" ? m.sync.checking : m.sync.checkNow}</button>
-        </div>
-      </section>
-
-      <section className="bw-panel">
-        <h2>{x.whereTitle}</h2>
-        <p>{persistent ? x.whereBody : x.wherePreview}</p>
-        <ul className="bw-privacy-list">
-          <li>{x.privacy1}</li>
-          <li>{x.privacy2}</li>
-          <li>{x.privacy3}</li>
-          <li>{x.privacy4}</li>
-        </ul>
-        <p className="bw-caption">{x.encryption}</p>
-        <p className="bw-caption">{t("settings.counts", { statements: statements.length, transactions: transactions.length, rules: rules.length })}</p>
       </section>
 
       <section className="bw-panel">

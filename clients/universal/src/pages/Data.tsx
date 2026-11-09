@@ -12,7 +12,7 @@ import { AccountError } from "../services/account";
 import { deleteCloudStatement, fetchCloudStatements, fetchCloudSummary, type CloudStatement, type CloudSummary } from "../services/cloudData";
 import { deleteCloudDatabase, renameCloudDatabase } from "../services/cloudManage";
 import { DATABASE_NAME_MAX, normalizeDatabaseName, StoreError, type StatementInventoryItem } from "../services/store";
-import { metadataUpdatedAt, reportingStatus } from "../services/reporting";
+import { metadataUpdatedAt } from "../services/reporting";
 import { previewTransfer, runTransfer, sameEndpoint, type Endpoint } from "../services/transfer";
 
 type Cloud = { status: "loading" } | { status: "ready"; summary: CloudSummary; statements: CloudStatement[] } | { status: "offline" | "failed" };
@@ -52,12 +52,12 @@ export function formatBytes(bytes: number, locale: string): string {
 
 const endpointOf = (target: Target): Endpoint => (target === "cloud" ? { kind: "cloud" } : { kind: "local", id: target });
 
-export function Data() {
+export function Data({ focus = null }: { focus?: string | null } = {}) {
   const { m, t, locale } = useI18n();
   const { getToken, expire, account } = useAccount();
   const email = account?.email ?? "";
   const finance = useFinance();
-  const { store, refresh, transactions, syncEnabled, syncNow, persistent, databaseIds, activeDatabaseId, maxDatabases, openStore, switchDatabase, createDatabase, removeDatabase, renameDatabaseById, reportNow } = finance;
+  const { store, refresh, transactions, syncEnabled, syncNow, setSyncEnabled, persistent, databaseIds, activeDatabaseId, maxDatabases, openStore, switchDatabase, createDatabase, removeDatabase, renameDatabaseById, reportNow } = finance;
   const d = m.data;
   const [locals, setLocals] = useState<LocalDb[] | null>(null);
   const [cloud, setCloud] = useState<Cloud>({ status: "loading" });
@@ -107,6 +107,22 @@ export function Data() {
 
   useEffect(() => { void loadLocals(); }, [loadLocals, transactions, activeDatabaseId]);
   useEffect(() => { void loadCloud(); }, [loadCloud]);
+  // Bring the sync panel into view and put the cursor on "From" (or on "To" once the source is chosen).
+  const showSyncPanel = (field: "from" | "to") => {
+    const panel = document.getElementById("sync-heading")?.closest("section");
+    panel?.scrollIntoView?.({ block: "start" });
+    panel?.querySelector<HTMLSelectElement>(`select[data-sync-field="${field}"]`)?.focus();
+  };
+  useEffect(() => {
+    if (focus === "sync") showSyncPanel("from");
+  }, [focus]);
+  // A card's "Sync Now to…": that database becomes the source; the person still picks the destination and confirms.
+  const syncFromCard = (target: Target) => {
+    setConfirmingSync(false);
+    setFrom(target);
+    if (to === target) setTo("");
+    setTimeout(() => showSyncPanel("to"), 0);
+  };
 
   const cloudName = cloud.status === "ready" ? cloud.summary.name ?? d.defaultCloudName : d.defaultCloudName;
   const nameOf = (target: Target) => (target === "cloud" ? cloudName : locals?.find((db) => db.id === target)?.name ?? d.unnamed);
@@ -147,7 +163,9 @@ export function Data() {
   });
   const downloadToDevice = (item: CloudStatement) => run(async () => {
     await store.allowDownload(item.sha256);
-    await syncNow(true);
+    // There is no Settings switch for website download any more: asking for a statement turns it back on.
+    if (syncEnabled) await syncNow(true);
+    else await setSyncEnabled(true);
     return t("data.downloaded", { name: item.filename });
   });
 
@@ -287,10 +305,9 @@ export function Data() {
     );
   }
 
-  const reportingOn = reportingStatus(email).enabled;
   const stateFacts = (updated: "n/a" | string | null, synced: string | null) => (
     <>
-      {updated !== "n/a" && <div data-fact="metadata"><dt>{d.metaUpdated}</dt><dd>{updated ? when(updated) : reportingOn ? d.metaNotYet : d.metaOff}</dd></div>}
+      {updated !== "n/a" && <div data-fact="metadata"><dt>{d.metaUpdated}</dt><dd>{updated ? when(updated) : d.metaNotYet}</dd></div>}
       <div data-fact="synced"><dt>{d.lastSynced}</dt><dd>{synced ? when(synced) : d.never}</dd></div>
       <div data-fact="backup"><dt>{d.lastBackedUp}</dt><dd>{d.backupNone}</dd></div>
     </>
@@ -345,6 +362,7 @@ export function Data() {
                 <div className="bw-db-where"><dt>{d.where}</dt><dd>{d.whereCloud}</dd></div>
               </dl>
               <div className="bw-db-actions">
+                <button type="button" className="bw-button bw-button-dark bw-button-small" disabled={busy} onClick={() => syncFromCard("cloud")}>{d.syncTo}</button>
                 <button type="button" className="bw-button bw-button-outline bw-button-small" disabled={busy} onClick={() => setRenaming({ target: "cloud", value: cloud.summary.name ?? "" })}>{d.rename}</button>
                 <button type="button" className="bw-button bw-button-danger-outline bw-button-small" disabled={busy} onClick={() => setDeleting({ target: "cloud", typed: "" })}>{d.deleteDb}</button>
               </div>
@@ -374,6 +392,7 @@ export function Data() {
             </dl>
             <div className="bw-db-actions">
               {db.id !== activeDatabaseId && <button type="button" className="bw-button bw-button-dark bw-button-small" disabled={busy} onClick={() => switchDatabase(db.id)}>{d.use}</button>}
+              <button type="button" className="bw-button bw-button-outline bw-button-small" disabled={busy} onClick={() => syncFromCard(db.id)}>{d.syncTo}</button>
               <button type="button" className="bw-button bw-button-outline bw-button-small" disabled={busy} onClick={() => setRenaming({ target: db.id, value: db.name === d.unnamed ? "" : db.name })}>{d.rename}</button>
               <button type="button" className="bw-button bw-button-danger-outline bw-button-small" disabled={busy} onClick={() => setDeleting({ target: db.id, typed: "" })}>{d.deleteDb}</button>
             </div>
@@ -406,7 +425,7 @@ export function Data() {
             return (
               <div key={key} className="bw-sync-side">
                 <label className="bw-field"><span>{label}</span>
-                  <select aria-label={label} value={value} disabled={busy} onChange={(e) => { setConfirmingSync(false); set(e.target.value); }}>
+                  <select aria-label={label} data-sync-field={key} value={value} disabled={busy} onChange={(e) => { setConfirmingSync(false); set(e.target.value); }}>
                     <option value="">{d.choose}</option>
                     {choices.map((choice) => <option key={choice} value={choice}>{nameOf(choice)}</option>)}
                   </select>
@@ -492,7 +511,6 @@ export function Data() {
         <h2 id="list-cloud">{t("data.statementsIn", { name: cloudName })}</h2>
         {cloud.status === "ready" && cloud.statements.length === 0 && <p className="bw-muted">{d.noStatements}</p>}
         {cloud.status !== "ready" && <p className="bw-muted">{cloud.status === "loading" ? d.loading : cloud.status === "offline" ? d.offline : d.failed}</p>}
-        {!syncEnabled && cloud.status === "ready" && cloud.statements.length > 0 && <p className="bw-caption">{d.downloadNeedsSync}</p>}
         <ul className="bw-db-list">
           {cloud.status === "ready" && cloud.statements.map((item) => {
             const here = deviceHashes.has(item.sha256);
@@ -508,7 +526,7 @@ export function Data() {
                   </div>
                   {!(pending?.kind === "deleteCloud" && pending.item.id === item.id) && (
                     <div className="bw-db-actions">
-                      {!here && <button type="button" className="bw-button bw-button-outline bw-button-small" disabled={busy || !syncEnabled} onClick={() => downloadToDevice(item)}>{d.download}</button>}
+                      {!here && <button type="button" className="bw-button bw-button-outline bw-button-small" disabled={busy} onClick={() => downloadToDevice(item)}>{d.download}</button>}
                       <button type="button" className="bw-button bw-button-outline bw-button-small" disabled={busy} onClick={() => setPending({ kind: "deleteCloud", item })}>{d.deleteCloud}</button>
                     </div>
                   )}

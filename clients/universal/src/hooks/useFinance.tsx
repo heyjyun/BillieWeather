@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AccountError } from "../services/account";
 import { freeSlot, loadRegistry, MAX_DATABASES, saveRegistry, type Registry } from "../services/databases";
 import { deviceName, openDatabase } from "../services/platform";
-import { queueDelete, reportAll, reportingStatus, setReporting, type ReportingStatus } from "../services/reporting";
+import { queueDelete, reportAll, reportingStatus, type ReportingStatus } from "../services/reporting";
 import { FinanceStore, StoreError, type WebSyncResult } from "../services/store";
 import { syncFromWeb } from "../services/webSync";
 import { useAccount } from "./useAccount";
@@ -42,9 +42,9 @@ interface FinanceContextValue extends FinanceData {
   openStore: (id: string) => Promise<FinanceStore>;
   switchDatabase: (id: string) => Promise<void>;
   renameDatabaseById: (id: string, name: string) => Promise<void>;
-  /** "Show My Local Databases on the Website": off by default; see services/reporting.ts. */
-  reporting: ReportingStatus & { setEnabled: (enabled: boolean) => Promise<void> };
-  /** Tells the website about this device's databases now (only if the person switched that on). */
+  /** Basic facts about the local databases are always shown on the website; see services/reporting.ts. */
+  reporting: ReportingStatus;
+  /** Tells the website about this device's databases now (metadata only). */
   reportNow: () => Promise<void>;
   /** Creates a new, named, empty database and returns its id. Does not switch to it. */
   createDatabase: (name: string) => Promise<string>;
@@ -175,17 +175,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         await runSync(state.store, force);
         void reportMetadata();
       },
-      reporting: {
-        ...reporting,
-        setEnabled: async (enabled: boolean) => {
-          try {
-            await setReporting({ account: accountEmail, token: getToken(), deviceName: (await deviceName()) ?? "Unknown device", openedAt: APP_OPENED_AT,
-              databases: await Promise.all(registryRef.current.entries.map(async (entry) => ({ id: entry.id, store: (await openById(entry.id)).store }))) }, enabled);
-          } finally {
-            setReportingState(reportingStatus(accountEmail));
-          }
-        },
-      },
+      reporting,
       reportNow: reportMetadata,
       setSyncEnabled: async (enabled: boolean) => {
         await state.store.setWebSyncEnabled(enabled);
@@ -244,7 +234,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         if (id === state.activeId) await activate(remaining[0].id);
       },
     } : null,
-    [data, state, registry, sync, syncEnabled, lastChecked, databaseName, reporting, accountEmail, getToken, reportMetadata, load, runSync, activate, openById, commitRegistry],
+    [data, state, registry, sync, syncEnabled, lastChecked, databaseName, reporting, reportMetadata, load, runSync, activate, openById, commitRegistry],
   );
 
   if (error) return <div className="bw-boot" role="alert">{m.boot.dbError}</div>;

@@ -114,7 +114,7 @@ en:
         cloud_total: "Cloud storage on BillieWeather's servers: %{size}."
         local_total: "Local storage reported by your devices: %{size}."
         not_uploaded: "Local sizes are reported by your apps and stay on your devices; they are not uploaded and do not count as cloud storage."
-        empty: "No local databases are shown. Turn on “Show My Local Databases on the Website” in the app's Settings to see them here."
+        empty: "No local databases have been reported yet. They appear here after you open the BillieWeather app while signed in."
         device: "Device"
         unknown_device: "Unknown device"
         status_local: "Local Database"

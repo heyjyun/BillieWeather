@@ -113,7 +113,6 @@ p { margin: 0 0 10px; }
 .bw-simple-list small { flex: 1; }
 .bw-export { display: grid; gap: 10px; align-content: start; }
 .bw-export p { color: var(--muted); font-size: 13px; }
-.bw-privacy-list { margin: 0 0 12px; padding-left: 18px; color: var(--muted); font-size: 13px; }
 .bw-danger { border-color: #f1c4bd; display: grid; gap: 12px; }
 .bw-empty { background: var(--card); border: 1px dashed var(--line); border-radius: 14px; padding: 40px 24px; text-align: center; display: grid; gap: 8px; justify-items: center; }
 .bw-empty p { color: var(--muted); max-width: 440px; }

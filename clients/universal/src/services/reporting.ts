@@ -1,11 +1,10 @@
-// Decides WHEN to tell the website about this device's local databases, and keeps that promise
-// to the person: nothing is reported unless they switched "Show My Local Databases on the
-// Website" on (default OFF, per account); switching it off asks the server to forget everything
-// this device reported, and that request is kept and retried until the server confirms.
+// Decides WHEN to tell the website about this device's local databases. Always on for a
+// signed-in person (there is no switch): only metadata (see localReport.ts) is ever sent,
+// never financial records, and the Settings page says so.
 //
-// Only metadata (see localReport.ts) is ever sent. There is no background timer: reporting
-// happens when the app opens and the person is signed in, and after they create, rename or
-// delete a database or finish a sync. Offline, the app works as usual; only removals are queued.
+// There is no background timer: reporting happens when the app opens and the person is signed
+// in, and after they create, rename or delete a database or finish a sync. Offline, the app
+// works as usual; removals of deleted databases are queued and retried until confirmed.
 import { AccountError } from "./account";
 import { randomId } from "./ids";
 import { deleteDatabaseReport, purgeDeviceReports, putDatabaseReport, type DatabaseReport } from "./localReport";
@@ -14,13 +13,12 @@ import type { FinanceStore } from "./store";
 const K = {
   device: "billie.report.device",
   seq: "billie.report.seq",
-  enabled: "billie.report.enabled",
   queue: "billie.report.queue",
   sent: "billie.report.sent",
   updatedAt: "billie.report.updatedAt",
-  removed: "billie.report.removed",
 };
 
+// "purge" entries can only come from an older version, which let people switch sharing off; they are still sent.
 type Op = { kind: "delete"; account: string; database: string; seq: number } | { kind: "purge"; account: string; seq: number };
 
 function read<T>(key: string, fallback: T): T {
@@ -72,11 +70,8 @@ export interface ReportContext {
 }
 
 export interface ReportingStatus {
-  enabled: boolean;
-  /** Removal requests (deleted databases, or "stop sharing") the server hasn't confirmed yet. */
+  /** Removals of deleted databases the server hasn't confirmed yet. */
   pendingRemoval: boolean;
-  /** The server confirmed it removed what this device reported. */
-  removalConfirmed: boolean;
   /** "Metadata Last Updated": when the server last accepted a report from this device (this is NOT a sync or a backup). */
   lastUpdatedAt: string | null;
 }
@@ -85,9 +80,7 @@ export function reportingStatus(account: string): ReportingStatus {
   const a = acct(account);
   const queue = read<Op[]>(K.queue, []);
   return {
-    enabled: read<Record<string, boolean>>(K.enabled, {})[a] === true,
     pendingRemoval: queue.some((op) => op.account === a),
-    removalConfirmed: read<Record<string, boolean>>(K.removed, {})[a] === true,
     lastUpdatedAt: Object.entries(read<Record<string, string>>(K.updatedAt, {})).filter(([key]) => key.startsWith(`${a}|`)).map(([, at]) => at).sort().at(-1) ?? null,
   };
 }
@@ -123,7 +116,6 @@ async function flush(ctx: ReportContext): Promise<boolean> {
       if (!(error instanceof AccountError && error.code === "invalid")) return false; // keep it and try again later
     }
     write(K.queue, read<Op[]>(K.queue, []).filter((candidate) => !(candidate.kind === op.kind && candidate.seq === op.seq && candidate.account === op.account)));
-    if (op.kind === "purge") write(K.removed, { ...read<Record<string, boolean>>(K.removed, {}), [a]: true });
   }
 }
 
@@ -147,8 +139,8 @@ async function collect(ctx: ReportContext, database: ContextDatabase): Promise<{
 type ContextDatabase = ReportContext["databases"][number];
 
 /**
- * Reports every local database whose information changed since it was last sent (when the
- * person has switched reporting on), after sending any queued removals. Never throws:
+ * Reports every local database whose information changed since it was last sent, after
+ * sending any queued removals. Never throws:
  * a failure just means the website's card stays as it was until the next trigger.
  */
 export function reportAll(ctx: ReportContext): Promise<void> {
@@ -156,7 +148,7 @@ export function reportAll(ctx: ReportContext): Promise<void> {
     try {
       if (!(await flush(ctx))) return; // removals come first; if they can't be sent, nothing else is
       const a = acct(ctx.account);
-      if (!reportingStatus(ctx.account).enabled || !ctx.token) return;
+      if (!ctx.token) return;
       const device = deviceId();
       for (const database of ctx.databases) {
         const { id, report, fingerprint } = await collect(ctx, database);
@@ -177,30 +169,9 @@ export function queueDelete(account: string, databaseId: string | null): void {
   if (!databaseId) return;
   const a = acct(account);
   const sent = read<Record<string, string>>(K.sent, {});
-  const wasReported = sentKey(a, databaseId) in sent;
-  if (!wasReported && !reportingStatus(account).enabled) return; // nothing was ever shared about it
   const { [sentKey(a, databaseId)]: _gone, ...rest } = sent;
   write(K.sent, rest);
   const { [sentKey(a, databaseId)]: _at, ...updated } = read<Record<string, string>>(K.updatedAt, {});
   write(K.updatedAt, updated);
   write(K.queue, [...read<Op[]>(K.queue, []), { kind: "delete", account: a, database: databaseId, seq: nextSequence() }]);
-}
-
-/** Turns "Show My Local Databases on the Website" on or off for this account on this device. */
-export function setReporting(ctx: ReportContext, enabled: boolean): Promise<void> {
-  const a = acct(ctx.account);
-  const flags = read<Record<string, boolean>>(K.enabled, {});
-  write(K.enabled, { ...flags, [a]: enabled });
-  if (enabled) {
-    write(K.removed, { ...read<Record<string, boolean>>(K.removed, {}), [a]: false });
-    return reportAll(ctx);
-  }
-  // Off: forget what we sent, and ask the server to forget it too. A single purge covers any
-  // removals that were still queued, so those are dropped in its favour.
-  const sent = read<Record<string, string>>(K.sent, {});
-  write(K.sent, Object.fromEntries(Object.entries(sent).filter(([key]) => !key.startsWith(`${a}|`))));
-  write(K.updatedAt, Object.fromEntries(Object.entries(read<Record<string, string>>(K.updatedAt, {})).filter(([key]) => !key.startsWith(`${a}|`))));
-  write(K.queue, [...read<Op[]>(K.queue, []).filter((op) => op.account !== a), { kind: "purge", account: a, seq: nextSequence() }]);
-  write(K.removed, { ...read<Record<string, boolean>>(K.removed, {}), [a]: false });
-  return reportAll(ctx);
 }

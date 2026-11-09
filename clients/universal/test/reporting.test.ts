@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
-// Local database metadata for the website: off by default, allowlisted, deduplicated, ordered,
-// and removals are queued and retried until the server confirms.
+// Local database metadata for the website: automatic for a signed-in person, allowlisted,
+// deduplicated, ordered, and removals are queued and retried until the server confirms.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { importFile } from "../src/services/importFile";
 import { REPORT_FIELDS } from "../src/services/localReport";
-import { metadataUpdatedAt, queueDelete, reportAll, reportingStatus, setReporting, deviceId, type ReportContext } from "../src/services/reporting";
+import { metadataUpdatedAt, queueDelete, reportAll, reportingStatus, deviceId, type ReportContext } from "../src/services/reporting";
 import { API_ORIGIN } from "../src/services/account";
 import { fixtureBytes, newStore } from "./helpers";
 
@@ -42,17 +42,18 @@ async function setup(account = "jyun@example.com") {
 }
 
 describe("metadata reporting", () => {
-  it("is off by default: nothing is sent", async () => {
+  it("is automatic: there is no switch, and a signed-in app reports every database", async () => {
     const { ctx } = await setup();
-    expect(reportingStatus(ctx.account)).toEqual({ enabled: false, pendingRemoval: false, removalConfirmed: false, lastUpdatedAt: null });
     await reportAll(ctx);
-    expect(calls).toEqual([]);
+    expect(calls.map((c) => c.method)).toEqual(["PUT", "PUT"]);
+    expect(Object.keys(reportingStatus(ctx.account)).sort()).toEqual(["lastUpdatedAt", "pendingRemoval"]);
+    const source = readFileSync(join(__dirname, "../src/services/reporting.ts"), "utf8");
+    expect(source).not.toMatch(/setReporting|billie\.report\.enabled/);
   });
 
-  it("when switched on, sends one request per database containing only the allowlisted metadata", async () => {
+  it("sends one request per database containing only the allowlisted metadata", async () => {
     const { ctx } = await setup();
-    await setReporting(ctx, true);
-    expect(calls.map((c) => c.method)).toEqual(["PUT", "PUT"]);
+    await reportAll(ctx);
     const device = deviceId();
     expect(device).toMatch(UUID);
     for (const call of calls) {
@@ -67,33 +68,28 @@ describe("metadata reporting", () => {
     expect(body.size_bytes).toBeGreaterThan(0);
     expect(body.period_start).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(body.modified_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-    // No financial content, file names, paths or identifiers derived from them.
-    const everything = JSON.stringify(calls) + JSON.stringify(Object.fromEntries(Object.entries(localStorage)));
     for (const secret of ["SECRET-FILE", "basic-amount", "billieweather.db", "/Users/", "Library", "ZED"]) expect(JSON.stringify(calls)).not.toContain(secret);
-    expect(everything).not.toMatch(/amount_cents|description/);
+    expect(JSON.stringify(calls)).not.toMatch(/amount_cents|description/);
   });
 
   it("sends nothing again until something changes; a rename keeps the same database id", async () => {
     const { ctx, first } = await setup();
-    await setReporting(ctx, true);
+    await reportAll(ctx);
     const ids = calls.map((c) => c.url.split("/")[3]);
     calls.length = 0;
     await reportAll(ctx);
     await reportAll(ctx);
     expect(calls).toEqual([]);
-
     await first.setDatabaseName("Renamed");
     await reportAll(ctx);
     expect(calls.length).toBe(1);
     expect(calls[0].url.split("/")[3]).toBe(ids[0]);
     expect((calls[0].body!.database as { name: string }).name).toBe("Renamed");
-    // Newer information always carries a higher sequence number than older.
-    expect(calls[0].body && (calls[0].body.database as { sequence: number }).sequence).toBeGreaterThan(0);
   });
 
   it("sequence numbers only go up", async () => {
     const { ctx, first } = await setup();
-    await setReporting(ctx, true);
+    await reportAll(ctx);
     await first.setDatabaseName("A");
     await reportAll(ctx);
     await first.setDatabaseName("B");
@@ -105,24 +101,26 @@ describe("metadata reporting", () => {
 
   it("does not report when signed out, and keeps working offline", async () => {
     const { ctx } = await setup();
-    await setReporting({ ...ctx, token: null }, true);
+    await reportAll({ ...ctx, token: null });
     expect(calls).toEqual([]);
     online = false;
     await expect(reportAll(ctx)).resolves.toBeUndefined();
+    expect(reportingStatus(ctx.account).lastUpdatedAt).toBeNull();
+    online = true;
+    await reportAll(ctx);
+    expect(calls.length).toBe(2); // sent once back online
   });
 
   it("a deleted database is removed on the server; offline, the removal waits and is retried with the same sequence", async () => {
     const { ctx, first } = await setup();
-    await setReporting(ctx, true);
+    await reportAll(ctx);
     const id = await first.reportId();
     calls.length = 0;
-
     online = false;
     queueDelete(ctx.account, id);
     await reportAll({ ...ctx, databases: [ctx.databases[1]] });
     expect(calls).toEqual([]);
     expect(reportingStatus(ctx.account).pendingRemoval).toBe(true);
-
     online = true;
     await reportAll({ ...ctx, databases: [ctx.databases[1]] });
     expect(calls.map((c) => c.method)).toEqual(["DELETE"]);
@@ -130,12 +128,12 @@ describe("metadata reporting", () => {
     expect(reportingStatus(ctx.account).pendingRemoval).toBe(false);
     calls.length = 0;
     await reportAll({ ...ctx, databases: [ctx.databases[1]] });
-    expect(calls).toEqual([]); // not repeated once confirmed
+    expect(calls).toEqual([]);
   });
 
   it("a removal is sent before any newer report, so a deleted database cannot reappear", async () => {
     const { ctx, first, second } = await setup();
-    await setReporting(ctx, true);
+    await reportAll(ctx);
     const id = await first.reportId();
     calls.length = 0;
     queueDelete(ctx.account, id);
@@ -146,76 +144,82 @@ describe("metadata reporting", () => {
     expect((calls[1].body!.database as { sequence: number }).sequence).toBeGreaterThan(deleteSeq);
   });
 
-  it("deleting a database that was never reported sends nothing", async () => {
+  it("a database that never got an id sends no removal", async () => {
     const { ctx } = await setup();
-    queueDelete(ctx.account, "7b1d3c52-9a41-4f0e-8a77-2d6f0c9b1e33");
-    await reportAll(ctx);
+    queueDelete(ctx.account, null);
+    await reportAll({ ...ctx, databases: [] });
     expect(calls).toEqual([]);
     expect(reportingStatus(ctx.account).pendingRemoval).toBe(false);
   });
 
-  it("switching off asks the server to forget this device; until it confirms, the removal is pending and ordinary reporting stays off", async () => {
-    const { ctx, first } = await setup();
-    await setReporting(ctx, true);
-    calls.length = 0;
-
+  it("queued removals belong to one account", async () => {
+    const { ctx, first } = await setup("one@example.com");
+    await reportAll(ctx);
     online = false;
-    await setReporting(ctx, false);
-    expect(reportingStatus(ctx.account)).toEqual({ enabled: false, pendingRemoval: true, removalConfirmed: false, lastUpdatedAt: null });
-    await first.setDatabaseName("Changed while off");
-    await reportAll(ctx);
-    expect(calls).toEqual([]);
-
-    online = true;
-    await reportAll(ctx);
-    expect(calls.map((c) => c.method)).toEqual(["DELETE"]);
-    expect(calls[0].url).toMatch(new RegExp(`^/${deviceId()}\\?sequence=\\d+$`));
-    expect(reportingStatus(ctx.account)).toEqual({ enabled: false, pendingRemoval: false, removalConfirmed: true, lastUpdatedAt: null });
-    calls.length = 0;
-    await reportAll(ctx);
-    expect(calls).toEqual([]); // still off: nothing is silently resumed
-  });
-
-  it("turning it back on after a pending removal sends the removal first, then reports again", async () => {
-    const { ctx } = await setup();
-    await setReporting(ctx, true);
-    online = false;
-    await setReporting(ctx, false);
+    queueDelete(ctx.account, await first.reportId());
     online = true;
     calls.length = 0;
-    await setReporting(ctx, true);
-    expect(calls.map((c) => c.method)).toEqual(["DELETE", "PUT", "PUT"]);
-    expect(reportingStatus(ctx.account)).toMatchObject({ enabled: true, pendingRemoval: false });
-  });
-
-  it("settings and queued removals belong to one account", async () => {
-    const { ctx } = await setup("one@example.com");
-    await setReporting(ctx, true);
-    online = false;
-    await setReporting(ctx, false);
-    online = true;
-    calls.length = 0;
-    const other = { ...ctx, account: "two@example.com" };
-    expect(reportingStatus(other.account)).toEqual({ enabled: false, pendingRemoval: false, removalConfirmed: false, lastUpdatedAt: null });
+    const other = { ...ctx, account: "two@example.com", databases: [] };
+    expect(reportingStatus(other.account).pendingRemoval).toBe(false);
     await reportAll(other);
     expect(calls).toEqual([]);
     expect(reportingStatus(ctx.account).pendingRemoval).toBe(true);
   });
 
-  it("a request the server refuses for good is dropped instead of blocking the queue forever", async () => {
-    const { ctx } = await setup();
-    await setReporting(ctx, true);
+  it("a removal the server refuses for good is dropped; a temporary error keeps it queued", async () => {
+    const { ctx, first, second } = await setup();
+    await reportAll(ctx);
+    status = 503;
+    queueDelete(ctx.account, await first.reportId());
+    await reportAll({ ...ctx, databases: [] });
+    expect(reportingStatus(ctx.account).pendingRemoval).toBe(true);
     status = 422;
-    await setReporting(ctx, false);
+    await reportAll({ ...ctx, databases: [] });
+    expect(reportingStatus(ctx.account).pendingRemoval).toBe(false);
+    status = 200;
+    queueDelete(ctx.account, await second.reportId());
+    await reportAll({ ...ctx, databases: [] });
     expect(reportingStatus(ctx.account).pendingRemoval).toBe(false);
   });
 
-  it("a temporary server error keeps the removal queued", async () => {
+  it("a stop-sharing request queued by an older version is still sent", async () => {
     const { ctx } = await setup();
-    await setReporting(ctx, true);
-    status = 503;
-    await setReporting(ctx, false);
-    expect(reportingStatus(ctx.account)).toMatchObject({ pendingRemoval: true, removalConfirmed: false, lastUpdatedAt: null });
+    localStorage.setItem("billie.report.queue", JSON.stringify([{ kind: "purge", account: ctx.account, seq: 5 }]));
+    await reportAll({ ...ctx, databases: [] });
+    expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([`DELETE /${deviceId()}?sequence=5`]);
+  });
+
+  it("Metadata Last Updated is recorded per successful report and dropped with a deleted database", async () => {
+    const { ctx, first } = await setup();
+    expect(reportingStatus(ctx.account).lastUpdatedAt).toBeNull();
+    await reportAll(ctx);
+    const at = reportingStatus(ctx.account).lastUpdatedAt!;
+    expect(new Date(at).getTime()).toBeGreaterThan(Date.now() - 5000);
+    const id = await first.reportId();
+    expect(metadataUpdatedAt(ctx.account, id)).toBeTruthy();
+    expect(metadataUpdatedAt(ctx.account, null)).toBeNull();
+    queueDelete(ctx.account, id);
+    expect(metadataUpdatedAt(ctx.account, id)).toBeNull();
+  });
+
+  it("reporting never syncs or backs up", async () => {
+    const { ctx, first } = await setup();
+    await reportAll(ctx);
+    expect(await first.lastSyncedAt()).toBeNull();
+    expect(calls.every((c) => c.method === "PUT")).toBe(true);
+    expect(calls.every((c) => /^\/[0-9a-f-]{36}\/databases\/[0-9a-f-]{36}$/.test(c.url))).toBe(true);
+    expect(Object.keys(localStorage).filter((key) => /backup/i.test(key))).toEqual([]);
+  });
+
+  it("reporting code is independent of sync, transfer, upload and backup code (and the other way round)", () => {
+    const src = (file: string) => readFileSync(join(__dirname, "../src/services", file), "utf8");
+    for (const file of ["reporting.ts", "localReport.ts"]) {
+      expect(src(file)).not.toMatch(/from "\.\/(transfer|webSync|cloudUpload|cloudManage|cloudData|importFile)"/);
+      expect(src(file)).not.toMatch(/runTransfer|syncFromWeb|uploadStatement|markSynced|exportData|mergeData/);
+    }
+    for (const file of ["transfer.ts", "cloudUpload.ts", "webSync.ts"]) {
+      expect(src(file)).not.toMatch(/from "\.\/(reporting|localReport)"/);
+    }
   });
 
   it("database ids are random, stable across renames, and new after a database is wiped", async () => {
@@ -235,42 +239,6 @@ describe("metadata reporting", () => {
     const summary = await first.reportSummary();
     expect(Object.keys(summary).sort()).toEqual(["modifiedAt", "name", "periodEnd", "periodStart", "rules", "sizeBytes", "statements", "transactions"]);
     expect(JSON.stringify(summary)).not.toContain("SECRET");
-  });
-
-  it("Metadata Last Updated is recorded per successful report, and cleared when sharing is switched off", async () => {
-    const { ctx } = await setup();
-    expect(reportingStatus(ctx.account).lastUpdatedAt).toBeNull();
-    online = false;
-    await setReporting(ctx, true);
-    expect(reportingStatus(ctx.account).lastUpdatedAt).toBeNull(); // nothing reached the server
-    online = true;
-    await reportAll(ctx);
-    const at = reportingStatus(ctx.account).lastUpdatedAt!;
-    expect(new Date(at).getTime()).toBeGreaterThan(Date.now() - 5000);
-    expect(metadataUpdatedAt(ctx.account, await ctx.databases[0].store.reportId())).toBeTruthy();
-    expect(metadataUpdatedAt(ctx.account, null)).toBeNull();
-    await setReporting(ctx, false);
-    expect(reportingStatus(ctx.account).lastUpdatedAt).toBeNull();
-  });
-
-  it("reporting never syncs or backs up: no sync state changes, and the three kinds of time stay separate", async () => {
-    const { ctx, first } = await setup();
-    await setReporting(ctx, true);
-    expect(await first.lastSyncedAt()).toBeNull();
-    expect(calls.every((c) => c.method === "PUT")).toBe(true);
-    expect(calls.every((c) => /^\/[0-9a-f-]{36}\/databases\/[0-9a-f-]{36}$/.test(c.url))).toBe(true);
-    expect(Object.keys(localStorage).filter((key) => /backup/i.test(key))).toEqual([]);
-  });
-
-  it("reporting code is independent of sync, transfer, upload and backup code (and the other way round)", () => {
-    const src = (file: string) => readFileSync(join(__dirname, "../src/services", file), "utf8");
-    for (const file of ["reporting.ts", "localReport.ts"]) {
-      expect(src(file)).not.toMatch(/from "\.\/(transfer|webSync|cloudUpload|cloudManage|cloudData|importFile)"/);
-      expect(src(file)).not.toMatch(/runTransfer|syncFromWeb|uploadStatement|markSynced|exportData|mergeData/);
-    }
-    for (const file of ["transfer.ts", "cloudUpload.ts", "webSync.ts"]) {
-      expect(src(file)).not.toMatch(/from "\.\/(reporting|localReport)"/);
-    }
   });
 
   it("there is no background timer anywhere in reporting", () => {

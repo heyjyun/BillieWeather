@@ -8,6 +8,7 @@ import initSqlJs from "sql.js";
 import { fixtureBytes, migrate } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { unzipStored } from "@billie/reporting";
+import { REPORT_FIELDS } from "../src/services/localReport";
 import { API_ORIGIN } from "../src/services/account";
 
 const saved: Array<{ filename: string; bytes: Uint8Array }> = [];
@@ -156,13 +157,21 @@ it("signs in, works with local data, switches language, and signs out", async ()
   await screen.findByRole("heading", { name: "登录 BillieWeather" });
   expect(sessionStorage.getItem("billie.token")).toBeNull();
 
-  // Nothing on this device was uploaded: the account API never saw financial data, and the
-  // only network requests were read-only GETs of the website-data download.
+  // No financial data was uploaded: the account API never saw any, the website-data download
+  // was read-only GETs, and the only other requests were the automatic metadata reports
+  // (names, sizes, counts) for the website's "Local databases" cards.
   expect(JSON.stringify(api.calls)).not.toMatch(/AMAZON|HYPERLINK|basic-amount|amount/i);
   expect(requests.length).toBeGreaterThan(0);
-  for (const { url, init } of requests) {
+  const finance = requests.filter(({ url }) => url.startsWith(`${API_ORIGIN}/api/client/v1/finance`));
+  const metadata = requests.filter(({ url }) => url.startsWith(`${API_ORIGIN}/api/client/v1/devices/`));
+  expect(finance.length + metadata.length).toBe(requests.length);
+  for (const { init } of finance) {
     expect(init.method).toBe("GET");
     expect(init.body).toBeUndefined();
-    expect(url.startsWith(`${API_ORIGIN}/api/client/v1/finance`)).toBe(true);
+  }
+  for (const { init } of metadata) {
+    expect(["PUT", "DELETE"]).toContain(init.method);
+    expect(String(init.body ?? "")).not.toMatch(/AMAZON|HYPERLINK|basic-amount|description|amount"/i);
+    if (init.body) expect(Object.keys(JSON.parse(String(init.body)).database)).toEqual([...REPORT_FIELDS]);
   }
 });

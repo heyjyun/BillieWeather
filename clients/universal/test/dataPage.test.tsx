@@ -23,6 +23,8 @@ vi.mock("../src/services/platform", async () => {
           db.run("INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, updated_at) VALUES (1,'2026-01-02','LOCAL ONLY',-500,'Shopping','2026-01-02T10:00:00Z')");
           db.run("INSERT INTO settings (key, value) VALUES ('currency','USD')");
           db.run("INSERT INTO settings (key, value) VALUES ('database_name','Home Mac')");
+          // A person who switched website download off in an older version (there is no switch any more).
+          if ((globalThis as { __webSyncOff?: boolean }).__webSyncOff) db.run("INSERT INTO settings (key, value) VALUES ('web_sync_enabled','0')");
         }
         files.set(file, sqljsDriver(db));
       }
@@ -102,7 +104,7 @@ async function createDatabase(name: string, shown = name) {
   await screen.findByText(`“${shown}” was created.`);
 }
 
-beforeEach(() => { localStorage.clear(); sessionStorage.clear(); platform.resetDatabases(); });
+beforeEach(() => { localStorage.clear(); sessionStorage.clear(); platform.resetDatabases(); (globalThis as { __webSyncOff?: boolean }).__webSyncOff = false; });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 it("shows the cloud and each local database by name, with size, share of the total, contents and dates", async () => {
@@ -382,7 +384,7 @@ it("Metadata Last Updated, Last Synced and Last Backed Up are separate; only a c
   await openData();
   await createDatabase("Work");
   const home = card("Home Mac");
-  expect(fact(home, "Metadata Last Updated")).toBe("Not shared (reporting is off)");
+  await waitFor(() => expect(fact(card("Home Mac"), "Metadata Last Updated")).toMatch(/^[A-Z][a-z]{2} \d/)); // reported automatically
   expect(fact(home, "Last Synced")).toBe("Never");
   expect(fact(home, "Last Backed Up")).toBe("No backups yet");
   expect(screen.getByText(/Metadata Last Updated only means basic facts about a database/)).toBeTruthy();
@@ -396,11 +398,40 @@ it("Metadata Last Updated, Last Synced and Last Backed Up are separate; only a c
   await screen.findByText(/Added 2 statements/);
   await waitFor(() => expect(fact(card("Work"), "Last Synced")).not.toBe("Never"));
   expect(fact(card("Home Mac"), "Last Synced")).not.toBe("Never");
-  expect(fact(card("Work"), "Metadata Last Updated")).toBe("Not shared (reporting is off)");
+  expect(within(card("Work")).getByText("Metadata Last Updated")).not.toBe(within(card("Work")).getByText("Last Synced")); // separate rows
   expect(fact(card("Work"), "Last Backed Up")).toBe("No backups yet");
 
   const backup = screen.getByRole("heading", { name: /Cloud backup/ }).closest("section")! as HTMLElement;
   const button = within(backup).getByRole("button", { name: /Back Up Now/ }) as HTMLButtonElement;
   expect(button.disabled).toBe(true);
   expect(button.textContent).toContain("Coming Soon");
+});
+
+it("Settings has no website-data section any more; the website download still happens on its own", async () => {
+  const { requests } = fakeCloud();
+  await openData(); // waits for "Downloaded from your website account"
+  expect(requests.some((r) => r.method === "GET" && r.path === "/statements")).toBe(true);
+  fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: "Settings" }));
+  await screen.findByRole("heading", { name: "Settings & privacy", level: 1 });
+  expect(screen.queryByRole("heading", { name: "Website data" })).toBeNull();
+  expect(screen.queryByRole("checkbox", { name: /Download my website data/ })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Check now" })).toBeNull();
+});
+
+it("if website download was switched off before, Download to this device still works and turns it back on", async () => {
+  (globalThis as { __webSyncOff?: boolean }).__webSyncOff = true;
+  fakeCloud();
+  sessionStorage.setItem("billie.token", "tok");
+  localStorage.setItem("billie.account", JSON.stringify(account));
+  localStorage.setItem("billie.locale", "en");
+  render(<App />);
+  fireEvent.click(within(await screen.findByRole("navigation")).getByRole("button", { name: "Data" }));
+  const inCloud = () => list("Statements in “BillieWeather cloud”");
+  await waitFor(() => expect(within(rowFor(inCloud(), "web.csv")).getByText("Not on this device")).toBeTruthy());
+  expect(screen.queryByText(/Turn on website download in Settings/)).toBeNull();
+  const button = within(rowFor(inCloud(), "web.csv")).getByRole("button", { name: "Download to this device" }) as HTMLButtonElement;
+  expect(button.disabled).toBe(false);
+  await click(button);
+  await waitFor(() => expect(within(rowFor(inCloud(), "web.csv")).getByText("On this device")).toBeTruthy());
+  expect(within(list("Statements in “Home Mac”")).getByText("web.csv")).toBeTruthy();
 });

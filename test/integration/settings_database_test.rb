@@ -183,10 +183,11 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "&lt;script&gt;alert(1)&lt;/script&gt;"
   end
 
-  test "with nothing reported the section explains how to turn reporting on" do
+  test "with nothing reported the section says local databases appear once the app is opened" do
     sign_in @user
     get finance_settings_path, params: {locale: "en"}
-    assert_includes css_select("#settings-local-databases").text, "Show My Local Databases on the Website"
+    assert_includes css_select("#settings-local-databases").text, "They appear here after you open the BillieWeather app while signed in."
+    assert_no_match(/Show My Local Databases|Turn on/, css_select("#settings-local-databases").text)
     assert_empty css_select("[data-local-database]")
   end
 
@@ -196,5 +197,22 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
     sign_in @user
     get finance_settings_path, params: {locale: "en"}
     assert_empty css_select("[data-local-database]")
+  end
+
+  test "local database cards are translated in every language" do
+    report_local(@user)
+    sign_in @user
+    %w[en es ja ko zh-CN zh-TW].each do |locale|
+      get finance_settings_path, params: {locale: locale}
+      assert_response :success
+      assert_no_match(/translation_missing|Translation missing/, response.body, locale)
+      card = css_select("[data-local-database]").sole
+      assert_includes card.text, I18n.t("billie.database.local.status_local", locale: locale), locale
+      assert_includes card.text, I18n.t("billie.database.local.reported", locale: locale), locale
+    end
+    get finance_settings_path, params: {locale: "zh-CN"}
+    card = css_select("[data-local-database]").sole.text
+    %w[本地数据库 元数据最近更新 最近同步 最近备份 还没有备份].each { |text| assert_includes card, text }
+    assert_no_match(/Metadata Last Updated|Last Synced|Local Database|No backups yet/, card)
   end
 end

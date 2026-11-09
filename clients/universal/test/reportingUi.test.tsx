@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The "Show My Local Databases on the Website" setting and when the app reports.
+// Local database metadata is reported automatically (there is no switch), and when the app reports.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
 import { migrate } from "./helpers";
@@ -59,49 +59,40 @@ async function openApp() {
   await waitFor(() => expect(screen.getAllByRole("navigation").length).toBeGreaterThan(0));
 }
 const go = (name: string) => fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name }));
-const toggle = () => screen.getByRole("checkbox", { name: "Show My Local Databases on the Website" }) as HTMLInputElement;
-const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)); });
 
 beforeEach(() => { localStorage.clear(); sessionStorage.clear(); platform.resetDatabases(); reports = []; online = true; mockServer(); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
-it("is off by default with the explanation shown, and opening the app reports nothing", async () => {
+it("there is no switch and no separate section: opening the app reports each database", async () => {
   await openApp();
-  go("Settings");
-  expect(toggle().checked).toBe(false);
-  expect(screen.getByText(/When enabled, BillieWeather securely shares basic information about your local databases, such as their names, sizes, and record counts, so you can see them on the website\. Your financial records remain on your device\./)).toBeTruthy();
-  await flush();
-  expect(reports).toEqual([]);
-});
-
-it("turning it on reports each database; turning it off asks the server to remove them and says so only when confirmed", async () => {
-  await openApp();
-  go("Settings");
-  await act(async () => fireEvent.click(toggle()));
   await waitFor(() => expect(reports.map((r) => r.method)).toEqual(["PUT"]));
-  expect((reports[0].body!.database as { name: string; device_name: string }).name).toBe("Home Mac");
+  expect((reports[0].body!.database as { name: string }).name).toBe("Home Mac");
   expect((reports[0].body!.database as { device_name: string }).device_name).toBe("Jyun's MacBook");
-
-  online = false;
-  await act(async () => fireEvent.click(toggle()));
-  expect(toggle().checked).toBe(false);
-  await screen.findByText(/Removal requested\. Waiting for the server to confirm/);
-  expect(screen.queryByText(/server confirmed/)).toBeNull();
-});
-
-it("a confirmed removal is reported to the person", async () => {
-  await openApp();
   go("Settings");
-  await act(async () => fireEvent.click(toggle()));
-  await waitFor(() => expect(reports.length).toBe(1));
-  await act(async () => fireEvent.click(toggle()));
-  await screen.findByText("The server confirmed that the information this device shared was removed from the website.");
-  expect(reports.at(-1)!.method).toBe("DELETE");
-  expect(reports.at(-1)!.path).toMatch(/^\/[0-9a-f-]{36}\?sequence=\d+$/);
+  await screen.findByRole("heading", { name: "Settings & privacy", level: 1 });
+  expect(screen.queryByRole("heading", { name: /Local databases on the website/ })).toBeNull();
+  expect(screen.queryByText(/Metadata Last Updated/)).toBeNull();
+  expect(screen.queryByRole("checkbox", { name: /local databases/i })).toBeNull();
+  // The "Where your data lives" section is gone from Settings.
+  expect(screen.queryByText(/Where your data lives|Encryption at rest/)).toBeNull();
+  expect(screen.queryByRole("button", { name: "Sync Now…" })).toBeNull();
 });
 
-it("when already on, opening the app reports; creating, renaming and deleting a database report too; the id never changes on rename", async () => {
-  localStorage.setItem("billie.report.enabled", JSON.stringify({ "jyun@example.com": true }));
+it("offline, the app works and a deleted database's removal is shown as pending", async () => {
+  online = false;
+  await openApp();
+  go("Data");
+  await screen.findByRole("heading", { name: "Data", level: 1 });
+  fireEvent.click(await screen.findByRole("button", { name: "New database" }));
+  fireEvent.change(screen.getByLabelText("Name of the new database"), { target: { value: "Work" } });
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Create" })));
+  await screen.findByText("“Work” was created.");
+  expect(reports).toEqual([]);
+  const home = screen.getByRole("heading", { name: "Home Mac", level: 2 }).closest("section")! as HTMLElement;
+  expect(within(home).getByText("Metadata Last Updated").nextElementSibling!.textContent).toBe("Not reported yet");
+});
+
+it("opening the app reports; creating, renaming and deleting a database report too; the id never changes on rename", async () => {
   await openApp();
   await waitFor(() => expect(reports.length).toBe(1)); // after the app opened and sign-in succeeded
   const homeId = reports[0].path.split("/")[3];
@@ -133,13 +124,7 @@ it("when already on, opening the app reports; creating, renaming and deleting a 
 
 it("reporting sets only Metadata Last Updated: Last Synced and Last Backed Up stay as they were, and no sync or upload request is made", async () => {
   await openApp();
-  go("Settings");
-  expect(screen.getByText(/^Metadata Last Updated: Not shared \(reporting is off\)/)).toBeTruthy();
-  await act(async () => fireEvent.click(toggle()));
   await waitFor(() => expect(reports.length).toBe(1));
-  await waitFor(() => expect(screen.queryByText(/Metadata Last Updated: Not shared/)).toBeNull());
-  expect(screen.getByText(/^Metadata Last Updated: [A-Z][a-z]{2} \d/)).toBeTruthy();
-
   go("Data");
   await screen.findByRole("heading", { name: "Data", level: 1 });
   const home = (await screen.findByRole("heading", { name: "Home Mac", level: 2 })).closest("section")! as HTMLElement;
@@ -150,4 +135,47 @@ it("reporting sets only Metadata Last Updated: Last Synced and Last Backed Up st
   const calls = (fetch as unknown as { mock: { calls: Array<[RequestInfo | URL, RequestInit?]> } }).mock.calls;
   expect(calls.filter(([, init]) => init?.method === "POST")).toEqual([]);
   expect(calls.filter(([url, init]) => !String(url).includes("/devices/") && init?.method && init.method !== "GET")).toEqual([]);
+});
+
+it("a database card's Sync Now to… picks it as the source and moves to the destination; nothing is copied until confirmed", async () => {
+  await openApp();
+  go("Data");
+  const home = (await screen.findByRole("heading", { name: "Home Mac", level: 2 })).closest("section")! as HTMLElement;
+  expect(within(home).getByRole("button", { name: "Rename" })).toBeTruthy();
+  expect(within(home).getByRole("button", { name: "Delete database" })).toBeTruthy();
+  const before = (fetch as unknown as { mock: { calls: unknown[] } }).mock.calls.length;
+  await act(async () => fireEvent.click(within(home).getByRole("button", { name: "Sync Now to…" })));
+  const panel = screen.getByRole("heading", { name: "Sync between databases" }).closest("section")! as HTMLElement;
+  expect((within(panel).getByRole("combobox", { name: "From" }) as HTMLSelectElement).selectedOptions[0].textContent).toBe("Home Mac");
+  await waitFor(() => expect(document.activeElement).toBe(within(panel).getByRole("combobox", { name: "To" })));
+  expect(within(panel).queryByRole("group", { name: "Confirm sync" })).toBeNull();
+  const after = (fetch as unknown as { mock: { calls: Array<[RequestInfo | URL, RequestInit?]> } }).mock.calls.slice(before);
+  expect(after.filter(([, init]) => init?.method && init.method !== "GET")).toEqual([]);
+});
+
+it("in Chinese, the disclosure, the three states and the sync buttons are all in Chinese", async () => {
+  account.locale = "zh-CN";
+  try {
+    sessionStorage.setItem("billie.token", "tok");
+    localStorage.setItem("billie.account", JSON.stringify(account));
+    localStorage.setItem("billie.locale", "zh-CN");
+    render(<App />);
+    await screen.findByRole("button", { name: "设置" });
+  } finally {
+    account.locale = "en";
+  }
+  fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: "设置" }));
+  await screen.findByRole("heading", { name: "设置与隐私", level: 1 });
+  expect(screen.queryByText(/并在网站上显示本地数据库的基本信息/)).toBeNull();
+  expect(screen.queryByText(/Local databases on the website|Metadata Last Updated|Sync Now/)).toBeNull();
+  fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: "数据管理" }));
+  const home = (await screen.findByRole("heading", { name: "Home Mac", level: 2 })).closest("section")! as HTMLElement;
+  expect(within(home).getByText("元数据最近更新")).toBeTruthy();
+  expect(within(home).getByText("最近同步")).toBeTruthy();
+  expect(within(home).getByText("最近备份")).toBeTruthy();
+  expect(screen.getByRole("button", { name: /立即备份 · 即将推出/ })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "立即同步" })).toBeTruthy();
+  expect(within(home).getByRole("button", { name: "立即同步到…" })).toBeTruthy();
+  expect(within(home).getByRole("button", { name: "重命名" })).toBeTruthy();
+  expect(screen.queryByText(/Coming Soon|Back Up Now|Last Synced/)).toBeNull();
 });
