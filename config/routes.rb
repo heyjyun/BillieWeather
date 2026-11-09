@@ -41,6 +41,9 @@ Rails.application.routes.draw do
       post :confirm, on: :member
     end
     resources :transactions, only: [:index, :edit, :update]
+    resources :categories, only: [:index, :create, :update, :destroy] do
+      post :ai_categorize, on: :collection
+    end
     resources :bank_accounts, only: :update
     resource :forecast, only: :show, controller: :forecast
     resource :report, only: :show, controller: :reports do
@@ -114,6 +117,8 @@ Rails.application.routes.draw do
     delete "finance/statements/:id", to: "finance#destroy_statement", as: :finance_statement
     get "finance/transactions", to: "finance#transactions", as: :finance_transactions
     get "finance/rules", to: "finance#rules", as: :finance_rules
+    get "finance/categories", to: "finance#categories", as: :finance_categories
+    post "finance/categorize", to: "finance#categorize", as: :finance_categorize
   end
 
   namespace :api do

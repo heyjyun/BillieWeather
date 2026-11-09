@@ -1,0 +1,73 @@
+zh-CN:
+  billie:
+    categories:
+      nav: 分类
+      title: 分类
+      eyebrow: 整理你的支出
+      intro: 查看每个分类包含哪些交易，添加你自己的分类，并让 AI 整理仍未分类的交易。
+      ai_eyebrow: 一键完成
+      ai_title: AI 一键分类
+      ai_body:
+        one: "有 %{count} 笔交易未分类。AI 可以为它推荐分类；你自己选择的分类永远不会被更改。"
+        other: "有 %{count} 笔交易未分类。AI 可以为每笔推荐分类；你自己选择的分类永远不会被更改。"
+      ai_consent: "我同意向 %{service} 发送最多 %{max} 个商户的以下信息：去除数字（卡号、参考号和电话号码）后的交易描述、资金是流入还是流出，以及我的分类名称。不会发送金额、日期、余额、账户信息或电子邮件，该服务也不会保存此请求。"
+      ai_button: AI 一键分类
+      ai_note: 只会更新未分类的交易。请在下方检查结果；你对某个商户所做的修改会被记住。
+      ai_unavailable: AI 分类尚未连接。你仍然可以自己选择分类。
+      custom_eyebrow: 按你的方式
+      custom_title: 自定义分类
+      custom_body: "除内置分类外，最多可添加 %{count} 个分类。它们会出现在所有可以选择分类的地方，也会用于 AI 推荐。"
+      new_name: 新分类
+      new_placeholder: 例如：育儿、宠物、礼物
+      add: 添加分类
+      all_title: 全部分类
+      all_body: 所有已导入的交易，不限日期。已排除的交易会计入笔数，但不计入金额。
+      col_category: 分类
+      col_count: 交易笔数
+      col_spent: 支出
+      col_received: 收入
+      col_share: 支出占比
+      col_last: 最近一笔
+      custom_label: 自定义
+      view: 详情
+      view_label: 查看 %{name} 的详情
+      footnote: 转账不计入支出占比。
+      detail_eyebrow: 分类详情
+      detail_summary:
+        one: "%{count} 笔交易 · 支出 %{spent} · 收入 %{received}"
+        other: "%{count} 笔交易 · 支出 %{spent} · 收入 %{received}"
+      open_in_transactions: 在交易页中打开
+      rename_label: 分类名称
+      rename: 重命名
+      delete: 删除分类
+      delete_confirm: 删除“%{name}”？其中的 %{count} 笔交易将变为未分类，相关的记住规则也会被删除。
+      detail_more: 显示最近 %{shown} 笔，共 %{total} 笔。在交易页中打开可查看全部。
+      detail_empty_title: 这个分类还没有交易
+      detail_empty_body: 在交易上选择这个分类，或运行 AI 分类。
+      created: 已添加分类“%{name}”。
+      renamed: 已将“%{old}”重命名为“%{name}”。
+      deleted:
+        one: 已删除分类“%{name}”；%{count} 笔交易现为未分类。
+        other: 已删除分类“%{name}”；%{count} 笔交易现为未分类。
+      ai_done:
+        one: AI 分析了 %{sent} 个商户，为 %{count} 笔交易完成分类。
+        other: AI 分析了 %{sent} 个商户，为 %{count} 笔交易完成分类。
+      ai_remaining:
+        one: 还有 %{count} 个商户待处理；再运行一次即可继续。
+        other: 还有 %{count} 个商户待处理；再运行一次即可继续。
+      errors:
+        blank: 请输入分类名称。
+        too_long: 分类名称最多 %{count} 个字符。
+        reserved: 这已经是内置分类。
+        taken: 你已经有同名的分类。
+        too_many: 最多可以有 %{count} 个自定义分类。
+      ai_errors:
+        consent_required: 使用 AI 前，请勾选同意发送的内容。
+        not_configured: AI 分类尚未连接。
+        nothing_to_do: 没有带可用描述的未分类交易。
+        wait: AI 分类刚刚运行过。请等几秒后再试。
+        auth_failed: AI 服务拒绝了服务器的凭据。未做任何更改。
+        quota: AI 服务额度不足或当前繁忙。未做任何更改。
+        failed: AI 服务无法为这些交易分类。未做任何更改；请稍后再试。
+        unavailable: 无法连接 AI 服务。未做任何更改；请稍后再试。
+        invalid_result: AI 服务返回了意外的结果。未做任何更改；请重试。

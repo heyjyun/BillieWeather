@@ -1,0 +1,73 @@
+ja:
+  billie:
+    categories:
+      nav: カテゴリ
+      title: カテゴリ
+      eyebrow: 支出を整理する
+      intro: 各カテゴリの内容を確認し、独自のカテゴリを追加し、まだ分類されていない取引を AI に整理させましょう。
+      ai_eyebrow: ワンクリック
+      ai_title: AI でまとめて分類
+      ai_body:
+        one: "%{count} 件の取引が未分類です。AI がカテゴリを提案します。あなたが選んだカテゴリは変更されません。"
+        other: "%{count} 件の取引が未分類です。AI がそれぞれのカテゴリを提案します。あなたが選んだカテゴリは変更されません。"
+      ai_consent: "最大 %{max} 件の加盟店について、数字（カード番号・参照番号・電話番号）を除いた取引の説明、入金か出金か、私のカテゴリ名を %{service} に送信することに同意します。金額、日付、残高、口座情報、メールアドレスは送信されず、サービス側でもリクエストは保存されません。"
+      ai_button: AI でまとめて分類
+      ai_note: 更新されるのは未分類の取引だけです。下で結果を確認してください。変更した内容はその加盟店について記憶されます。
+      ai_unavailable: AI 分類はまだ接続されていません。カテゴリはご自身で選べます。
+      custom_eyebrow: 自分仕様に
+      custom_title: 独自のカテゴリ
+      custom_body: "組み込みのカテゴリに加えて、最大 %{count} 個まで追加できます。カテゴリを選べるすべての場所と AI の提案に表示されます。"
+      new_name: 新しいカテゴリ
+      new_placeholder: 例：育児、ペット、贈り物
+      add: カテゴリを追加
+      all_title: すべてのカテゴリ
+      all_body: 取り込んだすべての取引（全期間）。除外した取引は件数に含まれますが、金額には含まれません。
+      col_category: カテゴリ
+      col_count: 取引数
+      col_spent: 出金
+      col_received: 入金
+      col_share: 支出に占める割合
+      col_last: 最新
+      custom_label: 独自
+      view: 詳細
+      view_label: "%{name} の詳細を表示"
+      footnote: 振替は支出の割合に含まれません。
+      detail_eyebrow: カテゴリの詳細
+      detail_summary:
+        one: "%{count} 件 · 出金 %{spent} · 入金 %{received}"
+        other: "%{count} 件 · 出金 %{spent} · 入金 %{received}"
+      open_in_transactions: 取引ページで開く
+      rename_label: カテゴリ名
+      rename: 名前を変更
+      delete: カテゴリを削除
+      delete_confirm: "「%{name}」を削除しますか？ %{count} 件の取引は未分類になり、関連する記憶ルールも削除されます。"
+      detail_more: 最新 %{shown} 件を表示しています（全 %{total} 件）。すべて見るには取引ページで開いてください。
+      detail_empty_title: このカテゴリにはまだ取引がありません
+      detail_empty_body: 取引でこのカテゴリを選ぶか、AI 分類を実行してください。
+      created: カテゴリ「%{name}」を追加しました。
+      renamed: "「%{old}」を「%{name}」に変更しました。"
+      deleted:
+        one: カテゴリ「%{name}」を削除しました。%{count} 件の取引が未分類になりました。
+        other: カテゴリ「%{name}」を削除しました。%{count} 件の取引が未分類になりました。
+      ai_done:
+        one: AI が %{sent} 件の加盟店を確認し、%{count} 件の取引を分類しました。
+        other: AI が %{sent} 件の加盟店を確認し、%{count} 件の取引を分類しました。
+      ai_remaining:
+        one: まだ %{count} 件の加盟店が残っています。もう一度実行すると続けます。
+        other: まだ %{count} 件の加盟店が残っています。もう一度実行すると続けます。
+      errors:
+        blank: カテゴリ名を入力してください。
+        too_long: カテゴリ名は %{count} 文字までです。
+        reserved: それは組み込みのカテゴリです。
+        taken: 同じ名前のカテゴリがすでにあります。
+        too_many: 独自のカテゴリは %{count} 個までです。
+      ai_errors:
+        consent_required: AI を使う前に、送信内容への同意にチェックを入れてください。
+        not_configured: AI 分類はまだ接続されていません。
+        nothing_to_do: 使える説明のある未分類の取引がありません。
+        wait: AI 分類を実行したばかりです。数秒待ってからもう一度お試しください。
+        auth_failed: AI サービスがサーバーの認証情報を拒否しました。何も変更されていません。
+        quota: AI サービスのクレジットが不足しているか混雑しています。何も変更されていません。
+        failed: AI サービスがこれらの取引を分類できませんでした。何も変更されていません。後でもう一度お試しください。
+        unavailable: AI サービスに接続できませんでした。何も変更されていません。後でもう一度お試しください。
+        invalid_result: AI サービスから予期しない応答がありました。何も変更されていません。もう一度お試しください。

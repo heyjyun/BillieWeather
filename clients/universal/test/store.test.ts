@@ -111,17 +111,21 @@ describe("local SQLite store", () => {
     expect((await store.transactions()).length).toBe(9);
   });
 
-  it("the database refuses invalid categories", async () => {
+  it("the database refuses unusable category names (custom names are checked by the store)", async () => {
     const { db } = await newStore();
     db.run("INSERT INTO statements (filename, currency, sha256, transaction_count, imported_at) VALUES ('a','USD','x',0,'t')");
-    expect(() => db.run("INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, updated_at) VALUES (1,'2026-01-01','d',1,'Crypto','t')")).toThrow();
+    const insert = (category: string) => db.run("INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, updated_at) VALUES (1,'2026-01-01','d',1,?,'t')", [category]);
+    expect(() => insert("")).toThrow();
+    expect(() => insert("x".repeat(41))).toThrow();
+    expect(() => db.run("INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ('m', 0, 'Uncategorized', 't')")).toThrow();
+    expect(() => insert("Crypto")).not.toThrow();
   });
 
   it("rolls back a statement whose rows fail to insert", async () => {
     const { store } = await newStore();
     const bytes = fixtureBytes("basic-amount.csv");
     const parsed = parseStatement(decodeStatementBytes(bytes, "b.csv"), { filename: "b.csv", currency: "USD", categorizer: await store.categorizer() });
-    parsed.rows[3] = { ...parsed.rows[3], category: "Bogus" as never };
+    parsed.rows[3] = { ...parsed.rows[3], category: "" };
     await expect(store.importStatement({ filename: "b.csv", currency: "USD", sha256: await sha256Hex(bytes), parsed })).rejects.toThrow();
     expect(await store.statements()).toEqual([]);
     expect(await store.transactions()).toEqual([]);

@@ -180,7 +180,10 @@ class ClientApiFinanceTest < ActionDispatch::IntegrationTest
       assert_equal "USD", response.parsed_body["currency"]
       upload(statement_payload(rows: [{booked_on: "2026-02-01", description: "x", amount: "1.001", category: "Income"}]))
       assert_response :unprocessable_entity
-      upload(statement_payload(rows: [{booked_on: "2026-02-01", description: "x", amount: "1.00", category: "Nonsense"}]))
+      # Unknown names become custom categories (see finance_categories_test.rb); unusable ones are refused.
+      upload(statement_payload(rows: [{booked_on: "2026-02-01", description: "x", amount: "1.00", category: "x" * 41}]))
+      assert_response :unprocessable_entity
+      upload(statement_payload(rows: [{booked_on: "2026-02-01", description: "x", amount: "1.00", category: "  "}]))
       assert_response :unprocessable_entity
       upload(statement_payload(rows: []))
       assert_response :unprocessable_entity

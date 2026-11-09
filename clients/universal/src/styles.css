@@ -230,3 +230,18 @@ p { margin: 0 0 10px; }
 .bw-sync-preview { margin: 0 0 10px; font-weight: 600; font-size: 13px; }
 .bw-checkbox-label { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 13px; }
 @media (max-width: 760px) { .bw-sync-grid { grid-template-columns: 1fr; } }
+
+/* Categories page */
+.bw-tone-slate, .bw-tone-gray { background: #eef0eb; color: #4b524d; }
+.bw-cat-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.bw-cat-manage { display: grid; gap: 12px; margin-bottom: 16px; }
+.bw-cat-kind { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; }
+.bw-table-scroll { overflow-x: auto; }
+.bw-cat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bw-cat-table th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.bw-cat-table td { padding: 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.bw-cat-table td:nth-child(n+2):nth-child(-n+5), .bw-cat-table th:nth-child(n+2):nth-child(-n+5) { text-align: right; }
+.bw-consent { margin: 12px 0; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); display: grid; gap: 8px; }
+.bw-consent h3, .bw-consent p { margin: 0; }
+.bw-consent-preview { margin: 0; padding-left: 18px; font-size: 13px; display: grid; gap: 4px; max-height: 220px; overflow: auto; }
+.bw-section-gap { margin-top: 18px; }

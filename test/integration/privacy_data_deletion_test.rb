@@ -22,6 +22,7 @@ class PrivacyDataDeletionTest < ActionDispatch::IntegrationTest
     Finance::StatementDraft.create!(user: user, bank_account: account, filename: "d.pdf", sha256: digit * 64, currency: "USD",
       rows: [{"description" => "Draft row", "booked_on" => Date.current.iso8601, "amount" => "-1.00"}], expires_at: 10.minutes.from_now)
     Finance::MerchantRule.create!(user: user, merchant_key: "coffee bar", category: "Food & dining")
+    Finance::CustomCategory.create!(user: user, name: "Pets")
     Finance::Insight.create!(user: user, source: "rules", content: {"summary" => "x"}, generated_at: Time.current)
     Finance::Transaction.create!(user: user, statement: statement, booked_on: Date.current, description: "Coffee bar", amount: "-4.00", category: "Food & dining")
   end

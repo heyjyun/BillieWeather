@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_000400) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_000500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -143,6 +143,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000400) do
     t.string "custom_name"
     t.index ["user_id", "identity_key"], name: "index_finance_bank_accounts_on_user_id_and_identity_key", unique: true
     t.index ["user_id"], name: "index_finance_bank_accounts_on_user_id"
+  end
+
+  create_table "finance_custom_categories", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", limit: 40, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "user_id, lower((name)::text)", name: "index_finance_custom_categories_on_user_and_lower_name", unique: true
+    t.index ["user_id"], name: "index_finance_custom_categories_on_user_id"
   end
 
   create_table "finance_insights", force: :cascade do |t|
@@ -472,6 +481,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000400) do
     t.string "nickname", limit: 40
     t.boolean "supporter_recognition_public", default: false, null: false
     t.string "cloud_database_name", limit: 60
+    t.datetime "finance_ai_categorized_at"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["google_uid"], name: "index_users_on_google_uid", unique: true, where: "(google_uid IS NOT NULL)"
     t.index ["platform_agent_of_id"], name: "index_users_on_platform_agent_of_id"
@@ -564,6 +574,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000400) do
   add_foreign_key "community_support_accesses", "users", column: "revoked_by_id", on_delete: :nullify
   add_foreign_key "community_support_accesses", "users", on_delete: :cascade
   add_foreign_key "finance_bank_accounts", "users"
+  add_foreign_key "finance_custom_categories", "users"
   add_foreign_key "finance_insights", "users"
   add_foreign_key "finance_local_database_reports", "users", on_delete: :cascade
   add_foreign_key "finance_local_devices", "users", on_delete: :cascade

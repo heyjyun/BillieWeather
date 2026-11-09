@@ -3,7 +3,7 @@
 // browser preview). Nothing here touches the network.
 import type { Category, Currency, MerchantRule, ParsedStatement, Statement, Transaction } from "@billie/shared-types";
 import { CURRENCIES } from "@billie/shared-types";
-import { Categorizer, recategorizeUncategorized, ruleFor, transactionsMatchingRule } from "@billie/finance-core";
+import { aiGroups, Categorizer, categoryNameProblem, CUSTOM_CATEGORY_MAX, isBuiltInCategory, normalizeCategoryName, recategorizeUncategorized, ruleFor, transactionsMatchingRule, type AiGroup, type CategoryNameProblem } from "@billie/finance-core";
 import { randomId } from "./ids";
 
 export interface SqlDriver {
@@ -11,7 +11,7 @@ export interface SqlDriver {
   select<T>(sql: string, params?: unknown[]): Promise<T[]>;
 }
 
-export type StoreErrorCode = "statement_duplicate" | "currency_mismatch" | "unsupported_currency" | "not_found" | "invalid_name";
+export type StoreErrorCode = "statement_duplicate" | "currency_mismatch" | "unsupported_currency" | "not_found" | "invalid_name" | "invalid_category" | "too_many_categories";
 
 export const DATABASE_NAME_MAX = 60;
 
@@ -49,6 +49,8 @@ export interface WebData {
   statements: Array<{ remoteId: number; filename: string; currency: Currency; sha256: string; transactionCount: number; closingBalanceCents: number | null; closingBalanceOn: string | null; importedAt: string }>;
   transactions: Array<{ remoteId: number; remoteStatementId: number; bookedOn: string; description: string; amountCents: number; category: Category; taxReview: boolean; excluded: boolean }>;
   rules: MerchantRule[];
+  /** The person's own categories on the website (older servers send none). */
+  categories?: string[];
 }
 
 export interface WebSyncResult {
@@ -74,6 +76,8 @@ export interface TransferStatement {
 export interface TransferData {
   statements: TransferStatement[];
   rules: MerchantRule[];
+  /** Custom categories, including ones no transaction uses yet. */
+  categories?: string[];
 }
 
 export interface MergeResult {
@@ -130,6 +134,109 @@ export class FinanceStore {
     return (await this.db.select<Row>("SELECT * FROM merchant_rules ORDER BY merchant_key")).map((row) => ({
       merchantKey: String(row.merchant_key), income: Number(row.income) === 1, category: row.category as MerchantRule["category"],
     }));
+  }
+
+  /** The person's own categories in this database, alphabetically. */
+  async customCategories(): Promise<string[]> {
+    return (await this.db.select<Row>("SELECT name FROM custom_categories ORDER BY name COLLATE NOCASE")).map((row) => String(row.name));
+  }
+
+  /** Adds a custom category. Returns the name as stored; throws invalid_category with a `problem`. */
+  async addCategory(name: string): Promise<string> {
+    const clean = normalizeCategoryName(name);
+    const existing = await this.customCategories();
+    this.checkCategoryName(clean, existing);
+    if (existing.length >= CUSTOM_CATEGORY_MAX) throw new StoreError("too_many_categories", "Too many categories.", { max: CUSTOM_CATEGORY_MAX });
+    await this.db.execute("INSERT INTO custom_categories (name, created_at) VALUES ($1, $2)", [clean, now()]);
+    return clean;
+  }
+
+  /** Renames a custom category everywhere it is used. Returns the new name. */
+  async renameCategory(from: string, to: string): Promise<string> {
+    const existing = await this.customCategories();
+    if (!existing.includes(from)) throw new StoreError("not_found", "Category not found.");
+    const clean = normalizeCategoryName(to);
+    this.checkCategoryName(clean, existing, from);
+    if (clean === from) return clean;
+    const stamp = now();
+    await this.db.execute("UPDATE custom_categories SET name = $1 WHERE name = $2", [clean, from]);
+    await this.db.execute("UPDATE transactions SET category = $1, locally_modified = 1, updated_at = $2 WHERE category = $3", [clean, stamp, from]);
+    await this.db.execute("UPDATE merchant_rules SET category = $1, updated_at = $2 WHERE category = $3", [clean, stamp, from]);
+    return clean;
+  }
+
+  /** Deletes a custom category: its transactions become Uncategorized, its rules are forgotten. Returns how many transactions moved. */
+  async deleteCategory(name: string): Promise<number> {
+    const [row] = await this.db.select<Row>("SELECT name FROM custom_categories WHERE name = $1", [name]);
+    if (!row) throw new StoreError("not_found", "Category not found.");
+    const moved = await this.db.execute("UPDATE transactions SET category = 'Uncategorized', locally_modified = 1, updated_at = $1 WHERE category = $2", [now(), name]);
+    await this.db.execute("DELETE FROM merchant_rules WHERE category = $1", [name]);
+    await this.db.execute("DELETE FROM custom_categories WHERE name = $1", [name]);
+    return moved.rowsAffected;
+  }
+
+  /**
+   * Makes sure every name coming from another database (a sync or a website download) exists
+   * here as a custom category, so those transactions keep their category. Unusable names and
+   * names past the limit are left out; their rows are filed as Uncategorized by `knownCategory`.
+   */
+  private async ensureCategories(names: Iterable<string>): Promise<Set<string>> {
+    const existing = await this.customCategories();
+    const known = new Map(existing.map((name) => [name.toLowerCase(), name]));
+    for (const raw of names) {
+      const name = normalizeCategoryName(raw);
+      if (!name || isBuiltInCategory(name) || known.has(name.toLowerCase())) continue;
+      if (known.size >= CUSTOM_CATEGORY_MAX || categoryNameProblem(name, [...known.values()]) !== null) continue;
+      await this.db.execute("INSERT INTO custom_categories (name, created_at) VALUES ($1, $2) ON CONFLICT DO NOTHING", [name, now()]);
+      known.set(name.toLowerCase(), name);
+    }
+    return new Set(known.values());
+  }
+
+  private checkCategoryName(name: string, existing: readonly string[], renaming?: string): void {
+    const problem: CategoryNameProblem | null = categoryNameProblem(name, existing, renaming);
+    if (problem) throw new StoreError("invalid_category", `Category name: ${problem}.`, { problem });
+  }
+
+  /** The stored name for a category from elsewhere: a built-in, a known custom one (any letter case), or Uncategorized. */
+  private static knownCategory(name: string, custom: ReadonlySet<string>): Category {
+    if (isBuiltInCategory(name)) return name;
+    const clean = normalizeCategoryName(name).toLowerCase();
+    for (const known of custom) if (known.toLowerCase() === clean) return known;
+    return "Uncategorized";
+  }
+
+  /** Uncategorized transactions grouped by merchant, as "Categorize with AI" would send them. */
+  async aiCandidates(): Promise<AiGroup[]> {
+    return aiGroups(await this.transactions());
+  }
+
+  /**
+   * Applies AI suggestions ({group key → category}) to the groups' transactions that are still
+   * Uncategorized, so a category chosen meanwhile is never overwritten. Names that are not a
+   * category here are ignored. No merchant rules are saved. Returns how many transactions changed.
+   */
+  async applyAiCategories(groups: readonly AiGroup[], assignments: ReadonlyArray<{ key: string; category: string }>): Promise<number> {
+    const custom = new Set(await this.customCategories());
+    const byKey = new Map(groups.map((group) => [group.key, group]));
+    const stamp = now();
+    let changed = 0;
+    for (const { key, category } of assignments) {
+      const group = byKey.get(key);
+      if (!group || category === "Uncategorized" || category === "Transfers" || !(isBuiltInCategory(category) || custom.has(category))) continue;
+      if (category === "Income" && group.direction !== "in") continue;
+      byKey.delete(key);
+      for (let start = 0; start < group.ids.length; start += 100) {
+        const ids = group.ids.slice(start, start + 100);
+        const placeholders = ids.map((_, i) => `$${i + 4}`).join(", ");
+        const result = await this.db.execute(
+          `UPDATE transactions SET category = $1, tax_review = CASE WHEN $2 = 'Business' THEN 1 ELSE tax_review END, updated_at = $3 WHERE category = 'Uncategorized' AND id IN (${placeholders})`,
+          [category, category, stamp, ...ids],
+        );
+        changed += result.rowsAffected;
+      }
+    }
+    return changed;
   }
 
   async categorizer(): Promise<Categorizer> {
@@ -220,7 +327,7 @@ export class FinanceStore {
    * (preferences, not financial data), unless `forgetName` clears those too.
    */
   async deleteAllData(options: { forgetName?: boolean } = {}): Promise<void> {
-    for (const table of ["transactions", "statements", "merchant_rules"]) await this.db.execute(`DELETE FROM ${table}`);
+    for (const table of ["transactions", "statements", "merchant_rules", "custom_categories"]) await this.db.execute(`DELETE FROM ${table}`);
     if (options.forgetName) await this.db.execute("DELETE FROM settings");
     else await this.db.execute("DELETE FROM settings WHERE key NOT IN ($1, $2)", ["web_sync_enabled", "database_name"]);
     // Reclaim freed pages so deleted rows do not linger in the database file.
@@ -321,6 +428,7 @@ export class FinanceStore {
         closingBalanceOn: s.closingBalanceOn, importedAt: s.importedAt, rows: byStatement.get(s.id) ?? [],
       })),
       rules: await this.rules(),
+      categories: await this.customCategories(),
     };
   }
 
@@ -342,6 +450,7 @@ export class FinanceStore {
     if (currency && wrong) throw new StoreError("currency_mismatch", `This database keeps statements in ${currency}.`, { currency, web: wrong.currency });
     const stamp = now();
     const skipped = await this.skippedHashes();
+    const custom = await this.ensureCategories([...(data.categories ?? []), ...fresh.flatMap((statement) => statement.rows.map((row) => row.category)), ...data.rules.map((rule) => rule.category)]);
     for (const statement of fresh) {
       const inserted = await this.db.execute(
         "INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
@@ -354,7 +463,7 @@ export class FinanceStore {
           const params: unknown[] = [];
           const values = batch.map((row) => {
             const base = params.length;
-            params.push(statementId, row.bookedOn, row.description, row.amountCents, row.category, row.taxReview ? 1 : 0, row.excluded ? 1 : 0, stamp);
+            params.push(statementId, row.bookedOn, row.description, row.amountCents, FinanceStore.knownCategory(row.category, custom), row.taxReview ? 1 : 0, row.excluded ? 1 : 0, stamp);
             return `(${Array.from({ length: 8 }, (_, i) => `$${base + i + 1}`).join(", ")})`;
           });
           await this.db.execute(
@@ -376,6 +485,7 @@ export class FinanceStore {
       if (!(await this.currency()) && currency) await this.setSetting("currency", currency);
     }
     for (const rule of data.rules) {
+      if (FinanceStore.knownCategory(rule.category, custom) !== rule.category) continue;
       const added = await this.db.execute(
         "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO NOTHING",
         [rule.merchantKey, rule.income ? 1 : 0, rule.category, stamp],
@@ -486,6 +596,7 @@ export class FinanceStore {
     }
     const result: WebSyncResult = { statementsAdded: 0, statementsRemoved: 0, transactionsAdded: 0, transactionsUpdated: 0, transactionsRemoved: 0, skippedDuplicates: 0 };
     const stamp = now();
+    const custom = await this.ensureCategories([...(web.categories ?? []), ...web.transactions.map((transaction) => transaction.category), ...web.rules.map((rule) => rule.category)]);
 
     // Statements.
     const localRows = await this.db.select<Row>("SELECT id, sha256, source, remote_id FROM statements");
@@ -533,13 +644,13 @@ export class FinanceStore {
       const statementId = statementIdFor.get(transaction.remoteStatementId)!;
       const row = existingTx.get(transaction.remoteId);
       if (!row) {
-        inserts.push([statementId, transaction.bookedOn, transaction.description, transaction.amountCents, transaction.category, transaction.taxReview ? 1 : 0, transaction.excluded ? 1 : 0, stamp, transaction.remoteId]);
+        inserts.push([statementId, transaction.bookedOn, transaction.description, transaction.amountCents, FinanceStore.knownCategory(transaction.category, custom), transaction.taxReview ? 1 : 0, transaction.excluded ? 1 : 0, stamp, transaction.remoteId]);
         continue;
       }
       const keepLocal = Number(row.locally_modified) === 1;
       const next = {
         statement_id: statementId, booked_on: transaction.bookedOn, description: transaction.description, amount_cents: transaction.amountCents,
-        category: keepLocal ? String(row.category) : transaction.category,
+        category: keepLocal ? String(row.category) : FinanceStore.knownCategory(transaction.category, custom),
         tax_review: keepLocal ? Number(row.tax_review) : transaction.taxReview ? 1 : 0,
         excluded: keepLocal ? Number(row.excluded) : transaction.excluded ? 1 : 0,
       };
@@ -569,6 +680,7 @@ export class FinanceStore {
 
     // Remembered rules: this device's own rules win.
     for (const rule of web.rules) {
+      if (FinanceStore.knownCategory(rule.category, custom) !== rule.category) continue;
       await this.db.execute(
         "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO NOTHING",
         [rule.merchantKey, rule.income ? 1 : 0, rule.category, stamp],

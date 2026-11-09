@@ -12,6 +12,8 @@ import { NameDatabase } from "../components/NameDatabase";
 
 interface FinanceData {
   transactions: Transaction[];
+  /** The person's own categories in this database (built-in ones are in CATEGORIES). */
+  customCategories: string[];
   statements: Statement[];
   rules: MerchantRule[];
   currency: Currency | null;
@@ -86,7 +88,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }
     return opened;
   }, []);
-  const [data, setData] = useState<FinanceData>({ transactions: [], statements: [], rules: [], currency: null });
+  const [data, setData] = useState<FinanceData>({ transactions: [], customCategories: [], statements: [], rules: [], currency: null });
   const [error, setError] = useState<string | null>(null);
   const [sync, setSync] = useState<SyncState>({ status: "idle" });
   const [syncEnabled, setSyncEnabledState] = useState(true);
@@ -111,8 +113,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   }, [accountEmail, getToken, openById]);
 
   const load = useCallback(async (store: FinanceStore) => {
-    const [transactions, statements, rules, currency, settings] = await Promise.all([store.transactions(), store.statements(), store.rules(), store.currency(), store.webSyncSettings()]);
-    setData({ transactions, statements, rules, currency });
+    const [transactions, statements, rules, currency, settings, customCategories] = await Promise.all([store.transactions(), store.statements(), store.rules(), store.currency(), store.webSyncSettings(), store.customCategories()]);
+    setData({ transactions, customCategories, statements, rules, currency });
     setSyncEnabledState(settings.enabled);
     setLastChecked(settings.checkedAt);
   }, []);

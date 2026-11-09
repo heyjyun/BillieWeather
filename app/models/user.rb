@@ -7,6 +7,7 @@ class User < ApplicationRecord
   has_many :finance_transactions, class_name: "Finance::Transaction", dependent: :destroy
   has_many :finance_insights, class_name: "Finance::Insight", dependent: :destroy
   has_many :finance_merchant_rules, class_name: "Finance::MerchantRule", dependent: :destroy
+  has_many :finance_custom_categories, class_name: "Finance::CustomCategory", dependent: :delete_all
   has_many :finance_statement_drafts, class_name: "Finance::StatementDraft", dependent: :destroy
   has_many :finance_bank_accounts, class_name: "Finance::BankAccount", dependent: :destroy
   has_many :finance_local_database_reports, class_name: "Finance::LocalDatabaseReport", dependent: :delete_all

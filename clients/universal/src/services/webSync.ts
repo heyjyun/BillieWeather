@@ -30,9 +30,14 @@ interface Summary { currency: Currency | null; version: string; statement_count:
 
 export async function fetchWebData(token: string): Promise<WebData & { version: string }> {
   const summary = await get<Summary>("", token);
-  const [{ statements }, { rules }] = await Promise.all([
+  const [{ statements }, { rules }, { categories }] = await Promise.all([
     get<{ statements: Array<{ id: number; filename: string; currency: Currency; sha256: string; transaction_count: number; closing_balance: string | null; closing_balance_on: string | null; imported_at: string }> }>("/statements", token),
     get<{ rules: Array<{ merchant_key: string; income: boolean; category: MerchantRule["category"] }> }>("/rules", token),
+    // The person's own categories; a server without them answers 404, which means none.
+    get<{ categories: string[] }>("/categories", token).catch((error: unknown) => {
+      if (error instanceof AccountError && error.code === "unknown") return { categories: [] as string[] };
+      throw error;
+    }),
   ]);
   const transactions: WebData["transactions"] = [];
   let afterId = 0;
@@ -52,6 +57,7 @@ export async function fetchWebData(token: string): Promise<WebData & { version: 
       closingBalanceCents: s.closing_balance === null ? null : decimalToCents(s.closing_balance), closingBalanceOn: s.closing_balance_on, importedAt: s.imported_at })),
     transactions,
     rules: rules.map((r) => ({ merchantKey: r.merchant_key, income: r.income, category: r.category })),
+    categories: Array.isArray(categories) ? categories.filter((name): name is string => typeof name === "string") : [],
   };
 }
 

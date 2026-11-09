@@ -1,0 +1,92 @@
+<% content_for :title, t("billie.categories.title") %>
+<% ai_service_name = Finance::AiCategorizer.service_name if @ai_available %>
+<div class="bw-page-heading">
+  <div>
+    <span class="bw-eyebrow"><%= t("billie.categories.eyebrow") %></span>
+    <h1><%= t("billie.categories.title") %></h1>
+    <p><%= t("billie.categories.intro") %></p>
+  </div>
+</div>
+
+<div class="bw-two-column bw-section-gap">
+  <section class="bw-panel" aria-labelledby="ai-heading">
+    <div class="bw-panel-heading"><div><span class="bw-eyebrow"><%= t("billie.categories.ai_eyebrow") %></span><h2 id="ai-heading"><%= t("billie.categories.ai_title") %></h2></div><%= finance_icon "insights" %></div>
+    <p><%= t("billie.categories.ai_body", count: @uncategorized_count) %></p>
+    <% if @ai_available %>
+      <%= form_with url: ai_categorize_finance_categories_path, data: {turbo: false}, class: "bw-form bw-ai-form" do |form| %>
+        <%= hidden_field_tag :name, @selected, id: nil if @selected %>
+        <label class="bw-checkbox-inline"><%= form.check_box :consent, {required: true}, "1", "0" %><span><%= t("billie.categories.ai_consent", service: ai_service_name, max: Finance::AiCategorizer::MAX_ITEMS) %></span></label>
+        <%= form.submit t("billie.categories.ai_button"), class: "bw-button bw-button-dark bw-full-width", disabled: @uncategorized_count.zero? %>
+      <% end %>
+      <p class="bw-caption"><%= t("billie.categories.ai_note") %></p>
+    <% else %>
+      <p class="bw-caption bw-ai-unavailable"><%= t("billie.categories.ai_unavailable") %></p>
+    <% end %>
+  </section>
+
+  <section class="bw-panel" aria-labelledby="custom-heading">
+    <div class="bw-panel-heading"><div><span class="bw-eyebrow"><%= t("billie.categories.custom_eyebrow") %></span><h2 id="custom-heading"><%= t("billie.categories.custom_title") %></h2></div><%= finance_icon "transactions" %></div>
+    <p><%= t("billie.categories.custom_body", count: Finance::CustomCategory::MAX_PER_USER) %></p>
+    <%= form_with url: finance_categories_path, scope: :category, data: {turbo: false}, class: "bw-form bw-cat-add" do |form| %>
+      <div class="bw-field"><%= form.label :name, t("billie.categories.new_name") %><%= form.text_field :name, required: true, maxlength: Finance::CustomCategory::MAX_LENGTH, placeholder: t("billie.categories.new_placeholder") %></div>
+      <%= form.submit t("billie.categories.add"), class: "bw-button bw-button-dark" %>
+    <% end %>
+  </section>
+</div>
+
+<section class="bw-panel bw-panel-flush bw-section-gap" aria-labelledby="all-heading">
+  <div class="bw-panel-heading"><div><h2 id="all-heading"><%= t("billie.categories.all_title") %></h2><p><%= t("billie.categories.all_body") %></p></div></div>
+  <div class="bw-table-scroll"><table class="bw-table">
+    <thead><tr>
+      <th scope="col"><%= t("billie.categories.col_category") %></th>
+      <th scope="col" class="bw-text-right"><%= t("billie.categories.col_count") %></th>
+      <th scope="col" class="bw-text-right"><%= t("billie.categories.col_spent") %></th>
+      <th scope="col" class="bw-text-right"><%= t("billie.categories.col_received") %></th>
+      <th scope="col" class="bw-text-right"><%= t("billie.categories.col_share") %></th>
+      <th scope="col"><%= t("billie.categories.col_last") %></th>
+      <th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th>
+    </tr></thead>
+    <tbody>
+      <% @category_rows.each do |row| %>
+        <tr class="<%= 'is-selected' if row[:name] == @selected %>">
+          <td><span class="bw-category"><%= finance_label(row[:name]) %></span><% if row[:custom] %> <small class="bw-cat-kind"><%= t("billie.categories.custom_label") %></small><% end %></td>
+          <td class="bw-text-right"><%= number_with_delimiter(row[:count]) %></td>
+          <td class="bw-text-right bw-nowrap"><%= finance_money(row[:spent], @profile.currency) %></td>
+          <td class="bw-text-right bw-nowrap"><%= finance_money(row[:received], @profile.currency) %></td>
+          <td class="bw-text-right"><%= row[:share] ? number_to_percentage(row[:share] * 100, precision: 0) : "—" %></td>
+          <td class="bw-nowrap"><%= finance_date(row[:last_on]) %></td>
+          <td class="bw-text-right"><%= link_to t("billie.categories.view"), finance_categories_path(name: row[:name], anchor: "detail"), class: "bw-table-link", "aria-label": t("billie.categories.view_label", name: finance_label(row[:name])) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table></div>
+  <p class="bw-table-footnote"><%= t("billie.categories.footnote") %></p>
+</section>
+
+<% if @selected %>
+  <section class="bw-panel bw-panel-flush bw-section-gap" id="detail" aria-labelledby="detail-heading">
+    <div class="bw-panel-heading">
+      <div>
+        <span class="bw-eyebrow"><%= t("billie.categories.detail_eyebrow") %></span>
+        <h2 id="detail-heading"><%= finance_label(@selected) %></h2>
+        <p><%= t("billie.categories.detail_summary", count: @selected_row[:count], spent: finance_money(@selected_row[:spent], @profile.currency), received: finance_money(@selected_row[:received], @profile.currency)) %></p>
+      </div>
+      <%= link_to t("billie.categories.open_in_transactions"), finance_transactions_path(category: @selected), class: "bw-button bw-button-outline" %>
+    </div>
+    <% if (custom = @selected_row[:custom]) %>
+      <div class="bw-cat-manage">
+        <%= form_with url: finance_category_path(custom), method: :patch, scope: :category, data: {turbo: false}, class: "bw-form bw-cat-add" do |form| %>
+          <div class="bw-field"><%= form.label :name, t("billie.categories.rename_label"), for: "rename-#{custom.id}" %><%= form.text_field :name, value: custom.name, id: "rename-#{custom.id}", required: true, maxlength: Finance::CustomCategory::MAX_LENGTH %></div>
+          <%= form.submit t("billie.categories.rename"), class: "bw-button bw-button-outline" %>
+        <% end %>
+        <%= button_to t("billie.categories.delete"), finance_category_path(custom), method: :delete, form: {data: {turbo: false, confirm: t("billie.categories.delete_confirm", name: custom.name, count: @selected_row[:count])}}, class: "bw-button bw-button-danger-outline" %>
+      </div>
+    <% end %>
+    <% if @selected_transactions.any? %>
+      <%= render "finance/shared/transactions_table", transactions: @selected_transactions, currency: @profile.currency %>
+      <% if @selected_row[:count] > @selected_transactions.length %><p class="bw-table-footnote"><%= t("billie.categories.detail_more", shown: @selected_transactions.length, total: @selected_row[:count]) %></p><% end %>
+    <% else %>
+      <div class="bw-empty-state"><h3><%= t("billie.categories.detail_empty_title") %></h3><p><%= t("billie.categories.detail_empty_body") %></p></div>
+    <% end %>
+  </section>
+<% end %>

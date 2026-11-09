@@ -3,7 +3,7 @@ module Finance
     before_action :load_transaction, only: [:edit, :update]
 
     def index
-      @categories = Transaction::CATEGORIES
+      @categories = CustomCategory.names_for(current_user)
       @filters = params.permit(:search, :category, :kind, :start_date, :end_date).to_h
       scope = current_user.finance_transactions.includes(:statement).order(booked_on: :desc, id: :desc)
       if params[:start_date].present? || params[:end_date].present?
@@ -44,11 +44,11 @@ module Finance
     end
 
     def edit
-      @categories = Transaction::CATEGORIES
+      @categories = CustomCategory.names_for(current_user)
     end
 
     def update
-      @categories = Transaction::CATEGORIES
+      @categories = CustomCategory.names_for(current_user)
       if @transaction.update(params.require(:finance_transaction).permit(:description, :category, :tax_review, :excluded))
         @profile.touch
         redirect_to finance_transactions_path, notice: update_notice

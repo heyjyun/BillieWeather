@@ -3,6 +3,7 @@ import { AccountProvider, useAccount } from "./hooks/useAccount";
 import { FinanceProvider, useFinance } from "./hooks/useFinance";
 import { I18nProvider, useI18n } from "./i18n";
 import { Dashboard } from "./pages/Dashboard";
+import { Categories } from "./pages/Categories";
 import { Data } from "./pages/Data";
 import { Import } from "./pages/Import";
 import { Login } from "./pages/Login";
@@ -11,11 +12,12 @@ import { Settings } from "./pages/Settings";
 import { Transactions } from "./pages/Transactions";
 import { SyncStatus } from "./components/SyncStatus";
 
-export type Page = "dashboard" | "transactions" | "import" | "reports" | "data" | "settings";
+export type Page = "dashboard" | "transactions" | "categories" | "import" | "reports" | "data" | "settings";
 
 const NAV: Array<{ page: Page; icon: string }> = [
   { page: "dashboard", icon: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z" },
   { page: "transactions", icon: "M3 7h16 M15 3l4 4-4 4 M21 17H5 M9 13l-4 4 4 4" },
+  { page: "categories", icon: "M3 3h8l10 10-8 8L3 11z M7.5 7.5h.01" },
   { page: "import", icon: "M12 16V3 M7 8l5-5 5 5 M3 15v5a1 1 0 001 1h16a1 1 0 001-1v-5" },
   { page: "reports", icon: "M14 2H5v20h14V7z M14 2v6h5 M8 12h8 M8 16h8" },
   { page: "data", icon: "M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6 M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" },
@@ -60,6 +62,7 @@ function Shell() {
         <SyncStatus />
         {page === "dashboard" && <Dashboard go={go} />}
         {page === "transactions" && <Transactions />}
+        {page === "categories" && <Categories />}
         {page === "import" && <Import />}
         {page === "reports" && <Reports />}
         {page === "data" && <Data focus={focus} />}

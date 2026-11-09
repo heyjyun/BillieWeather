@@ -2,6 +2,7 @@
 // app/models/finance/*.rb. Money is always integer minor units (cents) so that
 // totals never suffer from floating-point rounding.
 
+/** The built-in categories, the same on the website and in every app. */
 export const CATEGORIES = [
   "Income",
   "Housing",
@@ -14,7 +15,12 @@ export const CATEGORIES = [
   "Transfers",
   "Uncategorized",
 ] as const;
-export type Category = (typeof CATEGORIES)[number];
+export type BuiltInCategory = (typeof CATEGORIES)[number];
+/**
+ * A built-in category or one the person created (stored by name, like Rails'
+ * Finance::CustomCategory). `string & {}` keeps editor suggestions for the built-in names.
+ */
+export type Category = BuiltInCategory | (string & {});
 
 export const CURRENCIES = ["USD", "CAD", "EUR", "GBP", "AUD", "NZD", "SGD", "HKD", "CNY", "JPY"] as const;
 export type Currency = (typeof CURRENCIES)[number];

@@ -1,0 +1,73 @@
+es:
+  billie:
+    categories:
+      nav: Categorías
+      title: Categorías
+      eyebrow: ORGANIZA TUS GASTOS
+      intro: Mira qué contiene cada categoría, añade categorías propias y deja que la IA ordene las transacciones que aún no tienen una.
+      ai_eyebrow: CON UN CLIC
+      ai_title: Categorizar con IA
+      ai_body:
+        one: "%{count} transacción está sin categoría. La IA puede sugerirle una; las categorías que elegiste nunca se cambian."
+        other: "%{count} transacciones están sin categoría. La IA puede sugerir una para cada una; las categorías que elegiste nunca se cambian."
+      ai_consent: "Acepto enviar a %{service}, para hasta %{max} comercios: la descripción de la transacción sin números (de tarjeta, referencia y teléfono), si el dinero entró o salió, y los nombres de mis categorías. No se envían importes, fechas, saldos, datos de cuentas ni correo electrónico, y el servicio no guarda la solicitud."
+      ai_button: Categorizar con IA
+      ai_note: Solo se actualizan las transacciones sin categoría. Revisa los resultados abajo; lo que cambies se recuerda para ese comercio.
+      ai_unavailable: La categorización con IA aún no está conectada. Puedes elegir las categorías tú mismo.
+      custom_eyebrow: A TU MANERA
+      custom_title: Tus propias categorías
+      custom_body: "Añade hasta %{count} categorías además de las integradas. Aparecen en todos los lugares donde se elige una categoría y en las sugerencias de la IA."
+      new_name: Nueva categoría
+      new_placeholder: p. ej., Cuidado infantil, Mascotas, Regalos
+      add: Añadir categoría
+      all_title: Todas las categorías
+      all_body: Todas las transacciones importadas, de todas las fechas. Las excluidas se cuentan pero no se suman a los importes.
+      col_category: Categoría
+      col_count: Transacciones
+      col_spent: Salidas
+      col_received: Entradas
+      col_share: Parte del gasto
+      col_last: Más reciente
+      custom_label: Propia
+      view: Detalles
+      view_label: Ver detalles de %{name}
+      footnote: Las transferencias no forman parte del gasto.
+      detail_eyebrow: DETALLES DE LA CATEGORÍA
+      detail_summary:
+        one: "%{count} transacción · %{spent} de salidas · %{received} de entradas"
+        other: "%{count} transacciones · %{spent} de salidas · %{received} de entradas"
+      open_in_transactions: Abrir en Transacciones
+      rename_label: Nombre de la categoría
+      rename: Cambiar nombre
+      delete: Eliminar categoría
+      delete_confirm: ¿Eliminar «%{name}»? Sus %{count} transacción(es) quedarán sin categoría y se olvidarán sus reglas recordadas.
+      detail_more: Se muestran las %{shown} más recientes de %{total}. Abre Transacciones para verlas todas.
+      detail_empty_title: Todavía no hay nada en esta categoría
+      detail_empty_body: Elige esta categoría en una transacción o ejecuta la categorización con IA.
+      created: Categoría «%{name}» añadida.
+      renamed: "«%{old}» ahora se llama «%{name}»."
+      deleted:
+        one: Categoría «%{name}» eliminada; %{count} transacción quedó sin categoría.
+        other: Categoría «%{name}» eliminada; %{count} transacciones quedaron sin categoría.
+      ai_done:
+        one: La IA revisó %{sent} comercio(s) y categorizó %{count} transacción.
+        other: La IA revisó %{sent} comercio(s) y categorizó %{count} transacciones.
+      ai_remaining:
+        one: Queda %{count} comercio más; vuelve a ejecutarla para continuar.
+        other: Quedan %{count} comercios más; vuelve a ejecutarla para continuar.
+      errors:
+        blank: Escribe un nombre de categoría.
+        too_long: Los nombres de categoría pueden tener hasta %{count} caracteres.
+        reserved: Esa ya es una categoría integrada.
+        taken: Ya tienes una categoría con ese nombre.
+        too_many: Puedes tener hasta %{count} categorías propias.
+      ai_errors:
+        consent_required: Marca la casilla para aceptar lo que se envía antes de usar la IA.
+        not_configured: La categorización con IA aún no está conectada.
+        nothing_to_do: No hay transacciones sin categoría con una descripción utilizable.
+        wait: La categorización con IA acaba de ejecutarse. Espera unos segundos y vuelve a intentarlo.
+        auth_failed: El servicio de IA rechazó las credenciales del servidor. No se cambió nada.
+        quota: El servicio de IA no tiene crédito o está ocupado. No se cambió nada.
+        failed: El servicio de IA no pudo categorizar estas transacciones. No se cambió nada; inténtalo más tarde.
+        unavailable: No se pudo conectar con el servicio de IA. No se cambió nada; inténtalo más tarde.
+        invalid_result: El servicio de IA devolvió una respuesta inesperada. No se cambió nada; vuelve a intentarlo.

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { PageHeading } from "../components/common";
 import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
-import { LanguageSelect, useI18n } from "../i18n";
+import { categoryLabel, LanguageSelect, useI18n } from "../i18n";
 import { websiteUrl } from "../services/account";
 import { openExternal } from "../services/session";
 
@@ -71,7 +71,7 @@ export function Settings() {
             {rules.map((rule) => (
               <li key={`${rule.merchantKey}-${rule.income}`}>
                 <strong>{rule.merchantKey}</strong>
-                <small>{rule.income ? x.moneyIn : x.moneyOut} → {m.categories[rule.category]}</small>
+                <small>{rule.income ? x.moneyIn : x.moneyOut} → {categoryLabel(m, rule.category)}</small>
                 <button className="bw-link-button" onClick={async () => { await store.deleteRule(rule); await refresh(); }}>{x.forget}</button>
               </li>
             ))}

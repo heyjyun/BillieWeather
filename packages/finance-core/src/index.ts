@@ -1,3 +1,4 @@
+export * from "./categories";
 export * from "./categorizer";
 export * from "./csv";
 export * from "./importer";

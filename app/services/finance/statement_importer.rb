@@ -260,7 +260,7 @@ module Finance
       end
 
       category = if @columns[:category] && value(fields, :category).present?
-        Transaction::CATEGORIES.find { |candidate| candidate.casecmp?(value(fields, :category).strip) } || "Uncategorized"
+        CustomCategory.lookup(@user, value(fields, :category)) || "Uncategorized"
       else
         @categorizer.categorize(description, amount)
       end

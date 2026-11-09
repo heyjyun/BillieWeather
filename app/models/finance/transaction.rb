@@ -13,12 +13,19 @@ module Finance
     validates :booked_on, :description, presence: true
     validates :description, length: {maximum: 500}
     validates :amount, numericality: {greater_than: -10**13, less_than: 10**13}
-    validates :category, inclusion: {in: CATEGORIES}
+    validate :category_is_known
     validates :tax_review, :excluded, inclusion: {in: [true, false]}
     validate :same_owner_as_statement
     validate :amount_has_cent_precision
 
     private
+
+    # A built-in category or one of this person's own (Finance::CustomCategory).
+    def category_is_known
+      return if CATEGORIES.include?(category)
+      return if category.present? && user_id && CustomCategory.where(user_id: user_id, name: category).exists?
+      errors.add(:category, :inclusion)
+    end
 
     def amount_has_cent_precision
       value = BigDecimal(amount_before_type_cast.to_s, exception: false)

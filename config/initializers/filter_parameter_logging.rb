@@ -6,5 +6,5 @@
 Rails.application.config.filter_parameters += [
   :passw, :email, :secret, :token, :_key, :crypt, :salt, :certificate, :otp, :ssn, :cvv, :cvc,
   :file, :description, :current_balance, :content, :rows, :amount, :bank_account, :account_number, :account_last4,
-  :code, :state, :credential, :google_uid
+  :code, :state, :credential, :google_uid, :items
 ]

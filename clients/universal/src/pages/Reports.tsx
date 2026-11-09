@@ -24,7 +24,7 @@ export function Reports() {
   }
   async function exportExcel() {
     const snapshot = buildSnapshot({ transactions, statements, period, currency: cur });
-    const labels = { ...m.excel, disclaimer: m.footer, categoryNames: m.categories };
+    const labels = { ...m.excel, disclaimer: m.footer, categoryNames: m.categories as Record<string, string> };
     const bytes = excelReport({ snapshot, rows, period, currency: cur, generatedOn: localToday(), labels });
     const saved = await saveFile(reportFilename(period, localToday(), "xlsx"), bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     setStatus(saved ? x.xlsxSaved : x.cancelled);

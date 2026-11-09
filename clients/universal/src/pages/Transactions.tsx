@@ -1,13 +1,14 @@
-import { CATEGORIES, type Category, type Transaction } from "@billie/shared-types";
-import { merchantKey } from "@billie/finance-core";
+import type { Category, Transaction } from "@billie/shared-types";
+import { allCategories, merchantKey } from "@billie/finance-core";
 import { useMemo, useState } from "react";
-import { Empty, Money, PageHeading } from "../components/common";
+import { CategorySelect, Empty, Money, PageHeading } from "../components/common";
 import { useFinance } from "../hooks/useFinance";
-import { useI18n } from "../i18n";
+import { categoryLabel, useI18n } from "../i18n";
 
 export function Transactions() {
   const { m, t } = useI18n();
-  const { transactions, currency, store, refresh } = useFinance();
+  const { transactions, customCategories, currency, store, refresh } = useFinance();
+  const categories = useMemo(() => allCategories(customCategories), [customCategories]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Category | "all">("all");
   const [remember, setRemember] = useState(true);
@@ -25,7 +26,7 @@ export function Transactions() {
     await refresh();
     const merchant = merchantKey(transaction.description);
     if (remember && merchant && category !== "Uncategorized") {
-      const vars = { merchant, category: m.categories[category], count: others };
+      const vars = { merchant, category: categoryLabel(m, category), count: others };
       setStatus(others ? t("transactions.savedRuleOthers", vars) : t("transactions.savedRule", vars));
     } else {
       setStatus(x.saved);
@@ -48,7 +49,7 @@ export function Transactions() {
         <label className="bw-field"><span>{x.category}</span>
           <select value={filter} onChange={(e) => setFilter(e.target.value as Category | "all")}>
             <option value="all">{x.allCategories}</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{m.categories[c]}</option>)}
+            {categories.map((c) => <option key={c} value={c}>{categoryLabel(m, c)}</option>)}
           </select>
         </label>
         <label className="bw-check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> {x.remember}</label>
@@ -62,9 +63,7 @@ export function Transactions() {
               <strong>{transaction.description}</strong>
               <small>{transaction.bookedOn}{transaction.taxReview ? ` · ${x.taxReview}` : ""}{transaction.excluded ? ` · ${x.excluded}` : ""}</small>
             </div>
-            <select aria-label={t("transactions.categoryFor", { description: transaction.description })} value={transaction.category} onChange={(e) => change(transaction, e.target.value as Category)}>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{m.categories[c]}</option>)}
-            </select>
+            <CategorySelect label={t("transactions.categoryFor", { description: transaction.description })} value={transaction.category} categories={categories} onChange={(category) => change(transaction, category)} />
             <Money cents={transaction.amountCents} currency={cur} signed />
             <button type="button" className="bw-link-button" onClick={() => toggleExcluded(transaction)}>{transaction.excluded ? x.include : x.exclude}</button>
           </li>

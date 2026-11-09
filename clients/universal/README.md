@@ -85,6 +85,7 @@ not set up yet.
 - **Network: account only**:
   - The app signs in to the BillieWeather Rails API (`/api/client/v1`, see `app/controllers/client_api/v1`). After that it only sends language, nickname and time-zone changes.
   - **Statements and transactions leave the device only when the person syncs a database to the cloud** (see *Managing data*). `src/services/account.ts` may not import any financial code (enforced by `test/privacy.test.ts`).
+  - **Categorize with AI** (Categories page) is the one other exception, and only after the person confirms a consent panel that lists exactly what is sent: per merchant, the description cleaned on the device (`cleanForAi`: no digits, no email addresses), "in"/"out" and a short key, plus the names of their own categories. It goes from `src/services/aiCategorize.ts` to `POST /api/client/v1/finance/categorize` on the BillieWeather server, which holds the OpenAI key; the app never contacts OpenAI and holds no key. Amounts, dates, balances and statement names are never sent (the request body is pinned by `test/privacy.test.ts`).
   - The WebView Content Security Policy allows exactly one origin besides the local IPC bridge: the BillieWeather server chosen at build time.
 - **Accounts and preferences**:
   - Server side (existing Neon `users` columns, no migration): email, nickname, language, time zone, region, sign-up date and badges.
@@ -156,7 +157,13 @@ Differences found while porting are encoded in the fixtures instead of being gue
 When you change categorizer rules in Rails, regenerate the fixtures and update
 `packages/finance-core/src/categorizer.ts`.
 
-## Optional AI (Phase 5, not built yet)
+## Custom categories
+
+Each local database keeps its own custom categories (`custom_categories`, migration `0003`, which also rebuilds `transactions` and `merchant_rules` without the old fixed category list while keeping every row). The same limits as the website apply (`packages/finance-core/src/categories.ts`). Syncs and website downloads bring custom categories along (`GET /api/client/v1/finance/categories`); a name that can't be added (limit reached) is filed as Uncategorized.
+
+## Optional AI analysis (Phase 5, not built yet)
+
+AI categorization is built (see *Local-first privacy*). AI analysis of aggregates is not yet.
 
 The intended flow is local app → authenticated Rails API on Render → OpenAI. Requirements before
 any code ships:

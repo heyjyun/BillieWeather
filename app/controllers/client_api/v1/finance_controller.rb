@@ -8,7 +8,7 @@ module ClientApi
     class FinanceController < BaseController
       PAGE_SIZE = 2_000
       MAX_UPLOAD_ROWS = 50_000
-      UPLOAD_CATEGORIES = Finance::Transaction::CATEGORIES
+      MAX_CATEGORIZE_ITEMS = Finance::AiCategorizer::MAX_ITEMS
 
       before_action :authenticate_client!
       rate_limit to: 60, within: 1.minute, by: -> { request.remote_ip },
@@ -20,11 +20,13 @@ module ClientApi
         statements = Finance::Statement.where(user_id: current_user.id)
         transactions = Finance::Transaction.where(user_id: current_user.id)
         rules = Finance::MerchantRule.where(user_id: current_user.id)
+        categories = Finance::CustomCategory.where(user_id: current_user.id)
         parts = [
           statements.count, statements.maximum(:updated_at)&.utc&.iso8601(6),
           transactions.count, transactions.maximum(:updated_at)&.utc&.iso8601(6),
           rules.count, rules.maximum(:updated_at)&.utc&.iso8601(6),
-          profile&.currency
+          profile&.currency,
+          categories.count, categories.maximum(:updated_at)&.utc&.iso8601(6)
         ]
         render json: {
           currency: profile&.currency,
@@ -75,6 +77,9 @@ module ClientApi
           if (existing = Finance::Statement.find_by(user_id: current_user.id, sha256: sha256))
             next {id: existing.id, created: false, status: :ok}
           end
+          # Categories the person made in the app arrive as names; the cloud adds them as its own custom categories.
+          known = {}
+          parsed.each { |row| row[:category] = (known[row[:category]] ||= Finance::CustomCategory.ensure_for!(current_user, row[:category])) }
           statement = Finance::Statement.create!(user: current_user, filename: payload[:filename].to_s.first(255), currency: currency,
             sha256: sha256, status: "imported", transaction_count: parsed.length, closing_balance: closing,
             closing_balance_on: closing && parse_date(payload[:closing_balance_on]), balance_observed_on: parsed.map { |r| r[:booked_on] }.max)
@@ -136,6 +141,37 @@ module ClientApi
           .map { |rule| {merchant_key: rule.merchant_key, income: rule.income, category: rule.category} }}
       end
 
+      # The person's own categories (the built-in ones are the same everywhere and not listed).
+      def categories
+        render json: {categories: Finance::CustomCategory.where(user_id: current_user.id).order(Arel.sql("lower(name)")).pluck(:name)}
+      end
+
+      # "Categorize with AI" from an app. The app sends only what its consent screen shows: for
+      # each merchant a key, a cleaned description and the direction, plus the names of its own
+      # categories. Nothing is stored here; the answer maps keys to category names.
+      def categorize
+        return render json: {error: "consent_required"}, status: :unprocessable_entity unless params[:consent] == true
+        return render json: {error: "not_configured"}, status: :service_unavailable unless Finance::AiCategorizer.available?
+        items = Array(params[:items])
+        custom = Array(params[:categories])
+        if items.empty? || items.length > MAX_CATEGORIZE_ITEMS || custom.length > Finance::CustomCategory::MAX_PER_USER ||
+            !custom.all? { |name| name.is_a?(String) && name.length <= Finance::CustomCategory::MAX_LENGTH && name == Finance::CustomCategory.normalize_name(name) && name.present? }
+          return render json: {error: "invalid"}, status: :unprocessable_entity
+        end
+        cleaned = items.map do |item|
+          next nil unless item.respond_to?(:[]) && item[:key].is_a?(String) && item[:key].match?(/\A[\w-]{1,20}\z/) && %w[in out].include?(item[:direction])
+          text = Finance::AiCategorizer.clean_text(item[:description].to_s.first(200))
+          text && {key: item[:key], text: text, direction: item[:direction]}
+        end
+        return render json: {error: "invalid"}, status: :unprocessable_entity if cleaned.any?(&:nil?) || cleaned.map { |item| item[:key] }.uniq.length != cleaned.length
+        Finance::AiCategorizer.claim_run!(current_user)
+        suggestions = Finance::AiCategorizer.suggest(items: cleaned, categories: custom - Finance::Transaction::CATEGORIES)
+        render json: {assignments: suggestions.map { |key, category| {key: key, category: category} }}
+      rescue Finance::AiCategorizer::Error => error
+        status = {wait: :too_many_requests, not_configured: :service_unavailable, quota: :service_unavailable}.fetch(error.code, :bad_gateway)
+        render json: {error: error.code.to_s}, status: status
+      end
+
       private
 
       def profile
@@ -159,8 +195,9 @@ module ClientApi
         description = row[:description].to_s
         return nil if amount.nil? || !amount.finite? || amount != amount.round(2) || amount.abs >= 10**13
         return nil if booked_on.nil? || description.blank? || description.length > 500
-        return nil unless UPLOAD_CATEGORIES.include?(row[:category].to_s)
-        {booked_on: booked_on, description: description, amount: amount, category: row[:category].to_s,
+        category = Finance::CustomCategory.normalize_name(row[:category])
+        return nil if category.empty? || category.length > Finance::CustomCategory::MAX_LENGTH
+        {booked_on: booked_on, description: description, amount: amount, category: category,
          tax_review: row[:tax_review] == true, excluded: row[:excluded] == true}
       end
 

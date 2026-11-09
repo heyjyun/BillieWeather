@@ -738,3 +738,11 @@ body.billie-public { min-height: 100vh; min-height: 100dvh; display: flex; flex-
 .bw-usage-legend small { opacity: 0.7; }
 .bw-local-db .bw-tag { justify-self: start; display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: #eef0eb; color: #66726b; }
 .bw-message-warn { margin: 0; padding: 8px 10px; border-radius: 8px; background: #fff6e0; color: #6b4a00; font-size: 0.85rem; }
+
+/* Categories page */
+.bw-cat-add { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.bw-cat-add .bw-field { flex: 1 1 220px; margin: 0; }
+.bw-cat-manage { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding: 0 24px 20px; }
+.bw-cat-manage form:first-child { flex: 1 1 320px; }
+.bw-cat-kind { color: #6c746f; font-size: 10px; text-transform: uppercase; letter-spacing: .8px; }
+.bw-table tr.is-selected td { background: #f3f6f2; }

@@ -32,7 +32,9 @@ describe("data isolation", () => {
   const UPLOAD = join(ROOT, "src/services/cloudUpload.ts");
   // localReport.ts: one-way metadata about local databases (names, sizes, counts) for the website's cards.
   const REPORT = join(ROOT, "src/services/localReport.ts");
-  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT];
+  // aiCategorize.ts: "Categorize with AI", after the consent panel: cleaned merchant text, direction and category names only.
+  const AI = join(ROOT, "src/services/aiCategorize.ts");
+  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI];
 
   it.each([
     ["fetch(", /\bfetch\s*\(/],
@@ -102,6 +104,27 @@ describe("data isolation", () => {
     expect(readFileSync(join(ROOT, "src/services/reporting.ts"), "utf8")).not.toMatch(/\bfetch\s*\(/);
   });
 
+  it("AI categorization sends only cleaned merchant text, direction and category names, to the BillieWeather server", () => {
+    const source = readFileSync(AI, "utf8");
+    expect(source.match(/^import .*$/gm)).toEqual(['import { API_ORIGIN, AccountError } from "./account";']);
+    expect(source).not.toMatch(/@billie\/|\bFinanceStore\b|amountCents|bookedOn|filename|sha256|merchantKey|\bStatement\b/);
+    expect(source).toMatch(/const ENDPOINT = `\$\{API_ORIGIN\}\/api\/client\/v1\/finance\/categorize`/);
+    expect([...source.matchAll(/method:\s*"(\w+)"/g)].map((match) => match[1])).toEqual(["POST"]);
+    expect(source.match(/fetch\(/g)?.length).toBe(1);
+    // The request body, field by field.
+    const body = /body: JSON\.stringify\(\{([\s\S]*?)\}\),\n\s*credentials/.exec(source)![1];
+    expect([...body.matchAll(/(\w+):/g)].map((match) => match[1])).toEqual(["consent", "categories", "items", "key", "description", "direction"]);
+    expect(body).toMatch(/description: item\.text/);
+    // Only the Categories page calls it, with text already cleaned on the device.
+    const callers = all.filter((file) => file !== AI && /\brequestAiCategories\b/.test(readFileSync(file, "utf8")));
+    expect(callers).toEqual([join(ROOT, "src/pages/Categories.tsx")]);
+    expect(readFileSync(join(ROOT, "src/pages/Categories.tsx"), "utf8")).toMatch(/store\.aiCandidates\(\)/);
+  });
+
+  it("the app never talks to OpenAI directly", () => {
+    expect(all.filter((file) => /openai\.com/i.test(readFileSync(file, "utf8")))).toEqual([]);
+  });
+
   it("only the reviewed services know the server API paths", () => {
     expect(all.filter((file) => !NETWORK_FILES.includes(file) && /api\/client\/v1/.test(readFileSync(file, "utf8")))).toEqual([]);
   });
@@ -112,7 +135,7 @@ describe("data isolation", () => {
   });
 
   it("no cloud credentials or Neon/Render endpoints", () => {
-    const offenders = all.filter((file) => /DATABASE_URL|neon\.tech|postgres(ql)?:\/\/|OPENAI|sk-[A-Za-z0-9]{10,}|onrender\.com|api[_-]?key/i.test(readFileSync(file, "utf8")));
+    const offenders = all.filter((file) => /DATABASE_URL|neon\.tech|postgres(ql)?:\/\/|OPENAI_|sk-[A-Za-z0-9]{10,}|onrender\.com|api[_-]?key/i.test(readFileSync(file, "utf8")));
     expect(offenders).toEqual([]);
   });
 

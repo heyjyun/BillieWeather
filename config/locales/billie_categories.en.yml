@@ -1,0 +1,73 @@
+en:
+  billie:
+    categories:
+      nav: Categories
+      title: Categories
+      eyebrow: ORGANIZE YOUR SPENDING
+      intro: See what each category holds, add categories of your own, and let AI sort the transactions that still need one.
+      ai_eyebrow: ONE CLICK
+      ai_title: Categorize with AI
+      ai_body:
+        one: "%{count} transaction is Uncategorized. AI can suggest a category for it; categories you chose are never changed."
+        other: "%{count} transactions are Uncategorized. AI can suggest a category for each; categories you chose are never changed."
+      ai_consent: "I agree to send %{service}, for up to %{max} merchants: the transaction description with numbers removed (card, reference and phone numbers), whether money came in or went out, and my category names. No amounts, dates, balances, account details or email are sent, and the request is not stored by the service."
+      ai_button: Categorize with AI
+      ai_note: Only Uncategorized transactions are updated. Review the results below; anything you change is remembered for that merchant.
+      ai_unavailable: AI categorization is not connected yet. You can still choose categories yourself.
+      custom_eyebrow: MAKE IT YOURS
+      custom_title: Your own categories
+      custom_body: "Add up to %{count} categories alongside the built-in ones. They appear everywhere a category can be chosen and in AI suggestions."
+      new_name: New category
+      new_placeholder: e.g. Childcare, Pets, Gifts
+      add: Add category
+      all_title: All categories
+      all_body: Every imported transaction, all dates. Excluded transactions are counted but not added to the amounts.
+      col_category: Category
+      col_count: Transactions
+      col_spent: Money out
+      col_received: Money in
+      col_share: Share of spending
+      col_last: Latest
+      custom_label: Custom
+      view: Details
+      view_label: Show details for %{name}
+      footnote: Transfers are not part of the share of spending.
+      detail_eyebrow: CATEGORY DETAILS
+      detail_summary:
+        one: "%{count} transaction · %{spent} out · %{received} in"
+        other: "%{count} transactions · %{spent} out · %{received} in"
+      open_in_transactions: Open in Transactions
+      rename_label: Category name
+      rename: Rename
+      delete: Delete category
+      delete_confirm: Delete “%{name}”? Its %{count} transaction(s) become Uncategorized and its remembered rules are forgotten.
+      detail_more: Showing the latest %{shown} of %{total}. Open in Transactions to see them all.
+      detail_empty_title: Nothing in this category yet
+      detail_empty_body: Choose this category on a transaction, or run AI categorization.
+      created: Category “%{name}” added.
+      renamed: Renamed “%{old}” to “%{name}”.
+      deleted:
+        one: Category “%{name}” deleted; %{count} transaction is now Uncategorized.
+        other: Category “%{name}” deleted; %{count} transactions are now Uncategorized.
+      ai_done:
+        one: AI looked at %{sent} merchant(s) and categorized %{count} transaction.
+        other: AI looked at %{sent} merchant(s) and categorized %{count} transactions.
+      ai_remaining:
+        one: "%{count} more merchant is waiting; run it again to continue."
+        other: "%{count} more merchants are waiting; run it again to continue."
+      errors:
+        blank: Enter a category name.
+        too_long: Category names can be up to %{count} characters.
+        reserved: That is already a built-in category.
+        taken: You already have a category with that name.
+        too_many: You can have up to %{count} categories of your own.
+      ai_errors:
+        consent_required: Tick the box to agree to what is sent before using AI.
+        not_configured: AI categorization is not connected yet.
+        nothing_to_do: There are no Uncategorized transactions with a usable description.
+        wait: AI categorization just ran. Wait a few seconds and try again.
+        auth_failed: The AI service rejected the server's credentials. Nothing was changed.
+        quota: The AI service has no credit or is busy right now. Nothing was changed.
+        failed: The AI service could not categorize these transactions. Nothing was changed; try again later.
+        unavailable: The AI service could not be reached. Nothing was changed; try again later.
+        invalid_result: The AI service returned an unexpected answer. Nothing was changed; try again.

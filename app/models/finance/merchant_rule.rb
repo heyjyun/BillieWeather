@@ -8,7 +8,7 @@ module Finance
     belongs_to :user
 
     validates :merchant_key, presence: true, length: {maximum: 100}
-    validates :category, inclusion: {in: Transaction::CATEGORIES - ["Uncategorized"]}
+    validate :category_is_known
     validates :income, inclusion: {in: [true, false]}
 
     # Saves the rule and applies it to this account's other Uncategorized transactions
@@ -27,6 +27,14 @@ module Finance
         retry
       end
       Categorizer.apply_rule_to_uncategorized(user: user, key: key, income: income, category: category)
+    end
+
+    private
+
+    def category_is_known
+      known = (Transaction::CATEGORIES - ["Uncategorized"]).include?(category) ||
+        (category.present? && user_id && CustomCategory.where(user_id: user_id, name: category).exists?)
+      errors.add(:category, :inclusion) unless known
     end
   end
 end

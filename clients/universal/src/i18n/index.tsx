@@ -12,6 +12,11 @@ export const MESSAGES: Record<Locale, Messages> = { en, "zh-CN": zhCN, "zh-TW": 
 
 const STORAGE_KEY = "billie.locale";
 
+/** A category's name in the interface language: built-in names are translated, the person's own are shown as typed. */
+export function categoryLabel(m: Messages, name: string): string {
+  return Object.prototype.hasOwnProperty.call(m.categories, name) ? (m.categories as Record<string, string>)[name] : name;
+}
+
 export const isLocale = (value: unknown): value is Locale => typeof value === "string" && (LOCALES as readonly string[]).includes(value);
 
 /** Same rules as the Rails site: exact match, then Chinese script/region, then the base language. */

@@ -1,0 +1,73 @@
+zh-TW:
+  billie:
+    categories:
+      nav: 分類
+      title: 分類
+      eyebrow: 整理你的支出
+      intro: 查看每個分類包含哪些交易，新增你自己的分類，並讓 AI 整理仍未分類的交易。
+      ai_eyebrow: 一鍵完成
+      ai_title: AI 一鍵分類
+      ai_body:
+        one: "有 %{count} 筆交易未分類。AI 可以為它建議分類；你自己選擇的分類永遠不會被更改。"
+        other: "有 %{count} 筆交易未分類。AI 可以為每筆建議分類；你自己選擇的分類永遠不會被更改。"
+      ai_consent: "我同意向 %{service} 傳送最多 %{max} 個商家的以下資訊：去除數字（卡號、參考號碼和電話號碼）後的交易描述、資金是流入還是流出，以及我的分類名稱。不會傳送金額、日期、餘額、帳戶資訊或電子郵件，該服務也不會保存此請求。"
+      ai_button: AI 一鍵分類
+      ai_note: 只會更新未分類的交易。請在下方檢查結果；你對某個商家所做的修改會被記住。
+      ai_unavailable: AI 分類尚未連接。你仍然可以自己選擇分類。
+      custom_eyebrow: 依你的方式
+      custom_title: 自訂分類
+      custom_body: "除內建分類外，最多可新增 %{count} 個分類。它們會出現在所有可以選擇分類的地方，也會用於 AI 建議。"
+      new_name: 新分類
+      new_placeholder: 例如：育兒、寵物、禮物
+      add: 新增分類
+      all_title: 全部分類
+      all_body: 所有已匯入的交易，不限日期。已排除的交易會計入筆數，但不計入金額。
+      col_category: 分類
+      col_count: 交易筆數
+      col_spent: 支出
+      col_received: 收入
+      col_share: 支出占比
+      col_last: 最近一筆
+      custom_label: 自訂
+      view: 詳情
+      view_label: 查看 %{name} 的詳情
+      footnote: 轉帳不計入支出占比。
+      detail_eyebrow: 分類詳情
+      detail_summary:
+        one: "%{count} 筆交易 · 支出 %{spent} · 收入 %{received}"
+        other: "%{count} 筆交易 · 支出 %{spent} · 收入 %{received}"
+      open_in_transactions: 在交易頁中開啟
+      rename_label: 分類名稱
+      rename: 重新命名
+      delete: 刪除分類
+      delete_confirm: 刪除「%{name}」？其中的 %{count} 筆交易將變為未分類，相關的記住規則也會被刪除。
+      detail_more: 顯示最近 %{shown} 筆，共 %{total} 筆。在交易頁中開啟可查看全部。
+      detail_empty_title: 這個分類還沒有交易
+      detail_empty_body: 在交易上選擇這個分類，或執行 AI 分類。
+      created: 已新增分類「%{name}」。
+      renamed: 已將「%{old}」重新命名為「%{name}」。
+      deleted:
+        one: 已刪除分類「%{name}」；%{count} 筆交易現為未分類。
+        other: 已刪除分類「%{name}」；%{count} 筆交易現為未分類。
+      ai_done:
+        one: AI 分析了 %{sent} 個商家，為 %{count} 筆交易完成分類。
+        other: AI 分析了 %{sent} 個商家，為 %{count} 筆交易完成分類。
+      ai_remaining:
+        one: 還有 %{count} 個商家待處理；再執行一次即可繼續。
+        other: 還有 %{count} 個商家待處理；再執行一次即可繼續。
+      errors:
+        blank: 請輸入分類名稱。
+        too_long: 分類名稱最多 %{count} 個字元。
+        reserved: 這已經是內建分類。
+        taken: 你已經有同名的分類。
+        too_many: 最多可以有 %{count} 個自訂分類。
+      ai_errors:
+        consent_required: 使用 AI 前，請勾選同意傳送的內容。
+        not_configured: AI 分類尚未連接。
+        nothing_to_do: 沒有帶可用描述的未分類交易。
+        wait: AI 分類剛剛執行過。請等幾秒後再試。
+        auth_failed: AI 服務拒絕了伺服器的憑證。未做任何更改。
+        quota: AI 服務額度不足或目前忙碌。未做任何更改。
+        failed: AI 服務無法為這些交易分類。未做任何更改；請稍後再試。
+        unavailable: 無法連接 AI 服務。未做任何更改；請稍後再試。
+        invalid_result: AI 服務回傳了非預期的結果。未做任何更改；請重試。
