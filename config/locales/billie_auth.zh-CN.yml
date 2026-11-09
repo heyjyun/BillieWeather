@@ -43,7 +43,7 @@ zh-CN:
       log_in: 登录
       welcome_back: 欢迎回来
       outlook_awaits: 开启你的财务展望。
-      login_description: 登录你的 BillieWeather 工作区。
+      login_description: "使用你的 BillieWeather 账户登录。只有注册的基本信息保存在云端；账单和交易记录只保存在这台设备上，非常安全。"
       email: 电子邮箱
       password: 密码
       remember_me: 保持登录

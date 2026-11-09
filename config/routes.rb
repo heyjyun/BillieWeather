@@ -93,10 +93,16 @@ Rails.application.routes.draw do
     end
   end
 
-  # Account API for the desktop and mobile apps (clients/universal). Account data only.
+  # API for the desktop and mobile apps (clients/universal): sign-in, account preferences,
+  # and a read-only download of the person's web financial data. Apps never upload financial data.
   scope "api/client/v1", module: "client_api/v1", as: "client_api_v1", defaults: {format: :json} do
     resource :session, only: [:create, :destroy]
     resource :account, only: [:show, :update]
+    # Read-only copy of the person's web financial data for the app's local database.
+    get "finance", to: "finance#show", as: :finance
+    get "finance/statements", to: "finance#statements", as: :finance_statements
+    get "finance/transactions", to: "finance#transactions", as: :finance_transactions
+    get "finance/rules", to: "finance#rules", as: :finance_rules
   end
 
   namespace :api do

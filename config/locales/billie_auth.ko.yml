@@ -45,7 +45,7 @@
         "log_in": "로그인",
         "welcome_back": "다시 오신 것을 환영합니다",
         "outlook_awaits": "내 재정 전망을 확인하세요.",
-        "login_description": "BillieWeather 작업 공간에 로그인하세요.",
+        "login_description": "BillieWeather 계정으로 로그인하세요. 클라우드에는 가입 시 입력한 기본 정보만 저장되며, 청구서와 거래 내역은 이 기기에만 저장되어 안전합니다.",
         "email": "이메일",
         "password": "비밀번호",
         "remember_me": "로그인 상태 유지",

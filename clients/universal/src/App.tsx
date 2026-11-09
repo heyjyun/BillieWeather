@@ -8,6 +8,7 @@ import { Login } from "./pages/Login";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { Transactions } from "./pages/Transactions";
+import { SyncStatus } from "./components/SyncStatus";
 
 export type Page = "dashboard" | "transactions" | "import" | "reports" | "settings";
 
@@ -48,6 +49,7 @@ function Shell() {
       </nav>
       <main className="bw-main" id="main">
         {!persistent && <p className="bw-preview-banner">{m.preview}</p>}
+        <SyncStatus />
         {page === "dashboard" && <Dashboard go={setPage} />}
         {page === "transactions" && <Transactions />}
         {page === "import" && <Import />}

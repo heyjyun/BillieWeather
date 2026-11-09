@@ -46,7 +46,7 @@ en:
       log_in: Log in
       welcome_back: WELCOME BACK
       outlook_awaits: Your financial outlook awaits.
-      login_description: Log in to your BillieWeather workspace.
+      login_description: "Log in with your BillieWeather account. Only your basic sign-up details are stored in the cloud; your bills and transactions stay on this device, so they stay safe."
       email: Email
       password: Password
       remember_me: Keep me signed in

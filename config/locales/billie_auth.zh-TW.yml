@@ -45,7 +45,7 @@
         "log_in": "登入",
         "welcome_back": "歡迎回來",
         "outlook_awaits": "開啓你的財務展望。",
-        "login_description": "登入你的 BillieWeather 工作區。",
+        "login_description": "使用你的 BillieWeather 帳戶登入。只有註冊的基本資料保存在雲端；帳單和交易紀錄只保存在這台裝置上，非常安全。",
         "email": "電子信箱",
         "password": "密碼",
         "remember_me": "保持登入",

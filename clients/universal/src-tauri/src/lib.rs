@@ -7,12 +7,20 @@ use tauri_plugin_sql::{Migration, MigrationKind};
 pub const LOCAL_DATABASE: &str = "sqlite:billieweather.db";
 
 fn migrations() -> Vec<Migration> {
-    vec![Migration {
-        version: 1,
-        description: "initial local schema",
-        sql: include_str!("../migrations/0001_initial.sql"),
-        kind: MigrationKind::Up,
-    }]
+    vec![
+        Migration {
+            version: 1,
+            description: "initial local schema",
+            sql: include_str!("../migrations/0001_initial.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "copies of website statements",
+            sql: include_str!("../migrations/0002_web_sync.sql"),
+            kind: MigrationKind::Up,
+        },
+    ]
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

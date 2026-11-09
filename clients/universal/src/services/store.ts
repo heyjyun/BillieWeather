@@ -28,11 +28,35 @@ const toStatement = (row: Row): Statement => ({
   transactionCount: Number(row.transaction_count),
   closingBalanceCents: row.closing_balance_cents === null ? null : Number(row.closing_balance_cents),
   closingBalanceOn: (row.closing_balance_on as string | null) ?? null, importedAt: String(row.imported_at),
+  source: row.source === "web" ? "web" : "local",
 });
 const toTransaction = (row: Row): Transaction => ({
   id: Number(row.id), statementId: Number(row.statement_id), bookedOn: String(row.booked_on), description: String(row.description),
   amountCents: Number(row.amount_cents), category: row.category as Category, taxReview: Number(row.tax_review) === 1, excluded: Number(row.excluded) === 1,
 });
+
+/** Financial data downloaded (read-only) from the person's BillieWeather web account. */
+export interface WebData {
+  currency: Currency | null;
+  statements: Array<{ remoteId: number; filename: string; currency: Currency; sha256: string; transactionCount: number; closingBalanceCents: number | null; closingBalanceOn: string | null; importedAt: string }>;
+  transactions: Array<{ remoteId: number; remoteStatementId: number; bookedOn: string; description: string; amountCents: number; category: Category; taxReview: boolean; excluded: boolean }>;
+  rules: MerchantRule[];
+}
+
+export interface WebSyncResult {
+  statementsAdded: number;
+  statementsRemoved: number;
+  transactionsAdded: number;
+  transactionsUpdated: number;
+  transactionsRemoved: number;
+  skippedDuplicates: number;
+}
+
+export interface WebSyncSettings {
+  enabled: boolean;
+  version: string | null;
+  checkedAt: string | null;
+}
 
 export class FinanceStore {
   constructor(private db: SqlDriver) {}
@@ -116,6 +140,7 @@ export class FinanceStore {
     if (!row) throw new StoreError("not_found", "Transaction not found.");
     const transaction = toTransaction(row);
     await this.applyCategories([{ id, category }]);
+    await this.db.execute("UPDATE transactions SET locally_modified = 1 WHERE id = $1", [id]);
     if (!remember) return 0;
     const rule = ruleFor(transaction, category);
     if (!rule) return 0;
@@ -127,22 +152,151 @@ export class FinanceStore {
   }
 
   async setExcluded(id: number, excluded: boolean): Promise<void> {
-    await this.db.execute("UPDATE transactions SET excluded = $1, updated_at = $2 WHERE id = $3", [excluded ? 1 : 0, now(), id]);
+    await this.db.execute("UPDATE transactions SET excluded = $1, locally_modified = 1, updated_at = $2 WHERE id = $3", [excluded ? 1 : 0, now(), id]);
   }
 
   async deleteRule(rule: Pick<MerchantRule, "merchantKey" | "income">): Promise<void> {
     await this.db.execute("DELETE FROM merchant_rules WHERE merchant_key = $1 AND income = $2", [rule.merchantKey, rule.income ? 1 : 0]);
   }
 
-  /** Permanently removes every statement, transaction, rule and setting on this device. */
+  /**
+   * Permanently removes every statement, transaction and rule on this device. The only
+   * setting kept is whether website download is on (a preference, not financial data).
+   */
   async deleteAllData(): Promise<void> {
-    for (const table of ["transactions", "statements", "merchant_rules", "settings"]) await this.db.execute(`DELETE FROM ${table}`);
+    for (const table of ["transactions", "statements", "merchant_rules"]) await this.db.execute(`DELETE FROM ${table}`);
+    await this.db.execute("DELETE FROM settings WHERE key <> $1", ["web_sync_enabled"]);
     // Reclaim freed pages so deleted rows do not linger in the database file.
     try {
       await this.db.execute("VACUUM");
     } catch {
       // Some drivers refuse VACUUM while other connections are open; the rows are already gone.
     }
+  }
+
+  async webSyncSettings(): Promise<WebSyncSettings> {
+    const rows = await this.db.select<Row>("SELECT key, value FROM settings WHERE key IN ($1, $2, $3)", ["web_sync_enabled", "web_sync_version", "web_sync_checked_at"]);
+    const value = (key: string) => (rows.find((row) => row.key === key)?.value as string | undefined) ?? null;
+    return { enabled: value("web_sync_enabled") !== "0", version: value("web_sync_version"), checkedAt: value("web_sync_checked_at") };
+  }
+
+  async setWebSyncEnabled(enabled: boolean): Promise<void> {
+    await this.setSetting("web_sync_enabled", enabled ? "1" : "0");
+    if (!enabled) await this.db.execute("DELETE FROM settings WHERE key = $1", ["web_sync_version"]);
+  }
+
+  async markWebChecked(version: string | null): Promise<void> {
+    await this.setSetting("web_sync_checked_at", now());
+    if (version) await this.setSetting("web_sync_version", version);
+  }
+
+  /**
+   * Merges a download from the website into this device's database:
+   * - a statement already imported on this device (same file hash) is not added twice;
+   * - website edits update the copies, except categories/exclusions changed on this device;
+   * - statements and transactions deleted on the website are removed here too;
+   * - remembered rules from the website are added unless this device has its own rule.
+   * Statements imported on this device are never touched.
+   */
+  async applyWebData(web: WebData): Promise<WebSyncResult> {
+    const deviceCurrency = await this.currency();
+    if (deviceCurrency && web.currency && deviceCurrency !== web.currency && web.statements.length > 0) {
+      throw new StoreError("currency_mismatch", `Website data is in ${web.currency}; this device uses ${deviceCurrency}.`, { currency: deviceCurrency, web: web.currency });
+    }
+    const result: WebSyncResult = { statementsAdded: 0, statementsRemoved: 0, transactionsAdded: 0, transactionsUpdated: 0, transactionsRemoved: 0, skippedDuplicates: 0 };
+    const stamp = now();
+
+    // Statements.
+    const localRows = await this.db.select<Row>("SELECT id, sha256, source, remote_id FROM statements");
+    const localHashes = new Set(localRows.filter((row) => row.source !== "web").map((row) => String(row.sha256)));
+    const copies = new Map(localRows.filter((row) => row.source === "web").map((row) => [Number(row.remote_id), Number(row.id)]));
+    const statementIdFor = new Map<number, number>();
+    for (const statement of web.statements) {
+      if (localHashes.has(statement.sha256)) {
+        result.skippedDuplicates += 1;
+        continue;
+      }
+      const existing = copies.get(statement.remoteId);
+      const values = [statement.filename, statement.currency, statement.sha256, statement.transactionCount, statement.closingBalanceCents, statement.closingBalanceOn];
+      if (existing) {
+        await this.db.execute(
+          "UPDATE statements SET filename = $1, currency = $2, sha256 = $3, transaction_count = $4, closing_balance_cents = $5, closing_balance_on = $6 WHERE id = $7",
+          [...values, existing],
+        );
+        statementIdFor.set(statement.remoteId, existing);
+      } else {
+        const inserted = await this.db.execute(
+          "INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at, source, remote_id) VALUES ($1, $2, $3, $4, $5, $6, $7, 'web', $8)",
+          [...values, statement.importedAt || stamp, statement.remoteId],
+        );
+        statementIdFor.set(statement.remoteId, Number(inserted.lastInsertId));
+        result.statementsAdded += 1;
+      }
+    }
+    for (const [remoteId, localId] of copies) {
+      if (statementIdFor.has(remoteId)) continue;
+      await this.db.execute("DELETE FROM transactions WHERE statement_id = $1", [localId]);
+      await this.db.execute("DELETE FROM statements WHERE id = $1", [localId]);
+      result.statementsRemoved += 1;
+    }
+
+    // Transactions belonging to the website copies.
+    const existingTx = new Map((await this.db.select<Row>("SELECT * FROM transactions WHERE remote_id IS NOT NULL")).map((row) => [Number(row.remote_id), row]));
+    const incoming = web.transactions.filter((transaction) => statementIdFor.has(transaction.remoteStatementId));
+    const seen = new Set<number>();
+    const inserts: unknown[][] = [];
+    for (const transaction of incoming) {
+      seen.add(transaction.remoteId);
+      const statementId = statementIdFor.get(transaction.remoteStatementId)!;
+      const row = existingTx.get(transaction.remoteId);
+      if (!row) {
+        inserts.push([statementId, transaction.bookedOn, transaction.description, transaction.amountCents, transaction.category, transaction.taxReview ? 1 : 0, transaction.excluded ? 1 : 0, stamp, transaction.remoteId]);
+        continue;
+      }
+      const keepLocal = Number(row.locally_modified) === 1;
+      const next = {
+        statement_id: statementId, booked_on: transaction.bookedOn, description: transaction.description, amount_cents: transaction.amountCents,
+        category: keepLocal ? String(row.category) : transaction.category,
+        tax_review: keepLocal ? Number(row.tax_review) : transaction.taxReview ? 1 : 0,
+        excluded: keepLocal ? Number(row.excluded) : transaction.excluded ? 1 : 0,
+      };
+      const changed = (Object.keys(next) as Array<keyof typeof next>).some((key) => String(row[key]) !== String(next[key]));
+      if (!changed) continue;
+      await this.db.execute(
+        "UPDATE transactions SET statement_id = $1, booked_on = $2, description = $3, amount_cents = $4, category = $5, tax_review = $6, excluded = $7, updated_at = $8 WHERE id = $9",
+        [next.statement_id, next.booked_on, next.description, next.amount_cents, next.category, next.tax_review, next.excluded, stamp, Number(row.id)],
+      );
+      result.transactionsUpdated += 1;
+    }
+    for (let start = 0; start < inserts.length; start += 100) {
+      const batch = inserts.slice(start, start + 100);
+      const params = batch.flat();
+      const values = batch.map((_, i) => `(${Array.from({ length: 9 }, (_, j) => `$${i * 9 + j + 1}`).join(", ")})`);
+      await this.db.execute(
+        `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, remote_id) VALUES ${values.join(", ")}`,
+        params,
+      );
+      result.transactionsAdded += batch.length;
+    }
+    for (const [remoteId, row] of existingTx) {
+      if (seen.has(remoteId)) continue;
+      await this.db.execute("DELETE FROM transactions WHERE id = $1", [Number(row.id)]);
+      result.transactionsRemoved += 1;
+    }
+
+    // Remembered rules: this device's own rules win.
+    for (const rule of web.rules) {
+      await this.db.execute(
+        "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO NOTHING",
+        [rule.merchantKey, rule.income ? 1 : 0, rule.category, stamp],
+      );
+    }
+    if (!deviceCurrency && web.currency && web.statements.length > 0) await this.setSetting("currency", web.currency);
+    return result;
+  }
+
+  private async setSetting(key: string, value: string): Promise<void> {
+    await this.db.execute("INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [key, value]);
   }
 
   private async applyCategories(changes: Array<{ id: number; category: Category }>): Promise<number> {

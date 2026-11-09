@@ -43,7 +43,7 @@ es:
       log_in: Iniciar sesión
       welcome_back: TE DAMOS LA BIENVENIDA DE NUEVO
       outlook_awaits: Tu perspectiva financiera te espera.
-      login_description: Inicia sesión en tu espacio de trabajo de BillieWeather.
+      login_description: "Inicia sesión con tu cuenta de BillieWeather. En la nube solo se guardan los datos básicos de registro; tus facturas y movimientos se quedan solo en este dispositivo, totalmente seguros."
       email: Correo electrónico
       password: Contraseña
       remember_me: Mantener la sesión iniciada

@@ -19,9 +19,12 @@ const all = [...SOURCES, RUST].flatMap(files);
 describe("data isolation", () => {
   it("found the source files", () => expect(all.length).toBeGreaterThan(10));
 
-  // The account service is the single, reviewed exception: it talks to the BillieWeather
-  // account API. Everything else, including all financial code, must stay offline.
+  // Two reviewed exceptions may use the network, both only with the BillieWeather server:
+  // account.ts (sign-in and preferences, no financial code) and webSync.ts (read-only
+  // download of the person's website data: GET only, never a request body).
   const ACCOUNT = join(ROOT, "src/services/account.ts");
+  const WEB_SYNC = join(ROOT, "src/services/webSync.ts");
+  const NETWORK_FILES = [ACCOUNT, WEB_SYNC];
 
   it.each([
     ["fetch(", /\bfetch\s*\(/],
@@ -30,8 +33,17 @@ describe("data isolation", () => {
     ["sendBeacon", /sendBeacon/],
     ["EventSource", /\bEventSource\b/],
     ["tauri http plugin", /plugin-http|tauri_plugin_http|reqwest/],
-  ])("no network API outside the account service: %s", (_name, pattern) => {
-    expect(all.filter((file) => file !== ACCOUNT && pattern.test(readFileSync(file, "utf8")))).toEqual([]);
+  ])("no network API outside the two reviewed services: %s", (_name, pattern) => {
+    expect(all.filter((file) => !NETWORK_FILES.includes(file) && pattern.test(readFileSync(file, "utf8")))).toEqual([]);
+  });
+
+  it("the website download can only read: GET requests, no body, finance endpoints only", () => {
+    const source = readFileSync(WEB_SYNC, "utf8");
+    expect([...source.matchAll(/method:\s*"(\w+)"/g)].map((match) => match[1])).toEqual(["GET"]);
+    expect(source).not.toMatch(/\bbody\s*:/);
+    expect(source).not.toMatch(/\b(POST|PATCH|PUT|DELETE)\b/);
+    expect(source).toMatch(/const FINANCE = `\$\{API_ORIGIN\}\/api\/client\/v1\/finance`/);
+    expect(source.match(/fetch\(/g)?.length).toBe(1);
   });
 
   it("the account service cannot see financial data: it imports nothing", () => {
@@ -42,8 +54,8 @@ describe("data isolation", () => {
     expect([...source.matchAll(/request<[^>]*>\("([^"]+)"/g)].map((match) => match[1]).sort()).toEqual(["/account", "/account", "/session", "/session"]);
   });
 
-  it("only the account service touches the account API base URL", () => {
-    expect(all.filter((file) => file !== ACCOUNT && /api\/client\/v1/.test(readFileSync(file, "utf8")))).toEqual([]);
+  it("only the two reviewed services know the server API paths", () => {
+    expect(all.filter((file) => !NETWORK_FILES.includes(file) && /api\/client\/v1/.test(readFileSync(file, "utf8")))).toEqual([]);
   });
 
   it("no console logging or Rust print macros (financial data must stay out of logs)", () => {

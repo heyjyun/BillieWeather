@@ -9,7 +9,7 @@ import { openExternal } from "../services/session";
 export function Settings() {
   const { m, t, locale } = useI18n();
   const { account, offline, signOut, savePreferences } = useAccount();
-  const { store, refresh, rules, statements, transactions, persistent } = useFinance();
+  const { store, refresh, rules, statements, transactions, persistent, sync, syncEnabled, lastChecked, syncNow, setSyncEnabled } = useFinance();
   const [nickname, setNickname] = useState(account?.nickname ?? "");
   const [accountStatus, setAccountStatus] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -62,6 +62,17 @@ export function Settings() {
         </div>
       </section>
 
+      <section className="bw-panel bw-web-sync" aria-labelledby="web-sync-heading">
+        <h2 id="web-sync-heading">{m.sync.title}</h2>
+        <p>{m.sync.body}</p>
+        <label className="bw-check"><input type="checkbox" checked={syncEnabled} onChange={(e) => setSyncEnabled(e.target.checked)} /> {m.sync.toggle}</label>
+        <p className="bw-caption">{m.sync.rules}</p>
+        <div className="bw-account-actions">
+          <span className="bw-caption">{lastChecked ? t("sync.lastChecked", { time: new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(lastChecked)) }) : m.sync.never}</span>
+          <button type="button" className="bw-button bw-button-outline" disabled={!syncEnabled || sync.status === "checking"} onClick={() => syncNow(true)}>{sync.status === "checking" ? m.sync.checking : m.sync.checkNow}</button>
+        </div>
+      </section>
+
       <section className="bw-panel">
         <h2>{x.whereTitle}</h2>
         <p>{persistent ? x.whereBody : x.wherePreview}</p>
@@ -93,6 +104,7 @@ export function Settings() {
       <section className="bw-panel bw-danger">
         <h2>{x.deleteTitle}</h2>
         <p>{x.deleteBody}</p>
+        {syncEnabled && <p className="bw-caption">{m.sync.deleteNote}</p>}
         <label className="bw-field"><span>{x.deleteConfirm}</span><input value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" /></label>
         <button className="bw-button bw-button-danger" disabled={confirm !== "DELETE"} onClick={deleteAll}>{x.deleteButton}</button>
         <p role="status" aria-live="polite" className="bw-sr-status">{status}</p>

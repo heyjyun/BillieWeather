@@ -14,6 +14,10 @@ interface AccountContextValue {
   signIn: (email: string, password: string, otp?: string) => Promise<void>;
   signOut: () => Promise<void>;
   savePreferences: (preferences: AccountPreferences) => Promise<void>;
+  /** The sign-in token, for the website-data download. Never shown or logged. */
+  getToken: () => string | null;
+  /** Called when the server says the token is no longer valid. */
+  expire: () => Promise<void>;
 }
 
 const AccountContext = createContext<AccountContextValue | null>(null);
@@ -99,7 +103,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     }
   }, [adopt, forget]);
 
-  const value = useMemo(() => ({ status, account, offline, signIn, signOut, savePreferences }), [status, account, offline, signIn, signOut, savePreferences]);
+  const getToken = useCallback(() => token.current, []);
+  const value = useMemo(() => ({ status, account, offline, signIn, signOut, savePreferences, getToken, expire: forget }),
+    [status, account, offline, signIn, signOut, savePreferences, getToken, forget]);
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }
 

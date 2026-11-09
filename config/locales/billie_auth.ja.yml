@@ -45,7 +45,7 @@
         "log_in": "ログイン",
         "welcome_back": "おかえりなさい",
         "outlook_awaits": "お金の見通しを、ここから。",
-        "login_description": "BillieWeather のワークスペースにログインします。",
+        "login_description": "BillieWeather アカウントでログインします。クラウドに保存されるのは登録時の基本情報だけで、明細や取引記録はこのデバイスにのみ保存されるので安心です。",
         "email": "メールアドレス",
         "password": "パスワード",
         "remember_me": "ログイン状態を保持",

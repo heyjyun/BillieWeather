@@ -166,3 +166,11 @@ p { margin: 0 0 10px; }
 .bw-account-form select { min-height: 44px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
 .bw-account-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
 @media (max-width: 760px) { .bw-account-facts { grid-template-columns: 1fr; } .bw-login-card { padding: 22px 18px; } }
+
+/* Website data download */
+.bw-sync { margin: 0; padding: 10px 14px; border-radius: 9px; font-size: 12px; background: var(--accent-soft); }
+.bw-sync-warn { background: #fff4dc; color: #6b4f12; }
+.bw-sync-ok { background: var(--accent-soft); }
+.bw-web-sync { display: grid; gap: 10px; }
+.bw-web-sync h2, .bw-web-sync p { margin: 0; }
+.bw-tag { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600; }

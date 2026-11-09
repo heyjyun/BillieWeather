@@ -31,6 +31,8 @@ export interface Statement {
   closingBalanceCents: number | null;
   closingBalanceOn: IsoDate | null;
   importedAt: string;
+  /** "web" = copied from the BillieWeather website; "local" = imported on this device. */
+  source?: "local" | "web";
 }
 
 export interface Transaction {

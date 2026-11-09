@@ -69,7 +69,11 @@ export function Import() {
           <h2>{x.history}</h2>
           <ul className="bw-simple-list">
             {[...statements].reverse().map((statement) => (
-              <li key={statement.id}><strong>{statement.filename}</strong><small>{t("import.historyItem", { count: statement.transactionCount, date: statement.importedAt.slice(0, 10) })}</small></li>
+              <li key={statement.id}>
+                <strong>{statement.filename}</strong>
+                {statement.source === "web" && <span className="bw-tag">{m.sync.fromWeb}</span>}
+                <small>{t("import.historyItem", { count: statement.transactionCount, date: statement.importedAt.slice(0, 10) })}</small>
+              </li>
             ))}
           </ul>
         </section>
