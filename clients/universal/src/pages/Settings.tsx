@@ -6,6 +6,16 @@ import { LanguageSelect, useI18n } from "../i18n";
 import { websiteUrl } from "../services/account";
 import { openExternal } from "../services/session";
 
+function regionName(code: string | null | undefined, locale: string, globalCitizen: string): string {
+  if (!code) return "—";
+  if (code === "XG") return globalCitizen;
+  try {
+    return new Intl.DisplayNames([locale], { type: "region" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 export function Settings() {
   const { m, t, locale } = useI18n();
   const { account, offline, signOut, savePreferences } = useAccount();
@@ -35,7 +45,7 @@ export function Settings() {
         <dl className="bw-account-facts">
           <div><dt>{x.email}</dt><dd>{account?.email}</dd></div>
           <div><dt>{x.memberSince}</dt><dd>{memberSince}</dd></div>
-          <div><dt>{x.region}</dt><dd>{account?.usageRegion ?? "—"}</dd></div>
+          <div><dt>{x.region}</dt><dd>{regionName(account?.usageRegion, locale, x.globalCitizen)}</dd></div>
         </dl>
         <div className="bw-account-form">
           <label className="bw-field"><span>{x.nickname}</span>
