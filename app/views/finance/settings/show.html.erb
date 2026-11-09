@@ -26,6 +26,23 @@
     <% end %>
   </section>
 
+  <section class="bw-panel" id="settings-community" aria-labelledby="settings-community-heading">
+    <h2 id="settings-community-heading"><%= t("billie.community.settings.heading") %></h2>
+    <p><%= t("billie.community.settings.intro") %></p>
+    <p><%= community_badges(@user) %></p>
+    <% if @user.founding_patron? %>
+      <%= form_with model: @user, scope: :user, url: supporter_recognition_finance_settings_path, method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
+        <label class="bw-checkbox-label">
+          <%= form.check_box :supporter_recognition_public %>
+          <span><%= t("billie.community.settings.recognition_label") %></span>
+        </label>
+        <small class="bw-caption"><%= t("billie.community.settings.recognition_help") %></small>
+        <%= form.submit t("billie.community.settings.recognition_save"), class: "bw-button bw-button-outline" %>
+      <% end %>
+    <% end %>
+    <%= link_to t("billie.community.settings.learn_more"), billie_features_path(anchor: "membership"), class: "bw-text-link" %>
+  </section>
+
   <section class="bw-panel" id="settings-password" aria-labelledby="settings-password-heading">
     <h2 id="settings-password-heading"><%= t("billie.account.password_heading") %></h2>
     <p><%= t("billie.account.password_intro") %></p>

@@ -1,0 +1,103 @@
+<%# Support modal. Real QR codes appear only in the :ready state: payments enabled, signed in, invited by an admin, nickname set,
+    and at least one method enabled on Admin → Payment Methods. The nickname note is read-only here. %>
+<dialog id="support-dialog" class="bw-support-dialog" aria-labelledby="support-dialog-title" aria-describedby="support-dialog-intro" data-support-state="<%= state %>">
+  <div class="bw-support-dialog-header">
+    <div>
+      <h2 id="support-dialog-title"><%= t("billie.community.dialog.title") %></h2>
+      <p id="support-dialog-intro"><%= t("billie.community.dialog.intro") %></p>
+    </div>
+    <form method="dialog"><button type="submit" class="bw-icon-button bw-support-close" aria-label="<%= t("billie.community.dialog.close") %>"><%= finance_icon "close" %></button></form>
+  </div>
+
+  <% case state %>
+  <% when :ready %>
+    <p class="bw-support-encourage"><%= t("billie.community.dialog.encourage") %></p>
+    <p class="bw-support-voluntary"><%= t("billie.community.dialog.voluntary") %></p>
+    <div class="bw-support-grid">
+      <% payment_methods.each do |payment_method| %>
+        <% qr_path = community_payment_qr_path(payment_method.key, v: payment_method.qr_version) %>
+        <article class="bw-support-card" data-payment-method="<%= payment_method.key %>" aria-labelledby="support-method-<%= payment_method.key %>">
+          <h3 id="support-method-<%= payment_method.key %>"><%= payment_method.label %></h3>
+          <a class="bw-support-qr-link" href="<%= qr_path %>" target="_blank" rel="noopener" data-qr-zoom data-qr-title="<%= payment_method.label %>" aria-label="<%= t("billie.community.dialog.enlarge_label", method: payment_method.label) %>">
+            <img class="bw-support-qr" src="<%= qr_path %>" width="180" height="180" loading="lazy" alt="<%= t("billie.community.dialog.qr_alt", method: payment_method.label) %>">
+          </a>
+          <div class="bw-support-qr-actions">
+            <a class="bw-button bw-button-outline" href="<%= qr_path %>" target="_blank" rel="noopener" data-qr-zoom data-qr-title="<%= payment_method.label %>"><%= finance_icon "expand", size: 15 %><span><%= t("billie.community.dialog.enlarge") %></span></a>
+            <a class="bw-button bw-button-outline" href="<%= community_payment_qr_path(payment_method.key, v: payment_method.qr_version, download: 1) %>" download="<%= payment_method.qr_filename %>"><%= finance_icon "download", size: 15 %><span><%= t("billie.community.dialog.save_image") %></span></a>
+          </div>
+          <% unless payment_method.note_supported? %>
+            <p class="bw-support-warning"><%= t("billie.community.dialog.no_note_field") %></p>
+          <% end %>
+        </article>
+      <% end %>
+    </div>
+
+    <section class="bw-support-howto" aria-labelledby="support-howto-heading">
+      <h3 id="support-howto-heading"><%= t("billie.community.dialog.howto_heading") %></h3>
+      <ol>
+        <li><%= t("billie.community.dialog.howto_choose") %></li>
+        <li><%= t("billie.community.dialog.howto_scan") %></li>
+        <li><%= t("billie.community.dialog.howto_note") %></li>
+        <li><%= t("billie.community.dialog.howto_verify") %></li>
+      </ol>
+    </section>
+
+    <section class="bw-support-note" aria-labelledby="support-note-label">
+      <h3 class="bw-support-note-label" id="support-note-label"><%= t("billie.community.dialog.note_label") %></h3>
+      <div class="bw-support-note-row">
+        <code data-payment-note><%= payment_note %></code>
+        <button type="button" class="bw-button bw-button-dark bw-copy-button" data-copy-text="<%= payment_note %>" data-copied-label="<%= t("billie.community.dialog.copied") %>"><%= finance_icon "copy", size: 15 %><span><%= t("billie.community.dialog.copy_note") %></span></button>
+      </div>
+      <p class="bw-support-note-help"><%= t("billie.community.dialog.note_from_nickname") %> <%= link_to t("billie.community.dialog.change_nickname"), finance_settings_path(anchor: "settings-profile") %></p>
+    </section>
+    <p class="bw-sr-only" role="status" aria-live="polite" data-copy-status></p>
+
+    <div class="bw-support-manual">
+      <strong><%= t("billie.community.dialog.no_note_heading") %></strong>
+      <p><%= t("billie.community.dialog.manual_match") %>
+        <% if support_contact_email %>
+          <%= t("billie.community.dialog.contact_email") %> <%= mail_to support_contact_email, support_contact_email, subject: t("billie.community.dialog.contact_subject", note: payment_note) %>
+        <% else %>
+          <%= t("billie.community.dialog.contact_fallback") %>
+        <% end %>
+      </p>
+    </div>
+
+    <dialog class="bw-qr-zoom" id="support-qr-zoom" aria-labelledby="support-qr-zoom-title">
+      <div class="bw-qr-zoom-head">
+        <h3 id="support-qr-zoom-title" data-qr-zoom-title></h3>
+        <form method="dialog"><button type="submit" class="bw-icon-button bw-support-close" aria-label="<%= t("billie.community.dialog.close_enlarged") %>"><%= finance_icon "close" %></button></form>
+      </div>
+      <img data-qr-zoom-image alt="">
+      <p class="bw-caption"><%= t("billie.community.dialog.enlarged_help") %></p>
+    </dialog>
+  <% when :nickname_required %>
+    <div class="bw-support-state">
+      <div class="bw-feature-icon"><%= finance_icon "badge", size: 24 %></div>
+      <h3><%= t("billie.community.dialog.nickname_title") %></h3>
+      <p><%= t("billie.community.dialog.nickname_body") %></p>
+      <%= link_to t("billie.community.dialog.nickname_action"), finance_settings_path(anchor: "settings-profile"), class: "bw-button bw-button-dark" %>
+    </div>
+  <% when :not_invited %>
+    <div class="bw-support-state">
+      <div class="bw-feature-icon"><%= finance_icon "lock", size: 24 %></div>
+      <h3><%= t("billie.community.dialog.invite_title") %></h3>
+      <p><%= t("billie.community.dialog.invite_body") %></p>
+    </div>
+  <% when :sign_in %>
+    <div class="bw-support-state">
+      <div class="bw-feature-icon"><%= finance_icon "lock", size: 24 %></div>
+      <h3><%= t("billie.community.dialog.sign_in_title") %></h3>
+      <p><%= t("billie.community.dialog.sign_in_body") %></p>
+      <%= link_to t("billie.layout.log_in"), new_user_session_path, class: "bw-button bw-button-dark" %>
+    </div>
+  <% else %>
+    <div class="bw-support-state">
+      <div class="bw-feature-icon"><%= finance_icon "heart", size: 24 %></div>
+      <h3><%= t("billie.community.dialog.coming_soon") %></h3>
+      <p><%= t("billie.community.dialog.coming_soon_body") %></p>
+    </div>
+  <% end %>
+
+  <p class="bw-support-disclaimer"><%= t("billie.community.dialog.disclaimer") %></p>
+</dialog>

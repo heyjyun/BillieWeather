@@ -1,0 +1,207 @@
+---
+en:
+  billie:
+    community:
+      nav:
+        features_membership: Features & Membership
+        membership: Membership
+        admin: Community admin
+        payment_methods: Payment methods
+        support_us: Support us
+        support_admin: Support admin
+        overview: Overview
+        back_to_app: Back to the app
+      page:
+        title: Features & Membership
+        eyebrow: FEATURES & MEMBERSHIP
+        heading: What BillieWeather does, and who it's built with
+        intro: A plain look at the tools inside BillieWeather, how they work, and the community badges that thank the people helping it grow.
+      features:
+        eyebrow: PRODUCT FEATURES
+        heading: Everything in one calm workspace
+        dashboard_title: Financial Dashboard
+        dashboard_body: See income, spending, balances, and recent activity across your uploaded accounts on one page.
+        categorization_title: Smart Categorization
+        categorization_body: Transactions are sorted into categories automatically, and the rules you correct are remembered next time.
+        forecasting_title: Cash Flow Forecasting
+        forecasting_body: Estimate where your balance may be heading in the coming weeks, and test what-if changes to income or spending.
+        insights_title: AI Financial Insights
+        insights_body: Ask for a plain-language explanation of your spending patterns. AI analysis only runs when you request it.
+        tax_title: Tax Preparation Assistance
+        tax_body: Organize the records and questions to bring to tax time. It is a checklist helper, not tax advice or filing.
+      how:
+        eyebrow: HOW BILLIEWEATHER WORKS
+        heading: Numbers from code, words from AI
+        intro: Each part of BillieWeather does the job it is best at, so the figures you see can be traced back to your own records.
+        ai_title: Natural-language explanations
+        ai_body: BillieWeather currently uses OpenAI GPT models to answer in natural language and explain your finances, only when you ask for an AI analysis.
+        forecast_title: Forecasts from your own history
+        forecast_body: Cash flow forecasts are based on your past transactions, your income and spending trends, and the scenarios you set yourself.
+        models_title: Forecasting models
+        models_body: You can choose Prophet, Chronos-2, or a simple historical-average baseline. We keep evaluating which models forecast personal cash flow best.
+        numbers_title: Calculation kept separate from explanation
+        numbers_body: Every number is calculated by our own code first. The language model only explains figures that were already computed, so it is never asked to make up your financial numbers.
+      membership:
+        eyebrow: MEMBERSHIP & BENEFITS
+        heading: Community badges
+        intro: Badges are a thank-you, not a paid plan. Every account keeps the full core product.
+        your_badges: 'Your badges:'
+        member_body: Everyone with a BillieWeather account. All core features are included.
+        founding_member_body: Early users who joined and helped shape BillieWeather with feedback and testing.
+        founding_patron_body: People who chose to support BillieWeather financially, confirmed by hand by the developer.
+        table_caption: Benefits included with each badge
+        benefit: Benefit
+        planned: Planned
+        included: Included
+        not_included: Not included
+        stacking_note: Founding Member and Founding Patron stack. Someone with both badges keeps every benefit of each.
+        lamp_title: Aladdin's Lamp
+        lamp_body: Founding Members and Founding Patrons will be able to submit features they would like to see. The developer reviews each wish for feasibility; not every request can be built.
+        supporters_heading: Thank you to our Founding Patrons
+      badges:
+        member: Member
+        founding_member: Founding Member
+        founding_patron: Founding Patron
+      benefits:
+        core_features: Core Features
+        community_badge: Community Badge
+        early_previews: Early Feature Previews
+        feedback_voting: Product Feedback & Voting
+        aladdins_lamp: Aladdin's Lamp
+        supporter_recognition: Supporter Recognition
+      support:
+        eyebrow: BUILT WITH PERSONAL SUPPORT
+        heading: Built with Personal Support
+        body: BillieWeather is currently independently developed and funded out of pocket, including cloud hosting, database infrastructure, AI API token costs, and ongoing maintenance. Our goal is to keep personal finance tools accessible to everyone.
+        button: Support BillieWeather ❤️
+      payment_methods:
+        other: Other
+      dialog:
+        title: Support BillieWeather
+        intro: Your voluntary support helps cover hosting, infrastructure, and AI costs. Thank you for helping BillieWeather grow.
+        close: Close
+        qr_alt: "%{method} payment QR code"
+        qr_missing: QR code not available yet
+        note_label: Payment Note / 付款备注
+        copied: Copied
+        no_note_field: This service may not offer a note field. After paying, contact the developer so your contribution can be identified (see below).
+        manual_match: Send the developer your nickname, the payment method, the date, and the amount so the transfer can be matched by hand.
+        nickname_title: Set a nickname first
+        nickname_body: Your payment note uses your BillieWeather nickname so we can recognize your support. Add a nickname in your profile, then come back here.
+        nickname_action: Set my nickname
+        invite_title: Shared privately with invited friends
+        invite_body: Payment details are personal accounts, so they are only shown to friends the developer has invited. Thank you for thinking of BillieWeather.
+        sign_in_title: Sign in to see support options
+        sign_in_body: Support options are only available to signed-in friends the developer has invited.
+        coming_soon: Coming Soon
+        coming_soon_body: Support options will open once we have confirmed that receiving support is allowed and each payment service's terms are met. Thank you for your patience.
+        disclaimer: Support is a voluntary personal gift to an independent project. It is not a charitable donation, is not tax-deductible, and does not change your access to core features.
+        encourage: Even $1 is enough to make a difference. Every little bit helps keep BillieWeather free and growing. ❤️
+        voluntary: All contributions are voluntary. Every core feature stays free whether or not you contribute.
+        enlarge: Enlarge
+        enlarge_label: Enlarge the %{method} QR code
+        save_image: Save image
+        close_enlarged: Close enlarged QR code
+        enlarged_help: Scan this code with your payment app, or long-press the image to save it to your phone.
+        howto_heading: How to Support
+        howto_choose: Choose your preferred payment method.
+        howto_scan: Scan the QR code or save it to open in your payment app.
+        howto_note: Include the payment note shown below when supported.
+        howto_verify: Contributions are manually verified before Founding Patron recognition is granted.
+        copy_note: Copy Note
+        note_from_nickname: This note comes from your BillieWeather nickname and can't be edited here.
+        change_nickname: Change your nickname in account settings
+        no_note_heading: No note field in your payment app?
+        contact_email: 'Email:'
+        contact_subject: 'Support contribution: %{note}'
+        contact_fallback: Reply to the person who invited you, or message the developer the way you usually reach them.
+      settings:
+        heading: Community badges
+        intro: Badges thank people who help BillieWeather grow. They don't change your permissions.
+        recognition_label: Show my nickname on the public Founding Patrons list
+        recognition_help: Off by default. Only your nickname is shown, never amounts or your email.
+        recognition_save: Save recognition preference
+        recognition_saved: Your recognition preference was saved.
+        learn_more: About badges and benefits
+      admin:
+        title: Community admin
+        eyebrow: ADMIN
+        intro: Find people, grant or revoke honor badges after checking transfers by hand, and manage the payment QR codes.
+        status_heading: Support payments
+        payments_on: SUPPORT_PAYMENTS_ENABLED is on
+        payments_off: SUPPORT_PAYMENTS_ENABLED is off — visitors see Coming Soon
+        status_help: Set the SUPPORT_PAYMENTS_ENABLED environment variable to true and restart the server to show enabled QR codes to invited friends. You can upload and preview codes while it is off.
+        search_heading: Find a person
+        search_label: Nickname or email
+        search_button: Search
+        no_results: No one matches that search.
+        nickname: Nickname
+        badges: Badges
+        qr_access: QR access
+        manage: Manage
+        access_yes: Invited to see QR codes
+        access_no: Not invited
+        qr_heading: Payment QR codes
+        replace_qr: Replace QR code
+        upload_qr: Upload QR code
+        qr_help: PNG, JPEG, or WebP, up to 2 MB.
+        note_supported: This service lets payers add a note
+        save: Save
+        remove_qr: Remove QR code
+        remove_qr_confirm: Remove this QR code?
+        qr_too_large: The QR image must be %{size} or smaller.
+        qr_wrong_type: The QR image must be a PNG, JPEG, or WebP file.
+        qr_removed: "%{method} QR code removed."
+        payment_method_saved: "%{method} saved."
+        back: "← Community admin"
+        no_nickname: No nickname
+        current_badges: Current badges
+        granted_on: Granted %{time} by %{admin}
+        confirmed_via: Transfer confirmed %{time} via %{method}
+        note: Admin note
+        note_help: Visible to admins only. Do not record amounts unless you need them.
+        revoke_confirm: Revoke this badge?
+        revoke_reason: Reason (optional)
+        revoke: Revoke
+        grant_heading: Grant a badge
+        grant_intro: Grant Founding Patron only after you have checked the actual transfer outside BillieWeather. Opening the support window or copying a note never grants a badge.
+        badge: Badge
+        patron_details: Founding Patron confirmation
+        payment_method: Payment method
+        confirmed_at: Transfer confirmed at
+        patron_help: Required for Founding Patron; ignored for Founding Member.
+        grant: Grant badge
+        granted_flash: "%{badge} granted."
+        revoked_flash: "%{badge} revoked."
+        duplicate_badge: This person already has that badge.
+        patron_requires_confirmation: Founding Patron needs the payment method and the time you confirmed the transfer.
+        access_heading: QR code access
+        access_intro: Only invited friends can see the payment QR codes, and only while support payments are enabled.
+        grant_access: Invite to see QR codes
+        revoke_access: Remove QR access
+        access_granted: QR access granted.
+        access_revoked: QR access removed.
+        history_heading: Badge history
+        granted: Granted
+        revoked_col: Revoked
+        pm_title: Payment Methods
+        pm_intro: Upload, preview, replace, or remove the QR code for each payment method, and choose which ones appear in the support modal. Changes apply right away, with no code changes.
+        pm_privacy: QR images are stored privately in the database and served only to admins and invited friends after a permission check. They never get a public URL and are not part of the code repository. Only upload codes for accounts you control.
+        pm_status_live: Shown in support modal
+        pm_status_disabled: Disabled
+        pm_status_missing: No QR code
+        pm_current: Current image · %{type} · %{size}
+        pm_new_preview: New image (not saved yet)
+        pm_new_preview_alt: Preview of the new %{method} QR code
+        pm_enabled: Show this method in the support modal
+        pm_updated: Last changed %{time} by %{admin}
+        qr_required_to_enable: Upload a QR code before enabling this method.
+        qr_moved: Payment QR codes are managed on their own page.
+        open_payment_methods: Open Payment Methods
+        home_title: Support admin
+        home_intro: Membership badges, community access, and payment QR codes. This area is separate from the BillieWeather app and only open to admins.
+        home_community: Find people by nickname, grant or revoke Founding Member and Founding Patron badges, and invite friends to see the payment QR codes.
+        home_payments: Upload, replace, or remove the Alipay, WeChat Pay, Zelle, and Venmo QR codes, and choose which appear in the support modal.
+        home_membership: Open the public Features & Membership page to see what visitors see.
+        home_counts: "%{members} Founding Members · %{patrons} Founding Patrons · %{viewers} invited to see QR codes"
+        home_live: "%{count} of %{total} methods shown in the support modal"

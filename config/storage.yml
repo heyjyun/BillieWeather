@@ -17,3 +17,8 @@ amazon:
 
 cloudinary:
   service: Cloudinary
+
+# Private, persistent storage for sensitive uploads such as payment QR codes.
+# Bytes live in Postgres (private_storage_files) and never get a public URL.
+private_database:
+  service: PrivateDatabase

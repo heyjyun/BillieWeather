@@ -1,6 +1,32 @@
 Rails.application.routes.draw do
   get "/", to: "public/home#index", as: :billie_home
   get "/about", to: "public/home#about", as: :billie_about
+  get "/features", to: "public/home#features", as: :billie_features
+  # Payment QR images are only served here, after an authorization check.
+  get "/support/payment-methods/:key/qr", to: "community/payment_qr_codes#show", as: :community_payment_qr,
+    constraints: {key: /alipay|wechat_pay|zelle|venmo/}
+
+  # Support admin: a separate area, not part of the app. Not linked from public pages or
+  # the app sidebar; type /supportadmin. Admins (DEVELOPER_EMAILS) only, after signing in;
+  # everyone else gets a 404. /admin itself is left free for other tools.
+  scope "supportadmin", module: :admin, as: :admin do
+    get "/", to: "home#index", as: :root
+    # Membership: people, honor badges, and who may see the payment QR codes.
+    get "community", to: "community#index", as: :community
+    scope "community", as: "community" do
+      resources :users, only: :show, controller: "community_users" do
+        resources :honors, only: :create, controller: "community_honors" do
+          patch :revoke, on: :member
+        end
+        resource :support_access, only: [:create, :destroy], controller: "community_support_accesses"
+      end
+    end
+    # Payment methods: QR uploads and which methods appear in the support modal.
+    resources :payment_methods, only: [:index, :update], param: :key, path: "payment-methods",
+      constraints: {key: /alipay|wechat_pay|zelle|venmo/} do
+      delete :qr, on: :member, action: :remove_qr
+    end
+  end
   get "/up", to: "rails/health#show", as: :billie_health
   get "/users/google/region", to: "google_regions#new", as: :new_google_region
   post "/users/google/region", to: "google_regions#create", as: :google_region
@@ -24,6 +50,7 @@ Rails.application.routes.draw do
     resource :settings, only: [:show, :update], controller: :settings do
       patch :nickname
       patch :password
+      patch :supporter_recognition
       post :password_reset
     end
     resource :insights, only: :show, controller: :insights do

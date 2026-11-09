@@ -1,0 +1,41 @@
+<% content_for :title, t("billie.community.admin.home_title") %>
+<div class="bw-page-heading">
+  <div>
+    <span class="bw-eyebrow"><%= t("billie.community.admin.eyebrow") %></span>
+    <h1><%= t("billie.community.admin.home_title") %></h1>
+    <p><%= t("billie.community.admin.home_intro") %></p>
+  </div>
+</div>
+<div class="bw-settings-stack bw-admin-stack">
+  <section class="bw-panel" aria-labelledby="home-status-heading">
+    <h2 id="home-status-heading"><%= t("billie.community.admin.status_heading") %></h2>
+    <p>
+      <% if Community.payments_enabled? %>
+        <span class="bw-badge"><%= t("billie.community.admin.payments_on") %></span>
+      <% else %>
+        <span class="bw-badge bw-badge-review"><%= t("billie.community.admin.payments_off") %></span>
+      <% end %>
+    </p>
+    <p class="bw-caption"><%= t("billie.community.admin.status_help") %></p>
+  </section>
+
+  <div class="bw-admin-home-grid">
+    <%= link_to admin_community_path, class: "bw-panel bw-admin-home-card" do %>
+      <span class="bw-feature-icon"><%= finance_icon "users", size: 22 %></span>
+      <h2><%= t("billie.community.nav.admin") %></h2>
+      <p><%= t("billie.community.admin.home_community") %></p>
+      <small><%= t("billie.community.admin.home_counts", members: @founding_member_count, patrons: @patron_count, viewers: @viewer_count) %></small>
+    <% end %>
+    <%= link_to admin_payment_methods_path, class: "bw-panel bw-admin-home-card" do %>
+      <span class="bw-feature-icon"><%= finance_icon "qr", size: 22 %></span>
+      <h2><%= t("billie.community.nav.payment_methods") %></h2>
+      <p><%= t("billie.community.admin.home_payments") %></p>
+      <small><%= t("billie.community.admin.home_live", count: @payment_methods.count(&:available?), total: @payment_methods.size) %></small>
+    <% end %>
+    <%= link_to billie_features_path, class: "bw-panel bw-admin-home-card", target: "_blank", rel: "noopener" do %>
+      <span class="bw-feature-icon"><%= finance_icon "heart", size: 22 %></span>
+      <h2><%= t("billie.community.nav.membership") %> ↗</h2>
+      <p><%= t("billie.community.admin.home_membership") %></p>
+    <% end %>
+  </div>
+</div>

@@ -82,8 +82,137 @@
     });
   }
 
+  // Support modal: a native <dialog>, so Esc, focus containment and returning focus
+  // to the trigger come from the browser. Clicking the dimmed backdrop also closes it.
+  function setupDialogTrigger(trigger) {
+    if (trigger.dataset.dialogReady) return;
+    var dialog = document.getElementById(trigger.dataset.dialogOpen);
+    if (!dialog || typeof dialog.showModal !== "function") return;
+    trigger.dataset.dialogReady = "1";
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.addEventListener("click", function (event) {
+      // Links (like "Support us" in the header) fall back to /features#support without JS.
+      event.preventDefault();
+      if (dialog.open) return;
+      dialog.showModal();
+      trigger.setAttribute("aria-expanded", "true");
+    });
+    if (dialog.dataset.dialogReady) return;
+    dialog.dataset.dialogReady = "1";
+    dialog.addEventListener("close", function () {
+      trigger.setAttribute("aria-expanded", "false");
+      if (document.activeElement === document.body) trigger.focus();
+    });
+    dialog.addEventListener("click", function (event) {
+      if (event.target !== dialog) return;
+      var box = dialog.getBoundingClientRect();
+      var inside = event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
+      if (!inside) dialog.close();
+    });
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      (document.querySelector("dialog[open]") || document.body).appendChild(area);
+      area.select();
+      var copied = false;
+      try { copied = document.execCommand("copy"); } catch (error) { copied = false; }
+      area.remove();
+      if (copied) resolve(); else reject(new Error("copy failed"));
+    });
+  }
+
+  // "Copy Note" copies the whole payment note, e.g. "jyun donation".
+  function setupCopyButton(button) {
+    if (button.dataset.copyReady) return;
+    button.dataset.copyReady = "1";
+    var label = button.querySelector("span") || button;
+    var original = label.textContent;
+    button.addEventListener("click", function () {
+      var text = button.dataset.copyText || "";
+      var status = document.querySelector("[data-copy-status]");
+      copyText(text).then(function () {
+        label.textContent = button.dataset.copiedLabel || original;
+        button.classList.add("is-copied");
+        if (status) status.textContent = (button.dataset.copiedLabel || "") + " " + text;
+        setTimeout(function () { label.textContent = original; button.classList.remove("is-copied"); }, 2000);
+      }, function () {
+        // Clipboard unavailable: select the note so it can be copied by hand.
+        var code = button.parentElement && button.parentElement.querySelector("code");
+        if (code && window.getSelection) {
+          var range = document.createRange();
+          range.selectNodeContents(code);
+          window.getSelection().removeAllRanges();
+          window.getSelection().addRange(range);
+        }
+      });
+    });
+  }
+
+  // "Enlarge" opens the QR code in a larger view on top of the support modal, so it is
+  // easy to scan from another phone or to long-press and save. Without <dialog>
+  // support the link simply opens the image in a new tab.
+  function setupQrZoom(link) {
+    if (link.dataset.qrZoomReady) return;
+    var zoom = document.getElementById("support-qr-zoom");
+    if (!zoom || typeof zoom.showModal !== "function") return;
+    link.dataset.qrZoomReady = "1";
+    link.addEventListener("click", function (event) {
+      event.preventDefault();
+      var image = zoom.querySelector("[data-qr-zoom-image]");
+      var title = zoom.querySelector("[data-qr-zoom-title]");
+      image.src = link.getAttribute("href");
+      image.alt = (link.querySelector("img") || {}).alt || link.dataset.qrTitle || "";
+      if (title) title.textContent = link.dataset.qrTitle || "";
+      if (!zoom.open) zoom.showModal();
+    });
+    if (zoom.dataset.qrZoomReady) return;
+    zoom.dataset.qrZoomReady = "1";
+    zoom.addEventListener("click", function (event) {
+      if (event.target === zoom) zoom.close();
+      event.stopPropagation();
+    });
+  }
+
+  // Admin → Payment Methods: show the chosen file before it is saved.
+  function setupQrPreview(input) {
+    if (input.dataset.qrPreviewReady) return;
+    input.dataset.qrPreviewReady = "1";
+    var card = input.closest("[data-payment-method]");
+    var preview = card && card.querySelector("[data-qr-preview]");
+    if (!preview || !window.URL || !URL.createObjectURL) return;
+    var image = preview.querySelector("img");
+    input.addEventListener("change", function () {
+      if (image.src) URL.revokeObjectURL(image.src);
+      var file = input.files && input.files[0];
+      if (!file || !/^image\/(png|jpeg|webp)$/.test(file.type)) { preview.hidden = true; image.removeAttribute("src"); return; }
+      image.src = URL.createObjectURL(file);
+      preview.hidden = false;
+    });
+  }
+
+  // This layout has no Turbo/UJS, so honor data-confirm on forms here.
+  function setupConfirmForm(form) {
+    if (form.dataset.confirmReady) return;
+    form.dataset.confirmReady = "1";
+    form.addEventListener("submit", function (event) {
+      if (!window.confirm(form.dataset.confirm)) event.preventDefault();
+    });
+  }
+
   function init() {
     document.querySelectorAll("[data-region-search]").forEach(setupRegionSearch);
+    document.querySelectorAll("[data-dialog-open]").forEach(setupDialogTrigger);
+    document.querySelectorAll("[data-copy-text]").forEach(setupCopyButton);
+    document.querySelectorAll("form[data-confirm]").forEach(setupConfirmForm);
+    document.querySelectorAll("[data-qr-zoom]").forEach(setupQrZoom);
+    document.querySelectorAll("[data-qr-input]").forEach(setupQrPreview);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

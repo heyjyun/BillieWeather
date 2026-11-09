@@ -25,6 +25,14 @@ module Finance
       end
     end
 
+    # A Founding Patron's explicit opt-in to list their nickname on the Features & Membership page.
+    def supporter_recognition
+      public_listing = params.dig(:user, :supporter_recognition_public) == "1"
+      return head :forbidden if public_listing && !@user.founding_patron?
+      @user.update!(supporter_recognition_public: public_listing)
+      redirect_to finance_settings_path(anchor: "settings-community"), status: :see_other, notice: t("billie.community.settings.recognition_saved")
+    end
+
     # Changing the password always needs the current one, so an unattended
     # signed-in browser cannot be used to take over the account.
     def password

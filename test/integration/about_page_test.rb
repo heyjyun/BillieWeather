@@ -3,11 +3,12 @@ require "test_helper"
 class AboutPageTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
-  test "about us is public, linked beside How it works and Features, and localized" do
+  test "about us is public, linked beside Features, and localized" do
     get billie_home_path, params: {locale: "en"}
-    assert_select ".bw-public-links a", text: "How it works"
-    assert_select ".bw-public-links a", text: "Features"
+    assert_select ".bw-public-links a", text: "How it works", count: 0
+    assert_select ".bw-public-links a[href='#{billie_features_path}']", text: "Features & Membership"
     assert_select ".bw-public-links a[href='#{billie_about_path}']", text: "About us"
+    assert_select ".bw-public-links a[href='#{billie_about_path}'] + a[data-dialog-open='support-dialog'][href='#{billie_features_path(anchor: "support")}']", text: "Support us"
 
     %w[en zh-CN zh-TW ja ko es].each do |locale|
       get billie_about_path, params: {locale: locale}

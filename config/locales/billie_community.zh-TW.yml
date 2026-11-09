@@ -1,0 +1,207 @@
+---
+zh-TW:
+  billie:
+    community:
+      nav:
+        features_membership: 功能與會員
+        membership: 會員
+        admin: 社群管理
+        payment_methods: 收款方式
+        support_us: 支持我們
+        support_admin: 支持管理
+        overview: 概覽
+        back_to_app: 返回應用程式
+      page:
+        title: 功能與會員
+        eyebrow: 功能與會員
+        heading: BillieWeather 能做什麼，又是和誰一起打造的
+        intro: 坦白介紹 BillieWeather 裡的工具、它們如何運作，以及用來感謝協助它成長的人的社群徽章。
+      features:
+        eyebrow: 產品功能
+        heading: 一個安靜的工作區，集中所有工具
+        dashboard_title: 財務儀表板
+        dashboard_body: 在一個頁面裡查看已上傳帳戶的收入、支出、餘額和近期動態。
+        categorization_title: 智慧分類
+        categorization_body: 交易會自動歸入類別，你修正過的規則下次會被記住。
+        forecasting_title: 現金流預測
+        forecasting_body: 估算未來幾週餘額可能的走向，並試算收入或支出變化帶來的影響。
+        insights_title: AI 財務洞察
+        insights_body: 讓 AI 用淺白語言解釋你的消費規律。只有你主動要求時才會執行 AI 分析。
+        tax_title: 報稅準備助手
+        tax_body: 整理報稅時需要的紀錄和問題清單。它是清單助手，不是稅務建議，也不會替你報稅。
+      how:
+        eyebrow: BILLIEWEATHER 如何運作
+        heading: 數字由程式計算，文字由 AI 解釋
+        intro: BillieWeather 的每個部分只做最擅長的事，所以你看到的數字都能追溯到你自己的紀錄。
+        ai_title: 自然語言解釋
+        ai_body: BillieWeather 目前使用 OpenAI GPT 模型進行自然語言互動和財務解釋，並且只在你要求 AI 分析時執行。
+        forecast_title: 根據你自己的歷史做預測
+        forecast_body: 現金流預測根據你的歷史交易、收入與支出趨勢，以及你自訂的情境。
+        models_title: 預測模型
+        models_body: 你可以選擇 Prophet、Chronos-2 或簡單的歷史平均基準。我們會持續評估哪些模型最適合預測個人現金流。
+        numbers_title: 計算與解釋分開
+        numbers_body: 所有數字都先由我們自己的程式計算。語言模型只負責解釋已經算好的數字，從不讓它編造你的財務數據。
+      membership:
+        eyebrow: 會員與權益
+        heading: 社群徽章
+        intro: 徽章是一份感謝，不是付費方案。每個帳戶都能使用完整的核心功能。
+        your_badges: 你的徽章：
+        member_body: 所有註冊了 BillieWeather 帳戶的人，包含全部核心功能。
+        founding_member_body: 早期加入，並透過回饋和測試參與產品發展的使用者。
+        founding_patron_body: 自願為 BillieWeather 提供資金支持，並經開發者人工確認的使用者。
+        table_caption: 各徽章包含的權益
+        benefit: 權益
+        planned: 規劃中
+        included: 包含
+        not_included: 不包含
+        stacking_note: Founding Member 與 Founding Patron 可以疊加，同時擁有兩枚徽章的人保留兩者的全部權益。
+        lamp_title: 阿拉丁神燈
+        lamp_body: Founding Member 和 Founding Patron 將可以提交想要新增的功能。開發者會評估每個願望的可行性，但不保證所有請求都會實現。
+        supporters_heading: 感謝我們的 Founding Patron
+      badges:
+        member: Member
+        founding_member: Founding Member
+        founding_patron: Founding Patron
+      benefits:
+        core_features: 核心功能
+        community_badge: 社群徽章
+        early_previews: 新功能搶先體驗
+        feedback_voting: 產品回饋與投票
+        aladdins_lamp: 阿拉丁神燈
+        supporter_recognition: 支持者致謝
+      support:
+        eyebrow: 靠個人支持打造
+        heading: 靠個人支持打造
+        body: BillieWeather 目前由個人獨立開發並自費營運，包括雲端託管、資料庫基礎設施、AI API 呼叫費用和日常維護。我們的目標是讓每個人都能使用個人理財工具。
+        button: 支持 BillieWeather ❤️
+      payment_methods:
+        other: 其他
+      dialog:
+        title: 支持 BillieWeather
+        intro: 你的自願支持將用於託管、基礎設施和 AI 費用。感謝你協助 BillieWeather 成長。
+        close: 關閉
+        qr_alt: "%{method} 收款 QR Code"
+        qr_missing: QR Code 尚未上傳
+        note_label: Payment Note / 付款備註
+        copied: 已複製
+        no_note_field: 這個平台可能無法填寫備註。付款後請聯絡開發者，以便確認你的支持（見下方說明）。
+        manual_match: 請把你的暱稱、付款方式、日期和金額傳給開發者，方便人工核對這筆轉帳。
+        nickname_title: 請先設定暱稱
+        nickname_body: 付款備註會使用你的 BillieWeather 暱稱，方便我們認出你的支持。請先到個人資料中設定暱稱，再回到這裡。
+        nickname_action: 設定暱稱
+        invite_title: 僅向受邀朋友顯示
+        invite_body: 收款資訊屬於個人帳戶，只向開發者邀請的朋友顯示。謝謝你惦記著 BillieWeather。
+        sign_in_title: 登入後查看支持方式
+        sign_in_body: 支持方式僅向已登入且經開發者邀請的朋友開放。
+        coming_soon: 即將開放
+        coming_soon_body: 在確認可以接收支持、並符合各支付平台的使用條件後，我們才會開放支持方式。感謝你的耐心。
+        disclaimer: 支持是你對一個獨立專案的自願個人心意，不屬於慈善捐款，不能抵稅，也不會影響你使用核心功能。
+        encourage: 哪怕 1 美元也能帶來改變。每一點心意都在幫助 BillieWeather 保持免費、持續成長。❤️
+        voluntary: 所有支持都完全自願。無論是否支持，所有核心功能都維持免費。
+        enlarge: 放大
+        enlarge_label: 放大 %{method} QR 碼
+        save_image: 儲存圖片
+        close_enlarged: 關閉放大的 QR 碼
+        enlarged_help: 用支付 App 掃描此 QR 碼，或長按圖片儲存到手機。
+        howto_heading: 如何支持
+        howto_choose: 選擇你慣用的付款方式。
+        howto_scan: 掃描 QR 碼，或儲存圖片後在支付 App 中開啟。
+        howto_note: 如果平台支援，請填寫下方的付款備註。
+        howto_verify: 所有支持都會經人工核實後，才會授予 Founding Patron 徽章。
+        copy_note: 複製備註
+        note_from_nickname: 此備註來自你的 BillieWeather 暱稱，無法在這裡修改。
+        change_nickname: 在帳戶設定中修改暱稱
+        no_note_heading: 支付 App 無法填寫備註？
+        contact_email: 電子郵件：
+        contact_subject: 支持款項：%{note}
+        contact_fallback: 請回覆邀請你的人，或透過你平時聯絡開發者的方式告訴我們。
+      settings:
+        heading: 社群徽章
+        intro: 徽章用來感謝協助 BillieWeather 成長的人，不會改變你的權限。
+        recognition_label: 在公開的 Founding Patron 名單中顯示我的暱稱
+        recognition_help: 預設關閉。只會顯示暱稱，絕不顯示金額或電子郵件。
+        recognition_save: 儲存致謝設定
+        recognition_saved: 致謝設定已儲存。
+        learn_more: 了解徽章與權益
+      admin:
+        title: 社群管理
+        eyebrow: 管理員
+        intro: 查找使用者，在人工核對轉帳後授予或撤銷榮譽徽章，並管理收款 QR Code。
+        status_heading: 支持收款
+        payments_on: SUPPORT_PAYMENTS_ENABLED 已開啟
+        payments_off: SUPPORT_PAYMENTS_ENABLED 已關閉——訪客看到「即將開放」
+        status_help: 將環境變數 SUPPORT_PAYMENTS_ENABLED 設為 true 並重新啟動伺服器後，受邀朋友才能看到已啟用的 QR 碼。關閉時你仍可上傳和預覽 QR 碼。
+        search_heading: 查找使用者
+        search_label: 暱稱或電子郵件
+        search_button: 搜尋
+        no_results: 沒有找到符合的使用者。
+        nickname: 暱稱
+        badges: 徽章
+        qr_access: QR Code 權限
+        manage: 管理
+        access_yes: 已邀請查看 QR Code
+        access_no: 未邀請
+        qr_heading: 收款 QR Code
+        replace_qr: 替換 QR Code
+        upload_qr: 上傳 QR Code
+        qr_help: PNG、JPEG 或 WebP，不超過 2 MB。
+        note_supported: 該平台允許付款人填寫備註
+        save: 儲存
+        remove_qr: 刪除 QR Code
+        remove_qr_confirm: 確定刪除這個 QR Code 嗎？
+        qr_too_large: QR Code 圖片不能超過 %{size}。
+        qr_wrong_type: QR Code 圖片必須是 PNG、JPEG 或 WebP 檔案。
+        qr_removed: 已刪除 %{method} QR Code。
+        payment_method_saved: 已儲存 %{method}。
+        back: "← 社群管理"
+        no_nickname: 未設定暱稱
+        current_badges: 目前徽章
+        granted_on: "%{time} 由 %{admin} 授予"
+        confirmed_via: "%{time} 透過 %{method} 確認到帳"
+        note: 管理員備註
+        note_help: 僅管理員可見。除非必要，請不要記錄金額。
+        revoke_confirm: 確定撤銷這枚徽章嗎？
+        revoke_reason: 原因（選填）
+        revoke: 撤銷
+        grant_heading: 授予徽章
+        grant_intro: 請在 BillieWeather 之外核對實際到帳後再授予 Founding Patron。開啟支持視窗或複製備註都不會自動授予徽章。
+        badge: 徽章
+        patron_details: Founding Patron 確認資訊
+        payment_method: 付款方式
+        confirmed_at: 確認到帳時間
+        patron_help: Founding Patron 必填；授予 Founding Member 時忽略。
+        grant: 授予徽章
+        granted_flash: 已授予 %{badge}。
+        revoked_flash: 已撤銷 %{badge}。
+        duplicate_badge: 這位使用者已擁有這枚徽章。
+        patron_requires_confirmation: 授予 Founding Patron 需要填寫付款方式和確認到帳時間。
+        access_heading: QR Code 查看權限
+        access_intro: 只有受邀朋友能看到收款 QR Code，並且僅在支持收款開啟時。
+        grant_access: 邀請查看 QR Code
+        revoke_access: 取消 QR Code 權限
+        access_granted: 已授予 QR Code 權限。
+        access_revoked: 已取消 QR Code 權限。
+        history_heading: 徽章紀錄
+        granted: 授予
+        revoked_col: 撤銷
+        pm_title: 收款方式
+        pm_intro: 為每種收款方式上傳、預覽、替換或刪除 QR 碼，並選擇哪些方式顯示在支持視窗中。變更立即生效，無需修改程式碼。
+        pm_privacy: QR 碼圖片私密儲存在資料庫中，經權限檢查後只提供給管理員和受邀朋友。圖片沒有公開連結，也不在程式碼儲存庫中。請只上傳你本人控制的帳戶 QR 碼。
+        pm_status_live: 已在支持視窗顯示
+        pm_status_disabled: 已停用
+        pm_status_missing: 尚未上傳 QR 碼
+        pm_current: 目前圖片 · %{type} · %{size}
+        pm_new_preview: 新圖片（尚未儲存）
+        pm_new_preview_alt: 新的 %{method} QR 碼預覽
+        pm_enabled: 在支持視窗中顯示此方式
+        pm_updated: "%{admin} 於 %{time} 最後修改"
+        qr_required_to_enable: 請先上傳 QR 碼，再啟用此方式。
+        qr_moved: 收款 QR 碼已移到獨立的頁面管理。
+        open_payment_methods: 開啟收款方式
+        home_title: 支持管理
+        home_intro: 會員徽章、社群權限和收款 QR 碼。這個區域獨立於 BillieWeather 應用程式，只對管理員開放。
+        home_community: 依暱稱尋找使用者，授予或撤銷 Founding Member 和 Founding Patron 徽章，並邀請朋友查看收款 QR 碼。
+        home_payments: 上傳、替換或刪除支付寶、微信支付、Zelle 和 Venmo QR 碼，並選擇哪些顯示在支持視窗中。
+        home_membership: 開啟公開的「功能與會員」頁面，查看訪客看到的內容。
+        home_counts: "%{members} 位 Founding Member · %{patrons} 位 Founding Patron · %{viewers} 人受邀查看 QR 碼"
+        home_live: "%{total} 種方式中有 %{count} 種顯示在支持視窗"

@@ -1,0 +1,60 @@
+<% content_for :title, t("billie.community.admin.title") %>
+<div class="bw-page-heading">
+  <div>
+    <span class="bw-eyebrow"><%= t("billie.community.admin.eyebrow") %></span>
+    <h1><%= t("billie.community.admin.title") %></h1>
+    <p><%= t("billie.community.admin.intro") %></p>
+  </div>
+</div>
+<div class="bw-settings-stack bw-admin-stack">
+  <section class="bw-panel" aria-labelledby="admin-status-heading">
+    <h2 id="admin-status-heading"><%= t("billie.community.admin.status_heading") %></h2>
+    <p>
+      <% if Community.payments_enabled? %>
+        <span class="bw-badge"><%= t("billie.community.admin.payments_on") %></span>
+      <% else %>
+        <span class="bw-badge bw-badge-review"><%= t("billie.community.admin.payments_off") %></span>
+      <% end %>
+    </p>
+    <p class="bw-caption"><%= t("billie.community.admin.status_help") %></p>
+  </section>
+
+  <section class="bw-panel" aria-labelledby="admin-search-heading">
+    <h2 id="admin-search-heading"><%= t("billie.community.admin.search_heading") %></h2>
+    <%= form_with url: admin_community_path, method: :get, data: {turbo: false}, class: "bw-form bw-admin-search", role: "search" do %>
+      <div class="bw-field">
+        <label for="q"><%= t("billie.community.admin.search_label") %></label>
+        <input id="q" name="q" type="search" value="<%= @query %>" maxlength="100" autocomplete="off">
+      </div>
+      <button type="submit" class="bw-button bw-button-dark"><%= finance_icon "search", size: 16 %><span><%= t("billie.community.admin.search_button") %></span></button>
+    <% end %>
+    <% if @results %>
+      <% if @results.empty? %>
+        <p class="bw-section-gap"><%= t("billie.community.admin.no_results") %></p>
+      <% else %>
+        <div class="bw-table-scroll bw-section-gap">
+          <table class="bw-table">
+            <thead><tr><th scope="col"><%= t("billie.community.admin.nickname") %></th><th scope="col"><%= t("billie.auth.email") %></th><th scope="col"><%= t("billie.community.admin.badges") %></th><th scope="col"><%= t("billie.community.admin.qr_access") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.community.admin.manage") %></span></th></tr></thead>
+            <tbody>
+              <% @results.each do |member| %>
+                <tr>
+                  <td><strong><%= member.nickname.presence || "—" %></strong></td>
+                  <td><%= member.email %></td>
+                  <td><%= community_badges(member) %></td>
+                  <td><%= member.support_payments_viewer? ? t("billie.community.admin.access_yes") : t("billie.community.admin.access_no") %></td>
+                  <td><%= link_to t("billie.community.admin.manage"), admin_community_user_path(member), class: "bw-table-link" %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+
+  <section class="bw-panel" aria-labelledby="admin-qr-heading">
+    <h2 id="admin-qr-heading"><%= t("billie.community.admin.qr_heading") %></h2>
+    <p><%= t("billie.community.admin.qr_moved") %></p>
+    <%= link_to t("billie.community.admin.open_payment_methods"), admin_payment_methods_path, class: "bw-button bw-button-outline" %>
+  </section>
+</div>

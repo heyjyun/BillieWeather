@@ -1,0 +1,90 @@
+<% content_for :title, t("billie.community.page.title") %>
+<div class="bw-community-page">
+<section class="bw-marketing-section bw-about-hero">
+  <div class="bw-section-heading">
+    <span class="bw-eyebrow"><%= t("billie.community.page.eyebrow") %></span>
+    <h1><%= t("billie.community.page.heading") %></h1>
+    <p><%= t("billie.community.page.intro") %></p>
+  </div>
+</section>
+
+<section class="bw-marketing-section" id="product-features" aria-labelledby="product-features-heading">
+  <div class="bw-section-heading"><span class="bw-eyebrow"><%= t("billie.community.features.eyebrow") %></span><h2 id="product-features-heading"><%= t("billie.community.features.heading") %></h2></div>
+  <div class="bw-feature-grid">
+    <% [["dashboard", "dashboard"], ["categorization", "tag"], ["forecasting", "forecast"], ["insights", "insights"], ["tax", "file"]].each do |key, icon| %>
+      <article class="bw-feature-card"><div class="bw-feature-icon"><%= finance_icon icon, size: 26 %></div><h3><%= t("billie.community.features.#{key}_title") %></h3><p><%= t("billie.community.features.#{key}_body") %></p></article>
+    <% end %>
+  </div>
+</section>
+
+<section class="bw-marketing-section bw-marketing-split" id="how-it-works" aria-labelledby="community-how-heading">
+  <div><span class="bw-eyebrow"><%= t("billie.community.how.eyebrow") %></span><h2 id="community-how-heading"><%= t("billie.community.how.heading") %></h2><p><%= t("billie.community.how.intro") %></p></div>
+  <div class="bw-feature-list">
+    <% [["ai", "insights"], ["forecast", "forecast"], ["models", "sun"], ["numbers", "check"]].each do |key, icon| %>
+      <article><%= finance_icon icon, size: 22 %><div><h3><%= t("billie.community.how.#{key}_title") %></h3><p><%= t("billie.community.how.#{key}_body") %></p></div></article>
+    <% end %>
+  </div>
+</section>
+
+<section class="bw-marketing-section" id="membership" aria-labelledby="membership-heading">
+  <div class="bw-section-heading"><span class="bw-eyebrow"><%= t("billie.community.membership.eyebrow") %></span><h2 id="membership-heading"><%= t("billie.community.membership.heading") %></h2><p><%= t("billie.community.membership.intro") %></p></div>
+  <% if user_signed_in? %>
+    <p class="bw-your-badges"><span><%= t("billie.community.membership.your_badges") %></span> <%= community_badges(current_user) %></p>
+  <% end %>
+  <div class="bw-feature-grid bw-tier-grid">
+    <% CommunityHelper::TIERS.each do |tier| %>
+      <article class="bw-feature-card bw-tier-card bw-tier-<%= tier.dasherize %>">
+        <%= community_badge(tier) %>
+        <h3><%= t("billie.community.badges.#{tier}") %></h3>
+        <p><%= t("billie.community.membership.#{tier}_body") %></p>
+      </article>
+    <% end %>
+  </div>
+  <div class="bw-panel bw-panel-flush bw-benefits-panel">
+    <div class="bw-table-scroll">
+      <table class="bw-table bw-benefits-table">
+        <caption class="bw-sr-only"><%= t("billie.community.membership.table_caption") %></caption>
+        <thead>
+          <tr>
+            <th scope="col"><%= t("billie.community.membership.benefit") %></th>
+            <% CommunityHelper::TIERS.each do |tier| %><th scope="col"><%= t("billie.community.badges.#{tier}") %></th><% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% CommunityHelper::BENEFITS.each do |key, planned, included| %>
+            <tr>
+              <th scope="row"><%= t("billie.community.benefits.#{key}") %><% if planned %> <span class="bw-planned"><%= t("billie.community.membership.planned") %></span><% end %></th>
+              <% included.each do |yes| %>
+                <td class="<%= yes ? 'bw-benefit-yes' : 'bw-benefit-no' %>"><span aria-hidden="true"><%= yes ? "✓" : "—" %></span><span class="bw-sr-only"><%= t(yes ? "billie.community.membership.included" : "billie.community.membership.not_included") %></span></td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="bw-table-footnote"><%= t("billie.community.membership.stacking_note") %></p>
+  </div>
+  <div class="bw-lamp-note">
+    <div class="bw-feature-icon"><%= finance_icon "lamp", size: 24 %></div>
+    <div><h3><%= t("billie.community.membership.lamp_title") %> <span class="bw-planned"><%= t("billie.community.membership.planned") %></span></h3><p><%= t("billie.community.membership.lamp_body") %></p></div>
+  </div>
+  <% if @supporter_nicknames.any? %>
+    <div class="bw-supporters">
+      <h3><%= t("billie.community.membership.supporters_heading") %></h3>
+      <ul><% @supporter_nicknames.each do |nickname| %><li><%= community_badge("founding_patron") %> <span><%= nickname %></span></li><% end %></ul>
+    </div>
+  <% end %>
+</section>
+
+<section class="bw-marketing-cta bw-support-cta" id="support" aria-labelledby="support-heading">
+  <div>
+    <span class="bw-eyebrow"><%= t("billie.community.support.eyebrow") %></span>
+    <h2 id="support-heading"><%= t("billie.community.support.heading") %></h2>
+    <p><%= t("billie.community.support.body") %></p>
+  </div>
+  <button type="button" class="bw-button bw-button-dark bw-button-large bw-support-trigger" data-dialog-open="support-dialog" aria-haspopup="dialog" aria-controls="support-dialog">
+    <%= t("billie.community.support.button") %>
+  </button>
+</section>
+
+</div>

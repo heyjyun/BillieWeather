@@ -9,6 +9,9 @@ class User < ApplicationRecord
   has_many :finance_merchant_rules, class_name: "Finance::MerchantRule", dependent: :destroy
   has_many :finance_statement_drafts, class_name: "Finance::StatementDraft", dependent: :destroy
   has_many :finance_bank_accounts, class_name: "Finance::BankAccount", dependent: :destroy
+  # Honorary badges (not roles: they grant no permissions) and private support-payment access.
+  has_many :community_honors, class_name: "Community::Honor", dependent: :destroy
+  has_one :community_support_access, class_name: "Community::SupportAccess", dependent: :destroy
   validates :google_uid, length: {maximum: 255}, uniqueness: true, allow_nil: true
   before_validation :normalize_usage_region
   before_validation :normalize_nickname
@@ -43,6 +46,28 @@ class User < ApplicationRecord
     platform_agent_of_id.nil? && usage_region.blank?
   end
 
+  # Every account is a Member; Founding Member and Founding Patron stack on top.
+  def community_badges
+    ["member"] + Community::Honor::KINDS.select { |kind| active_honor_kinds.include?(kind) }
+  end
+
+  def founding_member?
+    active_honor_kinds.include?("founding_member")
+  end
+
+  def founding_patron?
+    active_honor_kinds.include?("founding_patron")
+  end
+
+  # Invited by an admin to see the personal payment QR codes.
+  def support_payments_viewer?
+    community_support_access&.active? || false
+  end
+
+  def support_payment_note
+    Community.payment_note_for(self)
+  end
+
   # Welcome mail is optional; account creation does not depend on paid email delivery.
   def send_welcome_email
     return if Rails.env.production? && (ENV["POSTMARK_API_TOKEN"].blank? || ENV["MAIL_FROM"].blank?)
@@ -71,6 +96,10 @@ class User < ApplicationRecord
   # 🚅 add methods above.
 
   private
+
+  def active_honor_kinds
+    community_honors.loaded? ? community_honors.select(&:active?).map(&:kind) : community_honors.active.pluck(:kind)
+  end
 
   def normalize_usage_region
     self[:usage_region] = usage_region.to_s.strip.upcase.presence

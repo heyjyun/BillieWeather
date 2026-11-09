@@ -1,0 +1,207 @@
+---
+es:
+  billie:
+    community:
+      nav:
+        features_membership: Funciones y membresía
+        membership: Membresía
+        admin: Administración de la comunidad
+        payment_methods: Métodos de pago
+        support_us: Apóyanos
+        support_admin: Administración de apoyo
+        overview: Resumen
+        back_to_app: Volver a la app
+      page:
+        title: Funciones y membresía
+        eyebrow: FUNCIONES Y MEMBRESÍA
+        heading: Qué hace BillieWeather y con quién se construye
+        intro: Una mirada clara a las herramientas de BillieWeather, cómo funcionan y las insignias de la comunidad que agradecen a quienes la ayudan a crecer.
+      features:
+        eyebrow: FUNCIONES DEL PRODUCTO
+        heading: Todo en un espacio de trabajo tranquilo
+        dashboard_title: Panel financiero
+        dashboard_body: Consulta ingresos, gastos, saldos y movimientos recientes de tus cuentas subidas en una sola página.
+        categorization_title: Categorización inteligente
+        categorization_body: Las transacciones se clasifican automáticamente y las reglas que corriges se recuerdan la próxima vez.
+        forecasting_title: Pronóstico de flujo de caja
+        forecasting_body: Estima hacia dónde puede ir tu saldo en las próximas semanas y prueba cambios en ingresos o gastos.
+        insights_title: Análisis financiero con IA
+        insights_body: Pide una explicación en lenguaje sencillo de tus patrones de gasto. El análisis con IA solo se ejecuta cuando lo solicitas.
+        tax_title: Ayuda para preparar impuestos
+        tax_body: Organiza los registros y preguntas para la temporada de impuestos. Es una lista de apoyo, no asesoría fiscal ni presentación de declaraciones.
+      how:
+        eyebrow: CÓMO FUNCIONA BILLIEWEATHER
+        heading: Los números los calcula el código; las palabras, la IA
+        intro: Cada parte de BillieWeather hace lo que mejor sabe hacer, para que las cifras que ves puedan rastrearse hasta tus propios registros.
+        ai_title: Explicaciones en lenguaje natural
+        ai_body: BillieWeather usa actualmente modelos GPT de OpenAI para conversar en lenguaje natural y explicar tus finanzas, solo cuando pides un análisis con IA.
+        forecast_title: Pronósticos a partir de tu historial
+        forecast_body: Los pronósticos de flujo de caja se basan en tus transacciones pasadas, tus tendencias de ingresos y gastos, y los escenarios que tú defines.
+        models_title: Modelos de pronóstico
+        models_body: Puedes elegir Prophet, Chronos-2 o una referencia simple de promedio histórico. Seguimos evaluando qué modelos pronostican mejor el flujo de caja personal.
+        numbers_title: El cálculo, separado de la explicación
+        numbers_body: Cada número lo calcula primero nuestro propio código. El modelo de lenguaje solo explica cifras ya calculadas, así que nunca se le pide inventar tus números financieros.
+      membership:
+        eyebrow: MEMBRESÍA Y BENEFICIOS
+        heading: Insignias de la comunidad
+        intro: Las insignias son un agradecimiento, no un plan de pago. Toda cuenta conserva el producto principal completo.
+        your_badges: 'Tus insignias:'
+        member_body: Todas las personas con una cuenta de BillieWeather. Incluye todas las funciones principales.
+        founding_member_body: Primeros usuarios que se unieron y ayudaron a dar forma a BillieWeather con comentarios y pruebas.
+        founding_patron_body: Personas que decidieron apoyar económicamente a BillieWeather, confirmadas a mano por el desarrollador.
+        table_caption: Beneficios incluidos en cada insignia
+        benefit: Beneficio
+        planned: Planeado
+        included: Incluido
+        not_included: No incluido
+        stacking_note: Founding Member y Founding Patron se acumulan. Quien tiene ambas insignias conserva todos los beneficios de cada una.
+        lamp_title: La lámpara de Aladino
+        lamp_body: Founding Members y Founding Patrons podrán proponer funciones que les gustaría ver. El desarrollador evaluará la viabilidad de cada deseo; no se garantiza que todas las solicitudes se construyan.
+        supporters_heading: Gracias a nuestros Founding Patrons
+      badges:
+        member: Member
+        founding_member: Founding Member
+        founding_patron: Founding Patron
+      benefits:
+        core_features: Funciones principales
+        community_badge: Insignia de la comunidad
+        early_previews: Vista previa de funciones nuevas
+        feedback_voting: Comentarios y votación del producto
+        aladdins_lamp: La lámpara de Aladino
+        supporter_recognition: Reconocimiento a quienes apoyan
+      support:
+        eyebrow: HECHO CON APOYO PERSONAL
+        heading: Hecho con apoyo personal
+        body: BillieWeather se desarrolla actualmente de forma independiente y se financia con recursos propios, incluidos el alojamiento en la nube, la infraestructura de bases de datos, el costo de tokens de la API de IA y el mantenimiento continuo. Nuestro objetivo es que las herramientas de finanzas personales sigan siendo accesibles para todos.
+        button: Apoya a BillieWeather ❤️
+      payment_methods:
+        other: Otro
+      dialog:
+        title: Apoya a BillieWeather
+        intro: Tu apoyo voluntario ayuda a cubrir el alojamiento, la infraestructura y los costos de IA. Gracias por ayudar a que BillieWeather crezca.
+        close: Cerrar
+        qr_alt: Código QR de pago de %{method}
+        qr_missing: El código QR aún no está disponible
+        note_label: Payment Note / 付款备注
+        copied: Copiado
+        no_note_field: Es posible que este servicio no tenga campo de nota. Después de pagar, contacta al desarrollador para que pueda identificar tu aporte (ver abajo).
+        manual_match: Envía al desarrollador tu apodo, el método de pago, la fecha y el importe para que pueda identificar la transferencia a mano.
+        nickname_title: Primero elige un apodo
+        nickname_body: Tu nota de pago usa tu apodo de BillieWeather para que podamos reconocer tu apoyo. Añade un apodo en tu perfil y vuelve aquí.
+        nickname_action: Elegir mi apodo
+        invite_title: Solo para amigos invitados
+        invite_body: Los datos de pago son de cuentas personales, así que solo se muestran a amigos que el desarrollador ha invitado. Gracias por pensar en BillieWeather.
+        sign_in_title: Inicia sesión para ver las opciones de apoyo
+        sign_in_body: Las opciones de apoyo solo están disponibles para amigos con sesión iniciada que el desarrollador ha invitado.
+        coming_soon: Próximamente
+        coming_soon_body: Abriremos las opciones de apoyo cuando hayamos confirmado que se permite recibir apoyo y que se cumplen las condiciones de cada servicio de pago. Gracias por tu paciencia.
+        disclaimer: El apoyo es un obsequio personal y voluntario a un proyecto independiente. No es una donación benéfica, no es deducible de impuestos y no cambia tu acceso a las funciones principales.
+        encourage: Incluso 1 $ marca la diferencia. Cada pequeño aporte ayuda a que BillieWeather siga siendo gratuito y creciendo. ❤️
+        voluntary: Todos los aportes son voluntarios. Todas las funciones principales siguen siendo gratuitas, aportes o no.
+        enlarge: Ampliar
+        enlarge_label: Ampliar el código QR de %{method}
+        save_image: Guardar imagen
+        close_enlarged: Cerrar el código QR ampliado
+        enlarged_help: Escanea este código con tu app de pagos, o mantén pulsada la imagen para guardarla en tu teléfono.
+        howto_heading: Cómo apoyar
+        howto_choose: Elige tu método de pago preferido.
+        howto_scan: Escanea el código QR o guárdalo para abrirlo en tu app de pagos.
+        howto_note: Incluye la nota de pago que aparece abajo cuando se pueda.
+        howto_verify: Los aportes se verifican a mano antes de otorgar el reconocimiento de Founding Patron.
+        copy_note: Copiar nota
+        note_from_nickname: Esta nota usa tu apodo de BillieWeather y no se puede editar aquí.
+        change_nickname: Cambia tu apodo en la configuración de la cuenta
+        no_note_heading: "¿Tu app de pagos no tiene campo de nota?"
+        contact_email: 'Correo:'
+        contact_subject: 'Aporte de apoyo: %{note}'
+        contact_fallback: Responde a la persona que te invitó o escribe al desarrollador por el medio que usas normalmente.
+      settings:
+        heading: Insignias de la comunidad
+        intro: Las insignias agradecen a quienes ayudan a BillieWeather a crecer. No cambian tus permisos.
+        recognition_label: Mostrar mi apodo en la lista pública de Founding Patrons
+        recognition_help: Desactivado de forma predeterminada. Solo se muestra tu apodo, nunca importes ni tu correo electrónico.
+        recognition_save: Guardar preferencia de reconocimiento
+        recognition_saved: Se guardó tu preferencia de reconocimiento.
+        learn_more: Sobre las insignias y beneficios
+      admin:
+        title: Administración de la comunidad
+        eyebrow: ADMINISTRACIÓN
+        intro: Busca personas, otorga o revoca insignias honoríficas tras revisar las transferencias a mano y gestiona los códigos QR de pago.
+        status_heading: Pagos de apoyo
+        payments_on: SUPPORT_PAYMENTS_ENABLED está activado
+        payments_off: SUPPORT_PAYMENTS_ENABLED está desactivado — los visitantes ven Próximamente
+        status_help: Define la variable de entorno SUPPORT_PAYMENTS_ENABLED como true y reinicia el servidor para mostrar los códigos QR activados a los amigos invitados. Mientras está desactivada puedes subir y previsualizar códigos.
+        search_heading: Buscar una persona
+        search_label: Apodo o correo electrónico
+        search_button: Buscar
+        no_results: Nadie coincide con esa búsqueda.
+        nickname: Apodo
+        badges: Insignias
+        qr_access: Acceso a QR
+        manage: Gestionar
+        access_yes: Invitado a ver los códigos QR
+        access_no: No invitado
+        qr_heading: Códigos QR de pago
+        replace_qr: Reemplazar código QR
+        upload_qr: Subir código QR
+        qr_help: PNG, JPEG o WebP, hasta 2 MB.
+        note_supported: Este servicio permite añadir una nota al pagar
+        save: Guardar
+        remove_qr: Eliminar código QR
+        remove_qr_confirm: "¿Eliminar este código QR?"
+        qr_too_large: La imagen QR debe pesar %{size} o menos.
+        qr_wrong_type: La imagen QR debe ser un archivo PNG, JPEG o WebP.
+        qr_removed: Se eliminó el código QR de %{method}.
+        payment_method_saved: Se guardó %{method}.
+        back: "← Administración de la comunidad"
+        no_nickname: Sin apodo
+        current_badges: Insignias actuales
+        granted_on: Otorgada el %{time} por %{admin}
+        confirmed_via: Transferencia confirmada el %{time} vía %{method}
+        note: Nota de administración
+        note_help: Solo la ven los administradores. No registres importes salvo que los necesites.
+        revoke_confirm: "¿Revocar esta insignia?"
+        revoke_reason: Motivo (opcional)
+        revoke: Revocar
+        grant_heading: Otorgar una insignia
+        grant_intro: Otorga Founding Patron solo después de revisar la transferencia real fuera de BillieWeather. Abrir la ventana de apoyo o copiar una nota nunca otorga una insignia.
+        badge: Insignia
+        patron_details: Confirmación de Founding Patron
+        payment_method: Método de pago
+        confirmed_at: Transferencia confirmada el
+        patron_help: Obligatorio para Founding Patron; se ignora para Founding Member.
+        grant: Otorgar insignia
+        granted_flash: Se otorgó %{badge}.
+        revoked_flash: Se revocó %{badge}.
+        duplicate_badge: Esta persona ya tiene esa insignia.
+        patron_requires_confirmation: Founding Patron necesita el método de pago y la fecha en que confirmaste la transferencia.
+        access_heading: Acceso a los códigos QR
+        access_intro: Solo los amigos invitados pueden ver los códigos QR de pago, y solo mientras los pagos de apoyo estén activados.
+        grant_access: Invitar a ver los códigos QR
+        revoke_access: Quitar acceso a QR
+        access_granted: Se concedió el acceso a QR.
+        access_revoked: Se quitó el acceso a QR.
+        history_heading: Historial de insignias
+        granted: Otorgada
+        revoked_col: Revocada
+        pm_title: Métodos de pago
+        pm_intro: Sube, previsualiza, reemplaza o elimina el código QR de cada método de pago, y elige cuáles aparecen en la ventana de apoyo. Los cambios se aplican al instante, sin tocar el código.
+        pm_privacy: Las imágenes QR se guardan de forma privada en la base de datos y solo se entregan a administradores y amigos invitados tras comprobar los permisos. Nunca tienen una URL pública ni forman parte del repositorio. Sube solo códigos de cuentas que controles.
+        pm_status_live: Visible en la ventana de apoyo
+        pm_status_disabled: Desactivado
+        pm_status_missing: Sin código QR
+        pm_current: Imagen actual · %{type} · %{size}
+        pm_new_preview: Imagen nueva (aún sin guardar)
+        pm_new_preview_alt: Vista previa del nuevo código QR de %{method}
+        pm_enabled: Mostrar este método en la ventana de apoyo
+        pm_updated: Último cambio %{time} por %{admin}
+        qr_required_to_enable: Sube un código QR antes de activar este método.
+        qr_moved: Los códigos QR de pago se gestionan en su propia página.
+        open_payment_methods: Abrir Métodos de pago
+        home_title: Administración de apoyo
+        home_intro: Insignias de membresía, acceso de la comunidad y códigos QR de pago. Esta área está separada de la app BillieWeather y solo la pueden abrir administradores.
+        home_community: Busca personas por apodo, otorga o revoca las insignias Founding Member y Founding Patron, e invita a amigos a ver los códigos QR de pago.
+        home_payments: Sube, reemplaza o elimina los códigos QR de Alipay, WeChat Pay, Zelle y Venmo, y elige cuáles aparecen en la ventana de apoyo.
+        home_membership: Abre la página pública de Funciones y membresía para ver lo que ven los visitantes.
+        home_counts: "%{members} Founding Members · %{patrons} Founding Patrons · %{viewers} invitados a ver los QR"
+        home_live: "%{count} de %{total} métodos visibles en la ventana de apoyo"

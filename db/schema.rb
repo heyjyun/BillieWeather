@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_000200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -82,6 +82,53 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["addressable_type", "addressable_id"], name: "index_addresses_on_addressable"
+  end
+
+  create_table "community_honors", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "kind", null: false
+    t.datetime "granted_at", null: false
+    t.bigint "granted_by_id"
+    t.datetime "confirmed_at"
+    t.string "payment_method"
+    t.text "note"
+    t.datetime "revoked_at"
+    t.bigint "revoked_by_id"
+    t.text "revoke_reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["granted_by_id"], name: "index_community_honors_on_granted_by_id"
+    t.index ["revoked_by_id"], name: "index_community_honors_on_revoked_by_id"
+    t.index ["user_id", "kind"], name: "index_community_honors_one_active_per_kind", unique: true, where: "(revoked_at IS NULL)"
+    t.index ["user_id"], name: "index_community_honors_on_user_id"
+    t.check_constraint "kind::text <> 'founding_patron'::text OR confirmed_at IS NOT NULL AND payment_method IS NOT NULL", name: "community_honors_patron_confirmed"
+    t.check_constraint "kind::text = ANY (ARRAY['founding_member'::character varying, 'founding_patron'::character varying]::text[])", name: "community_honors_kind_allowed"
+    t.check_constraint "payment_method IS NULL OR (payment_method::text = ANY (ARRAY['alipay'::character varying, 'wechat_pay'::character varying, 'zelle'::character varying, 'venmo'::character varying, 'other'::character varying]::text[]))", name: "community_honors_payment_method_allowed"
+  end
+
+  create_table "community_payment_methods", force: :cascade do |t|
+    t.string "key", null: false
+    t.boolean "note_supported", default: true, null: false
+    t.bigint "updated_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "enabled", default: false, null: false
+    t.index ["key"], name: "index_community_payment_methods_on_key", unique: true
+    t.index ["updated_by_id"], name: "index_community_payment_methods_on_updated_by_id"
+    t.check_constraint "key::text = ANY (ARRAY['alipay'::character varying, 'wechat_pay'::character varying, 'zelle'::character varying, 'venmo'::character varying]::text[])", name: "community_payment_methods_key_allowed"
+  end
+
+  create_table "community_support_accesses", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.datetime "granted_at", null: false
+    t.bigint "granted_by_id"
+    t.datetime "revoked_at"
+    t.bigint "revoked_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["granted_by_id"], name: "index_community_support_accesses_on_granted_by_id"
+    t.index ["revoked_by_id"], name: "index_community_support_accesses_on_revoked_by_id"
+    t.index ["user_id"], name: "index_community_support_accesses_on_user_id", unique: true
   end
 
   create_table "finance_bank_accounts", force: :cascade do |t|
@@ -290,6 +337,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000000) do
     t.index ["user_id"], name: "index_oauth_stripe_accounts_on_user_id"
   end
 
+  create_table "private_storage_files", force: :cascade do |t|
+    t.string "key", null: false
+    t.binary "data", null: false
+    t.bigint "byte_size", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_private_storage_files_on_key", unique: true
+  end
+
   create_table "scaffolding_absolutely_abstract_creative_concepts", force: :cascade do |t|
     t.bigint "team_id", null: false
     t.string "name"
@@ -381,6 +437,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000000) do
     t.string "usage_region", limit: 2
     t.boolean "usage_region_pending", default: false, null: false
     t.string "nickname", limit: 40
+    t.boolean "supporter_recognition_public", default: false, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["google_uid"], name: "index_users_on_google_uid", unique: true, where: "(google_uid IS NOT NULL)"
     t.index ["platform_agent_of_id"], name: "index_users_on_platform_agent_of_id"
@@ -465,6 +522,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_000000) do
   add_foreign_key "account_onboarding_invitation_lists", "teams"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "community_honors", "users", column: "granted_by_id", on_delete: :nullify
+  add_foreign_key "community_honors", "users", column: "revoked_by_id", on_delete: :nullify
+  add_foreign_key "community_honors", "users", on_delete: :cascade
+  add_foreign_key "community_payment_methods", "users", column: "updated_by_id", on_delete: :nullify
+  add_foreign_key "community_support_accesses", "users", column: "granted_by_id", on_delete: :nullify
+  add_foreign_key "community_support_accesses", "users", column: "revoked_by_id", on_delete: :nullify
+  add_foreign_key "community_support_accesses", "users", on_delete: :cascade
   add_foreign_key "finance_bank_accounts", "users"
   add_foreign_key "finance_insights", "users"
   add_foreign_key "finance_merchant_rules", "users"

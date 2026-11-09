@@ -1,0 +1,207 @@
+---
+ja:
+  billie:
+    community:
+      nav:
+        features_membership: 機能とメンバーシップ
+        membership: メンバーシップ
+        admin: コミュニティ管理
+        payment_methods: 支払い方法
+        support_us: 応援する
+        support_admin: サポート管理
+        overview: 概要
+        back_to_app: アプリに戻る
+      page:
+        title: 機能とメンバーシップ
+        eyebrow: 機能とメンバーシップ
+        heading: BillieWeather にできること、そして一緒につくる人たち
+        intro: BillieWeather のツールと仕組み、そして成長を支えてくれる人に感謝を伝えるコミュニティバッジをわかりやすく紹介します。
+      features:
+        eyebrow: プロダクトの機能
+        heading: 落ち着いたひとつのワークスペースに
+        dashboard_title: ファイナンシャル・ダッシュボード
+        dashboard_body: アップロードした口座の収入、支出、残高、最近の動きを 1 ページで確認できます。
+        categorization_title: スマート分類
+        categorization_body: 取引は自動でカテゴリに分類され、修正したルールは次回から反映されます。
+        forecasting_title: キャッシュフロー予測
+        forecasting_body: 今後数週間の残高の見通しを推定し、収入や支出が変わった場合を試算できます。
+        insights_title: AI ファイナンス・インサイト
+        insights_body: 支出の傾向をわかりやすい言葉で説明してもらえます。AI 分析はあなたが依頼したときだけ実行されます。
+        tax_title: 確定申告の準備サポート
+        tax_body: 申告時に必要な記録と確認事項を整理します。チェックリストの補助であり、税務アドバイスや申告代行ではありません。
+      how:
+        eyebrow: BILLIEWEATHER の仕組み
+        heading: 数字はコードで、言葉は AI で
+        intro: BillieWeather の各部分は得意な役割だけを担うので、表示される数字はすべてあなた自身の記録までたどれます。
+        ai_title: 自然な言葉での説明
+        ai_body: BillieWeather は現在、OpenAI の GPT モデルを使って自然言語でのやり取りと家計の説明を行います。AI 分析を依頼したときだけ動作します。
+        forecast_title: あなた自身の履歴にもとづく予測
+        forecast_body: キャッシュフロー予測は、過去の取引、収入と支出の傾向、そしてあなたが設定したシナリオにもとづいています。
+        models_title: 予測モデル
+        models_body: Prophet、Chronos-2、またはシンプルな過去平均ベースラインから選べます。個人のキャッシュフロー予測に最適なモデルを引き続き評価しています。
+        numbers_title: 計算と説明を分離
+        numbers_body: すべての数字はまず私たち自身のコードで計算します。言語モデルは計算済みの数字を説明するだけで、財務の数字を作らせることはありません。
+      membership:
+        eyebrow: メンバーシップと特典
+        heading: コミュニティバッジ
+        intro: バッジは感謝のしるしで、有料プランではありません。どのアカウントでもコア機能をすべて使えます。
+        your_badges: あなたのバッジ：
+        member_body: BillieWeather のアカウントを持つすべての人。コア機能はすべて含まれます。
+        founding_member_body: 早い時期に参加し、フィードバックやテストでプロダクトづくりに関わってくれた人。
+        founding_patron_body: 自らの意思で BillieWeather を資金面で支援し、開発者が手動で確認した人。
+        table_caption: 各バッジに含まれる特典
+        benefit: 特典
+        planned: 予定
+        included: 含まれる
+        not_included: 含まれない
+        stacking_note: Founding Member と Founding Patron は重ねて持てます。両方を持つ人はそれぞれの特典をすべて受けられます。
+        lamp_title: アラジンのランプ
+        lamp_body: Founding Member と Founding Patron は、追加してほしい機能を提案できるようになります。開発者が実現可能性を検討しますが、すべての要望の実現を約束するものではありません。
+        supporters_heading: Founding Patron の皆さんに感謝します
+      badges:
+        member: Member
+        founding_member: Founding Member
+        founding_patron: Founding Patron
+      benefits:
+        core_features: コア機能
+        community_badge: コミュニティバッジ
+        early_previews: 新機能の先行プレビュー
+        feedback_voting: フィードバックと投票
+        aladdins_lamp: アラジンのランプ
+        supporter_recognition: 支援者としての紹介
+      support:
+        eyebrow: 個人の支援でつくられています
+        heading: 個人の支援でつくられています
+        body: BillieWeather は現在、個人が独立して開発し、クラウドホスティング、データベース基盤、AI API の利用料、継続的な保守まで自費でまかなっています。個人の家計ツールを誰でも使えるものにし続けることが目標です。
+        button: BillieWeather を応援する ❤️
+      payment_methods:
+        other: その他
+      dialog:
+        title: BillieWeather を応援する
+        intro: 任意のご支援は、ホスティング、インフラ、AI の費用にあてられます。BillieWeather の成長を支えてくださりありがとうございます。
+        close: 閉じる
+        qr_alt: "%{method} の支払い用 QR コード"
+        qr_missing: QR コードはまだありません
+        note_label: Payment Note / 付款备注
+        copied: コピーしました
+        no_note_field: このサービスにはメモ欄がない場合があります。支払い後、支援を確認できるよう開発者に連絡してください（下記参照）。
+        manual_match: ニックネーム、支払い方法、日付、金額を開発者に送ってください。手作業で送金を照合します。
+        nickname_title: 先にニックネームを設定してください
+        nickname_body: 支払いメモには BillieWeather のニックネームを使い、支援を確認します。プロフィールでニックネームを設定してから戻ってきてください。
+        nickname_action: ニックネームを設定
+        invite_title: 招待した友人にだけ公開しています
+        invite_body: 支払い情報は個人の口座のため、開発者が招待した友人にだけ表示しています。BillieWeather のことを気にかけてくださりありがとうございます。
+        sign_in_title: ログインすると応援方法を確認できます
+        sign_in_body: 応援方法は、ログインしていて開発者に招待された友人だけが利用できます。
+        coming_soon: 近日公開
+        coming_soon_body: 支援の受け取りが認められ、各決済サービスの利用条件を満たしていることを確認してから公開します。もうしばらくお待ちください。
+        disclaimer: ご支援は独立したプロジェクトへの任意の個人的な贈り物です。慈善寄付ではなく、税控除の対象にもならず、コア機能の利用にも影響しません。
+        encourage: 1 ドルでも大きな力になります。小さな支援の一つひとつが、BillieWeather を無料のまま育てていく助けになります。❤️
+        voluntary: 支援はすべて任意です。支援の有無にかかわらず、すべての基本機能は無料のままです。
+        enlarge: 拡大
+        enlarge_label: "%{method} の QR コードを拡大"
+        save_image: 画像を保存
+        close_enlarged: 拡大した QR コードを閉じる
+        enlarged_help: 支払いアプリでこのコードを読み取るか、画像を長押ししてスマートフォンに保存してください。
+        howto_heading: 支援の方法
+        howto_choose: 使いたい支払い方法を選びます。
+        howto_scan: QR コードを読み取るか、保存して支払いアプリで開きます。
+        howto_note: 対応している場合は、下の支払いメモを入力してください。
+        howto_verify: 支援は手動で確認したうえで、Founding Patron の称号をお贈りします。
+        copy_note: メモをコピー
+        note_from_nickname: このメモは BillieWeather のニックネームから作られ、ここでは編集できません。
+        change_nickname: アカウント設定でニックネームを変更
+        no_note_heading: 支払いアプリにメモ欄がない場合
+        contact_email: メール：
+        contact_subject: 支援のご連絡：%{note}
+        contact_fallback: 招待してくれた人に返信するか、普段の方法で開発者に連絡してください。
+      settings:
+        heading: コミュニティバッジ
+        intro: バッジは BillieWeather の成長を支えてくれる人への感謝です。権限は変わりません。
+        recognition_label: 公開の Founding Patron 一覧にニックネームを表示する
+        recognition_help: 初期設定はオフです。表示されるのはニックネームだけで、金額やメールアドレスは表示されません。
+        recognition_save: 表示設定を保存
+        recognition_saved: 表示設定を保存しました。
+        learn_more: バッジと特典について
+      admin:
+        title: コミュニティ管理
+        eyebrow: 管理者
+        intro: ユーザーを検索し、送金を手動で確認したうえで名誉バッジを付与・取り消しし、支払い用 QR コードを管理します。
+        status_heading: 支援の受け付け
+        payments_on: SUPPORT_PAYMENTS_ENABLED はオンです
+        payments_off: SUPPORT_PAYMENTS_ENABLED はオフです — 訪問者には「近日公開」と表示されます
+        status_help: 環境変数 SUPPORT_PAYMENTS_ENABLED を true にしてサーバーを再起動すると、有効にした QR コードが招待された友人に表示されます。オフの間もアップロードとプレビューはできます。
+        search_heading: ユーザーを検索
+        search_label: ニックネームまたはメールアドレス
+        search_button: 検索
+        no_results: 一致するユーザーはいません。
+        nickname: ニックネーム
+        badges: バッジ
+        qr_access: QR の閲覧権限
+        manage: 管理
+        access_yes: QR コードの閲覧に招待済み
+        access_no: 未招待
+        qr_heading: 支払い用 QR コード
+        replace_qr: QR コードを差し替える
+        upload_qr: QR コードをアップロード
+        qr_help: PNG、JPEG、WebP（2 MB まで）。
+        note_supported: このサービスでは支払い時にメモを入力できる
+        save: 保存
+        remove_qr: QR コードを削除
+        remove_qr_confirm: この QR コードを削除しますか？
+        qr_too_large: QR 画像は %{size} 以下にしてください。
+        qr_wrong_type: QR 画像は PNG、JPEG、WebP のいずれかにしてください。
+        qr_removed: "%{method} の QR コードを削除しました。"
+        payment_method_saved: "%{method} を保存しました。"
+        back: "← コミュニティ管理"
+        no_nickname: ニックネーム未設定
+        current_badges: 現在のバッジ
+        granted_on: "%{time} に %{admin} が付与"
+        confirmed_via: "%{time} に %{method} で入金を確認"
+        note: 管理者メモ
+        note_help: 管理者だけが見られます。必要な場合を除き、金額は記録しないでください。
+        revoke_confirm: このバッジを取り消しますか？
+        revoke_reason: 理由（任意）
+        revoke: 取り消す
+        grant_heading: バッジを付与
+        grant_intro: Founding Patron は、BillieWeather の外で実際の入金を確認してから付与してください。応援ウィンドウを開いたりメモをコピーしたりしても、バッジは付与されません。
+        badge: バッジ
+        patron_details: Founding Patron の確認情報
+        payment_method: 支払い方法
+        confirmed_at: 入金を確認した日時
+        patron_help: Founding Patron では必須。Founding Member では使用しません。
+        grant: バッジを付与
+        granted_flash: "%{badge} を付与しました。"
+        revoked_flash: "%{badge} を取り消しました。"
+        duplicate_badge: このユーザーはすでにそのバッジを持っています。
+        patron_requires_confirmation: Founding Patron には支払い方法と入金を確認した日時が必要です。
+        access_heading: QR コードの閲覧権限
+        access_intro: 支払い用 QR コードを見られるのは招待した友人だけで、支援の受け付けがオンのときに限ります。
+        grant_access: QR コードの閲覧に招待
+        revoke_access: QR の閲覧権限を外す
+        access_granted: QR の閲覧権限を付与しました。
+        access_revoked: QR の閲覧権限を外しました。
+        history_heading: バッジの履歴
+        granted: 付与
+        revoked_col: 取り消し
+        pm_title: 支払い方法
+        pm_intro: 支払い方法ごとに QR コードのアップロード、プレビュー、差し替え、削除を行い、支援ウィンドウに表示する方法を選べます。変更はすぐに反映され、コードの変更は不要です。
+        pm_privacy: QR 画像はデータベースに非公開で保存され、権限を確認したうえで管理者と招待された友人にだけ配信されます。公開 URL はなく、コードリポジトリにも含まれません。自分が管理するアカウントのコードだけをアップロードしてください。
+        pm_status_live: 支援ウィンドウに表示中
+        pm_status_disabled: 無効
+        pm_status_missing: QR コードなし
+        pm_current: 現在の画像 · %{type} · %{size}
+        pm_new_preview: 新しい画像（未保存）
+        pm_new_preview_alt: 新しい %{method} QR コードのプレビュー
+        pm_enabled: この方法を支援ウィンドウに表示する
+        pm_updated: "%{time} に %{admin} が最終更新"
+        qr_required_to_enable: 有効にする前に QR コードをアップロードしてください。
+        qr_moved: 支払い用 QR コードは専用ページで管理します。
+        open_payment_methods: 支払い方法を開く
+        home_title: サポート管理
+        home_intro: メンバーシップの称号、コミュニティの権限、支払い用 QR コード。この画面は BillieWeather アプリとは別で、管理者だけが開けます。
+        home_community: ニックネームで人を探し、Founding Member と Founding Patron の称号を付与・取り消し、友人を QR コードの閲覧に招待します。
+        home_payments: Alipay、WeChat Pay、Zelle、Venmo の QR コードをアップロード・差し替え・削除し、支援ウィンドウに表示するものを選びます。
+        home_membership: 公開の「機能とメンバーシップ」ページを開き、訪問者に見える内容を確認します。
+        home_counts: Founding Member %{members} 人 · Founding Patron %{patrons} 人 · QR 閲覧招待 %{viewers} 人
+        home_live: "%{total} 件中 %{count} 件を支援ウィンドウに表示中"

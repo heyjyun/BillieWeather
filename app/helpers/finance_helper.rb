@@ -124,7 +124,19 @@ module FinanceHelper
       "logout" => "M9 4H3v16h6 M13 8l4 4-4 4 M7 12h14",
       "search" => "M21 21l-5-5 M10 3a7 7 0 100 14 7 7 0 000-14",
       "sun" => "M12 1v2 M12 21v2 M1 12h2 M21 12h2 M4.2 4.2l1.4 1.4 M18.4 18.4l1.4 1.4 M4.2 19.8l1.4-1.4 M18.4 5.6l1.4-1.4 M12 7a5 5 0 100 10 5 5 0 000-10",
-      "settings" => "M4 7h16 M4 17h16 M9 4v6 M15 14v6"
+      "settings" => "M4 7h16 M4 17h16 M9 4v6 M15 14v6",
+      "heart" => "M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z",
+      "crown" => "M3 19h18 M4 16L3 7l5 4 4-6 4 6 5-4-1 9z",
+      "badge" => "M12 3a9 9 0 100 18 9 9 0 000-18 M8 12l3 3 5-6",
+      "lamp" => "M3 13h12a4 4 0 004-4h2 M5 13c0 3 3 5 7 5s7-2 7-5 M12 9V6 M10 6h4 M8 21h8 M12 18v3",
+      "tag" => "M3 3h8l10 10-8 8L3 11z M7.5 7.5h.01",
+      "copy" => "M9 9h11v11H9z M5 15H4V4h11v1",
+      "close" => "M6 6l12 12 M18 6L6 18",
+      "users" => "M9 11a4 4 0 100-8 4 4 0 000 8 M3 21v-1a6 6 0 0112 0v1 M16 3.1a4 4 0 010 7.8 M21 21v-1a6 6 0 00-4-5.6",
+      "lock" => "M5 11h14v10H5z M8 11V7a4 4 0 018 0v4",
+      "download" => "M12 3v13 M7 11l5 5 5-5 M3 15v5a1 1 0 001 1h16a1 1 0 001-1v-5",
+      "expand" => "M15 3h6v6 M9 21H3v-6 M21 3l-7 7 M3 21l7-7",
+      "qr" => "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h3v3h-3z M20 14v.01 M14 20h.01 M17 17h4v4h-4"
     }
     content_tag(:svg, viewBox: "0 0 24 24", width: size, height: size, fill: "none", stroke: "currentColor", "stroke-width": 1.7, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": true) do
       tag.path(d: paths.fetch(name.to_s, paths["file"]))

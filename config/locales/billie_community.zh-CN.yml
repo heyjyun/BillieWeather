@@ -1,0 +1,207 @@
+---
+zh-CN:
+  billie:
+    community:
+      nav:
+        features_membership: 功能与会员
+        membership: 会员
+        admin: 社区管理
+        payment_methods: 收款方式
+        support_us: 支持我们
+        support_admin: 支持管理
+        overview: 概览
+        back_to_app: 返回应用
+      page:
+        title: 功能与会员
+        eyebrow: 功能与会员
+        heading: BillieWeather 能做什么，又是和谁一起打造的
+        intro: 坦白介绍 BillieWeather 里的工具、它们如何运作，以及用来感谢帮助它成长的人的社区徽章。
+      features:
+        eyebrow: 产品功能
+        heading: 一个安静的工作区，集中所有工具
+        dashboard_title: 财务仪表盘
+        dashboard_body: 在一个页面里查看已上传账户的收入、支出、余额和近期动态。
+        categorization_title: 智能分类
+        categorization_body: 交易会自动归入类别，你修正过的规则下次会被记住。
+        forecasting_title: 现金流预测
+        forecasting_body: 估算未来几周余额可能的走向，并试算收入或支出变化带来的影响。
+        insights_title: AI 财务洞察
+        insights_body: 让 AI 用通俗语言解释你的消费规律。只有你主动请求时才会运行 AI 分析。
+        tax_title: 报税准备助手
+        tax_body: 整理报税时需要的记录和问题清单。它是清单助手，不是税务建议，也不会替你报税。
+      how:
+        eyebrow: BILLIEWEATHER 如何运作
+        heading: 数字由代码计算，文字由 AI 解释
+        intro: BillieWeather 的每个部分只做最擅长的事，所以你看到的数字都能追溯到你自己的记录。
+        ai_title: 自然语言解释
+        ai_body: BillieWeather 目前使用 OpenAI GPT 模型进行自然语言交互和财务解释，并且只在你请求 AI 分析时运行。
+        forecast_title: 基于你自己的历史做预测
+        forecast_body: 现金流预测基于你的历史交易、收入与支出趋势，以及你自定义的情景。
+        models_title: 预测模型
+        models_body: 你可以选择 Prophet、Chronos-2 或简单的历史平均基线。我们会持续评估哪些模型最适合预测个人现金流。
+        numbers_title: 计算与解释分离
+        numbers_body: 所有数字都先由我们自己的代码计算。语言模型只负责解释已经算好的数字，从不让它编造你的财务数据。
+      membership:
+        eyebrow: 会员与权益
+        heading: 社区徽章
+        intro: 徽章是一份感谢，不是付费套餐。每个账户都能使用完整的核心功能。
+        your_badges: 你的徽章：
+        member_body: 所有注册了 BillieWeather 账户的人，包含全部核心功能。
+        founding_member_body: 早期加入，并通过反馈和测试参与产品发展的用户。
+        founding_patron_body: 自愿为 BillieWeather 提供资金支持，并经开发者人工确认的用户。
+        table_caption: 各徽章包含的权益
+        benefit: 权益
+        planned: 计划中
+        included: 包含
+        not_included: 不包含
+        stacking_note: Founding Member 与 Founding Patron 可以叠加，同时拥有两枚徽章的人保留两者的全部权益。
+        lamp_title: 阿拉丁神灯
+        lamp_body: Founding Member 和 Founding Patron 将可以提交想要新增的功能。开发者会评估每个愿望的可行性，但不承诺所有请求一定实现。
+        supporters_heading: 感谢我们的 Founding Patron
+      badges:
+        member: Member
+        founding_member: Founding Member
+        founding_patron: Founding Patron
+      benefits:
+        core_features: 核心功能
+        community_badge: 社区徽章
+        early_previews: 新功能抢先体验
+        feedback_voting: 产品反馈与投票
+        aladdins_lamp: 阿拉丁神灯
+        supporter_recognition: 支持者致谢
+      support:
+        eyebrow: 靠个人支持打造
+        heading: 靠个人支持打造
+        body: BillieWeather 目前由个人独立开发并自费运营，包括云托管、数据库基础设施、AI API 调用费用和日常维护。我们的目标是让每个人都能用上个人理财工具。
+        button: 支持 BillieWeather ❤️
+      payment_methods:
+        other: 其他
+      dialog:
+        title: 支持 BillieWeather
+        intro: 你的自愿支持将用于托管、基础设施和 AI 费用。感谢你帮助 BillieWeather 成长。
+        close: 关闭
+        qr_alt: "%{method} 收款二维码"
+        qr_missing: 二维码暂未上传
+        note_label: Payment Note / 付款备注
+        copied: 已复制
+        no_note_field: 这个平台可能无法填写备注。付款后请联系开发者，以便确认你的支持（见下方说明）。
+        manual_match: 请把你的昵称、付款方式、日期和金额发给开发者，方便人工核对这笔转账。
+        nickname_title: 请先设置昵称
+        nickname_body: 付款备注会使用你的 BillieWeather 昵称，方便我们认出你的支持。请先到个人资料中设置昵称，再回到这里。
+        nickname_action: 设置昵称
+        invite_title: 仅向受邀朋友展示
+        invite_body: 收款信息属于个人账户，只向开发者邀请的朋友展示。谢谢你惦记着 BillieWeather。
+        sign_in_title: 登录后查看支持方式
+        sign_in_body: 支持方式仅向已登录且经开发者邀请的朋友开放。
+        coming_soon: 即将开放
+        coming_soon_body: 在确认可以接收支持、并满足各支付平台的使用条件后，我们才会开放支持方式。感谢你的耐心。
+        disclaimer: 支持是你对一个独立项目的自愿个人心意，不属于慈善捐赠，不能抵税，也不会影响你使用核心功能。
+        encourage: 哪怕 1 美元也能带来改变。每一点心意都在帮助 BillieWeather 保持免费、持续成长。❤️
+        voluntary: 所有支持都完全自愿。无论是否支持，所有核心功能都保持免费。
+        enlarge: 放大
+        enlarge_label: 放大 %{method} 二维码
+        save_image: 保存图片
+        close_enlarged: 关闭放大的二维码
+        enlarged_help: 用支付 App 扫描此二维码，或长按图片保存到手机。
+        howto_heading: 如何支持
+        howto_choose: 选择你常用的付款方式。
+        howto_scan: 扫描二维码，或保存图片后在支付 App 中打开。
+        howto_note: 如果平台支持，请填写下方的付款备注。
+        howto_verify: 所有支持都会经人工核实后，才会授予 Founding Patron 徽章。
+        copy_note: 复制备注
+        note_from_nickname: 此备注来自你的 BillieWeather 昵称，无法在这里修改。
+        change_nickname: 在账户设置中修改昵称
+        no_note_heading: 支付 App 无法填写备注？
+        contact_email: 邮箱：
+        contact_subject: 支持款项：%{note}
+        contact_fallback: 请回复邀请你的人，或通过你平时联系开发者的方式告诉我们。
+      settings:
+        heading: 社区徽章
+        intro: 徽章用来感谢帮助 BillieWeather 成长的人，不会改变你的权限。
+        recognition_label: 在公开的 Founding Patron 名单中显示我的昵称
+        recognition_help: 默认关闭。只会显示昵称，绝不显示金额或邮箱。
+        recognition_save: 保存致谢设置
+        recognition_saved: 致谢设置已保存。
+        learn_more: 了解徽章与权益
+      admin:
+        title: 社区管理
+        eyebrow: 管理员
+        intro: 查找用户，在人工核对转账后授予或撤销荣誉徽章，并管理收款二维码。
+        status_heading: 支持收款
+        payments_on: SUPPORT_PAYMENTS_ENABLED 已开启
+        payments_off: SUPPORT_PAYMENTS_ENABLED 已关闭——访客看到“即将开放”
+        status_help: 将环境变量 SUPPORT_PAYMENTS_ENABLED 设为 true 并重启服务器后，受邀朋友才能看到已启用的二维码。关闭时你仍可上传和预览二维码。
+        search_heading: 查找用户
+        search_label: 昵称或邮箱
+        search_button: 搜索
+        no_results: 没有找到匹配的用户。
+        nickname: 昵称
+        badges: 徽章
+        qr_access: 二维码权限
+        manage: 管理
+        access_yes: 已邀请查看二维码
+        access_no: 未邀请
+        qr_heading: 收款二维码
+        replace_qr: 替换二维码
+        upload_qr: 上传二维码
+        qr_help: PNG、JPEG 或 WebP，不超过 2 MB。
+        note_supported: 该平台允许付款人填写备注
+        save: 保存
+        remove_qr: 删除二维码
+        remove_qr_confirm: 确定删除这个二维码吗？
+        qr_too_large: 二维码图片不能超过 %{size}。
+        qr_wrong_type: 二维码图片必须是 PNG、JPEG 或 WebP 文件。
+        qr_removed: 已删除 %{method} 二维码。
+        payment_method_saved: 已保存 %{method}。
+        back: "← 社区管理"
+        no_nickname: 未设置昵称
+        current_badges: 当前徽章
+        granted_on: "%{time} 由 %{admin} 授予"
+        confirmed_via: "%{time} 通过 %{method} 确认到账"
+        note: 管理员备注
+        note_help: 仅管理员可见。除非必要，请不要记录金额。
+        revoke_confirm: 确定撤销这枚徽章吗？
+        revoke_reason: 原因（可选）
+        revoke: 撤销
+        grant_heading: 授予徽章
+        grant_intro: 请在 BillieWeather 之外核对实际到账后再授予 Founding Patron。打开支持窗口或复制备注都不会自动授予徽章。
+        badge: 徽章
+        patron_details: Founding Patron 确认信息
+        payment_method: 付款方式
+        confirmed_at: 确认到账时间
+        patron_help: Founding Patron 必填；授予 Founding Member 时忽略。
+        grant: 授予徽章
+        granted_flash: 已授予 %{badge}。
+        revoked_flash: 已撤销 %{badge}。
+        duplicate_badge: 该用户已拥有这枚徽章。
+        patron_requires_confirmation: 授予 Founding Patron 需要填写付款方式和确认到账时间。
+        access_heading: 二维码查看权限
+        access_intro: 只有受邀朋友能看到收款二维码，并且仅在支持收款开启时。
+        grant_access: 邀请查看二维码
+        revoke_access: 取消二维码权限
+        access_granted: 已授予二维码权限。
+        access_revoked: 已取消二维码权限。
+        history_heading: 徽章记录
+        granted: 授予
+        revoked_col: 撤销
+        pm_title: 收款方式
+        pm_intro: 为每种收款方式上传、预览、替换或删除二维码，并选择哪些方式显示在支持窗口中。更改立即生效，无需修改代码。
+        pm_privacy: 二维码图片私密保存在数据库中，经权限检查后只提供给管理员和受邀朋友。图片没有公开链接，也不在代码仓库中。请只上传你本人控制的账户二维码。
+        pm_status_live: 已在支持窗口显示
+        pm_status_disabled: 已停用
+        pm_status_missing: 未上传二维码
+        pm_current: 当前图片 · %{type} · %{size}
+        pm_new_preview: 新图片（尚未保存）
+        pm_new_preview_alt: 新的 %{method} 二维码预览
+        pm_enabled: 在支持窗口中显示此方式
+        pm_updated: "%{admin} 于 %{time} 最后修改"
+        qr_required_to_enable: 请先上传二维码，再启用此方式。
+        qr_moved: 收款二维码已移到单独的页面管理。
+        open_payment_methods: 打开收款方式
+        home_title: 支持管理
+        home_intro: 会员徽章、社区权限和收款二维码。这个区域独立于 BillieWeather 应用，只对管理员开放。
+        home_community: 按昵称查找用户，授予或撤销 Founding Member 和 Founding Patron 徽章，并邀请朋友查看收款二维码。
+        home_payments: 上传、替换或删除支付宝、微信支付、Zelle 和 Venmo 二维码，并选择哪些显示在支持窗口中。
+        home_membership: 打开公开的「功能与会员」页面，查看访客看到的内容。
+        home_counts: "%{members} 位 Founding Member · %{patrons} 位 Founding Patron · %{viewers} 人受邀查看二维码"
+        home_live: "%{total} 种方式中有 %{count} 种显示在支持窗口"

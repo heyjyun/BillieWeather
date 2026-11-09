@@ -1,0 +1,71 @@
+<% content_for :title, t("billie.community.admin.pm_title") %>
+<div class="bw-page-heading">
+  <div>
+    <span class="bw-eyebrow"><%= t("billie.community.admin.eyebrow") %></span>
+    <h1><%= t("billie.community.admin.pm_title") %></h1>
+    <p><%= t("billie.community.admin.pm_intro") %></p>
+  </div>
+</div>
+<div class="bw-settings-stack bw-admin-stack">
+  <section class="bw-panel" aria-labelledby="pm-status-heading">
+    <h2 id="pm-status-heading"><%= t("billie.community.admin.status_heading") %></h2>
+    <p>
+      <% if Community.payments_enabled? %>
+        <span class="bw-badge"><%= t("billie.community.admin.payments_on") %></span>
+      <% else %>
+        <span class="bw-badge bw-badge-review"><%= t("billie.community.admin.payments_off") %></span>
+      <% end %>
+    </p>
+    <p class="bw-caption"><%= t("billie.community.admin.status_help") %></p>
+    <p class="bw-caption"><%= t("billie.community.admin.pm_privacy") %></p>
+  </section>
+
+  <div class="bw-admin-qr-grid">
+    <% @payment_methods.each do |payment_method| %>
+      <section class="bw-panel bw-admin-qr-card" id="payment-method-<%= payment_method.key %>" data-payment-method="<%= payment_method.key %>" aria-labelledby="pm-<%= payment_method.key %>">
+        <div class="bw-admin-qr-head">
+          <h2 id="pm-<%= payment_method.key %>"><%= payment_method.label %></h2>
+          <% if payment_method.available? %>
+            <span class="bw-badge"><%= t("billie.community.admin.pm_status_live") %></span>
+          <% elsif payment_method.qr_present? %>
+            <span class="bw-badge bw-badge-review"><%= t("billie.community.admin.pm_status_disabled") %></span>
+          <% else %>
+            <span class="bw-badge bw-badge-review"><%= t("billie.community.admin.pm_status_missing") %></span>
+          <% end %>
+        </div>
+
+        <div class="bw-admin-qr-preview">
+          <% if payment_method.qr_present? %>
+            <img class="bw-support-qr" data-qr-current src="<%= community_payment_qr_path(payment_method.key, v: payment_method.qr_version) %>" width="160" height="160" alt="<%= t("billie.community.dialog.qr_alt", method: payment_method.label) %>">
+            <small><%= t("billie.community.admin.pm_current", type: payment_method.qr_extension.upcase, size: number_to_human_size(payment_method.qr_byte_size)) %></small>
+          <% else %>
+            <div class="bw-support-qr bw-support-qr-missing" data-qr-current><%= t("billie.community.dialog.qr_missing") %></div>
+          <% end %>
+          <figure class="bw-admin-qr-new" data-qr-preview hidden>
+            <img class="bw-support-qr" width="160" height="160" alt="<%= t("billie.community.admin.pm_new_preview_alt", method: payment_method.label) %>">
+            <figcaption><%= t("billie.community.admin.pm_new_preview") %></figcaption>
+          </figure>
+        </div>
+
+        <%= form_with url: admin_payment_method_path(payment_method.key), method: :patch, multipart: true, data: {turbo: false}, class: "bw-form" do %>
+          <div class="bw-field">
+            <label for="qr_upload_<%= payment_method.key %>"><%= payment_method.qr_present? ? t("billie.community.admin.replace_qr") : t("billie.community.admin.upload_qr") %></label>
+            <input id="qr_upload_<%= payment_method.key %>" type="file" name="payment_method[qr_upload]" accept="image/png,image/jpeg,image/webp" data-qr-input>
+            <small><%= t("billie.community.admin.qr_help") %></small>
+          </div>
+          <input type="hidden" name="payment_method[enabled]" value="0">
+          <label class="bw-checkbox-label"><input type="checkbox" name="payment_method[enabled]" value="1" <%= "checked" if payment_method.enabled? %>><span><%= t("billie.community.admin.pm_enabled") %></span></label>
+          <input type="hidden" name="payment_method[note_supported]" value="0">
+          <label class="bw-checkbox-label"><input type="checkbox" name="payment_method[note_supported]" value="1" <%= "checked" if payment_method.note_supported? %>><span><%= t("billie.community.admin.note_supported") %></span></label>
+          <button type="submit" class="bw-button bw-button-dark"><%= t("billie.community.admin.save") %></button>
+        <% end %>
+        <% if payment_method.qr_present? %>
+          <%= button_to t("billie.community.admin.remove_qr"), qr_admin_payment_method_path(payment_method.key), method: :delete, form: {data: {turbo: false, confirm: t("billie.community.admin.remove_qr_confirm")}}, class: "bw-button bw-button-outline" %>
+        <% end %>
+        <% if payment_method.persisted? && payment_method.updated_by %>
+          <p class="bw-caption"><%= t("billie.community.admin.pm_updated", time: l(payment_method.updated_at, format: :long), admin: payment_method.updated_by.nickname.presence || payment_method.updated_by.email) %></p>
+        <% end %>
+      </section>
+    <% end %>
+  </div>
+</div>

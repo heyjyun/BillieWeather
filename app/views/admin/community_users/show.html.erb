@@ -1,0 +1,97 @@
+<% content_for :title, t("billie.community.admin.title") %>
+<% admin_time = ->(time) { time&.in_time_zone(current_user.time_zone.presence || "UTC")&.strftime("%Y-%m-%d %H:%M") } %>
+<div class="bw-page-heading">
+  <div>
+    <%= link_to t("billie.community.admin.back"), admin_community_path, class: "bw-text-link" %>
+    <h1><%= @member.nickname.presence || t("billie.community.admin.no_nickname") %></h1>
+    <p><%= @member.email %></p>
+  </div>
+</div>
+<div class="bw-settings-stack bw-admin-stack">
+  <section class="bw-panel" aria-labelledby="member-badges-heading">
+    <h2 id="member-badges-heading"><%= t("billie.community.admin.current_badges") %></h2>
+    <p><%= community_badges(@member) %></p>
+    <% active = @honors.select(&:active?) %>
+    <% if active.any? %>
+      <ul class="bw-admin-honor-list">
+        <% active.each do |honor| %>
+          <li>
+            <div>
+              <%= community_badge(honor.kind) %>
+              <small><%= t("billie.community.admin.granted_on", time: admin_time.call(honor.granted_at), admin: honor.granted_by&.email || "—") %></small>
+              <% if honor.founding_patron? %><small><%= t("billie.community.admin.confirmed_via", time: admin_time.call(honor.confirmed_at), method: Community.payment_method_label(honor.payment_method)) %></small><% end %>
+              <% if honor.note.present? %><small><%= t("billie.community.admin.note") %>: <%= honor.note %></small><% end %>
+            </div>
+            <%= form_with url: revoke_admin_community_user_honor_path(@member, honor), method: :patch, data: {turbo: false, confirm: t("billie.community.admin.revoke_confirm")}, class: "bw-admin-revoke" do %>
+              <label class="bw-sr-only" for="revoke_reason_<%= honor.id %>"><%= t("billie.community.admin.revoke_reason") %></label>
+              <input id="revoke_reason_<%= honor.id %>" type="text" name="honor[revoke_reason]" maxlength="500" placeholder="<%= t("billie.community.admin.revoke_reason") %>">
+              <button type="submit" class="bw-button bw-button-outline"><%= t("billie.community.admin.revoke") %></button>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <section class="bw-panel" aria-labelledby="member-grant-heading">
+    <h2 id="member-grant-heading"><%= t("billie.community.admin.grant_heading") %></h2>
+    <p><%= t("billie.community.admin.grant_intro") %></p>
+    <%= form_with model: @new_honor, scope: :honor, url: admin_community_user_honors_path(@member), method: :post, data: {turbo: false}, class: "bw-form" do |form| %>
+      <div class="bw-field">
+        <%= form.label :kind, t("billie.community.admin.badge") %>
+        <%= form.select :kind, Community::Honor::KINDS.map { |kind| [t("billie.community.badges.#{kind}"), kind] }, {}, required: true %>
+      </div>
+      <fieldset class="bw-export-fieldset">
+        <legend><%= t("billie.community.admin.patron_details") %></legend>
+        <div class="bw-field">
+          <%= form.label :payment_method, t("billie.community.admin.payment_method") %>
+          <%= form.select :payment_method, Community::Honor::RECORDED_PAYMENT_METHODS.map { |key| [Community.payment_method_label(key), key] }, include_blank: true %>
+        </div>
+        <div class="bw-field">
+          <%= form.label :confirmed_at, t("billie.community.admin.confirmed_at") %>
+          <%= form.datetime_local_field :confirmed_at, value: admin_time.call(@new_honor.confirmed_at)&.tr(" ", "T") %>
+        </div>
+        <small><%= t("billie.community.admin.patron_help") %></small>
+      </fieldset>
+      <div class="bw-field">
+        <%= form.label :note, t("billie.community.admin.note") %>
+        <%= form.text_area :note, rows: 3, maxlength: 1000 %>
+        <small><%= t("billie.community.admin.note_help") %></small>
+      </div>
+      <%= form.submit t("billie.community.admin.grant"), class: "bw-button bw-button-dark" %>
+    <% end %>
+  </section>
+
+  <section class="bw-panel" aria-labelledby="member-access-heading">
+    <h2 id="member-access-heading"><%= t("billie.community.admin.access_heading") %></h2>
+    <p><%= t("billie.community.admin.access_intro") %></p>
+    <% if @member.support_payments_viewer? %>
+      <p><span class="bw-badge"><%= t("billie.community.admin.access_yes") %></span></p>
+      <%= button_to t("billie.community.admin.revoke_access"), admin_community_user_support_access_path(@member), method: :delete, form: {data: {turbo: false}}, class: "bw-button bw-button-outline" %>
+    <% else %>
+      <p><span class="bw-badge bw-badge-review"><%= t("billie.community.admin.access_no") %></span></p>
+      <%= button_to t("billie.community.admin.grant_access"), admin_community_user_support_access_path(@member), method: :post, form: {data: {turbo: false}}, class: "bw-button bw-button-dark" %>
+    <% end %>
+  </section>
+
+  <% if @honors.any? %>
+    <section class="bw-panel bw-panel-flush" aria-labelledby="member-history-heading">
+      <div class="bw-panel-heading"><div><h2 id="member-history-heading"><%= t("billie.community.admin.history_heading") %></h2></div></div>
+      <div class="bw-table-scroll">
+        <table class="bw-table">
+          <thead><tr><th scope="col"><%= t("billie.community.admin.badge") %></th><th scope="col"><%= t("billie.community.admin.granted") %></th><th scope="col"><%= t("billie.community.admin.payment_method") %></th><th scope="col"><%= t("billie.community.admin.revoked_col") %></th></tr></thead>
+          <tbody>
+            <% @honors.each do |honor| %>
+              <tr>
+                <td><%= community_badge(honor.kind) %></td>
+                <td><%= admin_time.call(honor.granted_at) %><br><small><%= honor.granted_by&.email %></small></td>
+                <td><%= honor.payment_method ? Community.payment_method_label(honor.payment_method) : "—" %><% if honor.confirmed_at %><br><small><%= admin_time.call(honor.confirmed_at) %></small><% end %></td>
+                <td><% if honor.revoked_at %><%= admin_time.call(honor.revoked_at) %><br><small><%= [honor.revoked_by&.email, honor.revoke_reason].compact.join(" · ") %></small><% else %>—<% end %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% end %>
+</div>
