@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
-# Fixed ISO 3166-1 alpha-2 country/region allowlist, including territories.
+# Fixed region allowlist: standard ISO codes plus the app's Global Citizen choice.
 # Codes: IANA tzdb iso3166.tab (public domain), cross-checked with UNSD M49
 # https://unstats.un.org/unsd/methodology/m49/overview/ and the ISO index
 # https://www.iso.org/iso-3166-country-codes.html (TW is also an ISO code).
 # Update the database check constraint with a migration when changing this list.
 class UsageRegion
-  CODES = %w[
+  GLOBAL_CITIZEN_CODE = "XG"
+  STANDARD_CODES = %w[
     AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB
     BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY
     BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX
@@ -22,4 +23,5 @@ class UsageRegion
     TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY
     UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW
   ].freeze
+  CODES = (STANDARD_CODES + [GLOBAL_CITIZEN_CODE]).sort.freeze
 end

@@ -1,0 +1,36 @@
+{
+  "es": {
+    "billie": {
+      "region": {
+        "label": "Región de uso",
+        "blank": "Selecciona una región",
+        "help": "Selecciona la región donde usas principalmente esta aplicación. La selección es obligatoria.",
+        "heading": "Configuración de la cuenta",
+        "intro": "Elige dónde usas principalmente BillieWeather. Puedes cambiar esta selección en cualquier momento.",
+        "save": "Guardar región",
+        "saved": "Se ha guardado tu región de uso.",
+        "nav": "Configuración",
+        "required_notice": "Selecciona tu región de uso para continuar."
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "user": {
+          "usage_region": "Región de uso"
+        }
+      },
+      "errors": {
+        "models": {
+          "user": {
+            "attributes": {
+              "usage_region": {
+                "inclusion": "debe ser una región de la lista",
+                "blank": "debe seleccionarse"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

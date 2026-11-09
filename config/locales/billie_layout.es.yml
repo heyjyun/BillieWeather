@@ -1,0 +1,35 @@
+{
+  "es": {
+    "billie": {
+      "layout": {
+        "title": "BillieWeather — una previsión financiera más clara",
+        "description": "Convierte tus extractos en una visión más clara de tus transacciones, flujo de caja y próximos pasos financieros.",
+        "skip": "Saltar al contenido",
+        "home": "Inicio de BillieWeather",
+        "main_navigation": "Navegación principal",
+        "how_it_works": "Cómo funciona",
+        "features": "Funciones",
+        "open_dashboard": "Abrir el panel",
+        "log_in": "Iniciar sesión",
+        "get_started": "Empezar",
+        "my_workspace": "Mi espacio de trabajo",
+        "personal_finances": "Finanzas personales",
+        "workspace_label": "ESPACIO DE TRABAJO",
+        "workspace_navigation": "Navegación del espacio de trabajo",
+        "dashboard": "Panel",
+        "transactions": "Transacciones",
+        "forecast": "Previsión de flujo de caja",
+        "insights": "Billie Insights",
+        "clarity": "Un poco de claridad te ayuda a avanzar.",
+        "next_step": "Tu próximo paso empieza por entender tus números.",
+        "your_account": "Tu cuenta",
+        "log_out": "Cerrar sesión",
+        "workspace": "Espacio de trabajo",
+        "overview": "Resumen",
+        "outlook": "Tu perspectiva financiera",
+        "footer": "Claridad hoy. Confianza para lo que viene.",
+        "language": "Idioma"
+      }
+    }
+  }
+}

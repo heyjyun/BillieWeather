@@ -74,6 +74,16 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     assert_equal "HK", User.find_by!(google_uid: "region-google-subject").usage_region
   end
 
+  test "Google signup accepts Global Citizen as the selected region" do
+    get user_google_oauth2_omniauth_callback_path
+    assert_redirected_to new_google_region_path
+    assert_difference "User.count", 1 do
+      post google_region_path, params: {user: {usage_region: "XG"}}
+    end
+    assert_redirected_to finance_dashboard_path
+    assert_equal "XG", User.find_by!(google_uid: "region-google-subject").usage_region
+  end
+
   test "expired and missing verified identities cannot complete Google signup" do
     assert_no_difference "User.count" do
       post google_region_path, params: {user: {usage_region: "US"}, auth: google_auth.to_h}

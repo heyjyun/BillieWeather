@@ -1,0 +1,75 @@
+{
+  "es": {
+    "errors": {
+      "messages": {
+        "cent_precision": "debe tener como máximo dos decimales",
+        "currency_in_use": "no se puede cambiar mientras existan extractos en otra moneda",
+        "same_owner": "debe pertenecerte",
+        "same_statement_owner": "debe pertenecer a la misma cuenta",
+        "object_required": "debe ser un objeto",
+        "control_characters": "no puede contener caracteres de control",
+        "review_row_count": "debe contener entre 1 y %{count} transacciones para revisar",
+        "review_row_invalid": "contiene datos no válidos en la fila %{row}",
+        "review_date_invalid": "contiene una fecha no válida en la fila %{row}",
+        "review_save_failed": "no se pudo guardar para su revisión",
+        "review_expiration": "debe estar dentro de los próximos 30 minutos",
+        "inclusion": "no está en la lista de opciones permitidas",
+        "exclusion": "es un valor reservado",
+        "not_an_integer": "debe ser un número entero",
+        "greater_than": "debe ser mayor que %{count}",
+        "greater_than_or_equal_to": "debe ser mayor o igual que %{count}",
+        "less_than": "debe ser menor que %{count}",
+        "less_than_or_equal_to": "debe ser menor o igual que %{count}",
+        "equal_to": "debe ser igual a %{count}",
+        "other_than": "debe ser distinto de %{count}",
+        "accepted": "debe aceptarse",
+        "present": "debe estar vacío",
+        "required": "debe existir",
+        "too_long": "no puede tener más de %{count} caracteres",
+        "wrong_length": "debe tener %{count} caracteres"
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "finance/profile": {
+          "currency": "Moneda",
+          "current_balance": "Saldo actual",
+          "cash_on_hand": "Efectivo disponible",
+          "tax_country": "Jurisdicción fiscal",
+          "tax_profile": "Perfil fiscal",
+          "balance_source": "Origen del saldo"
+        },
+        "finance/transaction": {
+          "booked_on": "Fecha de la transacción",
+          "description": "Descripción",
+          "amount": "Importe",
+          "category": "Categoría",
+          "tax_review": "Revisión fiscal",
+          "excluded": "Exclusión",
+          "statement": "Extracto"
+        },
+        "finance/bank_account": {
+          "bank_name": "Nombre del banco",
+          "name": "Nombre de la cuenta",
+          "custom_name": "Nombre personalizado",
+          "last4": "Últimos dígitos de la cuenta",
+          "kind": "Tipo de cuenta"
+        },
+        "finance/statement": {
+          "bank_account": "Cuenta bancaria",
+          "filename": "Nombre del archivo",
+          "currency": "Moneda",
+          "transaction_count": "Número de transacciones"
+        },
+        "finance/statement_draft": {
+          "bank_account": "Cuenta bancaria",
+          "filename": "Nombre del archivo",
+          "currency": "Moneda",
+          "rows": "Transacciones por revisar",
+          "warnings": "Avisos",
+          "expires_at": "Fecha de vencimiento"
+        }
+      }
+    }
+  }
+}

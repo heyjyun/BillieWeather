@@ -1,0 +1,108 @@
+{
+  "es": {
+    "billie": {
+      "helpers": {
+        "date_format": "%-d de %b de %Y",
+        "unavailable": "No disponible",
+        "balance_today": "El saldo corresponde a hoy.",
+        "balance_dated": "El saldo corresponde al %{date}.",
+        "balance_aged": "El saldo corresponde al %{date} (hace %{days}); no incluye la actividad posterior a esa fecha.",
+        "manual": "Introducido por ti. Sustituye los totales automáticos de las cuentas.",
+        "manual_dated": "Introducido por ti el %{date}. Sustituye los totales automáticos de las cuentas.",
+        "automatic_total": "Suma automáticamente el saldo más reciente de %{accounts}.",
+        "statement_dates": " Fechas de los extractos: %{dates}.",
+        "partial_total": " Total parcial: algunas cuentas o saldos aún necesitan revisión.",
+        "no_statement_data": "Aún no hay datos de extractos",
+        "labels": {
+          "income": "Ingresos",
+          "housing": "Vivienda",
+          "food": "Alimentación y restaurantes",
+          "transport": "Transporte",
+          "utilities": "Suministros",
+          "shopping": "Compras",
+          "health": "Salud",
+          "business": "Negocios",
+          "transfers": "Transferencias",
+          "uncategorized": "Sin categoría",
+          "checking": "Cuenta corriente",
+          "savings": "Cuenta de ahorro",
+          "credit_account": "Cuenta de crédito",
+          "cash_account": "Cuenta de efectivo",
+          "account": "Cuenta"
+        },
+        "setup": {
+          "unassigned": "Se han guardado los saldos de cierre con fecha de %{statements}, pero no se han identificado sus cuentas. Selecciona sus cuentas en el historial de extractos para incluirlas en el total automático.",
+          "unconfirmed": "Se han guardado los saldos de cierre, pero aún hay que confirmar sus cuentas y las fechas de los saldos. Revisa el historial de extractos; la fecha de una transacción por sí sola no confirma la fecha del saldo.",
+          "no_details": "Se han importado las transacciones de %{statements}, pero no se han guardado los datos de las cuentas ni los saldos de cierre. Si tus archivos contienen datos de las cuentas y una columna de saldo, vuelve a subirlos: los datos que faltan se completarán automáticamente y no se importará nada dos veces. También puedes introducir tu saldo manualmente.",
+          "only_credit": "Solo se han identificado cuentas de crédito. Sus saldos son deudas y se excluyen del efectivo inicial. Se necesita un saldo con fecha de una cuenta corriente o de ahorro.",
+          "future_date": "Las fechas de los saldos de las cuentas de efectivo están en el futuro. Revisa las fechas en el desglose de cuentas antes de usar estos saldos.",
+          "missing_date": "Los saldos de las cuentas de efectivo no tienen fechas confirmadas. Revisa las fechas de los saldos en el historial de extractos antes de usarlos.",
+          "missing_balance": "Los últimos extractos de tus cuentas de efectivo no tienen saldos de cierre válidos guardados. Comprueba los saldos y sus fechas en los extractos originales; no se sustituyen automáticamente por saldos anteriores.",
+          "unknown_kind": "Los tipos de cuenta no están confirmados. Identifica las cuentas corrientes o de ahorro en el historial de extractos para calcular el efectivo inicial.",
+          "no_balance": "Aún no hay un saldo con fecha de una cuenta de efectivo. Importa un extracto con los datos de la cuenta y un saldo de cierre para calcularlo automáticamente."
+        },
+        "balance_status": {
+          "known": "Incluido en el total de efectivo",
+          "missing_balance": "El último extracto no tiene un saldo de cierre legible",
+          "missing_date": "Hay que confirmar la fecha del saldo",
+          "future_date": "El saldo con fecha futura no está incluido",
+          "excluded_credit": "Saldo de tarjeta de crédito · excluido del efectivo",
+          "unknown_kind": "Confirma si es una cuenta de efectivo o una tarjeta de crédito",
+          "excluded": "Excluido del total de efectivo"
+        },
+        "month_format": "%b de %Y",
+        "month_day_format": "%-d de %b",
+        "counts": {
+          "transaction": {
+            "one": "%{count} transacción",
+            "other": "%{count} transacciones"
+          },
+          "statement": {
+            "one": "%{count} extracto",
+            "other": "%{count} extractos"
+          },
+          "account": {
+            "one": "%{count} cuenta",
+            "other": "%{count} cuentas"
+          },
+          "card": {
+            "one": "%{count} tarjeta",
+            "other": "%{count} tarjetas"
+          },
+          "cash_account": {
+            "one": "%{count} cuenta de efectivo",
+            "other": "%{count} cuentas de efectivo"
+          },
+          "day": {
+            "one": "%{count} día",
+            "other": "%{count} días"
+          },
+          "file": {
+            "one": "%{count} archivo",
+            "other": "%{count} archivos"
+          },
+          "row": {
+            "one": "%{count} fila",
+            "other": "%{count} filas"
+          },
+          "month": {
+            "one": "%{count} mes",
+            "other": "%{count} meses"
+          }
+        }
+      }
+    },
+    "date": {
+      "formats": {
+        "default": "%d/%m/%Y",
+        "short": "%-d de %b",
+        "long": "%-d de %B de %Y"
+      },
+      "day_names": ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"],
+      "abbr_day_names": ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"],
+      "month_names": [null, "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+      "abbr_month_names": [null, "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sept", "oct", "nov", "dic"],
+      "order": ["day", "month", "year"]
+    }
+  }
+}

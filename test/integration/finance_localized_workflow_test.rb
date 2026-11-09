@@ -9,11 +9,14 @@ class FinanceLocalizedWorkflowTest < ActionDispatch::IntegrationTest
   include BillieMethodStub
 
   setup do
+    travel_to Time.zone.local(2026, 11, 8, 18)
     @user = create(:user)
     sign_in @user
     get finance_statements_path, params: {locale: "zh-CN"}
     assert_response :success
   end
+
+  teardown { travel_back }
 
   test "Chinese CSV import localizes notices and errors while preserving canonical data and export headers" do
     csv = "Date,Description,Amount,Category,Balance,Bank,Account Number,Account Type\n#{Date.current.iso8601},超市采购,-25.50,Food & dining,800.00,Chase,1234,Checking\n"
@@ -137,11 +140,11 @@ class FinanceLocalizedWorkflowTest < ActionDispatch::IntegrationTest
     end
     stub_method(Finance::InsightGenerator, :ai_available?, true) do
       stub_method(Finance::InsightGenerator, :model, "test-model") do
-        %w[en zh-CN zh-TW ja ko].each { |locale| I18n.with_locale(locale) { generator.call } }
+        %w[en zh-CN zh-TW ja ko es].each { |locale| I18n.with_locale(locale) { generator.call } }
       end
     end
-    assert_equal 5, payloads.length
-    ["English", "Simplified Chinese", "Traditional Chinese", "Japanese", "Korean"].each_with_index do |language, index|
+    assert_equal 6, payloads.length
+    ["English", "Simplified Chinese", "Traditional Chinese", "Japanese", "Korean", "Spanish"].each_with_index do |language, index|
       assert_includes payloads[index].fetch(:instructions), language
       assert_includes payloads[index].fetch(:instructions), "Keep the schema keys unchanged"
       assert_equal Finance::InsightGenerator::OUTPUT_SCHEMA, payloads[index].dig(:text, :format, :schema)

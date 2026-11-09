@@ -1,6 +1,6 @@
 <div class="sm:col-span-2">
   <%= form.label :usage_region, t("billie.region.label"), class: "block mb-2 text-sm font-medium" %>
-  <%= form.select :usage_region, [[t("billie.region.blank"), "", {disabled: true}]] + usage_region_options, {selected: form.object.usage_region.presence || ""}, {class: "w-full rounded-md border-gray-300", required: true, autocomplete: "country", "aria-describedby": "user_usage_region_help"} %>
+  <%= form.select :usage_region, usage_region_options, {prompt: t("billie.region.blank"), disabled: "", selected: form.object.usage_region.presence || ""}, {class: "w-full rounded-md border-gray-300", required: true, autocomplete: "country", "aria-describedby": "user_usage_region_help"} %>
   <p id="user_usage_region_help" class="mt-2 text-sm text-gray-500"><%= t("billie.region.help") %></p>
 </div>
 <%# 🚅 super scaffolding will insert new fields above this line. %>

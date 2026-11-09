@@ -11,7 +11,7 @@ module Finance
     CONTENT_KEYS = %w[summary observations actions tax_preparation limitations].freeze
     TAX_SECTION_KEYS = %w[tax_preparation questions].freeze
     TAX_CONTENT_KEYS = %w[summary tax_preparation questions limitations].freeze
-    OUTPUT_LANGUAGES = {"en" => "English", "zh-CN" => "Simplified Chinese", "zh-TW" => "Traditional Chinese", "ja" => "Japanese", "ko" => "Korean"}.freeze
+    OUTPUT_LANGUAGES = {"en" => "English", "zh-CN" => "Simplified Chinese", "zh-TW" => "Traditional Chinese", "ja" => "Japanese", "ko" => "Korean", "es" => "Spanish"}.freeze
     MAX_RESPONSE_BYTES = 100_000
     QUOTA_EXHAUSTED_CODES = %w[
       insufficient_quota credit_balance_exhausted organization_spend_limit_exceeded

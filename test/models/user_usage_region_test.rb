@@ -25,6 +25,16 @@ class UserUsageRegionTest < ActiveSupport::TestCase
     end
   end
 
+  test "Global Citizen is an explicit supported region and satisfies required selection" do
+    user = create(:user, usage_region: " xg ")
+    assert_equal "XG", user.reload.usage_region
+    assert_not user.needs_usage_region?
+    assert_not user.usage_region_pending?
+    assert user.update_columns(usage_region: "US")
+    assert user.update_columns(usage_region: "XG")
+    assert_equal "XG", user.reload.usage_region
+  end
+
   test "region list includes major regions and excludes arbitrary values" do
     %w[US CN JP KR GB CA AU DE FR IN SG HK TW BR MX ZA AE].each do |code|
       assert_includes UsageRegion::CODES, code

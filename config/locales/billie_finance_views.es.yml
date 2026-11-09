@@ -1,0 +1,394 @@
+es:
+  billie:
+    finance:
+      ui:
+        a_clearer_financial_picture: Una visión más clara de tus finanzas.
+        a_clearer_outlook_starts_here: Una perspectiva más clara empieza aquí.
+        a_fresh_perspective: UNA NUEVA PERSPECTIVA
+        a_fresh_perspective_on_your_finances: Una nueva perspectiva de tus finanzas.
+        a_fresh_start: UN NUEVO COMIENZO
+        a_manual_override_pauses_automatic_updates_until_you_switch_back_to_the_account: Un ajuste manual pausa las actualizaciones automáticas hasta que vuelvas a usar el total de las cuentas.
+        a_projection_using_your_account_balances_and_the_patterns_in_your_income_and_spe: Una proyección basada en los saldos de tus cuentas y los patrones de tus ingresos y gastos.
+        a_quick_guide: UNA GUÍA RÁPIDA
+        a_useful_record: Un registro útil,
+        account: Cuenta
+        account_label: Nombre de la cuenta
+        account_type: Tipo de cuenta
+        account_type_needs_confirmation: Falta confirmar el tipo de cuenta
+        account_unidentified_no_closing_balance_saved: Cuenta sin identificar; no se guardó ningún saldo final
+        across_imported_statement_dates: Entre las fechas de los estados de cuenta importados
+        action: Acción
+        actions: Acciones
+        actions_to_consider: Acciones a considerar
+        adjust_the_outlook_without_changing_your_actual_transactions: Ajusta la proyección sin cambiar tus transacciones reales.
+        after_your_scenario_adjustments: Después de los ajustes de tu escenario
+        all_categories: Todas las categorías
+        all_time: Todo el historial
+        all_transactions: Todas las transacciones
+        amount: Importe
+        amounts_in: Importes en
+        analysis_can_be_incomplete_or_incorrect_it_is_for_financial_organization_and_gen: El análisis puede ser incompleto o incorrecto. Sirve para organizar tus finanzas y ofrecer información educativa general, no asesoramiento personalizado de inversión, legal o fiscal. Consulta las decisiones importantes y las normas fiscales vigentes con un profesional adecuado.
+        analysis_consent: Acepto enviar el resumen agregado y el contexto fiscal que se muestran a %{service} para este análisis.
+        analysis_privacy: El análisis básico utiliza tus totales y categorías. La función opcional Billie Insights envía un resumen financiero agregado a %{service}; no envía tus estados de cuenta originales, las descripciones de las transacciones ni el correo electrónico de tu cuenta.
+        apply_dates: Aplicar fechas
+        apply_filters: Aplicar filtros
+        as_of_date: Al %{date}
+        ask_billie_again: Consultar a Billie de nuevo
+        ask_billie_for_tax_preparation_insights: Pedir a Billie recomendaciones para preparar la declaración de impuestos
+        auto_assigned_categories_are_a_starting_point_you_can_change_them_here: Las categorías asignadas automáticamente son un punto de partida. Puedes cambiarlas aquí.
+        automatic_cash_total: Total automático de efectivo
+        automatic_detection_prefers_transaction_date_then_date_then_posting_dates_choose: La detección automática da prioridad a Transaction Date, después a Date y luego a las fechas de contabilización. Si eliges una columna manualmente, selecciona solo el CSV que quieras volver a procesar.
+        automatic_transaction_date_first: Automática (primero la fecha de la transacción)
+        average_daily_net_cash_flow: Flujo de efectivo neto diario promedio
+        back_to_transactions: ← Volver a las transacciones
+        back_to_upload: ← Volver a la carga
+        balance: Saldo
+        balance_date: Fecha del saldo
+        balance_date_not_saved: Fecha del saldo sin guardar
+        balance_not_readable: Saldo ilegible
+        bank_account: Cuenta bancaria
+        bank_deposits_are_not_automatically_taxable_income_this_is_a_preparation_checkli: Los depósitos bancarios no son automáticamente ingresos sujetos a impuestos. Esta es una lista de preparación, no una declaración de impuestos completada.
+        bank_name: Nombre del banco
+        basic_analysis: Análisis básico
+        basic_analysis_rules_based: Análisis básico · basado en reglas
+        before_you_upload: Antes de cargar archivos
+        billie_insights: Billie Insights
+        billie_insights_2: · Billie Insights
+        billie_is_not_connected_yet_basic_analysis_is_available_without_an_ai_service: Billie aún no está conectado. El análisis básico está disponible sin un servicio de IA.
+        billie_is_not_connected_yet_the_checklist_below_is_available_without_an_ai_servi: Billie aún no está conectado. La lista de abajo está disponible sin un servicio de IA.
+        billie_reviews_your_financial_summary_and_your_saved_tax_context_to_help_you_org: Billie revisa tu resumen financiero y el contexto fiscal guardado para ayudarte a organizar documentos y preparar preguntas para un profesional fiscal.
+        bring_each_bank_account_together: Reúne todas tus cuentas bancarias
+        bring_your_numbers_together: Reúne tus cifras.
+        cancel: Cancelar
+        cancel_import: Cancelar importación
+        cash_account: Cuenta de efectivo
+        cash_accounts: Cuentas de efectivo
+        cash_balance: Saldo de efectivo
+        cash_balance_currency: Saldo de efectivo (%{currency})
+        cash_balance_from_statements: Saldo de efectivo de los estados de cuenta
+        cash_entered_date: Registrado el %{date}
+        cash_flow_forecast: Proyección del flujo de efectivo
+        cash_on_hand: Efectivo disponible
+        cash_on_hand_currency: Efectivo que tienes (%{currency})
+        categories_and_context: Categorías y contexto
+        categories_help_organize_records_they_do_not_determine_tax_deductibility_transfe: Las categorías ayudan a organizar los registros; no determinan si un gasto es deducible de impuestos. Las transferencias y las transacciones excluidas no se cuentan en los totales de ingresos y gastos.
+        category: Categoría
+        change_account: Cambiar cuenta
+        change_dates: Cambiar fechas
+        check_each_pdf_s_extracted_rows_before_adding_its_transactions: Revisa las filas extraídas de cada PDF antes de añadir sus transacciones.
+        check_every_row_against_your_statement: Compara cada fila con tu estado de cuenta.
+        check_uncategorized_transactions_transfers_and_any_business_related_items: Revisa las transacciones sin categoría, las transferencias y cualquier movimiento relacionado con tu actividad profesional.
+        checking_savings_and_cash_you_hold: Cuentas corrientes, de ahorro y efectivo que tienes
+        checking_savings_cash: Cuenta corriente / de ahorro (efectivo)
+        choose_account: Elegir cuenta
+        choose_account_type: Elegir tipo de cuenta
+        choose_different_dates_or_view_all_your_imported_transactions: Elige otras fechas o consulta todas tus transacciones importadas.
+        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: Elige uno o varios archivos CSV o PDF con texto exportados por tu banco.
+        choose_statements_from_your_bank: Elige estados de cuenta de tu banco
+        choose_the_account_type: Elegir el tipo de cuenta →
+        choose_the_dates_for_your_income_expenses_and_transactions: Elige las fechas para tus ingresos, gastos y transacciones.
+        clarity_starts_with_context: La claridad empieza con el contexto.
+        collect_applicable_w_2_and_1099_forms_mortgage_or_student_loan_interest_statemen: Reúne los formularios W-2 y 1099 que correspondan, los comprobantes de intereses de hipotecas o préstamos estudiantiles, los registros de cobertura médica, los recibos y tu declaración del año anterior.
+        confirm_and_import_transactions: Confirmar e importar transacciones
+        confirm_sign_and_amount: Confirmar signo e importe
+        context: '· Contexto:'
+        credit_card: Tarjeta de crédito
+        credit_card_excluded_from_cash: Tarjeta de crédito · excluida del efectivo
+        credit_cards: Tarjetas de crédito
+        credit_owed_excluded: Deuda en tarjetas de crédito · %{count} (no forma parte del efectivo)
+        csv_check_the_columns: 'CSV: revisa las columnas'
+        dashboard: Panel
+        date: Fecha
+        date_column_optional_override: Columna de fecha (selección manual opcional)
+        date_description_and_amount_import_transaction_activity_automatic_cash_balances: Las columnas Date, Description y Amount permiten importar las transacciones. Los saldos automáticos de efectivo también necesitan una columna Balance y datos de la cuenta como Bank, Account Number y Account Type (Checking, Savings o Credit Card). Estas columnas adicionales son opcionales para importar transacciones.
+        date_range_not_applied: Intervalo de fechas sin aplicar
+        dates_use_column: Las fechas utilizan la columna %{column}.
+        description: Descripción
+        details: Detalles
+        discard: Descartar
+        discard_this_pdf_review: Descartar esta revisión del PDF
+        download_sample_csv: Descargar CSV de ejemplo
+        e_g_chase: p. ej., Chase
+        e_g_everyday_checking: p. ej., cuenta corriente diaria
+        each_cash_account_contributes_its_latest_statement_balance_once_older_statements: Cada cuenta de efectivo aporta una sola vez el saldo de su estado de cuenta más reciente. Los estados anteriores de la misma cuenta no se suman de nuevo.
+        each_file_has_its_own_result_transactions_are_saved_to_your_account_original_fil: Cada archivo tiene su propio resultado. Las transacciones se guardan en tu cuenta; los archivos originales no se conservan.
+        each_file_is_processed_separately_a_failed_file_does_not_affect_successful_impor: Cada archivo se procesa por separado. Si un archivo falla, no afecta a las importaciones completadas.
+        end_date: Fecha de fin
+        enter_or_edit_amount: ✎ Introducir o editar importe
+        enter_or_edit_balance: ✎ Introducir o editar saldo
+        entered_by_you_physical_cash_is_not_on_any_statement: Introducido por ti. El dinero en efectivo no aparece en ningún estado de cuenta.
+        estimate_not_a_guarantee: Es una estimación, no una garantía
+        every_transaction_has_a_story: Cada transacción tiene una historia.
+        example_10_means_10_less_spending: 'Ejemplo: −10 significa un 10 % menos de gastos.'
+        example_10_means_10_more_income: 'Ejemplo: 10 significa un 10 % más de ingresos.'
+        exclude_from_totals_and_forecasts: Excluir de los totales y las proyecciones
+        excluded: '· Excluidas:'
+        excluded_2: Excluida
+        excluded_from_totals: Excluida de los totales
+        expense_change: Cambio en los gastos (%)
+        expenses: Gastos
+        expenses_2: · gastos
+        expires_in: En %{duration}
+        explore_a_scenario: Explorar un escenario
+        explore_insights: Explorar el análisis
+        explore_spending_observations_and_practical_next_steps_organize_transactions_tha: Explora observaciones sobre tus gastos y próximos pasos prácticos. Organiza las transacciones que puedan requerir más atención al preparar tu declaración de impuestos.
+        export_csv: Exportar CSV
+        export_records: Exportar registros
+        extracted_rows: Filas extraídas
+        extraction_notes: Notas de extracción (%{count})
+        financial_context: Contexto financiero
+        financial_observations: Observaciones financieras
+        flag_for_tax_review: Marcar para revisión fiscal
+        flagged_for_tax_review: Marcada para revisión fiscal
+        flagging_a_transaction_does_not_make_it_deductible_save_receipts_and_supporting: Marcar una transacción no la convierte en deducible. Guarda los recibos y documentos justificativos, y confirma el tratamiento aplicable en tu jurisdicción.
+        forecast_chart_description: Saldo proyectado de %{current} hoy a %{projected} en %{days} días
+        forecast_horizon: Horizonte de proyección
+        forecast_model: Modelo de proyección
+        forecast_starts_today: La proyección empieza hoy, %{date}.
+        from_statements_to_clarity: DE LOS ESTADOS DE CUENTA A LA CLARIDAD
+        gather_u_s_personal_tax_documents: Reúne los documentos para tus impuestos personales en EE. UU.
+        generate_an_analysis_to_see_observations_and_actions_based_on_your_imported_tran: Genera un análisis para ver observaciones y acciones basadas en tus transacciones importadas.
+        generate_basic_analysis: Generar análisis básico
+        generate_billie_insights: Generar Billie Insights
+        generated: Generado
+        get_your_tax_records_ready: Prepara tus registros fiscales
+        historical_average: Promedio histórico
+        history_days_coverage: Basado en %{days} días de historial
+        i_checked_the_dates_descriptions_and_signed_amounts_excluded_rows_will_not_be_im: He revisado las fechas, las descripciones y los importes con su signo. Las filas excluidas no se importarán.
+        i_reviewed_the_included_rows_against_my_statement: He comparado las filas incluidas con mi estado de cuenta.
+        identify_this_account: Identificar esta cuenta
+        if_the_selected_model_is_unavailable_the_result_shows_the_model_used_and_explain: Si el modelo seleccionado no está disponible, el resultado muestra el modelo utilizado y explica el cambio.
+        illustrative_range: Intervalo ilustrativo
+        import_a_statement_first_so_billie_has_something_to_review: Importa primero un estado de cuenta para que Billie tenga información que revisar.
+        import_a_statement_first_to_generate_an_analysis: Importa primero un estado de cuenta para generar un análisis.
+        import_a_statement_to_see_your_income_and_expenses_in_one_place: Importa un estado de cuenta para ver tus ingresos y gastos en un solo lugar.
+        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: Importa juntos tus estados de cuenta bancarios en CSV o PDF con texto. Organizaremos las transacciones para que tengas una visión de tus finanzas.
+        import_statements: Importar estados de cuenta
+        imported: Importado
+        in_days: En %{days} días
+        in_the_selected_period: En el período seleccionado
+        in_the_selected_period_2: en el período seleccionado
+        in_your_financial_picture: en tu panorama financiero
+        include: Incluir
+        include_row: Incluir fila %{number}
+        include_this_transaction_in_the_records_you_review_with_your_tax_professional: Incluye esta transacción en los registros que revises con tu profesional fiscal.
+        income: Ingresos
+        income_2: ': ingresos'
+        income_change: Cambio en los ingresos (%)
+        income_minus_expenses: Ingresos menos gastos
+        insights_use_your_full_imported_history: El análisis utiliza todo tu historial importado.
+        irs_gather_your_documents: 'IRS: reúne tus documentos →'
+        keep_this_analysis_in_perspective: Ten presentes los límites de este análisis
+        keep_this_in_perspective: Ten presentes estas limitaciones
+        keep_your_records_accurate_and_mark_anything_that_needs_a_closer_look: Mantén tus registros correctos y marca lo que necesite una revisión más detallada.
+        known_cash_balances_partial_total: Saldos de efectivo conocidos · total parcial
+        last_30_days: Últimos 30 días
+        last_four_account_digits: Últimos cuatro dígitos de la cuenta
+        last_month: Mes pasado
+        last_year: Año pasado
+        latest_6_months_with_transactions_in_this_period: Los 6 meses más recientes con transacciones en este período
+        latest_statement_per_account_summed_automatically_credit_card_balances_are_exclu: Se suman automáticamente los saldos del estado de cuenta más reciente de cada cuenta. Los saldos de tarjetas de crédito se excluyen del efectivo.
+        let_your_numbers: Deja que tus cifras
+        make_room_for_what_s_next: HAZ ESPACIO PARA LO QUE VIENE
+        make_the_details_yours: PERSONALIZA LOS DETALLES
+        match_records_to_official_tax_documents_and_review_your_individual_circumstances: Compara los registros con los documentos fiscales oficiales y revisa tus circunstancias personales con un profesional fiscal cualificado.
+        model: 'Modelo:'
+        money_in_money_out: Dinero que entra. Dinero que sale.
+        month: Mes
+        monthly_aggregate_totals_included_in_analysis: Totales mensuales agregados incluidos en el análisis
+        monthly_totals_from_your_imported_transactions: Totales mensuales de tus transacciones importadas
+        name_for_this_account: Nombre para esta cuenta
+        names_are_read_from_your_statements_use_to_rename_one_the_name_you_type_is_alway: Los nombres se obtienen de tus estados de cuenta. Usa ✎ para cambiar un nombre; siempre se mostrará el que escribas.
+        needs_review: Necesita revisión
+        net: Neto
+        net_cash_flow: Flujo de efectivo neto
+        next: Siguiente →
+        next_30_days: Próximos 30 días
+        next_60_days: Próximos 60 días
+        next_90_days: Próximos 90 días
+        no_categorized_expenses_yet: Aún no hay gastos con categoría.
+        no_closing_balance_saved: No se guardó ningún saldo final
+        no_credit_cards_identified_yet_upload_a_credit_card_statement_that_includes_the: Aún no hay tarjetas de crédito identificadas. Carga un estado de cuenta de tarjeta que incluya el banco y los últimos cuatro dígitos.
+        no_identified_accounts_yet: Aún no hay cuentas identificadas.
+        no_matching_transactions: No hay transacciones que coincidan.
+        no_statements_yet: Aún no hay estados de cuenta.
+        no_transactions_in_this_period: No hay transacciones en este período.
+        no_transactions_match_these_dates: No hay transacciones para estas fechas.
+        not_a_tax_decision: no una decisión fiscal.
+        not_available: No disponible
+        not_entered_yet: Aún sin introducir
+        not_imported: Sin importar
+        not_imported_yet: · Aún sin importar
+        not_included: Sin incluir
+        not_included_in_automatic_cash_total: No se incluye en el total automático de efectivo
+        not_linked_to_an_account_yet: aún sin vincular a una cuenta.
+        not_specified: Sin especificar
+        nothing_appears_in_your_dashboard_until_you_confirm_this_import: No aparecerá nada en tu panel hasta que confirmes esta importación.
+        open_statement_history: Abrir historial de estados de cuenta →
+        or_add_an_account: 'O añade una cuenta:'
+        owed: Deuda
+        owed_amount: Deuda de %{amount}
+        owed_on_credit_cards: 'Deuda en tarjetas de crédito:'
+        page_of_total: Página %{page} de %{total}
+        pdf_extraction_can_confuse_dates_amounts_running_balances_and_deposit_or_withdra: La extracción de un PDF puede confundir fechas, importes, saldos acumulados y signos de depósitos o retiros. Corrige los errores de abajo, excluye las líneas de resumen y confirma solo las transacciones que reconozcas. Los importes positivos indican entradas de dinero; los negativos, salidas.
+        pdf_review_anything_unclear: 'PDF: revisa lo que no esté claro'
+        pdfs_are_imported_automatically_when_everything_is_clear_including_the_statement: Los PDF se importan automáticamente cuando todo está claro, incluido el año del estado de cuenta y el signo de cada importe. Los datos poco claros pasan a una revisión específica. Los ingresos son positivos; los gastos, negativos. Las fechas de los CSV usan YYYY-MM-DD o MM/DD/YYYY.
+        pdfs_waiting_for_review: PDF pendientes de revisión
+        personal: Personal
+        preparation_guidance_depends_on_your_circumstances: La orientación para la preparación depende de tus circunstancias.
+        previous: ← Anterior
+        projected_balance_in_days: Saldo proyectado en %{days} días
+        projected_cash_balance: Saldo de efectivo proyectado
+        questions_for_your_tax_professional: Preguntas para tu profesional fiscal
+        recent_transactions: Transacciones recientes
+        records_to_organize: Registros por organizar
+        remove: Eliminar
+        remove_this_statement_and_its_transactions: Eliminar este estado de cuenta y sus transacciones
+        rename: ✎ Cambiar nombre
+        reset: Restablecer
+        result: Resultado
+        retry_only_the_files_that_were_not_imported_pdfs_marked_needs_review_are_saved_b: Vuelve a intentar solo los archivos que no se importaron. Los PDF marcados como «Necesita revisión» se guardan abajo hasta que caduquen.
+        review: Revisar
+        review_2: Revisar →
+        review_account_balances: Revisar saldos de las cuentas →
+        review_expires: Caducidad de la revisión
+        review_federal_and_state_requirements: Revisa los requisitos federales y estatales
+        review_flagged_transactions: Revisar transacciones marcadas →
+        review_pdf_statement: Revisar estado de cuenta en PDF
+        review_transaction: Revisar transacción
+        review_transaction_2: Revisar transacción.
+        review_transaction_description: Revisar %{description}
+        review_your_extracted_transactions: Revisa las transacciones extraídas.
+        review_your_spending_refine_categories_and_flag_records_for_tax_preparation: Revisa tus gastos, ajusta las categorías y marca registros para preparar tu declaración de impuestos.
+        review_your_transaction_categories: Revisa las categorías de tus transacciones
+        reviews_expire_30_minutes_after_upload_if_one_expires_upload_that_pdf_again_disc: Las revisiones caducan 30 minutos después de cargar el archivo. Si una caduca, vuelve a cargar ese PDF. Descartar una revisión no afecta a los estados de cuenta importados.
+        row_date: Fecha de la fila %{number}
+        row_description: Descripción de la fila %{number}
+        row_signed_amount: Importe con signo de la fila %{number}
+        sample_transactions_are_examples_import_them_only_if_you_want_to_try_the_workflo: Las transacciones de muestra son ejemplos. Impórtalas solo si quieres probar el proceso.
+        save_account: Guardar cuenta
+        save_balance: Guardar saldo
+        save_cash_on_hand: Guardar efectivo disponible
+        save_changes: Guardar cambios
+        save_name: Guardar nombre
+        save_tax_context: Guardar contexto fiscal
+        saved_balance: Saldo guardado
+        search_transactions: Buscar transacciones
+        search_transactions_2: Buscar transacciones…
+        see_a_little_further_ahead: Mira un poco más allá.
+        see_the_account_breakdown: Ver el desglose por cuenta ↓
+        select_several_files_at_once_including_a_mix_of_csvs_and_text_based_pdfs_scanned: Selecciona varios archivos a la vez; puedes combinar CSV y PDF con texto. Para los PDF escaneados o que solo contienen imágenes, necesitas una versión con texto o un archivo CSV; el reconocimiento óptico de caracteres (OCR) no está disponible.
+        self_employed: Trabajo por cuenta propia
+        showing: Mostrando
+        signed_amount_currency: Importe con signo (%{currency})
+        small_business: Pequeña empresa
+        small_steps_clearer_direction: PEQUEÑOS PASOS, UN RUMBO MÁS CLARO
+        some_statements_need_an_account: Algunos estados de cuenta necesitan una cuenta
+        some_statements_still_need_an_account_or_a_readable_dated_balance: Algunos estados de cuenta aún necesitan una cuenta o un saldo legible con fecha.
+        start_date: Fecha de inicio
+        starting_cash_balance: Saldo inicial de efectivo
+        statement: Estado de cuenta
+        statement_account_name: 'Obtenido de tu estado de cuenta: %{name}. Deja el campo vacío para usar ese nombre.'
+        statement_csv_or_pdf_files: Estados de cuenta en archivos CSV o PDF
+        statement_currency: 'Moneda del estado de cuenta:'
+        statement_history: Historial de estados de cuenta
+        statements_from_the_same_account_contribute_only_the_latest_balance_removing_a_s: Los estados de la misma cuenta aportan únicamente el saldo más reciente. Al eliminar un estado de cuenta, también se eliminan sus transacciones y se recalcula el total de la cuenta.
+        status: Estado
+        still_need_a_category: aún necesitan una categoría.
+        still_need_a_type_cash_or_credit: aún necesitan un tipo (efectivo o crédito).
+        summary_used_for_analysis: Resumen utilizado para el análisis
+        tax_country_or_jurisdiction: País o jurisdicción fiscal
+        tax_jurisdiction: 'Jurisdicción fiscal:'
+        tax_preparation: Preparación de impuestos
+        tax_review: '· Revisión fiscal:'
+        tax_review_2: Revisión fiscal
+        tell_you_more: te cuenten más.
+        the_everyday_details: LOS DETALLES DEL DÍA A DÍA
+        the_original_date_and_amount_stay_tied_to_the_imported_statement_remove_and_re_i: La fecha y el importe originales permanecen vinculados al estado de cuenta importado. Si necesitas cambiarlos, elimina el archivo y vuelve a importar una versión corregida.
+        the_shaded_envelope_combines_daily_income_and_spending_bounds_it_has_no_calibrat: El área sombreada combina los límites diarios de ingresos y gastos. No representa una probabilidad calibrada del saldo total de efectivo.
+        these_are_balances_on_the_dates_shown_upload_newer_statements_to_refresh_them_th: Estos son los saldos de las fechas indicadas. Carga estados de cuenta más recientes para actualizarlos. Esta aplicación no se conecta a tus bancos ni consulta saldos en tiempo real.
+        these_statements_are_not_included_in_the_automatic_total_choose_an_existing_acco: Estos estados de cuenta no se incluyen en el total automático. Elige una cuenta existente o añade su banco y sus últimos cuatro dígitos en el historial de estados de cuenta. Elegir una cuenta no completa un saldo final que falte; consulta la columna Saldo guardado para ver qué datos hay disponibles.
+        this_draft_expires_after_30_minutes: Este borrador caduca después de 30 minutos.
+        this_forecast_starts_from_a_partial_account_total: Esta proyección parte de un total parcial de las cuentas.
+        this_information_adds_context_to_the_next_analysis_billieweather_does_not_calcul: Esta información añade contexto al próximo análisis. BillieWeather no calcula los impuestos que debes pagar ni presenta declaraciones de impuestos.
+        this_is_a_different_account_with_the_same_bank_and_last_four_digits: Esta es una cuenta distinta con el mismo banco y los mismos últimos cuatro dígitos
+        this_line_is_based_on_patterns_in_your_past_transactions_not_bill_due_dates_or_c: Esta línea se basa en patrones de tus transacciones pasadas, no en fechas de vencimiento de facturas ni en pagos futuros confirmados. Los saldos de los estados de cuenta reflejan las fechas impresas, no los saldos bancarios en tiempo real.
+        this_month: Este mes
+        this_year: Este año
+        time_period: Período
+        today: Hoy
+        total_cash: Efectivo total
+        total_cash_partial_some_accounts_need_attention: Efectivo total · parcial, algunas cuentas necesitan atención
+        total_expenses: Gastos totales
+        total_income: Ingresos totales
+        total_owed_on_credit_cards: Deuda total en tarjetas de crédito ·
+        transaction: Transacción
+        transaction_type: Tipo de transacción
+        transactions: Transacciones
+        transactions_are_organized_and_categorized_automatically_as_you_import: Las transacciones se organizan y categorizan automáticamente al importarlas
+        transfers: '· Transferencias:'
+        transfers_and_excluded_items_omitted: Se omiten las transferencias y los elementos excluidos
+        try_another_search_or_clear_your_filters: Prueba otra búsqueda o borra los filtros.
+        turn_information_into_next_steps: CONVIERTE LA INFORMACIÓN EN PRÓXIMOS PASOS
+        u_s_personal_tax_preparation: PREPARACIÓN DE IMPUESTOS PERSONALES EN EE. UU.
+        uncategorized: 'Sin categoría:'
+        understand_patterns_consider_practical_actions_and_get_your_records_ready_for_ta: Comprende los patrones, considera acciones prácticas y prepara tus registros para la temporada de impuestos.
+        united_states: Estados Unidos
+        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: Hasta 10 archivos · 2 MB por archivo · 10 MB en total · CSV y PDF con texto
+        update_forecast: Actualizar proyección
+        upload_a_statement: Cargar un estado de cuenta
+        upload_a_statement_review_your_categories_then_generate_your_first_analysis: Carga un estado de cuenta, revisa las categorías y genera tu primer análisis.
+        upload_statement: Cargar estado de cuenta
+        upload_statements: Cargar estados de cuenta →
+        upload_statements_2: Cargar estados de cuenta
+        upload_your_first_csv_or_text_based_pdf_statement_to_see_income_spending_and_a_c: Carga tu primer estado de cuenta en CSV o PDF con texto para ver ingresos, gastos y una proyección del flujo de efectivo basada en tus propias transacciones.
+        upload_your_first_statement: Carga tu primer estado de cuenta
+        upload_your_first_statement_to_start_connecting_the_dots: Carga tu primer estado de cuenta para empezar a ver las conexiones.
+        use_an_existing_account: Usar una cuenta existente
+        use_automatic_account_total: Usar el total automático de las cuentas
+        use_date_description_and_amount_separate_debit_and_credit_columns_are_also_suppo: 'Usa las columnas Date, Description y Amount. También se admiten columnas Debit y Credit separadas. Las fechas se detectan automáticamente: primero Transaction Date, después Date y luego las fechas de contabilización. Cada resultado de importación indica la columna utilizada.'
+        use_for_duplicates_or_items_that_should_not_affect_your_financial_picture: Úsalo para duplicados o elementos que no deban afectar a tu panorama financiero.
+        use_one_currency: Usa una sola moneda
+        use_the_same_bank_and_last_four_digits_for_every_statement_from_this_account_do: Usa el mismo banco y los mismos últimos cuatro dígitos en todos los estados de esta cuenta. No introduzcas el número de cuenta completo.
+        use_this_account: Usar esta cuenta
+        view_account_balances: Ver saldos de las cuentas →
+        view_all: Ver todo →
+        view_all_dates: Ver todas las fechas
+        view_monthly_figures: Ver cifras mensuales
+        view_transactions: Ver transacciones →
+        waiting_for_a_usable_starting_balance: A la espera de un saldo inicial utilizable
+        what_goes_into_this_estimate: Qué se utiliza para esta estimación
+        what_you_owe_on_each_card: Lo que debes en cada tarjeta
+        what_your_numbers_say: LO QUE DICEN TUS CIFRAS
+        when_account_details_and_a_dated_balance_are_present_we_total_the_latest_balance: Cuando hay datos de la cuenta y un saldo con fecha, sumamos el saldo más reciente de cada cuenta de efectivo. Si una cuenta no está clara, selecciónala en el historial de estados de cuenta. Las tarjetas de crédito se excluyen del efectivo.
+        where_it_goes: A dónde va
+        workspace_currency: Tu espacio de trabajo actual utiliza %{currency}. No se aplica conversión de moneda.
+        you_have_the_final_say: TÚ TIENES LA ÚLTIMA PALABRA
+        your_account_balances: Los saldos de tus cuentas
+        your_accounts: Tus cuentas
+        your_cash_flow_outlook: Tu proyección del flujo de efectivo
+        your_expense_categories: Tus categorías de gastos
+        your_financial_outlook: Tu perspectiva financiera
+        your_financial_story_starts_here: Tu historia financiera empieza aquí.
+        your_imported_files_accounts_and_transaction_counts: Tus archivos importados, cuentas y cantidades de transacciones
+        your_latest_transactions_will_appear_here: Tus transacciones más recientes aparecerán aquí.
+        your_money_in_focus: TU DINERO, CON CLARIDAD
+        your_next_insight_is_in_your_numbers: Tu próximo descubrimiento está en tus cifras.
+        your_numbers_thoughtfully_explained: Tus cifras, explicadas con cuidado
+        your_records_or_profile_changed_since_billie_prepared_these_tax_insights_ask_bil: Tus registros o tu perfil han cambiado desde que Billie preparó estas recomendaciones fiscales. Consulta a Billie de nuevo para incluir la información más reciente.
+        your_records_or_profile_changed_since_this_analysis_was_generated_generate_a_new: Tus registros o tu perfil han cambiado desde que se generó este análisis. Genera uno nuevo para incluir la información más reciente.
+        your_starting_balance_is_not_available_yet: Tu saldo inicial aún no está disponible.
+        your_starting_point: Tu punto de partida
+        your_tax_context: Tu contexto fiscal
+        your_transactions_belong_here: Tus transacciones tienen su lugar aquí.
+        your_upload_results: Los resultados de tu carga
+        dashboard_periods: Períodos del panel
+        monthly_income_expenses: Ingresos y gastos mensuales
+        income_amount: 'Ingresos: %{amount}'
+        expenses_amount: 'Gastos: %{amount}'
+        transactions_found:
+          one: transacción encontrada
+          other: transacciones encontradas
+        tax_context_personal: Personal
+        tax_context_self_employed: Trabajo por cuenta propia
+        tax_context_business: Empresa

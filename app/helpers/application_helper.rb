@@ -10,8 +10,9 @@ module ApplicationHelper
   end
 
   def usage_region_options
-    UsageRegion::CODES.map { |code| [t("usage_regions.#{code}"), code] }
+    standard = UsageRegion::STANDARD_CODES.map { |code| [t("usage_regions.#{code}"), code] }
       .sort_by { |label, _code| label.downcase }
+    [[t("usage_regions.#{UsageRegion::GLOBAL_CITIZEN_CODE}"), UsageRegion::GLOBAL_CITIZEN_CODE]] + standard
   end
 
   def billie_language_path(locale)

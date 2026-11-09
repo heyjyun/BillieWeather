@@ -52,6 +52,28 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
+  test "Global Citizen can be selected at signup and saved by an existing user" do
+    get new_user_registration_path
+    assert_select "select#user_usage_region option[value='XG']", text: "Global Citizen"
+    assert_difference "User.count", 1 do
+      post user_registration_path, params: registration_params("global-citizen@example.com", usage_region: "XG")
+    end
+    assert_redirected_to finance_dashboard_path
+    user = User.find_by!(email: "global-citizen@example.com")
+    assert_equal "XG", user.usage_region
+
+    patch finance_settings_path, params: {user: {usage_region: "JP"}}
+    assert_redirected_to finance_settings_path
+    patch finance_settings_path, params: {user: {usage_region: "xg"}}
+    assert_redirected_to finance_settings_path
+    assert_equal "XG", user.reload.usage_region
+    get finance_settings_path
+    assert_select "select#user_usage_region option[value='XG'][selected]", text: "Global Citizen"
+    assert_select "select#user_usage_region option" do |options|
+      assert_equal "XG", options.find { |option| option["value"].present? }["value"]
+    end
+  end
+
   test "legacy users must complete region selection before finance activity" do
     user = create(:user)
     user.update_columns(usage_region: nil, usage_region_pending: true)
@@ -138,18 +160,19 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal "FR", user.reload.usage_region
   end
 
-  test "region labels are localized in all five languages while Mainland China stays explicit" do
+  test "region labels are localized in all six languages while special choices stay explicit" do
     user = create(:user, usage_region: "JP")
     sign_in user
     codes = nil
     {"en" => ["Japan", "Usage region"], "zh-CN" => ["日本", "使用地区"], "zh-TW" => ["日本", "使用地區"],
-      "ja" => ["日本", "利用する地域"], "ko" => ["일본", "사용 지역"]}.each do |locale, (japan, label)|
+      "ja" => ["日本", "利用する地域"], "ko" => ["일본", "사용 지역"], "es" => ["Japón", "Región de uso"]}.each do |locale, (japan, label)|
       get finance_settings_path, params: {locale: locale}
       assert_response :success
       assert_select "html[lang='#{locale}']"
       assert_select "label[for='user_usage_region']", text: label
       assert_select "select#user_usage_region option[value='JP']", text: japan
       assert_select "select#user_usage_region option[value='CN']", text: "Mainland China"
+      assert_select "select#user_usage_region option[value='XG']", text: "Global Citizen"
       assert_select "select#user_usage_region option[value='HK']"
       assert_select "select#user_usage_region option[value='TW']"
       assert_select "input[name='user[usage_region]']", count: 0

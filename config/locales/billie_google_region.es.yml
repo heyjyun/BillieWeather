@@ -1,0 +1,13 @@
+{
+  "es": {
+    "billie": {
+      "google_region": {
+        "heading": "Elige tu región de uso",
+        "intro": "Tu identidad de Google está verificada. Selecciona una región para terminar de crear tu cuenta.",
+        "continue": "Crear cuenta",
+        "expired": "Tu sesión de registro con Google ha caducado. Vuelve a iniciar sesión con Google.",
+        "invalid": "Selecciona una región de la lista."
+      }
+    }
+  }
+}

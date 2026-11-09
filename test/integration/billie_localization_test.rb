@@ -109,7 +109,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     end
     catalogs.each do |english_path|
       english = flatten.call(YAML.safe_load_file(english_path).fetch("en"))
-      %w[zh-CN zh-TW ja ko].each do |locale|
+      %w[zh-CN zh-TW ja ko es].each do |locale|
         translated_path = english_path.sub(/\.en\.yml\z/, ".#{locale}.yml")
         assert File.exist?(translated_path), "Missing #{translated_path}"
         translated = flatten.call(YAML.safe_load_file(translated_path).fetch(locale))
@@ -135,16 +135,16 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     end
   end
 
-  %w[zh-TW ja ko].each do |locale|
+  %w[zh-TW ja ko es].each do |locale|
     test "#{locale} browser detection authentication and language menu work" do
-      language = {"zh-TW" => "zh-TW", "ja" => "ja-JP", "ko" => "ko-KR"}.fetch(locale)
+      language = {"zh-TW" => "zh-TW", "ja" => "ja-JP", "ko" => "ko-KR", "es" => "es-MX"}.fetch(locale)
       get root_path, headers: {"HTTP_ACCEPT_LANGUAGE" => "#{language},en;q=0.8"}
       assert_response :success
       assert_select "html[lang='#{locale}']"
-      label = {"zh-TW" => "繁體中文", "ja" => "日本語", "ko" => "한국어"}.fetch(locale)
+      label = {"zh-TW" => "繁體中文", "ja" => "日本語", "ko" => "한국어", "es" => "Español"}.fetch(locale)
       assert_select "details.bw-language-menu > summary", text: /#{label}/
-      assert_select ".bw-language-switcher a", count: 5
-      %w[en zh-CN zh-TW ja ko].each { |option| assert_select ".bw-language-switcher a[lang='#{option}']" }
+      assert_select ".bw-language-switcher a", count: 6
+      %w[en zh-CN zh-TW ja ko es].each { |option| assert_select ".bw-language-switcher a[lang='#{option}']" }
 
       get new_user_session_path, params: {locale: locale}
       assert_select "html[lang='#{locale}']"

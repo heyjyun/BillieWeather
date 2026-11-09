@@ -5,6 +5,7 @@ locales: &locales
   zh-TW: 繁體中文
   ja: 日本語
   ko: 한국어
+  es: Español
 
 # The language labels should be the same across all locales.
 en:
@@ -30,4 +31,9 @@ zh-TW:
 ko:
   locale:
     default: 기본값
+    locales: *locales
+
+es:
+  locale:
+    default: Predeterminado
     locales: *locales
