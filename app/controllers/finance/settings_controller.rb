@@ -53,6 +53,9 @@ module Finance
 
     def load_user
       @user = current_user
+      @account_deletion = AccountDeletion.new(@user)
+      @privacy_counts = {statements: @user.finance_statements.count, transactions: @user.finance_transactions.count,
+                         accounts: @user.finance_bank_accounts.count}
     end
   end
 end

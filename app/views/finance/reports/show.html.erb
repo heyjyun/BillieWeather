@@ -1,0 +1,59 @@
+<% content_for :title, t("billie.export.title") %>
+<div class="bw-page-heading">
+  <div>
+    <span class="bw-eyebrow"><%= t("billie.export.eyebrow") %></span>
+    <h1><%= t("billie.export.heading") %></h1>
+    <p><%= t("billie.export.intro") %></p>
+  </div>
+  <%= link_to t("billie.export.back_to_dashboard"), finance_dashboard_path(preset: @period.preset, start_date: (@period.start_date&.iso8601 if @period.preset == "custom"), end_date: (@period.end_date&.iso8601 if @period.preset == "custom")), class: "bw-button bw-button-outline" %>
+</div>
+
+<div class="bw-settings-stack">
+  <section class="bw-panel" id="report-export" aria-labelledby="report-export-heading">
+    <h2 id="report-export-heading"><%= t("billie.export.options_heading") %></h2>
+    <p id="report-period">
+      <%= t("billie.export.period_label") %>
+      <strong><%= @period.start_date && @period.end_date ? "#{finance_date(@period.start_date)} – #{finance_date(@period.end_date)}" : t("billie.finance.ui.all_time") %></strong>
+      <span class="bw-dot-divider">·</span> <%= @profile.currency %>
+    </p>
+    <% if @period_error %>
+      <div class="bw-flash bw-flash-error" role="alert"><%= t("billie.export.period_reset", error: @period_error) %></div>
+    <% end %>
+    <%= form_with url: download_finance_report_path, method: :get, local: true, data: {turbo: false}, class: "bw-form bw-export-form" do %>
+      <%= hidden_field_tag :preset, @period.preset, id: nil %>
+      <% if @period.preset == "custom" %>
+        <%= hidden_field_tag :start_date, @period.start_date&.iso8601, id: nil %>
+        <%= hidden_field_tag :end_date, @period.end_date&.iso8601, id: nil %>
+      <% end %>
+
+      <fieldset class="bw-export-fieldset">
+        <legend><%= t("billie.export.format_legend") %></legend>
+        <label class="bw-checkbox-card">
+          <%= radio_button_tag :export_format, "xlsx", true, id: "export_format_xlsx" %>
+          <span><strong><%= t("billie.export.xlsx_label") %></strong><small><%= t("billie.export.xlsx_help") %></small></span>
+        </label>
+        <label class="bw-checkbox-card">
+          <%= radio_button_tag :export_format, "csv", false, id: "export_format_csv" %>
+          <span><strong><%= t("billie.export.csv_label") %></strong><small><%= t("billie.export.csv_help") %></small></span>
+        </label>
+      </fieldset>
+
+      <fieldset class="bw-export-fieldset bw-export-sheets" id="report-sheets">
+        <legend><%= t("billie.export.sheets_legend") %></legend>
+        <small><%= t("billie.export.sheets_help") %></small>
+        <%= hidden_field_tag "sheets[]", "", id: nil %>
+        <% @sheets.each do |sheet| %>
+          <label class="bw-checkbox-inline">
+            <%= check_box_tag "sheets[]", sheet, true, id: "report_sheet_#{sheet}" %>
+            <span><strong><%= t("billie.export.workbook.sheets.#{sheet}") %></strong> — <%= t("billie.export.sheet_descriptions.#{sheet}") %></span>
+          </label>
+        <% end %>
+      </fieldset>
+
+      <p class="bw-caption"><%= t("billie.export.privacy_note") %></p>
+      <%= button_tag type: "submit", class: "bw-button bw-button-dark", name: nil do %>
+        <%= finance_icon "file", size: 17 %> <%= t("billie.export.download") %>
+      <% end %>
+    <% end %>
+  </section>
+</div>

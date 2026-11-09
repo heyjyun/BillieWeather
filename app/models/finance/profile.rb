@@ -25,6 +25,16 @@ module Finance
       balance_source.in?(BALANCE_SOURCES) || !current_balance.to_d.zero?
     end
 
+    # A balance the person typed in (or a legacy non-zero balance with no source) wins over statements.
+    def manual_balance?
+      balance_source == "manual" || (balance_source.blank? && current_balance.to_d.nonzero?)
+    end
+
+    # The balance the dashboard shows, or nil when none is known. `summary` is a BalanceSync summary.
+    def displayed_balance(summary)
+      manual_balance? ? current_balance : summary&.dig(:total)
+    end
+
     private
 
     def cash_on_hand_has_cent_precision

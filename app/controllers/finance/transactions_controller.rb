@@ -76,20 +76,18 @@ module Finance
       @transaction = current_user.finance_transactions.find(params[:id])
     end
 
+    # The Transactions page keeps its original columns so existing spreadsheets and scripts still work.
+    # The fuller report CSV (account, merchant, byte-order mark) lives in Finance::ReportsController.
     def export_csv(scope)
       require "csv"
       csv = CSV.generate do |rows|
         rows << ["Date", "Description", "Amount", "Currency", "Category", "Tax review", "Excluded"]
         scope.find_each do |transaction|
-          rows << [transaction.booked_on.iso8601, csv_safe(transaction.description), transaction.amount.to_s("F"),
+          rows << [transaction.booked_on.iso8601, TransactionCsv.safe_text(transaction.description), transaction.amount.to_s("F"),
             transaction.statement.currency, transaction.category, transaction.tax_review, transaction.excluded]
         end
       end
       send_data csv, type: "text/csv; charset=utf-8", disposition: "attachment", filename: "billieweather-transactions-#{Date.current.iso8601}.csv"
-    end
-
-    def csv_safe(value)
-      value.to_s.match?(/\A\s*[=+\-@\t\r]/) ? "'#{value}" : value
     end
   end
 end

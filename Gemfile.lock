@@ -223,6 +223,11 @@ GEM
     capybara-lockstep (2.3.1)
       activesupport (>= 7.0)
       capybara (>= 3.0)
+    caxlsx (4.5.0)
+      htmlentities (~> 4.3, >= 4.3.4)
+      marcel (~> 1.0)
+      nokogiri (~> 1.10, >= 1.10.4)
+      rubyzip (>= 2.4, < 4)
     childprocess (5.1.0)
       logger (~> 1.5)
     choice (0.2.0)
@@ -757,6 +762,7 @@ DEPENDENCIES
   capybara (~> 3.39)
   capybara-email
   capybara-lockstep
+  caxlsx (~> 4.1)
   chronic
   colorize
   cssbundling-rails

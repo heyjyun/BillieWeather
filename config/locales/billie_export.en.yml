@@ -1,0 +1,141 @@
+---
+en:
+  billie:
+    export:
+      button: Export report
+      title: Export report
+      eyebrow: Take your numbers with you
+      heading: Export your financial report
+      intro: Download your income, spending, accounts and categorized transactions. Categories you corrected are included exactly as you saved them.
+      back_to_dashboard: Back to dashboard
+      options_heading: Report options
+      period_label: "Period:"
+      period_reset: "The selected dates could not be used (%{error}). Showing all dates instead."
+      format_legend: Format
+      xlsx_label: Excel workbook (.xlsx)
+      xlsx_help: A formatted report with an overview, accounts, spending by category and every transaction.
+      csv_label: CSV (.csv)
+      csv_help: Your categorized transactions as plain rows, for spreadsheets or other finance apps.
+      sheets_legend: Worksheets to include
+      sheets_help: Excel only. A CSV file always contains your transactions.
+      sheet_descriptions:
+        overview: totals, net cash flow and balance
+        accounts: balances by account
+        categories: spending by category with percentages
+        transactions: every transaction with its category
+      privacy_note: The file is generated when you download it and is not saved on BillieWeather's servers. It contains sensitive financial details, so store it somewhere safe.
+      download: Download report
+      choose_a_sheet: Choose at least one worksheet to include.
+      choose_a_format: Choose Excel or CSV.
+      workbook:
+        title: BillieWeather financial report
+        generated_at: "Generated %{time}"
+        all_time: All dates
+        not_available: Not available
+        no_transactions: No transactions in this period.
+        no_expenses: No expenses in this period.
+        no_accounts: No accounts have been identified from your statements yet.
+        "yes": "Yes"
+        "no": "No"
+        totals_note: Transfers and excluded transactions are not counted in income or expenses.
+        balance_note: Balances come from your latest statements (or what you entered) and do not include activity after that date.
+        balance_manual: Entered by you
+        balance_statements: From statements
+        partial_total_note: "Total cash is partial: some accounts are missing a balance or an account type."
+        unassigned_note:
+          one: "%{count} statement is not linked to an account and is not in these totals."
+          other: "%{count} statements are not linked to an account and are not in these totals."
+        monthly_heading: Monthly totals
+        sheets:
+          overview: Overview
+          accounts: Accounts
+          categories: Categories
+          transactions: Transactions
+        rows:
+          period: Report period
+          data_range: Transactions dated
+          currency: Currency
+          total_income: Total income
+          total_expenses: Total expenses
+          net_cash_flow: Net cash flow
+          available_balance: Available cash balance
+          balance_as_of: Balance as of
+          balance_source: Balance source
+          cash_on_hand: Cash on hand
+          owed_on_credit_cards: Owed on credit cards
+          total_cash: Total cash
+          transactions: Transactions
+          statements: Statements
+          uncategorized: Uncategorized transactions
+          transfers: Transfers
+          excluded: Excluded transactions
+        columns:
+          month: Month
+          income: Income
+          expenses: Expenses
+          net: Net
+          account: Account
+          bank: Bank
+          type: Type
+          last4: Last 4
+          balance: Balance
+          amount_owed: Amount owed
+          as_of: As of
+          status: Status
+          category: Category
+          amount: Amount
+          share: Share of expenses
+          date: Date
+          merchant: Merchant
+          description: Description
+          currency: Currency
+          tax_review: Tax review
+          excluded: Excluded
+          counted: Counted in totals
+        account_kinds:
+          cash: Cash
+          credit: Credit
+          unknown: Not set
+        account_statuses:
+          known: Balance known
+          excluded_credit: Credit card (amount owed)
+          unknown_kind: Choose cash or credit
+          missing_date: Statement date missing
+          future_date: Statement date is in the future
+          missing_balance: Closing balance missing
+    privacy:
+      heading: Privacy & data
+      intro: Remove your financial data at any time, or close your account entirely. Both actions are permanent.
+      export_first: Deleted data cannot be recovered. Export your report first if you might need it.
+      type_email: "To confirm, type your email (%{email})"
+      confirmation_mismatch: The email you typed doesn't match your account, so nothing was deleted.
+      backups_note: Data is removed from BillieWeather right away. Copies in encrypted database backups are not erased immediately; they expire on the hosting provider's backup schedule. Information previously sent to the optional AI insights or forecasting services follows those providers' retention policies.
+      data:
+        heading: Delete my financial data
+        summary: "You currently have %{statements} statement(s), %{transactions} transaction(s) and %{accounts} account(s). This removes:"
+        items:
+          transactions: All imported transactions, including categories you corrected
+          statements: Statement records and any PDF imports waiting for review
+          accounts: Detected bank accounts and the names you gave them
+          rules: Remembered merchant categories
+          insights: Generated insights and tax-preparation notes
+          profile: Balances, cash on hand, currency and tax context
+        kept: Your login, nickname, password and region are kept, so you can start fresh.
+        button: Delete my financial data
+        deleted: Your financial data has been deleted. Your account is still active.
+        failed: Your financial data could not be deleted. Nothing was removed; please try again.
+      account:
+        heading: Delete my account
+        items:
+          login: Your login, nickname and sign-in methods (including Google sign-in)
+          financial: All of your financial data listed above
+          teams: Your personal workspace
+        button: Permanently delete my account
+        deleted: Your account and financial data have been deleted.
+        failed: Your account could not be deleted. Nothing was removed; please try again or contact support.
+        wrong_password: The current password is incorrect, so your account was not deleted.
+        blocked: "Account deletion is unavailable:"
+        shared_team: "you share the team “%{team}” with other people. Leave it or remove its other members first"
+        shared_team_generic: Your team changed while your account was being deleted. Nothing was removed; please try again.
+        connected_integrations: you have a connected payment integration. Please contact support
+        platform_agent: this is an automated platform account

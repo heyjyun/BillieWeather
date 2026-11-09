@@ -1,0 +1,141 @@
+---
+ja:
+  billie:
+    export:
+      button: レポートを書き出す
+      title: レポートを書き出す
+      eyebrow: 数字をいつでも手元に
+      heading: 家計レポートを書き出す
+      intro: 収入、支出、口座、分類済みの取引をダウンロードできます。修正したカテゴリは保存したとおりに含まれます。
+      back_to_dashboard: ダッシュボードに戻る
+      options_heading: レポートの設定
+      period_label: "期間："
+      period_reset: "選択した日付は使用できませんでした（%{error}）。すべての日付を表示しています。"
+      format_legend: 形式
+      xlsx_label: Excel ブック（.xlsx）
+      xlsx_help: 概要、口座、カテゴリ別の支出、すべての取引を含む整形済みレポートです。
+      csv_label: CSV（.csv）
+      csv_help: 分類済みの取引をシンプルな行で出力します。表計算ソフトや他の家計アプリ向けです。
+      sheets_legend: 含めるシート
+      sheets_help: Excel のみ。CSV ファイルには常に取引が含まれます。
+      sheet_descriptions:
+        overview: 合計、純キャッシュフロー、残高
+        accounts: 口座ごとの残高
+        categories: カテゴリ別の支出と割合
+        transactions: すべての取引とカテゴリ
+      privacy_note: ファイルはダウンロード時に作成され、BillieWeather のサーバーには保存されません。機密性の高い金融情報を含むため、安全な場所に保管してください。
+      download: レポートをダウンロード
+      choose_a_sheet: シートを1つ以上選んでください。
+      choose_a_format: Excel または CSV を選んでください。
+      workbook:
+        title: BillieWeather 家計レポート
+        generated_at: "作成日時：%{time}"
+        all_time: すべての期間
+        not_available: 不明
+        no_transactions: この期間の取引はありません。
+        no_expenses: この期間の支出はありません。
+        no_accounts: 明細書から識別された口座はまだありません。
+        "yes": "はい"
+        "no": "いいえ"
+        totals_note: 振替と除外した取引は収入・支出に含まれません。
+        balance_note: 残高は最新の明細書（または入力した値）に基づき、その日付以降の取引は含まれません。
+        balance_manual: 手動入力
+        balance_statements: 明細書から
+        partial_total_note: "現金合計は一部のみです：残高または口座の種類が不明な口座があります。"
+        unassigned_note:
+          one: "%{count} 件の明細書が口座に紐づいておらず、この合計に含まれていません。"
+          other: "%{count} 件の明細書が口座に紐づいておらず、この合計に含まれていません。"
+        monthly_heading: 月ごとの合計
+        sheets:
+          overview: 概要
+          accounts: 口座
+          categories: カテゴリ
+          transactions: 取引
+        rows:
+          period: レポート期間
+          data_range: 取引の日付
+          currency: 通貨
+          total_income: 総収入
+          total_expenses: 総支出
+          net_cash_flow: 純キャッシュフロー
+          available_balance: 利用可能な現金残高
+          balance_as_of: 残高の基準日
+          balance_source: 残高の出所
+          cash_on_hand: 手元の現金
+          owed_on_credit_cards: クレジットカードの未払額
+          total_cash: 現金合計
+          transactions: 取引数
+          statements: 明細書数
+          uncategorized: 未分類の取引
+          transfers: 振替
+          excluded: 除外した取引
+        columns:
+          month: 月
+          income: 収入
+          expenses: 支出
+          net: 差額
+          account: 口座
+          bank: 銀行
+          type: 種類
+          last4: 下4桁
+          balance: 残高
+          amount_owed: 未払額
+          as_of: 基準日
+          status: 状態
+          category: カテゴリ
+          amount: 金額
+          share: 支出に占める割合
+          date: 日付
+          merchant: 店舗
+          description: 内容
+          currency: 通貨
+          tax_review: 税務確認
+          excluded: 除外
+          counted: 合計に含む
+        account_kinds:
+          cash: 現金
+          credit: クレジット
+          unknown: 未設定
+        account_statuses:
+          known: 残高あり
+          excluded_credit: クレジットカード（未払額）
+          unknown_kind: 現金かクレジットかを選択
+          missing_date: 明細書の日付がありません
+          future_date: 明細書の日付が未来です
+          missing_balance: 締め残高がありません
+    privacy:
+      heading: プライバシーとデータ
+      intro: 家計データはいつでも削除でき、アカウント自体を閉じることもできます。どちらも元に戻せません。
+      export_first: 削除したデータは復元できません。必要になる可能性がある場合は、先にレポートを書き出してください。
+      type_email: "確認のため、メールアドレス（%{email}）を入力してください"
+      confirmation_mismatch: 入力したメールアドレスがアカウントと一致しないため、何も削除されませんでした。
+      backups_note: データは BillieWeather からすぐに削除されます。暗号化されたデータベースのバックアップ内のコピーはすぐには消去されず、ホスティング事業者のバックアップ期間に従って失効します。任意の AI 分析や予測サービスに以前送信された情報は、各事業者の保持ポリシーに従います。
+      data:
+        heading: 家計データを削除する
+        summary: "現在、明細書 %{statements} 件、取引 %{transactions} 件、口座 %{accounts} 件があります。削除される内容："
+        items:
+          transactions: 取り込んだすべての取引（修正したカテゴリを含む）
+          statements: 明細書の記録と、確認待ちの PDF 取り込み
+          accounts: 検出された銀行口座と付けた名前
+          rules: 店舗ごとに記憶したカテゴリ
+          insights: 作成された分析と税務準備メモ
+          profile: 残高、手元の現金、通貨、税務情報
+        kept: ログイン、ニックネーム、パスワード、地域は残るため、最初からやり直せます。
+        button: 家計データを削除する
+        deleted: 家計データを削除しました。アカウントは引き続き利用できます。
+        failed: 家計データを削除できませんでした。何も削除されていません。もう一度お試しください。
+      account:
+        heading: アカウントを削除する
+        items:
+          login: ログイン、ニックネーム、サインイン方法（Google サインインを含む）
+          financial: 上記のすべての家計データ
+          teams: 個人用ワークスペース
+        button: アカウントを完全に削除する
+        deleted: アカウントと家計データを削除しました。
+        failed: アカウントを削除できませんでした。何も削除されていません。もう一度お試しいただくか、サポートにお問い合わせください。
+        wrong_password: 現在のパスワードが正しくないため、アカウントは削除されませんでした。
+        blocked: "アカウントを削除できません："
+        shared_team: "チーム「%{team}」を他の人と共有しています。先にチームから抜けるか、他のメンバーを削除してください"
+        shared_team_generic: 削除中にチームが変更されました。何も削除されていません。もう一度お試しください。
+        connected_integrations: 決済連携が接続されています。サポートにお問い合わせください
+        platform_agent: これはプラットフォームの自動アカウントです

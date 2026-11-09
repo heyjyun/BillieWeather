@@ -27,27 +27,19 @@ module FinanceHelper
   end
 
   def finance_balance_available?(profile, summary = @balance_summary)
-    profile.balance_source == "manual" ||
-      (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?) ||
-      summary&.dig(:total).present?
+    !profile.displayed_balance(summary).nil?
   end
 
   def finance_balance_display(profile, summary = @balance_summary)
     return t("billie.helpers.unavailable") unless finance_balance_available?(profile, summary)
 
-    balance = if profile.balance_source == "manual" || (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?)
-      profile.current_balance
-    else
-      summary[:total]
-    end
-    finance_money(balance, profile.currency)
+    finance_money(profile.displayed_balance(summary), profile.currency)
   end
 
   # How old the balance is. A statement balance is a snapshot, so activity after its date is not included.
   def finance_balance_age_note(profile, summary = @balance_summary, today: Date.current)
     return unless finance_balance_available?(profile, summary)
-    manual = profile.balance_source == "manual" || (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?)
-    as_of = manual ? profile.balance_as_of : summary&.dig(:as_of_start)
+    as_of = profile.manual_balance? ? profile.balance_as_of : summary&.dig(:as_of_start)
     return unless as_of
     days = (today - as_of.to_date).to_i
     return t("billie.helpers.balance_today") if days <= 0

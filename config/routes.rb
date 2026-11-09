@@ -16,6 +16,10 @@ Rails.application.routes.draw do
     resources :transactions, only: [:index, :edit, :update]
     resources :bank_accounts, only: :update
     resource :forecast, only: :show, controller: :forecast
+    resource :report, only: :show, controller: :reports do
+      get :download
+    end
+    resource :financial_data, only: :destroy, controller: :financial_data
     resource :profile, only: :update
     resource :settings, only: [:show, :update], controller: :settings do
       patch :nickname

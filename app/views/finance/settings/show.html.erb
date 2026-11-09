@@ -67,4 +67,60 @@
       <%= form.submit t("billie.region.save"), class: "bw-button bw-button-dark" %>
     <% end %>
   </section>
+  <section class="bw-panel bw-panel-danger" id="settings-privacy" aria-labelledby="settings-privacy-heading">
+    <h2 id="settings-privacy-heading"><%= t("billie.privacy.heading") %></h2>
+    <p><%= t("billie.privacy.intro") %></p>
+    <div class="bw-flash" role="note">
+      <%= t("billie.privacy.export_first") %>
+      <%= link_to t("billie.export.button"), finance_report_path, class: "bw-text-link" %>
+    </div>
+
+    <div class="bw-privacy-action" id="privacy-delete-data">
+      <h3><%= t("billie.privacy.data.heading") %></h3>
+      <p class="bw-caption"><%= t("billie.privacy.data.summary", statements: @privacy_counts[:statements], transactions: @privacy_counts[:transactions], accounts: @privacy_counts[:accounts]) %></p>
+      <ul class="bw-privacy-list">
+        <% %w[transactions statements accounts rules insights profile].each do |item| %>
+          <li><%= t("billie.privacy.data.items.#{item}") %></li>
+        <% end %>
+      </ul>
+      <p class="bw-caption"><%= t("billie.privacy.data.kept") %></p>
+      <%= form_with url: finance_financial_data_path, method: :delete, scope: :financial_data, data: {turbo: false}, class: "bw-form" do |form| %>
+        <div class="bw-field">
+          <%= form.label :confirm_email, t("billie.privacy.type_email", email: @user.email) %>
+          <%= form.email_field :confirm_email, required: true, autocomplete: "off", value: nil %>
+        </div>
+        <%= form.submit t("billie.privacy.data.button"), class: "bw-button bw-button-danger" %>
+      <% end %>
+    </div>
+
+    <div class="bw-privacy-action" id="privacy-delete-account">
+      <h3><%= t("billie.privacy.account.heading") %></h3>
+      <ul class="bw-privacy-list">
+        <% %w[login financial teams].each do |item| %>
+          <li><%= t("billie.privacy.account.items.#{item}") %></li>
+        <% end %>
+      </ul>
+      <p class="bw-caption"><%= t("billie.privacy.backups_note") %></p>
+      <% blockers = @account_deletion.blockers %>
+      <% if blockers.any? %>
+        <div class="bw-flash bw-flash-error" role="alert" id="privacy-account-blocked">
+          <%= t("billie.privacy.account.blocked") %> <%= blockers.to_sentence %>
+        </div>
+      <% else %>
+        <%= form_with url: user_registration_path, method: :delete, scope: :user, data: {turbo: false}, class: "bw-form" do |form| %>
+          <div class="bw-field">
+            <%= form.label :confirm_email, t("billie.privacy.type_email", email: @user.email), for: "account_confirm_email" %>
+            <%= form.email_field :confirm_email, required: true, autocomplete: "off", value: nil, id: "account_confirm_email" %>
+          </div>
+          <% if @account_deletion.password_required? %>
+            <div class="bw-field">
+              <%= form.label :current_password, t("billie.account.current_password"), for: "account_current_password" %>
+              <%= form.password_field :current_password, required: true, autocomplete: "current-password", value: nil, id: "account_current_password" %>
+            </div>
+          <% end %>
+          <%= form.submit t("billie.privacy.account.button"), class: "bw-button bw-button-danger" %>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
 </div>

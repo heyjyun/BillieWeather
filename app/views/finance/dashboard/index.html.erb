@@ -14,9 +14,15 @@
       <span class="bw-dot-divider">·</span> <%= @profile.currency %>
     </p>
   </div>
-  <%= link_to finance_statements_path, class: "bw-button bw-button-dark" do %>
-    <%= finance_icon "upload", size: 17 %> <%= t("billie.finance.ui.upload_statement") %>
-  <% end %>
+  <div class="bw-heading-actions">
+    <% export_period = @date_filter_error ? {preset: "all_time"} : @filter_values.compact %>
+    <%= link_to finance_report_path(export_period), class: "bw-button bw-button-outline", id: "dashboard-export-report" do %>
+      <%= finance_icon "file", size: 17 %> <%= t("billie.export.button") %>
+    <% end %>
+    <%= link_to finance_statements_path, class: "bw-button bw-button-dark" do %>
+      <%= finance_icon "upload", size: 17 %> <%= t("billie.finance.ui.upload_statement") %>
+    <% end %>
+  </div>
 </div>
 
 <section class="bw-dashboard-period" aria-labelledby="dashboard-period-heading">

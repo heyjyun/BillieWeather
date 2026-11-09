@@ -1,0 +1,141 @@
+---
+es:
+  billie:
+    export:
+      button: Exportar informe
+      title: Exportar informe
+      eyebrow: Lleva tus números contigo
+      heading: Exporta tu informe financiero
+      intro: Descarga tus ingresos, gastos, cuentas y transacciones categorizadas. Las categorías que corregiste se incluyen tal como las guardaste.
+      back_to_dashboard: Volver al panel
+      options_heading: Opciones del informe
+      period_label: "Período:"
+      period_reset: "No se pudieron usar las fechas seleccionadas (%{error}). Se muestran todas las fechas."
+      format_legend: Formato
+      xlsx_label: Libro de Excel (.xlsx)
+      xlsx_help: Un informe con formato que incluye resumen, cuentas, gastos por categoría y todas las transacciones.
+      csv_label: CSV (.csv)
+      csv_help: Tus transacciones categorizadas como filas simples, para hojas de cálculo u otras apps de finanzas.
+      sheets_legend: Hojas que incluir
+      sheets_help: Solo para Excel. Un archivo CSV siempre contiene tus transacciones.
+      sheet_descriptions:
+        overview: totales, flujo de caja neto y saldo
+        accounts: saldos por cuenta
+        categories: gastos por categoría con porcentajes
+        transactions: cada transacción con su categoría
+      privacy_note: El archivo se genera al descargarlo y no se guarda en los servidores de BillieWeather. Contiene datos financieros sensibles; guárdalo en un lugar seguro.
+      download: Descargar informe
+      choose_a_sheet: Elige al menos una hoja.
+      choose_a_format: Elige Excel o CSV.
+      workbook:
+        title: Informe financiero de BillieWeather
+        generated_at: "Generado el %{time}"
+        all_time: Todas las fechas
+        not_available: No disponible
+        no_transactions: No hay transacciones en este período.
+        no_expenses: No hay gastos en este período.
+        no_accounts: Aún no se han identificado cuentas en tus extractos.
+        "yes": "Sí"
+        "no": "No"
+        totals_note: Las transferencias y las transacciones excluidas no se cuentan en ingresos ni gastos.
+        balance_note: Los saldos provienen de tus extractos más recientes (o de lo que ingresaste) y no incluyen movimientos posteriores a esa fecha.
+        balance_manual: Ingresado por ti
+        balance_statements: De los extractos
+        partial_total_note: "El efectivo total es parcial: a algunas cuentas les falta el saldo o el tipo de cuenta."
+        unassigned_note:
+          one: "%{count} extracto no está vinculado a una cuenta y no se incluye en estos totales."
+          other: "%{count} extractos no están vinculados a una cuenta y no se incluyen en estos totales."
+        monthly_heading: Totales mensuales
+        sheets:
+          overview: Resumen
+          accounts: Cuentas
+          categories: Categorías
+          transactions: Transacciones
+        rows:
+          period: Período del informe
+          data_range: Fechas de las transacciones
+          currency: Moneda
+          total_income: Ingresos totales
+          total_expenses: Gastos totales
+          net_cash_flow: Flujo de caja neto
+          available_balance: Saldo en efectivo disponible
+          balance_as_of: Saldo a fecha de
+          balance_source: Origen del saldo
+          cash_on_hand: Efectivo en mano
+          owed_on_credit_cards: Adeudado en tarjetas de crédito
+          total_cash: Efectivo total
+          transactions: Transacciones
+          statements: Extractos
+          uncategorized: Transacciones sin categoría
+          transfers: Transferencias
+          excluded: Transacciones excluidas
+        columns:
+          month: Mes
+          income: Ingresos
+          expenses: Gastos
+          net: Neto
+          account: Cuenta
+          bank: Banco
+          type: Tipo
+          last4: Últimos 4
+          balance: Saldo
+          amount_owed: Importe adeudado
+          as_of: A fecha de
+          status: Estado
+          category: Categoría
+          amount: Importe
+          share: Porcentaje de gastos
+          date: Fecha
+          merchant: Comercio
+          description: Descripción
+          currency: Moneda
+          tax_review: Revisión fiscal
+          excluded: Excluida
+          counted: Incluida en totales
+        account_kinds:
+          cash: Efectivo
+          credit: Crédito
+          unknown: Sin definir
+        account_statuses:
+          known: Saldo conocido
+          excluded_credit: Tarjeta de crédito (importe adeudado)
+          unknown_kind: Elige efectivo o crédito
+          missing_date: Falta la fecha del extracto
+          future_date: La fecha del extracto es futura
+          missing_balance: Falta el saldo de cierre
+    privacy:
+      heading: Privacidad y datos
+      intro: Elimina tus datos financieros cuando quieras o cierra tu cuenta por completo. Ambas acciones son permanentes.
+      export_first: Los datos eliminados no se pueden recuperar. Exporta tu informe primero si podrías necesitarlo.
+      type_email: "Para confirmar, escribe tu correo (%{email})"
+      confirmation_mismatch: El correo que escribiste no coincide con tu cuenta, así que no se eliminó nada.
+      backups_note: Los datos se eliminan de BillieWeather de inmediato. Las copias en las copias de seguridad cifradas de la base de datos no se borran al instante; caducan según el calendario del proveedor de alojamiento. La información enviada antes a los servicios opcionales de análisis con IA o de previsión sigue las políticas de retención de esos proveedores.
+      data:
+        heading: Eliminar mis datos financieros
+        summary: "Ahora tienes %{statements} extracto(s), %{transactions} transacción(es) y %{accounts} cuenta(s). Se eliminará:"
+        items:
+          transactions: Todas las transacciones importadas, incluidas las categorías que corregiste
+          statements: Los registros de extractos y las importaciones de PDF pendientes de revisión
+          accounts: Las cuentas bancarias detectadas y los nombres que les diste
+          rules: Las categorías recordadas por comercio
+          insights: Los análisis generados y las notas de preparación de impuestos
+          profile: Saldos, efectivo en mano, moneda y contexto fiscal
+        kept: Se conservan tu inicio de sesión, apodo, contraseña y región, para que puedas empezar de nuevo.
+        button: Eliminar mis datos financieros
+        deleted: Se eliminaron tus datos financieros. Tu cuenta sigue activa.
+        failed: No se pudieron eliminar tus datos financieros. No se eliminó nada; inténtalo de nuevo.
+      account:
+        heading: Eliminar mi cuenta
+        items:
+          login: Tu inicio de sesión, apodo y métodos de acceso (incluido Google)
+          financial: Todos tus datos financieros indicados arriba
+          teams: Tu espacio de trabajo personal
+        button: Eliminar mi cuenta permanentemente
+        deleted: Se eliminaron tu cuenta y tus datos financieros.
+        failed: No se pudo eliminar tu cuenta. No se eliminó nada; inténtalo de nuevo o contacta con soporte.
+        wrong_password: La contraseña actual es incorrecta, así que tu cuenta no se eliminó.
+        blocked: "No es posible eliminar la cuenta:"
+        shared_team: "compartes el equipo «%{team}» con otras personas. Sal de él o elimina primero a sus otros miembros"
+        shared_team_generic: Tu equipo cambió mientras se eliminaba la cuenta. No se eliminó nada; inténtalo de nuevo.
+        connected_integrations: tienes una integración de pagos conectada. Contacta con soporte
+        platform_agent: esta es una cuenta automatizada de la plataforma

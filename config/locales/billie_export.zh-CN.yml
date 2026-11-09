@@ -1,0 +1,141 @@
+---
+zh-CN:
+  billie:
+    export:
+      button: 导出报告
+      title: 导出报告
+      eyebrow: 随时带走你的数据
+      heading: 导出财务报告
+      intro: 下载你的收入、支出、账户和已分类的交易。你修改过的类别会按保存时的样子导出。
+      back_to_dashboard: 返回总览
+      options_heading: 报告选项
+      period_label: "期间："
+      period_reset: "无法使用所选日期（%{error}），已改为显示全部日期。"
+      format_legend: 格式
+      xlsx_label: Excel 工作簿（.xlsx）
+      xlsx_help: 带格式的报告，包含概览、账户、分类支出和全部交易。
+      csv_label: CSV（.csv）
+      csv_help: 以简单行格式导出已分类的交易，适用于电子表格或其他理财应用。
+      sheets_legend: 包含的工作表
+      sheets_help: 仅适用于 Excel。CSV 文件始终包含你的交易。
+      sheet_descriptions:
+        overview: 合计、净现金流和余额
+        accounts: 各账户余额
+        categories: 分类支出及占比
+        transactions: 每笔交易及其类别
+      privacy_note: 文件在下载时生成，不会保存在 BillieWeather 的服务器上。文件包含敏感的财务信息，请妥善保管。
+      download: 下载报告
+      choose_a_sheet: 请至少选择一个工作表。
+      choose_a_format: 请选择 Excel 或 CSV。
+      workbook:
+        title: BillieWeather 财务报告
+        generated_at: "生成时间：%{time}"
+        all_time: 全部日期
+        not_available: 暂无
+        no_transactions: 此期间没有交易。
+        no_expenses: 此期间没有支出。
+        no_accounts: 尚未从对账单中识别出账户。
+        "yes": "是"
+        "no": "否"
+        totals_note: 转账和已排除的交易不计入收入或支出。
+        balance_note: 余额来自最新的对账单（或你输入的数值），不包含该日期之后的交易。
+        balance_manual: 手动输入
+        balance_statements: 来自对账单
+        partial_total_note: "现金合计不完整：部分账户缺少余额或账户类型。"
+        unassigned_note:
+          one: "有 %{count} 份对账单未关联账户，未计入这些合计。"
+          other: "有 %{count} 份对账单未关联账户，未计入这些合计。"
+        monthly_heading: 月度合计
+        sheets:
+          overview: 概览
+          accounts: 账户
+          categories: 类别
+          transactions: 交易
+        rows:
+          period: 报告期间
+          data_range: 交易日期
+          currency: 币种
+          total_income: 总收入
+          total_expenses: 总支出
+          net_cash_flow: 净现金流
+          available_balance: 可用现金余额
+          balance_as_of: 余额截至
+          balance_source: 余额来源
+          cash_on_hand: 手头现金
+          owed_on_credit_cards: 信用卡欠款
+          total_cash: 现金合计
+          transactions: 交易笔数
+          statements: 对账单数
+          uncategorized: 未分类交易
+          transfers: 转账
+          excluded: 已排除的交易
+        columns:
+          month: 月份
+          income: 收入
+          expenses: 支出
+          net: 净额
+          account: 账户
+          bank: 银行
+          type: 类型
+          last4: 尾号
+          balance: 余额
+          amount_owed: 欠款
+          as_of: 截至
+          status: 状态
+          category: 类别
+          amount: 金额
+          share: 占支出比例
+          date: 日期
+          merchant: 商户
+          description: 描述
+          currency: 币种
+          tax_review: 税务复核
+          excluded: 已排除
+          counted: 计入合计
+        account_kinds:
+          cash: 现金
+          credit: 信用
+          unknown: 未设置
+        account_statuses:
+          known: 余额已知
+          excluded_credit: 信用卡（欠款）
+          unknown_kind: 请选择现金或信用
+          missing_date: 缺少对账单日期
+          future_date: 对账单日期在未来
+          missing_balance: 缺少期末余额
+    privacy:
+      heading: 隐私与数据
+      intro: 你可以随时删除财务数据，或彻底注销账户。两项操作都无法撤销。
+      export_first: 删除的数据无法恢复。如果之后可能需要，请先导出报告。
+      type_email: "请输入你的邮箱（%{email}）以确认"
+      confirmation_mismatch: 输入的邮箱与账户不符，未删除任何内容。
+      backups_note: 数据会立即从 BillieWeather 中删除。加密数据库备份中的副本不会立即清除，会按照托管服务商的备份周期过期。此前发送给可选 AI 分析或预测服务的信息，遵循这些服务商的保留政策。
+      data:
+        heading: 删除我的财务数据
+        summary: "你目前有 %{statements} 份对账单、%{transactions} 笔交易和 %{accounts} 个账户。将删除："
+        items:
+          transactions: 所有导入的交易，包括你修改过的类别
+          statements: 对账单记录以及等待确认的 PDF 导入
+          accounts: 识别出的银行账户及你设置的名称
+          rules: 按商户记住的类别
+          insights: 生成的分析和报税准备笔记
+          profile: 余额、手头现金、币种和税务信息
+        kept: 你的登录信息、昵称、密码和地区会保留，可以重新开始。
+        button: 删除我的财务数据
+        deleted: 你的财务数据已删除，账户仍可继续使用。
+        failed: 无法删除你的财务数据，未删除任何内容，请重试。
+      account:
+        heading: 注销我的账户
+        items:
+          login: 你的登录信息、昵称和登录方式（包括 Google 登录）
+          financial: 上面列出的全部财务数据
+          teams: 你的个人工作区
+        button: 永久注销我的账户
+        deleted: 你的账户和财务数据已删除。
+        failed: 无法注销你的账户，未删除任何内容。请重试或联系客服。
+        wrong_password: 当前密码不正确，账户未被注销。
+        blocked: "暂时无法注销账户："
+        shared_team: "你与他人共享团队“%{team}”，请先退出该团队或移除其他成员"
+        shared_team_generic: 注销过程中团队发生了变化，未删除任何内容，请重试。
+        connected_integrations: 你已连接支付集成，请联系客服
+        platform_agent: 这是平台的自动化账户

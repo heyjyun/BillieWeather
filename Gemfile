@@ -272,3 +272,5 @@ gem "omniauth-google-oauth2", "~> 1.2", ">= 1.2.3"
 # 🚅 super scaffolding will insert new oauth providers above this line.
 
 gem "prophet-rb", "~> 0.7.0"
+
+gem "caxlsx", "~> 4.1"

@@ -1,0 +1,141 @@
+---
+zh-TW:
+  billie:
+    export:
+      button: 匯出報告
+      title: 匯出報告
+      eyebrow: 隨時帶走你的數據
+      heading: 匯出財務報告
+      intro: 下載你的收入、支出、帳戶和已分類的交易。你修改過的類別會依儲存時的樣子匯出。
+      back_to_dashboard: 返回總覽
+      options_heading: 報告選項
+      period_label: "期間："
+      period_reset: "無法使用所選日期（%{error}），已改為顯示全部日期。"
+      format_legend: 格式
+      xlsx_label: Excel 活頁簿（.xlsx）
+      xlsx_help: 具格式的報告，包含概覽、帳戶、分類支出和全部交易。
+      csv_label: CSV（.csv）
+      csv_help: 以簡單列格式匯出已分類的交易，適用於試算表或其他理財應用程式。
+      sheets_legend: 包含的工作表
+      sheets_help: 僅適用於 Excel。CSV 檔案一律包含你的交易。
+      sheet_descriptions:
+        overview: 合計、淨現金流和餘額
+        accounts: 各帳戶餘額
+        categories: 分類支出及占比
+        transactions: 每筆交易及其類別
+      privacy_note: 檔案在下載時產生，不會儲存在 BillieWeather 的伺服器上。檔案包含敏感的財務資訊，請妥善保管。
+      download: 下載報告
+      choose_a_sheet: 請至少選擇一個工作表。
+      choose_a_format: 請選擇 Excel 或 CSV。
+      workbook:
+        title: BillieWeather 財務報告
+        generated_at: "產生時間：%{time}"
+        all_time: 全部日期
+        not_available: 暫無
+        no_transactions: 此期間沒有交易。
+        no_expenses: 此期間沒有支出。
+        no_accounts: 尚未從對帳單中識別出帳戶。
+        "yes": "是"
+        "no": "否"
+        totals_note: 轉帳和已排除的交易不計入收入或支出。
+        balance_note: 餘額來自最新的對帳單（或你輸入的數值），不包含該日期之後的交易。
+        balance_manual: 手動輸入
+        balance_statements: 來自對帳單
+        partial_total_note: "現金合計不完整：部分帳戶缺少餘額或帳戶類型。"
+        unassigned_note:
+          one: "有 %{count} 份對帳單未連結帳戶，未計入這些合計。"
+          other: "有 %{count} 份對帳單未連結帳戶，未計入這些合計。"
+        monthly_heading: 每月合計
+        sheets:
+          overview: 概覽
+          accounts: 帳戶
+          categories: 類別
+          transactions: 交易
+        rows:
+          period: 報告期間
+          data_range: 交易日期
+          currency: 幣別
+          total_income: 總收入
+          total_expenses: 總支出
+          net_cash_flow: 淨現金流
+          available_balance: 可用現金餘額
+          balance_as_of: 餘額截至
+          balance_source: 餘額來源
+          cash_on_hand: 手邊現金
+          owed_on_credit_cards: 信用卡欠款
+          total_cash: 現金合計
+          transactions: 交易筆數
+          statements: 對帳單數
+          uncategorized: 未分類交易
+          transfers: 轉帳
+          excluded: 已排除的交易
+        columns:
+          month: 月份
+          income: 收入
+          expenses: 支出
+          net: 淨額
+          account: 帳戶
+          bank: 銀行
+          type: 類型
+          last4: 末四碼
+          balance: 餘額
+          amount_owed: 欠款
+          as_of: 截至
+          status: 狀態
+          category: 類別
+          amount: 金額
+          share: 占支出比例
+          date: 日期
+          merchant: 商家
+          description: 描述
+          currency: 幣別
+          tax_review: 稅務複核
+          excluded: 已排除
+          counted: 計入合計
+        account_kinds:
+          cash: 現金
+          credit: 信用
+          unknown: 未設定
+        account_statuses:
+          known: 餘額已知
+          excluded_credit: 信用卡（欠款）
+          unknown_kind: 請選擇現金或信用
+          missing_date: 缺少對帳單日期
+          future_date: 對帳單日期在未來
+          missing_balance: 缺少期末餘額
+    privacy:
+      heading: 隱私與資料
+      intro: 你可以隨時刪除財務資料，或徹底刪除帳號。兩項操作都無法復原。
+      export_first: 刪除的資料無法復原。如果之後可能需要，請先匯出報告。
+      type_email: "請輸入你的電子郵件（%{email}）以確認"
+      confirmation_mismatch: 輸入的電子郵件與帳號不符，未刪除任何內容。
+      backups_note: 資料會立即從 BillieWeather 中刪除。加密資料庫備份中的副本不會立即清除，會依照託管服務商的備份週期過期。先前傳送給選用 AI 分析或預測服務的資訊，依循這些服務商的保留政策。
+      data:
+        heading: 刪除我的財務資料
+        summary: "你目前有 %{statements} 份對帳單、%{transactions} 筆交易和 %{accounts} 個帳戶。將刪除："
+        items:
+          transactions: 所有匯入的交易，包括你修改過的類別
+          statements: 對帳單紀錄以及等待確認的 PDF 匯入
+          accounts: 識別出的銀行帳戶及你設定的名稱
+          rules: 依商家記住的類別
+          insights: 產生的分析和報稅準備筆記
+          profile: 餘額、手邊現金、幣別和稅務資訊
+        kept: 你的登入資訊、暱稱、密碼和地區會保留，可以重新開始。
+        button: 刪除我的財務資料
+        deleted: 你的財務資料已刪除，帳號仍可繼續使用。
+        failed: 無法刪除你的財務資料，未刪除任何內容，請重試。
+      account:
+        heading: 刪除我的帳號
+        items:
+          login: 你的登入資訊、暱稱和登入方式（包括 Google 登入）
+          financial: 上面列出的全部財務資料
+          teams: 你的個人工作區
+        button: 永久刪除我的帳號
+        deleted: 你的帳號和財務資料已刪除。
+        failed: 無法刪除你的帳號，未刪除任何內容。請重試或聯絡客服。
+        wrong_password: 目前密碼不正確，帳號未被刪除。
+        blocked: "暫時無法刪除帳號："
+        shared_team: "你與他人共用團隊「%{team}」，請先退出該團隊或移除其他成員"
+        shared_team_generic: 刪除過程中團隊有所變動，未刪除任何內容，請重試。
+        connected_integrations: 你已連結付款整合，請聯絡客服
+        platform_agent: 這是平台的自動化帳號

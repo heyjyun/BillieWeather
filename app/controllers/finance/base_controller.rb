@@ -9,6 +9,11 @@ module Finance
 
     private
 
+    # Today's date where the person lives, so "this month" means the same thing on every page.
+    def finance_today
+      Time.current.in_time_zone(current_user.time_zone.presence || "America/Chicago").to_date
+    end
+
     def load_finance_profile
       @profile = Profile.find_or_create_by!(user: current_user)
       load_account_balances
