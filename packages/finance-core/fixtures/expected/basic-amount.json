@@ -1,0 +1,79 @@
+{
+  "rows": [
+    {
+      "bookedOn": "2026-01-02",
+      "description": "ACME CORP PAYROLL",
+      "amountCents": 250000,
+      "category": "Income",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-01-03",
+      "description": "STARBUCKS STORE #1234 SEATTLE WA",
+      "amountCents": -575,
+      "category": "Food & dining",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-01-05",
+      "description": "Monthly rent - Oak Street Apartments",
+      "amountCents": -165000,
+      "category": "Housing",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-01-09",
+      "description": "ONLINE TRANSFER TO SAVINGS",
+      "amountCents": -40000,
+      "category": "Transfers",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-01-15",
+      "description": "AMAZON WEB SERVICES AWS.AMAZON.CO",
+      "amountCents": -6120,
+      "category": "Uncategorized",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-02-01",
+      "description": "ACME CORP PAYROLL",
+      "amountCents": 250000,
+      "category": "Income",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-02-03",
+      "description": "UBER EATS ORDER 8812, late",
+      "amountCents": -2340,
+      "category": "Food & dining",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-02-11",
+      "description": "Quote \"Inc\" Store",
+      "amountCents": -1000,
+      "category": "Shopping",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-02-11",
+      "description": "=HYPERLINK(evil)",
+      "amountCents": -100,
+      "category": "Uncategorized",
+      "taxReview": false,
+      "excluded": false
+    }
+  ],
+  "closingBalanceCents": 344865,
+  "closingBalanceOn": "2026-02-11",
+  "dateColumnUsed": "Date"
+}

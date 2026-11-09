@@ -1,0 +1,58 @@
+{
+  "incomeCents": 680012,
+  "expensesCents": 185093,
+  "netCents": 494919,
+  "transactionCount": 18,
+  "statementCount": 3,
+  "uncategorizedCount": 3,
+  "taxReviewCount": 1,
+  "transferCount": 2,
+  "periodStart": "2026-01-02",
+  "periodEnd": "2026-03-05",
+  "categories": [
+    {
+      "name": "Housing",
+      "amountCents": 165000
+    },
+    {
+      "name": "Uncategorized",
+      "amountCents": 6720
+    },
+    {
+      "name": "Business",
+      "amountCents": 4210
+    },
+    {
+      "name": "Health",
+      "amountCents": 3748
+    },
+    {
+      "name": "Food & dining",
+      "amountCents": 2915
+    },
+    {
+      "name": "Shopping",
+      "amountCents": 2500
+    }
+  ],
+  "monthly": [
+    {
+      "month": "2026-01-01",
+      "incomeCents": 250000,
+      "expensesCents": 171695,
+      "netCents": 78305
+    },
+    {
+      "month": "2026-02-01",
+      "incomeCents": 250012,
+      "expensesCents": 7188,
+      "netCents": 242824
+    },
+    {
+      "month": "2026-03-01",
+      "incomeCents": 180000,
+      "expensesCents": 6210,
+      "netCents": 173790
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+Date,Payee,Amount,Type,Category,Currency
+2026-03-01,Freelance client,$800.00,credit,,USD
+2026-03-02,Office Depot,(42.10),,Business,usd
+2026-03-03,Corner Shop,$15.00,debit,shopping,USD
+2026-03-04,Mystery,5.00,dr,NotACategory,USD
+2026-03-05,Gift from Mom,"$1,000",cr,,USD

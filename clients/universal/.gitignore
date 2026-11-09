@@ -1,0 +1,9 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/schemas/
+# Never commit local financial data.
+*.db
+*.db-*
+*.sqlite
+*.sqlite3

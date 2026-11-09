@@ -1,0 +1,66 @@
+[
+  {
+    "name": "missing columns",
+    "code": "csv_required_columns"
+  },
+  {
+    "name": "header only",
+    "code": "csv_require_rows"
+  },
+  {
+    "name": "duplicate headers",
+    "code": "csv_duplicate_headers"
+  },
+  {
+    "name": "two amount aliases",
+    "code": "one_column_only"
+  },
+  {
+    "name": "amount and debit",
+    "code": "csv_amount_columns"
+  },
+  {
+    "name": "bad date",
+    "code": "row_invalid_date"
+  },
+  {
+    "name": "bad money",
+    "code": "row_invalid_money"
+  },
+  {
+    "name": "wrong symbol",
+    "code": "row_currency_symbol"
+  },
+  {
+    "name": "blank description",
+    "code": "row_description_required"
+  },
+  {
+    "name": "extra values",
+    "code": "csv_extra_values"
+  },
+  {
+    "name": "debit and credit",
+    "code": "row_debit_credit"
+  },
+  {
+    "name": "bad type",
+    "code": "row_invalid_type"
+  },
+  {
+    "name": "currency column mismatch",
+    "code": "row_currency_mismatch"
+  },
+  {
+    "name": "unclosed quote",
+    "code": "csv_unreadable"
+  },
+  {
+    "name": "stray quote",
+    "code": "csv_unreadable"
+  },
+  {
+    "name": "extra value in first row is accepted (Rails quirk)",
+    "code": null
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "rows": [
+    {
+      "bookedOn": "2026-02-19",
+      "description": "PLANET FITNESS CLUB",
+      "amountCents": -2499,
+      "category": "Health",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-02-18",
+      "description": "Interest paid",
+      "amountCents": 12,
+      "category": "Income",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-02-17",
+      "description": "CVS/PHARMACY #0042",
+      "amountCents": -1249,
+      "category": "Health",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-02-01",
+      "description": "Opening balance",
+      "amountCents": 101237,
+      "category": "Transfers",
+      "taxReview": false,
+      "excluded": false
+    }
+  ],
+  "closingBalanceCents": 97501,
+  "closingBalanceOn": "2026-02-19",
+  "dateColumnUsed": "Transaction Date"
+}

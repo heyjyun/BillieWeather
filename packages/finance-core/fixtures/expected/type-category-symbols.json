@@ -1,0 +1,47 @@
+{
+  "rows": [
+    {
+      "bookedOn": "2026-03-01",
+      "description": "Freelance client",
+      "amountCents": 80000,
+      "category": "Income",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-03-02",
+      "description": "Office Depot",
+      "amountCents": -4210,
+      "category": "Business",
+      "taxReview": true,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-03-03",
+      "description": "Corner Shop",
+      "amountCents": -1500,
+      "category": "Shopping",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-03-04",
+      "description": "Mystery",
+      "amountCents": -500,
+      "category": "Uncategorized",
+      "taxReview": false,
+      "excluded": false
+    },
+    {
+      "bookedOn": "2026-03-05",
+      "description": "Gift from Mom",
+      "amountCents": 100000,
+      "category": "Income",
+      "taxReview": false,
+      "excluded": false
+    }
+  ],
+  "closingBalanceCents": null,
+  "closingBalanceOn": null,
+  "dateColumnUsed": "Date"
+}

@@ -1,0 +1,205 @@
+[
+  {
+    "description": "STARBUCKS STORE #1234 SEATTLE WA",
+    "amount": "-5.75",
+    "merchant_key": "starbucks store",
+    "merchant_title": "Starbucks Store",
+    "category": "Food & dining"
+  },
+  {
+    "description": "Starbucks Store 99 Portland OR",
+    "amount": "-4.10",
+    "merchant_key": "starbucks store",
+    "merchant_title": "Starbucks Store",
+    "category": "Food & dining"
+  },
+  {
+    "description": "UBER EATS ORDER 8812",
+    "amount": "-23.40",
+    "merchant_key": "uber eats",
+    "merchant_title": "Uber Eats",
+    "category": "Food & dining"
+  },
+  {
+    "description": "UBER TRIP HELP.UBER.COM",
+    "amount": "-18.00",
+    "merchant_key": "uber trip",
+    "merchant_title": "Uber Trip",
+    "category": "Transport"
+  },
+  {
+    "description": "AMAZON WEB SERVICES AWS.AMAZON.CO",
+    "amount": "-61.20",
+    "merchant_key": "amazon services",
+    "merchant_title": "Amazon Services",
+    "category": "Uncategorized"
+  },
+  {
+    "description": "AMAZON MKTPLACE PMTS",
+    "amount": "-35.99",
+    "merchant_key": "amazon mktplace",
+    "merchant_title": "Amazon Mktplace",
+    "category": "Shopping"
+  },
+  {
+    "description": "ACME CORP PAYROLL",
+    "amount": "2500.00",
+    "merchant_key": "acme corp",
+    "merchant_title": "Acme Corp",
+    "category": "Income"
+  },
+  {
+    "description": "ONLINE TRANSFER TO SAVINGS",
+    "amount": "-400.00",
+    "merchant_key": "transfer to",
+    "merchant_title": "Transfer To",
+    "category": "Transfers"
+  },
+  {
+    "description": "Credit Card Payment - Thank You",
+    "amount": "-1200.00",
+    "merchant_key": "thank you",
+    "merchant_title": "Thank You",
+    "category": "Transfers"
+  },
+  {
+    "description": "PAYMENT THANK YOU",
+    "amount": "300.00",
+    "merchant_key": "thank you",
+    "merchant_title": "Thank You",
+    "category": "Transfers"
+  },
+  {
+    "description": "Monthly rent - Oak Street Apartments",
+    "amount": "-1650.00",
+    "merchant_key": "monthly rent",
+    "merchant_title": "Monthly Rent",
+    "category": "Housing"
+  },
+  {
+    "description": "COMCAST XFINITY INTERNET",
+    "amount": "-79.99",
+    "merchant_key": "comcast xfinity",
+    "merchant_title": "Comcast Xfinity",
+    "category": "Utilities"
+  },
+  {
+    "description": "CVS/PHARMACY #0042",
+    "amount": "-12.49",
+    "merchant_key": "cvs pharmacy",
+    "merchant_title": "Cvs Pharmacy",
+    "category": "Health"
+  },
+  {
+    "description": "GITHUB SPONSORS",
+    "amount": "-4.00",
+    "merchant_key": "github sponsors",
+    "merchant_title": "Github Sponsors",
+    "category": "Business"
+  },
+  {
+    "description": "AT&T WIRELESS BILL",
+    "amount": "-65.00",
+    "merchant_key": "at&t wireless",
+    "merchant_title": "At&T Wireless",
+    "category": "Utilities"
+  },
+  {
+    "description": "7-ELEVEN 33321",
+    "amount": "-3.25",
+    "merchant_key": "eleven",
+    "merchant_title": "Eleven",
+    "category": "Food & dining"
+  },
+  {
+    "description": "LOWE'S HOME CENTER",
+    "amount": "-88.10",
+    "merchant_key": "lowe home",
+    "merchant_title": "Lowe Home",
+    "category": "Shopping"
+  },
+  {
+    "description": "POS PURCHASE VISA DEBIT TARGET T-1234",
+    "amount": "-45.00",
+    "merchant_key": "target",
+    "merchant_title": "Target",
+    "category": "Shopping"
+  },
+  {
+    "description": "SHELL OIL 57444",
+    "amount": "-40.00",
+    "merchant_key": "shell oil",
+    "merchant_title": "Shell Oil",
+    "category": "Transport"
+  },
+  {
+    "description": "BPXYZ HOLDINGS",
+    "amount": "-10.00",
+    "merchant_key": "bpxyz holdings",
+    "merchant_title": "Bpxyz Holdings",
+    "category": "Uncategorized"
+  },
+  {
+    "description": "瑞幸咖啡 上海",
+    "amount": "-28.00",
+    "merchant_key": "瑞幸咖啡 上海",
+    "merchant_title": "瑞幸咖啡 上海",
+    "category": "Uncategorized"
+  },
+  {
+    "description": "Café Délice Paris",
+    "amount": "-9.50",
+    "merchant_key": "café délice",
+    "merchant_title": "Café Délice",
+    "category": "Uncategorized"
+  },
+  {
+    "description": "#123 456",
+    "amount": "-1.00",
+    "merchant_key": null,
+    "merchant_title": null,
+    "category": "Uncategorized"
+  },
+  {
+    "description": "SQ *BLUE BOTTLE",
+    "amount": "-6.00",
+    "merchant_key": "blue bottle",
+    "merchant_title": "Blue Bottle",
+    "category": "Uncategorized"
+  },
+  {
+    "description": "Refund AMAZON",
+    "amount": "12.00",
+    "merchant_key": "refund amazon",
+    "merchant_title": "Refund Amazon",
+    "category": "Income"
+  },
+  {
+    "description": "PLANET FITNESS CLUB",
+    "amount": "-24.99",
+    "merchant_key": "planet fitness",
+    "merchant_title": "Planet Fitness",
+    "category": "Health"
+  },
+  {
+    "description": "Unknown merchant zz",
+    "amount": "-7.00",
+    "merchant_key": "unknown merchant",
+    "merchant_title": "Unknown Merchant",
+    "category": "Uncategorized"
+  },
+  {
+    "description": "ÉCAFE ZZ",
+    "amount": "-9.00",
+    "merchant_key": "écafe zz",
+    "merchant_title": "Écafe Zz",
+    "category": "Uncategorized"
+  },
+  {
+    "description": "Bäckerei Rent-a-Car",
+    "amount": "-30.00",
+    "merchant_key": "bäckerei rent",
+    "merchant_title": "Bäckerei Rent",
+    "category": "Housing"
+  }
+]

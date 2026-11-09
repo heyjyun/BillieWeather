@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Least privilege: local SQLite, a save dialog, and writing only to the file the person picked in that dialog.",
+  "windows": ["main"],
+  "platforms": ["macOS", "windows", "linux", "iOS", "android"],
+  "permissions": [
+    "core:default",
+    "sql:allow-load",
+    "sql:allow-execute",
+    "sql:allow-select",
+    "sql:allow-close",
+    "dialog:allow-save",
+    "fs:allow-write-file"
+  ]
+}

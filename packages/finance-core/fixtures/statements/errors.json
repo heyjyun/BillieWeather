@@ -1,0 +1,90 @@
+[
+  {
+    "name": "missing columns",
+    "csv": "Date,Amount\n2026-01-01,1.00\n",
+    "code": "csv_required_columns"
+  },
+  {
+    "name": "header only",
+    "csv": "Date,Description,Amount\n",
+    "code": "csv_require_rows"
+  },
+  {
+    "name": "duplicate headers",
+    "csv": "Date,Description,Description,Amount\n2026-01-01,a,b,1\n",
+    "code": "csv_duplicate_headers"
+  },
+  {
+    "name": "two amount aliases",
+    "csv": "Date,Description,Amount,Net Amount\n2026-01-01,a,1,1\n",
+    "code": "one_column_only"
+  },
+  {
+    "name": "amount and debit",
+    "csv": "Date,Description,Amount,Debit,Credit\n2026-01-01,a,1,,\n",
+    "code": "csv_amount_columns"
+  },
+  {
+    "name": "bad date",
+    "csv": "Date,Description,Amount\n2026-02-30,a,1\n",
+    "code": "row_invalid_date",
+    "row": 2
+  },
+  {
+    "name": "bad money",
+    "csv": "Date,Description,Amount\n2026-01-01,a,1.234\n",
+    "code": "row_invalid_money",
+    "row": 2
+  },
+  {
+    "name": "wrong symbol",
+    "csv": "Date,Description,Amount\n2026-01-01,a,€5.00\n",
+    "code": "row_currency_symbol",
+    "row": 2
+  },
+  {
+    "name": "blank description",
+    "csv": "Date,Description,Amount\n2026-01-01,  ,1\n",
+    "code": "row_description_required",
+    "row": 2
+  },
+  {
+    "name": "extra values",
+    "csv": "Date,Description,Amount\n2026-01-01,a,1\n2026-01-02,b,2,extra\n",
+    "code": "csv_extra_values",
+    "row": 3
+  },
+  {
+    "name": "debit and credit",
+    "csv": "Date,Description,Debit,Credit\n2026-01-01,a,1,2\n",
+    "code": "row_debit_credit",
+    "row": 2
+  },
+  {
+    "name": "bad type",
+    "csv": "Date,Description,Amount,Type\n2026-01-01,a,1,sideways\n",
+    "code": "row_invalid_type",
+    "row": 2
+  },
+  {
+    "name": "currency column mismatch",
+    "csv": "Date,Description,Amount,Currency\n2026-01-01,a,1,EUR\n",
+    "code": "row_currency_mismatch",
+    "row": 2
+  },
+  {
+    "name": "unclosed quote",
+    "csv": "Date,Description,Amount\n2026-01-01,\"a,1\n",
+    "code": "csv_unreadable"
+  },
+  {
+    "name": "stray quote",
+    "csv": "Date,Description,Amount\n2026-01-01,a\"b,1\n",
+    "code": "csv_unreadable"
+  },
+  {
+    "name": "extra value in first row is accepted (Rails quirk)",
+    "csv": "Date,Description,Amount\n2026-01-01,a,1,extra\n",
+    "code": null
+  }
+]

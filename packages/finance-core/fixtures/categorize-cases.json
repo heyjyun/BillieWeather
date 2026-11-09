@@ -1,0 +1,118 @@
+[
+  {
+    "description": "STARBUCKS STORE #1234 SEATTLE WA",
+    "amount": "-5.75"
+  },
+  {
+    "description": "Starbucks Store 99 Portland OR",
+    "amount": "-4.10"
+  },
+  {
+    "description": "UBER EATS ORDER 8812",
+    "amount": "-23.40"
+  },
+  {
+    "description": "UBER TRIP HELP.UBER.COM",
+    "amount": "-18.00"
+  },
+  {
+    "description": "AMAZON WEB SERVICES AWS.AMAZON.CO",
+    "amount": "-61.20"
+  },
+  {
+    "description": "AMAZON MKTPLACE PMTS",
+    "amount": "-35.99"
+  },
+  {
+    "description": "ACME CORP PAYROLL",
+    "amount": "2500.00"
+  },
+  {
+    "description": "ONLINE TRANSFER TO SAVINGS",
+    "amount": "-400.00"
+  },
+  {
+    "description": "Credit Card Payment - Thank You",
+    "amount": "-1200.00"
+  },
+  {
+    "description": "PAYMENT THANK YOU",
+    "amount": "300.00"
+  },
+  {
+    "description": "Monthly rent - Oak Street Apartments",
+    "amount": "-1650.00"
+  },
+  {
+    "description": "COMCAST XFINITY INTERNET",
+    "amount": "-79.99"
+  },
+  {
+    "description": "CVS/PHARMACY #0042",
+    "amount": "-12.49"
+  },
+  {
+    "description": "GITHUB SPONSORS",
+    "amount": "-4.00"
+  },
+  {
+    "description": "AT&T WIRELESS BILL",
+    "amount": "-65.00"
+  },
+  {
+    "description": "7-ELEVEN 33321",
+    "amount": "-3.25"
+  },
+  {
+    "description": "LOWE'S HOME CENTER",
+    "amount": "-88.10"
+  },
+  {
+    "description": "POS PURCHASE VISA DEBIT TARGET T-1234",
+    "amount": "-45.00"
+  },
+  {
+    "description": "SHELL OIL 57444",
+    "amount": "-40.00"
+  },
+  {
+    "description": "BPXYZ HOLDINGS",
+    "amount": "-10.00"
+  },
+  {
+    "description": "瑞幸咖啡 上海",
+    "amount": "-28.00"
+  },
+  {
+    "description": "Café Délice Paris",
+    "amount": "-9.50"
+  },
+  {
+    "description": "#123 456",
+    "amount": "-1.00"
+  },
+  {
+    "description": "SQ *BLUE BOTTLE",
+    "amount": "-6.00"
+  },
+  {
+    "description": "Refund AMAZON",
+    "amount": "12.00"
+  },
+  {
+    "description": "PLANET FITNESS CLUB",
+    "amount": "-24.99"
+  },
+  {
+    "description": "Unknown merchant zz",
+    "amount": "-7.00"
+  },
+  {
+    "description": "ÉCAFE ZZ",
+    "amount": "-9.00"
+  },
+  {
+    "description": "Bäckerei Rent-a-Car",
+    "amount": "-30.00"
+  }
+]
