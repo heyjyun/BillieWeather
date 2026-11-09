@@ -1,0 +1,47 @@
+ko:
+  billie:
+    spending:
+      eyebrow: 한눈에 보기
+      mix_title: 돈이 어디로 가는지
+      mix_body: 이 기간 지출에서 각 카테고리가 차지하는 비율입니다. 카테고리 색상은 모든 페이지에서 같습니다.
+      mix_body_all: 전체 기간 지출에서 각 카테고리가 차지하는 비율입니다. 블록에 마우스를 올리거나 Tab 키로 선택하면 금액이 표시됩니다.
+      mix_label: "카테고리별 지출, 총 %{total}"
+      part_label: "%{name}: %{amount}, 지출의 %{share}"
+      all_categories: 모든 카테고리
+      other: 기타
+      no_spending: 아직 지출이 없습니다. 명세서를 가져오면 돈이 어디로 가는지 볼 수 있습니다.
+      monthly_eyebrow: 시간에 따른 변화
+      monthly_title: 월별 지출
+      monthly_body:
+        one: 최근 %{count}개월, 카테고리별.
+        other: 최근 %{count}개월, 카테고리별.
+      monthly_label: 카테고리별 월별 지출
+      month_label: "%{month}: %{amount}"
+      no_monthly: 이 기간에는 지출이 없습니다.
+      legend: 이 차트의 카테고리
+      month: 월
+      total: 합계
+      stat_total: 총 지출
+      stat_total_note: 전체 기간, 제외한 거래는 빼고
+      stat_average: 보통의 한 달
+      stat_average_note:
+        one: 최근 %{count}개월 평균
+        other: 최근 %{count}개월 중 처음 사용한 달부터의 평균
+      stat_latest: "최근 한 달 (%{month})"
+      stat_latest_none: 최근 한 달
+      vs_average_above: "보통의 한 달보다 %{percent} 많음"
+      vs_average_below: "보통의 한 달보다 %{percent} 적음"
+      vs_average_same: 보통의 한 달과 비슷함
+      vs_average_none: 아직 비교할 기록이 충분하지 않습니다
+      trend_title: 월별 추이
+      trend_body:
+        one: 최근 %{count}개월 이 카테고리의 지출입니다.
+        other: 최근 %{count}개월 이 카테고리의 지출입니다.
+      trend_label: 이 카테고리의 월별 지출
+      average_line: "평균 %{amount}"
+      merchants_title: 지출이 많은 가맹점
+      merchants_body: 이 카테고리의 돈이 쓰인 곳 (전체 기간).
+      merchant_count:
+        one: "거래 %{count}건"
+        other: "거래 %{count}건"
+      no_category_spending: 이 카테고리에는 아직 지출이 없습니다.

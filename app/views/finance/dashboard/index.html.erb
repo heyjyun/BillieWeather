@@ -130,17 +130,12 @@
         <% end %>
       </details>
     </section>
-    <section class="bw-panel">
-      <div class="bw-panel-heading"><div><h2><%= t("billie.finance.ui.where_it_goes") %></h2><p><%= t("billie.finance.ui.your_expense_categories") %></p></div><%= finance_icon "transactions" %></div>
-      <div class="bw-category-list">
-        <% @snapshot[:categories].first(6).each_with_index do |category, index| %>
-          <div>
-            <div class="bw-category-row"><span><i class="bw-category-dot tone-<%= index % 4 %>"></i><%= finance_label(category[:name]) %></span><strong><%= finance_money(category[:amount], @profile.currency) %></strong></div>
-            <div class="bw-category-track"><span class="tone-<%= index % 4 %>" style="width:<%= [(@snapshot[:expenses].to_f.positive? ? category[:amount].to_f / @snapshot[:expenses].to_f * 100 : 0).round(2), 100].min %>%"></span></div>
-          </div>
-        <% end %>
-        <% if @snapshot[:categories].empty? %><p class="bw-muted"><%= t("billie.finance.ui.no_categorized_expenses_yet") %></p><% end %>
+    <section class="bw-panel bw-mix-panel" id="dashboard-spending-mix" aria-labelledby="dashboard-mix-heading">
+      <div class="bw-panel-heading">
+        <div><h2 id="dashboard-mix-heading"><%= t("billie.finance.ui.where_it_goes") %></h2><p><%= t("billie.spending.mix_body") %></p></div>
+        <%= link_to t("billie.spending.all_categories"), finance_categories_path, class: "bw-text-link" %>
       </div>
+      <%= render "finance/shared/spending_mix", mix: @spending_mix, currency: @profile.currency, empty_text: t("billie.finance.ui.no_categorized_expenses_yet"), link: true %>
     </section>
   </div>
 <% end %>

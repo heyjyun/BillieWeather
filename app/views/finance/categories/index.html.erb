@@ -34,6 +34,17 @@
   </section>
 </div>
 
+<div class="bw-two-column bw-section-gap bw-cat-overview">
+  <section class="bw-panel" id="categories-spending-monthly" aria-labelledby="monthly-heading">
+    <div class="bw-panel-heading"><div><span class="bw-eyebrow"><%= t("billie.spending.monthly_eyebrow") %></span><h2 id="monthly-heading"><%= t("billie.spending.monthly_title") %></h2><p><%= t("billie.spending.monthly_body", count: @spending_monthly.size) %></p></div></div>
+    <%= render "finance/shared/spending_monthly", monthly: @spending_monthly, currency: @profile.currency %>
+  </section>
+  <section class="bw-panel bw-mix-panel" id="categories-spending-mix" aria-labelledby="mix-heading">
+    <div class="bw-panel-heading"><div><span class="bw-eyebrow"><%= t("billie.spending.eyebrow") %></span><h2 id="mix-heading"><%= t("billie.spending.mix_title") %></h2><p><%= t("billie.spending.mix_body_all") %></p></div></div>
+    <%= render "finance/shared/spending_mix", mix: @spending_mix, currency: @profile.currency, empty_text: t("billie.spending.no_spending"), link: true %>
+  </section>
+</div>
+
 <section class="bw-panel bw-panel-flush bw-section-gap" aria-labelledby="all-heading">
   <div class="bw-panel-heading"><div><h2 id="all-heading"><%= t("billie.categories.all_title") %></h2><p><%= t("billie.categories.all_body") %></p></div></div>
   <div class="bw-table-scroll"><table class="bw-table">
@@ -49,7 +60,7 @@
     <tbody>
       <% @category_rows.each do |row| %>
         <tr class="<%= 'is-selected' if row[:name] == @selected %>">
-          <td><span class="bw-category"><%= finance_label(row[:name]) %></span><% if row[:custom] %> <small class="bw-cat-kind"><%= t("billie.categories.custom_label") %></small><% end %></td>
+          <td><% if row[:spent].positive? && row[:name] != "Transfers" %><i class="bw-viz-swatch bw-viz-<%= @spending_tones[row[:name]] %> bw-cat-swatch" aria-hidden="true"></i><% end %><span class="bw-category"><%= finance_label(row[:name]) %></span><% if row[:custom] %> <small class="bw-cat-kind"><%= t("billie.categories.custom_label") %></small><% end %></td>
           <td class="bw-text-right"><%= number_with_delimiter(row[:count]) %></td>
           <td class="bw-text-right bw-nowrap"><%= finance_money(row[:spent], @profile.currency) %></td>
           <td class="bw-text-right bw-nowrap"><%= finance_money(row[:received], @profile.currency) %></td>
@@ -73,6 +84,7 @@
       </div>
       <%= link_to t("billie.categories.open_in_transactions"), finance_transactions_path(category: @selected), class: "bw-button bw-button-outline" %>
     </div>
+    <%= render "finance/categories/insights", trend: @selected_trend, merchants: @selected_merchants, tone: @selected_tone, spent: @selected_row[:spent], currency: @profile.currency %>
     <% if (custom = @selected_row[:custom]) %>
       <div class="bw-cat-manage">
         <%= form_with url: finance_category_path(custom), method: :patch, scope: :category, data: {turbo: false}, class: "bw-form bw-cat-add" do |form| %>

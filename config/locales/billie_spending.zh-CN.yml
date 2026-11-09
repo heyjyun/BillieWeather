@@ -1,0 +1,47 @@
+zh-CN:
+  billie:
+    spending:
+      eyebrow: 一目了然
+      mix_title: 钱都花在哪里
+      mix_body: 本期间各分类占支出的比例。每个分类在所有页面都使用同一种颜色。
+      mix_body_all: 所有日期内各分类占支出的比例。将鼠标悬停或用 Tab 键选中色块可查看金额。
+      mix_label: "按分类划分的支出，共 %{total}"
+      part_label: "%{name}：%{amount}，占支出 %{share}"
+      all_categories: 所有分类
+      other: 其他
+      no_spending: 还没有支出。导入一份对账单，看看钱都花在哪里。
+      monthly_eyebrow: 随时间变化
+      monthly_title: 每月支出
+      monthly_body:
+        one: 最近 %{count} 个月，按分类划分。
+        other: 最近 %{count} 个月，按分类划分。
+      monthly_label: 按分类划分的每月支出
+      month_label: "%{month}：%{amount}"
+      no_monthly: 这几个月没有支出。
+      legend: 本图中的分类
+      month: 月份
+      total: 合计
+      stat_total: 总支出
+      stat_total_note: 所有日期，不含已排除的交易
+      stat_average: 平均每月
+      stat_average_note:
+        one: 最近 %{count} 个月的平均值
+        other: 自最近 %{count} 个月中首次使用起的平均值
+      stat_latest: "最近一个月（%{month}）"
+      stat_latest_none: 最近一个月
+      vs_average_above: "比平均每月高 %{percent}"
+      vs_average_below: "比平均每月低 %{percent}"
+      vs_average_same: 与平均每月基本持平
+      vs_average_none: 历史记录还不够，暂时无法比较
+      trend_title: 每月变化
+      trend_body:
+        one: 最近 %{count} 个月此分类的支出。
+        other: 最近 %{count} 个月此分类的支出。
+      trend_label: 此分类的每月支出
+      average_line: "平均 %{amount}"
+      merchants_title: 支出最多的商家
+      merchants_body: 此分类的钱花在了哪里（所有日期）。
+      merchant_count:
+        one: "%{count} 笔交易"
+        other: "%{count} 笔交易"
+      no_category_spending: 此分类还没有支出。

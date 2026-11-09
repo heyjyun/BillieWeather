@@ -746,3 +746,85 @@ body.billie-public { min-height: 100vh; min-height: 100dvh; display: flex; flex-
 .bw-cat-manage form:first-child { flex: 1 1 320px; }
 .bw-cat-kind { color: #6c746f; font-size: 10px; text-transform: uppercase; letter-spacing: .8px; }
 .bw-table tr.is-selected td { background: #f3f6f2; }
+
+/* Spending charts (dashboard + Categories). Each category keeps one color everywhere:
+   bw-viz-0..6 are the biggest all-time spending categories (Finance::SpendingBreakdown). */
+.bw-viz-0 { background: #2a78d6; } .bw-viz-1 { background: #eb6834; } .bw-viz-2 { background: #1baf7a; } .bw-viz-3 { background: #eda100; }
+.bw-viz-4 { background: #e87ba4; } .bw-viz-5 { background: #008300; } .bw-viz-6 { background: #6250d6; }
+.bw-viz-other { background: #c9c7bd; } .bw-viz-uncategorized { background: #898781; } .bw-viz-solo { background: var(--bw-green); }
+.bw-viz-empty { font-size: 11px; margin: 8px 0 0; }
+.bw-viz-swatch { flex: none; display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+.bw-viz-key { flex: none; display: inline-block; width: 12px; height: 2px; border-radius: 1px; }
+.bw-viz-legend { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 10px; color: #52514e; }
+.bw-viz-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.bw-viz-heading { font-size: 13px; margin: 0 0 4px; letter-spacing: -.2px; }
+.bw-viz-sub { font-size: 10px; color: #6c746f; margin: 0 0 14px; }
+.bw-viz-delta { font-size: 9px; }
+/* Hover / keyboard-focus readout. The same figures are always in the list or table below the chart. */
+.bw-viz-tip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); z-index: 5; display: none; flex-direction: column; gap: 2px; min-width: max-content; max-width: 260px; padding: 8px 10px; border-radius: 8px; background: #fff; color: #52514e; border: 1px solid rgba(11,11,11,.1); box-shadow: 0 6px 18px #172b2a1f; font-size: 10px; line-height: 1.5; pointer-events: none; text-align: left; white-space: nowrap; }
+.bw-viz-tip strong { color: #0b0b0b; font-size: 12px; font-variant-numeric: tabular-nums; }
+.bw-viz-tip-list strong { font-size: 11px; }
+.bw-viz-tip-title { margin-bottom: 3px; }
+.bw-viz-tip-row { display: flex; align-items: center; gap: 6px; }
+:is(.bw-mix-part, .bw-col):is(:hover, :focus-visible) > .bw-viz-tip { display: flex; }
+
+/* One whole split into parts: tall segmented bar + named list. */
+.bw-mix { display: flex; gap: 2px; height: 28px; margin-top: 4px; }
+.bw-mix-part { position: relative; flex: 0 1 0; min-width: 3px; border-radius: 4px; display: flex; align-items: center; padding-left: 7px; outline-offset: 2px; transition: filter .15s; }
+.bw-mix-part:hover, .bw-mix-part:focus-visible { filter: brightness(1.08) saturate(1.05); }
+.bw-mix-value { font-size: 10px; font-weight: 650; color: #fff; font-variant-numeric: tabular-nums; }
+.bw-viz-3 > .bw-mix-value, .bw-viz-other > .bw-mix-value { color: #0b0b0b; }
+.bw-mix-list { list-style: none; margin: 18px 0 0; padding: 0; display: grid; }
+.bw-mix-list li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eff2ec; font-size: 11px; color: #405448; }
+.bw-mix-list li:last-child { border-bottom: 0; }
+.bw-mix-name small { display: block; font-size: 10px; color: #6c746f; }
+.bw-mix-share { color: #6c746f; font-size: 10px; font-variant-numeric: tabular-nums; }
+.bw-mix-amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Column charts (stacked by category, or one category). The month labels sit in a 28px band. */
+.bw-col-chart { --band: 28px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; height: 230px; }
+.bw-col-axis { position: relative; min-width: 34px; font-size: 9px; color: #898781; font-variant-numeric: tabular-nums; }
+.bw-col-axis span { position: absolute; right: 0; bottom: calc(var(--band) + (100% - var(--band) - 10px) * var(--at)); transform: translateY(50%); white-space: nowrap; }
+.bw-col-plot { position: relative; min-width: 0; }
+.bw-col-plot::after { content: ""; position: absolute; left: 0; right: 0; bottom: var(--band); height: 1px; background: #c3c2b7; }
+.bw-col-grid, .bw-col-average { position: absolute; left: 0; right: 0; height: 1px; bottom: calc(var(--band) + (100% - var(--band) - 10px) * var(--at)); }
+.bw-col-grid { background: #e1e0d9; }
+.bw-col-average { z-index: 2; background: #52514e; pointer-events: none; }
+.bw-col-average span { position: absolute; right: 0; bottom: 3px; padding: 0 4px; border-radius: 3px; background: #ffffffd9; font-size: 9px; font-weight: 600; color: #52514e; white-space: nowrap; }
+.bw-col-list { position: relative; z-index: 1; list-style: none; margin: 0; padding: 0; height: 100%; display: flex; gap: 4px; }
+.bw-col { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; border-radius: 6px; outline-offset: 2px; }
+.bw-col:hover, .bw-col:focus-visible { background: #f4f7f2; }
+.bw-col-bar { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; padding-top: 10px; }
+.bw-col-stack { width: 24px; max-width: 70%; display: flex; flex-direction: column-reverse; gap: 2px; }
+.bw-col-stack > span { flex: 0 1 0; min-height: 2px; }
+.bw-col-stack > span:last-child { border-radius: 4px 4px 0 0; }
+.bw-col-chart-dense .bw-col-stack { width: 18px; }
+.bw-col-month { height: var(--band); display: flex; align-items: center; font-size: 9px; color: #68736b; white-space: nowrap; }
+.bw-col-list > .bw-col:first-child > .bw-viz-tip { left: 0; transform: none; }
+.bw-col-list > .bw-col:last-child > .bw-viz-tip { left: auto; right: 0; transform: none; }
+.bw-viz-table { border-collapse: collapse; margin-top: 10px; font-size: 10px; font-variant-numeric: tabular-nums; }
+.bw-viz-table th, .bw-viz-table td { padding: 5px 12px 5px 0; text-align: right; white-space: nowrap; border-bottom: 1px solid #eff2ec; font-weight: 400; }
+.bw-viz-table th:first-child { text-align: left; }
+.bw-viz-table thead th { color: #6c746e; }
+
+/* Category details: stat tiles, trend and top merchants. */
+.bw-cat-insights { padding: 0 24px 24px; }
+.bw-cat-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
+.bw-cat-stat { padding: 16px 18px; border: 1px solid var(--bw-line); border-radius: 10px; display: grid; gap: 4px; }
+.bw-cat-stat > span { font-size: 10px; color: #6c746f; }
+.bw-cat-stat > strong { font-size: 21px; letter-spacing: -.5px; }
+.bw-cat-stat > small { font-size: 10px; color: #6c746f; }
+.bw-cat-charts { gap: 30px; }
+.bw-rank-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.bw-rank-row { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; margin-bottom: 6px; color: #405448; }
+.bw-rank-row strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bw-rank-name small { color: #6c746f; font-size: 10px; margin-left: 4px; }
+.bw-rank-track { height: 8px; }
+.bw-rank-track > span { display: block; height: 100%; min-width: 3px; border-radius: 0 4px 4px 0; }
+.bw-mix-panel .bw-mix-list { margin-top: 14px; }
+@media (max-width: 760px) { .bw-cat-stats { grid-template-columns: 1fr; } .bw-cat-insights { padding: 0 20px 20px; } .bw-col-month { font-size: 8px; } }
+@media (forced-colors: active) { .bw-mix-part, .bw-col-stack > span, .bw-viz-swatch, .bw-rank-track > span { forced-color-adjust: none; border: 1px solid CanvasText; } }
+.bw-cat-swatch { margin-right: 8px; vertical-align: middle; }
+.bw-mix-panel .bw-panel-heading > .bw-text-link { white-space: nowrap; flex: none; }
+.bw-mix-list li { padding: 3px 0; min-height: 40px; }
+.bw-mix-list .bw-table-link { padding-inline: 0; font-size: 11px; }

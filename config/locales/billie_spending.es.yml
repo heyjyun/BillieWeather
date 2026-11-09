@@ -1,0 +1,47 @@
+es:
+  billie:
+    spending:
+      eyebrow: DE UN VISTAZO
+      mix_title: A dónde va tu dinero
+      mix_body: Parte del gasto de este periodo. Cada categoría conserva su color en todas las páginas.
+      mix_body_all: Parte del gasto en todas las fechas. Pasa el cursor o usa Tab sobre un bloque para ver su importe.
+      mix_label: "Gasto por categoría, %{total} en total"
+      part_label: "%{name}: %{amount}, %{share} del gasto"
+      all_categories: Todas las categorías
+      other: Otras
+      no_spending: Todavía no hay gastos. Importa un extracto para ver a dónde va tu dinero.
+      monthly_eyebrow: CON EL TIEMPO
+      monthly_title: Gasto mes a mes
+      monthly_body:
+        one: El último %{count} mes, por categoría.
+        other: Los últimos %{count} meses, por categoría.
+      monthly_label: Gasto mensual por categoría
+      month_label: "%{month}: %{amount}"
+      no_monthly: No hay gastos en estos meses.
+      legend: Categorías de este gráfico
+      month: Mes
+      total: Total
+      stat_total: Total gastado
+      stat_total_note: Todas las fechas, sin las transacciones excluidas
+      stat_average: Un mes típico
+      stat_average_note:
+        one: Promedio del último %{count} mes
+        other: Promedio desde su primer mes dentro de los últimos %{count}
+      stat_latest: "Último mes (%{month})"
+      stat_latest_none: Último mes
+      vs_average_above: "%{percent} más que un mes típico"
+      vs_average_below: "%{percent} menos que un mes típico"
+      vs_average_same: Más o menos igual que un mes típico
+      vs_average_none: Todavía no hay suficiente historial para comparar
+      trend_title: Mes a mes
+      trend_body:
+        one: Gasto en esta categoría en el último %{count} mes.
+        other: Gasto en esta categoría en los últimos %{count} meses.
+      trend_label: Gasto mensual en esta categoría
+      average_line: "Prom. %{amount}"
+      merchants_title: Comercios con más gasto
+      merchants_body: A dónde fue el dinero de esta categoría, todas las fechas.
+      merchant_count:
+        one: "%{count} transacción"
+        other: "%{count} transacciones"
+      no_category_spending: Todavía no hay gastos en esta categoría.

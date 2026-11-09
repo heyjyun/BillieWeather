@@ -1,0 +1,58 @@
+<%# Spending per month, stacked by category (one stacking order in every month), with a legend,
+    hover/focus readouts for each month and a table of the same figures.
+    Locals: monthly (Finance::SpendingBreakdown#monthly), currency. %>
+<% top = finance_axis_max(monthly.map { |month| month[:total] }.max) %>
+<% keys = monthly.flat_map { |month| month[:segments] }.uniq { |segment| segment[:key] }.sort_by { |segment| {"other" => 100, "uncategorized" => 101}.fetch(segment[:tone], segment[:tone]) } %>
+<% if keys.empty? %>
+  <p class="bw-muted bw-viz-empty"><%= t("billie.spending.no_monthly") %></p>
+<% else %>
+  <ul class="bw-viz-legend" aria-label="<%= t("billie.spending.legend") %>">
+    <% keys.each do |segment| %>
+      <li><i class="bw-viz-swatch bw-viz-<%= segment[:tone] %>" aria-hidden="true"></i><%= finance_spending_name(segment) %></li>
+    <% end %>
+  </ul>
+  <div class="bw-col-chart">
+    <div class="bw-col-axis" aria-hidden="true">
+      <span style="--at:1"><%= finance_money(top, currency, precision: 0) %></span>
+      <span style="--at:.5"><%= finance_money(top / 2.0, currency, precision: 0) %></span>
+      <span style="--at:0"><%= finance_money(0, currency, precision: 0) %></span>
+    </div>
+    <div class="bw-col-plot">
+      <i class="bw-col-grid" style="--at:1" aria-hidden="true"></i>
+      <i class="bw-col-grid" style="--at:.5" aria-hidden="true"></i>
+      <ol class="bw-col-list" aria-label="<%= t("billie.spending.monthly_label") %>">
+        <% monthly.each do |month| %>
+          <% label = finance_date(month[:month], "%b %Y") %>
+          <li class="bw-col" tabindex="0" aria-label="<%= t("billie.spending.month_label", month: label, amount: finance_money(month[:total], currency)) %>">
+            <span class="bw-col-bar">
+              <span class="bw-col-stack" style="height:<%= (month[:total].to_f / top * 100).round(2) %>%">
+                <% month[:segments].each do |segment| %>
+                  <span class="bw-viz-<%= segment[:tone] %>" style="flex-grow:<%= (segment[:amount] / month[:total]).to_f.round(4) %>"></span>
+                <% end %>
+              </span>
+            </span>
+            <span class="bw-col-month" aria-hidden="true"><%= finance_date(month[:month], "%b %Y") %></span>
+            <span class="bw-viz-tip bw-viz-tip-list" aria-hidden="true">
+              <span class="bw-viz-tip-title"><%= label %> · <strong><%= finance_money(month[:total], currency) %></strong></span>
+              <% month[:segments].reverse_each do |segment| %>
+                <span class="bw-viz-tip-row"><i class="bw-viz-key bw-viz-<%= segment[:tone] %>"></i><strong><%= finance_money(segment[:amount], currency) %></strong> <%= finance_spending_name(segment) %></span>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ol>
+    </div>
+  </div>
+  <details class="bw-chart-details">
+    <summary><%= t("billie.finance.ui.view_monthly_figures") %></summary>
+    <div class="bw-table-scroll"><table class="bw-viz-table">
+      <thead><tr><th scope="col"><%= t("billie.spending.month") %></th><% keys.each do |segment| %><th scope="col"><%= finance_spending_name(segment) %></th><% end %><th scope="col"><%= t("billie.spending.total") %></th></tr></thead>
+      <tbody>
+        <% monthly.each do |month| %>
+          <% amounts = month[:segments].to_h { |segment| [segment[:key], segment[:amount]] } %>
+          <tr><th scope="row"><%= finance_date(month[:month], "%b %Y") %></th><% keys.each do |segment| %><td><%= finance_money(amounts[segment[:key]], currency) %></td><% end %><td><strong><%= finance_money(month[:total], currency) %></strong></td></tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  </details>
+<% end %>

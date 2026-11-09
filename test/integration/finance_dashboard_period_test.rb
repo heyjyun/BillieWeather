@@ -38,6 +38,9 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
     assert_metric "balance", "$2,500.00"
     assert_select ".bw-page-heading p", text: /Dec 31, 2024.*Nov 1, 2026/
     assert_not_includes response.body, "Private other-account payroll"
+    assert_select "#dashboard-spending-mix .bw-mix-part", count: 4
+    assert_select "#dashboard-spending-mix .bw-mix-part.bw-viz-0[aria-label=?]", "Food & dining: $120.00, 47% of spending"
+    assert_select "#dashboard-spending-mix .bw-mix-list a[href=?]", finance_categories_path(name: "Food & dining", anchor: "detail")
   end
 
   test "a bookmarkable custom range filters all dashboard figures and transactions inclusively without changing records" do
@@ -55,9 +58,9 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
     assert_select ".bw-page-heading p", text: /Oct 1, 2026.*Oct 31, 2026/
     assert_select ".bw-chart-details p", text: /Oct 2026: income \$1,000\.00.*expenses \$150\.00/
     assert_select ".bw-chart-details p", count: 1
-    assert_select ".bw-category-row", text: /Food & dining.*\$120\.00/
-    assert_select ".bw-category-row", text: /Utilities.*\$30\.00/
-    assert_select ".bw-category-row", text: /Shopping|Housing|Transfers/, count: 0
+    assert_select ".bw-mix-list li", text: /Food & dining.*80%.*\$120\.00/m
+    assert_select ".bw-mix-list li", text: /Utilities.*20%.*\$30\.00/m
+    assert_select ".bw-mix-list li", text: /Shopping|Housing|Transfers/, count: 0
     assert_select "table tbody tr", count: 5
     ["October salary", "October groceries", "October utilities", "October account transfer", "October excluded purchase"].each do |description|
       assert_select "table strong", text: description

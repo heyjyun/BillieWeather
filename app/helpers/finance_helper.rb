@@ -1,7 +1,25 @@
 module FinanceHelper
-  def finance_money(amount, currency = "USD")
+  def finance_money(amount, currency = "USD", precision: 2)
     units = {"USD" => "$", "CAD" => "CA$", "EUR" => "€", "GBP" => "£", "AUD" => "A$", "CNY" => "¥"}
-    number_to_currency(amount || 0, unit: units.fetch(currency, "#{currency} "), precision: 2)
+    number_to_currency(amount || 0, unit: units.fetch(currency, "#{currency} "), precision: precision)
+  end
+
+  # A clean top for a chart axis: the smallest 1, 2, 2.5 or 5 × 10ⁿ at or above `value`.
+  def finance_axis_max(value)
+    value = value.to_f
+    return 1 unless value.positive?
+    step = 10**Math.log10(value).floor
+    [1, 2, 2.5, 5, 10].map { |factor| factor * step }.find { |top| top >= value * 0.999999 }
+  end
+
+  # The name shown for one part of a spending chart (Other has no category name).
+  def finance_spending_name(part)
+    (part[:key] == Finance::SpendingBreakdown::OTHER) ? t("billie.spending.other") : finance_label(part[:key])
+  end
+
+  def finance_share(share)
+    return "—" if share.nil?
+    (share.positive? && share < 0.005) ? "<1%" : number_to_percentage(share * 100, precision: 0)
   end
 
   def finance_date(value, format = nil)

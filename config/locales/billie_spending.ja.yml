@@ -1,0 +1,47 @@
+ja:
+  billie:
+    spending:
+      eyebrow: ひと目でわかる
+      mix_title: お金の行き先
+      mix_body: この期間の支出に占める各カテゴリの割合です。カテゴリの色はどのページでも同じです。
+      mix_body_all: すべての期間の支出に占める各カテゴリの割合です。ブロックにカーソルを合わせるか Tab キーで選ぶと金額が表示されます。
+      mix_label: "カテゴリ別の支出（合計 %{total}）"
+      part_label: "%{name}：%{amount}、支出の %{share}"
+      all_categories: すべてのカテゴリ
+      other: その他
+      no_spending: まだ支出がありません。明細を取り込むと、お金の行き先が表示されます。
+      monthly_eyebrow: 推移
+      monthly_title: 月ごとの支出
+      monthly_body:
+        one: 直近 %{count} か月をカテゴリ別に表示しています。
+        other: 直近 %{count} か月をカテゴリ別に表示しています。
+      monthly_label: カテゴリ別の月ごとの支出
+      month_label: "%{month}：%{amount}"
+      no_monthly: この期間に支出はありません。
+      legend: このグラフのカテゴリ
+      month: 月
+      total: 合計
+      stat_total: 支出の合計
+      stat_total_note: すべての期間（除外した取引を除く）
+      stat_average: 平均的な月
+      stat_average_note:
+        one: 直近 %{count} か月の平均
+        other: 直近 %{count} か月のうち、初めて使われた月からの平均
+      stat_latest: "直近の月（%{month}）"
+      stat_latest_none: 直近の月
+      vs_average_above: "平均的な月より %{percent} 多い"
+      vs_average_below: "平均的な月より %{percent} 少ない"
+      vs_average_same: 平均的な月とほぼ同じ
+      vs_average_none: 比較できるだけの履歴がまだありません
+      trend_title: 月ごとの推移
+      trend_body:
+        one: 直近 %{count} か月のこのカテゴリの支出です。
+        other: 直近 %{count} か月のこのカテゴリの支出です。
+      trend_label: このカテゴリの月ごとの支出
+      average_line: "平均 %{amount}"
+      merchants_title: 支出の多い店舗
+      merchants_body: このカテゴリのお金の行き先（すべての期間）。
+      merchant_count:
+        one: "%{count} 件"
+        other: "%{count} 件"
+      no_category_spending: このカテゴリにはまだ支出がありません。

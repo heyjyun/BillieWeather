@@ -78,8 +78,15 @@ module Finance
         row.merge(name: name, custom: custom_by_name[name], share: share)
       end
       @uncategorized_count = stats.dig("Uncategorized", :count).to_i
+      breakdown = SpendingBreakdown.new(user: current_user)
+      @spending_mix = breakdown.mix
+      @spending_monthly = breakdown.monthly
+      @spending_tones = names.to_h { |name| [name, breakdown.tone(name)] }
       @selected = names.include?(params[:name]) ? params[:name] : nil
       if @selected
+        @selected_tone = breakdown.tone(@selected)
+        @selected_trend = breakdown.trend(@selected)
+        @selected_merchants = breakdown.top_merchants(@selected)
         scope = current_user.finance_transactions.where(category: @selected)
         @selected_row = @category_rows.find { |row| row[:name] == @selected }
         @selected_transactions = scope.includes(:statement).recent_first.limit(DETAIL_LIMIT).to_a

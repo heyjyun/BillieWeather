@@ -1,7 +1,8 @@
 import type { Category, Transaction } from "@billie/shared-types";
-import { AI_BATCH_MAX, allCategories, CATEGORY_NAME_MAX, CUSTOM_CATEGORY_MAX, formatMoney, merchantKey, type AiGroup } from "@billie/finance-core";
+import { AI_BATCH_MAX, allCategories, CATEGORY_NAME_MAX, categoryTrend, CUSTOM_CATEGORY_MAX, formatMoney, merchantKey, spendingByMonth, spendingMix, spendingPalette, spendingTone, topMerchants, type AiGroup } from "@billie/finance-core";
 import { useMemo, useState, type FormEvent } from "react";
 import { CategoryBadge, CategorySelect, Money, PageHeading } from "../components/common";
+import { CategoryInsights, MonthlySpendingChart, SpendingMixChart } from "../components/SpendingCharts";
 import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, useI18n } from "../i18n";
@@ -42,7 +43,7 @@ type AiState =
   | { step: "consent"; groups: AiGroup[]; batch: AiGroup[]; transactions: number }
   | { step: "working" };
 
-export function Categories() {
+export function Categories({ focus = null }: { focus?: string | null } = {}) {
   const { m, t } = useI18n();
   const { getToken, expire } = useAccount();
   const { transactions, customCategories, currency, store, refresh } = useFinance();
@@ -50,13 +51,16 @@ export function Categories() {
   const cur = currency ?? "USD";
   const categories = useMemo(() => allCategories(customCategories), [customCategories]);
   const rows = useMemo(() => categoryRows(transactions, categories, new Set(customCategories)), [transactions, categories, customCategories]);
-  const [selected, setSelected] = useState<Category | null>(null);
+  const [selected, setSelected] = useState<Category | null>(() => (focus && categories.includes(focus) ? focus : null));
   const [newName, setNewName] = useState("");
-  const [renameTo, setRenameTo] = useState("");
+  const [renameTo, setRenameTo] = useState(() => focus ?? "");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [ai, setAi] = useState<AiState>({ step: "idle" });
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const palette = useMemo(() => spendingPalette(transactions), [transactions]);
+  const mix = useMemo(() => spendingMix(transactions, palette), [transactions, palette]);
+  const monthly = useMemo(() => spendingByMonth(transactions, palette), [transactions, palette]);
   const uncategorized = rows.find((row) => row.name === "Uncategorized")?.count ?? 0;
 
   function say(message: string, isError = false) {
@@ -173,6 +177,9 @@ export function Categories() {
         </PageHeading>
         {messages}
         <p className="bw-caption">{t("categoryPage.detailSummary", { count: detail.count, out: formatMoney(detail.outCents, cur), in: formatMoney(detail.inCents, cur) })}</p>
+        <section className="bw-panel bw-cat-insights-panel" aria-label={m.spending.trendTitle}>
+          <CategoryInsights trend={categoryTrend(transactions, selected)} merchants={topMerchants(transactions, selected)} tone={spendingTone(palette, selected)} spentCents={detail.outCents} currency={cur} />
+        </section>
         {detail.custom && (
           <section className="bw-panel bw-cat-manage">
             <form className="bw-cat-form" onSubmit={rename}>
@@ -248,6 +255,20 @@ export function Categories() {
           </form>
         </section>
       </div>
+      <div className="bw-two-column bw-section-gap">
+        <section className="bw-panel" id="categories-spending-monthly" aria-labelledby="monthly-heading">
+          <span className="bw-eyebrow">{m.spending.monthlyEyebrow}</span>
+          <h2 id="monthly-heading">{m.spending.monthlyTitle}</h2>
+          <p className="bw-caption bw-viz-intro">{t("spending.monthlyBody", { count: monthly.length })}</p>
+          <MonthlySpendingChart months={monthly} currency={cur} />
+        </section>
+        <section className="bw-panel" id="categories-spending-mix" aria-labelledby="mix-heading">
+          <span className="bw-eyebrow">{m.spending.eyebrow}</span>
+          <h2 id="mix-heading">{m.spending.mixTitle}</h2>
+          <p className="bw-caption bw-viz-intro">{m.spending.mixBodyAll}</p>
+          <SpendingMixChart mix={mix} currency={cur} emptyText={m.spending.noSpending} onOpen={open} />
+        </section>
+      </div>
       <section className="bw-panel bw-section-gap" aria-labelledby="all-heading">
         <h2 id="all-heading">{x.allTitle}</h2>
         <p className="bw-caption">{x.allBody}</p>
@@ -257,7 +278,7 @@ export function Categories() {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.name}>
-                  <td><CategoryBadge category={row.name} />{row.custom && <small className="bw-cat-kind"> {x.custom}</small>}</td>
+                  <td>{row.outCents > 0 && row.name !== "Transfers" && <i className={`bw-viz-swatch bw-viz-${spendingTone(palette, row.name)} bw-cat-swatch`} aria-hidden="true" />}<CategoryBadge category={row.name} />{row.custom && <small className="bw-cat-kind"> {x.custom}</small>}</td>
                   <td>{row.count}</td>
                   <td><Money cents={row.outCents} currency={cur} /></td>
                   <td><Money cents={row.inCents} currency={cur} /></td>

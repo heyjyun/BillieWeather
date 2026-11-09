@@ -1,0 +1,47 @@
+en:
+  billie:
+    spending:
+      eyebrow: AT A GLANCE
+      mix_title: Where your money goes
+      mix_body: Share of spending in this period. A category keeps its color on every page.
+      mix_body_all: Share of spending across all dates. Hover or tab to a block for its amount.
+      mix_label: "Spending split by category, %{total} in total"
+      part_label: "%{name}: %{amount}, %{share} of spending"
+      all_categories: All categories
+      other: Other
+      no_spending: No spending yet. Import a statement to see where your money goes.
+      monthly_eyebrow: OVER TIME
+      monthly_title: Spending month by month
+      monthly_body:
+        one: The latest %{count} month, split by category.
+        other: The latest %{count} months, split by category.
+      monthly_label: Monthly spending by category
+      month_label: "%{month}: %{amount}"
+      no_monthly: No spending in these months.
+      legend: Categories in this chart
+      month: Month
+      total: Total
+      stat_total: Total spent
+      stat_total_note: All dates, excluded transactions left out
+      stat_average: Typical month
+      stat_average_note:
+        one: Average of the latest %{count} month
+        other: Average since its first month in the latest %{count}
+      stat_latest: "Latest month (%{month})"
+      stat_latest_none: Latest month
+      vs_average_above: "%{percent} above a typical month"
+      vs_average_below: "%{percent} below a typical month"
+      vs_average_same: About the same as a typical month
+      vs_average_none: Not enough history to compare yet
+      trend_title: Month by month
+      trend_body:
+        one: Spending in this category in the latest %{count} month.
+        other: Spending in this category in the latest %{count} months.
+      trend_label: Monthly spending in this category
+      average_line: "Avg %{amount}"
+      merchants_title: Biggest merchants
+      merchants_body: Where this category's money went, all dates.
+      merchant_count:
+        one: "%{count} transaction"
+        other: "%{count} transactions"
+      no_category_spending: No spending in this category yet.

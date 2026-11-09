@@ -75,8 +75,20 @@ it("adds a category, categorizes with AI after consent, and manages the category
   await act(async () => fireEvent.change(input, { target: { files: [file] } }));
   await screen.findByText(/9 transactions imported/);
 
+  // Where the money goes: the dashboard splits spending by category and links to each one's details.
+  nav("Dashboard");
+  const mix = within(await screen.findByRole("list", { name: /^Spending split by category/ }));
+  const housing = mix.getByRole("listitem", { name: /^Housing: \$1,650\.00, \d+% of spending$/ });
+  expect(housing.className).toContain("bw-viz-0");
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Housing" })));
+  await screen.findByRole("heading", { name: "Housing" });
+  expect(screen.getByRole("heading", { name: "Biggest merchants" })).toBeTruthy();
+  expect(screen.getByRole("list", { name: "Monthly spending in this category" }).children).toHaveLength(12);
+
   nav("Categories");
   await screen.findByRole("heading", { name: "All categories" });
+  expect(screen.getByRole("heading", { name: "Spending month by month" })).toBeTruthy();
+  expect(screen.getByRole("list", { name: "Monthly spending by category" }).children).toHaveLength(6);
   expect(screen.getByText("2 transaction(s) are Uncategorized. AI can suggest a category for each; categories you chose are never changed.")).toBeTruthy();
 
   fireEvent.change(screen.getByLabelText("New category"), { target: { value: "Cloud" } });

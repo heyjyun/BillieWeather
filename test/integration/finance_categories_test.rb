@@ -84,6 +84,24 @@ class FinanceCategoriesTest < ActionDispatch::IntegrationTest
     assert_select "a.bw-nav-link.is-active", text: "Categories"
     assert_select ".bw-table tbody tr", count: Finance::Transaction::CATEGORIES.length + 1
     assert_select ".bw-table tbody tr", text: /Gifts/
+    # Where the money goes: the coffee shop was recognized, the rest still needs a category.
+    assert_select "#categories-spending-mix .bw-mix-part", count: 2
+    assert_select "#categories-spending-mix .bw-mix-part.bw-viz-0[aria-label=?]", "Food & dining: $5.25, 4% of spending"
+    assert_select "#categories-spending-mix .bw-mix-part.bw-viz-uncategorized[aria-label=?]", "Uncategorized: $134.10, 96% of spending"
+    assert_select "#categories-spending-monthly .bw-col", count: 6
+    assert_select "#categories-spending-monthly .bw-col:last-child[aria-label=?]", "Jan 2026: $139.35"
+  end
+
+  test "category details chart its months and biggest merchants" do
+    sign_in @user
+    @user.finance_transactions.where("description ILIKE ?", "%zorblax%").update_all(category: "Shopping")
+    get finance_categories_path(name: "Shopping")
+    assert_response :success
+    assert_select "#categories-spending-mix .bw-mix-part.bw-viz-0[aria-label=?]", "Shopping: $54.10, 39% of spending"
+    assert_select "#detail .bw-cat-stat strong", text: "$54.10"
+    assert_select "#detail .bw-col", count: 12
+    assert_select "#detail .bw-rank-list li", count: 1
+    assert_select "#detail .bw-rank-name", text: /Zorblax Pet.*2 transactions/m
   end
 
   test "AI categorization sends only cleaned merchant text and updates only Uncategorized rows" do

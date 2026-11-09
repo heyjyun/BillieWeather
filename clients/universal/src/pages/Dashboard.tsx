@@ -1,18 +1,21 @@
 import type { PeriodPreset } from "@billie/shared-types";
-import { buildSnapshot, localToday, resolvePeriod } from "@billie/finance-core";
+import { buildSnapshot, localToday, resolvePeriod, spendingMix, spendingPalette } from "@billie/finance-core";
 import { useMemo, useState } from "react";
 import { CategoryBadge, Empty, Money, PageHeading, PeriodPicker } from "../components/common";
+import { SpendingMixChart } from "../components/SpendingCharts";
 import { useFinance } from "../hooks/useFinance";
 import { useI18n } from "../i18n";
 import type { Page } from "../App";
 
-export function Dashboard({ go }: { go: (page: Page) => void }) {
+export function Dashboard({ go }: { go: (page: Page, part?: string | null) => void }) {
   const { m, t } = useI18n();
   const { transactions, statements, currency } = useFinance();
   const [preset, setPreset] = useState<PeriodPreset>("all_time");
   const cur = currency ?? "USD";
   const period = useMemo(() => resolvePeriod(preset, { today: localToday() }), [preset]);
   const snap = useMemo(() => buildSnapshot({ transactions, statements, period, currency: cur }), [transactions, statements, period, cur]);
+  const palette = useMemo(() => spendingPalette(transactions), [transactions]);
+  const mix = useMemo(() => spendingMix(transactions, palette, period), [transactions, palette, period]);
   const d = m.dashboard;
 
   if (transactions.length === 0) {
@@ -57,19 +60,13 @@ export function Dashboard({ go }: { go: (page: Page) => void }) {
           )}
           <p className="bw-legend"><span className="bw-dot bw-dot-in" /> {d.legendIncome} <span className="bw-dot bw-dot-out" /> {d.legendSpending}</p>
         </section>
-        <section className="bw-panel" aria-labelledby="categories-heading">
-          <h2 id="categories-heading">{d.byCategory}</h2>
-          {snap.categories.length === 0 ? <p className="bw-muted">{d.noSpending}</p> : (
-            <ul className="bw-category-list">
-              {snap.categories.map((category) => (
-                <li key={category.name}>
-                  <CategoryBadge category={category.name} />
-                  <span className="bw-share">{category.share === null ? "" : `${Math.round(category.share * 100)}%`}</span>
-                  <Money cents={category.amountCents} currency={cur} />
-                </li>
-              ))}
-            </ul>
-          )}
+        <section className="bw-panel" aria-labelledby="categories-heading" id="dashboard-spending-mix">
+          <div className="bw-panel-top">
+            <h2 id="categories-heading">{m.spending.mixTitle}</h2>
+            <button type="button" className="bw-link-button" onClick={() => go("categories")}>{m.spending.allCategories}</button>
+          </div>
+          <p className="bw-caption bw-viz-intro">{m.spending.mixBody}</p>
+          <SpendingMixChart mix={mix} currency={cur} emptyText={d.noSpending} onOpen={(category) => go("categories", category)} />
         </section>
       </div>
       <section className="bw-panel" aria-labelledby="recent-heading">

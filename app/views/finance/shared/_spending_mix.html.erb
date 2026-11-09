@@ -1,0 +1,35 @@
+<%# One whole (spending in a date range) split into its categories: a tall segmented bar, then a
+    list that names every part with its amount and share (the bar's table view).
+    Locals: mix (Finance::SpendingBreakdown#mix), currency, empty_text, link (true to link to category details). %>
+<% if mix[:parts].empty? %>
+  <p class="bw-muted bw-viz-empty"><%= empty_text %></p>
+<% else %>
+  <div class="bw-mix" role="list" aria-label="<%= t("billie.spending.mix_label", total: finance_money(mix[:total], currency)) %>">
+    <% mix[:parts].each do |part| %>
+      <% name = finance_spending_name(part) %>
+      <% share = finance_share(part[:share]) %>
+      <div class="bw-mix-part bw-viz-<%= part[:tone] %>" role="listitem" tabindex="0" style="flex-grow:<%= part[:share].to_f.round(4) %>" aria-label="<%= t("billie.spending.part_label", name: name, amount: finance_money(part[:amount], currency), share: share) %>">
+        <% if part[:share].to_f >= 0.1 %><span class="bw-mix-value" aria-hidden="true"><%= share %></span><% end %>
+        <span class="bw-viz-tip" aria-hidden="true"><strong><%= finance_money(part[:amount], currency) %></strong><span><%= name %> · <%= share %></span></span>
+      </div>
+    <% end %>
+  </div>
+  <ul class="bw-mix-list">
+    <% mix[:parts].each do |part| %>
+      <% name = finance_spending_name(part) %>
+      <li>
+        <i class="bw-viz-swatch bw-viz-<%= part[:tone] %>" aria-hidden="true"></i>
+        <span class="bw-mix-name">
+          <% if link && part[:key] != Finance::SpendingBreakdown::OTHER %>
+            <%= link_to name, finance_categories_path(name: part[:key], anchor: "detail"), class: "bw-table-link" %>
+          <% else %>
+            <%= name %>
+          <% end %>
+          <% if part[:members] %><small><%= part[:members].first(4).map { |member| finance_label(member) }.join(", ") %><%= "…" if part[:members].size > 4 %></small><% end %>
+        </span>
+        <span class="bw-mix-share"><%= finance_share(part[:share]) %></span>
+        <strong class="bw-mix-amount"><%= finance_money(part[:amount], currency) %></strong>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

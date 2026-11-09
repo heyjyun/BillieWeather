@@ -62,7 +62,7 @@ function Shell() {
         <SyncStatus />
         {page === "dashboard" && <Dashboard go={go} />}
         {page === "transactions" && <Transactions />}
-        {page === "categories" && <Categories />}
+        {page === "categories" && <Categories key={focus ?? ""} focus={focus} />}
         {page === "import" && <Import />}
         {page === "reports" && <Reports />}
         {page === "data" && <Data focus={focus} />}

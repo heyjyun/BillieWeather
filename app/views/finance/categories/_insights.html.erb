@@ -1,0 +1,98 @@
+<%# One category at a glance: what it costs in a typical month, the latest month against that,
+    a month-by-month column chart with the average marked, and its biggest merchants.
+    Locals: trend (SpendingBreakdown#trend), merchants (#top_merchants), tone, spent, currency. %>
+<% tone_class = tone.is_a?(Integer) ? "bw-viz-#{tone}" : "bw-viz-solo" %>
+<% average = trend[:average] %>
+<% latest = trend[:latest] %>
+<div class="bw-cat-insights">
+  <div class="bw-cat-stats">
+    <div class="bw-cat-stat">
+      <span><%= t("billie.spending.stat_total") %></span>
+      <strong><%= finance_money(spent, currency) %></strong>
+      <small><%= t("billie.spending.stat_total_note") %></small>
+    </div>
+    <div class="bw-cat-stat">
+      <span><%= t("billie.spending.stat_average") %></span>
+      <strong><%= average ? finance_money(average, currency) : "—" %></strong>
+      <small><%= t("billie.spending.stat_average_note", count: trend[:months].size) %></small>
+    </div>
+    <div class="bw-cat-stat">
+      <span><%= latest ? t("billie.spending.stat_latest", month: finance_date(latest[:month], "%b %Y")) : t("billie.spending.stat_latest_none") %></span>
+      <strong><%= latest ? finance_money(latest[:amount], currency) : "—" %></strong>
+      <small>
+        <% if average&.positive? && latest %>
+          <% change = ((latest[:amount] - average) / average * 100).round %>
+          <% if change.abs < 5 %>
+            <%= t("billie.spending.vs_average_same") %>
+          <% elsif change.positive? %>
+            <span class="bw-viz-delta">▲</span> <%= t("billie.spending.vs_average_above", percent: "#{change}%") %>
+          <% else %>
+            <span class="bw-viz-delta">▼</span> <%= t("billie.spending.vs_average_below", percent: "#{change.abs}%") %>
+          <% end %>
+        <% else %>
+          <%= t("billie.spending.vs_average_none") %>
+        <% end %>
+      </small>
+    </div>
+  </div>
+
+  <div class="bw-two-column bw-cat-charts">
+    <div>
+      <h3 class="bw-viz-heading"><%= t("billie.spending.trend_title") %></h3>
+      <p class="bw-viz-sub"><%= t("billie.spending.trend_body", count: trend[:months].size) %></p>
+      <% peak = trend[:months].map { |month| month[:amount] }.max %>
+      <% if peak.nil? || peak.zero? %>
+        <p class="bw-muted bw-viz-empty"><%= t("billie.spending.no_category_spending") %></p>
+      <% else %>
+        <% top = finance_axis_max(peak) %>
+        <div class="bw-col-chart bw-col-chart-dense">
+          <div class="bw-col-axis" aria-hidden="true">
+            <span style="--at:1"><%= finance_money(top, currency, precision: 0) %></span>
+            <span style="--at:.5"><%= finance_money(top / 2.0, currency, precision: 0) %></span>
+            <span style="--at:0"><%= finance_money(0, currency, precision: 0) %></span>
+          </div>
+          <div class="bw-col-plot">
+            <i class="bw-col-grid" style="--at:1" aria-hidden="true"></i>
+            <i class="bw-col-grid" style="--at:.5" aria-hidden="true"></i>
+            <% if average&.positive? %>
+              <i class="bw-col-average" style="--at:<%= (average.to_f / top).round(4) %>" aria-hidden="true"><span><%= t("billie.spending.average_line", amount: finance_money(average, currency, precision: 0)) %></span></i>
+            <% end %>
+            <ol class="bw-col-list" aria-label="<%= t("billie.spending.trend_label") %>">
+              <% trend[:months].each_with_index do |month, index| %>
+                <% label = finance_date(month[:month], "%b %Y") %>
+                <li class="bw-col" tabindex="0" aria-label="<%= t("billie.spending.month_label", month: label, amount: finance_money(month[:amount], currency)) %>">
+                  <span class="bw-col-bar"><span class="bw-col-stack" style="height:<%= (month[:amount].to_f / top * 100).round(2) %>%"><% if month[:amount].positive? %><span class="<%= tone_class %>" style="flex-grow:1"></span><% end %></span></span>
+                  <span class="bw-col-month" aria-hidden="true"><%= (index.even? || index == trend[:months].size - 1) ? finance_date(month[:month], "%b %Y") : "" %></span>
+                  <span class="bw-viz-tip" aria-hidden="true"><strong><%= finance_money(month[:amount], currency) %></strong><span><%= label %></span></span>
+                </li>
+              <% end %>
+            </ol>
+          </div>
+        </div>
+        <details class="bw-chart-details">
+          <summary><%= t("billie.finance.ui.view_monthly_figures") %></summary>
+          <% trend[:months].each do |month| %>
+            <p><%= finance_date(month[:month], "%b %Y") %>: <%= finance_money(month[:amount], currency) %></p>
+          <% end %>
+        </details>
+      <% end %>
+    </div>
+    <div>
+      <h3 class="bw-viz-heading"><%= t("billie.spending.merchants_title") %></h3>
+      <p class="bw-viz-sub"><%= t("billie.spending.merchants_body") %></p>
+      <% if merchants.empty? %>
+        <p class="bw-muted bw-viz-empty"><%= t("billie.spending.no_category_spending") %></p>
+      <% else %>
+        <% biggest = merchants.first[:amount] %>
+        <ol class="bw-rank-list">
+          <% merchants.each do |merchant| %>
+            <li>
+              <div class="bw-rank-row"><span class="bw-rank-name"><%= merchant[:name] %> <small><%= t("billie.spending.merchant_count", count: merchant[:count]) %></small></span><strong><%= finance_money(merchant[:amount], currency) %></strong></div>
+              <div class="bw-rank-track" aria-hidden="true"><span class="<%= tone_class %>" style="width:<%= (merchant[:amount] / biggest * 100).to_f.round(2) %>%"></span></div>
+            </li>
+          <% end %>
+        </ol>
+      <% end %>
+    </div>
+  </div>
+</div>
