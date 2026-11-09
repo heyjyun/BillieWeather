@@ -1,0 +1,13 @@
+{
+  "ko": {
+    "billie": {
+      "google_region": {
+        "heading": "이용 지역 선택",
+        "intro": "Google 본인 확인이 완료되었습니다. 계정 생성을 완료하려면 지역을 선택하세요.",
+        "continue": "계정 만들기",
+        "expired": "Google 가입 세션이 만료되었습니다. Google로 다시 로그인하세요.",
+        "invalid": "목록에서 지역을 선택하세요."
+      }
+    }
+  }
+}

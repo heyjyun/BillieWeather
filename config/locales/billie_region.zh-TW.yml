@@ -1,0 +1,36 @@
+{
+  "zh-TW": {
+    "billie": {
+      "region": {
+        "label": "使用地區",
+        "blank": "請選擇地區",
+        "help": "請選擇你主要使用本應用的地區，此項為必填。",
+        "heading": "帳戶設定",
+        "intro": "選擇你主要使用 BillieWeather 的地區。你可以隨時修改此選項。",
+        "save": "儲存地區",
+        "saved": "使用地區已儲存。",
+        "nav": "設定",
+        "required_notice": "請先選擇使用地區，再繼續使用。"
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "user": {
+          "usage_region": "使用地區"
+        }
+      },
+      "errors": {
+        "models": {
+          "user": {
+            "attributes": {
+              "usage_region": {
+                "inclusion": "必須從地區清單中選擇",
+                "blank": "必須選擇"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

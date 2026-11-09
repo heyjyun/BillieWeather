@@ -30,7 +30,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
 
   test "sign up creates a real account and login returns to the dashboard" do
     assert_difference "User.count", 1 do
-      post user_registration_path, params: {user: {email: "new-finance-user@example.com", first_name: "Alex", last_name: "River",
+      post user_registration_path, params: {user: {email: "new-finance-user@example.com", first_name: "Alex", last_name: "River", usage_region: "US",
                                                    password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}}
     end
     assert_redirected_to finance_dashboard_path

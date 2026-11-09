@@ -1,0 +1,129 @@
+{
+  "zh-TW": {
+    "billie": {
+      "helpers": {
+        "date_format": "%Y年%-m月%-d日",
+        "unavailable": "暫無資料",
+        "balance_today": "餘額截至今天。",
+        "balance_dated": "餘額截至 %{date}。",
+        "balance_aged": "餘額截至 %{date}（%{days}前）；不包含此後的交易。",
+        "manual": "由你手動填寫，將覆蓋自動帳戶合計。",
+        "manual_dated": "由你手動填寫，日期為 %{date}，將覆蓋自動帳戶合計。",
+        "automatic_total": "自動合計 %{accounts}的最新餘額。",
+        "statement_dates": " 帳單日期：%{dates}。",
+        "partial_total": " 目前為部分合計：部分帳戶或餘額仍需確認。",
+        "no_statement_data": "暫無帳單資料",
+        "labels": {
+          "income": "收入",
+          "housing": "住房",
+          "food": "餐飲",
+          "transport": "交通",
+          "utilities": "生活繳費",
+          "shopping": "購物",
+          "health": "醫療健康",
+          "business": "業務支出",
+          "transfers": "轉帳",
+          "uncategorized": "未分類",
+          "checking": "支票帳戶",
+          "savings": "儲蓄帳戶",
+          "credit_account": "信用帳戶",
+          "cash_account": "現金帳戶",
+          "account": "帳戶"
+        },
+        "counts": {
+          "transaction": "%{count} 筆交易",
+          "statement": "%{count} 份帳單",
+          "account": "%{count} 個帳戶",
+          "card": "%{count} 張卡",
+          "cash_account": "%{count} 個現金帳戶",
+          "day": "%{count} 天",
+          "file": "%{count} 個檔案",
+          "row": "%{count} 列",
+          "month": "%{count} 個月"
+        },
+        "setup": {
+          "unassigned": "已儲存 %{statements}的帶日期期末餘額，但尚未識別所屬帳戶。請在帳單紀錄中選擇帳戶，將其納入自動合計。",
+          "unconfirmed": "已儲存期末餘額，但所屬帳戶和餘額日期仍需確認。請檢查帳單紀錄；交易日期不能單獨作為餘額日期。",
+          "no_details": "已從 %{statements}匯入交易，但未儲存帳戶資訊或期末餘額。如果檔案包含帳戶資訊和餘額欄位，請重新上傳：系統會自動補充缺失資訊，不會重複匯入交易。你也可以手動填寫餘額。",
+          "only_credit": "目前僅識別到信用帳戶，其餘額屬於欠款，不計入起始現金。請提供帶日期的支票或儲蓄帳戶餘額。",
+          "future_date": "現金帳戶的餘額日期在未來。使用這些餘額前，請檢查帳戶明細中的日期。",
+          "missing_date": "現金帳戶餘額尚無已確認的日期。請先在帳單紀錄中確認餘額日期。",
+          "missing_balance": "現金帳戶的最新帳單沒有可用的期末餘額。請檢視原始帳單，確認餘額及其日期；系統不會自動使用較舊的餘額代替。",
+          "unknown_kind": "帳戶類型尚未確認。請在帳單紀錄中識別支票或儲蓄帳戶，以計算起始現金。",
+          "no_balance": "暫無帶日期的現金帳戶餘額。匯入包含帳戶資訊和期末餘額的帳單後，系統會自動計算。"
+        },
+        "balance_status": {
+          "known": "已計入現金合計",
+          "missing_balance": "最新帳單沒有可讀取的期末餘額",
+          "missing_date": "餘額日期待確認",
+          "future_date": "未來日期的餘額未計入",
+          "excluded_credit": "信用卡餘額 · 不計入現金",
+          "unknown_kind": "請確認這是現金帳戶還是信用卡",
+          "excluded": "未計入現金合計"
+        },
+        "month_format": "%Y年%-m月",
+        "month_day_format": "%-m月%-d日"
+      }
+    },
+    "date": {
+      "formats": {
+        "default": "%Y年%-m月%-d日",
+        "short": "%-m月%-d日",
+        "long": "%Y年%-m月%-d日"
+      },
+      "day_names": [
+        "星期日",
+        "星期一",
+        "星期二",
+        "星期三",
+        "星期四",
+        "星期五",
+        "星期六"
+      ],
+      "abbr_day_names": [
+        "週日",
+        "週一",
+        "週二",
+        "週三",
+        "週四",
+        "週五",
+        "週六"
+      ],
+      "month_names": [
+        null,
+        "一月",
+        "二月",
+        "三月",
+        "四月",
+        "五月",
+        "六月",
+        "七月",
+        "八月",
+        "九月",
+        "十月",
+        "十一月",
+        "十二月"
+      ],
+      "abbr_month_names": [
+        null,
+        "1月",
+        "2月",
+        "3月",
+        "4月",
+        "5月",
+        "6月",
+        "7月",
+        "8月",
+        "9月",
+        "10月",
+        "11月",
+        "12月"
+      ],
+      "order": [
+        "year",
+        "month",
+        "day"
+      ]
+    }
+  }
+}

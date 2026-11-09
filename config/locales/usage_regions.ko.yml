@@ -1,5 +1,3 @@
-# Country/region display names from Unicode CLDR via Intl.DisplayNames.
-# Stored values are the matching ISO codes in UsageRegion::CODES.
 {
   "ko": {
     "usage_regions": {
@@ -50,7 +48,7 @@
       "CK": "쿡 제도",
       "CL": "칠레",
       "CM": "카메룬",
-      "CN": "중국",
+      "CN": "Mainland China",
       "CO": "콜롬비아",
       "CR": "코스타리카",
       "CU": "쿠바",
@@ -97,7 +95,7 @@
       "GU": "괌",
       "GW": "기니비사우",
       "GY": "가이아나",
-      "HK": "홍콩(중국 특별행정구)",
+      "HK": "홍콩",
       "HM": "허드 맥도널드 제도",
       "HN": "온두라스",
       "HR": "크로아티아",
@@ -150,7 +148,7 @@
       "ML": "말리",
       "MM": "미얀마",
       "MN": "몽골",
-      "MO": "마카오(중국 특별행정구)",
+      "MO": "마카오",
       "MP": "북마리아나제도",
       "MQ": "마르티니크",
       "MR": "모리타니",

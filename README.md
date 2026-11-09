@@ -20,15 +20,21 @@ Register a new account; no shared demo login or preloaded financial data is crea
 
 ## Languages
 
-The main app supports English, Simplified Chinese, Japanese, and Korean. Open the language menu in the header on the home, authentication, or finance pages and choose **English / 简体中文 / 日本語 / 한국어**. The first visit follows the browser language; an explicit choice is remembered in this browser for one year and takes priority over browser and account defaults. It remains selected after signing in or out. Language links preserve current search and date filters.
+The main app supports English, Simplified Chinese, Traditional Chinese, Japanese, and Korean. Open the language menu in the header on the home, authentication, or finance pages and choose **English / 简体中文 / 繁體中文 / 日本語 / 한국어**. The first visit follows the browser language; an explicit choice is remembered in this browser for one year and takes priority over browser and account defaults. It remains selected after signing in or out. Language links preserve current search and date filters.
 
 Navigation, forms, dates, categories, validation messages, forecast explanations, and newly generated basic/AI analysis use the selected language. Previously saved analysis and PDF-specific warnings retain their original language; generate a new analysis to use the current language. User-provided descriptions, bank names, and custom account names remain as entered. CSV headers, stored categories, currencies, and financial calculations stay consistent between languages. Changing the interface language does not change the app's U.S. tax-preparation scope or add support for other countries' bank statement formats. Restart Rails after adding the new locale configuration.
 
-## Usage country or region
+## Usage region
 
-Users may select a usage country or region during email registration or later in **Settings** (`/app/settings`). The field is optional, and existing and Google-created accounts can leave it blank. Account profile editing uses the same list. The list contains 249 ISO 3166-1 country/region codes, displayed in the selected interface language. Only the two-letter code (for example, `US`, `CN`, `JP`, or `KR`) is stored as nullable `users.usage_region`.
+Users must select a usage region during email registration. The region can be changed later in **Settings** (`/app/settings`) or the account profile, but cannot be cleared. The fixed list has 249 region codes, with names shown in the selected interface language. The interface labels this field as a region; the `CN` choice is **Mainland China** in every language, alongside separate regional choices such as Hong Kong, Taiwan, and Macao. The stored value is the two-letter `users.usage_region` code.
 
-Both Rails validation and a PostgreSQL check constraint reject values outside the list. Clearing the selection stores `NULL`. This is a usage preference; tax jurisdiction remains a separate profile setting. Country list changes require updating the catalog and the database constraint through a new migration. Apply migrations before running the updated app; restart an already running Rails process afterward.
+New accounts require a valid region in Rails and PostgreSQL. Existing accounts with no saved region are marked `usage_region_pending` by the migration, rather than assigned a guessed location. They can authenticate, then must choose a region before accessing the app; a valid selection clears the pending flag. Attempts to save an empty or invented region are rejected. Region-list changes require a new migration to update the database allowlist. The usage region is separate from the tax-jurisdiction profile setting.
+
+New Google registrations also require a region before account creation. A verified identity is held in the encrypted session for up to 10 minutes, then the user chooses a region. The app rechecks identity ownership and registration eligibility before creating the account; access and refresh tokens are not saved. Existing Google accounts with no region are directed to Settings after login.
+
+Internal OAuth service principals share the users table but are not human registrations and are exempt from region selection. Pending human API users receive a usage_region_required response until they complete Settings.
+
+Apply the region migrations before running this version, then restart Rails. Production migration requires explicit authorization for the production database.
 
 ## Working flows
 

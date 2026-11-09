@@ -1,0 +1,13 @@
+{
+  "zh-CN": {
+    "billie": {
+      "google_region": {
+        "heading": "选择使用地区",
+        "intro": "你的 Google 身份已验证。请选择使用地区以完成账户注册。",
+        "continue": "创建账户",
+        "expired": "Google 注册会话已过期，请重新使用 Google 登录。",
+        "invalid": "请从列表中选择地区。"
+      }
+    }
+  }
+}

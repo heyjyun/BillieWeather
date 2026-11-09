@@ -2,6 +2,7 @@ module Finance
   class BaseController < ApplicationController
     layout "billie"
     before_action :authenticate_user!
+    before_action :require_usage_region, unless: -> { controller_name == "settings" }
     before_action :load_finance_profile
     after_action :prevent_financial_page_caching
     after_action :preserve_flash_for_turbo_reload

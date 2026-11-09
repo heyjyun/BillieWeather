@@ -1,0 +1,18 @@
+<% content_for :title, t("billie.google_region.heading") %>
+<section class="bw-auth-wrap">
+  <div class="bw-panel bw-auth-card">
+    <p class="bw-eyebrow">Google</p>
+    <h1><%= t("billie.google_region.heading") %></h1>
+    <p class="bw-muted"><%= t("billie.google_region.intro") %></p>
+    <% if @user.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= @user.errors.full_messages.to_sentence %></div><% end %>
+    <%= form_with model: @user, scope: :user, url: google_region_path, method: :post, data: {turbo: false}, class: "bw-form" do |form| %>
+      <div class="bw-form-field bw-field">
+        <%= form.label :usage_region, t("billie.region.label") %>
+        <%= form.select :usage_region, [[t("billie.region.blank"), "", {disabled: true}]] + usage_region_options, {selected: form.object.usage_region.presence || ""}, {required: true, autocomplete: "country", "aria-describedby": "user_usage_region_help"} %>
+        <small id="user_usage_region_help"><%= t("billie.region.help") %></small>
+      </div>
+      <%= form.submit t("billie.google_region.continue"), class: "bw-button bw-button-dark" %>
+    <% end %>
+    <p class="bw-auth-switch"><%= link_to t("billie.auth.back_to_login"), new_user_session_path %></p>
+  </div>
+</section>

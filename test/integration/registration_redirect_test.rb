@@ -36,7 +36,7 @@ class RegistrationRedirectTest < ActionDispatch::IntegrationTest
   private
 
   def registration_params(email)
-    {user: {first_name: "Alex", last_name: "River", email: email,
+    {user: {first_name: "Alex", last_name: "River", email: email, usage_region: "US",
             password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}}
   end
 end

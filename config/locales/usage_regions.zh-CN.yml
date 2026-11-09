@@ -1,5 +1,3 @@
-# Country/region display names from Unicode CLDR via Intl.DisplayNames.
-# Stored values are the matching ISO codes in UsageRegion::CODES.
 {
   "zh-CN": {
     "usage_regions": {
@@ -50,7 +48,7 @@
       "CK": "库克群岛",
       "CL": "智利",
       "CM": "喀麦隆",
-      "CN": "中国",
+      "CN": "Mainland China",
       "CO": "哥伦比亚",
       "CR": "哥斯达黎加",
       "CU": "古巴",
@@ -97,7 +95,7 @@
       "GU": "关岛",
       "GW": "几内亚比绍",
       "GY": "圭亚那",
-      "HK": "中国香港特别行政区",
+      "HK": "香港",
       "HM": "赫德岛和麦克唐纳群岛",
       "HN": "洪都拉斯",
       "HR": "克罗地亚",
@@ -150,7 +148,7 @@
       "ML": "马里",
       "MM": "缅甸",
       "MN": "蒙古",
-      "MO": "中国澳门特别行政区",
+      "MO": "澳门",
       "MP": "北马里亚纳群岛",
       "MQ": "马提尼克",
       "MR": "毛里塔尼亚",

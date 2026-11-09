@@ -10,17 +10,30 @@ class GoogleSignIn
     end
   end
 
+  class RegionRequired < Error
+    attr_reader :identity
+
+    def initialize(uid:, email:, first_name:, last_name:)
+      # Only the verified identity is retained in the encrypted browser session.
+      # Google access/refresh tokens are never kept while waiting for a region.
+      @identity = {"uid" => uid, "email" => email, "first_name" => first_name, "last_name" => last_name,
+                   "expires_at" => 10.minutes.from_now.to_i}
+      super(I18n.t("billie.google_region.intro"))
+    end
+  end
+
   attr_reader :created
 
   def self.configured?
     ENV["GOOGLE_CLIENT_ID"].to_s.strip.present? && ENV["GOOGLE_CLIENT_SECRET"].to_s.strip.present?
   end
 
-  def initialize(auth:, current_user: nil, allow_signup: true, create_team: true)
+  def initialize(auth:, current_user: nil, allow_signup: true, create_team: true, usage_region: nil)
     @auth = auth
     @current_user = current_user
     @allow_signup = allow_signup
     @create_team = create_team
+    @usage_region = usage_region.to_s.strip.upcase.presence
     @created = false
   end
 
@@ -44,10 +57,17 @@ class GoogleSignIn
     raise Error, I18n.t("billie.auth.google_sign_out_before_signup") if @current_user
     raise Error, I18n.t("billie.auth.registration_unavailable") unless @allow_signup
 
+    unless @usage_region
+      raise RegionRequired.new(uid: @uid, email: @email,
+        first_name: profile_name("first_name", "given_name"), last_name: profile_name("last_name", "family_name"))
+    end
+    raise Error, I18n.t("billie.google_region.invalid") unless UsageRegion::CODES.include?(@usage_region)
+
     user = User.transaction do
       password = Devise.friendly_token(48)
       user = User.create!(email: @email, google_uid: @uid, password: password, password_confirmation: password,
-        first_name: profile_name("first_name", "given_name"), last_name: profile_name("last_name", "family_name"))
+        first_name: profile_name("first_name", "given_name"), last_name: profile_name("last_name", "family_name"),
+        usage_region: @usage_region)
       user.create_default_team if @create_team
       user
     end
@@ -56,6 +76,22 @@ class GoogleSignIn
   rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
     # Concurrent signups must never bind an identity to a different existing user.
     raise Error, I18n.t("billie.auth.google_failed")
+  end
+
+  # Rebuild the minimal auth input only from a short-lived, verified session identity.
+  # The completion controller never accepts identity fields from form parameters.
+  def self.pending_signup_auth(identity)
+    return unless identity.is_a?(Hash) && identity["expires_at"].is_a?(Integer) && identity["expires_at"] > Time.current.to_i
+    return if identity["expires_at"] > 10.minutes.from_now.to_i
+    uid = identity["uid"]
+    email = identity["email"]
+    return unless uid.is_a?(String) && uid.length.between?(1, 255) && !uid.match?(/\s/)
+    return unless email.is_a?(String) && email.length <= 254 && email == email.strip.downcase && Devise.email_regexp.match?(email)
+    return unless %w[first_name last_name].all? { |key| identity[key].is_a?(String) && identity[key].length <= 80 }
+
+    {"provider" => "google_oauth2", "uid" => uid,
+     "info" => {"email" => email, "first_name" => identity["first_name"], "last_name" => identity["last_name"]},
+     "extra" => {"id_info" => {"sub" => uid, "email" => email, "email_verified" => true}}}
   end
 
   # Called only after Devise has authenticated the account's password (and OTP,

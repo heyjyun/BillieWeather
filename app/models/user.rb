@@ -11,7 +11,18 @@ class User < ApplicationRecord
   has_many :finance_bank_accounts, class_name: "Finance::BankAccount", dependent: :destroy
   validates :google_uid, length: {maximum: 255}, uniqueness: true, allow_nil: true
   before_validation :normalize_usage_region
+  after_save { @usage_region_selection_attempted = false }
+  validates :usage_region, presence: true, if: :usage_region_selection_required?
   validates :usage_region, inclusion: {in: UsageRegion::CODES}, allow_nil: true
+
+  def usage_region=(value)
+    @usage_region_selection_attempted = true
+    super
+  end
+
+  def needs_usage_region?
+    platform_agent_of_id.nil? && usage_region.blank?
+  end
 
   # Welcome mail is optional; account creation does not depend on paid email delivery.
   def send_welcome_email
@@ -43,6 +54,13 @@ class User < ApplicationRecord
   private
 
   def normalize_usage_region
-    self.usage_region = usage_region.to_s.strip.upcase.presence
+    self[:usage_region] = usage_region.to_s.strip.upcase.presence
+    self.usage_region_pending = false if usage_region.present?
+  end
+
+  def usage_region_selection_required?
+    # Legacy accounts can authenticate to complete their region. An explicit
+    # blank selection is always rejected, including for those pending accounts.
+    platform_agent_of_id.nil? && (new_record? || !usage_region_pending? || @usage_region_selection_attempted)
   end
 end

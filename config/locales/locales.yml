@@ -2,6 +2,7 @@ locales: &locales
   # This is the canonical list of available languages.
   en: English
   zh-CN: 简体中文
+  zh-TW: 繁體中文
   ja: 日本語
   ko: 한국어
 
@@ -19,6 +20,11 @@ zh-CN:
 ja:
   locale:
     default: 既定
+    locales: *locales
+
+zh-TW:
+  locale:
+    default: 預設
     locales: *locales
 
 ko:

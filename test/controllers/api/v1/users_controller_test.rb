@@ -52,4 +52,17 @@ class Api::V1::UsersControllerTest < Api::Test
     get "/api/v1/users/#{@user.id}", params: {access_token: another_access_token}
     assert_response :not_found
   end
+
+  test "legacy users must select a region before using the API" do
+    @user.update_columns(usage_region: nil, usage_region_pending: true)
+    get "/api/v1/users/#{@user.id}", params: {access_token: access_token}
+    assert_response :unprocessable_entity
+    assert_equal "usage_region_required", response.parsed_body.fetch("error")
+    assert_equal finance_settings_path, response.parsed_body.fetch("settings_path")
+
+    @user.reload.update!(usage_region: "CN")
+    get "/api/v1/users/#{@user.id}", params: {access_token: access_token}
+    assert_response :success
+    assert_equal "CN", response.parsed_body.fetch("usage_region")
+  end
 end

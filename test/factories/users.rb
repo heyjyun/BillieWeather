@@ -10,6 +10,7 @@ FactoryBot.define do
     last_sign_in_ip { "127.0.0.2" }
     time_zone { ActiveSupport::TimeZone.all.first.name }
     locale { nil }
+    usage_region { "US" }
     factory :onboarded_user do
       first_name { "First Name" }
       last_name { "Last Name" }

@@ -137,11 +137,11 @@ class FinanceLocalizedWorkflowTest < ActionDispatch::IntegrationTest
     end
     stub_method(Finance::InsightGenerator, :ai_available?, true) do
       stub_method(Finance::InsightGenerator, :model, "test-model") do
-        %w[en zh-CN ja ko].each { |locale| I18n.with_locale(locale) { generator.call } }
+        %w[en zh-CN zh-TW ja ko].each { |locale| I18n.with_locale(locale) { generator.call } }
       end
     end
-    assert_equal 4, payloads.length
-    %w[English].concat(["Simplified Chinese", "Japanese", "Korean"]).each_with_index do |language, index|
+    assert_equal 5, payloads.length
+    ["English", "Simplified Chinese", "Traditional Chinese", "Japanese", "Korean"].each_with_index do |language, index|
       assert_includes payloads[index].fetch(:instructions), language
       assert_includes payloads[index].fetch(:instructions), "Keep the schema keys unchanged"
       assert_equal Finance::InsightGenerator::OUTPUT_SCHEMA, payloads[index].dig(:text, :format, :schema)

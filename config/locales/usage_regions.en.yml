@@ -1,5 +1,3 @@
-# Country/region display names from Unicode CLDR via Intl.DisplayNames.
-# Stored values are the matching ISO codes in UsageRegion::CODES.
 {
   "en": {
     "usage_regions": {
@@ -50,7 +48,7 @@
       "CK": "Cook Islands",
       "CL": "Chile",
       "CM": "Cameroon",
-      "CN": "China",
+      "CN": "Mainland China",
       "CO": "Colombia",
       "CR": "Costa Rica",
       "CU": "Cuba",
@@ -97,7 +95,7 @@
       "GU": "Guam",
       "GW": "Guinea-Bissau",
       "GY": "Guyana",
-      "HK": "Hong Kong SAR China",
+      "HK": "Hong Kong",
       "HM": "Heard & McDonald Islands",
       "HN": "Honduras",
       "HR": "Croatia",
@@ -150,7 +148,7 @@
       "ML": "Mali",
       "MM": "Myanmar (Burma)",
       "MN": "Mongolia",
-      "MO": "Macao SAR China",
+      "MO": "Macao",
       "MP": "Northern Mariana Islands",
       "MQ": "Martinique",
       "MR": "Mauritania",

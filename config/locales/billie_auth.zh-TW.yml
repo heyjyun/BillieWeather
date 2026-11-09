@@ -1,0 +1,188 @@
+{
+  "zh-TW": {
+    "billie": {
+      "auth": {
+        "home": {
+          "eyebrow": "讓財務一目瞭然",
+          "intro": "匯入銀行帳單，清晰瞭解支出，並檢視直觀的現金流預測。",
+          "dashboard": "進入總覽",
+          "no_bank_login": "無需登入銀行帳戶",
+          "future_bank_sync": "未來如果我們有更多使用者和資金基礎，我們會考慮和銀行合作直接自動化同步所有帳單。",
+          "free_analysis": "免費基礎分析",
+          "art_label": "匯入帳單、核對交易並檢視現金流預測",
+          "outlook": "你的財務展望",
+          "clear_view_html": "清晰掌握<br>每一筆收支。",
+          "in_one_place_html": "帳單、交易與現金流，<br>盡在一處。",
+          "step_import": "匯入帳單",
+          "step_review": "核對交易",
+          "step_forecast": "檢視現金流預測",
+          "real_numbers": "基於你的真實資料",
+          "less_guesswork": "少一些猜測。",
+          "more_room": "多一些規劃。",
+          "clarity": "從帳單到清晰洞察",
+          "what_it_does": "功能介紹",
+          "import_title": "匯入帳單。",
+          "import_description": "上傳銀行的 CSV 或文字型 PDF 帳單，核對每筆交易，並選擇合適的分類。",
+          "spending_title": "瞭解錢花在哪裡。",
+          "spending_description": "在總覽中集中檢視收入、支出、分類和近期交易。",
+          "forecast_title": "預測現金流。",
+          "forecast_description": "設定目前餘額，瞭解近期收支規律持續時餘額可能如何變化。",
+          "one_step": "一步一步，輕鬆開始",
+          "how_it_works": "使用方法",
+          "how_signup": "建立帳戶並登入。",
+          "how_upload": "上傳銀行帳單。",
+          "how_no_bank_login": "無需登入銀行帳戶。",
+          "how_review": "核對匯入的交易。",
+          "how_open": "開啟總覽和預測頁面。",
+          "tax_title": "為報稅做好準備。",
+          "tax_description": "標記需要複核的交易，整理記錄，方便與稅務專業人士溝通。",
+          "analysis_title": "免費基礎分析。",
+          "analysis_description": "隨時生成收支規律的文字總結。基礎分析無需付費 AI 服務。",
+          "disclaimer": "BillieWeather 僅提供財務整理與估算，不提供針對個人的財務、法律或稅務建議。"
+        },
+        "create_an_account": "建立帳戶",
+        "log_in": "登入",
+        "welcome_back": "歡迎回來",
+        "outlook_awaits": "開啓你的財務展望。",
+        "login_description": "登入你的 BillieWeather 工作區。",
+        "email": "電子信箱",
+        "password": "密碼",
+        "remember_me": "保持登入",
+        "authentication_code": "驗證碼（如已啓用）",
+        "new_here": "初次使用 BillieWeather？",
+        "forgot_password": "忘記密碼？",
+        "create_your_account": "建立你的帳戶",
+        "signup_eyebrow": "更清晰的財務展望",
+        "signup_description": "從每一份帳單開始，讓財務逐漸清晰。",
+        "first_name": "名",
+        "last_name": "姓",
+        "unique_password_hint": "請使用至少 %{count} 個字元、且未在其他網站使用過的密碼。",
+        "confirm_password": "確認密碼",
+        "create_account": "建立帳戶",
+        "already_have_account": "已有帳戶？",
+        "reset_password": "重設密碼",
+        "recovery_eyebrow": "重新開啓清晰展望",
+        "reset_description": "輸入帳戶電子信箱，獲取密碼重設連結。",
+        "send_reset_link": "發送重設連結",
+        "back_to_login": "返回登入",
+        "choose_password": "設定新密碼",
+        "fresh_start": "重新開始",
+        "protect_workspace": "使用獨立密碼保護你的財務工作區。",
+        "new_password": "新密碼",
+        "password_hint": "請使用至少 %{count} 個字元。",
+        "confirm_new_password": "確認新密碼",
+        "update_password": "更新密碼",
+        "google_continue": "使用 Google 繼續",
+        "google_unavailable": "Google 登入暫不可用，請使用電子信箱繼續。",
+        "email_continue": "或使用電子信箱繼續",
+        "sign_in": "登入",
+        "recovery_unavailable": "密碼找回功能暫不可用，請稍後重試。",
+        "google_connected": "登入成功，已關聯 Google，今後可使用 Google 登入。",
+        "page_expired": "登入頁面已過期，請重新輸入登入資訊。",
+        "google_signed_in": "已通過 Google 登入。",
+        "google_incomplete": "Google 登入未完成，請重試，或使用電子信箱和密碼登入。",
+        "google_link_required": "此電子信箱已有帳戶，請先使用現有密碼登入一次以關聯 Google。",
+        "google_service_unavailable": "Google 登入暫不可用，請使用電子信箱和密碼登入。",
+        "google_sign_out_first": "使用其他 Google 帳戶前，請先登出。",
+        "google_sign_out_before_signup": "使用其他電子信箱建立帳戶前，請先登出。",
+        "registration_unavailable": "目前不開放新帳戶註冊，請使用受邀帳戶。",
+        "google_failed": "Google 登入未能完成，請重試，或使用現有密碼登入。",
+        "google_unverified_identity": "未收到 Google 驗證的身份資訊，請重試。",
+        "google_unverified_email": "未收到 Google 驗證的電子信箱地址，請重試。",
+        "account_unavailable": "此帳戶目前無法登入，請使用電子信箱登入頁面。",
+        "authentication_code_required": "此帳戶需要驗證碼，請使用電子信箱、密碼和驗證碼登入。",
+        "google_other_account": "此帳戶已關聯其他 Google 帳戶，請使用現有方式登入。"
+      }
+    },
+    "activerecord": {
+      "attributes": {
+        "user": {
+          "email": "電子信箱",
+          "password": "密碼",
+          "password_confirmation": "密碼確認",
+          "first_name": "名",
+          "last_name": "姓",
+          "reset_password_token": "密碼重設令牌",
+          "confirmation_token": "確認令牌",
+          "unlock_token": "解鎖令牌"
+        }
+      }
+    },
+    "errors": {
+      "format": "%{attribute}%{message}",
+      "messages": {
+        "blank": "不能為空",
+        "taken": "已被使用",
+        "invalid": "無效",
+        "confirmation": "與%{attribute}不一致",
+        "too_short": "長度至少為 %{count} 個字元",
+        "too_long": "長度最多為 %{count} 個字元",
+        "not_saved": "儲存失敗",
+        "not_found": "不存在",
+        "already_confirmed": "已確認，請直接登入",
+        "confirmation_period_expired": "需要在 %{period} 內確認，請重新申請",
+        "expired": "已過期，請重新申請",
+        "not_locked": "未被鎖定",
+        "not_a_number": "必須為數字",
+        "pwned_password": "曾在資料洩露中出現，請使用其他密碼"
+      },
+      "attributes": {}
+    },
+    "devise": {
+      "failure": {
+        "already_authenticated": "你已登入。",
+        "inactive": "帳戶尚未激活。",
+        "invalid": "%{authentication_keys}或密碼不正確。",
+        "locked": "帳戶已鎖定。",
+        "last_attempt": "再次登入失敗後，帳戶將被鎖定。",
+        "not_found_in_database": "%{authentication_keys}或密碼不正確。",
+        "timeout": "登入已過期，請重新登入。",
+        "unauthenticated": "請先登入或註冊。",
+        "unconfirmed": "請先確認電子信箱。"
+      },
+      "sessions": {
+        "signed_in": "登入成功。",
+        "signed_out": "已登出。",
+        "already_signed_out": "已登出。",
+        "warn_pwned": "你的密碼曾在資料洩露中出現，建議立即更改密碼。"
+      },
+      "registrations": {
+        "signed_up": "註冊成功，歡迎使用！",
+        "signed_up_but_inactive": "註冊成功，帳戶激活後即可登入。",
+        "signed_up_but_locked": "註冊成功，但帳戶已被鎖定。",
+        "signed_up_but_unconfirmed": "確認郵件已發送，請按郵件中的連結激活帳戶。",
+        "updated": "帳戶資訊已更新。",
+        "update_needs_confirmation": "帳戶資訊已更新，請確認新電子信箱。",
+        "destroyed": "帳戶已刪除。"
+      },
+      "passwords": {
+        "no_token": "請通過密碼重設郵件中的連結開啟此頁面。",
+        "send_instructions": "你將很快收到包含密碼重設說明的郵件。",
+        "send_paranoid_instructions": "如果該電子信箱已註冊，你將收到密碼重設郵件。",
+        "updated": "密碼已更新，你已登入。",
+        "updated_not_active": "密碼已更新。"
+      },
+      "confirmations": {
+        "confirmed": "電子信箱已確認。",
+        "send_instructions": "你將很快收到包含電子信箱確認說明的郵件。",
+        "send_paranoid_instructions": "如果該電子信箱已註冊，你將收到確認郵件。"
+      },
+      "unlocks": {
+        "send_instructions": "你將很快收到包含帳戶解鎖說明的郵件。",
+        "send_paranoid_instructions": "如果該帳戶存在，你將收到解鎖郵件。",
+        "unlocked": "帳戶已解鎖，請登入。"
+      },
+      "omniauth_callbacks": {
+        "failure": "無法通過 %{kind} 登入：%{reason}。",
+        "success": "已通過 %{kind} 登入。"
+      }
+    },
+    "support": {
+      "array": {
+        "words_connector": "、",
+        "two_words_connector": "和",
+        "last_word_connector": "和"
+      }
+    }
+  }
+}

@@ -8,6 +8,7 @@ class Account::Oauth::OmniauthCallbacksController < Devise::OmniauthCallbacksCon
 
   def google_oauth2
     session.delete(:pending_google_identity)
+    session.delete(:pending_google_signup)
     service = GoogleSignIn.new(auth: request.env["omniauth.auth"], current_user: current_user,
       allow_signup: show_sign_up_options?, create_team: session[:invitation_uuid].blank?)
     user = service.call
@@ -16,6 +17,9 @@ class Account::Oauth::OmniauthCallbacksController < Devise::OmniauthCallbacksCon
     user.create_default_team unless user.teams.exists?
     user.send_welcome_email if service.created
     redirect_to after_sign_in_path_for(user), notice: t("billie.auth.google_signed_in")
+  rescue GoogleSignIn::RegionRequired => error
+    session[:pending_google_signup] = error.identity
+    redirect_to new_google_region_path
   rescue GoogleSignIn::LinkRequired => error
     session[:pending_google_identity] = error.identity
     redirect_to new_user_session_path, notice: error.message
@@ -28,6 +32,7 @@ class Account::Oauth::OmniauthCallbacksController < Devise::OmniauthCallbacksCon
     return super unless strategy&.name.to_s == "google_oauth2" || request.path.include?("/google_oauth2")
 
     session.delete(:pending_google_identity)
+    session.delete(:pending_google_signup)
     redirect_to new_user_session_path, alert: t("billie.auth.google_incomplete")
   end
 

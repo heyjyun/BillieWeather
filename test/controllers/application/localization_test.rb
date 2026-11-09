@@ -15,6 +15,10 @@ class ApplicationControllerTest < ActionController::TestCase
       get "locale" => "anonymous#locale"
     end
 
+    # Load real application catalogs before this test narrows the locale list.
+    # Otherwise I18n's lazy loader skips Chinese/Japanese/Korean translations
+    # for the rest of the suite when this test happens to run first.
+    I18n.backend.eager_load!
     @actual_locales = I18n.available_locales
     I18n.available_locales = %w[en es de]
 
@@ -23,6 +27,7 @@ class ApplicationControllerTest < ActionController::TestCase
 
   teardown do
     I18n.available_locales = @actual_locales
+    I18n.reload!
   end
 
   test "team locale is nil, user locale is nil" do

@@ -287,7 +287,7 @@ strong { font-weight: 600; }
 .bw-language-menu:not([open]) .bw-language-switcher { display: none; }
 .bw-language-switcher a[aria-current="true"] { background: var(--bw-mint); color: var(--bw-ink); font-weight: 600; }
 .bw-topbar-actions { display: flex; align-items: center; gap: 18px; }
-html:is([lang="zh-CN"], [lang="ja"], [lang="ko"]) :is(h1, h2, h3) { letter-spacing: 0; }
+html:is([lang="zh-CN"], [lang="zh-TW"], [lang="ja"], [lang="ko"]) :is(h1, h2, h3) { letter-spacing: 0; }
 html[lang="ko"] :is(h1, h2, h3, p) { word-break: keep-all; overflow-wrap: anywhere; }
 @media (max-width: 760px) { .bw-public-header { flex-wrap: wrap; gap: 14px; }.bw-header-actions { flex-wrap: wrap; gap: 10px; }.bw-public-header .bw-header-actions { margin-left: auto; }.bw-topbar-actions { gap: 8px; }.bw-language-menu { font-size: 10px; }.bw-language-switcher a { min-height: 44px; } }
 @media (max-width: 480px) { .bw-public-header .bw-header-actions { width: 100%; justify-content: flex-end; }.bw-public-header .bw-language-menu { margin-right: auto; }.bw-public-header .bw-language-switcher { left: 0; right: auto; }.bw-topbar-actions .bw-topbar-label { display: none; } }

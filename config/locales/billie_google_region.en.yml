@@ -1,0 +1,13 @@
+{
+  "en": {
+    "billie": {
+      "google_region": {
+        "heading": "Choose your usage region",
+        "intro": "Your Google identity is verified. Select a region to finish creating your account.",
+        "continue": "Create account",
+        "expired": "Your Google sign-up session expired. Please sign in with Google again.",
+        "invalid": "Choose a region from the list."
+      }
+    }
+  }
+}

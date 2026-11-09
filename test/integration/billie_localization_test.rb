@@ -109,7 +109,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     end
     catalogs.each do |english_path|
       english = flatten.call(YAML.safe_load_file(english_path).fetch("en"))
-      %w[zh-CN ja ko].each do |locale|
+      %w[zh-CN zh-TW ja ko].each do |locale|
         translated_path = english_path.sub(/\.en\.yml\z/, ".#{locale}.yml")
         assert File.exist?(translated_path), "Missing #{translated_path}"
         translated = flatten.call(YAML.safe_load_file(translated_path).fetch(locale))
@@ -125,14 +125,26 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     end
   end
 
-  %w[ja ko].each do |locale|
+  test "browser detects Traditional Chinese regions and scripts without selecting Simplified Chinese" do
+    {"zh-TW" => "zh-TW", "zh-HK,en;q=0.8" => "zh-TW", "zh-Hant" => "zh-TW",
+     "zh-Hant-TW" => "zh-TW", "zh-Hans" => "zh-CN", "zh-CN" => "zh-CN"}.each do |language, expected|
+      browser = open_session
+      browser.get root_path, headers: {"HTTP_ACCEPT_LANGUAGE" => language}
+      browser.assert_response :success
+      browser.assert_select "html[lang='#{expected}']"
+    end
+  end
+
+  %w[zh-TW ja ko].each do |locale|
     test "#{locale} browser detection authentication and language menu work" do
-      get root_path, headers: {"HTTP_ACCEPT_LANGUAGE" => "#{locale}-#{locale == 'ja' ? 'JP' : 'KR'},en;q=0.8"}
+      language = {"zh-TW" => "zh-TW", "ja" => "ja-JP", "ko" => "ko-KR"}.fetch(locale)
+      get root_path, headers: {"HTTP_ACCEPT_LANGUAGE" => "#{language},en;q=0.8"}
       assert_response :success
       assert_select "html[lang='#{locale}']"
-      assert_select "details.bw-language-menu > summary", text: /#{locale == 'ja' ? '日本語' : '한국어'}/
-      assert_select ".bw-language-switcher a", count: 4
-      %w[en zh-CN ja ko].each { |option| assert_select ".bw-language-switcher a[lang='#{option}']" }
+      label = {"zh-TW" => "繁體中文", "ja" => "日本語", "ko" => "한국어"}.fetch(locale)
+      assert_select "details.bw-language-menu > summary", text: /#{label}/
+      assert_select ".bw-language-switcher a", count: 5
+      %w[en zh-CN zh-TW ja ko].each { |option| assert_select ".bw-language-switcher a[lang='#{option}']" }
 
       get new_user_session_path, params: {locale: locale}
       assert_select "html[lang='#{locale}']"

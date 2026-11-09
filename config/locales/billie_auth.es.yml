@@ -1,0 +1,167 @@
+es:
+  billie:
+    auth:
+      home:
+        eyebrow: TUS FINANZAS, CON CLARIDAD
+        intro: Convierte tus extractos bancarios en una visión clara de tus gastos y una previsión sencilla de tu flujo de caja.
+        dashboard: Ir al panel
+        no_bank_login: No necesitas iniciar sesión en tu banco
+        future_bank_sync: En el futuro, si nuestra base de usuarios crece y conseguimos más financiación, consideraremos colaborar con bancos para sincronizar todos los extractos directamente y de forma automática.
+        free_analysis: Análisis básico gratuito
+        art_label: Importa un extracto, revisa tus transacciones y consulta la previsión de tu flujo de caja
+        outlook: TU PERSPECTIVA FINANCIERA
+        clear_view_html: Una visión clara de<br>tu dinero.
+        in_one_place_html: Tus extractos, transacciones<br>y flujo de caja en un solo lugar.
+        step_import: Importa tus extractos
+        step_review: Revisa tus transacciones
+        step_forecast: Consulta la previsión de tu flujo de caja
+        real_numbers: Basado en tus datos reales
+        less_guesswork: Menos incertidumbre.
+        more_room: Más espacio para planificar.
+        clarity: DE LOS EXTRACTOS A LA CLARIDAD
+        what_it_does: Qué puedes hacer
+        import_title: Importa extractos.
+        import_description: Sube un extracto bancario en CSV o PDF con texto, revisa cada transacción y elige las categorías adecuadas.
+        spending_title: Descubre en qué gastas tu dinero.
+        spending_description: Consulta tus ingresos, gastos, categorías y actividad reciente en un solo panel.
+        forecast_title: Prevé tu flujo de caja.
+        forecast_description: Establece tu saldo actual y consulta cómo podría cambiar si continúan los patrones recientes.
+        one_step: PASO A PASO
+        how_it_works: Cómo funciona
+        how_signup: Crea una cuenta e inicia sesión.
+        how_upload: Sube un extracto bancario.
+        how_no_bank_login: No necesitas iniciar sesión en tu banco.
+        how_review: Revisa las transacciones importadas.
+        how_open: Abre el panel y la previsión.
+        tax_title: Prepárate para la declaración de impuestos.
+        tax_description: Marca las transacciones que necesiten revisión y mantén un registro organizado para compartirlo con tu asesor fiscal.
+        analysis_title: Análisis básico gratuito.
+        analysis_description: Genera un resumen escrito de tus patrones de gasto cuando lo necesites. El análisis básico está disponible sin un servicio de IA de pago.
+        disclaimer: BillieWeather solo ofrece organización financiera y estimaciones. No proporciona asesoramiento financiero, jurídico ni fiscal personalizado.
+      create_an_account: Crear una cuenta
+      log_in: Iniciar sesión
+      welcome_back: TE DAMOS LA BIENVENIDA DE NUEVO
+      outlook_awaits: Tu perspectiva financiera te espera.
+      login_description: Inicia sesión en tu espacio de trabajo de BillieWeather.
+      email: Correo electrónico
+      password: Contraseña
+      remember_me: Mantener la sesión iniciada
+      authentication_code: Código de autenticación (si está activado)
+      new_here: ¿Es tu primera vez en BillieWeather?
+      forgot_password: ¿Olvidaste tu contraseña?
+      create_your_account: Crea tu cuenta
+      signup_eyebrow: UNA PREVISIÓN FINANCIERA MÁS CLARA
+      signup_description: Da claridad a tus finanzas, extracto a extracto.
+      first_name: Nombre
+      last_name: Apellidos
+      unique_password_hint: Usa una contraseña única de al menos %{count} caracteres.
+      confirm_password: Confirmar contraseña
+      create_account: Crear cuenta
+      already_have_account: ¿Ya tienes una cuenta?
+      reset_password: Restablece tu contraseña
+      recovery_eyebrow: RECUPERA UNA PERSPECTIVA MÁS CLARA
+      reset_description: Introduce el correo electrónico de tu cuenta para solicitar un enlace de restablecimiento de contraseña.
+      send_reset_link: Enviar enlace de restablecimiento
+      back_to_login: Volver al inicio de sesión
+      choose_password: Elige una nueva contraseña
+      fresh_start: UN NUEVO COMIENZO
+      protect_workspace: Usa una contraseña única para proteger tu espacio financiero.
+      new_password: Nueva contraseña
+      password_hint: Usa al menos %{count} caracteres.
+      confirm_new_password: Confirmar nueva contraseña
+      update_password: Actualizar contraseña
+      google_continue: Continuar con Google
+      google_unavailable: El inicio de sesión con Google no está disponible en este momento. Usa tu correo electrónico para continuar.
+      email_continue: o continúa con tu correo electrónico
+      sign_in: Iniciar sesión
+      recovery_unavailable: La recuperación de contraseña no está disponible temporalmente. Inténtalo de nuevo más tarde.
+      google_connected: Has iniciado sesión. Google ya está vinculado para futuros accesos.
+      page_expired: Tu página de inicio de sesión ha caducado. Introduce tus datos de nuevo.
+      google_signed_in: Has iniciado sesión con Google.
+      google_incomplete: El inicio de sesión con Google no se ha completado. Inténtalo de nuevo o usa tu correo electrónico y contraseña.
+      google_link_required: Este correo electrónico ya tiene una cuenta. Inicia sesión una vez con tu contraseña actual para vincular Google.
+      google_service_unavailable: El inicio de sesión con Google no está disponible en este momento. Usa tu correo electrónico y contraseña.
+      google_sign_out_first: Cierra la sesión antes de usar otra cuenta de Google.
+      google_sign_out_before_signup: Cierra la sesión antes de crear una cuenta con otro correo electrónico.
+      registration_unavailable: El registro de nuevas cuentas no está disponible. Usa una cuenta con invitación.
+      google_failed: No se ha podido completar el inicio de sesión con Google. Inténtalo de nuevo o inicia sesión con tu contraseña actual.
+      google_unverified_identity: Google no ha devuelto una identidad verificada. Inténtalo de nuevo.
+      google_unverified_email: Google no ha devuelto una dirección de correo electrónico verificada. Inténtalo de nuevo.
+      account_unavailable: Esta cuenta no puede iniciar sesión en este momento. Usa la página de inicio de sesión por correo electrónico.
+      authentication_code_required: Esta cuenta requiere un código de autenticación. Inicia sesión con tu correo electrónico, contraseña y código de autenticación.
+      google_other_account: Esta cuenta está vinculada a otra cuenta de Google. Usa tu método habitual de inicio de sesión.
+  activerecord:
+    attributes:
+      user:
+        email: Correo electrónico
+        password: Contraseña
+        password_confirmation: Confirmación de contraseña
+        first_name: Nombre
+        last_name: Apellidos
+        reset_password_token: Token de restablecimiento de contraseña
+        confirmation_token: Token de confirmación
+        unlock_token: Token de desbloqueo
+  errors:
+    format: '%{attribute} %{message}'
+    messages:
+      blank: no puede estar en blanco
+      taken: ya está en uso
+      invalid: no es válido
+      confirmation: no coincide con %{attribute}
+      too_short: debe tener al menos %{count} caracteres
+      too_long: no puede tener más de %{count} caracteres
+      not_saved: no se ha podido guardar
+      not_found: no se ha encontrado
+      already_confirmed: ya se ha confirmado; inicia sesión
+      confirmation_period_expired: debe confirmarse en un plazo de %{period}; solicita un nuevo enlace
+      expired: ha caducado; solicita uno nuevo
+      not_locked: no está bloqueado
+      not_a_number: debe ser un número
+      pwned_password: ha aparecido en una filtración de datos; usa otra contraseña
+    attributes: {}
+  devise:
+    failure:
+      already_authenticated: Ya has iniciado sesión.
+      inactive: Tu cuenta aún no está activada.
+      invalid: '%{authentication_keys} o contraseña incorrectos.'
+      locked: Tu cuenta está bloqueada.
+      last_attempt: Si el próximo intento falla, tu cuenta se bloqueará.
+      not_found_in_database: '%{authentication_keys} o contraseña incorrectos.'
+      timeout: Tu sesión ha caducado. Inicia sesión de nuevo.
+      unauthenticated: Inicia sesión o regístrate para continuar.
+      unconfirmed: Confirma tu correo electrónico para continuar.
+    sessions:
+      signed_in: Has iniciado sesión.
+      signed_out: Has cerrado la sesión.
+      already_signed_out: Ya has cerrado la sesión.
+      warn_pwned: Tu contraseña ha aparecido en una filtración de datos. Te recomendamos cambiarla de inmediato.
+    registrations:
+      signed_up: ¡Tu cuenta se ha creado! Te damos la bienvenida.
+      signed_up_but_inactive: Tu cuenta se ha creado. Podrás iniciar sesión cuando se active.
+      signed_up_but_locked: Tu cuenta se ha creado, pero está bloqueada.
+      signed_up_but_unconfirmed: Hemos enviado un correo de confirmación. Usa el enlace que contiene para activar tu cuenta.
+      updated: Los datos de tu cuenta se han actualizado.
+      update_needs_confirmation: Los datos de tu cuenta se han actualizado. Confirma tu nueva dirección de correo electrónico.
+      destroyed: Tu cuenta se ha eliminado.
+    passwords:
+      no_token: Abre esta página desde el enlace del correo de restablecimiento de contraseña.
+      send_instructions: Pronto recibirás un correo con instrucciones para restablecer tu contraseña.
+      send_paranoid_instructions: Si ese correo electrónico está registrado, recibirás un correo para restablecer tu contraseña.
+      updated: Tu contraseña se ha actualizado y has iniciado sesión.
+      updated_not_active: Tu contraseña se ha actualizado.
+    confirmations:
+      confirmed: Tu correo electrónico se ha confirmado.
+      send_instructions: Pronto recibirás un correo con instrucciones para confirmar tu dirección de correo electrónico.
+      send_paranoid_instructions: Si ese correo electrónico está registrado, recibirás un correo de confirmación.
+    unlocks:
+      send_instructions: Pronto recibirás un correo con instrucciones para desbloquear tu cuenta.
+      send_paranoid_instructions: Si esa cuenta existe, recibirás un correo para desbloquearla.
+      unlocked: Tu cuenta se ha desbloqueado. Inicia sesión.
+    omniauth_callbacks:
+      failure: 'No se ha podido iniciar sesión con %{kind}: %{reason}.'
+      success: Has iniciado sesión con %{kind}.
+  support:
+    array:
+      words_connector: ', '
+      two_words_connector: ' y '
+      last_word_connector: ' y '

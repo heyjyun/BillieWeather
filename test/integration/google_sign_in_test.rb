@@ -96,14 +96,19 @@ class GoogleSignInTest < ActionDispatch::IntegrationTest
   end
 
   test "a verified new Google identity creates one user and a usable Bullet Train workspace" do
-    assert_difference ["User.count", "Team.count", "Membership.count"], 1 do
+    assert_no_difference ["User.count", "Team.count", "Membership.count"] do
       google_callback
+    end
+    assert_redirected_to new_google_region_path
+    assert_difference ["User.count", "Team.count", "Membership.count"], 1 do
+      post google_region_path, params: {user: {usage_region: "US"}}
     end
     assert_redirected_to finance_dashboard_path
     user = User.find_by!(google_uid: "google-subject-123")
     assert_equal "google-reader@example.com", user.email
     assert_equal "Alex", user.first_name
     assert_equal "River", user.last_name
+    assert_equal "US", user.usage_region
     assert user.current_team
     assert_equal 1, user.teams.count
     assert user.encrypted_password.present?

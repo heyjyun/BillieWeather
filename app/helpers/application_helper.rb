@@ -18,6 +18,8 @@ module ApplicationHelper
     # Failed form submissions may render at a URL without a GET action.
     path = if request.get?
       request.path
+    elsif controller_name == "google_regions"
+      new_google_region_path
     elsif devise_controller?
       case controller_name
       when "registrations" then new_user_registration_path
