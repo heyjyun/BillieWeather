@@ -17,6 +17,7 @@ const K = {
   enabled: "billie.report.enabled",
   queue: "billie.report.queue",
   sent: "billie.report.sent",
+  updatedAt: "billie.report.updatedAt",
   removed: "billie.report.removed",
 };
 
@@ -76,6 +77,8 @@ export interface ReportingStatus {
   pendingRemoval: boolean;
   /** The server confirmed it removed what this device reported. */
   removalConfirmed: boolean;
+  /** "Metadata Last Updated": when the server last accepted a report from this device (this is NOT a sync or a backup). */
+  lastUpdatedAt: string | null;
 }
 
 export function reportingStatus(account: string): ReportingStatus {
@@ -85,7 +88,13 @@ export function reportingStatus(account: string): ReportingStatus {
     enabled: read<Record<string, boolean>>(K.enabled, {})[a] === true,
     pendingRemoval: queue.some((op) => op.account === a),
     removalConfirmed: read<Record<string, boolean>>(K.removed, {})[a] === true,
+    lastUpdatedAt: Object.entries(read<Record<string, string>>(K.updatedAt, {})).filter(([key]) => key.startsWith(`${a}|`)).map(([, at]) => at).sort().at(-1) ?? null,
   };
+}
+
+/** When the server last accepted a report about one database (by its report id), or null. */
+export function metadataUpdatedAt(account: string, databaseId: string | null): string | null {
+  return databaseId ? read<Record<string, string>>(K.updatedAt, {})[sentKey(acct(account), databaseId)] ?? null : null;
 }
 
 const sentKey = (a: string, database: string) => `${a}|${database}`;
@@ -155,6 +164,7 @@ export function reportAll(ctx: ReportContext): Promise<void> {
         if (sent[sentKey(a, id)] === fingerprint) continue; // nothing changed: no request
         await putDatabaseReport(ctx.token, device, id, { ...report, sequence: nextSequence() });
         write(K.sent, { ...read<Record<string, string>>(K.sent, {}), [sentKey(a, id)]: fingerprint });
+        write(K.updatedAt, { ...read<Record<string, string>>(K.updatedAt, {}), [sentKey(a, id)]: new Date().toISOString() });
       }
     } catch {
       // Offline, signed out, or refused: the app carries on and retries at the next trigger.
@@ -171,6 +181,8 @@ export function queueDelete(account: string, databaseId: string | null): void {
   if (!wasReported && !reportingStatus(account).enabled) return; // nothing was ever shared about it
   const { [sentKey(a, databaseId)]: _gone, ...rest } = sent;
   write(K.sent, rest);
+  const { [sentKey(a, databaseId)]: _at, ...updated } = read<Record<string, string>>(K.updatedAt, {});
+  write(K.updatedAt, updated);
   write(K.queue, [...read<Op[]>(K.queue, []), { kind: "delete", account: a, database: databaseId, seq: nextSequence() }]);
 }
 
@@ -187,6 +199,7 @@ export function setReporting(ctx: ReportContext, enabled: boolean): Promise<void
   // removals that were still queued, so those are dropped in its favour.
   const sent = read<Record<string, string>>(K.sent, {});
   write(K.sent, Object.fromEntries(Object.entries(sent).filter(([key]) => !key.startsWith(`${a}|`))));
+  write(K.updatedAt, Object.fromEntries(Object.entries(read<Record<string, string>>(K.updatedAt, {})).filter(([key]) => !key.startsWith(`${a}|`))));
   write(K.queue, [...read<Op[]>(K.queue, []).filter((op) => op.account !== a), { kind: "purge", account: a, seq: nextSequence() }]);
   write(K.removed, { ...read<Record<string, boolean>>(K.removed, {}), [a]: false });
   return reportAll(ctx);

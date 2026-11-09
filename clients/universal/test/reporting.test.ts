@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { importFile } from "../src/services/importFile";
 import { REPORT_FIELDS } from "../src/services/localReport";
-import { queueDelete, reportAll, reportingStatus, setReporting, deviceId, type ReportContext } from "../src/services/reporting";
+import { metadataUpdatedAt, queueDelete, reportAll, reportingStatus, setReporting, deviceId, type ReportContext } from "../src/services/reporting";
 import { API_ORIGIN } from "../src/services/account";
 import { fixtureBytes, newStore } from "./helpers";
 
@@ -44,7 +44,7 @@ async function setup(account = "jyun@example.com") {
 describe("metadata reporting", () => {
   it("is off by default: nothing is sent", async () => {
     const { ctx } = await setup();
-    expect(reportingStatus(ctx.account)).toEqual({ enabled: false, pendingRemoval: false, removalConfirmed: false });
+    expect(reportingStatus(ctx.account)).toEqual({ enabled: false, pendingRemoval: false, removalConfirmed: false, lastUpdatedAt: null });
     await reportAll(ctx);
     expect(calls).toEqual([]);
   });
@@ -161,7 +161,7 @@ describe("metadata reporting", () => {
 
     online = false;
     await setReporting(ctx, false);
-    expect(reportingStatus(ctx.account)).toEqual({ enabled: false, pendingRemoval: true, removalConfirmed: false });
+    expect(reportingStatus(ctx.account)).toEqual({ enabled: false, pendingRemoval: true, removalConfirmed: false, lastUpdatedAt: null });
     await first.setDatabaseName("Changed while off");
     await reportAll(ctx);
     expect(calls).toEqual([]);
@@ -170,7 +170,7 @@ describe("metadata reporting", () => {
     await reportAll(ctx);
     expect(calls.map((c) => c.method)).toEqual(["DELETE"]);
     expect(calls[0].url).toMatch(new RegExp(`^/${deviceId()}\\?sequence=\\d+$`));
-    expect(reportingStatus(ctx.account)).toEqual({ enabled: false, pendingRemoval: false, removalConfirmed: true });
+    expect(reportingStatus(ctx.account)).toEqual({ enabled: false, pendingRemoval: false, removalConfirmed: true, lastUpdatedAt: null });
     calls.length = 0;
     await reportAll(ctx);
     expect(calls).toEqual([]); // still off: nothing is silently resumed
@@ -196,7 +196,7 @@ describe("metadata reporting", () => {
     online = true;
     calls.length = 0;
     const other = { ...ctx, account: "two@example.com" };
-    expect(reportingStatus(other.account)).toEqual({ enabled: false, pendingRemoval: false, removalConfirmed: false });
+    expect(reportingStatus(other.account)).toEqual({ enabled: false, pendingRemoval: false, removalConfirmed: false, lastUpdatedAt: null });
     await reportAll(other);
     expect(calls).toEqual([]);
     expect(reportingStatus(ctx.account).pendingRemoval).toBe(true);
@@ -215,7 +215,7 @@ describe("metadata reporting", () => {
     await setReporting(ctx, true);
     status = 503;
     await setReporting(ctx, false);
-    expect(reportingStatus(ctx.account)).toMatchObject({ pendingRemoval: true, removalConfirmed: false });
+    expect(reportingStatus(ctx.account)).toMatchObject({ pendingRemoval: true, removalConfirmed: false, lastUpdatedAt: null });
   });
 
   it("database ids are random, stable across renames, and new after a database is wiped", async () => {
@@ -235,6 +235,42 @@ describe("metadata reporting", () => {
     const summary = await first.reportSummary();
     expect(Object.keys(summary).sort()).toEqual(["modifiedAt", "name", "periodEnd", "periodStart", "rules", "sizeBytes", "statements", "transactions"]);
     expect(JSON.stringify(summary)).not.toContain("SECRET");
+  });
+
+  it("Metadata Last Updated is recorded per successful report, and cleared when sharing is switched off", async () => {
+    const { ctx } = await setup();
+    expect(reportingStatus(ctx.account).lastUpdatedAt).toBeNull();
+    online = false;
+    await setReporting(ctx, true);
+    expect(reportingStatus(ctx.account).lastUpdatedAt).toBeNull(); // nothing reached the server
+    online = true;
+    await reportAll(ctx);
+    const at = reportingStatus(ctx.account).lastUpdatedAt!;
+    expect(new Date(at).getTime()).toBeGreaterThan(Date.now() - 5000);
+    expect(metadataUpdatedAt(ctx.account, await ctx.databases[0].store.reportId())).toBeTruthy();
+    expect(metadataUpdatedAt(ctx.account, null)).toBeNull();
+    await setReporting(ctx, false);
+    expect(reportingStatus(ctx.account).lastUpdatedAt).toBeNull();
+  });
+
+  it("reporting never syncs or backs up: no sync state changes, and the three kinds of time stay separate", async () => {
+    const { ctx, first } = await setup();
+    await setReporting(ctx, true);
+    expect(await first.lastSyncedAt()).toBeNull();
+    expect(calls.every((c) => c.method === "PUT")).toBe(true);
+    expect(calls.every((c) => /^\/[0-9a-f-]{36}\/databases\/[0-9a-f-]{36}$/.test(c.url))).toBe(true);
+    expect(Object.keys(localStorage).filter((key) => /backup/i.test(key))).toEqual([]);
+  });
+
+  it("reporting code is independent of sync, transfer, upload and backup code (and the other way round)", () => {
+    const src = (file: string) => readFileSync(join(__dirname, "../src/services", file), "utf8");
+    for (const file of ["reporting.ts", "localReport.ts"]) {
+      expect(src(file)).not.toMatch(/from "\.\/(transfer|webSync|cloudUpload|cloudManage|cloudData|importFile)"/);
+      expect(src(file)).not.toMatch(/runTransfer|syncFromWeb|uploadStatement|markSynced|exportData|mergeData/);
+    }
+    for (const file of ["transfer.ts", "cloudUpload.ts", "webSync.ts"]) {
+      expect(src(file)).not.toMatch(/from "\.\/(reporting|localReport)"/);
+    }
   });
 
   it("there is no background timer anywhere in reporting", () => {

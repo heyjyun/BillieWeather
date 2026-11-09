@@ -234,7 +234,8 @@ it("syncs one local database into another: shows what will be added, adds only t
   expect(panel.querySelector('[data-sync-status="to"]')!.textContent).toMatch(/^0 statements · 0 transactions/);
   expect(within(panel).getByText(/nothing is stored in the cloud/)).toBeTruthy();
 
-  await click(within(panel).getByRole("button", { name: "Sync" }));
+  await click(within(panel).getByRole("button", { name: "Sync Now" }));
+  await click(within(panel).getByRole("button", { name: "Confirm Sync" }));
   await screen.findByText("Added 2 statements (3 transactions) to “Work”.");
   expect(fact(card("Work"), "Statements")).toBe("2");
   expect(fact(card("Work"), "Transactions")).toBe("3");
@@ -242,7 +243,7 @@ it("syncs one local database into another: shows what will be added, adds only t
   expect(requests.some((r) => r.method === "POST")).toBe(false); // not ticked: nothing sent to the cloud
 
   await waitFor(() => expect(within(panel).getByText("“Work” already has everything from “Home Mac”.")).toBeTruthy());
-  expect((within(panel).getByRole("button", { name: "Sync" }) as HTMLButtonElement).disabled).toBe(true);
+  expect((within(panel).getByRole("button", { name: "Sync Now" }) as HTMLButtonElement).disabled).toBe(true);
 });
 
 it("refuses to sync a database onto itself", async () => {
@@ -252,7 +253,7 @@ it("refuses to sync a database onto itself", async () => {
   fireEvent.change(screen.getByRole("combobox", { name: "From" }), { target: { value: "1" } });
   fireEvent.change(screen.getByRole("combobox", { name: "To" }), { target: { value: "1" } });
   expect(screen.getByText("Choose two different databases.")).toBeTruthy();
-  expect((within(list("Sync between databases")).getByRole("button", { name: "Sync" }) as HTMLButtonElement).disabled).toBe(true);
+  expect((within(list("Sync between databases")).getByRole("button", { name: "Sync Now" }) as HTMLButtonElement).disabled).toBe(true);
 });
 
 it("with the box ticked, a local-to-local sync also keeps the statements in the cloud", async () => {
@@ -263,7 +264,8 @@ it("with the box ticked, a local-to-local sync also keeps the statements in the 
   fireEvent.change(screen.getByRole("combobox", { name: "To" }), { target: { value: "2" } });
   const panel = list("Sync between databases");
   await click(within(panel).getByRole("checkbox", { name: "Also keep a copy in the cloud" }));
-  await click(within(panel).getByRole("button", { name: "Sync" }));
+  await click(within(panel).getByRole("button", { name: "Sync Now" }));
+  await click(within(panel).getByRole("button", { name: "Confirm Sync" }));
   await screen.findByText(/Added 2 statements \(3 transactions\) to “Work”\. Also saved in the cloud: 1\./);
   const posts = requests.filter((r) => r.method === "POST");
   expect(posts.length).toBe(2); // mine.csv is new to the cloud; web.csv was already there
@@ -280,7 +282,8 @@ it("copies the cloud into a local database, and a local database up to the cloud
   fireEvent.change(screen.getByRole("combobox", { name: "From" }), { target: { value: "cloud" } });
   fireEvent.change(screen.getByRole("combobox", { name: "To" }), { target: { value: "2" } });
   await waitFor(() => expect(within(panel).getByText(/1 new statements \(2 transactions\) will be added to “Work”/)).toBeTruthy());
-  await click(within(panel).getByRole("button", { name: "Sync" }));
+  await click(within(panel).getByRole("button", { name: "Sync Now" }));
+  await click(within(panel).getByRole("button", { name: "Confirm Sync" }));
   await screen.findByText("Added 1 statements (2 transactions) to “Work”.");
   expect(fact(card("Work"), "Transactions")).toBe("2");
   expect(cloud.statements.length).toBe(1); // nothing is ever removed by a sync
@@ -340,4 +343,64 @@ it("deletes one statement from the cloud after confirmation; this device's copy 
   const here = list("Statements in “Home Mac”");
   await waitFor(() => expect(within(here).queryByText("web.csv")).toBeNull());
   expect(within(here).getByText("mine.csv")).toBeTruthy();
+});
+
+it("a sync only starts after a confirmation that names the source, the destination, the data scope and where it travels", async () => {
+  const { requests } = fakeCloud();
+  await openData();
+  await createDatabase("Work");
+  fireEvent.change(screen.getByRole("combobox", { name: "From" }), { target: { value: "1" } });
+  fireEvent.change(screen.getByRole("combobox", { name: "To" }), { target: { value: "2" } });
+  const panel = list("Sync between databases");
+  await waitFor(() => expect(within(panel).getByText(/will be added to “Work”/)).toBeTruthy());
+  await click(within(panel).getByRole("button", { name: "Sync Now" }));
+  const confirm = within(panel).getByRole("group", { name: "Confirm sync" });
+  expect(within(confirm).getByText("From").nextElementSibling!.textContent).toBe("Home Mac");
+  expect(within(confirm).getByText("To").nextElementSibling!.textContent).toBe("Work");
+  expect(within(confirm).getByText("Data scope").nextElementSibling!.textContent).toBe("2 new statements (3 transactions) and remembered rules will be copied. Nothing is deleted from either side.");
+  expect(within(confirm).getByText("Stays on this device. Nothing is sent to the cloud.")).toBeTruthy();
+  expect(fact(card("Work"), "Statements")).toBe("0"); // nothing happened yet
+  await click(within(confirm).getByRole("button", { name: "Cancel" }));
+  expect(within(panel).queryByRole("group", { name: "Confirm sync" })).toBeNull();
+  expect(fact(card("Work"), "Statements")).toBe("0");
+  expect(requests.some((r) => r.method === "POST")).toBe(false);
+});
+
+it("the confirmation says when data is sent to the cloud", async () => {
+  fakeCloud();
+  await openData();
+  await createDatabase("Work");
+  fireEvent.change(screen.getByRole("combobox", { name: "From" }), { target: { value: "1" } });
+  fireEvent.change(screen.getByRole("combobox", { name: "To" }), { target: { value: "cloud" } });
+  const panel = list("Sync between databases");
+  await click(within(panel).getByRole("button", { name: "Sync Now" }));
+  expect(within(panel).getByText("These statements are sent to your BillieWeather cloud account.")).toBeTruthy();
+});
+
+it("Metadata Last Updated, Last Synced and Last Backed Up are separate; only a confirmed sync sets Last Synced; backup is not available", async () => {
+  fakeCloud();
+  await openData();
+  await createDatabase("Work");
+  const home = card("Home Mac");
+  expect(fact(home, "Metadata Last Updated")).toBe("Not shared (reporting is off)");
+  expect(fact(home, "Last Synced")).toBe("Never");
+  expect(fact(home, "Last Backed Up")).toBe("No backups yet");
+  expect(screen.getByText(/Metadata Last Updated only means basic facts about a database/)).toBeTruthy();
+
+  fireEvent.change(screen.getByRole("combobox", { name: "From" }), { target: { value: "1" } });
+  fireEvent.change(screen.getByRole("combobox", { name: "To" }), { target: { value: "2" } });
+  const panel = list("Sync between databases");
+  await click(within(panel).getByRole("button", { name: "Sync Now" }));
+  expect(fact(card("Work"), "Last Synced")).toBe("Never"); // opening the confirmation is not a sync
+  await click(within(panel).getByRole("button", { name: "Confirm Sync" }));
+  await screen.findByText(/Added 2 statements/);
+  await waitFor(() => expect(fact(card("Work"), "Last Synced")).not.toBe("Never"));
+  expect(fact(card("Home Mac"), "Last Synced")).not.toBe("Never");
+  expect(fact(card("Work"), "Metadata Last Updated")).toBe("Not shared (reporting is off)");
+  expect(fact(card("Work"), "Last Backed Up")).toBe("No backups yet");
+
+  const backup = screen.getByRole("heading", { name: /Cloud backup/ }).closest("section")! as HTMLElement;
+  const button = within(backup).getByRole("button", { name: /Back Up Now/ }) as HTMLButtonElement;
+  expect(button.disabled).toBe(true);
+  expect(button.textContent).toContain("Coming Soon");
 });

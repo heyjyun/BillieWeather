@@ -59,6 +59,8 @@ export function Settings() {
           <h2 id="report-heading">{m.report.title}</h2>
           <p>{m.report.body}</p>
           <label className="bw-check"><input type="checkbox" checked={reporting.enabled} onChange={(e) => void reporting.setEnabled(e.target.checked)} /> {m.report.title}</label>
+          <p className="bw-caption" data-fact="metadata">{m.data.metaUpdated}: {reporting.lastUpdatedAt ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(reporting.lastUpdatedAt)) : reporting.enabled ? m.data.metaNotYet : m.data.metaOff}</p>
+          <p className="bw-caption">{m.data.metaNote}</p>
           {reporting.pendingRemoval && <p className="bw-caption" role="status">{m.report.pending}</p>}
           {!reporting.enabled && !reporting.pendingRemoval && reporting.removalConfirmed && <p className="bw-caption" role="status">{m.report.removed}</p>}
         </section>

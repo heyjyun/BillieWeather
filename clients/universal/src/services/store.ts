@@ -281,6 +281,16 @@ export class FinanceStore {
     };
   }
 
+  /** When an explicit "Sync Now" last finished for this database (never set by metadata reporting or the automatic website download). */
+  async lastSyncedAt(): Promise<string | null> {
+    const [row] = await this.db.select<Row>("SELECT value FROM settings WHERE key = $1", ["last_synced_at"]);
+    return row ? String(row.value) : null;
+  }
+
+  async markSynced(): Promise<void> {
+    await this.setSetting("last_synced_at", now());
+  }
+
   /** Size and coverage of this device's database. */
   async databaseInfo(): Promise<{ sizeBytes: number; periodStart: string | null; periodEnd: string | null }> {
     const [pages] = await this.db.select<Row>("SELECT page_count * page_size AS bytes FROM pragma_page_count(), pragma_page_size()");

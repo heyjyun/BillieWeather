@@ -17,6 +17,8 @@ export const sameEndpoint = (a: Endpoint, b: Endpoint) => a.kind === b.kind && (
 export interface TransferContext {
   openStore: (id: string) => Promise<FinanceStore>;
   getToken: () => string | null;
+  /** Called when a transfer involving the cloud finishes, so "Last Synced" can show it. */
+  markCloudSynced?: () => void;
 }
 
 export interface TransferOutcome {
@@ -82,6 +84,11 @@ export async function runTransfer(source: Endpoint, target: Endpoint, keepInClou
     const merged = await (await context.openStore(target.id)).mergeData(data);
     outcome = { statementsAdded: merged.statementsAdded, transactionsAdded: merged.transactionsAdded, skipped: merged.skipped, keptInCloud: 0 };
     if (keepInCloud && source.kind === "local") outcome.keptInCloud = (await sendToCloud(token!, data)).added;
+  }
+  // "Last Synced" is recorded only here, after the person's explicit Sync Now has finished.
+  for (const end of [source, target]) {
+    if (end.kind === "local") await (await context.openStore(end.id)).markSynced();
+    else context.markCloudSynced?.();
   }
   return outcome;
 }

@@ -130,3 +130,24 @@ it("when already on, opening the app reports; creating, renaming and deleting a 
   expect(reports.filter((r) => r.method === "DELETE").length).toBe(1);
   expect(JSON.stringify(reports)).not.toMatch(/amount|description|filename/);
 });
+
+it("reporting sets only Metadata Last Updated: Last Synced and Last Backed Up stay as they were, and no sync or upload request is made", async () => {
+  await openApp();
+  go("Settings");
+  expect(screen.getByText(/^Metadata Last Updated: Not shared \(reporting is off\)/)).toBeTruthy();
+  await act(async () => fireEvent.click(toggle()));
+  await waitFor(() => expect(reports.length).toBe(1));
+  await waitFor(() => expect(screen.queryByText(/Metadata Last Updated: Not shared/)).toBeNull());
+  expect(screen.getByText(/^Metadata Last Updated: [A-Z][a-z]{2} \d/)).toBeTruthy();
+
+  go("Data");
+  await screen.findByRole("heading", { name: "Data", level: 1 });
+  const home = (await screen.findByRole("heading", { name: "Home Mac", level: 2 })).closest("section")! as HTMLElement;
+  const fact = (label: string) => within(home).getByText(label).nextElementSibling!.textContent;
+  await waitFor(() => expect(fact("Metadata Last Updated")).toMatch(/^[A-Z][a-z]{2} \d/));
+  expect(fact("Last Synced")).toBe("Never");
+  expect(fact("Last Backed Up")).toBe("No backups yet");
+  const calls = (fetch as unknown as { mock: { calls: Array<[RequestInfo | URL, RequestInit?]> } }).mock.calls;
+  expect(calls.filter(([, init]) => init?.method === "POST")).toEqual([]);
+  expect(calls.filter(([url, init]) => !String(url).includes("/devices/") && init?.method && init.method !== "GET")).toEqual([]);
+});

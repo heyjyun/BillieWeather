@@ -110,6 +110,10 @@ not set up yet.
   - Reported when the app opens and the person is signed in, and after creating, renaming or deleting a database, or finishing a sync. There is no timer and no background work. Unchanged data is not resent.
   - Offline, everything keeps working. Removals (deleted databases, "stop sharing") are queued in `localStorage` and retried with their original sequence number until the server confirms; the UI says "pending" until then. Per-device sequence numbers make retries and late, older reports harmless on the server (a deleted database stays deleted).
   - Database ids live in each database's `settings` table (`report_id`), stay the same across renames and disappear with the database.
+- **Reporting, sync and backup are three separate things** (never merged in code or UI):
+  - *Metadata Last Updated*: when the server last accepted a metadata report (above). Automatic only if the person switched it on. Moves no financial data. `reporting.ts` and `localReport.ts` import no sync, transfer, upload or backup code (tested).
+  - *Last Synced*: set only when the person presses **Sync Now** on the Data page and then **Confirm Sync**. The confirmation names the source, the destination, the data scope and where the data travels. Metadata reporting never starts a sync, and the automatic website download does not set this.
+  - *Last Backed Up*: cloud backup is **not implemented**. The Data page shows **Back Up Now** disabled with "Coming Soon" and no backup is ever made. When built it must be explicit, encrypted, show size/destination/storage before confirming, and be restorable; it will be independent of reporting and sync.
 - **Migrations**: `src-tauri/migrations/NNNN_*.sql`, applied in order by the SQL plugin. Never
   edit a shipped file; add a new numbered one that migrates data in place. Tests apply the same
   files.

@@ -12,6 +12,7 @@ import { AccountError } from "../services/account";
 import { deleteCloudStatement, fetchCloudStatements, fetchCloudSummary, type CloudStatement, type CloudSummary } from "../services/cloudData";
 import { deleteCloudDatabase, renameCloudDatabase } from "../services/cloudManage";
 import { DATABASE_NAME_MAX, normalizeDatabaseName, StoreError, type StatementInventoryItem } from "../services/store";
+import { metadataUpdatedAt, reportingStatus } from "../services/reporting";
 import { previewTransfer, runTransfer, sameEndpoint, type Endpoint } from "../services/transfer";
 
 type Cloud = { status: "loading" } | { status: "ready"; summary: CloudSummary; statements: CloudStatement[] } | { status: "offline" | "failed" };
@@ -28,7 +29,15 @@ interface LocalDb {
   transactions: number;
   rules: number;
   lastChanged: string | null;
+  /** Three separate facts: metadata reporting, an explicit sync, a backup. Never mixed up. */
+  metadataUpdated: string | null;
+  lastSynced: string | null;
 }
+
+const cloudSyncKey = (email: string) => `billie.sync.cloud.${email.trim().toLowerCase()}`;
+const readCloudSynced = (email: string): string | null => {
+  try { return localStorage.getItem(cloudSyncKey(email)); } catch { return null; }
+};
 
 export function formatBytes(bytes: number, locale: string): string {
   const units = ["B", "KB", "MB", "GB"];
@@ -45,7 +54,8 @@ const endpointOf = (target: Target): Endpoint => (target === "cloud" ? { kind: "
 
 export function Data() {
   const { m, t, locale } = useI18n();
-  const { getToken, expire } = useAccount();
+  const { getToken, expire, account } = useAccount();
+  const email = account?.email ?? "";
   const finance = useFinance();
   const { store, refresh, transactions, syncEnabled, syncNow, persistent, databaseIds, activeDatabaseId, maxDatabases, openStore, switchDatabase, createDatabase, removeDatabase, renameDatabaseById, reportNow } = finance;
   const d = m.data;
@@ -58,6 +68,8 @@ export function Data() {
   const [from, setFrom] = useState<Target | "">("");
   const [to, setTo] = useState<Target | "">("");
   const [keepInCloud, setKeepInCloud] = useState(false);
+  const [confirmingSync, setConfirmingSync] = useState(false);
+  const [cloudSynced, setCloudSynced] = useState<string | null>(() => readCloudSynced(email));
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const num = (value: number) => new Intl.NumberFormat(locale).format(value);
@@ -71,14 +83,15 @@ export function Data() {
     const loaded = await Promise.all(databaseIds.map(async (id): Promise<LocalDb | null> => {
       try {
         const db = await openStore(id);
-        const [info, items, rules, name, lastChanged] = await Promise.all([db.databaseInfo(), db.statementInventory(), db.rules(), db.databaseName(), db.lastChanged()]);
-        return { id, name: name ?? d.unnamed, ...info, items, transactions: items.reduce((sum, item) => sum + item.transactionCount, 0), rules: rules.length, lastChanged };
+        const [info, items, rules, name, lastChanged, reportId, lastSynced] = await Promise.all([db.databaseInfo(), db.statementInventory(), db.rules(), db.databaseName(), db.lastChanged(), db.peekReportId(), db.lastSyncedAt()]);
+        return { id, name: name ?? d.unnamed, ...info, items, transactions: items.reduce((sum, item) => sum + item.transactionCount, 0), rules: rules.length, lastChanged,
+          metadataUpdated: metadataUpdatedAt(email, reportId), lastSynced };
       } catch {
         return null; // a database that was just deleted, or one that can't be opened, is left out
       }
     }));
     setLocals(loaded.filter((db): db is LocalDb => db !== null));
-  }, [databaseIds, openStore, d.unnamed]);
+  }, [databaseIds, openStore, d.unnamed, email]);
   const loadCloud = useCallback(async () => {
     const token = getToken();
     if (!token) return;
@@ -210,7 +223,15 @@ export function Data() {
   const canSync = from !== "" && to !== "" && !same && !busy && (preview === null || preview.statements > 0);
 
   const startSync = () => from !== "" && to !== "" && run(async () => {
-    const outcome = await runTransfer(endpointOf(from), endpointOf(to), keepInCloud && localToLocal, { openStore, getToken });
+    const outcome = await runTransfer(endpointOf(from), endpointOf(to), keepInCloud && localToLocal, {
+      openStore, getToken,
+      markCloudSynced: () => {
+        const stamp = new Date().toISOString();
+        try { localStorage.setItem(cloudSyncKey(email), stamp); } catch { /* shown for this session only */ }
+        setCloudSynced(stamp);
+      },
+    });
+    setConfirmingSync(false);
     const base = outcome.statementsAdded === 0 && outcome.keptInCloud === 0
       ? t("data.syncedNothing", { target: nameOf(to) })
       : t("data.synced", { statements: num(outcome.statementsAdded), transactions: num(outcome.transactionsAdded), target: nameOf(to) });
@@ -266,6 +287,14 @@ export function Data() {
     );
   }
 
+  const reportingOn = reportingStatus(email).enabled;
+  const stateFacts = (updated: "n/a" | string | null, synced: string | null) => (
+    <>
+      {updated !== "n/a" && <div data-fact="metadata"><dt>{d.metaUpdated}</dt><dd>{updated ? when(updated) : reportingOn ? d.metaNotYet : d.metaOff}</dd></div>}
+      <div data-fact="synced"><dt>{d.lastSynced}</dt><dd>{synced ? when(synced) : d.never}</dd></div>
+      <div data-fact="backup"><dt>{d.lastBackedUp}</dt><dd>{d.backupNone}</dd></div>
+    </>
+  );
   const shareFact = (bytes: number) => <div><dt>{d.share}</dt><dd>{percent(bytes)}</dd></div>;
 
   return (
@@ -312,6 +341,7 @@ export function Data() {
                 {cloud.summary.insights > 0 && <div><dt>{d.insights}</dt><dd>{num(cloud.summary.insights)}</dd></div>}
                 <div><dt>{d.dates}</dt><dd>{range(cloud.summary.periodStart, cloud.summary.periodEnd)}</dd></div>
                 <div><dt>{d.lastUpdated}</dt><dd>{when(cloud.summary.lastUpdatedAt)}</dd></div>
+                {stateFacts("n/a", cloudSynced)}
                 <div className="bw-db-where"><dt>{d.where}</dt><dd>{d.whereCloud}</dd></div>
               </dl>
               <div className="bw-db-actions">
@@ -339,6 +369,7 @@ export function Data() {
               <div><dt>{d.rules}</dt><dd>{num(db.rules)}</dd></div>
               <div><dt>{d.dates}</dt><dd>{range(db.periodStart, db.periodEnd)}</dd></div>
               <div><dt>{d.lastUpdated}</dt><dd>{when(db.lastChanged)}</dd></div>
+              {stateFacts(db.metadataUpdated, db.lastSynced)}
               <div className="bw-db-where"><dt>{d.where}</dt><dd>{d.whereDevice}</dd></div>
             </dl>
             <div className="bw-db-actions">
@@ -351,6 +382,7 @@ export function Data() {
         ))}
       </div>
       <p className="bw-caption">{d.multiDevice}</p>
+      <p className="bw-caption">{d.metaNote}</p>
 
       <section className="bw-panel" aria-labelledby="new-db-heading">
         <h2 id="new-db-heading">{d.newDb}</h2>
@@ -374,7 +406,7 @@ export function Data() {
             return (
               <div key={key} className="bw-sync-side">
                 <label className="bw-field"><span>{label}</span>
-                  <select aria-label={label} value={value} disabled={busy} onChange={(e) => set(e.target.value)}>
+                  <select aria-label={label} value={value} disabled={busy} onChange={(e) => { setConfirmingSync(false); set(e.target.value); }}>
                     <option value="">{d.choose}</option>
                     {choices.map((choice) => <option key={choice} value={choice}>{nameOf(choice)}</option>)}
                   </select>
@@ -400,7 +432,28 @@ export function Data() {
         )}
         {localToLocal && !same && <p className="bw-caption">{keepInCloud ? d.keepInCloudOn : d.keepInCloudOff}</p>}
         {to === "cloud" && !same && <p className="bw-caption">{d.toCloudNote}</p>}
-        <button type="button" className="bw-button bw-button-dark" disabled={!canSync} onClick={startSync}>{busy ? d.working : d.sync}</button>
+        {!confirmingSync && <button type="button" className="bw-button bw-button-dark" disabled={!canSync} onClick={() => setConfirmingSync(true)}>{d.syncNow}</button>}
+        {confirmingSync && canSync && from !== "" && to !== "" && (
+          <div className="bw-confirm bw-confirm-sync" role="group" aria-label={d.confirmTitle}>
+            <strong>{d.confirmTitle}</strong>
+            <dl className="bw-db-facts">
+              <div><dt>{d.confirmFrom}</dt><dd>{nameOf(from)}</dd></div>
+              <div><dt>{d.confirmTo}</dt><dd>{nameOf(to)}</dd></div>
+              <div><dt>{d.confirmScope}</dt><dd>{preview ? t("data.scopeNew", { statements: num(preview.statements), transactions: num(preview.transactions) }) : d.scopeUnknown}</dd></div>
+            </dl>
+            <p>{to === "cloud" ? d.routeUp : from === "cloud" ? d.routeDown : keepInCloud ? d.routeLocalKeep : d.routeLocal}</p>
+            <div>
+              <button type="button" className="bw-button bw-button-dark bw-button-small" disabled={busy} onClick={startSync}>{busy ? d.working : d.confirmSync}</button>
+              <button type="button" className="bw-button bw-button-outline bw-button-small" disabled={busy} onClick={() => setConfirmingSync(false)}>{d.cancel}</button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="bw-panel" aria-labelledby="backup-heading">
+        <h2 id="backup-heading">{d.backupTitle} <span className="bw-tag bw-tag-muted">{d.comingSoon}</span></h2>
+        <p className="bw-caption">{d.backupBody}</p>
+        <button type="button" className="bw-button bw-button-outline" disabled aria-disabled="true">{d.backupButton} · {d.comingSoon}</button>
       </section>
 
       <section className="bw-panel" aria-labelledby="list-device">

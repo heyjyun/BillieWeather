@@ -163,9 +163,11 @@
                 <% if report.modified_at %><div><dt><%= t("billie.database.local.modified") %></dt><dd><%= local_report_time(report.modified_at, @user) %></dd></div><% end %>
                 <% if report.opened_at %><div><dt><%= t("billie.database.local.opened") %></dt><dd><%= local_report_time(report.opened_at, @user) %></dd></div><% end %>
                 <div><dt><%= t("billie.database.local.reported") %></dt><dd><%= local_report_time(report.reported_at, @user) %></dd></div>
+                <div><dt><%= t("billie.database.local.synced") %></dt><dd><%= t("billie.database.local.synced_value") %></dd></div>
+                <div><dt><%= t("billie.database.local.backed_up") %></dt><dd><%= t("billie.database.local.backed_up_value") %></dd></div>
               </dl>
               <% if report.stale? %><p class="bw-message bw-message-warn" data-stale><%= t("billie.database.local.stale") %></p><% end %>
-              <p class="bw-caption"><%= t("billie.database.local.notice") %></p>
+              <p class="bw-caption"><%= t("billie.database.local.notice") %> <%= t("billie.database.local.metadata_note") %></p>
             </article>
           <% end %>
         </div>

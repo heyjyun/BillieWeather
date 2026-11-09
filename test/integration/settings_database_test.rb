@@ -125,6 +125,14 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
     assert_empty card.css("form, button, a, input, select"), "no delete, rename, edit, open or sync controls"
     assert_not_includes response.body, "Someone else&#39;s"
     assert_no_match(/Not updated for over 30 days/, card.text)
+    # Three different things, never merged: a metadata report is not a sync and not a backup.
+    labels = card.css("dt").map(&:text)
+    assert_includes labels, "Metadata Last Updated"
+    assert_includes labels, "Last Synced"
+    assert_includes labels, "Last Backed Up"
+    assert_not_includes labels, "Last reported"
+    assert_equal "No backups yet", card.css("div").find { |row| row.at_css("dt")&.text == "Last Backed Up" }.at_css("dd").text
+    assert_includes card.text, "It is not a sync and not a backup."
   end
 
   test "storage keeps cloud and local separate and never counts local bytes as cloud storage" do
@@ -152,7 +160,7 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
     old, fresh = css_select("[data-local-database]").partition { |card| card.at_css("h4").text == "Old one" }.map(&:first)
     assert_includes old.text, "Not updated for over 30 days. Information may be outdated."
     assert_no_match(/Not updated for over 30 days/, fresh.text)
-    assert_includes old.text, "Last reported"
+    assert_includes old.text, "Metadata Last Updated"
   end
 
   test "times are shown in the person's own time zone, with the zone named" do
