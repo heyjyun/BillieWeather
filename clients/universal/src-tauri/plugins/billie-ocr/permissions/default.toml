@@ -1,0 +1,8 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = """
+Allows the on-device OCR command `recognize` (Android: ML Kit bundled model, iOS: Apple Vision).
+On desktop the command exists but always fails with `unsupported_platform`.
+"""
+permissions = ["allow-recognize"]

@@ -1,4 +1,5 @@
 import type { Messages } from "./en";
+import { universalZhTW } from "./universal";
 
 export const zhTW: Messages = {
   languageName: "繁體中文",
@@ -269,4 +270,5 @@ export const zhTW: Messages = {
     columns: ["日期", "帳戶", "商家", "描述", "分類", "金額", "幣別", "待報稅複核", "已排除", "計入統計"],
     yes: "是", no: "否",
   },
+  universal: universalZhTW,
 };

@@ -3,7 +3,7 @@
 // browser preview). Nothing here touches the network.
 import type { Category, Currency, MerchantRule, ParsedStatement, Statement, Transaction } from "@billie/shared-types";
 import { CURRENCIES } from "@billie/shared-types";
-import { aiGroups, Categorizer, categoryNameProblem, CUSTOM_CATEGORY_MAX, isBuiltInCategory, normalizeCategoryName, recategorizeUncategorized, ruleFor, transactionsMatchingRule, type AiGroup, type CategoryNameProblem } from "@billie/finance-core";
+import { aiGroups, Categorizer, categoryNameProblem, CUSTOM_CATEGORY_MAX, isBuiltInCategory, merchantKey, normalizeCategoryName, recategorizeUncategorized, ruleFor, titleizeMerchant, transactionsMatchingRule, type AiGroup, type CategoryNameProblem, type ExistingTransaction, type ImportReport, type ImportTemplate, type PlannedRow, type PlannedStatement } from "@billie/finance-core";
 import { randomId } from "./ids";
 
 export interface SqlDriver {
@@ -261,35 +261,185 @@ export class FinanceStore {
     }
     if (duplicate.length > 0) throw new StoreError("statement_duplicate", "This statement was already imported.");
 
-    const stamp = now();
-    const result = await this.db.execute(
-      "INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-      [input.filename, input.currency, input.sha256, input.parsed.rows.length, input.parsed.closingBalanceCents, input.parsed.closingBalanceOn, stamp],
-    );
-    const statementId = Number(result.lastInsertId);
-    try {
-      for (let start = 0; start < input.parsed.rows.length; start += 100) {
-        const batch = input.parsed.rows.slice(start, start + 100);
-        const params: unknown[] = [];
-        const values = batch.map((row) => {
-          const base = params.length;
-          params.push(statementId, row.bookedOn, row.description, row.amountCents, row.category, row.taxReview ? 1 : 0, row.excluded ? 1 : 0, stamp);
-          return `(${Array.from({ length: 8 }, (_, i) => `$${base + i + 1}`).join(", ")})`;
-        });
-        await this.db.execute(
-          `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at) VALUES ${values.join(", ")}`,
-          params,
-        );
-      }
-      if (!existingCurrency) await this.db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ($1, $2)", ["currency", input.currency]);
-    } catch (error) {
-      await this.db.execute("DELETE FROM transactions WHERE statement_id = $1", [statementId]);
-      await this.db.execute("DELETE FROM statements WHERE id = $1", [statementId]);
-      throw error;
-    }
+    const rows: PlannedRow[] = input.parsed.rows.map((row, index) => ({
+      bookedOn: row.bookedOn, postedOn: null, description: row.description, normalizedMerchant: titleizeMerchant(merchantKey(row.description)),
+      amountCents: row.amountCents, currency: input.currency, direction: row.amountCents < 0 ? "debit" : row.amountCents > 0 ? "credit" : "zero",
+      balanceCents: null, bankReference: null, accountKey: null, category: row.category, categorySource: "auto", taxReview: row.taxReview, pending: false,
+      kindHints: "", sourceRef: `row:${index + 1}`, confidence: 100, validationStatus: "verified", raw: "{}",
+    }));
+    const statementId = await this.commitStaged({
+      filename: input.filename, currency: input.currency, sha256: input.sha256, sourceSha256: input.sha256, batchId: randomId(),
+      closingBalanceCents: input.parsed.closingBalanceCents, closingBalanceOn: input.parsed.closingBalanceOn, rows,
+    });
     // Like Rails: newer rules also clean up older Uncategorized rows.
     const recategorized = await this.applyCategories(recategorizeUncategorized(await this.transactions(), await this.rules()));
     return { statementId, recategorized };
+  }
+
+  /**
+   * Writes one statement and all its rows atomically: rows go to `import_staging_rows` first
+   * (invisible to every reader), then a single INSERT of the statement fires the
+   * `statements_commit_staged` trigger (migration 0004), which moves exactly
+   * `transaction_count` rows into `transactions` or aborts the whole INSERT. A failure or crash at
+   * any point leaves no statement and no transactions; leftover staging rows are cleared next time.
+   */
+  private async commitStaged(input: {
+    filename: string; currency: string; sha256: string; sourceSha256: string; batchId: string; closingBalanceCents: number | null; closingBalanceOn: string | null;
+    rows: PlannedRow[]; account?: PlannedStatement["account"]; format?: string; openingBalanceCents?: number | null; openingBalanceOn?: string | null; report?: ImportReport;
+  }): Promise<number> {
+    const stamp = now();
+    // Staging rows older than an hour belong to an import that never finished.
+    await this.db.execute("DELETE FROM import_staging_rows WHERE staging_key = $1 OR staged_at < $2", [input.sha256, new Date(Date.now() - 3_600_000).toISOString()]);
+    try {
+      const columns = 22;
+      for (let start = 0; start < input.rows.length; start += 50) {
+        const batch = input.rows.slice(start, start + 50);
+        const params: unknown[] = [];
+        const values = batch.map((row, offset) => {
+          const base = params.length;
+          params.push(input.sha256, start + offset, row.bookedOn, row.description, row.amountCents, row.category, row.taxReview ? 1 : 0, row.postedOn, row.normalizedMerchant,
+            row.currency, row.direction, row.balanceCents, row.bankReference, row.accountKey, row.categorySource, row.pending ? 1 : 0, row.kindHints || null, row.sourceRef,
+            row.confidence, row.validationStatus, row.raw, stamp);
+          return `(${Array.from({ length: columns }, (_, i) => `$${base + i + 1}`).join(", ")})`;
+        });
+        await this.db.execute(
+          `INSERT INTO import_staging_rows (staging_key, position, booked_on, description, amount_cents, category, tax_review, posted_on, normalized_merchant, currency, direction,
+            balance_cents, bank_reference, account_key, category_source, pending, kind_hints, source_ref, parse_confidence, validation_status, source_raw, staged_at) VALUES ${values.join(", ")}`,
+          params,
+        );
+      }
+      const result = await this.db.execute(
+        `INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at, import_batch_id, source_sha256, source_format,
+          account_key, institution, account_last4, account_kind, opening_balance_cents, opening_balance_on, import_report) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+        [input.filename, input.currency, input.sha256, input.rows.length, input.closingBalanceCents, input.closingBalanceOn, stamp, input.batchId, input.sourceSha256,
+          input.format ?? null, input.account?.key ?? null, input.account?.institution ?? null, input.account?.last4 ?? null, input.account?.kind ?? "unknown",
+          input.openingBalanceCents ?? null, input.openingBalanceOn ?? null, input.report ? JSON.stringify(input.report) : null],
+      );
+      return Number(result.lastInsertId);
+    } catch (error) {
+      await this.db.execute("DELETE FROM import_staging_rows WHERE staging_key = $1", [input.sha256]).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  /**
+   * Commits a confirmed universal-import plan: one statement per account, each atomic. All
+   * statements of one file share `batchId`, so the whole import can be reversed together.
+   * If a later account fails, the earlier ones of the same batch are removed again.
+   */
+  async commitImport(plan: readonly PlannedStatement[], hashes: readonly string[]): Promise<{ batchId: string; statementIds: number[]; transactions: number; recategorized: number }> {
+    const deviceCurrency = await this.currency();
+    for (const statement of plan) {
+      if (!(CURRENCIES as readonly string[]).includes(statement.currency)) throw new StoreError("unsupported_currency", "That currency is not supported.");
+      if (deviceCurrency && deviceCurrency !== statement.currency) {
+        throw new StoreError("currency_mismatch", `This device keeps statements in ${deviceCurrency}. Delete local data to switch currency.`, { currency: deviceCurrency });
+      }
+    }
+    const fileHashes = await this.importedFileHashes();
+    if (plan.some((statement) => fileHashes.has(statement.sourceSha256)) || hashes.some((hash) => fileHashes.has(hash))) {
+      throw new StoreError("statement_duplicate", "This statement was already imported.");
+    }
+    const batchId = randomId();
+    const statementIds: number[] = [];
+    try {
+      for (const [index, statement] of plan.entries()) {
+        statementIds.push(await this.commitStaged({
+          filename: statement.filename, currency: statement.currency, sha256: hashes[index], sourceSha256: statement.sourceSha256, batchId, rows: statement.rows,
+          closingBalanceCents: statement.closingBalanceCents, closingBalanceOn: statement.closingBalanceOn, account: statement.account, format: statement.format,
+          openingBalanceCents: statement.openingBalanceCents, openingBalanceOn: statement.openingBalanceOn, report: statement.report,
+        }));
+      }
+    } catch (error) {
+      for (const id of statementIds) {
+        await this.db.execute("DELETE FROM transactions WHERE statement_id = $1", [id]);
+        await this.db.execute("DELETE FROM statements WHERE id = $1", [id]);
+      }
+      if ((await this.db.select<Row>("SELECT 1 FROM statements LIMIT 1")).length === 0) await this.db.execute("DELETE FROM settings WHERE key = $1", ["currency"]);
+      throw error;
+    }
+    const recategorized = await this.applyCategories(recategorizeUncategorized(await this.transactions(), await this.rules()));
+    return { batchId, statementIds, transactions: plan.reduce((sum, statement) => sum + statement.rows.length, 0), recategorized };
+  }
+
+  /** File hashes already imported (the original file's hash, also for multi-account files). */
+  async importedFileHashes(): Promise<Set<string>> {
+    const rows = await this.db.select<Row>("SELECT sha256, source_sha256 FROM statements");
+    return new Set(rows.flatMap((row) => [String(row.sha256), ...(row.source_sha256 ? [String(row.source_sha256)] : [])]));
+  }
+
+  /** What duplicate detection compares against. */
+  async dedupeIndex(): Promise<ExistingTransaction[]> {
+    const rows = await this.db.select<Row>("SELECT id, booked_on, amount_cents, description, account_key, bank_reference FROM transactions");
+    return rows.map((row) => ({
+      id: Number(row.id), bookedOn: String(row.booked_on), amountCents: Number(row.amount_cents), description: String(row.description),
+      accountKey: (row.account_key as string | null) ?? null, bankReference: (row.bank_reference as string | null) ?? null,
+    }));
+  }
+
+  /** Imports on this device, newest first, with their reports. Legacy imports have no report. */
+  async importHistory(): Promise<Array<{ batchId: string | null; statementIds: number[]; filename: string; importedAt: string; format: string | null; transactionCount: number; accounts: string[]; reports: ImportReport[]; source: "local" | "web" }>> {
+    const rows = await this.db.select<Row>("SELECT * FROM statements ORDER BY imported_at DESC, id DESC");
+    const result: Awaited<ReturnType<FinanceStore["importHistory"]>> = [];
+    const groups = new Map<string, (typeof result)[number]>();
+    for (const row of rows) {
+      const batch = (row.import_batch_id as string | null) ?? null;
+      const key = batch ?? `statement:${row.id}`;
+      let entry = groups.get(key);
+      if (!entry) {
+        entry = { batchId: batch, statementIds: [], filename: String(row.filename), importedAt: String(row.imported_at), format: (row.source_format as string | null) ?? null,
+          transactionCount: 0, accounts: [], reports: [], source: row.source === "web" ? "web" : "local" };
+        groups.set(key, entry);
+        result.push(entry);
+      }
+      entry.statementIds.push(Number(row.id));
+      entry.transactionCount += Number(row.transaction_count);
+      if (row.account_last4) entry.accounts.push(`${row.institution ? `${String(row.institution)} ` : ""}…${String(row.account_last4)}`);
+      if (row.import_report) {
+        try {
+          entry.reports.push(JSON.parse(String(row.import_report)) as ImportReport);
+        } catch {
+          // A damaged report is ignored; the transactions are unaffected.
+        }
+      }
+    }
+    return result;
+  }
+
+  /** Reverses one import: removes exactly its statements and their transactions, nothing else. */
+  async reverseImport(statementIds: readonly number[]): Promise<number> {
+    let removed = 0;
+    for (const id of statementIds) {
+      const [count] = await this.db.select<Row>("SELECT COUNT(*) AS n FROM transactions WHERE statement_id = $1", [id]);
+      await this.removeStatement(id);
+      removed += Number(count?.n ?? 0);
+    }
+    return removed;
+  }
+
+  async templates(): Promise<ImportTemplate[]> {
+    const rows = await this.db.select<Row>("SELECT body FROM import_templates ORDER BY name COLLATE NOCASE");
+    return rows.flatMap((row) => {
+      try {
+        return [JSON.parse(String(row.body)) as ImportTemplate];
+      } catch {
+        return [];
+      }
+    });
+  }
+
+  async saveTemplate(template: ImportTemplate): Promise<void> {
+    const name = normalizeDatabaseName(template.name).slice(0, 80);
+    if (!name) throw new StoreError("invalid_name", "Give this template a name.");
+    const body = JSON.stringify({ ...template, name });
+    await this.db.execute(
+      `INSERT INTO import_templates (id, name, institution, fingerprint, body, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $6)
+       ON CONFLICT (id) DO UPDATE SET name = excluded.name, institution = excluded.institution, fingerprint = excluded.fingerprint, body = excluded.body, updated_at = excluded.updated_at`,
+      [template.id, name, template.institution, template.fingerprint, body, now()],
+    );
+  }
+
+  async deleteTemplate(id: string): Promise<void> {
+    await this.db.execute("DELETE FROM import_templates WHERE id = $1", [id]);
   }
 
   /**
@@ -302,7 +452,7 @@ export class FinanceStore {
     if (!row) throw new StoreError("not_found", "Transaction not found.");
     const transaction = toTransaction(row);
     await this.applyCategories([{ id, category }]);
-    await this.db.execute("UPDATE transactions SET locally_modified = 1 WHERE id = $1", [id]);
+    await this.db.execute("UPDATE transactions SET locally_modified = 1, category_source = 'user' WHERE id = $1", [id]);
     if (!remember) return 0;
     const rule = ruleFor(transaction, category);
     if (!rule) return 0;
@@ -327,7 +477,7 @@ export class FinanceStore {
    * (preferences, not financial data), unless `forgetName` clears those too.
    */
   async deleteAllData(options: { forgetName?: boolean } = {}): Promise<void> {
-    for (const table of ["transactions", "statements", "merchant_rules", "custom_categories"]) await this.db.execute(`DELETE FROM ${table}`);
+    for (const table of ["transactions", "statements", "merchant_rules", "custom_categories", "import_staging_rows", "import_templates"]) await this.db.execute(`DELETE FROM ${table}`);
     if (options.forgetName) await this.db.execute("DELETE FROM settings");
     else await this.db.execute("DELETE FROM settings WHERE key NOT IN ($1, $2)", ["web_sync_enabled", "database_name"]);
     // Reclaim freed pages so deleted rows do not linger in the database file.

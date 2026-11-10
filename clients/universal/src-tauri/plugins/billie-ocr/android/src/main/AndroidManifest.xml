@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      Privacy: ML Kit's bundled text model runs on-device, but ML Kit (com.google.mlkit:common)
+      depends on Google Data Transport (com.google.android.datatransport:transport-runtime and
+      transport-backend-cct), which can upload ML Kit usage/diagnostic events to Google.
+
+      The component names below were checked against the AndroidManifest.xml inside the published
+      AARs (transport-backend-cct 2.3.3, the version com.google.mlkit:common:18.11.0 requests,
+      and 5.0.0): transport-backend-cct registers its uploader ("cct" backend) as this meta-data
+      on the TransportBackendDiscovery service. Removing that meta-data leaves the transport
+      runtime with no backend, so events are never sent. This is NOT documented by Google as an
+      opt-out (there is no official ML Kit telemetry switch); it is a manifest-level workaround.
+
+      TODO(verify on device, not done):
+        1. Build the app and confirm the merged manifest
+           (app/build/intermediates/merged_manifest/<variant>/.../AndroidManifest.xml) no longer
+           contains "CctBackendFactory". Library-manifest removal markers apply to lower-priority
+           (dependency) manifests; if it is still present, move this block into the app manifest
+           (src-tauri/gen/android/app/src/main/AndroidManifest.xml).
+        2. Run OCR with network capture (e.g. mitmproxy / PCAPdroid) and confirm no requests to
+           firebaselogging-pa.googleapis.com / play.googleapis.com/log or similar.
+        3. Re-check after every ML Kit / datatransport upgrade: new components may appear.
+      The scheduler service/receiver (JobInfoSchedulerService, AlarmManagerSchedulerBroadcastReceiver)
+      are intentionally left in place; removing them is not needed once no backend exists.
+    -->
+    <application>
+        <service
+            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+            tools:node="merge">
+            <meta-data
+                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+                tools:node="remove" />
+        </service>
+    </application>
+</manifest>

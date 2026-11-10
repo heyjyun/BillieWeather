@@ -106,9 +106,16 @@ it("signs in, works with local data, switches language, and signs out", async ()
   nav("Import");
   const input = document.querySelector<HTMLInputElement>('input[type="file"]')!;
   await act(async () => upload(input, "basic-amount.csv", fixtureBytes("basic-amount.csv")));
-  await screen.findByText(/basic-amount\.csv: 9 transactions imported, closing balance \$3,448\.65\./);
+  // Reading a file crosses real async boundaries (hashing, decoding); let React apply the result.
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+  // Every file is previewed first; nothing is saved until the person confirms.
+  await act(async () => fireEvent.click(await screen.findByRole("button", { name: "Import 9 transactions" }, { timeout: 8000 })));
+  await screen.findByText("basic-amount.csv: 9 transactions imported, 0 skipped, 0 could not be imported.");
   expect(screen.getByText("web-checking.csv").parentElement!.textContent).toContain("From website");
-  await act(async () => upload(input, "basic-amount.csv", fixtureBytes("basic-amount.csv")));
+  // The preview replaced the file picker while it was open, so pick the (new) input again.
+  const again = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  await act(async () => upload(again, "basic-amount.csv", fixtureBytes("basic-amount.csv")));
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
   await screen.findByText(/basic-amount\.csv: This statement has already been imported|basic-amount\.csv: .*already/i);
 
   nav("Dashboard");

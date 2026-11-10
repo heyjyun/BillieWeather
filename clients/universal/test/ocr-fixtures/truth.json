@@ -1,0 +1,518 @@
+{
+ "ambiguous-columns.png": {
+  "currency": "USD",
+  "opening": 100000,
+  "rows": [
+   {
+    "amountMinor": 250000,
+    "balanceMinor": 350000,
+    "date": "2026-03-02",
+    "description": "Payroll ACME"
+   },
+   {
+    "amountMinor": -575,
+    "balanceMinor": 349425,
+    "date": "2026-03-03",
+    "description": "Coffee Corner"
+   },
+   {
+    "amountMinor": -165000,
+    "balanceMinor": 184425,
+    "date": "2026-03-05",
+    "description": "Rent Oak Street"
+   },
+   {
+    "amountMinor": -8234,
+    "balanceMinor": 176191,
+    "date": "2026-03-09",
+    "description": "Grocery Mart"
+   },
+   {
+    "amountMinor": 4500,
+    "balanceMinor": 180691,
+    "date": "2026-03-14",
+    "description": "Refund Shoe Store"
+   },
+   {
+    "amountMinor": -12099,
+    "balanceMinor": 168592,
+    "date": "2026-03-18",
+    "description": "Electric Utility"
+   },
+   {
+    "amountMinor": -40000,
+    "balanceMinor": 128592,
+    "date": "2026-03-22",
+    "description": "Transfer to savings"
+   },
+   {
+    "amountMinor": 12,
+    "balanceMinor": 128604,
+    "date": "2026-03-27",
+    "description": "Interest"
+   }
+  ],
+  "variant": "amounts between debit and credit"
+ },
+ "multipage": {
+  "currency": "USD",
+  "opening": 100000,
+  "pages": [
+   "multipage-1.png",
+   "multipage-2.png"
+  ],
+  "rows": [
+   {
+    "amountMinor": 250000,
+    "balanceMinor": 350000,
+    "date": "2026-03-02",
+    "description": "Payroll ACME"
+   },
+   {
+    "amountMinor": -575,
+    "balanceMinor": 349425,
+    "date": "2026-03-03",
+    "description": "Coffee Corner"
+   },
+   {
+    "amountMinor": -165000,
+    "balanceMinor": 184425,
+    "date": "2026-03-05",
+    "description": "Rent Oak Street"
+   },
+   {
+    "amountMinor": -8234,
+    "balanceMinor": 176191,
+    "date": "2026-03-09",
+    "description": "Grocery Mart"
+   },
+   {
+    "amountMinor": 4500,
+    "balanceMinor": 180691,
+    "date": "2026-03-14",
+    "description": "Refund Shoe Store"
+   },
+   {
+    "amountMinor": -12099,
+    "balanceMinor": 168592,
+    "date": "2026-03-18",
+    "description": "Electric Utility"
+   },
+   {
+    "amountMinor": -40000,
+    "balanceMinor": 128592,
+    "date": "2026-03-22",
+    "description": "Transfer to savings"
+   },
+   {
+    "amountMinor": 12,
+    "balanceMinor": 128604,
+    "date": "2026-03-27",
+    "description": "Interest"
+   }
+  ]
+ },
+ "scanned-statement.pdf": {
+  "currency": "USD",
+  "opening": 100000,
+  "pages": [
+   "multipage-1.png",
+   "multipage-2.png"
+  ],
+  "rows": [
+   {
+    "amountMinor": 250000,
+    "balanceMinor": 350000,
+    "date": "2026-03-02",
+    "description": "Payroll ACME"
+   },
+   {
+    "amountMinor": -575,
+    "balanceMinor": 349425,
+    "date": "2026-03-03",
+    "description": "Coffee Corner"
+   },
+   {
+    "amountMinor": -165000,
+    "balanceMinor": 184425,
+    "date": "2026-03-05",
+    "description": "Rent Oak Street"
+   },
+   {
+    "amountMinor": -8234,
+    "balanceMinor": 176191,
+    "date": "2026-03-09",
+    "description": "Grocery Mart"
+   },
+   {
+    "amountMinor": 4500,
+    "balanceMinor": 180691,
+    "date": "2026-03-14",
+    "description": "Refund Shoe Store"
+   },
+   {
+    "amountMinor": -12099,
+    "balanceMinor": 168592,
+    "date": "2026-03-18",
+    "description": "Electric Utility"
+   },
+   {
+    "amountMinor": -40000,
+    "balanceMinor": 128592,
+    "date": "2026-03-22",
+    "description": "Transfer to savings"
+   },
+   {
+    "amountMinor": 12,
+    "balanceMinor": 128604,
+    "date": "2026-03-27",
+    "description": "Interest"
+   }
+  ]
+ },
+ "us-blurred.png": {
+  "currency": "USD",
+  "opening": 100000,
+  "rows": [
+   {
+    "amountMinor": 250000,
+    "balanceMinor": 350000,
+    "date": "2026-03-02",
+    "description": "Payroll ACME"
+   },
+   {
+    "amountMinor": -575,
+    "balanceMinor": 349425,
+    "date": "2026-03-03",
+    "description": "Coffee Corner"
+   },
+   {
+    "amountMinor": -165000,
+    "balanceMinor": 184425,
+    "date": "2026-03-05",
+    "description": "Rent Oak Street"
+   },
+   {
+    "amountMinor": -8234,
+    "balanceMinor": 176191,
+    "date": "2026-03-09",
+    "description": "Grocery Mart"
+   },
+   {
+    "amountMinor": 4500,
+    "balanceMinor": 180691,
+    "date": "2026-03-14",
+    "description": "Refund Shoe Store"
+   },
+   {
+    "amountMinor": -12099,
+    "balanceMinor": 168592,
+    "date": "2026-03-18",
+    "description": "Electric Utility"
+   },
+   {
+    "amountMinor": -40000,
+    "balanceMinor": 128592,
+    "date": "2026-03-22",
+    "description": "Transfer to savings"
+   },
+   {
+    "amountMinor": 12,
+    "balanceMinor": 128604,
+    "date": "2026-03-27",
+    "description": "Interest"
+   }
+  ],
+  "variant": "blur"
+ },
+ "us-debit-credit.png": {
+  "currency": "USD",
+  "opening": 100000,
+  "rows": [
+   {
+    "amountMinor": 250000,
+    "balanceMinor": 350000,
+    "date": "2026-03-02",
+    "description": "Payroll ACME"
+   },
+   {
+    "amountMinor": -575,
+    "balanceMinor": 349425,
+    "date": "2026-03-03",
+    "description": "Coffee Corner"
+   },
+   {
+    "amountMinor": -165000,
+    "balanceMinor": 184425,
+    "date": "2026-03-05",
+    "description": "Rent Oak Street"
+   },
+   {
+    "amountMinor": -8234,
+    "balanceMinor": 176191,
+    "date": "2026-03-09",
+    "description": "Grocery Mart"
+   },
+   {
+    "amountMinor": 4500,
+    "balanceMinor": 180691,
+    "date": "2026-03-14",
+    "description": "Refund Shoe Store"
+   },
+   {
+    "amountMinor": -12099,
+    "balanceMinor": 168592,
+    "date": "2026-03-18",
+    "description": "Electric Utility"
+   },
+   {
+    "amountMinor": -40000,
+    "balanceMinor": 128592,
+    "date": "2026-03-22",
+    "description": "Transfer to savings"
+   },
+   {
+    "amountMinor": 12,
+    "balanceMinor": 128604,
+    "date": "2026-03-27",
+    "description": "Interest"
+   }
+  ]
+ },
+ "us-rotated-90.png": {
+  "currency": "USD",
+  "opening": 100000,
+  "rows": [
+   {
+    "amountMinor": 250000,
+    "balanceMinor": 350000,
+    "date": "2026-03-02",
+    "description": "Payroll ACME"
+   },
+   {
+    "amountMinor": -575,
+    "balanceMinor": 349425,
+    "date": "2026-03-03",
+    "description": "Coffee Corner"
+   },
+   {
+    "amountMinor": -165000,
+    "balanceMinor": 184425,
+    "date": "2026-03-05",
+    "description": "Rent Oak Street"
+   },
+   {
+    "amountMinor": -8234,
+    "balanceMinor": 176191,
+    "date": "2026-03-09",
+    "description": "Grocery Mart"
+   },
+   {
+    "amountMinor": 4500,
+    "balanceMinor": 180691,
+    "date": "2026-03-14",
+    "description": "Refund Shoe Store"
+   },
+   {
+    "amountMinor": -12099,
+    "balanceMinor": 168592,
+    "date": "2026-03-18",
+    "description": "Electric Utility"
+   },
+   {
+    "amountMinor": -40000,
+    "balanceMinor": 128592,
+    "date": "2026-03-22",
+    "description": "Transfer to savings"
+   },
+   {
+    "amountMinor": 12,
+    "balanceMinor": 128604,
+    "date": "2026-03-27",
+    "description": "Interest"
+   }
+  ],
+  "variant": "rotated 90"
+ },
+ "us-signed-amount.jpg": {
+  "currency": "USD",
+  "opening": 50000,
+  "rows": [
+   {
+    "amountMinor": 180000,
+    "balanceMinor": 230000,
+    "date": "2026-04-01",
+    "description": "Salary"
+   },
+   {
+    "amountMinor": -2399,
+    "balanceMinor": 227601,
+    "date": "2026-04-02",
+    "description": "Bookshop"
+   },
+   {
+    "amountMinor": -1250,
+    "balanceMinor": 226351,
+    "date": "2026-04-04",
+    "description": "Pharmacy"
+   },
+   {
+    "amountMinor": -4510,
+    "balanceMinor": 221841,
+    "date": "2026-04-06",
+    "description": "Gas Station"
+   },
+   {
+    "amountMinor": -6300,
+    "balanceMinor": 215541,
+    "date": "2026-04-11",
+    "description": "Restaurant"
+   },
+   {
+    "amountMinor": -3500,
+    "balanceMinor": 212041,
+    "date": "2026-04-15",
+    "description": "Phone bill"
+   }
+  ]
+ },
+ "us-skew-3.png": {
+  "currency": "USD",
+  "opening": 100000,
+  "rows": [
+   {
+    "amountMinor": 250000,
+    "balanceMinor": 350000,
+    "date": "2026-03-02",
+    "description": "Payroll ACME"
+   },
+   {
+    "amountMinor": -575,
+    "balanceMinor": 349425,
+    "date": "2026-03-03",
+    "description": "Coffee Corner"
+   },
+   {
+    "amountMinor": -165000,
+    "balanceMinor": 184425,
+    "date": "2026-03-05",
+    "description": "Rent Oak Street"
+   },
+   {
+    "amountMinor": -8234,
+    "balanceMinor": 176191,
+    "date": "2026-03-09",
+    "description": "Grocery Mart"
+   },
+   {
+    "amountMinor": 4500,
+    "balanceMinor": 180691,
+    "date": "2026-03-14",
+    "description": "Refund Shoe Store"
+   },
+   {
+    "amountMinor": -12099,
+    "balanceMinor": 168592,
+    "date": "2026-03-18",
+    "description": "Electric Utility"
+   },
+   {
+    "amountMinor": -40000,
+    "balanceMinor": 128592,
+    "date": "2026-03-22",
+    "description": "Transfer to savings"
+   },
+   {
+    "amountMinor": 12,
+    "balanceMinor": 128604,
+    "date": "2026-03-27",
+    "description": "Interest"
+   }
+  ],
+  "variant": "skew 3"
+ },
+ "zh-cn.png": {
+  "currency": "CNY",
+  "opening": 300000,
+  "rows": [
+   {
+    "amountMinor": 850000,
+    "balanceMinor": 1150000,
+    "date": "2026-03-01",
+    "description": "工资 代发"
+   },
+   {
+    "amountMinor": -3550,
+    "balanceMinor": 1146450,
+    "date": "2026-03-02",
+    "description": "美团外卖"
+   },
+   {
+    "amountMinor": -420000,
+    "balanceMinor": 726450,
+    "date": "2026-03-04",
+    "description": "房租"
+   },
+   {
+    "amountMinor": -18620,
+    "balanceMinor": 707830,
+    "date": "2026-03-08",
+    "description": "超市购物"
+   },
+   {
+    "amountMinor": 2990,
+    "balanceMinor": 710820,
+    "date": "2026-03-12",
+    "description": "退款"
+   },
+   {
+    "amountMinor": -21550,
+    "balanceMinor": 689270,
+    "date": "2026-03-20",
+    "description": "电费"
+   }
+  ]
+ },
+ "zh-tw.png": {
+  "currency": "HKD",
+  "opening": 120000,
+  "rows": [
+   {
+    "amountMinor": 420000,
+    "balanceMinor": 540000,
+    "date": "2026-05-02",
+    "description": "薪資轉入"
+   },
+   {
+    "amountMinor": -8800,
+    "balanceMinor": 531200,
+    "date": "2026-05-03",
+    "description": "便利商店"
+   },
+   {
+    "amountMinor": -19800,
+    "balanceMinor": 511400,
+    "date": "2026-05-06",
+    "description": "電話費"
+   },
+   {
+    "amountMinor": -35600,
+    "balanceMinor": 475800,
+    "date": "2026-05-10",
+    "description": "餐廳"
+   },
+   {
+    "amountMinor": 12000,
+    "balanceMinor": 487800,
+    "date": "2026-05-15",
+    "description": "退貨退款"
+   },
+   {
+    "amountMinor": -150000,
+    "balanceMinor": 337800,
+    "date": "2026-05-21",
+    "description": "保險費"
+   }
+  ]
+ }
+}

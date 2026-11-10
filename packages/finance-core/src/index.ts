@@ -8,3 +8,4 @@ export * from "./period";
 export * from "./rules";
 export * from "./snapshot";
 export * from "./spending";
+export * from "./universal";

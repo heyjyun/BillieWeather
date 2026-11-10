@@ -1,4 +1,5 @@
 import type { Messages } from "./en";
+import { universalZhCN } from "./universal";
 
 export const zhCN: Messages = {
   languageName: "简体中文",
@@ -269,4 +270,5 @@ export const zhCN: Messages = {
     columns: ["日期", "账户", "商户", "描述", "分类", "金额", "币种", "待报税复核", "已排除", "计入统计"],
     yes: "是", no: "否",
   },
+  universal: universalZhCN,
 };

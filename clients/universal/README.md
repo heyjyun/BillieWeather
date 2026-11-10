@@ -32,7 +32,7 @@ Requirements: Node 24 and npm. Desktop builds also need Rust (`cargo`).
 ```sh
 cd clients/universal
 npm install          # isolated from the Rails app's yarn install
-npm test             # 120 tests: Ruby parity, SQLite storage, sign-in + full UI workflow, translations, privacy guards
+npm test             # 370 tests (real OCR engines included where available): Ruby parity, universal import, SQLite storage, sign-in + full UI workflow, translations, privacy guards
 npm run typecheck
 npm run dev          # browser preview at http://localhost:1420 (in-memory, nothing saved)
 npm run desktop:dev  # the real app window, signing in to http://localhost:3000
@@ -96,6 +96,12 @@ not set up yet.
 - **Languages**:
   - English, 简体中文, 繁體中文, 日本語, 한국어 and Español, detected from the device and saved to the account.
   - Import error messages, PDF review warnings and the PDF review page text are copied from the Rails translations with `npm run sync:translations`.
+- **Universal import** (CSV, TSV, Excel `.xlsx`, OFX/QFX) is read on the device by `packages/finance-core/src/universal`
+  (see its README) and always shown as a preview first: settings that change results (date order, decimal separator,
+  currency, credit-card signs, unclear encodings, a bank template whose columns changed) must be chosen, rows that need a
+  decision must be decided, and only then can the person import. Overlapping statements are detected per account;
+  each import is written atomically (migration `0004`) and can be undone from Import history. Photos and scanned
+  statements are read by an **on-device OCR engine** (see *On-device OCR* below).
 - **PDF statements** are read on the device with pdf.js (`src/services/pdfText.ts`, loaded only when a PDF is imported).
   Rows are extracted by `packages/finance-core/src/pdf.ts`, a port of Rails' `PdfStatementExtractor`. A PDF where every
   amount has a clear sign and the year is known is imported straight away; otherwise it opens a review (correct or leave
@@ -123,6 +129,43 @@ not set up yet.
 - **Migrations**: `src-tauri/migrations/NNNN_*.sql`, applied in order by the SQL plugin. Never
   edit a shipped file; add a new numbered one that migrates data in place. Tests apply the same
   files.
+
+### On-device OCR (photos and scanned PDFs)
+
+Every engine returns the same `OcrResult` contract (`packages/finance-core/src/universal/ocr.ts`: lines, words, boxes in
+upright-page pixels, confidence, engine id/version, page errors, unsupported capabilities) and feeds the same layout,
+validation, preview and import pipeline as CSV. Text PDFs keep the text extractor; only pages without a usable text layer
+are rendered locally (pdf.js, ~300 dpi, at most 24 MP per page) and sent to OCR as images, in page order.
+
+| Platform | Engine | Status (2026-11-09, this Mac) |
+|---|---|---|
+| macOS | Apple Vision (`src-tauri/ocr-apple/BillieVisionOCR.swift`, linked by `build.rs`, command in `src/ocr.rs`) | Compiled into the app; FFI tested by `cargo test`; real images tested (`test/ocr/appleVision.real.test.ts`, also with networking denied by `sandbox-exec`) |
+| Web (browsers) | Tesseract 5 WebAssembly via tesseract.js 7, assets served from the app origin (`/ocr/`, `vite.config.ts`) | Real images and an image-only PDF tested in Chromium with all non-local hosts blocked and offline after first use (`test/ocr/browser.real.test.ts`) |
+| Windows | Same bundled Tesseract WebAssembly engine inside WebView2 (Chromium) | Not built or run on Windows. The Chromium test is the closest evidence. |
+| iOS | Apple Vision via `src-tauri/plugins/billie-ocr` (shares the Swift file) | Written; **not compiled** (no full Xcode here) |
+| Android | ML Kit Text Recognition v2, bundled Chinese+Latin model, via `src-tauri/plugins/billie-ocr` | Written; **not compiled** (no JDK / Android SDK here). Telemetry removal in the manifest is unverified. |
+
+Financial safety: OCR confidence is shown but never trusted on its own. An OCR row is only "ready" when the statement's own
+balances prove its amount and direction (previous balance + amount = printed balance, or printed opening + rows = printed
+closing); every other row needs a decision, and the original page is shown beside the rows with the row highlighted.
+Unreadable amounts are rejected, never repaired; missing pages must be acknowledged; repeated page headers are skipped
+visibly; a line printed twice with the same balance is flagged. Tesseract cannot tell Simplified from Traditional Chinese,
+so it returns both readings and the person chooses the script (amounts and dates are identical in both).
+
+Privacy: no image, recognized text or financial value leaves the device. Apple Vision runs locally (language correction
+off, so amounts are never "corrected"). The Tesseract worker loads only `/ocr/worker.min.js`, `/ocr/core/*-lstm.wasm.js`
+(WASM embedded) and `/ocr/lang/{eng,chi_sim,chi_tra}.traineddata.gz`; the adapter refuses to start without these local
+paths, so tesseract.js's jsDelivr defaults can never be used. The CSP gained `connect-src 'self'` (the app bundle only).
+Only `location: "device"` engines can be registered.
+
+First use in a browser downloads about 17 MB of OCR files from the same origin (one 3.7 MB core is used, chosen by SIMD
+support, plus 6 MB of models); `public/ocr-sw.js` caches those files (and nothing else) so OCR then works offline. The
+installed apps bundle them. Licences: tesseract.js and tesseract.js-core Apache-2.0; models from tessdata (Apache-2.0)
+packaged by @tesseract.js-data (MIT); Apple Vision and ML Kit are platform/SDK components under their vendors' terms.
+
+Tests regenerate nothing at run time: synthetic statements (`test/ocr-fixtures/`, made by `generate.py`) have ground truth
+in `truth.json`; each real-engine test prints recall, field accuracy and review rate and asserts that no row is ever
+marked ready with a wrong date, amount or direction.
 
 ### Encryption at rest — designed, **not implemented**
 

@@ -1,0 +1,24 @@
+[package]
+name = "tauri-plugin-billie-ocr"
+version = "0.1.0"
+description = "On-device OCR for BillieWeather on Android (ML Kit Text Recognition v2, bundled) and iOS (Apple Vision)"
+edition = "2021"
+rust-version = "1.77.2"
+publish = false
+# Required by Tauri for plugins with Android/iOS code: the tauri-plugin build helper uses the
+# `links` key to hand the native project paths to the app's build script.
+links = "tauri-plugin-billie-ocr"
+build = "build.rs"
+exclude = ["/android/build", "/android/.tauri", "/ios/.build", "/ios/.tauri"]
+
+[lib]
+name = "tauri_plugin_billie_ocr"
+path = "src/lib.rs"
+
+[dependencies]
+tauri = { version = "2", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }

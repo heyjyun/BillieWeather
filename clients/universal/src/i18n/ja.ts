@@ -1,4 +1,5 @@
 import type { Messages } from "./en";
+import { universalJa } from "./universal";
 
 export const ja: Messages = {
   languageName: "日本語",
@@ -269,4 +270,5 @@ export const ja: Messages = {
     columns: ["日付", "口座", "店名", "内容", "カテゴリ", "金額", "通貨", "税務確認", "除外", "集計対象"],
     yes: "はい", no: "いいえ",
   },
+  universal: universalJa,
 };

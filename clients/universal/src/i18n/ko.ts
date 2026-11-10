@@ -1,4 +1,5 @@
 import type { Messages } from "./en";
+import { universalKo } from "./universal";
 
 export const ko: Messages = {
   languageName: "한국어",
@@ -269,4 +270,5 @@ export const ko: Messages = {
     columns: ["날짜", "계좌", "가맹점", "내용", "분류", "금액", "통화", "세무 검토", "제외", "합계 포함"],
     yes: "예", no: "아니요",
   },
+  universal: universalKo,
 };

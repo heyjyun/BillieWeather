@@ -73,6 +73,10 @@ it("adds a category, categorizes with AI after consent, and manages the category
   const file = new File([bytes as BlobPart], "basic-amount.csv", { type: "text/csv" });
   Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
   await act(async () => fireEvent.change(input, { target: { files: [file] } }));
+  // Reading a file crosses real async boundaries (hashing, decoding); let React apply the result.
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+  // Every file is previewed first; nothing is saved until the person confirms.
+  await act(async () => fireEvent.click(await screen.findByRole("button", { name: "Import 9 transactions" }, { timeout: 8000 })));
   await screen.findByText(/9 transactions imported/);
 
   // Where the money goes: the dashboard splits spending by category and links to each one's details.
@@ -166,6 +170,10 @@ it("explains a server without AI and an offline device, and changes nothing", as
   const file = new File([bytes as BlobPart], "basic-amount.csv", { type: "text/csv" });
   Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
   await act(async () => fireEvent.change(input, { target: { files: [file] } }));
+  // Reading a file crosses real async boundaries (hashing, decoding); let React apply the result.
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+  // Every file is previewed first; nothing is saved until the person confirms.
+  await act(async () => fireEvent.click(await screen.findByRole("button", { name: "Import 9 transactions" }, { timeout: 8000 })));
   await screen.findByText(/9 transactions imported/);
 
   nav("Categories");

@@ -1,4 +1,5 @@
 import type { Messages } from "./en";
+import { universalEs } from "./universal";
 
 export const es: Messages = {
   languageName: "Español",
@@ -269,4 +270,5 @@ export const es: Messages = {
     columns: ["Fecha", "Cuenta", "Comercio", "Descripción", "Categoría", "Importe", "Moneda", "Revisión fiscal", "Excluido", "Cuenta en totales"],
     yes: "Sí", no: "No",
   },
+  universal: universalEs,
 };

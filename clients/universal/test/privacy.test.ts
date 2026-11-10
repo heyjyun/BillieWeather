@@ -139,11 +139,24 @@ describe("data isolation", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("the base Content Security Policy allows only the local IPC bridge", () => {
+  it("the base Content Security Policy allows only the local IPC bridge and the app's own bundled files", () => {
     const config = JSON.parse(readFileSync(join(ROOT, "src-tauri/tauri.conf.json"), "utf8"));
     const csp: string = config.app.security.csp;
-    expect((/connect-src ([^;]+)/.exec(csp)?.[1].trim().split(/\s+/) ?? []).sort()).toEqual(["http://ipc.localhost", "ipc:"]);
+    // 'self' is the app bundle itself: the on-device OCR worker loads its WASM core and models from it.
+    expect((/connect-src ([^;]+)/.exec(csp)?.[1].trim().split(/\s+/) ?? []).sort()).toEqual(["'self'", "http://ipc.localhost", "ipc:"]);
+    expect(csp).not.toMatch(/jsdelivr|unpkg|cdn|https:\/\/(?!ipc)/i);
     expect(csp).toMatch(/default-src 'self'/);
+  });
+
+  it("OCR assets are local files only and the Tesseract engine refuses to run without local paths", async () => {
+    const source = readFileSync(join(ROOT, "vite.config.ts"), "utf8");
+    const assets = source.slice(source.indexOf("export const OCR_ASSETS"), source.indexOf("function ocrAssets"));
+    expect(assets).not.toMatch(/https?:\/\//);
+    const engine = readFileSync(join(ROOT, "src/services/ocr/tesseractEngine.ts"), "utf8");
+    expect(engine).toMatch(/workerBlobURL: false/);
+    expect(engine).not.toMatch(/https?:\/\//);
+    const { tesseractEngine } = await import("../src/services/ocr/tesseractEngine");
+    expect(() => tesseractEngine({ workerPath: "", corePath: "", langPath: "", cacheMethod: "none" })).toThrow(/CDN/);
   });
 
   it("builds add exactly one origin — the BillieWeather server — and only over https", async () => {
@@ -151,7 +164,7 @@ describe("data isolation", () => {
     const { apiOrigin, cspWithOrigin } = await import("../scripts/tauri.mjs");
     const config = JSON.parse(readFileSync(join(ROOT, "src-tauri/tauri.conf.json"), "utf8"));
     const csp = cspWithOrigin(config.app.security.csp, apiOrigin("https://billieweather.example.com/some/path"));
-    expect((/connect-src ([^;]+)/.exec(csp)?.[1].trim().split(/\s+/) ?? []).sort()).toEqual(["http://ipc.localhost", "https://billieweather.example.com", "ipc:"]);
+    expect((/connect-src ([^;]+)/.exec(csp)?.[1].trim().split(/\s+/) ?? []).sort()).toEqual(["'self'", "http://ipc.localhost", "https://billieweather.example.com", "ipc:"]);
     expect(apiOrigin(undefined)).toBe("http://localhost:3000");
     expect(() => apiOrigin("http://billieweather.example.com")).toThrow(/https/);
   });

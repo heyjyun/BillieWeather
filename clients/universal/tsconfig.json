@@ -20,5 +20,5 @@
       "@billie/reporting": ["../../packages/reporting/src/index.ts"]
     }
   },
-  "include": ["src", "test", "vite.config.ts", "../../packages/*/src", "../../packages/*/test"]
+  "include": ["src", "test", "e2e", "vite.config.ts", "../../packages/*/src", "../../packages/*/test"]
 }

@@ -55,17 +55,18 @@ describe("custom categories", () => {
     const SQL = await initSqlJs();
     const db = new SQL.Database();
     migrate(db, 2);
-    const store = new FinanceStore(sqljsDriver(db));
-    await importFile(store, fixtureBytes("basic-amount.csv"), "b.csv", "USD");
-    const aws = await byDescription(store, "AMAZON WEB SERVICES AWS.AMAZON.CO");
-    await store.setCategory(aws.id, "Business", true);
-    db.run("UPDATE transactions SET remote_id = 77, locally_modified = 1 WHERE id = ?", [aws.id]);
-    const before = { transactions: await store.transactions(), rules: await store.rules(), raw: db.exec("SELECT * FROM transactions ORDER BY id")[0].values };
+    // Data as a version-2 app wrote it (today's store code always runs on a fully migrated database).
+    db.run("INSERT INTO statements (id, filename, currency, sha256, transaction_count, imported_at) VALUES (1, 'b.csv', 'USD', ?, 2, '2026-01-01T00:00:00Z')", ["a".repeat(64)]);
+    db.run("INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, remote_id, locally_modified) VALUES (1, '2026-01-02', 'AMAZON WEB SERVICES AWS.AMAZON.CO', -1299, 'Business', 1, 0, 'x', 77, 1), (1, '2026-01-03', 'Coffee', -500, 'Food & dining', 0, 0, 'x', NULL, 0)");
+    db.run("INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ('amazon web', 0, 'Business', 'x')");
+    const before = { transactions: db.exec("SELECT * FROM transactions ORDER BY id")[0].values, rules: db.exec("SELECT * FROM merchant_rules")[0].values };
 
+    migrate(db, 3);
+    expect(db.exec("SELECT * FROM transactions ORDER BY id")[0].values).toEqual(before.transactions);
+    expect(db.exec("SELECT * FROM merchant_rules")[0].values).toEqual(before.rules);
     migrate(db);
-    expect(await store.transactions()).toEqual(before.transactions);
-    expect(await store.rules()).toEqual(before.rules);
-    expect(db.exec("SELECT * FROM transactions ORDER BY id")[0].values).toEqual(before.raw);
+    const store = new FinanceStore(sqljsDriver(db));
+    const aws = await byDescription(store, "AMAZON WEB SERVICES AWS.AMAZON.CO");
     await store.addCategory("Cloud");
     await store.setCategory(aws.id, "Cloud", true);
     expect((await byDescription(store, aws.description)).category).toBe("Cloud");

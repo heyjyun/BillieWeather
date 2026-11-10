@@ -1,5 +1,7 @@
 // English is the reference dictionary: every other language must have exactly these keys
 // (checked by TypeScript and by test/i18n.test.ts). Use {name} for interpolation.
+import { universalEn } from "./universal";
+
 export const en = {
   languageName: "English",
   boot: { opening: "Opening your local data…", dbError: "The local database could not be opened." },
@@ -269,6 +271,7 @@ export const en = {
     columns: ["Date", "Account", "Merchant", "Description", "Category", "Amount", "Currency", "Tax review", "Excluded", "Counted in totals"],
     yes: "Yes", no: "No",
   },
+  universal: universalEn,
 };
 
 type Widen<T> = T extends string ? string : T extends readonly string[] ? string[] : { [K in keyof T]: Widen<T[K]> };

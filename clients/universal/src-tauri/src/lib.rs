@@ -1,4 +1,5 @@
 mod device;
+mod ocr;
 mod session;
 
 use tauri_plugin_sql::{Migration, MigrationKind};
@@ -37,6 +38,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0003_custom_categories.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 4,
+            description: "universal import schema",
+            sql: include_str!("../migrations/0004_universal_import.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -51,8 +58,11 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_billie_ocr::init())
         .invoke_handler(tauri::generate_handler![
             device::device_name,
+            ocr::ocr_capabilities,
+            ocr::ocr_recognize_image,
             session::session_load,
             session::session_save,
             session::session_clear
