@@ -3,7 +3,7 @@
 // browser preview). Nothing here touches the network.
 import type { Category, Currency, MerchantRule, ParsedStatement, Statement, Transaction } from "@billie/shared-types";
 import { CURRENCIES } from "@billie/shared-types";
-import { aiGroups, Categorizer, categoryNameProblem, CUSTOM_CATEGORY_MAX, isBuiltInCategory, merchantKey, normalizeCategoryName, normalizeRegion, recategorizeUncategorized, ruleFor, titleizeMerchant, transactionsMatchingRule, type AiGroup, type CategoryNameProblem, type ExistingTransaction, type ImportReport, type ImportTemplate, type PlannedRow, type PlannedStatement } from "@billie/finance-core";
+import { aiGroups, Categorizer, categoryNameProblem, CUSTOM_CATEGORY_MAX, isBuiltInCategory, merchantKey, normalizeCategoryName, normalizeRegion, normalizeRegionSource, parseDetection, recategorizeUncategorized, serializeDetection, type RegionDetection, type RegionSource, ruleFor, titleizeMerchant, transactionsMatchingRule, type AiGroup, type CategoryNameProblem, type ExistingTransaction, type ImportReport, type ImportTemplate, type PlannedRow, type PlannedStatement } from "@billie/finance-core";
 import { randomId } from "./ids";
 
 export interface SqlDriver {
@@ -29,6 +29,16 @@ export class StoreError extends Error {
 }
 
 type Row = Record<string, unknown>;
+
+/** How an import's region was decided and what detection found (finance-core regionDetect.ts). */
+export interface RegionMeta {
+  /** Defaults to "user" when a region is given, null otherwise. */
+  source?: RegionSource | null;
+  detection?: RegionDetection | null;
+}
+
+/** The source stored with a region: none without a region; a region without a source was selected by a person. */
+const regionSourceFor = (region: string | null, source: RegionSource | null | undefined): RegionSource | null => (region ? source ?? "user" : null);
 const now = () => new Date().toISOString();
 
 const toStatement = (row: Row): Statement => ({
@@ -251,7 +261,7 @@ export class FinanceStore {
    * one device keeps one currency. If inserting rows fails part-way, everything written
    * for this statement is removed again.
    */
-  async importStatement(input: { filename: string; currency: Currency; sha256: string; parsed: ParsedStatement; region?: string | null }): Promise<{ statementId: number; recategorized: number }> {
+  async importStatement(input: { filename: string; currency: Currency; sha256: string; parsed: ParsedStatement; region?: string | null; regionMeta?: RegionMeta }): Promise<{ statementId: number; recategorized: number }> {
     if (!(CURRENCIES as readonly string[]).includes(input.currency)) throw new StoreError("unsupported_currency", "That currency is not supported.");
     const existingCurrency = await this.currency();
     if (existingCurrency && existingCurrency !== input.currency) {
@@ -276,7 +286,7 @@ export class FinanceStore {
     }));
     const statementId = await this.commitStaged({
       filename: input.filename, currency: input.currency, sha256: input.sha256, sourceSha256: input.sha256, batchId: randomId(),
-      closingBalanceCents: input.parsed.closingBalanceCents, closingBalanceOn: input.parsed.closingBalanceOn, rows, region,
+      closingBalanceCents: input.parsed.closingBalanceCents, closingBalanceOn: input.parsed.closingBalanceOn, rows, region, regionMeta: input.regionMeta,
     });
     // Like Rails: newer rules also clean up older Uncategorized rows.
     const recategorized = await this.applyCategories(recategorizeUncategorized(await this.transactions(), await this.rules()));
@@ -294,7 +304,10 @@ export class FinanceStore {
     filename: string; currency: string; sha256: string; sourceSha256: string; batchId: string; closingBalanceCents: number | null; closingBalanceOn: string | null;
     rows: PlannedRow[]; account?: PlannedStatement["account"]; format?: string; openingBalanceCents?: number | null; openingBalanceOn?: string | null; report?: ImportReport;
     region?: string | null;
+    regionMeta?: RegionMeta;
   }): Promise<number> {
+    const region = normalizeRegion(input.region);
+    const detection = input.regionMeta?.detection ?? null;
     const stamp = now();
     // Staging rows older than an hour belong to an import that never finished.
     await this.db.execute("DELETE FROM import_staging_rows WHERE staging_key = $1 OR staged_at < $2", [input.sha256, new Date(Date.now() - 3_600_000).toISOString()]);
@@ -318,10 +331,12 @@ export class FinanceStore {
       }
       const result = await this.db.execute(
         `INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at, import_batch_id, source_sha256, source_format,
-          account_key, institution, account_last4, account_kind, opening_balance_cents, opening_balance_on, import_report, region) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+          account_key, institution, account_last4, account_kind, opening_balance_cents, opening_balance_on, import_report, region,
+          region_source, detected_region, region_confidence, region_evidence) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)`,
         [input.filename, input.currency, input.sha256, input.rows.length, input.closingBalanceCents, input.closingBalanceOn, stamp, input.batchId, input.sourceSha256,
           input.format ?? null, input.account?.key ?? null, input.account?.institution ?? null, input.account?.last4 ?? null, input.account?.kind ?? "unknown",
-          input.openingBalanceCents ?? null, input.openingBalanceOn ?? null, input.report ? JSON.stringify(input.report) : null, normalizeRegion(input.region)],
+          input.openingBalanceCents ?? null, input.openingBalanceOn ?? null, input.report ? JSON.stringify(input.report) : null, region,
+          regionSourceFor(region, input.regionMeta?.source), detection?.detectedRegion ?? null, detection?.confidence ?? null, detection ? serializeDetection(detection) : null],
       );
       return Number(result.lastInsertId);
     } catch (error) {
@@ -335,7 +350,7 @@ export class FinanceStore {
    * statements of one file share `batchId`, so the whole import can be reversed together.
    * If a later account fails, the earlier ones of the same batch are removed again.
    */
-  async commitImport(plan: readonly PlannedStatement[], hashes: readonly string[], region?: string | null): Promise<{ batchId: string; statementIds: number[]; transactions: number; recategorized: number }> {
+  async commitImport(plan: readonly PlannedStatement[], hashes: readonly string[], region?: string | null, regionMeta?: RegionMeta): Promise<{ batchId: string; statementIds: number[]; transactions: number; recategorized: number }> {
     const deviceCurrency = await this.currency();
     for (const statement of plan) {
       if (!(CURRENCIES as readonly string[]).includes(statement.currency)) throw new StoreError("unsupported_currency", "That currency is not supported.");
@@ -354,7 +369,7 @@ export class FinanceStore {
         statementIds.push(await this.commitStaged({
           filename: statement.filename, currency: statement.currency, sha256: hashes[index], sourceSha256: statement.sourceSha256, batchId, rows: statement.rows,
           closingBalanceCents: statement.closingBalanceCents, closingBalanceOn: statement.closingBalanceOn, account: statement.account, format: statement.format,
-          openingBalanceCents: statement.openingBalanceCents, openingBalanceOn: statement.openingBalanceOn, report: statement.report, region,
+          openingBalanceCents: statement.openingBalanceCents, openingBalanceOn: statement.openingBalanceOn, report: statement.report, region, regionMeta,
         }));
       }
     } catch (error) {
@@ -385,7 +400,7 @@ export class FinanceStore {
   }
 
   /** Imports on this device, newest first, with their reports. Legacy imports have no report. */
-  async importHistory(): Promise<Array<{ batchId: string | null; statementIds: number[]; filename: string; importedAt: string; format: string | null; transactionCount: number; accounts: string[]; reports: ImportReport[]; source: "local" | "web"; region: string | null }>> {
+  async importHistory(): Promise<Array<{ batchId: string | null; statementIds: number[]; filename: string; importedAt: string; format: string | null; transactionCount: number; accounts: string[]; reports: ImportReport[]; source: "local" | "web"; region: string | null; regionSource: RegionSource | null; detection: RegionDetection }>> {
     const rows = await this.db.select<Row>("SELECT * FROM statements ORDER BY imported_at DESC, id DESC");
     const result: Awaited<ReturnType<FinanceStore["importHistory"]>> = [];
     const groups = new Map<string, (typeof result)[number]>();
@@ -395,7 +410,8 @@ export class FinanceStore {
       let entry = groups.get(key);
       if (!entry) {
         entry = { batchId: batch, statementIds: [], filename: String(row.filename), importedAt: String(row.imported_at), format: (row.source_format as string | null) ?? null,
-          transactionCount: 0, accounts: [], reports: [], source: row.source === "web" ? "web" : "local", region: normalizeRegion(row.region) };
+          transactionCount: 0, accounts: [], reports: [], source: row.source === "web" ? "web" : "local", region: normalizeRegion(row.region),
+          regionSource: normalizeRegionSource(row.region_source), detection: parseDetection(row.detected_region, row.region_confidence, row.region_evidence) };
         groups.set(key, entry);
         result.push(entry);
       }
@@ -476,14 +492,26 @@ export class FinanceStore {
    * statements). Metadata only: no transaction, amount, date, currency or category changes here;
    * reclassifying is a separate, explicit step (`reclassifyStatements`). Website copies are refused.
    */
-  async setStatementRegion(statementIds: readonly number[], region: string | null): Promise<void> {
+  async setStatementRegion(statementIds: readonly number[], region: string | null, source: RegionSource = "user"): Promise<void> {
     const code = normalizeRegion(region);
     if (region !== null && region !== "" && code === null) throw new StoreError("invalid_region", "Unknown region.");
     for (const id of statementIds) {
       const [row] = await this.db.select<Row>("SELECT source FROM statements WHERE id = $1", [id]);
       if (!row || row.source === "web") throw new StoreError("not_found", "Statement not found.");
     }
-    for (const id of statementIds) await this.db.execute("UPDATE statements SET region = $1 WHERE id = $2", [code, id]);
+    for (const id of statementIds) await this.db.execute("UPDATE statements SET region = $1, region_source = $2 WHERE id = $3", [code, regionSourceFor(code, source), id]);
+  }
+
+  /**
+   * "Keep my selection" after a region conflict warning: the selected region stays exactly as it
+   * is and is marked as confirmed, so the warning is not shown again. Metadata only.
+   */
+  async keepStatementRegion(statementIds: readonly number[]): Promise<void> {
+    for (const id of statementIds) {
+      const [row] = await this.db.select<Row>("SELECT source, region FROM statements WHERE id = $1", [id]);
+      if (!row || row.source === "web") throw new StoreError("not_found", "Statement not found.");
+    }
+    for (const id of statementIds) await this.db.execute("UPDATE statements SET region_source = 'user_confirmed' WHERE id = $1 AND region IS NOT NULL", [id]);
   }
 
   /**
@@ -665,8 +693,9 @@ export class FinanceStore {
     const custom = await this.ensureCategories([...(data.categories ?? []), ...fresh.flatMap((statement) => statement.rows.map((row) => row.category)), ...data.rules.map((rule) => rule.category)]);
     for (const statement of fresh) {
       const inserted = await this.db.execute(
-        "INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at, region) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-        [statement.filename, statement.currency, statement.sha256, statement.rows.length, statement.closingBalanceCents, statement.closingBalanceOn, statement.importedAt || stamp, normalizeRegion(statement.region)],
+        "INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at, region, region_source) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        [statement.filename, statement.currency, statement.sha256, statement.rows.length, statement.closingBalanceCents, statement.closingBalanceOn, statement.importedAt || stamp,
+          normalizeRegion(statement.region), regionSourceFor(normalizeRegion(statement.region), "user")],
       );
       const statementId = Number(inserted.lastInsertId);
       try {

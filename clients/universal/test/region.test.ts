@@ -219,7 +219,8 @@ describe("6. statements imported before this version", () => {
     const statementBefore = db.exec("SELECT * FROM statements")[0].values;
     migrate(db);
     expect(db.exec(`SELECT ${columns} FROM transactions ORDER BY id`)[0].values).toEqual(before);
-    expect(db.exec("SELECT * FROM statements")[0].values).toEqual([[...statementBefore[0], null]]);
+    // Version 5 adds region; version 6 adds region_source, detected_region, region_confidence, region_evidence. All empty.
+    expect(db.exec("SELECT * FROM statements")[0].values).toEqual([[...statementBefore[0], null, null, null, null, null]]);
 
     const store = new FinanceStore(sqljsDriver(db));
     const [statement] = await store.statements();

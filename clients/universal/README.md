@@ -209,6 +209,21 @@ Differences found while porting are encoded in the fixtures instead of being gue
 When you change categorizer rules in Rails, regenerate the fixtures and update
 `packages/finance-core/src/categorizer.ts`.
 
+## Statement country / region
+
+The Import page has an optional **Country / Region** dropdown (19 regions, default **Not specified**). Names follow the interface language (for example Mainland China / 中国大陆 / 中國大陸). The default is never taken from GPS, IP, the device or the account's usage region.
+
+Each imported file is also checked by a deterministic, rule-based detector (`packages/finance-core/src/regionDetect.ts`; no network, no model). It scores evidence found in the file: bank names, routing numbers / IBAN / sort code / BSB / IFSC / CLABE (checksums verified where they exist), bank addresses, regional payment networks (Zelle, Venmo, Interac, PayNow, 轉數快…), and, weakly, currency and date style. USD alone, or Chinese-language text, never makes a confident detection. The result is `detectedRegion`, `confidence` (high / medium / low), `evidence` and `conflictingEvidence`.
+
+The validator never changes a selection by itself:
+
+- Nothing selected + High confidence: a suggestion with **Use detected region**.
+- Selection matches: nothing is shown.
+- Selection conflicts with High-confidence evidence: a non-blocking warning with **Keep my selection** / **Use detected region**.
+- Weak or no evidence: nothing is shown.
+
+The notice appears above the import preview or PDF review, and stays in Import history for imports already saved (accepting there also reclassifies automatic categories). Migration 6 stores the selection and the detection separately on each statement: `region` (in effect), `region_source` (`user`, `user_confirmed`, `suggestion`, or NULL), `detected_region`, `region_confidence`, and `region_evidence`. Evidence holds rule labels only, never text or numbers from the file. Region data stays on the device and is not uploaded.
+
 ## Custom categories
 
 Each local database keeps its own custom categories (`custom_categories`, migration `0003`, which also rebuilds `transactions` and `merchant_rules` without the old fixed category list while keeping every row). The same limits as the website apply (`packages/finance-core/src/categories.ts`). Syncs and website downloads bring custom categories along (`GET /api/client/v1/finance/categories`); a name that can't be added (limit reached) is filed as Uncategorized.

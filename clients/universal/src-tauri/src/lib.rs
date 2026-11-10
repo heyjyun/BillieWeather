@@ -50,6 +50,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0005_statement_region.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 6,
+            description: "statement region detection",
+            sql: include_str!("../migrations/0006_statement_region_detection.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

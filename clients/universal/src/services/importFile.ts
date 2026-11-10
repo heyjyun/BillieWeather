@@ -4,11 +4,11 @@
 // the person to review (like the website). Drafts live only in memory, never on disk.
 import type { Currency } from "@billie/shared-types";
 import {
-  checkPdfBytes, decodeStatementBytes, extractPdfStatement, ImportError, isPdf, parseStatement, pdfDraftToStatement, sha256Hex,
-  type PdfDraft, type ReviewedPdfRow,
+  checkPdfBytes, decodeStatementBytes, detectRegion, extractPdfStatement, ImportError, isPdf, parseStatement, pdfDraftToStatement, sha256Hex,
+  type PdfDraft, type RegionDetection, type RegionSource, type ReviewedPdfRow,
 } from "@billie/finance-core";
 import { readPdfPages } from "./pdfText";
-import { StoreError, type FinanceStore } from "./store";
+import { StoreError, type FinanceStore, type RegionMeta } from "./store";
 
 export interface ImportedFile {
   kind: "imported";
@@ -26,8 +26,12 @@ export interface PdfReview {
   currency: Currency;
   sha256: string;
   draft: PdfDraft;
-  /** Optional country/region chosen on the Import page; null = not specified. */
+  /** Optional country/region chosen on the Import page (or an accepted suggestion); null = not specified. */
   region: string | null;
+  /** How `region` was decided; null with no region. */
+  regionSource?: RegionSource | null;
+  /** What rule-based detection found in the PDF text. */
+  detection?: RegionDetection;
 }
 
 async function checkCurrency(store: FinanceStore, currency: Currency) {
@@ -38,17 +42,18 @@ async function checkCurrency(store: FinanceStore, currency: Currency) {
 }
 
 /** Imports a CSV or a clear PDF, or returns a PDF draft that needs review. */
-export async function importFile(store: FinanceStore, bytes: Uint8Array, filename: string, currency: Currency, region: string | null = null): Promise<ImportedFile | PdfReview> {
+export async function importFile(store: FinanceStore, bytes: Uint8Array, filename: string, currency: Currency, region: string | null = null, regionMeta?: RegionMeta): Promise<ImportedFile | PdfReview> {
   await checkCurrency(store, currency);
-  if (isPdf(bytes, filename)) return importPdf(store, bytes, filename, currency, region);
+  if (isPdf(bytes, filename)) return importPdf(store, bytes, filename, currency, region, regionMeta?.source ?? null);
   const text = decodeStatementBytes(bytes, filename);
   const parsed = parseStatement(text, { filename, currency, categorizer: await store.categorizer(region) });
   const sha256 = await sha256Hex(bytes);
-  const result = await store.importStatement({ filename, currency, sha256, parsed, region });
+  const detection = detectRegion({ text, currency, dateOrder: null });
+  const result = await store.importStatement({ filename, currency, sha256, parsed, region, regionMeta: { detection, ...regionMeta } });
   return { kind: "imported", format: "csv", ...result, count: parsed.rows.length, closingBalanceCents: parsed.closingBalanceCents };
 }
 
-async function importPdf(store: FinanceStore, bytes: Uint8Array, filename: string, currency: Currency, region: string | null): Promise<ImportedFile | PdfReview> {
+async function importPdf(store: FinanceStore, bytes: Uint8Array, filename: string, currency: Currency, region: string | null, regionSource: RegionSource | null): Promise<ImportedFile | PdfReview> {
   const base = filename.replace(/\\/g, "/").split("/").pop() ?? filename;
   checkPdfBytes(bytes, base);
   const sha256 = await sha256Hex(bytes);
@@ -56,8 +61,10 @@ async function importPdf(store: FinanceStore, bytes: Uint8Array, filename: strin
   if ((await store.statements()).some((statement) => statement.sha256 === sha256)) {
     throw new StoreError("statement_duplicate", "This statement was already imported.");
   }
-  const draft = extractPdfStatement(await readPdfPages(bytes), { currency });
-  const review: PdfReview = { kind: "review", filename: base, currency, sha256, draft, region };
+  const pages = await readPdfPages(bytes);
+  const draft = extractPdfStatement(pages, { currency });
+  const detection = detectRegion({ text: pages.join("\n"), currency });
+  const review: PdfReview = { kind: "review", filename: base, currency, sha256, draft, region, regionSource: region ? regionSource ?? "user" : null, detection };
   if (!draft.autoImportable) return review;
   try {
     return await importPdfReview(store, review, draft.rows.map((row) => ({ ...row, include: true })));
@@ -72,6 +79,7 @@ async function importPdf(store: FinanceStore, bytes: Uint8Array, filename: strin
 export async function importPdfReview(store: FinanceStore, review: PdfReview, rows: ReviewedPdfRow[]): Promise<ImportedFile> {
   await checkCurrency(store, review.currency);
   const parsed = pdfDraftToStatement(review.draft, rows, { currency: review.currency, categorizer: await store.categorizer(review.region) });
-  const result = await store.importStatement({ filename: review.filename, currency: review.currency, sha256: review.sha256, parsed, region: review.region });
+  const result = await store.importStatement({ filename: review.filename, currency: review.currency, sha256: review.sha256, parsed, region: review.region,
+    regionMeta: { source: review.regionSource, detection: review.detection } });
   return { kind: "imported", format: "pdf", ...result, count: parsed.rows.length, closingBalanceCents: parsed.closingBalanceCents };
 }

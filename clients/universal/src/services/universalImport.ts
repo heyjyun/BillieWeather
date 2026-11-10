@@ -3,9 +3,9 @@
 // path (importFile.ts). Files are read here and stay in memory until the person confirms; only
 // `commitDraft` writes, and it writes atomically. Nothing in this module uses the network.
 import { CURRENCIES, type Currency } from "@billie/shared-types";
-import { commitPlan, createDraft, createOcrDraft, detectImage, ImportPipelineError, sha256Hex, statementHashes, type CommitBlocker, type ImportContext, type ImportDraft } from "@billie/finance-core";
+import { commitPlan, createDraft, createOcrDraft, detectImage, detectRegion, ImportPipelineError, regionInputFromDraft, sha256Hex, statementHashes, type CommitBlocker, type ImportContext, type ImportDraft, type RegionDetection } from "@billie/finance-core";
 import { initOcrEngine, ocrEngine } from "./ocrEngine";
-import type { FinanceStore } from "./store";
+import type { FinanceStore, RegionMeta } from "./store";
 
 export class ImportBlockedError extends Error {
   code = "blocked" as const;
@@ -72,11 +72,19 @@ export async function importScannedPdf(store: FinanceStore, bytes: Uint8Array, f
   return { draft, allPages };
 }
 
-/** Confirm -> Commit. Throws ImportBlockedError while anything still needs a decision. The region is saved with the statements. */
-export async function commitDraft(store: FinanceStore, draft: ImportDraft, context: ImportContext) {
+/** Rule-based guess of the statement's country / region from the draft's own contents (never from the device). */
+export function detectDraftRegion(draft: ImportDraft): RegionDetection {
+  return detectRegion(regionInputFromDraft(draft));
+}
+
+/**
+ * Confirm -> Commit. Throws ImportBlockedError while anything still needs a decision. The region
+ * in effect (context.categorizer.region), how it was decided and the detection are saved with the statements.
+ */
+export async function commitDraft(store: FinanceStore, draft: ImportDraft, context: ImportContext, regionMeta?: RegionMeta) {
   const plan = commitPlan(draft, context);
   if (!plan.ok) throw new ImportBlockedError(plan.blockers);
-  return store.commitImport(plan.statements, await statementHashes(plan.statements), context.categorizer.region);
+  return store.commitImport(plan.statements, await statementHashes(plan.statements), context.categorizer.region, { detection: detectDraftRegion(draft), ...regionMeta });
 }
 
 /** Formats the universal pipeline reads directly (by content, not only by extension). */

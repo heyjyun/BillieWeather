@@ -372,3 +372,7 @@ p { margin: 0 0 10px; }
   .bw-universal:has(.bw-ocr-original) > .bw-ocr-original { grid-column: 1; grid-row: 1 / span 6; position: sticky; top: 8px; }
   .bw-universal:has(.bw-ocr-original) > :not(.bw-ocr-original) { grid-column: 2; }
 }
+
+/* Region suggestion / conflict notice (non-blocking). */
+.bw-region-notice { display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; }
+.bw-region-notice small { display: block; }

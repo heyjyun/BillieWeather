@@ -1,35 +1,24 @@
 import { CURRENCIES, type Currency } from "@billie/shared-types";
 import {
   allCategories, formatMoney, ImportError, ImportPipelineError, isPdf, normalizeRegion, reviseDraft, STATEMENT_REGIONS, templateFrom,
-  type ImportContext, type ImportDraft, type ImportReport, type ReviewedPdfRow,
+  type ImportContext, type ImportDraft, type ImportReport, type RegionDetection, type RegionSource, type ReviewedPdfRow,
 } from "@billie/finance-core";
 import { useEffect, useState } from "react";
 import { PageHeading } from "../components/common";
 import { ImportPreview } from "../components/ImportPreview";
 import { PdfReview, usePdfMessages } from "../components/PdfReview";
+import { RegionNotice, useRegionName } from "../components/RegionNotice";
 import { useFinance } from "../hooks/useFinance";
 import { interpolate, useI18n } from "../i18n";
 import importErrors from "../i18n/importErrors.json";
 import { randomId } from "../services/ids";
 import { importFile, importPdfReview, type ImportedFile, type PdfReview as Review } from "../services/importFile";
 import { StoreError, type FinanceStore } from "../services/store";
-import { commitDraft, ImportBlockedError, importContext, importDraftFile, importScannedPdf, UNIVERSAL_ACCEPT } from "../services/universalImport";
+import { commitDraft, detectDraftRegion, ImportBlockedError, importContext, importDraftFile, importScannedPdf, UNIVERSAL_ACCEPT } from "../services/universalImport";
 
 type History = Awaited<ReturnType<FinanceStore["importHistory"]>>;
-
-/** Display name of a region code in the interface language ("" = not specified). Never detected from the device. */
-function useRegionName() {
-  const { m, locale } = useI18n();
-  return (code: string | null): string => {
-    if (!code) return m.universal.region.none;
-    if (code === "CN") return m.universal.region.mainlandChina; // like the website: Mainland China, alongside HK, MO and TW
-    try {
-      return new Intl.DisplayNames([locale], { type: "region" }).of(code) ?? code;
-    } catch {
-      return code;
-    }
-  };
-}
+/** A file waiting for review. The region in effect is `context.categorizer.region`; `region` says how it was decided and what detection found. */
+type Waiting = { draft: ImportDraft; context: ImportContext; region: { source: RegionSource | null; detection: RegionDetection } };
 
 /** The optional Country / Region dropdown. "" means Not specified. */
 function RegionSelect({ value, onChange, disabled, label }: { value: string; onChange: (code: string) => void; disabled?: boolean; label: string }) {
@@ -55,7 +44,7 @@ export function Import() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "warn" | "error"; text: string } | null>(null);
   // Files waiting for review, first one shown. Kept in memory only; nothing is written until confirmed.
-  const [drafts, setDrafts] = useState<Array<{ draft: ImportDraft; context: ImportContext }>>([]);
+  const [drafts, setDrafts] = useState<Waiting[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [history, setHistory] = useState<History>([]);
@@ -95,7 +84,12 @@ export function Import() {
     setBusy(true);
     const lines: string[] = [];
     const waitingPdf: Review[] = [];
-    const waiting: Array<{ draft: ImportDraft; context: ImportContext }> = [];
+    const waiting: Waiting[] = [];
+    // Detection never changes the selection: a file starts with the region chosen above (or none).
+    const chosenSource: RegionSource | null = normalizeRegion(region) ? "user" : null;
+    const waitingItem = async (draft: ImportDraft): Promise<Waiting> => ({
+      draft, context: await importContext(store, normalizeRegion(region)), region: { source: chosenSource, detection: detectDraftRegion(draft) },
+    });
     let failed = false;
     const cur = deviceCurrency ?? currency;
     const chosenRegion = normalizeRegion(region);
@@ -112,7 +106,7 @@ export function Import() {
           } finally {
             setRecognition(null);
           }
-          if (scanned) waiting.push({ draft: scanned.draft, context: await importContext(store, chosenRegion) });
+          if (scanned) waiting.push(await waitingItem(scanned.draft));
           if (scanned?.allPages) continue;
           // Text PDFs keep their own reviewed extraction (a port of the website's).
           const result = await importFile(store, bytes, file.name, cur, chosenRegion);
@@ -132,7 +126,7 @@ export function Import() {
         } finally {
           setRecognition(null);
         }
-        waiting.push({ draft, context: await importContext(store, chosenRegion) });
+        waiting.push(await waitingItem(draft));
       } catch (error) {
         failed = true;
         lines.push(t("import.failed", { file: file.name, message: errorText(error) }));
@@ -147,16 +141,16 @@ export function Import() {
   }
 
   /** After one import is saved, the others are re-checked against what is now stored (duplicates). */
-  async function advance(rest: Array<{ draft: ImportDraft; context: ImportContext }>) {
+  async function advance(rest: Waiting[]) {
     // Each waiting file keeps the region it was chosen with.
     const next = await Promise.all(rest.map(async (item) => {
       const context = await importContext(store, item.context.categorizer.region);
-      return { draft: reviseDraft(item.draft, {}, context), context };
+      return { ...item, draft: reviseDraft(item.draft, {}, context), context };
     }));
     setDrafts(next);
   }
 
-  async function confirmDraft(draft: ImportDraft, context: ImportContext, template: { name: string } | null) {
+  async function confirmDraft(draft: ImportDraft, context: ImportContext, regionInfo: Waiting["region"], template: { name: string } | null) {
     setBusy(true);
     setReviewError(null);
     try {
@@ -164,13 +158,56 @@ export function Import() {
         await store.saveTemplate(templateFrom({ id: randomId(), name: template.name, institution: draft.preamble.institution, headers: draft.headers,
           mapping: draft.mapping, conventions: { ...draft.conventions, decimal: draft.effective.decimal, currency: draft.effective.currency }, now: new Date().toISOString() }));
       }
-      const result = await commitDraft(store, draft, context);
+      const result = await commitDraft(store, draft, context, { source: regionInfo.source, detection: regionInfo.detection });
       await refresh();
       const skipped = draft.rows.filter((row) => row.status !== "rejected").length - result.transactions;
       setMessage({ tone: "ok", text: interpolate(u.result, { file: draft.filename, count: result.transactions, skipped, rejected: draft.summary.rejected }) });
       await advance(drafts.slice(1));
     } catch (error) {
       setReviewError(errorText(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** "Use detected region" before import: the categorizer switches to it and the preview is recomputed. Edits are kept. */
+  async function acceptDraftRegion(code: string) {
+    const context = await importContext(store, normalizeRegion(code));
+    setDrafts((list) => list.length === 0 ? list : [{ ...list[0], draft: reviseDraft(list[0].draft, {}, context), context, region: { ...list[0].region, source: "suggestion" } }, ...list.slice(1)]);
+  }
+
+  function keepDraftRegion() {
+    setDrafts((list) => list.length === 0 ? list : [{ ...list[0], region: { ...list[0].region, source: "user_confirmed" } }, ...list.slice(1)]);
+  }
+
+  function updateReview(review: Review, change: Partial<Review>) {
+    setReviews((list) => list.map((item) => (item === review ? { ...item, ...change } : item)));
+  }
+
+  /** "Use detected region" for an import that is already saved: set it, then reclassify (only automatic categories can change). */
+  async function acceptHistoryRegion(item: History[number], code: string) {
+    setBusy(true);
+    try {
+      await store.setStatementRegion(item.statementIds, code, "suggestion");
+      const count = await store.reclassifyStatements(item.statementIds);
+      await refresh();
+      setHistory(await store.importHistory());
+      setMessage({ tone: "ok", text: interpolate(u.region.accepted, { file: item.filename, region: regionName(code), count }) });
+    } catch (error) {
+      setMessage({ tone: "error", text: errorText(error) });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function keepHistoryRegion(item: History[number]) {
+    setBusy(true);
+    try {
+      await store.keepStatementRegion(item.statementIds);
+      setHistory(await store.importHistory());
+      setMessage({ tone: "ok", text: interpolate(u.region.kept, { file: item.filename }) });
+    } catch (error) {
+      setMessage({ tone: "error", text: errorText(error) });
     } finally {
       setBusy(false);
     }
@@ -258,13 +295,18 @@ export function Import() {
       {current ? (
         <>
           {drafts.length + reviews.length > 1 && <p className="bw-message bw-message-warn" role="status">{interpolate(u.waiting, { count: drafts.length + reviews.length - 1 })}</p>}
+          <RegionNotice selected={current.context.categorizer.region} source={current.region.source} detection={current.region.detection} busy={busy}
+            onAccept={(code) => void acceptDraftRegion(code)} onKeep={keepDraftRegion} />
           <ImportPreview key={current.draft.fileSha256} draft={current.draft} context={current.context} categories={allCategories(customCategories)} busy={busy} error={reviewError}
             onChange={(draft) => setDrafts((list) => [{ ...list[0], draft }, ...list.slice(1)])}
-            onConfirm={(draft, template) => void confirmDraft(draft, current.context, template)} onCancel={() => cancelDraft(current.draft)} />
+            onConfirm={(draft, template) => void confirmDraft(draft, current.context, current.region, template)} onCancel={() => cancelDraft(current.draft)} />
         </>
       ) : currentPdf ? (
         <>
           {reviews.length > 1 && <p className="bw-message bw-message-warn" role="status">{t("import.reviewQueued", { count: reviews.length - 1 })}</p>}
+          <RegionNotice selected={currentPdf.region} source={currentPdf.regionSource} detection={currentPdf.detection} busy={busy}
+            onAccept={(code) => updateReview(currentPdf, { region: normalizeRegion(code), regionSource: "suggestion" })}
+            onKeep={() => updateReview(currentPdf, { regionSource: "user_confirmed" })} />
           <PdfReview key={currentPdf.sha256} review={currentPdf} busy={busy} error={reviewError}
             onConfirm={(rows) => void confirmReview(currentPdf, rows)} onCancel={() => cancelReview(currentPdf)} />
         </>
@@ -313,10 +355,17 @@ export function Import() {
                   ) : (
                     <span>
                       <small className="bw-muted">{interpolate(u.region.tag, { region: regionName(item.region) })}</small>{" "}
+                      {item.detection.detectedRegion && (
+                        <><small className="bw-muted">{interpolate(u.region.detectedTag, { region: regionName(item.detection.detectedRegion), confidence: (u.region.confidence as Record<string, string>)[item.detection.confidence ?? "low"] })}</small>{" "}</>
+                      )}
                       <button type="button" className="bw-link-button" disabled={busy} onClick={() => setEditingRegion({ key, value: item.region ?? "" })}>{u.region.change}</button>{" "}
                       <button type="button" className="bw-link-button" disabled={busy} onClick={() => void reclassify(item)}>{u.region.reclassify}</button>
                     </span>
                   ))}
+                  {item.source === "local" && editingRegion?.key !== key && (
+                    <RegionNotice selected={item.region} source={item.regionSource} detection={item.detection} busy={busy}
+                      onAccept={(code) => void acceptHistoryRegion(item, code)} onKeep={() => void keepHistoryRegion(item)} />
+                  )}
                   {rejected.length > 0 && <small className="bw-muted">{interpolate(u.history.rejectedRows, { rows: rejected.slice(0, 20).join(", ") })}</small>}
                   {item.source === "local" && (reversing === key ? (
                     <span role="group">
