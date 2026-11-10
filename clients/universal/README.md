@@ -27,7 +27,10 @@ path alias, so there is no separate build step.
 
 ## Everyday development
 
-Requirements: Node 24 and npm. Desktop builds also need Rust (`cargo`).
+Requirements: Node 24 and npm. Desktop builds also need Rust (`cargo`). macOS desktop builds additionally need the Xcode Command Line Tools
+(`xcode-select --install`), which provide `swiftc` for the Apple Vision OCR library compiled by `src-tauri/build.rs`.
+End users of the built app need nothing extra: it requires macOS 11+ and uses the system Swift runtime and Vision framework.
+Web-only development (`npm run dev`, `npm test`) needs no Swift.
 
 ```sh
 cd clients/universal
