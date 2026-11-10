@@ -5,6 +5,7 @@ export * from "./importer";
 export * from "./money";
 export * from "./pdf";
 export * from "./period";
+export * from "./regions";
 export * from "./rules";
 export * from "./snapshot";
 export * from "./spending";

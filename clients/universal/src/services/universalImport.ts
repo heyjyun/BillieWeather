@@ -20,9 +20,10 @@ const localToday = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 };
 
-export async function importContext(store: FinanceStore): Promise<ImportContext> {
+/** `region` is the optional country/region chosen on the Import page: extra context for categorization only. */
+export async function importContext(store: FinanceStore, region: string | null = null): Promise<ImportContext> {
   const [categorizer, customCategories, templates, existing, existingFileHashes, deviceCurrency] = await Promise.all([
-    store.categorizer(), store.customCategories(), store.templates(), store.dedupeIndex(), store.importedFileHashes(), store.currency(),
+    store.categorizer(region), store.customCategories(), store.templates(), store.dedupeIndex(), store.importedFileHashes(), store.currency(),
   ]);
   return { categorizer, customCategories, templates, existing, existingFileHashes, deviceCurrency, storableCurrencies: CURRENCIES, today: localToday(), ocr: ocrEngine() ?? (await initOcrEngine()) };
 }
@@ -31,8 +32,8 @@ export async function importContext(store: FinanceStore): Promise<ImportContext>
  * Upload -> ... -> Preview. `chosenCurrency` is the currency picked on the Import page; it is only
  * a fallback when the file and the database say nothing.
  */
-export async function importDraftFile(store: FinanceStore, bytes: Uint8Array, filename: string, chosenCurrency: Currency, signal?: AbortSignal): Promise<ImportDraft> {
-  const context = await importContext(store);
+export async function importDraftFile(store: FinanceStore, bytes: Uint8Array, filename: string, chosenCurrency: Currency, signal?: AbortSignal, region: string | null = null): Promise<ImportDraft> {
+  const context = await importContext(store, region);
   const ctx = { ...context, deviceCurrency: context.deviceCurrency ?? chosenCurrency };
   // Photos go to the on-device OCR engine (with cancellation); everything else is read directly.
   const image = detectImage(bytes);
@@ -46,7 +47,7 @@ export async function importDraftFile(store: FinanceStore, bytes: Uint8Array, fi
  * `allPages` is true when the whole document is scanned (then the text extraction is skipped).
  * A partly scanned PDF gets its own hash for the OCR part so both parts can be stored.
  */
-export async function importScannedPdf(store: FinanceStore, bytes: Uint8Array, filename: string, chosenCurrency: Currency, signal?: AbortSignal): Promise<{ draft: ImportDraft; allPages: boolean } | null> {
+export async function importScannedPdf(store: FinanceStore, bytes: Uint8Array, filename: string, chosenCurrency: Currency, signal?: AbortSignal, region: string | null = null): Promise<{ draft: ImportDraft; allPages: boolean } | null> {
   const { findScannedPages, renderPages } = await import("./ocr/pdfRaster");
   let pages;
   try {
@@ -55,7 +56,7 @@ export async function importScannedPdf(store: FinanceStore, bytes: Uint8Array, f
     return null; // unreadable, encrypted, too many pages…: the regular PDF path reports it precisely
   }
   if (pages.scanned.length === 0) return null;
-  const context = await importContext(store);
+  const context = await importContext(store, region);
   if (!context.ocr) throw new ImportPipelineError("ocr_unavailable");
   const allPages = pages.scanned.length === pages.pageCount;
   const fileSha = await sha256Hex(bytes);
@@ -71,11 +72,11 @@ export async function importScannedPdf(store: FinanceStore, bytes: Uint8Array, f
   return { draft, allPages };
 }
 
-/** Confirm -> Commit. Throws ImportBlockedError while anything still needs a decision. */
+/** Confirm -> Commit. Throws ImportBlockedError while anything still needs a decision. The region is saved with the statements. */
 export async function commitDraft(store: FinanceStore, draft: ImportDraft, context: ImportContext) {
   const plan = commitPlan(draft, context);
   if (!plan.ok) throw new ImportBlockedError(plan.blockers);
-  return store.commitImport(plan.statements, await statementHashes(plan.statements));
+  return store.commitImport(plan.statements, await statementHashes(plan.statements), context.categorizer.region);
 }
 
 /** Formats the universal pipeline reads directly (by content, not only by extension). */

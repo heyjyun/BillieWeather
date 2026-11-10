@@ -39,6 +39,8 @@ export interface Statement {
   importedAt: string;
   /** "web" = copied from the BillieWeather website; "local" = imported on this device. */
   source?: "local" | "web";
+  /** Optional country/region chosen at import (two-letter code); null = not specified. */
+  region?: string | null;
 }
 
 export interface Transaction {

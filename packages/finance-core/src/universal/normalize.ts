@@ -387,8 +387,9 @@ export function normalizeTable(input: {
         category = fromFile;
         categorySource = "file";
       } else if (amountMinor !== null && description) {
-        category = context.categorizer.categorize(description, amountMinor);
-        categorySource = "auto";
+        const decided = context.categorizer.explain(description, amountMinor);
+        category = decided.category;
+        categorySource = decided.reason === "region" ? "region" : "auto";
       }
     }
 

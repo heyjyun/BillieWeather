@@ -2,6 +2,7 @@
 // the first matching category wins. Parity is checked against Ruby-generated
 // fixtures in ../fixtures (see fixtures/README.md).
 import type { Category, MerchantRule } from "@billie/shared-types";
+import { normalizeRegion, regionalCategory, type StatementRegion } from "./regions";
 
 // Ruby's \b is Unicode-aware on UTF-8 strings ("é" is a word character); JavaScript's
 // \b is ASCII-only, so word boundaries are spelled out with Unicode classes instead.
@@ -57,20 +58,38 @@ export function merchantKey(description: string): string | null {
 
 const ruleKey = (merchant: string, income: boolean) => `${income ? "in" : "out"}:${merchant}`;
 
+/** Which step decided a category. "region" means only the statement's optional region matched. */
+export type CategoryReason = "learned" | "transfer" | "income" | "rule" | "region" | "none";
+
 export class Categorizer {
   private learned: Map<string, Category>;
+  /** The statement's optional country/region (regions.ts), or null when not specified. */
+  readonly region: StatementRegion | null;
 
-  constructor(rules: readonly MerchantRule[] = []) {
+  constructor(rules: readonly MerchantRule[] = [], options: { region?: string | null } = {}) {
     this.learned = new Map(rules.map((rule) => [ruleKey(rule.merchantKey, rule.income), rule.category]));
+    this.region = normalizeRegion(options.region);
   }
 
   categorize(description: string, amountCents: number): Category {
+    return this.explain(description, amountCents).category;
+  }
+
+  /**
+   * The category and the step that chose it. The order is the Rails order; the region is a last,
+   * supplementary step, so without a region (or with one that has no rules) results are unchanged.
+   */
+  explain(description: string, amountCents: number): { category: Category; reason: CategoryReason } {
     const key = merchantKey(description);
     const learned = key ? this.learned.get(ruleKey(key, amountCents > 0)) : undefined;
-    if (learned) return learned;
-    if (TRANSFERS.test(description)) return "Transfers";
-    if (amountCents > 0) return "Income";
-    return RULES.find(([, pattern]) => pattern.test(description))?.[0] ?? "Uncategorized";
+    if (learned) return { category: learned, reason: "learned" };
+    if (TRANSFERS.test(description)) return { category: "Transfers", reason: "transfer" };
+    if (amountCents > 0) return { category: "Income", reason: "income" };
+    const rule = RULES.find(([, pattern]) => pattern.test(description));
+    // "Uncategorized" is itself a rule (AWS): a deliberate decision the region must not override.
+    if (rule) return { category: rule[0], reason: "rule" };
+    const regional = regionalCategory(this.region, description);
+    return regional ? { category: regional, reason: "region" } : { category: "Uncategorized", reason: "none" };
   }
 }
 

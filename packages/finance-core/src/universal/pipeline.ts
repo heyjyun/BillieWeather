@@ -533,8 +533,9 @@ function buildOfx(draft: ImportDraft, context: ImportContext) {
       category = edit.category;
       categorySource = "user";
     } else if (amountMinor !== null && description) {
-      category = context.categorizer.categorize(description, amountMinor);
-      categorySource = "auto";
+      const decided = context.categorizer.explain(description, amountMinor);
+      category = decided.category;
+      categorySource = decided.reason === "region" ? "region" : "auto";
     }
     if (Object.keys(edit).length > 0) issues.push(issue("edited_by_user", "info"));
     const raw: Record<string, string> = { TRNTYPE: transaction.trnType, TRNAMT: transaction.amount };
@@ -604,7 +605,7 @@ export interface PlannedRow {
   bankReference: string | null;
   accountKey: string | null;
   category: Category;
-  categorySource: "user" | "rule" | "file" | "auto";
+  categorySource: "user" | "rule" | "file" | "auto" | "region";
   taxReview: boolean;
   pending: boolean;
   kindHints: string;

@@ -23,7 +23,8 @@ export type Direction = "debit" | "credit" | "zero";
 export type AccountKind = "checking" | "savings" | "credit_card" | "loan" | "unknown";
 
 /** Who decided a transaction's category. A person's choice always wins over automation. */
-export type CategorySource = "user" | "rule" | "file" | "auto";
+export type CategorySource = "user" | "rule" | "file" | "auto" | "region";
+// "region": only the statement's optional region matched (regions.ts); reclassifying may change it.
 
 /** What a description or bank code suggests the transaction is. Hints only: they never change amounts. */
 export type KindHint = "transfer" | "card_payment" | "refund" | "reversal" | "chargeback" | "fee" | "interest" | "fx_adjustment" | "cash";

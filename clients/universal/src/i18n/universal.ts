@@ -75,6 +75,13 @@ export const universalEn = {
     blocked: "Some rows or settings still need a decision.",
   },
   ocr: { title: "Original", engine: "Read on this device by {engine}", page: "Page {page}", script: "Chinese script on this statement", scripts: { "zh-Hans": "Simplified (简体)", "zh-Hant": "Traditional (繁體)" }, scriptHint: "This text engine cannot tell Simplified from Traditional Chinese. Compare with the image; amounts and dates are the same either way.", missing: "Pages {pages} could not be read, so their transactions are missing.", acknowledge: "Import without these pages", recognition: "Recognition {percent}%", proven: "Proven by balances", unproven: "Not proven by balances", reading: "Reading text on this device…", stop: "Stop", showRow: "Show on page" },
+  region: {
+    label: "Country / Region (Optional)", none: "Not specified", mainlandChina: "Mainland China",
+    help: "Optional. Helps BillieWeather recognize regional banking formats and improve rule-based transaction categorization.",
+    tag: "Region: {region}", change: "Change region", save: "Save region", cancel: "Cancel", reclassify: "Reclassify",
+    saved: "{file}: region saved. No categories were changed; choose Reclassify to apply it.",
+    reclassified: "{file}: {count} transactions reclassified. Categories you chose were kept.",
+  },
   history: {
     title: "Import history", report: "{accepted} imported · {duplicates} duplicates skipped · {rejected} could not be imported", legacy: "Imported before import reports existed",
     reverse: "Undo import", reverseConfirm: "Remove the {count} transactions from this import? Other transactions are not touched.", reverseYes: "Remove", reverseNo: "Keep",
@@ -158,6 +165,13 @@ export const universalZhCN: UniversalMessages = {
     blocked: "仍有行或设置需要决定。",
   },
   ocr: { title: "原件", engine: "由 {engine} 在本机识别", page: "第 {page} 页", script: "此对账单的中文字体", scripts: { "zh-Hans": "简体", "zh-Hant": "繁体" }, scriptHint: "此识别引擎无法区分简体和繁体中文，请对照图片选择；两种结果的金额和日期相同。", missing: "第 {pages} 页无法识别，这些页上的交易缺失。", acknowledge: "不含这些页面继续导入", recognition: "识别可信度 {percent}%", proven: "已被余额证实", unproven: "未被余额证实", reading: "正在本机识别文字…", stop: "停止", showRow: "在页面上显示" },
+  region: {
+    label: "国家/地区（可选）", none: "未指定", mainlandChina: "中国大陆",
+    help: "可选。帮助 BillieWeather 识别各地区的银行格式，并改进基于规则的交易分类。",
+    tag: "地区：{region}", change: "更改地区", save: "保存地区", cancel: "取消", reclassify: "重新分类",
+    saved: "{file}：已保存地区，分类未改变；选择“重新分类”即可应用。",
+    reclassified: "{file}：已重新分类 {count} 笔交易，你自己选择的分类保持不变。",
+  },
   history: {
     title: "导入记录", report: "已导入 {accepted} 笔 · 跳过重复 {duplicates} 笔 · {rejected} 笔无法导入", legacy: "在有导入报告之前导入",
     reverse: "撤销导入", reverseConfirm: "要删除此次导入的 {count} 笔交易吗？其他交易不受影响。", reverseYes: "删除", reverseNo: "保留",
@@ -238,6 +252,13 @@ export const universalZhTW: UniversalMessages = {
     blocked: "仍有列或設定需要決定。",
   },
   ocr: { title: "原件", engine: "由 {engine} 在本機辨識", page: "第 {page} 頁", script: "此對帳單的中文字體", scripts: { "zh-Hans": "簡體", "zh-Hant": "繁體" }, scriptHint: "此辨識引擎無法區分簡體和繁體中文，請對照圖片選擇；兩種結果的金額和日期相同。", missing: "第 {pages} 頁無法辨識，這些頁上的交易缺失。", acknowledge: "不含這些頁面繼續匯入", recognition: "辨識可信度 {percent}%", proven: "已經餘額證實", unproven: "未經餘額證實", reading: "正在本機辨識文字…", stop: "停止", showRow: "在頁面上顯示" },
+  region: {
+    label: "國家/地區（選填）", none: "未指定", mainlandChina: "中國大陸",
+    help: "選填。協助 BillieWeather 辨識各地區的銀行格式，並改善以規則為基礎的交易分類。",
+    tag: "地區：{region}", change: "變更地區", save: "儲存地區", cancel: "取消", reclassify: "重新分類",
+    saved: "{file}：已儲存地區，分類未變更；選擇「重新分類」即可套用。",
+    reclassified: "{file}：已重新分類 {count} 筆交易，你自己選擇的分類維持不變。",
+  },
   history: {
     title: "匯入紀錄", report: "已匯入 {accepted} 筆 · 略過重複 {duplicates} 筆 · {rejected} 筆無法匯入", legacy: "在有匯入報告之前匯入",
     reverse: "復原匯入", reverseConfirm: "要刪除此次匯入的 {count} 筆交易嗎？其他交易不受影響。", reverseYes: "刪除", reverseNo: "保留",
@@ -318,6 +339,13 @@ export const universalJa: UniversalMessages = {
     blocked: "判断が必要な行や設定が残っています。",
   },
   ocr: { title: "原本", engine: "{engine} でこの端末上で読み取り", page: "{page} ページ", script: "この明細の中国語の字体", scripts: { "zh-Hans": "簡体字", "zh-Hant": "繁体字" }, scriptHint: "この認識エンジンは簡体字と繁体字を区別できません。画像と比べて選んでください。金額と日付はどちらでも同じです。", missing: "{pages} ページを読み取れなかったため、その取引が欠けています。", acknowledge: "これらのページなしで取り込む", recognition: "認識 {percent}%", proven: "残高で確認済み", unproven: "残高で未確認", reading: "この端末で文字を読み取り中…", stop: "停止", showRow: "ページ上で表示" },
+  region: {
+    label: "国・地域（任意）", none: "指定しない", mainlandChina: "中国本土",
+    help: "任意。BillieWeather が地域ごとの銀行の形式を認識し、ルールに基づく取引の分類を改善するのに役立ちます。",
+    tag: "地域：{region}", change: "地域を変更", save: "地域を保存", cancel: "キャンセル", reclassify: "再分類",
+    saved: "{file}：地域を保存しました。分類は変更していません。適用するには「再分類」を選んでください。",
+    reclassified: "{file}：{count} 件の取引を再分類しました。ご自身で選んだ分類はそのままです。",
+  },
   history: {
     title: "取り込み履歴", report: "取り込み {accepted} 件 · 重複スキップ {duplicates} 件 · 取り込み不可 {rejected} 件", legacy: "取り込みレポート導入前の取り込み",
     reverse: "取り込みを取り消す", reverseConfirm: "この取り込みの {count} 件の取引を削除しますか？ほかの取引は変わりません。", reverseYes: "削除", reverseNo: "残す",
@@ -398,6 +426,13 @@ export const universalKo: UniversalMessages = {
     blocked: "결정이 필요한 행이나 설정이 남아 있습니다.",
   },
   ocr: { title: "원본", engine: "{engine}(으)로 이 기기에서 읽음", page: "{page}페이지", script: "이 명세서의 중국어 글자체", scripts: { "zh-Hans": "간체", "zh-Hant": "번체" }, scriptHint: "이 인식 엔진은 간체와 번체를 구분하지 못합니다. 이미지와 비교해 선택하세요. 금액과 날짜는 어느 쪽이든 같습니다.", missing: "{pages}페이지를 읽지 못해 해당 거래가 빠졌습니다.", acknowledge: "이 페이지 없이 가져오기", recognition: "인식 {percent}%", proven: "잔액으로 확인됨", unproven: "잔액으로 확인 안 됨", reading: "이 기기에서 글자를 읽는 중…", stop: "중지", showRow: "페이지에서 보기" },
+  region: {
+    label: "국가/지역 (선택)", none: "지정 안 함", mainlandChina: "중국 본토",
+    help: "선택 사항입니다. BillieWeather가 지역별 은행 형식을 인식하고 규칙 기반 거래 분류를 개선하는 데 도움이 됩니다.",
+    tag: "지역: {region}", change: "지역 변경", save: "지역 저장", cancel: "취소", reclassify: "다시 분류",
+    saved: "{file}: 지역을 저장했습니다. 분류는 바뀌지 않았습니다. 적용하려면 '다시 분류'를 선택하세요.",
+    reclassified: "{file}: 거래 {count}건을 다시 분류했습니다. 직접 선택한 분류는 유지됩니다.",
+  },
   history: {
     title: "가져오기 기록", report: "가져옴 {accepted} · 중복 건너뜀 {duplicates} · 가져올 수 없음 {rejected}", legacy: "가져오기 보고서 도입 전에 가져옴",
     reverse: "가져오기 취소", reverseConfirm: "이 가져오기의 거래 {count}건을 삭제할까요? 다른 거래는 바뀌지 않습니다.", reverseYes: "삭제", reverseNo: "유지",
@@ -478,6 +513,13 @@ export const universalEs: UniversalMessages = {
     blocked: "Aún hay filas o ajustes por decidir.",
   },
   ocr: { title: "Original", engine: "Leído en este dispositivo con {engine}", page: "Página {page}", script: "Escritura china de este extracto", scripts: { "zh-Hans": "Simplificado (简体)", "zh-Hant": "Tradicional (繁體)" }, scriptHint: "Este motor no distingue el chino simplificado del tradicional. Compáralo con la imagen; los importes y fechas son iguales en ambos.", missing: "No se pudieron leer las páginas {pages}; faltan sus movimientos.", acknowledge: "Importar sin estas páginas", recognition: "Reconocimiento {percent}%", proven: "Comprobado por los saldos", unproven: "No comprobado por los saldos", reading: "Leyendo el texto en este dispositivo…", stop: "Detener", showRow: "Ver en la página" },
+  region: {
+    label: "País / región (opcional)", none: "Sin especificar", mainlandChina: "China continental",
+    help: "Opcional. Ayuda a BillieWeather a reconocer formatos bancarios regionales y a mejorar la categorización de movimientos basada en reglas.",
+    tag: "Región: {region}", change: "Cambiar región", save: "Guardar región", cancel: "Cancelar", reclassify: "Reclasificar",
+    saved: "{file}: región guardada. No se cambió ninguna categoría; elige Reclasificar para aplicarla.",
+    reclassified: "{file}: {count} movimientos reclasificados. Se mantuvieron las categorías que elegiste.",
+  },
   history: {
     title: "Historial de importaciones", report: "{accepted} importados · {duplicates} duplicados omitidos · {rejected} no importables", legacy: "Importado antes de los informes de importación",
     reverse: "Deshacer importación", reverseConfirm: "¿Eliminar los {count} movimientos de esta importación? Los demás no se modifican.", reverseYes: "Eliminar", reverseNo: "Conservar",

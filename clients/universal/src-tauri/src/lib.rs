@@ -44,6 +44,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0004_universal_import.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 5,
+            description: "optional statement region",
+            sql: include_str!("../migrations/0005_statement_region.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
