@@ -216,6 +216,10 @@ html[lang="ko"] :is(h1, h2, p) { word-break: keep-all; overflow-wrap: anywhere; 
 .bw-login h1 { font-size: var(--bw-font-size-2xl); }
 .bw-login-form { display: grid; gap: 14px; margin-top: 6px; }
 .bw-login-form .bw-button { width: 100%; }
+.bw-login-quick { display: grid; gap: 8px; margin-top: 6px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.bw-login-quick-label { font-size: var(--bw-font-size-xs); color: var(--muted); }
+.bw-login-quick-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.bw-login-quick-buttons .bw-button { white-space: normal; text-align: center; }
 .bw-login-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px; margin-top: 4px; }
 .bw-login-footer { max-width: 440px; text-align: center; font-size: var(--bw-font-size-xs); color: var(--muted); margin: 0; }
 

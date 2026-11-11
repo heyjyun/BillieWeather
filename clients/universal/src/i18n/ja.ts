@@ -20,6 +20,7 @@ export const ja: Messages = {
     email: "メールアドレス", password: "パスワード", otp: "2 段階認証コード", otpHelp: "認証アプリに表示される 6 桁のコードを入力してください。",
     submit: "サインイン", submitting: "サインイン中…",
     createAccount: "アカウントを作成", forgot: "パスワードをお忘れですか？", language: "言語",
+    quick: { heading: "クイックサインイン（開発用）", example: "サンプルアカウント", heyjyun: "heyjyun（個人）" },
     errors: {
       invalid_credentials: "メールアドレスまたはパスワードが正しくありません。", locked: "試行回数が多すぎるため、アカウントがロックされました。メールを確認して解除してください。",
       otp_required: "2 段階認証コードを入力してください。", invalid_otp: "2 段階認証コードが正しくありません。", rate_limited: "試行回数が多すぎます。1 分ほど待ってから再度お試しください。",

@@ -21,6 +21,7 @@ export const en = {
     email: "Email", password: "Password", otp: "Two-factor code", otpHelp: "Enter the 6-digit code from your authenticator app.",
     submit: "Sign in", submitting: "Signing in…",
     createAccount: "Create an account", forgot: "Forgot your password?", language: "Language",
+    quick: { heading: "Quick sign-in (development)", example: "Example account", heyjyun: "heyjyun (personal)" },
     errors: {
       invalid_credentials: "That email and password don't match.", locked: "This account is locked after too many attempts. Check your email to unlock it.",
       otp_required: "Enter your two-factor code.", invalid_otp: "That two-factor code is not valid.", rate_limited: "Too many attempts. Wait a minute and try again.",

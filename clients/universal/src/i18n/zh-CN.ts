@@ -20,6 +20,7 @@ export const zhCN: Messages = {
     email: "邮箱", password: "密码", otp: "两步验证码", otpHelp: "请输入身份验证器 App 中的 6 位验证码。",
     submit: "登录", submitting: "正在登录…",
     createAccount: "注册账户", forgot: "忘记密码？", language: "语言",
+    quick: { heading: "快捷登录（开发用）", example: "示例账户", heyjyun: "heyjyun（个人）" },
     errors: {
       invalid_credentials: "邮箱或密码不正确。", locked: "尝试次数过多，账户已被锁定。请查看邮件进行解锁。",
       otp_required: "请输入两步验证码。", invalid_otp: "两步验证码不正确。", rate_limited: "尝试次数过多，请稍等一分钟再试。",

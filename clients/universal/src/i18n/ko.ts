@@ -20,6 +20,7 @@ export const ko: Messages = {
     email: "이메일", password: "비밀번호", otp: "2단계 인증 코드", otpHelp: "인증 앱에 표시된 6자리 코드를 입력하세요.",
     submit: "로그인", submitting: "로그인 중…",
     createAccount: "계정 만들기", forgot: "비밀번호를 잊으셨나요?", language: "언어",
+    quick: { heading: "빠른 로그인(개발용)", example: "예시 계정", heyjyun: "heyjyun(개인)" },
     errors: {
       invalid_credentials: "이메일 또는 비밀번호가 올바르지 않습니다.", locked: "시도 횟수가 너무 많아 계정이 잠겼습니다. 이메일을 확인해 잠금을 해제하세요.",
       otp_required: "2단계 인증 코드를 입력하세요.", invalid_otp: "2단계 인증 코드가 올바르지 않습니다.", rate_limited: "시도 횟수가 너무 많습니다. 1분 후 다시 시도하세요.",

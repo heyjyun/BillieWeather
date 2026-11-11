@@ -20,6 +20,7 @@ export const es: Messages = {
     email: "Correo", password: "Contraseña", otp: "Código de verificación en dos pasos", otpHelp: "Escribe el código de 6 dígitos de tu app de autenticación.",
     submit: "Iniciar sesión", submitting: "Iniciando sesión…",
     createAccount: "Crear una cuenta", forgot: "¿Olvidaste tu contraseña?", language: "Idioma",
+    quick: { heading: "Inicio rápido (desarrollo)", example: "Cuenta de ejemplo", heyjyun: "heyjyun (personal)" },
     errors: {
       invalid_credentials: "El correo y la contraseña no coinciden.", locked: "La cuenta se bloqueó tras demasiados intentos. Revisa tu correo para desbloquearla.",
       otp_required: "Escribe tu código de verificación en dos pasos.", invalid_otp: "El código de verificación no es válido.", rate_limited: "Demasiados intentos. Espera un minuto y vuelve a intentarlo.",

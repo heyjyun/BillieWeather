@@ -20,6 +20,7 @@ export const zhTW: Messages = {
     email: "電子郵件", password: "密碼", otp: "兩步驟驗證碼", otpHelp: "請輸入驗證器 App 中的 6 位數驗證碼。",
     submit: "登入", submitting: "正在登入…",
     createAccount: "註冊帳戶", forgot: "忘記密碼？", language: "語言",
+    quick: { heading: "快速登入（開發用）", example: "範例帳戶", heyjyun: "heyjyun（個人）" },
     errors: {
       invalid_credentials: "電子郵件或密碼不正確。", locked: "嘗試次數過多，帳戶已被鎖定。請查看郵件解鎖。",
       otp_required: "請輸入兩步驟驗證碼。", invalid_otp: "兩步驟驗證碼不正確。", rate_limited: "嘗試次數過多，請稍候一分鐘再試。",

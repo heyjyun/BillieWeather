@@ -9,3 +9,5 @@ src-tauri/gen/schemas/
 *.sqlite3
 src-tauri/tauri.api.conf.json
 coverage/
+# Local env (quick-login credentials for development).
+.env*.local
