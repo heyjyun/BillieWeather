@@ -30,7 +30,15 @@
         "overview": "개요",
         "outlook": "나의 재무 전망",
         "footer": "현재를 이해하고, 다음을 자신 있게 준비하세요.",
-        "language": "언어"
+        "language": "언어",
+        "statements": "명세서",
+        "collapse_sidebar": "사이드바 접기",
+        "expand_sidebar": "사이드바 펼치기",
+        "theme": "테마",
+        "theme_system": "시스템",
+        "theme_light": "라이트",
+        "theme_dark": "다크",
+        "account_menu": "계정"
       }
     }
   }

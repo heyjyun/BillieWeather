@@ -30,7 +30,15 @@
         "overview": "概要",
         "outlook": "これからのお金の見通し",
         "footer": "今を知り、これからを安心して考える。",
-        "language": "言語"
+        "language": "言語",
+        "statements": "明細書",
+        "collapse_sidebar": "サイドバーを折りたたむ",
+        "expand_sidebar": "サイドバーを展開",
+        "theme": "テーマ",
+        "theme_system": "システム",
+        "theme_light": "ライト",
+        "theme_dark": "ダーク",
+        "account_menu": "アカウント"
       }
     }
   }

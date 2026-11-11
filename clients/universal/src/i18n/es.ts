@@ -5,7 +5,7 @@ export const es: Messages = {
   languageName: "Español",
   boot: { opening: "Abriendo tus datos locales…", dbError: "No se pudo abrir la base de datos local." },
   dbName: { eyebrow: "NUEVO EN ESTE DISPOSITIVO", heading: "Pon nombre a la base de datos de este dispositivo", intro: "Tus datos financieros se guardan en una base de datos en este dispositivo. Ponle un nombre para distinguir tus dispositivos. Puedes cambiarlo después en la página Datos.", label: "Nombre de la base de datos", help: "Se rellena con el nombre de este dispositivo. Usa el nombre que quieras.", fallback: "Mi dispositivo", create: "Crear base de datos", creating: "Creando…", failed: "No se pudo guardar el nombre. Inténtalo de nuevo." },
-  nav: { main: "Principal", dashboard: "Panel", transactions: "Movimientos", categories: "Categorías", import: "Importar", reports: "Informes", data: "Datos", settings: "Ajustes", note: "Tus datos financieros se quedan aquí salvo que los sincronices" },
+  nav: { collapse: "Contraer barra lateral", expand: "Expandir barra lateral", main: "Principal", dashboard: "Panel", transactions: "Movimientos", categories: "Categorías", import: "Importar", reports: "Informes", data: "Datos", settings: "Ajustes", note: "Tus datos financieros se quedan aquí salvo que los sincronices" },
   preview: "Vista previa en navegador: los datos financieros solo están en memoria y no se guardan.",
   footer: "BillieWeather ofrece organización financiera y estimaciones únicamente. No es asesoramiento financiero, legal ni fiscal personalizado.",
   categories: {
@@ -60,6 +60,7 @@ export const es: Messages = {
     csvSaved: "CSV guardado.", xlsxSaved: "Informe de Excel guardado.", cancelled: "Exportación cancelada.",
   },
   settings: {
+    appearance: "Apariencia", theme: "Tema", themeSystem: "Igual que el sistema", themeLight: "Claro", themeDark: "Oscuro", themeHelp: "Se guarda solo en este dispositivo.",
     eyebrow: "TUS DATOS, TUS REGLAS", title: "Ajustes y privacidad",
     account: "Cuenta", email: "Correo", nickname: "Apodo", nicknamePlaceholder: "Se muestra en lugar de tu correo", memberSince: "Miembro desde", region: "Región", globalCitizen: "Ciudadanía global",
     language: "Idioma", save: "Guardar", saved: "Guardado en tu cuenta de BillieWeather.", saveFailed: "No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.",

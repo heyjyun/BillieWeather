@@ -5,7 +5,7 @@ export const ko: Messages = {
   languageName: "한국어",
   boot: { opening: "로컬 데이터를 여는 중…", dbError: "로컬 데이터베이스를 열 수 없습니다." },
   dbName: { eyebrow: "이 기기에서 처음", heading: "이 기기의 데이터베이스 이름 정하기", intro: "금융 데이터는 이 기기의 데이터베이스에 저장됩니다. 기기를 구분할 수 있도록 이름을 정하세요. 나중에 데이터 페이지에서 바꿀 수 있습니다.", label: "데이터베이스 이름", help: "이 기기의 이름이 입력되어 있습니다. 원하는 이름으로 바꿀 수 있습니다.", fallback: "내 기기", create: "데이터베이스 만들기", creating: "만드는 중…", failed: "이름을 저장하지 못했습니다. 다시 시도하세요." },
-  nav: { main: "메인", dashboard: "대시보드", transactions: "거래 내역", categories: "카테고리", import: "가져오기", reports: "보고서", data: "데이터", settings: "설정", note: "직접 동기화하지 않는 한 재무 데이터는 이 기기에만 저장됩니다" },
+  nav: { collapse: "사이드바 접기", expand: "사이드바 펼치기", main: "메인", dashboard: "대시보드", transactions: "거래 내역", categories: "카테고리", import: "가져오기", reports: "보고서", data: "데이터", settings: "설정", note: "직접 동기화하지 않는 한 재무 데이터는 이 기기에만 저장됩니다" },
   preview: "브라우저 미리보기: 금융 데이터는 메모리에만 있으며 저장되지 않습니다.",
   footer: "BillieWeather는 재무 정리와 추정만 제공하며, 개인 맞춤형 금융·법률·세무 조언이 아닙니다.",
   categories: {
@@ -60,6 +60,7 @@ export const ko: Messages = {
     csvSaved: "CSV를 저장했습니다.", xlsxSaved: "Excel 보고서를 저장했습니다.", cancelled: "내보내기를 취소했습니다.",
   },
   settings: {
+    appearance: "화면", theme: "테마", themeSystem: "시스템 설정 따르기", themeLight: "라이트", themeDark: "다크", themeHelp: "이 기기에만 저장됩니다.",
     eyebrow: "내 데이터는 내가 관리", title: "설정 및 개인정보",
     account: "계정", email: "이메일", nickname: "닉네임", nicknamePlaceholder: "이메일 대신 표시됩니다", memberSince: "가입일", region: "지역", globalCitizen: "세계 시민",
     language: "언어", save: "저장", saved: "BillieWeather 계정에 저장했습니다.", saveFailed: "저장하지 못했습니다. 연결을 확인하고 다시 시도하세요.",

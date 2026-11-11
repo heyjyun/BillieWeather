@@ -1,0 +1,12 @@
+{
+  "name": "@billie/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/tokens.ts",
+  "types": "src/tokens.ts",
+  "description": "BillieWeather design tokens (colors, type, spacing, radii, shadows, layout, icons) shared by the Rails website and the universal client. No dependencies.",
+  "scripts": {
+    "generate": "node scripts/generate.ts"
+  }
+}

@@ -30,7 +30,15 @@
         "overview": "Overview",
         "outlook": "Your financial outlook",
         "footer": "Clarity today. Confidence for what’s next.",
-        "language": "Language"
+        "language": "Language",
+        "statements": "Statements",
+        "collapse_sidebar": "Collapse sidebar",
+        "expand_sidebar": "Expand sidebar",
+        "theme": "Theme",
+        "theme_system": "System",
+        "theme_light": "Light",
+        "theme_dark": "Dark",
+        "account_menu": "Account"
       }
     }
   }

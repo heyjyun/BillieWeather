@@ -51,7 +51,7 @@
       <p><%= finance_date(Date.current) %> – <%= finance_date(Date.current + @forecast[:days].to_i) %></p>
       <p id="forecast-model"><%= t("billie.finance.ui.model") %> <%= forecast_model_labels.fetch(@forecast[:method]) %></p>
     </div>
-    <% if @forecast[:balance_available] %><span class="bw-legend"><span><i class="bw-legend-income"></i><%= t("billie.finance.ui.projected_cash_balance") %></span><% if @forecast[:points].first&.key?(:lower) %><span><%= t("billie.finance.ui.illustrative_range") %></span><% end %></span><% end %>
+    <% if @forecast[:balance_available] %><span class="bw-legend"><span><i class="bw-legend-forecast"></i><%= t("billie.finance.ui.projected_cash_balance") %></span><% if @forecast[:points].first&.key?(:lower) %><span><i class="bw-legend-band"></i><%= t("billie.finance.ui.illustrative_range") %></span><% end %></span><% end %>
   </div>
   <% if @forecast[:balance_available] && @forecast[:points].present? %>
     <div class="bw-line-chart">
@@ -61,12 +61,12 @@
         <span><%= finance_money(chart_low, @profile.currency) %></span>
       </div>
       <svg viewBox="0 0 800 250" role="img" aria-label="<%= t("billie.finance.ui.forecast_chart_description", current: finance_money(@forecast[:current_balance], @profile.currency), projected: finance_money(@forecast[:projected_balance], @profile.currency), days: @forecast[:days]) %>" preserveAspectRatio="none">
-        <defs><linearGradient id="forecast-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#84c6af" stop-opacity="0.35"/><stop offset="100%" stop-color="#84c6af" stop-opacity="0.02"/></linearGradient></defs>
-        <path d="M20 60H780 M20 130H780 M20 210H780" fill="none" stroke="#e9ece9" stroke-width="1" stroke-dasharray="5 5"/>
+        <defs><linearGradient id="forecast-fill" x1="0" x2="0" y1="0" y2="1"><stop class="bw-forecast-stop" offset="0%" stop-opacity="0.28"/><stop class="bw-forecast-stop" offset="100%" stop-opacity="0.02"/></linearGradient></defs>
+        <path class="bw-forecast-grid" d="M20 60H780 M20 130H780 M20 210H780" fill="none" stroke-width="1" stroke-dasharray="5 5"/>
         <% band = finance_chart_band(@forecast[:points]) %>
-        <% if band.present? %><polygon class="bw-forecast-band" points="<%= band %>" fill="#84c6af" fill-opacity="0.25"/><% end %>
+        <% if band.present? %><polygon class="bw-forecast-band" points="<%= band %>"/><% end %>
         <polygon points="20,230 <%= finance_chart_points(@forecast[:points]) %> 780,230" fill="url(#forecast-fill)"/>
-        <polyline points="<%= finance_chart_points(@forecast[:points]) %>" fill="none" stroke="#297b63" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+        <polyline class="bw-forecast-line" points="<%= finance_chart_points(@forecast[:points]) %>" fill="none" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
       </svg>
     </div>
     <div class="bw-chart-dates"><span><%= t("billie.finance.ui.today") %></span><span><%= t("billie.finance.ui.in_days", days: @forecast[:days]) %></span></div>

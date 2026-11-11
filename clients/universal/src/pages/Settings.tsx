@@ -5,6 +5,7 @@ import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, LanguageSelect, useI18n } from "../i18n";
 import { websiteUrl } from "../services/account";
 import { openExternal } from "../services/session";
+import { savedTheme, setTheme, type ThemeChoice } from "../services/theme";
 
 function regionName(code: string | null | undefined, locale: string, globalCitizen: string): string {
   if (!code) return "—";
@@ -22,6 +23,7 @@ export function Settings() {
   const { store, refresh, rules } = useFinance();
   const [nickname, setNickname] = useState(account?.nickname ?? "");
   const [accountStatus, setAccountStatus] = useState("");
+  const [theme, setThemeState] = useState<ThemeChoice>(savedTheme);
   const x = m.settings;
 
   async function save(preferences: Parameters<typeof savePreferences>[0]) {
@@ -62,6 +64,19 @@ export function Settings() {
           <button type="button" className="bw-link-button" onClick={() => openExternal(websiteUrl("/app/settings", locale))}>{x.manageOnline} ↗</button>
           <button type="button" className="bw-button bw-button-outline" onClick={() => signOut()}>{x.signOut}</button>
         </div>
+      </section>
+
+      <section className="bw-panel" aria-labelledby="appearance-heading">
+        <h2 id="appearance-heading">{x.appearance}</h2>
+        <div className="bw-segmented" role="radiogroup" aria-label={x.theme}>
+          {(["system", "light", "dark"] as const).map((choice) => (
+            <button key={choice} type="button" role="radio" aria-checked={theme === choice} className={theme === choice ? "is-active" : ""}
+              onClick={() => { setTheme(choice); setThemeState(choice); }}>
+              {choice === "system" ? x.themeSystem : choice === "light" ? x.themeLight : x.themeDark}
+            </button>
+          ))}
+        </div>
+        <p className="bw-caption bw-section-gap">{x.themeHelp}</p>
       </section>
 
       <section className="bw-panel">

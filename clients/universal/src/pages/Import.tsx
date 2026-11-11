@@ -42,6 +42,7 @@ export function Import() {
   const [editingRegion, setEditingRegion] = useState<{ key: string; value: string } | null>(null);
   const regionName = useRegionName();
   const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "warn" | "error"; text: string } | null>(null);
   // Files waiting for review, first one shown. Kept in memory only; nothing is written until confirmed.
   const [drafts, setDrafts] = useState<Waiting[]>([]);
@@ -323,7 +324,7 @@ export function Import() {
             <RegionSelect label={u.region.label} value={region} disabled={busy} onChange={setRegion} />
             <small>{u.region.help}</small>
           </label>
-          <label className={`bw-dropzone ${busy ? "is-busy" : ""}`}>
+          <label className={`bw-dropzone ${busy ? "is-busy" : ""} ${dragOver ? "is-dragover" : ""}`} onDragEnter={() => setDragOver(true)} onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false); }} onDrop={() => setDragOver(false)}>
             <input type="file" accept={`${UNIVERSAL_ACCEPT},.pdf,application/pdf`} multiple disabled={busy} onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
             <strong>{recognition ? u.ocr.reading : busy ? x.importing : u.choose}</strong>
             <small>{u.requirements}</small>

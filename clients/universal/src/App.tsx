@@ -1,3 +1,4 @@
+import { icons } from "@billie/design-tokens";
 import { useState } from "react";
 import { AccountProvider, useAccount } from "./hooks/useAccount";
 import { FinanceProvider, useFinance } from "./hooks/useFinance";
@@ -11,17 +12,18 @@ import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { Transactions } from "./pages/Transactions";
 import { SyncStatus } from "./components/SyncStatus";
+import { saveSidebarCollapsed, savedSidebarCollapsed } from "./services/theme";
 
 export type Page = "dashboard" | "transactions" | "categories" | "import" | "reports" | "data" | "settings";
 
 const NAV: Array<{ page: Page; icon: string }> = [
-  { page: "dashboard", icon: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z" },
-  { page: "transactions", icon: "M3 7h16 M15 3l4 4-4 4 M21 17H5 M9 13l-4 4 4 4" },
-  { page: "categories", icon: "M3 3h8l10 10-8 8L3 11z M7.5 7.5h.01" },
-  { page: "import", icon: "M12 16V3 M7 8l5-5 5 5 M3 15v5a1 1 0 001 1h16a1 1 0 001-1v-5" },
-  { page: "reports", icon: "M14 2H5v20h14V7z M14 2v6h5 M8 12h8 M8 16h8" },
-  { page: "data", icon: "M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6 M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" },
-  { page: "settings", icon: "M4 7h16 M4 17h16 M9 4v6 M15 14v6" },
+  { page: "dashboard", icon: icons.dashboard },
+  { page: "transactions", icon: icons.transactions },
+  { page: "categories", icon: icons.tag },
+  { page: "import", icon: icons.upload },
+  { page: "reports", icon: icons.file },
+  { page: "data", icon: icons.data },
+  { page: "settings", icon: icons.settings },
 ];
 
 function Icon({ d }: { d: string }) {
@@ -39,21 +41,28 @@ function Shell() {
     setPage(next);
   };
   const { persistent } = useFinance();
+  const [collapsed, setCollapsed] = useState(savedSidebarCollapsed);
+  const toggleSidebar = () => setCollapsed((was) => { saveSidebarCollapsed(!was); return !was; });
   return (
-    <div className="bw-app">
-      <nav className="bw-nav" aria-label={m.nav.main}>
-        <div className="bw-brand"><span className="bw-brand-mark">b<small>·</small></span><span>BillieWeather</span></div>
+    <div className={collapsed ? "bw-app is-collapsed" : "bw-app"}>
+      <nav className="bw-nav" id="bw-nav" aria-label={m.nav.main}>
+        <div className="bw-nav-head">
+          <div className="bw-brand"><span className="bw-brand-mark" aria-hidden="true">b<small>·</small></span><span className="bw-brand-name">BillieWeather</span></div>
+          <button type="button" className="bw-nav-toggle" aria-controls="bw-nav" aria-expanded={!collapsed} aria-label={collapsed ? m.nav.expand : m.nav.collapse} title={collapsed ? m.nav.expand : m.nav.collapse} onClick={toggleSidebar}>
+            <Icon d={icons.collapse} />
+          </button>
+        </div>
         <ul>
           {NAV.map((item) => (
             <li key={item.page}>
-              <button type="button" className={page === item.page ? "is-active" : ""} aria-current={page === item.page ? "page" : undefined} onClick={() => go(item.page)}>
+              <button type="button" className={page === item.page ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? m.nav[item.page] : undefined} aria-current={page === item.page ? "page" : undefined} onClick={() => go(item.page)}>
                 <Icon d={item.icon} /><span>{m.nav[item.page]}</span>
               </button>
             </li>
           ))}
         </ul>
         <div className="bw-nav-bottom">
-          <p className="bw-nav-note"><Icon d="M5 11h14v10H5z M8 11V7a4 4 0 018 0v4" /><span>{m.nav.note}</span></p>
+          <p className="bw-nav-note"><Icon d={icons.lock} /><span>{m.nav.note}</span></p>
           {account && <p className="bw-nav-user"><strong>{account.nickname || account.email}</strong>{account.nickname && <small>{account.email}</small>}</p>}
         </div>
       </nav>

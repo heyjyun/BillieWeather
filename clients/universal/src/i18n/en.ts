@@ -6,7 +6,7 @@ export const en = {
   languageName: "English",
   boot: { opening: "Opening your local data…", dbError: "The local database could not be opened." },
   dbName: { eyebrow: "NEW ON THIS DEVICE", heading: "Name this device's database", intro: "Your financial data is stored in a database on this device. Give it a name so you can tell your devices apart. You can change it later on the Data page.", label: "Database name", help: "Filled in with this device's name. Use any name you like.", fallback: "My device", create: "Create database", creating: "Creating…", failed: "The name couldn't be saved. Try again." },
-  nav: { main: "Main", dashboard: "Dashboard", transactions: "Transactions", categories: "Categories", import: "Import", reports: "Reports", data: "Data", settings: "Settings", note: "Financial data stays here unless you sync it" },
+  nav: { collapse: "Collapse sidebar", expand: "Expand sidebar", main: "Main", dashboard: "Dashboard", transactions: "Transactions", categories: "Categories", import: "Import", reports: "Reports", data: "Data", settings: "Settings", note: "Financial data stays here unless you sync it" },
   preview: "Browser preview — financial data is kept in memory and is not saved.",
   footer: "BillieWeather provides financial organization and estimates only. It is not individualized financial, legal, or tax advice.",
   categories: {
@@ -61,6 +61,7 @@ export const en = {
     csvSaved: "CSV saved.", xlsxSaved: "Excel report saved.", cancelled: "Export cancelled.",
   },
   settings: {
+    appearance: "Appearance", theme: "Theme", themeSystem: "Match system", themeLight: "Light", themeDark: "Dark", themeHelp: "Saved on this device only.",
     eyebrow: "YOUR DATA, YOUR RULES", title: "Settings & privacy",
     account: "Account", email: "Email", nickname: "Nickname", nicknamePlaceholder: "Shown instead of your email", memberSince: "Member since", region: "Region", globalCitizen: "Global Citizen",
     language: "Language", save: "Save", saved: "Saved to your BillieWeather account.", saveFailed: "Couldn't save. Check your connection and try again.",

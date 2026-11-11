@@ -7,7 +7,10 @@
     <meta name="description" content="<%= t('billie.layout.description') %>">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <meta name="color-scheme" content="light dark">
+    <%= stylesheet_link_tag "/billie-tokens.css" %>
     <%= stylesheet_link_tag "/billie.css" %>
+    <script src="/billie-theme.js"></script>
     <script src="/billie.js" defer></script>
   </head>
   <% landing_page = controller_path == "public/home"; public_page = landing_page || devise_controller? || !user_signed_in?; admin_area = !public_page && controller_path.start_with?("admin/") %>
@@ -18,13 +21,17 @@
         <%= link_to root_path, class: "bw-brand", "aria-label": t('billie.layout.home') do %><span class="bw-brand-mark">b<small>·</small></span><span>BillieWeather</span><% end %>
         <nav class="bw-public-links" aria-label="<%= t('billie.layout.main_navigation') %>"><%= link_to t('billie.community.nav.features_membership'), billie_features_path, "aria-current": ("page" if current_page?(billie_features_path)) %><%= link_to t('billie.layout.about_us'), billie_about_path, "aria-current": ("page" if current_page?(billie_about_path)) %><%= link_to t('billie.community.nav.support_us'), billie_features_path(anchor: "support"), class: "bw-public-support-link", data: {dialog_open: "support-dialog"}, "aria-haspopup": "dialog", "aria-controls": "support-dialog" %><%= link_to t('billie.downloads.nav'), billie_download_path, "aria-current": ("page" if current_page?(billie_download_path)) %></nav>
         <div class="bw-header-actions">
+          <%= render 'shared/billie_theme_switcher' %>
           <%= render 'shared/billie_language_switcher' %>
           <% if user_signed_in? %><%= link_to t('billie.layout.open_dashboard'), finance_dashboard_path, class: "bw-button bw-button-dark" %><% else %><%= link_to t('billie.layout.log_in'), new_user_session_path, class: "bw-text-link" %><%= link_to t('billie.layout.get_started'), new_user_registration_path, class: "bw-button bw-button-dark" %><% end %>
         </div>
       </header>
     <% else %>
-      <aside class="bw-sidebar">
-        <%= link_to root_path, class: "bw-brand", "aria-label": t('billie.layout.home') do %><span class="bw-brand-mark">b<small>·</small></span><span>BillieWeather</span><% end %>
+      <aside class="bw-sidebar" id="bw-sidebar">
+        <div class="bw-sidebar-head">
+          <%= link_to root_path, class: "bw-brand", "aria-label": t('billie.layout.home') do %><span class="bw-brand-mark">b<small>·</small></span><span class="bw-brand-name">BillieWeather</span><% end %>
+          <button type="button" class="bw-sidebar-toggle" data-sidebar-toggle hidden aria-controls="bw-sidebar" aria-expanded="true" aria-label="<%= t('billie.layout.collapse_sidebar') %>" title="<%= t('billie.layout.collapse_sidebar') %>" data-collapse-label="<%= t('billie.layout.collapse_sidebar') %>" data-expand-label="<%= t('billie.layout.expand_sidebar') %>"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6 M4 4v16"/></svg></button>
+        </div>
         <% if admin_area %>
         <span class="bw-nav-label"><%= t('billie.community.nav.support_admin') %></span>
         <nav class="bw-nav" aria-label="<%= t('billie.community.nav.support_admin') %>">
@@ -35,10 +42,11 @@
           <%= link_to finance_dashboard_path, class: "bw-nav-link bw-nav-back" do %><%= finance_icon "arrow" %><span><%= t('billie.community.nav.back_to_app') %></span><% end %>
         </nav>
         <% else %>
-        <div class="bw-workspace"><span class="bw-workspace-avatar"><%= current_user.email.to_s.first.upcase %></span><div><strong><%= t('billie.layout.my_workspace') %></strong><small><%= t('billie.layout.personal_finances') %></small></div></div>
+        <div class="bw-workspace"><span class="bw-workspace-avatar" aria-hidden="true"><%= current_user.email.to_s.first.upcase %></span><div><strong><%= t('billie.layout.my_workspace') %></strong><small><%= t('billie.layout.personal_finances') %></small></div></div>
         <span class="bw-nav-label"><%= t('billie.layout.workspace_label') %></span>
         <nav class="bw-nav" aria-label="<%= t('billie.layout.workspace_navigation') %>">
           <%= finance_nav t('billie.layout.dashboard'), finance_dashboard_path, "dashboard", active: controller_name == "dashboard" %>
+          <%= finance_nav t('billie.layout.statements'), finance_statements_path, "upload", active: controller_name == "statements" %>
           <%= finance_nav t('billie.layout.transactions'), finance_transactions_path, "transactions", active: controller_name == "transactions" %>
           <%= finance_nav t('billie.categories.nav'), finance_categories_path, "tag", active: controller_name == "categories" %>
           <%= finance_nav t('billie.layout.forecast'), finance_forecast_path, "forecast", active: controller_name == "forecast" %>
@@ -54,7 +62,7 @@
       </aside>
     <% end %>
     <div class="<%= public_page ? 'bw-public-shell' : 'bw-main-shell' %>">
-      <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb"><%= admin_area ? t('billie.community.nav.support_admin') : t('billie.layout.workspace') %> <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : t('billie.layout.overview') %></strong></div><div class="bw-topbar-actions"><span class="bw-topbar-label"><span class="bw-status-dot"></span> <%= t('billie.layout.outlook') %></span><%= render 'shared/billie_language_switcher' %></div></header><% end %>
+      <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb"><%= admin_area ? t('billie.community.nav.support_admin') : t('billie.layout.workspace') %> <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : t('billie.layout.overview') %></strong></div><div class="bw-topbar-actions"><%= render 'shared/billie_theme_switcher' %><%= render 'shared/billie_language_switcher' %></div></header><% end %>
       <main id="main-content" class="<%= 'bw-main' unless public_page %>">
         <% flash.each do |type, message| %><div class="bw-flash <%= 'bw-flash-error' if type.to_s == 'alert' %>" role="<%= type.to_s == 'alert' ? 'alert' : 'status' %>"><%= message %></div><% end %>
         <%= yield %>

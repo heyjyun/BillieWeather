@@ -12,6 +12,7 @@ billieweather/
 │   ├── finance-core/   # import parsing, categorizer, rules, dashboard math — ported from Rails
 │   │   └── fixtures/   # synthetic statements + Ruby-generated expected results
 │   └── reporting/      # CSV export and a dependency-free .xlsx writer
+│   └── design-tokens/  # colors, type, spacing, icons: one source for the website and every app
 └── clients/universal/
     ├── src/            # the one React app every platform runs
     │   ├── pages/      # Dashboard, Transactions, Import, Reports, Settings & privacy

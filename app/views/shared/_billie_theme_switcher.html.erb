@@ -1,0 +1,13 @@
+<%# Per-browser theme preference (System / Light / Dark). Stored only in this browser's localStorage by /billie-theme.js; never sent to the server. Hidden until the script runs. %>
+<details class="bw-theme-menu" data-theme-menu hidden>
+  <summary aria-label="<%= t('billie.layout.theme') %>" title="<%= t('billie.layout.theme') %>">
+    <svg class="bw-theme-icon-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 1v2 M12 21v2 M1 12h2 M21 12h2 M4.2 4.2l1.4 1.4 M18.4 18.4l1.4 1.4 M4.2 19.8l1.4-1.4 M18.4 5.6l1.4-1.4 M12 7a5 5 0 100 10 5 5 0 000-10"/></svg>
+    <svg class="bw-theme-icon-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>
+    <span class="bw-sr-only"><%= t('billie.layout.theme') %></span>
+  </summary>
+  <div class="bw-theme-options" role="group" aria-label="<%= t('billie.layout.theme') %>">
+    <button type="button" data-theme-choice="system" aria-pressed="true"><%= t('billie.layout.theme_system') %></button>
+    <button type="button" data-theme-choice="light" aria-pressed="false"><%= t('billie.layout.theme_light') %></button>
+    <button type="button" data-theme-choice="dark" aria-pressed="false"><%= t('billie.layout.theme_dark') %></button>
+  </div>
+</details>

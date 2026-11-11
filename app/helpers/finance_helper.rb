@@ -165,8 +165,8 @@ module FinanceHelper
   end
 
   def finance_nav(label, path, icon, active:)
-    link_to(path, class: "bw-nav-link #{"is-active" if active}", "aria-current": ("page" if active)) do
-      safe_join([finance_icon(icon), content_tag(:span, label)])
+    link_to(path, class: "bw-nav-link #{"is-active" if active}", "aria-current": ("page" if active), title: label) do
+      safe_join([finance_icon(icon), content_tag(:span, label, class: "bw-nav-text")])
     end
   end
 

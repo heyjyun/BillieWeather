@@ -73,13 +73,14 @@
       <%= finance_icon "upload" %>
     </div>
     <%= form_with url: finance_statements_path, multipart: true, data: {turbo: false}, class: "bw-form" do |form| %>
-      <div class="bw-upload-box">
+      <div class="bw-upload-box" data-dropzone>
         <span class="bw-upload-icon"><%= finance_icon "upload", size: 32 %></span>
         <h3><%= t("billie.finance.ui.a_clearer_outlook_starts_here") %></h3>
         <p><%= t("billie.finance.ui.choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank") %></p>
         <%= form.label :files, t("billie.finance.ui.statement_csv_or_pdf_files"), class: "bw-sr-only" %>
         <%= form.file_field :files, multiple: true, accept: ".csv,.pdf,text/csv,application/pdf", required: true, class: "bw-file-input", aria: {describedby: "statement-file-limits"} %>
         <small id="statement-file-limits"><%= t("billie.finance.ui.up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf") %></small>
+        <ul class="bw-dropzone-files" data-dropzone-files aria-live="polite" hidden></ul>
       </div>
       <div class="bw-form-note">
         <%= finance_icon "file", size: 18 %>

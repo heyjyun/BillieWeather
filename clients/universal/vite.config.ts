@@ -46,6 +46,7 @@ export default defineConfig({
       "@billie/shared-types": `${packages}/shared-types/src/index.ts`,
       "@billie/finance-core": `${packages}/finance-core/src/index.ts`,
       "@billie/reporting": `${packages}/reporting/src/index.ts`,
+      "@billie/design-tokens": `${packages}/design-tokens/src/tokens.ts`,
     },
   },
   clearScreen: false,

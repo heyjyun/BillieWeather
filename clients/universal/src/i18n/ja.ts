@@ -5,7 +5,7 @@ export const ja: Messages = {
   languageName: "日本語",
   boot: { opening: "ローカルデータを開いています…", dbError: "ローカルデータベースを開けませんでした。" },
   dbName: { eyebrow: "このデバイスで初めて", heading: "このデバイスのデータベースに名前を付ける", intro: "家計データはこのデバイス上のデータベースに保存されます。デバイスを見分けられるよう名前を付けてください。あとで「データ」ページから変更できます。", label: "データベース名", help: "このデバイスの名前を入れてあります。好きな名前に変えられます。", fallback: "マイデバイス", create: "データベースを作成", creating: "作成しています…", failed: "名前を保存できませんでした。もう一度お試しください。" },
-  nav: { main: "メイン", dashboard: "ダッシュボード", transactions: "取引", categories: "カテゴリ", import: "取り込み", reports: "レポート", data: "データ", settings: "設定", note: "同期しない限り、財務データはこの端末にだけ保存されます" },
+  nav: { collapse: "サイドバーを折りたたむ", expand: "サイドバーを展開", main: "メイン", dashboard: "ダッシュボード", transactions: "取引", categories: "カテゴリ", import: "取り込み", reports: "レポート", data: "データ", settings: "設定", note: "同期しない限り、財務データはこの端末にだけ保存されます" },
   preview: "ブラウザプレビュー：お金のデータはメモリ上にのみあり、保存されません。",
   footer: "BillieWeather は家計の整理と見積もりを提供するもので、個人向けの金融・法律・税務アドバイスではありません。",
   categories: {
@@ -60,6 +60,7 @@ export const ja: Messages = {
     csvSaved: "CSV を保存しました。", xlsxSaved: "Excel レポートを保存しました。", cancelled: "書き出しをキャンセルしました。",
   },
   settings: {
+    appearance: "表示", theme: "テーマ", themeSystem: "システムに合わせる", themeLight: "ライト", themeDark: "ダーク", themeHelp: "この端末にのみ保存されます。",
     eyebrow: "あなたのデータはあなたのもの", title: "設定とプライバシー",
     account: "アカウント", email: "メールアドレス", nickname: "ニックネーム", nicknamePlaceholder: "メールアドレスの代わりに表示", memberSince: "登録日", region: "地域", globalCitizen: "地球市民",
     language: "言語", save: "保存", saved: "BillieWeather アカウントに保存しました。", saveFailed: "保存できませんでした。接続を確認してもう一度お試しください。",

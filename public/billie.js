@@ -206,7 +206,114 @@
     });
   }
 
+  // Theme menu (System / Light / Dark). The choice stays in this browser only (see /billie-theme.js).
+  function storageGet(key) { try { return window.localStorage.getItem(key); } catch (error) { return null; } }
+  function storageSet(key, value) { try { if (value === null) window.localStorage.removeItem(key); else window.localStorage.setItem(key, value); } catch (error) { /* ignore */ } }
+
+  function setupThemeMenu(menu) {
+    if (menu.dataset.themeReady) return;
+    menu.dataset.themeReady = "1";
+    menu.hidden = false;
+    var buttons = menu.querySelectorAll("[data-theme-choice]");
+    function apply(choice) {
+      if (choice === "light" || choice === "dark") document.documentElement.setAttribute("data-theme", choice);
+      else document.documentElement.removeAttribute("data-theme");
+      buttons.forEach(function (button) { button.setAttribute("aria-pressed", button.dataset.themeChoice === choice ? "true" : "false"); });
+    }
+    apply(storageGet("billie.theme") || "system");
+    buttons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var choice = button.dataset.themeChoice;
+        storageSet("billie.theme", choice === "system" ? null : choice);
+        document.querySelectorAll("[data-theme-menu]").forEach(function (other) {
+          other.querySelectorAll("[data-theme-choice]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.themeChoice === choice ? "true" : "false"); });
+        });
+        apply(choice);
+        menu.open = false;
+        menu.querySelector("summary").focus();
+      });
+    });
+  }
+
+  // Collapsible sidebar on wide screens. aria-expanded mirrors the state; the label swaps.
+  function setupSidebarToggle(button) {
+    if (button.dataset.sidebarReady) return;
+    button.dataset.sidebarReady = "1";
+    button.hidden = false;
+    function sync() {
+      var collapsed = document.documentElement.getAttribute("data-sidebar") === "collapsed";
+      button.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      var label = collapsed ? button.dataset.expandLabel : button.dataset.collapseLabel;
+      button.setAttribute("aria-label", label);
+      button.setAttribute("title", label);
+    }
+    sync();
+    button.addEventListener("click", function () {
+      var collapsed = document.documentElement.getAttribute("data-sidebar") === "collapsed";
+      if (collapsed) document.documentElement.removeAttribute("data-sidebar"); else document.documentElement.setAttribute("data-sidebar", "collapsed");
+      storageSet("billie.sidebar", collapsed ? null : "collapsed");
+      sync();
+    });
+  }
+
+  // Close an open <details> menu (language, theme) on Escape or an outside click.
+  function setupMenuDismiss() {
+    if (document.documentElement.dataset.menuDismissReady) return;
+    document.documentElement.dataset.menuDismissReady = "1";
+    document.addEventListener("click", function (event) {
+      document.querySelectorAll(".bw-language-menu[open], .bw-theme-menu[open]").forEach(function (menu) {
+        if (!menu.contains(event.target)) menu.open = false;
+      });
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape") return;
+      document.querySelectorAll(".bw-language-menu[open], .bw-theme-menu[open]").forEach(function (menu) {
+        menu.open = false;
+        var summary = menu.querySelector("summary");
+        if (summary) summary.focus();
+      });
+    });
+  }
+
+  // Statement upload: drop files anywhere on the upload box. The file input stays the real control
+  // (keyboard, screen readers, no-JS); dropping just fills it. Chosen file names are listed locally.
+  function setupDropzone(zone) {
+    if (zone.dataset.dropzoneReady) return;
+    var input = zone.querySelector("input[type=file]");
+    var list = zone.querySelector("[data-dropzone-files]");
+    if (!input) return;
+    zone.dataset.dropzoneReady = "1";
+    function showFiles() {
+      if (!list) return;
+      list.textContent = "";
+      Array.prototype.forEach.call(input.files || [], function (file) {
+        var item = document.createElement("li");
+        item.textContent = file.name;
+        list.appendChild(item);
+      });
+      list.hidden = !(input.files && input.files.length);
+    }
+    ["dragenter", "dragover"].forEach(function (type) {
+      zone.addEventListener(type, function (event) { event.preventDefault(); zone.classList.add("is-dragover"); });
+    });
+    ["dragleave", "dragend"].forEach(function (type) {
+      zone.addEventListener(type, function (event) { if (!zone.contains(event.relatedTarget)) zone.classList.remove("is-dragover"); });
+    });
+    zone.addEventListener("drop", function (event) {
+      event.preventDefault();
+      zone.classList.remove("is-dragover");
+      if (!event.dataTransfer || !event.dataTransfer.files.length) return;
+      try { input.files = event.dataTransfer.files; } catch (error) { return; }
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    input.addEventListener("change", showFiles);
+  }
+
   function init() {
+    document.querySelectorAll("[data-dropzone]").forEach(setupDropzone);
+    document.querySelectorAll("[data-theme-menu]").forEach(setupThemeMenu);
+    document.querySelectorAll("[data-sidebar-toggle]").forEach(setupSidebarToggle);
+    setupMenuDismiss();
     document.querySelectorAll("[data-region-search]").forEach(setupRegionSearch);
     document.querySelectorAll("[data-dialog-open]").forEach(setupDialogTrigger);
     document.querySelectorAll("[data-copy-text]").forEach(setupCopyButton);

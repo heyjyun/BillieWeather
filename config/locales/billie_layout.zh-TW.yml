@@ -30,7 +30,15 @@
         "overview": "總覽",
         "outlook": "你的財務前景",
         "footer": "看清當下，從容迎接未來。",
-        "language": "語言"
+        "language": "語言",
+        "statements": "對帳單",
+        "collapse_sidebar": "收合側邊欄",
+        "expand_sidebar": "展開側邊欄",
+        "theme": "主題",
+        "theme_system": "跟隨系統",
+        "theme_light": "淺色",
+        "theme_dark": "深色",
+        "account_menu": "帳戶"
       }
     }
   }
