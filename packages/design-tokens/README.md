@@ -40,6 +40,13 @@ Custom properties are named `--bw-color-*`, `--bw-font-size-*`, `--bw-space-*`, 
 - `warning-*` marks rows that need review, uncertain data and stale results; `info-*` explains
   estimates and limitations (for example the forecast caveat).
 
+## Engine compatibility
+
+The apps target Safari 15 (iOS, older macOS WebKit) and Chrome 105 (Windows WebView2); see
+`clients/universal/vite.config.ts`. Stick to CSS those engines support: no `color-mix()`, `oklch()`,
+container queries or cascade layers. Translucent colors are plain `rgba` tokens (`accent-tint`,
+`focus-halo`, `topbar-bg`, …). The token tests reject the unsupported features.
+
 ## Themes
 
 The tokens follow the operating system (`prefers-color-scheme`). `<html data-theme="light">` or

@@ -42,3 +42,13 @@ describe("shared icons", () => {
     }
   });
 });
+
+describe("engine compatibility", () => {
+  // The apps target Safari 15 (iOS, older macOS WebKit) and Chrome 105 (Windows WebView2) — see
+  // clients/universal/vite.config.ts. color-mix() needs Safari 16.2 / Chrome 111, so translucent
+  // colors are plain rgba tokens instead.
+  it.each(["../../../public/billie.css", "../../../clients/universal/src/styles.css", "../dist/tokens.css"])("%s avoids CSS newer than the supported engines", (file) => {
+    const css = read(file);
+    expect(css).not.toMatch(/color-mix\(|oklch\(|@container|@layer|text-wrap:/);
+  });
+});

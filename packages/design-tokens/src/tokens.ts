@@ -69,7 +69,15 @@ export interface ColorTokens {
   infoSoft: string;
 
   focusRing: string;
+  /** Soft halo drawn around focused inputs. */
+  focusHalo: string;
   overlay: string;
+  /** Translucent fills. Plain rgba so every target engine (Safari 15, Chrome 105) supports them. */
+  topbarBg: string;
+  accentTint: string;
+  accentTintStrong: string;
+  positiveBorder: string;
+  warningTint: string;
 
   /** Chart palette. viz0..viz6 follow the spending categories (finance-core spending.ts). */
   viz0: string; viz1: string; viz2: string; viz3: string; viz4: string; viz5: string; viz6: string;
@@ -125,7 +133,13 @@ export const color: Record<ThemeName, ColorTokens> = {
     infoSoft: "#EAF0FC",
 
     focusRing: "#C2357F",
+    focusHalo: "rgba(194, 53, 127, 0.35)",
     overlay: "rgba(28, 16, 36, 0.62)",
+    topbarBg: "rgba(248, 247, 250, 0.88)",
+    accentTint: "rgba(228, 88, 163, 0.14)",
+    accentTintStrong: "rgba(228, 88, 163, 0.4)",
+    positiveBorder: "rgba(28, 149, 121, 0.3)",
+    warningTint: "rgba(201, 138, 18, 0.14)",
 
     // Validated categorical palette (kept from the previous charts so a category keeps its color).
     viz0: "#2A78D6", viz1: "#EB6834", viz2: "#1BAF7A", viz3: "#EDA100", viz4: "#E87BA4", viz5: "#008300", viz6: "#6250D6",
@@ -179,7 +193,13 @@ export const color: Record<ThemeName, ColorTokens> = {
     infoSoft: "#1D2840",
 
     focusRing: "#F07FBE",
+    focusHalo: "rgba(240, 127, 190, 0.35)",
     overlay: "rgba(5, 2, 8, 0.74)",
+    topbarBg: "rgba(23, 19, 28, 0.88)",
+    accentTint: "rgba(240, 127, 190, 0.14)",
+    accentTintStrong: "rgba(240, 127, 190, 0.4)",
+    positiveBorder: "rgba(60, 199, 159, 0.3)",
+    warningTint: "rgba(232, 176, 74, 0.16)",
 
     viz0: "#3987E5", viz1: "#D95926", viz2: "#199E70", viz3: "#C98500", viz4: "#D55181", viz5: "#2E9B2E", viz6: "#9085E9",
     vizOther: "#5A5263",

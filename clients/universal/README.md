@@ -113,6 +113,10 @@ not set up yet.
 - **Least privilege**: the app's permissions (`src-tauri/capabilities/default.json`) allow SQLite,
   the save dialog, and writing to the file the person picked. There is no file-system read scope;
   imports use the standard file picker.
+  Files can also be dropped onto the Import drop zone: `dragDropEnabled: false` in `tauri.conf.json` hands OS drops to
+  the web view's `<input type="file">` (Tauri's own handler would swallow them on macOS and Windows), so a dropped file
+  is read exactly like a picked one and no file path reaches JavaScript. `src/services/dropGuard.ts` cancels drops
+  anywhere else so the web view never opens a dropped file. Verified with a real Finder-style drag on macOS; not run on Windows.
 - **No analytics, crash reporting, or financial sync.**
 - **Managing data** (the Data page):
   - Lists the cloud and every local database side by side, each with its name, size (actual SQLite size locally, approximate in the cloud), its share of the total, contents, date range and last change, plus a bar of the shares. Databases on other devices are stored there and are not counted.

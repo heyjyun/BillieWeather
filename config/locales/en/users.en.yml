@@ -2,6 +2,13 @@ en:
   users:
     fields:
       _:
+      # Documents the app's usage_region column in the generated OpenAPI schema (api/v1/users/_user.json.jbuilder).
+      usage_region:
+        _: &usage_region Usage Region
+        label: *usage_region
+        heading: *usage_region
+        api_title: *usage_region
+        api_description: "Two-letter usage region code chosen at registration (ISO 3166-1 alpha-2, or XG for Global Citizen)."
       # 🚅 super scaffolding will insert new fields above this line.
   activerecord:
     attributes:
