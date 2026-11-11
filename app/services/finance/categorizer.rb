@@ -9,9 +9,17 @@ module Finance
       /\b(?:#{list.map { |word| Regexp.escape(word) }.join("|")})\b/i
     end
 
+    # Like `words`, but the words of a phrase may be separated by spaces and punctuation, as banks
+    # print them: "PAYMENT - THANK YOU", "ONLINE PAYMENT, THANK YOU".
+    PHRASE_GAP = '[\s.,;:/_*#·\-–—]+' # same set as finance-core's categorizer.ts
+
+    def self.phrases(*list)
+      /\b(?:#{list.map { |phrase| phrase.split.map { |word| Regexp.escape(word) }.join(PHRASE_GAP) }.join("|")})\b/i
+    end
+
     # Transfers are left out of income/spending totals, so keep this list narrow: wrongly
     # calling a real payment a transfer would silently hide it from the totals.
-    TRANSFERS = words("transfer", "payment thank you", "credit card payment", "opening balance", "balance forward")
+    TRANSFERS = phrases("transfer", "payment thank you", "credit card payment", "opening balance", "balance forward")
 
     # Order matters: the first match wins, so more specific lists come first
     # (for example "uber eats" is Food, not Transport; "amazon web services" is Business, not Shopping).

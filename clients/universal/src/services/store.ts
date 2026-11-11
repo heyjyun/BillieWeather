@@ -289,7 +289,7 @@ export class FinanceStore {
       closingBalanceCents: input.parsed.closingBalanceCents, closingBalanceOn: input.parsed.closingBalanceOn, rows, region, regionMeta: input.regionMeta,
     });
     // Like Rails: newer rules also clean up older Uncategorized rows.
-    const recategorized = await this.applyCategories(recategorizeUncategorized(await this.transactions(), await this.rules()));
+    const recategorized = await this.applyCategories(recategorizeUncategorized(await this.automaticTransactions(), await this.rules()));
     return { statementId, recategorized };
   }
 
@@ -380,7 +380,7 @@ export class FinanceStore {
       if ((await this.db.select<Row>("SELECT 1 FROM statements LIMIT 1")).length === 0) await this.db.execute("DELETE FROM settings WHERE key = $1", ["currency"]);
       throw error;
     }
-    const recategorized = await this.applyCategories(recategorizeUncategorized(await this.transactions(), await this.rules()));
+    const recategorized = await this.applyCategories(recategorizeUncategorized(await this.automaticTransactions(), await this.rules()));
     return { batchId, statementIds, transactions: plan.reduce((sum, statement) => sum + statement.rows.length, 0), recategorized };
   }
 
@@ -484,7 +484,7 @@ export class FinanceStore {
       "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO UPDATE SET category = excluded.category, updated_at = excluded.updated_at",
       [rule.merchantKey, rule.income ? 1 : 0, rule.category, now()],
     );
-    return this.applyCategories(transactionsMatchingRule(await this.transactions(), rule, id).map((match) => ({ id: match.id, category })));
+    return this.applyCategories(transactionsMatchingRule(await this.automaticTransactions(), rule, id).map((match) => ({ id: match.id, category })));
   }
 
   /**
@@ -576,6 +576,12 @@ export class FinanceStore {
     } catch {
       // Some drivers refuse VACUUM while other connections are open; the rows are already gone.
     }
+  }
+
+  /** Whether this database holds statements or has been named (so it is someone's database, not a fresh slot). */
+  async hasContent(): Promise<boolean> {
+    const rows = await this.db.select<Row>("SELECT 1 FROM statements UNION ALL SELECT 1 FROM settings WHERE key = $1 LIMIT 1", ["database_name"]);
+    return rows.length > 0;
   }
 
   /** The name the person gave this device's database, or null before it has been named. */
@@ -933,6 +939,15 @@ export class FinanceStore {
 
   private async setSetting(key: string, value: string): Promise<void> {
     await this.db.execute("INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [key, value]);
+  }
+
+  /**
+   * Transactions whose category was set automatically. Rules and newer keyword lists only clean up
+   * these: a category the person chose, even "Uncategorized", is never changed by them.
+   */
+  private async automaticTransactions(): Promise<Transaction[]> {
+    const chosen = new Set((await this.db.select<Row>("SELECT id FROM transactions WHERE category_source = 'user'")).map((row) => Number(row.id)));
+    return (await this.transactions()).filter((transaction) => !chosen.has(transaction.id));
   }
 
   private async applyCategories(changes: Array<{ id: number; category: Category }>): Promise<number> {

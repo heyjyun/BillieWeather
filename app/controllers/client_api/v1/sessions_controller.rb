@@ -19,12 +19,21 @@ module ClientApi
           code = params[:otp_attempt].to_s.strip
           return render json: {error: "otp_required"}, status: :unauthorized if code.empty?
           valid = user.validate_and_consume_otp!(code) || (user.respond_to?(:invalidate_otp_backup_code!) && user.invalidate_otp_backup_code!(code))
-          return render json: {error: "invalid_otp"}, status: :unauthorized unless valid
+          return render json: {error: record_failed_otp(user) ? "locked" : "invalid_otp"}, status: :unauthorized unless valid
         end
 
+        user.reset_failed_attempts! # a complete sign-in, as on the website
         token, expires_at = ClientApi::SessionToken.issue(user)
         user.update_columns(last_seen_at: Time.current)
         render json: {token: token, expires_at: expires_at.iso8601, account: account_json(user)}, status: :created
+      end
+
+      # A wrong two-factor code counts toward the same lockout as a wrong password, so knowing
+      # the password does not allow unlimited code guesses. Returns whether the account is now locked.
+      private def record_failed_otp(user)
+        user.increment_failed_attempts
+        user.lock_access! if user.failed_attempts >= User.maximum_attempts && !user.access_locked?
+        user.access_locked?
       end
 
       # Tokens are stateless; the app forgets its token. Changing the password signs out every app.

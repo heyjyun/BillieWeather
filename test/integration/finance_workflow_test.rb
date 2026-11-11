@@ -144,6 +144,23 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     assert_select "td", text: /HYPERLINK/, count: 0
   end
 
+  test "transactions CSV neutralizes formulas in custom category names" do
+    sign_in @user
+    Finance::CustomCategory.create!(user: @user, name: "=HYPERLINK(2)")
+    upload_csv("Date,Description,Amount\n#{Date.current.iso8601},Corner shop,-3.00\n") do |file|
+      post finance_statements_path, params: {file: file}
+    end
+    @user.finance_transactions.update_all(category: "=HYPERLINK(2)")
+    get finance_transactions_path(format: :csv)
+    assert_response :success
+    assert_equal "'=HYPERLINK(2)", CSV.parse(response.body, headers: true).first["Category"]
+  end
+
+  test "transaction search words are filtered from the logs" do
+    filter = ActiveSupport::ParameterFilter.new(Rails.application.config.filter_parameters)
+    assert_equal "[FILTERED]", filter.filter("search" => "pharmacy")["search"]
+  end
+
   test "invalid forecast inputs fail visibly without changing the saved balance" do
     sign_in @user
     get finance_forecast_path, params: {days: "nonsense", expense_adjustment: "NaN"}

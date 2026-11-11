@@ -1,0 +1,13 @@
+checked 306 page renders; 0 with findings
+--- phone small targets (66 pages)
+home a.bw-text-link "Log in" 38x20
+sign-in input#user_remember_me "1" 13x13
+password a "Back to log in" 308x20 | a "Create an account" 308x20
+dashboard a.bw-metric-link "View account balances →" 324x19 | a.bw-metric-link "✎ Enter or edit balance" 324x19 | summary.bw-text-link "✎ Rename" 65x20 | summary.bw-text-link "✎ Enter or edit amount" 142x20 | a.bw-text-link "All categories" 87x20 | a.bw-text-link "View all →" 64x20
+transaction-edit a.bw-text-link "← Back to transactions" 145x20 | input#finance_transaction_tax_review "1" 16x16 | input#finance_transaction_excluded "1" 16x16 | a.bw-text-link "Cancel" 43x20
+categories input#consent "1" 16x16
+forecast a.bw-metric-link "✎ Enter or edit balance" 324x19 | a.bw-text-link "See the account breakdown ↓" 189x20 | summary.bw-text-link "✎ Enter or edit balance" 146x20
+insights input#consent "1" 16x16 | summary "Categories and context" 316x19
+tax summary "Categories and context" 316x19 | input#tax_consent "1" 16x16 | a.bw-text-link "Review flagged transactions →" 194x20
+settings a.bw-text-link "About badges and benefits" 171x20
+report input#export_format_xlsx "xlsx" 16x16 | input#export_format_csv "csv" 16x16 | input#report_sheet_overview "overview" 16x16 | input#report_sheet_accounts "accounts" 16x16 | input#report_sheet_categories "categories" 16x16 | input#report_sheet_transactions "transactions" 16x16

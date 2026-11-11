@@ -1,5 +1,7 @@
 //! The device's human name ("Jyun's MacBook Pro", "DESKTOP-4F2K", "Pixel 8"), offered as
-//! the default name of this device's local database. Read-only, never sent anywhere.
+//! the default name of this device's local database. Read-only. It is also included in the
+//! database facts the app reports to the person's own website account (src/services/localReport.ts,
+//! disclosed in README.md), never with any financial data.
 //! Returns None when the platform gives nothing useful; the UI then falls back to a
 //! generic label ("iPhone", "Android phone", …).
 

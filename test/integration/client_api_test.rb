@@ -45,6 +45,32 @@ class ClientApiTest < ActionDispatch::IntegrationTest
     assert_equal "locked", sign_in_json["error"], "even the right password is refused while locked"
   end
 
+  # Two-factor sign-in is active only when Active Record encryption is configured (Bullet Train's
+  # two_factor_authentication_enabled?), which the test environment is not; the devise-two-factor
+  # methods are simulated on this one user with the code "123456".
+  test "wrong two-factor codes count toward the lockout, and a complete sign-in resets the count" do
+    @user.update_columns(otp_required_for_login: true)
+    user = User.find(@user.id)
+    user.define_singleton_method(:validate_and_consume_otp!) { |code| code == "123456" }
+    User.define_singleton_method(:find_by) { |*| user.reload } # find_by itself is inherited from ActiveRecord
+    begin
+      assert_equal "invalid_otp", sign_in_json(otp_attempt: "000000")["error"]
+      assert_equal "invalid_otp", sign_in_json(otp_attempt: "000000")["error"]
+      assert_equal 2, @user.reload.failed_attempts, "the correct password must not clear code failures"
+
+      sign_in_json(otp_attempt: "123456")
+      assert_response :created
+      assert_equal 0, @user.reload.failed_attempts
+
+      @user.update_columns(failed_attempts: User.maximum_attempts - 1)
+      assert_equal "locked", sign_in_json(otp_attempt: "000000")["error"]
+      assert @user.reload.access_locked?
+      assert_equal "locked", sign_in_json(otp_attempt: "123456")["error"], "a valid code is refused while locked"
+    ensure
+      User.singleton_class.remove_method(:find_by)
+    end
+  end
+
   test "reads and updates language, nickname, and time zone with the token" do
     token = sign_in_json["token"]
     get "/api/client/v1/account", headers: auth(token), as: :json

@@ -204,20 +204,25 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         if (id !== state.activeId) await activate(id);
       },
       createDatabase: async (name: string) => {
-        const slot = freeSlot(registryRef.current);
-        if (!slot || !state.persistent) throw new StoreError("invalid_name", "No room for another database.");
-        commitRegistry({ ...registryRef.current, entries: [...registryRef.current.entries, slot] });
-        try {
-          const { store } = await openById(slot.id);
-          await store.deleteAllData({ forgetName: true }); // a reused slot always starts empty
-          await store.setDatabaseName(name);
-          void reportMetadata();
-        } catch (error) {
-          handles.current.delete(slot.id);
-          commitRegistry({ ...registryRef.current, entries: registryRef.current.entries.filter((e) => e.id !== slot.id) });
-          throw error;
+        for (;;) {
+          const slot = freeSlot(registryRef.current);
+          if (!slot || !state.persistent) throw new StoreError("invalid_name", "No room for another database.");
+          commitRegistry({ ...registryRef.current, entries: [...registryRef.current.entries, slot] });
+          try {
+            const { store } = await openById(slot.id);
+            // A slot missing from the list but holding data is a database whose list entry was
+            // lost (cleared app storage): keep it listed and never wipe it; try the next slot.
+            if (await store.hasContent()) continue;
+            await store.deleteAllData({ forgetName: true }); // leftovers of a removed database
+            await store.setDatabaseName(name);
+            void reportMetadata();
+          } catch (error) {
+            handles.current.delete(slot.id);
+            commitRegistry({ ...registryRef.current, entries: registryRef.current.entries.filter((e) => e.id !== slot.id) });
+            throw error;
+          }
+          return slot.id;
         }
-        return slot.id;
       },
       removeDatabase: async (id: string) => {
         const { store } = await openById(id);

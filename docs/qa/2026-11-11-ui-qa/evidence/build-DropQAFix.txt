@@ -1,0 +1,8 @@
+        Info Looking up installed tauri packages to check mismatched versions...
+   Compiling billieweather v0.1.0 (/Users/jyunz/Downloads/BillieWeather/billieweather/clients/universal/src-tauri)
+    Finished `release` profile [optimized] target(s) in 1m 03s
+       Built application at: /Users/jyunz/Downloads/BillieWeather/billieweather/clients/universal/src-tauri/target/release/dropqa-false
+    Bundling DropQAFix.app (/Users/jyunz/Downloads/BillieWeather/billieweather/clients/universal/src-tauri/target/release/bundle/macos/DropQAFix.app)
+    Finished 1 bundle at:
+        /Users/jyunz/Downloads/BillieWeather/billieweather/clients/universal/src-tauri/target/release/bundle/macos/DropQAFix.app (6.45 MiB)
+

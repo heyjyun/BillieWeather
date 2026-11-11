@@ -1,0 +1,416 @@
+[
+ {
+  "vw": "desktop",
+  "name": "support dialog opens",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "support dialog closes on Escape",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "focus returns to support trigger",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "sign in reaches dashboard",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "nav /app",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "desktop",
+  "name": "nav /app/statements",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "desktop",
+  "name": "nav /app/transactions",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "desktop",
+  "name": "nav /app/categories",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "desktop",
+  "name": "nav /app/forecast",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "desktop",
+  "name": "nav /app/insights",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "desktop",
+  "name": "nav /app/tax",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "desktop",
+  "name": "nav /app/settings",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "desktop",
+  "name": "theme menu visible after script",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "dark theme applied",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "dark theme persists after reload",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "dark background token in effect",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "system theme restores",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "language menu opens",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "language menu closes on Escape",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "language menu closes on outside click",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "sidebar collapses",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "collapsed nav keeps accessible names",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "collapsed state persists",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "toggle label says Expand when collapsed",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "sidebar expands again",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "drop highlights the upload box",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "dropped file fills the input and is listed",
+  "ok": true,
+  "detail": "{\"over\":true,\"files\":1,\"listed\":[\"dropped.csv\"]}"
+ },
+ {
+  "vw": "desktop",
+  "name": "privacy-delete-data-dialog opens",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "privacy-delete-data-dialog fits the screen",
+  "ok": true,
+  "detail": "{\"x\":460,\"y\":142.484375,\"width\":520,\"height\":615.03125}"
+ },
+ {
+  "vw": "desktop",
+  "name": "privacy-delete-data-dialog closes on Escape",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "privacy-delete-account-dialog opens",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "privacy-delete-account-dialog fits the screen",
+  "ok": true,
+  "detail": "{\"x\":460,\"y\":171.140625,\"width\":520,\"height\":557.71875}"
+ },
+ {
+  "vw": "desktop",
+  "name": "privacy-delete-account-dialog closes on Escape",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "region search filters",
+  "ok": true,
+  "detail": "TW"
+ },
+ {
+  "vw": "desktop",
+  "name": "forecast scenario renders with chosen horizon",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "no page errors",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "support dialog opens",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "support dialog closes on Escape",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "focus returns to support trigger",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "sign in reaches dashboard",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "nav /app",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "phone",
+  "name": "nav /app/statements",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "phone",
+  "name": "nav /app/transactions",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "phone",
+  "name": "nav /app/categories",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "phone",
+  "name": "nav /app/forecast",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "phone",
+  "name": "nav /app/insights",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "phone",
+  "name": "nav /app/tax",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "phone",
+  "name": "nav /app/settings",
+  "ok": true,
+  "detail": "status 200 active=1"
+ },
+ {
+  "vw": "phone",
+  "name": "last tab reachable by scrolling the tab bar",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "theme menu visible after script",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "dark theme applied",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "dark theme persists after reload",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "dark background token in effect",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "system theme restores",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "language menu opens",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "language menu closes on Escape",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "language menu closes on outside click",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "sidebar toggle hidden on phones",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "drop highlights the upload box",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "dropped file fills the input and is listed",
+  "ok": true,
+  "detail": "{\"over\":true,\"files\":1,\"listed\":[\"dropped.csv\"]}"
+ },
+ {
+  "vw": "phone",
+  "name": "privacy-delete-data-dialog opens",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "privacy-delete-data-dialog fits the screen",
+  "ok": true,
+  "detail": "{\"x\":17,\"y\":44.6875,\"width\":356,\"height\":754.625}"
+ },
+ {
+  "vw": "phone",
+  "name": "privacy-delete-data-dialog closes on Escape",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "privacy-delete-account-dialog opens",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "privacy-delete-account-dialog fits the screen",
+  "ok": true,
+  "detail": "{\"x\":17,\"y\":105.625,\"width\":356,\"height\":632.734375}"
+ },
+ {
+  "vw": "phone",
+  "name": "privacy-delete-account-dialog closes on Escape",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "region search filters",
+  "ok": true,
+  "detail": "TW"
+ },
+ {
+  "vw": "phone",
+  "name": "forecast scenario renders with chosen horizon",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "no page errors",
+  "ok": true,
+  "detail": ""
+ }
+]

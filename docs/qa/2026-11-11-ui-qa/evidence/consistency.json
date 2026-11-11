@@ -1,0 +1,258 @@
+{
+ "light": [
+  {
+   "token": "sidebarBg",
+   "web": "rgb(44, 25, 56)",
+   "app": "rgb(44, 25, 56)",
+   "same": true
+  },
+  {
+   "token": "navActiveBg",
+   "web": "rgb(74, 45, 93)",
+   "app": "rgb(74, 45, 93)",
+   "same": true
+  },
+  {
+   "token": "navActiveColor",
+   "web": "rgb(241, 234, 246)",
+   "app": "rgb(241, 234, 246)",
+   "same": true
+  },
+  {
+   "token": "navHeight",
+   "web": "40px",
+   "app": "44px",
+   "same": false
+  },
+  {
+   "token": "primaryBg",
+   "web": "rgb(194, 53, 127)",
+   "app": "(missing)",
+   "same": false
+  },
+  {
+   "token": "primaryRadius",
+   "web": "8px",
+   "app": "(missing)",
+   "same": false
+  },
+  {
+   "token": "primaryText",
+   "web": "rgb(255, 255, 255)",
+   "app": "(missing)",
+   "same": false
+  },
+  {
+   "token": "pageBg",
+   "web": "rgb(248, 247, 250)",
+   "app": "rgb(248, 247, 250)",
+   "same": true
+  },
+  {
+   "token": "cardBg",
+   "web": "rgb(255, 255, 255)",
+   "app": "rgb(255, 255, 255)",
+   "same": true
+  },
+  {
+   "token": "cardBorder",
+   "web": "rgb(230, 226, 236)",
+   "app": "rgb(230, 226, 236)",
+   "same": true
+  },
+  {
+   "token": "cardRadius",
+   "web": "12px",
+   "app": "12px",
+   "same": true
+  },
+  {
+   "token": "cardShadow",
+   "web": "rgba(36, 32, 43, 0.06) 0px 1px 2px 0px",
+   "app": "rgba(36, 32, 43, 0.06) 0px 1px 2px 0px",
+   "same": true
+  },
+  {
+   "token": "metricValueSize",
+   "web": "25.6px",
+   "app": "25.6px",
+   "same": true
+  },
+  {
+   "token": "metricLabelColor",
+   "web": "rgb(107, 101, 118)",
+   "app": "rgb(107, 101, 118)",
+   "same": true
+  },
+  {
+   "token": "h1Size",
+   "web": "28px",
+   "app": "28px",
+   "same": true
+  },
+  {
+   "token": "eyebrowColor",
+   "web": "rgb(194, 53, 127)",
+   "app": "rgb(194, 53, 127)",
+   "same": true
+  },
+  {
+   "token": "bodyFont",
+   "web": "-apple-system, \"system-ui\", \"Segoe UI\", Roboto, \"Helvetica Neue\", \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Microsoft YaHei\", \"Microsoft JhengHei\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", \"Noto Sans CJK SC\", sans-serif",
+   "app": "-apple-system, \"system-ui\", \"Segoe UI\", Roboto, \"Helvetica Neue\", \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Microsoft YaHei\", \"Microsoft JhengHei\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", \"Noto Sans CJK SC\", sans-serif",
+   "same": true
+  },
+  {
+   "token": "textColor",
+   "web": "rgb(36, 32, 43)",
+   "app": "rgb(36, 32, 43)",
+   "same": true
+  },
+  {
+   "token": "balanceTileBg",
+   "web": "rgb(44, 25, 56)",
+   "app": "rgb(44, 25, 56)",
+   "same": true
+  },
+  {
+   "token": "positiveColor",
+   "web": "rgb(19, 122, 98)",
+   "app": "rgb(19, 122, 98)",
+   "same": true
+  },
+  {
+   "token": "brandMarkBg",
+   "web": "rgb(228, 88, 163)",
+   "app": "rgb(228, 88, 163)",
+   "same": true
+  }
+ ],
+ "dark": [
+  {
+   "token": "sidebarBg",
+   "web": "rgb(30, 17, 39)",
+   "app": "rgb(30, 17, 39)",
+   "same": true
+  },
+  {
+   "token": "navActiveBg",
+   "web": "rgb(59, 36, 73)",
+   "app": "rgb(59, 36, 73)",
+   "same": true
+  },
+  {
+   "token": "navActiveColor",
+   "web": "rgb(241, 234, 246)",
+   "app": "rgb(241, 234, 246)",
+   "same": true
+  },
+  {
+   "token": "navHeight",
+   "web": "40px",
+   "app": "44px",
+   "same": false
+  },
+  {
+   "token": "primaryBg",
+   "web": "rgb(240, 127, 190)",
+   "app": "(missing)",
+   "same": false
+  },
+  {
+   "token": "primaryRadius",
+   "web": "8px",
+   "app": "(missing)",
+   "same": false
+  },
+  {
+   "token": "primaryText",
+   "web": "rgb(28, 22, 34)",
+   "app": "(missing)",
+   "same": false
+  },
+  {
+   "token": "pageBg",
+   "web": "rgb(23, 19, 28)",
+   "app": "rgb(23, 19, 28)",
+   "same": true
+  },
+  {
+   "token": "cardBg",
+   "web": "rgb(33, 27, 40)",
+   "app": "rgb(33, 27, 40)",
+   "same": true
+  },
+  {
+   "token": "cardBorder",
+   "web": "rgb(58, 49, 68)",
+   "app": "rgb(58, 49, 68)",
+   "same": true
+  },
+  {
+   "token": "cardRadius",
+   "web": "12px",
+   "app": "12px",
+   "same": true
+  },
+  {
+   "token": "cardShadow",
+   "web": "rgba(0, 0, 0, 0.4) 0px 1px 2px 0px",
+   "app": "rgba(0, 0, 0, 0.4) 0px 1px 2px 0px",
+   "same": true
+  },
+  {
+   "token": "metricValueSize",
+   "web": "25.6px",
+   "app": "25.6px",
+   "same": true
+  },
+  {
+   "token": "metricLabelColor",
+   "web": "rgb(166, 159, 178)",
+   "app": "rgb(166, 159, 178)",
+   "same": true
+  },
+  {
+   "token": "h1Size",
+   "web": "28px",
+   "app": "28px",
+   "same": true
+  },
+  {
+   "token": "eyebrowColor",
+   "web": "rgb(240, 127, 190)",
+   "app": "rgb(240, 127, 190)",
+   "same": true
+  },
+  {
+   "token": "bodyFont",
+   "web": "-apple-system, \"system-ui\", \"Segoe UI\", Roboto, \"Helvetica Neue\", \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Microsoft YaHei\", \"Microsoft JhengHei\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", \"Noto Sans CJK SC\", sans-serif",
+   "app": "-apple-system, \"system-ui\", \"Segoe UI\", Roboto, \"Helvetica Neue\", \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Microsoft YaHei\", \"Microsoft JhengHei\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", \"Noto Sans CJK SC\", sans-serif",
+   "same": true
+  },
+  {
+   "token": "textColor",
+   "web": "rgb(237, 234, 241)",
+   "app": "rgb(237, 234, 241)",
+   "same": true
+  },
+  {
+   "token": "balanceTileBg",
+   "web": "rgb(30, 17, 39)",
+   "app": "rgb(30, 17, 39)",
+   "same": true
+  },
+  {
+   "token": "positiveColor",
+   "web": "rgb(60, 199, 159)",
+   "app": "rgb(60, 199, 159)",
+   "same": true
+  },
+  {
+   "token": "brandMarkBg",
+   "web": "rgb(240, 127, 190)",
+   "app": "rgb(240, 127, 190)",
+   "same": true
+  }
+ ]
+}

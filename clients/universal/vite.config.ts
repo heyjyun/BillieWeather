@@ -18,6 +18,15 @@ export const OCR_ASSETS: Record<string, string> = {
   ...Object.fromEntries(["eng", "chi_sim", "chi_tra"].map((lang) => [`ocr/lang/${lang}.traineddata.gz`, `${modules}/@tesseract.js-data/${lang}/4.0.0_best_int/${lang}.traineddata.gz`])),
 };
 
+/**
+ * Tauri builds for Apple platforms and Android always use the native engine (Apple Vision, ML Kit;
+ * see src/services/ocrEngine.ts and src-tauri/src/ocr.rs), so Tesseract is never loaded there and
+ * its ~10 MB is left out. Browsers, Windows and Linux keep it.
+ */
+export function needsTesseract(tauriPlatform: string | undefined): boolean {
+  return !["darwin", "macos", "ios", "android"].includes(tauriPlatform ?? "");
+}
+
 function ocrAssets(): Plugin {
   return {
     name: "billie-ocr-assets",
@@ -30,6 +39,7 @@ function ocrAssets(): Plugin {
       });
     },
     generateBundle() {
+      if (!needsTesseract(process.env.TAURI_ENV_PLATFORM)) return;
       for (const [fileName, path] of Object.entries(OCR_ASSETS)) this.emitFile({ type: "asset", fileName, source: readFileSync(path) });
     },
   };

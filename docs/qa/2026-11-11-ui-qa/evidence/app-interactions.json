@@ -1,0 +1,290 @@
+[
+ {
+  "vw": "desktop",
+  "name": "wrong password shows an error",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "signed in to the app shell",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "tab 1 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "tab 2 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "tab 3 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "tab 4 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "tab 5 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "tab 6 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "tab 7 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "period picker selects",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "category correction applies",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "duplicate statement is rejected with a clear message",
+  "ok": true,
+  "detail": "sample.csv: This file was already imported."
+ },
+ {
+  "vw": "desktop",
+  "name": "import preview opens for a new file",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "import preview cancels back to the drop zone",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "drop zone shows drag-over state",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "delete confirmation asks for the typed word",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "delete stays disabled until the word is typed",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "delete confirmation cancels",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "dark theme from Settings",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "system theme restores",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "sidebar collapses",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "collapse remembered after reload",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "no page errors",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "no requests outside the app and BillieWeather server",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "desktop",
+  "name": "no statement uploaded to the cloud",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "wrong password shows an error",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "signed in to the app shell",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "tab 1 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "tab 2 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "tab 3 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "tab 4 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "tab 5 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "tab 6 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "tab 7 reachable and active",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "period picker selects",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "category correction applies",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "duplicate statement is rejected with a clear message",
+  "ok": true,
+  "detail": "sample.csv: This file was already imported."
+ },
+ {
+  "vw": "phone",
+  "name": "import preview opens for a new file",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "import preview cancels back to the drop zone",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "drop zone shows drag-over state",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "delete confirmation asks for the typed word",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "delete stays disabled until the word is typed",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "delete confirmation cancels",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "dark theme from Settings",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "system theme restores",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "no page errors",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "no requests outside the app and BillieWeather server",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "vw": "phone",
+  "name": "no statement uploaded to the cloud",
+  "ok": true,
+  "detail": ""
+ }
+]

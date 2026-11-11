@@ -84,7 +84,7 @@ module Finance
         rows << ["Date", "Description", "Amount", "Currency", "Category", "Tax review", "Excluded"]
         scope.find_each do |transaction|
           rows << [transaction.booked_on.iso8601, TransactionCsv.safe_text(transaction.description), transaction.amount.to_s("F"),
-            transaction.statement.currency, transaction.category, transaction.tax_review, transaction.excluded]
+            transaction.statement.currency, TransactionCsv.safe_text(transaction.category), transaction.tax_review, transaction.excluded]
         end
       end
       send_data csv, type: "text/csv; charset=utf-8", disposition: "attachment", filename: "billieweather-transactions-#{Date.current.iso8601}.csv"

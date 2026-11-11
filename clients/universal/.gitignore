@@ -8,3 +8,4 @@ src-tauri/gen/schemas/
 *.sqlite
 *.sqlite3
 src-tauri/tauri.api.conf.json
+coverage/

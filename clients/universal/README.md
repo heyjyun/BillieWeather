@@ -36,7 +36,7 @@ Web-only development (`npm run dev`, `npm test`) needs no Swift.
 ```sh
 cd clients/universal
 npm install          # isolated from the Rails app's yarn install
-npm test             # 370 tests (real OCR engines included where available): Ruby parity, universal import, SQLite storage, sign-in + full UI workflow, translations, privacy guards
+npm test             # 461 tests (real OCR engines included where available): Ruby parity, universal import, SQLite storage, sign-in + full UI workflow, translations, privacy guards
 npm run typecheck
 npm run dev          # browser preview at http://localhost:1420 (in-memory, nothing saved)
 npm run desktop:dev  # the real app window, signing in to http://localhost:3000
@@ -95,6 +95,7 @@ not set up yet.
   - Server side (existing Neon `users` columns, no migration): email, nickname, language, time zone, region, sign-up date and badges.
   - Device side:
     - The sign-in token is in the macOS/iOS Keychain or Windows Credential Manager (an app-only file on Android).
+    - Each build variant has its own sign-in (`src-tauri/src/session.rs`): the keychain service is the bundle identifier, exactly `com.billieweather.client` for release builds of the shipped app (unchanged, so existing sign-ins survive updates). Debug builds (`desktop:dev`, `cargo test`) use `<identifier>.dev`, and QA/beta builds with their own identifier use their own entry, so they cannot read or overwrite the installed app's token. Note that `desktop:dev` still uses the shipped app's **data folder** (same identifier), so it opens, and migrates, the real local databases; build QA variants with a different identifier.
     - Account details are cached so the app opens offline after the first sign-in.
   - Changing the password on the website signs out every app.
 - **Languages**:

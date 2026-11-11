@@ -1,0 +1,3 @@
+checked 147 screen renders; 0 with findings
+--- phone small targets (en)
+transactions input "on" 17x18

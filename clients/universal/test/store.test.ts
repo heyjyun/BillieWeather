@@ -60,6 +60,19 @@ describe("local SQLite store", () => {
     expect((await store.rules()).length).toBe(1);
   });
 
+  it("a category the person chose, even Uncategorized, is never changed by rules or later imports", async () => {
+    const { store } = await newStore();
+    const csv = "Date,Description,Amount\n2026-01-01,ZED BAKERS 1,-5.00\n2026-01-02,Zed Bakers 2,-6.00\n";
+    await importFile(store, new TextEncoder().encode(csv), "z.csv", "USD");
+    const [one, two] = (await store.transactions()).sort((a, b) => a.id - b.id);
+    // The person decides the second purchase stays Uncategorized, then teaches a rule from the first.
+    await store.setCategory(two.id, "Uncategorized", false);
+    expect(await store.setCategory(one.id, "Business", true)).toBe(0);
+    // An unrelated later import re-runs the rules over Uncategorized rows.
+    await importFile(store, new TextEncoder().encode("Date,Description,Amount\n2026-02-01,OTHER PLACE,-1.00\n"), "o.csv", "USD");
+    expect((await store.transactions()).find((t) => t.id === two.id)!.category).toBe("Uncategorized");
+  });
+
   it("excludes a transaction from totals", async () => {
     const { store } = await newStore();
     await importFile(store, new TextEncoder().encode("Date,Description,Amount\n2026-01-01,Coffee shop,-5.00\n"), "c.csv", "USD");

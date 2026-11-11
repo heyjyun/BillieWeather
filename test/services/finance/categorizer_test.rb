@@ -27,6 +27,15 @@ class Finance::CategorizerTest < ActiveSupport::TestCase
     assert_equal "Uncategorized", categorize("ZXQ WIDGETS LLC", -20)
   end
 
+  # Same cases as packages/finance-core/test/core.test.ts ("card payments printed with punctuation").
+  test "card payments printed with punctuation are transfers, not income" do
+    assert_equal "Transfers", categorize("AUTOPAY PAYMENT - THANK YOU", 500)
+    assert_equal "Transfers", categorize("ONLINE PAYMENT, THANK YOU", 500)
+    assert_equal "Transfers", categorize("CREDIT-CARD PAYMENT", -500)
+    assert_equal "Income", categorize("PAYMENT THANK YOURSELF SPA", 50)
+    assert_equal "Utilities", categorize("COMCAST AUTOPAY", -80)
+  end
+
   test "a person-to-person payment is not hidden as a transfer" do
     assert_equal "Uncategorized", categorize("Zelle payment to Sam", -60)
   end

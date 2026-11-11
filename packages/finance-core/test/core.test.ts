@@ -49,6 +49,18 @@ describe("file checks", () => {
   });
 });
 
+// Same cases as test/services/finance/categorizer_test.rb on the Rails side.
+describe("card payments printed with punctuation", () => {
+  it("are transfers, not income, while real bills still count", () => {
+    const categorizer = new Categorizer([]);
+    expect(categorizer.categorize("AUTOPAY PAYMENT - THANK YOU", 50000)).toBe("Transfers");
+    expect(categorizer.categorize("ONLINE PAYMENT, THANK YOU", 50000)).toBe("Transfers");
+    expect(categorizer.categorize("CREDIT-CARD PAYMENT", -50000)).toBe("Transfers");
+    expect(categorizer.categorize("PAYMENT THANK YOURSELF SPA", 5000)).toBe("Income");
+    expect(categorizer.categorize("COMCAST AUTOPAY", -8000)).toBe("Utilities");
+  });
+});
+
 describe("remembered rules", () => {
   const starbucks = { description: "STARBUCKS STORE #1 SEATTLE", amountCents: -500 };
   it("learned rules win over built-in lists, per direction", () => {

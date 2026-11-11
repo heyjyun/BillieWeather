@@ -26,6 +26,12 @@ vi.mock("../src/services/platform", async () => {
           // A person who switched website download off in an older version (there is no switch any more).
           if ((globalThis as { __webSyncOff?: boolean }).__webSyncOff) db.run("INSERT INTO settings (key, value) VALUES ('web_sync_enabled','0')");
         }
+        // A database whose entry in the device's list was lost (app storage cleared).
+        if (file === "billieweather-2.db" && (globalThis as { __forgottenSlot?: boolean }).__forgottenSlot) {
+          db.run("INSERT INTO statements (filename, currency, sha256, transaction_count, imported_at) VALUES ('old.csv','USD','o',1,'2026-01-01')");
+          db.run("INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, updated_at) VALUES (1,'2026-01-02','FORGOTTEN ROW',-700,'Shopping','2026-01-02T10:00:00Z')");
+          db.run("INSERT INTO settings (key, value) VALUES ('database_name','Old laptop')");
+        }
         files.set(file, sqljsDriver(db));
       }
       return { driver: files.get(file)!, persistent: true };
@@ -163,6 +169,22 @@ it("creates, names and switches between local databases", async () => {
   fireEvent.change(within(card("Work laptop")).getByLabelText("Name"), { target: { value: "Studio iMac" } });
   await click(within(card("Work laptop")).getByRole("button", { name: "Save" }));
   await waitFor(() => expect(card("Studio iMac")).toBeTruthy());
+});
+
+it("creating a database never wipes a database the device's list forgot", async () => {
+  (globalThis as { __forgottenSlot?: boolean }).__forgottenSlot = true;
+  try {
+    fakeCloud();
+    await openData();
+    expect(JSON.parse(localStorage.getItem("billie.databases") ?? "null")?.ids ?? [1]).toEqual([1]);
+    await createDatabase("Work");
+    expect(card("Work")).toBeTruthy();
+    const old = card("Old laptop");
+    expect(fact(old, "Statements")).toBe("1");
+    expect(JSON.parse(localStorage.getItem("billie.databases")!).ids).toEqual([1, 2, 3]);
+  } finally {
+    delete (globalThis as { __forgottenSlot?: boolean }).__forgottenSlot;
+  }
 });
 
 it("deleting a database needs the typed word, says it can't be undone, and can be cancelled", async () => {

@@ -1,0 +1,50 @@
+        Info Looking up installed tauri packages to check mismatched versions...
+     Running beforeBuildCommand `npm run build`
+
+> billieweather-universal@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 161 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                            0.42 kB │ gzip:   0.28 kB
+dist/ocr/worker.min.js                                   111.31 kB
+dist/assets/sql-wasm-B-9ndiyM.wasm                       685.24 kB │ gzip: 336.42 kB
+dist/assets/pdf.worker.min-rsCePomN.mjs                1,417.59 kB
+dist/ocr/lang/chi_tra.traineddata.gz                   1,656.24 kB
+dist/ocr/lang/chi_sim.traineddata.gz                   1,718.77 kB
+dist/ocr/lang/eng.traineddata.gz                       2,952.87 kB
+dist/ocr/core/tesseract-core-lstm.wasm.js              3,896.48 kB
+dist/ocr/core/tesseract-core-simd-lstm.wasm.js         3,899.47 kB
+dist/ocr/core/tesseract-core-relaxedsimd-lstm.wasm.js  3,905.77 kB
+dist/assets/index-D6Z7UTLi.css                            44.82 kB │ gzip:   8.96 kB
+dist/assets/sql-wasm-FaYLIE2n.js                           0.06 kB │ gzip:   0.08 kB
+dist/assets/pdf.worker.min-DDwCJoSP.js                     0.07 kB │ gzip:   0.09 kB
+dist/assets/dist-js-DGHKuT3C.js                            0.14 kB │ gzip:   0.14 kB
+dist/assets/sqljsDriver-BRON54Wn.js                        0.35 kB │ gzip:   0.27 kB
+dist/assets/dist-js-BoUSsXT7.js                            0.50 kB │ gzip:   0.28 kB
+dist/assets/dist-js-BFlLM7fI.js                            1.26 kB │ gzip:   0.48 kB
+dist/assets/nativeEngines-BFFvj1wO.js                      1.57 kB │ gzip:   0.74 kB
+dist/assets/pdfRaster-BZaaPFlb.js                          1.64 kB │ gzip:   0.92 kB
+dist/assets/core-BUhCcD2K.js                               2.70 kB │ gzip:   1.11 kB
+dist/assets/tesseractEngine-Dq7PEhBn.js                    4.32 kB │ gzip:   2.08 kB
+dist/assets/dist-js-Cl2Z1Yo3.js                            7.63 kB │ gzip:   2.04 kB
+dist/assets/index-C6xHUsg2.js                             15.83 kB │ gzip:   6.83 kB
+dist/assets/sql-wasm-browser-BBAdf-_8.js                  41.30 kB │ gzip:  15.21 kB
+dist/assets/pdf-z6sF223D.js                              379.02 kB │ gzip: 114.08 kB
+dist/assets/index-D32_YHEj.js                            764.51 kB │ gzip: 242.47 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 991ms
+   Compiling billieweather v0.1.0 (/Users/jyunz/Downloads/BillieWeather/billieweather/clients/universal/src-tauri)
+    Finished `release` profile [optimized] target(s) in 59.36s
+       Built application at: /Users/jyunz/Downloads/BillieWeather/billieweather/clients/universal/src-tauri/target/release/billieweather-qa
+    Bundling BillieWeatherQA.app (/Users/jyunz/Downloads/BillieWeather/billieweather/clients/universal/src-tauri/target/release/bundle/macos/BillieWeatherQA.app)
+    Finished 1 bundle at:
+        /Users/jyunz/Downloads/BillieWeather/billieweather/clients/universal/src-tauri/target/release/bundle/macos/BillieWeatherQA.app (17.21 MiB)
+

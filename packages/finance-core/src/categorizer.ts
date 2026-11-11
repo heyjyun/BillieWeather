@@ -8,13 +8,22 @@ import { normalizeRegion, regionalCategory, type StatementRegion } from "./regio
 // \b is ASCII-only, so word boundaries are spelled out with Unicode classes instead.
 const WORD_CHAR = "[\\p{L}\\p{M}\\p{Nd}\\p{Pc}]";
 
+const escape = (word: string) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 function words(...list: string[]): RegExp {
-  const escaped = list.map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  return new RegExp(`(?<!${WORD_CHAR})(?:${escaped.join("|")})(?!${WORD_CHAR})`, "iu");
+  return new RegExp(`(?<!${WORD_CHAR})(?:${list.map(escape).join("|")})(?!${WORD_CHAR})`, "iu");
+}
+
+/** Like `words`, but a phrase's words may be separated by spaces and punctuation ("PAYMENT - THANK YOU"). */
+const PHRASE_GAP = "[\\s.,;:/_*#·\\-–—]+"; // same set as categorizer.rb
+
+function phrases(...list: string[]): RegExp {
+  const joined = list.map((phrase) => phrase.split(" ").map(escape).join(PHRASE_GAP));
+  return new RegExp(`(?<!${WORD_CHAR})(?:${joined.join("|")})(?!${WORD_CHAR})`, "iu");
 }
 
 /** Left out of income/spending totals; kept narrow on purpose. */
-export const TRANSFERS = words("transfer", "payment thank you", "credit card payment", "opening balance", "balance forward");
+export const TRANSFERS = phrases("transfer", "payment thank you", "credit card payment", "opening balance", "balance forward");
 
 export const RULES: ReadonlyArray<readonly [Category, RegExp]> = [
   ["Housing", words("rent", "mortgage", "property management", "hoa", "landlord", "apartment", "lease", "home insurance", "renters insurance", "homeowners")],

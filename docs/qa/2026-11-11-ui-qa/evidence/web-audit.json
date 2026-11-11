@@ -1,0 +1,1528 @@
+[
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "home",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"Log in\" 38x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "features",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "about",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "download",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "sign-in",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#user_remember_me \"1\" 13x13"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "sign-up",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "password",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a \"Back to log in\" 386x20",
+   "a \"Create an account\" 386x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "dashboard",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-metric-link \"View account balances →\" 228x19",
+   "a.bw-metric-link \"✎ Enter or edit balance\" 228x19",
+   "summary.bw-text-link \"✎ Rename\" 65x20",
+   "summary.bw-text-link \"✎ Enter or edit amount\" 142x20",
+   "a.bw-text-link \"All categories\" 87x20",
+   "a.bw-text-link \"View all →\" 64x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "statements",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "transactions",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "transaction-edit",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"← Back to transactions\" 145x20",
+   "input#finance_transaction_tax_review \"1\" 16x16",
+   "input#finance_transaction_excluded \"1\" 16x16",
+   "a.bw-text-link \"Cancel\" 43x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "categories",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "forecast",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-metric-link \"✎ Enter or edit balance\" 323x19",
+   "a.bw-text-link \"See the account breakdown ↓\" 189x20",
+   "summary.bw-text-link \"✎ Enter or edit balance\" 146x20",
+   "a.bw-text-link \"Upload statements →\" 135x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "insights",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16",
+   "summary \"Categories and context\" 1086x19"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "tax",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "summary \"Categories and context\" 1086x19",
+   "input#tax_consent \"1\" 16x16",
+   "a.bw-text-link \"Review flagged transactions →\" 194x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "settings",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"About badges and benefits\" 171x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "en",
+  "name": "report",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#export_format_xlsx \"xlsx\" 16x16",
+   "input#export_format_csv \"csv\" 16x16",
+   "input#report_sheet_overview \"overview\" 16x16",
+   "input#report_sheet_accounts \"accounts\" 16x16",
+   "input#report_sheet_categories \"categories\" 16x16",
+   "input#report_sheet_transactions \"transactions\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "home",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"Iniciar sesión\" 83x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "features",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "about",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "download",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "sign-in",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#user_remember_me \"1\" 13x13"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "sign-up",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "password",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a \"Volver al inicio de sesión\" 386x20",
+   "a \"Crear una cuenta\" 386x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "dashboard",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-metric-link \"Ver saldos de las cuentas →\" 228x19",
+   "a.bw-metric-link \"✎ Introducir o editar saldo\" 228x19",
+   "summary.bw-text-link \"✎ Cambiar nombre\" 118x20",
+   "summary.bw-text-link \"✎ Introducir o editar importe\" 178x20",
+   "a.bw-text-link \"Todas las categorías\" 129x20",
+   "a.bw-text-link \"Ver todo →\" 69x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "statements",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "transactions",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "transaction-edit",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"← Volver a las transacciones\" 180x20",
+   "input#finance_transaction_tax_review \"1\" 16x16",
+   "input#finance_transaction_excluded \"1\" 16x16",
+   "a.bw-text-link \"Cancelar\" 56x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "categories",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "forecast",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-metric-link \"✎ Introducir o editar saldo\" 323x19",
+   "a.bw-text-link \"Ver el desglose por cuenta ↓\" 182x20",
+   "summary.bw-text-link \"✎ Introducir o editar saldo\" 167x20",
+   "a.bw-text-link \"Cargar estados de cuenta →\" 178x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "insights",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16",
+   "summary \"Categorías y contexto\" 1086x19"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "tax",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "summary \"Categorías y contexto\" 1086x19",
+   "input#tax_consent \"1\" 16x16",
+   "a.bw-text-link \"Revisar transacciones marcadas →\" 220x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "settings",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"Sobre las insignias y beneficios\" 198x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "desktop",
+  "locale": "es",
+  "name": "report",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#export_format_xlsx \"xlsx\" 16x16",
+   "input#export_format_csv \"csv\" 16x16",
+   "input#report_sheet_overview \"overview\" 16x16",
+   "input#report_sheet_accounts \"accounts\" 16x16",
+   "input#report_sheet_categories \"categories\" 16x16",
+   "input#report_sheet_transactions \"transactions\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "home",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"Log in\" 38x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "features",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "about",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "download",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "sign-in",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#user_remember_me \"1\" 13x13"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "sign-up",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "password",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a \"Back to log in\" 418x20",
+   "a \"Create an account\" 418x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "dashboard",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-metric-link \"View account balances →\" 222x19",
+   "a.bw-metric-link \"✎ Enter or edit balance\" 222x19",
+   "summary.bw-text-link \"✎ Rename\" 65x20",
+   "summary.bw-text-link \"✎ Enter or edit amount\" 142x20",
+   "a.bw-text-link \"All categories\" 87x20",
+   "a.bw-text-link \"View all →\" 64x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "statements",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "transactions",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "transaction-edit",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"← Back to transactions\" 145x20",
+   "input#finance_transaction_tax_review \"1\" 16x16",
+   "input#finance_transaction_excluded \"1\" 16x16",
+   "a.bw-text-link \"Cancel\" 43x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "categories",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "forecast",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"See the account breakdown ↓\" 189x20",
+   "summary.bw-text-link \"✎ Enter or edit balance\" 146x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "insights",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16",
+   "summary \"Categories and context\" 482x19"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "tax",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "summary \"Categories and context\" 482x19",
+   "input#tax_consent \"1\" 16x16",
+   "a.bw-text-link \"Review flagged transactions →\" 194x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "settings",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"About badges and benefits\" 171x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "en",
+  "name": "report",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#export_format_xlsx \"xlsx\" 16x16",
+   "input#export_format_csv \"csv\" 16x16",
+   "input#report_sheet_overview \"overview\" 16x16",
+   "input#report_sheet_accounts \"accounts\" 16x16",
+   "input#report_sheet_categories \"categories\" 16x16",
+   "input#report_sheet_transactions \"transactions\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "home",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"Iniciar sesión\" 83x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "features",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "about",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "download",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "sign-in",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#user_remember_me \"1\" 13x13"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "sign-up",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "password",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a \"Volver al inicio de sesión\" 418x20",
+   "a \"Crear una cuenta\" 418x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "dashboard",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-metric-link \"Ver saldos de las cuentas →\" 222x19",
+   "a.bw-metric-link \"✎ Introducir o editar saldo\" 222x19",
+   "summary.bw-text-link \"✎ Cambiar nombre\" 118x20",
+   "summary.bw-text-link \"✎ Introducir o editar importe\" 178x20",
+   "a.bw-text-link \"Todas las categorías\" 129x20",
+   "a.bw-text-link \"Ver todo →\" 69x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "statements",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "transactions",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "transaction-edit",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"← Volver a las transacciones\" 180x20",
+   "input#finance_transaction_tax_review \"1\" 16x16",
+   "input#finance_transaction_excluded \"1\" 16x16",
+   "a.bw-text-link \"Cancelar\" 56x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "categories",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "forecast",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"Ver el desglose por cuenta ↓\" 182x20",
+   "summary.bw-text-link \"✎ Introducir o editar saldo\" 167x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "insights",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16",
+   "summary \"Categorías y contexto\" 482x19"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "tax",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "summary \"Categorías y contexto\" 482x19",
+   "input#tax_consent \"1\" 16x16",
+   "a.bw-text-link \"Revisar transacciones marcadas →\" 220x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "settings",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "a.bw-text-link \"Sobre las insignias y beneficios\" 198x20"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "tablet",
+  "locale": "es",
+  "name": "report",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#export_format_xlsx \"xlsx\" 16x16",
+   "input#export_format_csv \"csv\" 16x16",
+   "input#report_sheet_overview \"overview\" 16x16",
+   "input#report_sheet_accounts \"accounts\" 16x16",
+   "input#report_sheet_categories \"categories\" 16x16",
+   "input#report_sheet_transactions \"transactions\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "home",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "features",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "about",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "download",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "sign-in",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#user_remember_me \"1\" 13x13"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "sign-up",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "password",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "dashboard",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "statements",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "transactions",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "transaction-edit",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#finance_transaction_tax_review \"1\" 16x16",
+   "input#finance_transaction_excluded \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "categories",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "forecast",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "insights",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "tax",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#tax_consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "settings",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "en",
+  "name": "report",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#export_format_xlsx \"xlsx\" 16x16",
+   "input#export_format_csv \"csv\" 16x16",
+   "input#report_sheet_overview \"overview\" 16x16",
+   "input#report_sheet_accounts \"accounts\" 16x16",
+   "input#report_sheet_categories \"categories\" 16x16",
+   "input#report_sheet_transactions \"transactions\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "home",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "features",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "about",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "download",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "sign-in",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#user_remember_me \"1\" 13x13"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "sign-up",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "password",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "dashboard",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "statements",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "transactions",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "transaction-edit",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#finance_transaction_tax_review \"1\" 16x16",
+   "input#finance_transaction_excluded \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "categories",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "forecast",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "insights",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "tax",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#tax_consent \"1\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "settings",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [],
+  "clipped": [],
+  "errors": []
+ },
+ {
+  "vw": "phone",
+  "locale": "es",
+  "name": "report",
+  "status": 200,
+  "docOverflow": 0,
+  "offscreen": [],
+  "missingText": [],
+  "tinyText": [],
+  "smallTargets": [
+   "input#export_format_xlsx \"xlsx\" 16x16",
+   "input#export_format_csv \"csv\" 16x16",
+   "input#report_sheet_overview \"overview\" 16x16",
+   "input#report_sheet_accounts \"accounts\" 16x16",
+   "input#report_sheet_categories \"categories\" 16x16",
+   "input#report_sheet_transactions \"transactions\" 16x16"
+  ],
+  "clipped": [],
+  "errors": []
+ }
+]
