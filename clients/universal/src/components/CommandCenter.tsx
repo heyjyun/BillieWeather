@@ -3,7 +3,8 @@
 // always previewed and confirmed first. One session per signed-in account and database: switching
 // either starts over, so no plan, history or undo crosses databases.
 
-import { ActionExecutor, DialogueSession, NaturalLanguageEngine, type Message } from "@nlae/core";
+import { ActionExecutor, DialogueSession, NaturalLanguageEngine } from "@nlae/core";
+import { translateCommandMessage } from "@billie/commands";
 import { CommandBar, createLocalController, type CommandBarLabels } from "@nlae/react";
 import "@nlae/react/commandBar.css";
 import { useMemo, useRef } from "react";
@@ -12,23 +13,11 @@ import { billieRegistry, PRODUCT } from "../commands/actions";
 import { createAuthorizer, createEntities, createHandlers, type TransactionFilter } from "../commands/handlers";
 import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
-import { categoryLabel, interpolate, isLocale, MESSAGES, useI18n } from "../i18n";
+import { categoryLabel, isLocale, MESSAGES, useI18n } from "../i18n";
 import { setTheme } from "../services/theme";
 
-type CommandStrings = ReturnType<typeof useI18n>["m"]["command"];
-
-/** Translates an engine or host message by code; unknown codes fall back to the English text. */
-export function translateCommandMessage(c: CommandStrings, nav: Record<string, string>, actionName: (id: string) => string, message: Message & { param?: string }): string {
-  const vars: Record<string, string | number> = { ...(message.vars ?? {}) };
-  if (typeof vars.page === "string" && vars.page in nav) vars.page = nav[vars.page];
-  if (typeof vars.action === "string") vars.action = actionName(vars.action);
-  const param = (message.param ?? vars.param) as string | undefined;
-  if (["missing_param", "choose_option", "choose_entity"].includes(message.code) && param && param in c.questions) return c.questions[param as keyof typeof c.questions];
-  const messages = c.messages as Record<string, string>;
-  if (message.code in messages) return interpolate(messages[message.code], vars);
-  if (message.code.startsWith("invalid_")) return c.messages.invalid;
-  return interpolate(message.message, vars);
-}
+/** Translates an engine or host message by code (shared with the website). */
+export { translateCommandMessage };
 
 export function CommandCenter({ go }: { go: (page: Page, part?: string | null, filter?: TransactionFilter) => void }) {
   const { m, locale, setLocale } = useI18n();

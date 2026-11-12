@@ -1,0 +1,44 @@
+/*
+ * The website's command bar in the app's top bar. Colors, radii and shadows come only from the
+ * shared design tokens (public/billie-tokens.css), mapped exactly as in the universal client
+ * (clients/universal/src/styles.css, .bw-command), so both look the same in light and dark themes.
+ */
+.bw-command {
+  --nlae-bg: var(--bw-color-accent-soft); --nlae-surface: var(--bw-color-surface); --nlae-text: var(--bw-color-text); --nlae-muted: var(--bw-color-text-muted);
+  --nlae-border: var(--bw-color-border); --nlae-accent: var(--bw-color-accent-strong); --nlae-accent-text: var(--bw-color-text-on-accent);
+  --nlae-danger: var(--bw-color-negative-text); --nlae-success: var(--bw-color-positive-text); --nlae-warning: var(--bw-color-warning-text);
+  --nlae-radius: var(--bw-radius-md); --nlae-focus: var(--bw-color-focus-ring); --nlae-shadow: var(--bw-shadow-md);
+  --nlae-font-size: var(--bw-font-size-sm);
+  position: relative; flex: 1 1 420px; min-width: 0; max-width: 560px;
+}
+.bw-command .nlae-suggestions li.is-active, .bw-command .nlae-suggestions li:hover { color: var(--bw-color-accent-soft-text); }
+.bw-command .nlae-input { min-height: 36px; font-size: var(--bw-font-size-sm); }
+.bw-command .nlae-button { min-height: 32px; font-size: var(--bw-font-size-sm); }
+.bw-command .nlae-suggestions { z-index: 40; }
+
+/* Results float under the bar instead of pushing the page down; long previews scroll inside. */
+.bw-command .nlae-output {
+  position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0;
+  max-height: min(70vh, 560px); overflow: auto; overscroll-behavior: contain;
+  border-radius: var(--bw-radius-md); box-shadow: var(--bw-shadow-md);
+}
+.bw-command .nlae-panel { background: var(--bw-color-surface); }
+.bw-command-refresh {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 0; padding: 6px 10px;
+  border-radius: var(--bw-radius-md); background: var(--bw-color-accent-soft); color: var(--bw-color-accent-soft-text); font-size: var(--bw-font-size-xs);
+}
+
+/* Tablets: the bar takes the room the breadcrumb leaves. */
+@media (max-width: 1100px) { .bw-command { flex-basis: 300px; } }
+
+/* Phones: the top bar is not sticky here, so the bar gets its own full-width row and results flow in
+   the page; 16px text keeps iOS from zooming into the field. */
+@media (max-width: 760px) {
+  .bw-topbar:has(.bw-command) { flex-wrap: wrap; padding-block: 8px; row-gap: 8px; }
+  .bw-command { order: 3; flex: 1 1 100%; max-width: none; }
+  .bw-command .nlae-input, .bw-command .nlae-args input, .bw-command .nlae-args select, .bw-command .nlae-typed input { font-size: 16px; }
+  .bw-command .nlae-output { position: static; max-height: none; box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { .bw-command * { transition: none !important; } }
+@media (forced-colors: active) { .bw-command .nlae-panel, .bw-command .nlae-suggestions { border: 1px solid CanvasText; } }

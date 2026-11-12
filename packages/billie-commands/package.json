@@ -1,0 +1,12 @@
+{
+  "name": "@billie/commands",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "description": "BillieWeather's typed-command definitions, strings and the website's command-bar bundle, shared by the universal client and the Rails website.",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs"
+  }
+}

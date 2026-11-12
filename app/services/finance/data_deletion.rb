@@ -8,7 +8,7 @@ module Finance
   # syncing take, inside one database transaction: it either removes everything or nothing.
   class DataDeletion
     # Order matters: children before the rows their foreign keys point at.
-    MODELS = [Transaction, StatementDraft, Statement, BankAccount, MerchantRule, CustomCategory, Insight, Profile].freeze
+    MODELS = [CommandExecution, Transaction, StatementDraft, Statement, BankAccount, MerchantRule, CustomCategory, Insight, Profile].freeze
 
     def self.call(user:)
       new(user: user).call

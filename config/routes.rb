@@ -64,6 +64,13 @@ Rails.application.routes.draw do
     resource :tax_preparation, only: :show, path: "tax", controller: :tax_preparation do
       post :generate
     end
+    # The command bar's trusted side (JSON only). The browser parses; these re-check and run.
+    scope "command", controller: :commands, as: :command, defaults: {format: :json} do
+      get :context
+      post :preview
+      post :execute
+      post :undo
+    end
   end
 
   # See `config/routes/*.rb` to customize these configurations.

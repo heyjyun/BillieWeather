@@ -8,5 +8,7 @@ Rails.application.config.filter_parameters += [
   :file, :description, :current_balance, :content, :rows, :amount, :bank_account, :account_number, :account_last4,
   :code, :state, :credential, :google_uid, :items,
   # Transaction search words ("pharmacy", a payee name) describe someone's spending.
-  :search
+  :search,
+  # Typed commands (Finance::CommandsController): the text, merchant phrases and amounts in a plan.
+  :plan, :confirmation
 ]

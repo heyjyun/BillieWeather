@@ -12,8 +12,14 @@
     <%= stylesheet_link_tag "/billie.css" %>
     <script src="/billie-theme.js"></script>
     <script src="/billie.js" defer></script>
-  </head>
   <% landing_page = controller_path == "public/home"; public_page = landing_page || devise_controller? || !user_signed_in?; admin_area = !public_page && controller_path.start_with?("admin/") %>
+  <%# The command bar (public/billie-command.*, built from packages/billie-commands) only on the signed-in finance pages. %>
+  <% command_bar = !public_page && !admin_area && controller_path.start_with?("finance/") && !current_user.needs_usage_region? %>
+  <% if command_bar %>
+    <%= stylesheet_link_tag "/billie-command.css" %>
+    <script src="/billie-command.js" defer></script>
+  <% end %>
+  </head>
   <body class="<%= public_page ? 'billie-public' : 'billie-app' %>">
     <a class="bw-skip-link" href="#main-content"><%= t('billie.layout.skip') %></a>
     <% if public_page %>
@@ -62,7 +68,7 @@
       </aside>
     <% end %>
     <div class="<%= public_page ? 'bw-public-shell' : 'bw-main-shell' %>">
-      <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb"><%= admin_area ? t('billie.community.nav.support_admin') : t('billie.layout.workspace') %> <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : t('billie.layout.overview') %></strong></div><div class="bw-topbar-actions"><%= render 'shared/billie_theme_switcher' %><%= render 'shared/billie_language_switcher' %></div></header><% end %>
+      <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb"><%= admin_area ? t('billie.community.nav.support_admin') : t('billie.layout.workspace') %> <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : t('billie.layout.overview') %></strong></div><% if command_bar %><div class="bw-command" data-smart-command data-locale="<%= I18n.locale %>" data-context-url="<%= finance_command_context_path %>" data-preview-url="<%= finance_command_preview_path %>" data-execute-url="<%= finance_command_execute_path %>" data-undo-url="<%= finance_command_undo_path %>"></div><% end %><div class="bw-topbar-actions"><%= render 'shared/billie_theme_switcher' %><%= render 'shared/billie_language_switcher' %></div></header><% end %>
       <main id="main-content" class="<%= 'bw-main' unless public_page %>">
         <% flash.each do |type, message| %><div class="bw-flash <%= 'bw-flash-error' if type.to_s == 'alert' %>" role="<%= type.to_s == 'alert' ? 'alert' : 'status' %>"><%= message %></div><% end %>
         <%= yield %>

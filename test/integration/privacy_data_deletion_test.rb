@@ -24,6 +24,8 @@ class PrivacyDataDeletionTest < ActionDispatch::IntegrationTest
     Finance::MerchantRule.create!(user: user, merchant_key: "coffee bar", category: "Food & dining")
     Finance::CustomCategory.create!(user: user, name: "Pets")
     Finance::Insight.create!(user: user, source: "rules", content: {"summary" => "x"}, generated_at: Time.current)
+    # Command-bar history and undo data (Finance::SmartCommand) are financial data too.
+    Finance::CommandExecution.create!(user: user, idempotency_key: "privacy-#{digit * 8}", action_id: "transactions.exclude", request_digest: digit * 64, undo_payload: {"field" => "excluded", "rows" => []})
     Finance::Transaction.create!(user: user, statement: statement, booked_on: Date.current, description: "Coffee bar", amount: "-4.00", category: "Food & dining")
   end
 

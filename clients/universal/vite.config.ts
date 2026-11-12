@@ -57,12 +57,14 @@ export default defineConfig({
       "@billie/finance-core": `${packages}/finance-core/src/index.ts`,
       "@billie/reporting": `${packages}/reporting/src/index.ts`,
       "@billie/design-tokens": `${packages}/design-tokens/src/tokens.ts`,
+      "@billie/commands": `${packages}/billie-commands/src/index.ts`,
       "@nlae/core": `${packages}/nl-action-engine/src/index.ts`,
       "@nlae/react/commandBar.css": `${packages}/nl-action-react/src/commandBar.css`,
       "@nlae/react": `${packages}/nl-action-react/src/index.ts`,
     },
-    // packages/nl-action-react imports React from outside this folder; always use this app's copy.
-    dedupe: ["react", "react-dom"],
+    // packages/nl-action-react and packages/billie-commands (and its tests) import React from outside
+    // this folder; always use this app's copy.
+    dedupe: ["react", "react-dom", "@testing-library/react"],
   },
   clearScreen: false,
   server: {
@@ -82,7 +84,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["test/**/*.test.{ts,tsx}", "../../packages/*/test/**/*.test.ts"],
+    include: ["test/**/*.test.{ts,tsx}", "../../packages/*/test/**/*.test.{ts,tsx}"],
     root: fileURLToPath(new URL(".", import.meta.url)),
   },
 });

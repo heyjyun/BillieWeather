@@ -1,0 +1,985 @@
+{
+  "expenses_this_month": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-000",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "Show my expenses this month.",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "finance.spending",
+      "score": 1,
+      "matched": "show my expenses"
+    },
+    "alternatives": [],
+    "arguments": {
+      "period": {
+        "value": {
+          "start": "2026-11-01",
+          "end": "2026-11-30"
+        },
+        "source": "input",
+        "raw": "this month",
+        "corrected": false,
+        "display": "2026-11-01 – 2026-11-30"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "find_uber": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-001",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "Find my Uber transactions.",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "transactions.find",
+      "score": 1,
+      "matched": "find"
+    },
+    "alternatives": [],
+    "arguments": {
+      "query": {
+        "value": "Uber",
+        "source": "input",
+        "raw": "Uber"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "spent_last_week": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-002",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "How much did I spend last week?",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "finance.spending",
+      "score": 1,
+      "matched": "how much did i spend"
+    },
+    "alternatives": [],
+    "arguments": {
+      "period": {
+        "value": {
+          "start": "2026-11-02",
+          "end": "2026-11-08"
+        },
+        "source": "input",
+        "raw": "last week",
+        "corrected": false,
+        "display": "2026-11-02 – 2026-11-08"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "open_transactions": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-003",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "Open my transactions.",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "app.navigate",
+      "score": 1,
+      "matched": "open"
+    },
+    "alternatives": [],
+    "arguments": {
+      "page": {
+        "value": "transactions",
+        "source": "input",
+        "raw": "transactions",
+        "display": "transactions",
+        "corrected": false
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "zh_last_month_expenses": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-004",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "上个月的支出",
+    "language": "zh-Hans",
+    "status": "ready",
+    "intent": {
+      "actionId": "finance.spending",
+      "score": 1,
+      "matched": "的支出"
+    },
+    "alternatives": [],
+    "arguments": {
+      "period": {
+        "value": {
+          "start": "2026-10-01",
+          "end": "2026-10-31"
+        },
+        "source": "input",
+        "raw": "上个月",
+        "corrected": false,
+        "display": "2026-10-01 – 2026-10-31"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "zh_show_last_month_expenses": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-005",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "显示上个月的支出。",
+    "language": "zh-Hans",
+    "status": "needs_clarification",
+    "intent": {
+      "actionId": "finance.spending",
+      "score": 1,
+      "matched": "的支出"
+    },
+    "alternatives": [
+      {
+        "actionId": "transactions.find",
+        "score": 1
+      }
+    ],
+    "arguments": {
+      "period": {
+        "value": {
+          "start": "2026-10-01",
+          "end": "2026-10-31"
+        },
+        "source": "input",
+        "raw": "上个月",
+        "corrected": false,
+        "display": "2026-10-01 – 2026-10-31"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": true,
+      "reasons": [
+        "intent"
+      ]
+    },
+    "clarification": {
+      "kind": "intent",
+      "code": "which_action",
+      "message": "Which did you mean?",
+      "options": [
+        {
+          "value": "finance.spending",
+          "label": "Total spending"
+        },
+        {
+          "value": "transactions.find",
+          "label": "Find transactions"
+        }
+      ]
+    },
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "income_this_year": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-006",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "how much did I earn this year",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "finance.income",
+      "score": 1,
+      "matched": "how much did i earn"
+    },
+    "alternatives": [],
+    "arguments": {
+      "period": {
+        "value": {
+          "start": "2026-01-01",
+          "end": "2026-12-31"
+        },
+        "source": "input",
+        "raw": "this year",
+        "corrected": false,
+        "display": "2026-01-01 – 2026-12-31"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "food_last_month": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-007",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "how much did I spend on food last month",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "finance.spending",
+      "score": 1,
+      "matched": "how much did i spend"
+    },
+    "alternatives": [],
+    "arguments": {
+      "period": {
+        "value": {
+          "start": "2026-10-01",
+          "end": "2026-10-31"
+        },
+        "source": "input",
+        "raw": "last month",
+        "corrected": false,
+        "display": "2026-10-01 – 2026-10-31"
+      },
+      "category": {
+        "value": "Food & dining",
+        "source": "input",
+        "raw": "food",
+        "display": "Food & dining",
+        "corrected": false
+      }
+    },
+    "targets": [
+      {
+        "param": "category",
+        "kind": "category",
+        "id": "Food & dining",
+        "label": "Food & dining",
+        "via": "input"
+      }
+    ],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "find_coffee_by_category": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-008",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "show starbucks transactions last month",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "transactions.find",
+      "score": 1,
+      "matched": "show"
+    },
+    "alternatives": [],
+    "arguments": {
+      "period": {
+        "value": {
+          "start": "2026-10-01",
+          "end": "2026-10-31"
+        },
+        "source": "input",
+        "raw": "last month",
+        "corrected": false,
+        "display": "2026-10-01 – 2026-10-31"
+      },
+      "query": {
+        "value": "starbucks",
+        "source": "input",
+        "raw": "starbucks"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "find_over_amount": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-009",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "find payments over $100",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "transactions.find",
+      "score": 1,
+      "matched": "find"
+    },
+    "alternatives": [],
+    "arguments": {
+      "amount": {
+        "value": {
+          "amountMinor": 10000,
+          "currency": "USD",
+          "comparator": "gt"
+        },
+        "source": "input",
+        "raw": "over $100"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "balances": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-010",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "show my account balances",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "finance.balance",
+      "score": 1,
+      "matched": "show my account balances"
+    },
+    "alternatives": [],
+    "arguments": {},
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "zh_balance": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-011",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "账户余额",
+    "language": "zh-Hans",
+    "status": "ready",
+    "intent": {
+      "actionId": "finance.balance",
+      "score": 1,
+      "matched": "账户余额"
+    },
+    "alternatives": [],
+    "arguments": {},
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "list_categories": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-012",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "list categories",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "categories.list",
+      "score": 1,
+      "matched": "list categories"
+    },
+    "alternatives": [],
+    "arguments": {},
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "zh_list_categories": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-013",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "有哪些类别",
+    "language": "zh-Hans",
+    "status": "ready",
+    "intent": {
+      "actionId": "categories.list",
+      "score": 1,
+      "matched": "有哪些类别"
+    },
+    "alternatives": [],
+    "arguments": {},
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "open_forecast": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-014",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "go to forecast",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "app.navigate",
+      "score": 1,
+      "matched": "go to"
+    },
+    "alternatives": [],
+    "arguments": {
+      "page": {
+        "value": "forecast",
+        "source": "input",
+        "raw": "forecast",
+        "display": "forecast",
+        "corrected": false
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "open_statements": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-015",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "open statements",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "app.navigate",
+      "score": 1,
+      "matched": "open"
+    },
+    "alternatives": [],
+    "arguments": {
+      "page": {
+        "value": "import",
+        "source": "input",
+        "raw": "statements",
+        "display": "import",
+        "corrected": false
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "zh_open_tax": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-016",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "打开税务",
+    "language": "zh-Hans",
+    "status": "ready",
+    "intent": {
+      "actionId": "app.navigate",
+      "score": 1,
+      "matched": "打开"
+    },
+    "alternatives": [],
+    "arguments": {
+      "page": {
+        "value": "tax",
+        "source": "input",
+        "raw": "税 务",
+        "display": "tax",
+        "corrected": false
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "none",
+    "confirmation": "none",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "categorize_uber": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-017",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "move uber to transport",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "transactions.categorize",
+      "score": 1,
+      "matched": "move"
+    },
+    "alternatives": [],
+    "arguments": {
+      "category": {
+        "value": "Transport",
+        "source": "input",
+        "raw": "transport",
+        "display": "Transport",
+        "corrected": false
+      },
+      "query": {
+        "value": "uber",
+        "source": "input",
+        "raw": "uber"
+      }
+    },
+    "targets": [
+      {
+        "param": "category",
+        "kind": "category",
+        "id": "Transport",
+        "label": "Transport",
+        "via": "input"
+      }
+    ],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "medium",
+    "confirmation": "confirm",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "exclude_venmo": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-018",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "exclude venmo",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "transactions.exclude",
+      "score": 1,
+      "matched": "exclude"
+    },
+    "alternatives": [],
+    "arguments": {
+      "query": {
+        "value": "venmo",
+        "source": "input",
+        "raw": "venmo"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "medium",
+    "confirmation": "confirm",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "include_venmo": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-019",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "include venmo again",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "transactions.include",
+      "score": 1,
+      "matched": "include"
+    },
+    "alternatives": [],
+    "arguments": {
+      "query": {
+        "value": "venmo",
+        "source": "input",
+        "raw": "venmo"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "medium",
+    "confirmation": "confirm",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "create_category": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-020",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "create category \"Pet care\"",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "categories.create",
+      "score": 1,
+      "matched": "create category"
+    },
+    "alternatives": [],
+    "arguments": {
+      "name": {
+        "value": "Pet care",
+        "source": "input",
+        "raw": "Pet care"
+      }
+    },
+    "targets": [],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "low",
+    "confirmation": "confirm",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "rename_category": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-021",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "rename category Pets to \"Animals\"",
+    "language": "en",
+    "status": "ready",
+    "intent": {
+      "actionId": "categories.rename",
+      "score": 1,
+      "matched": "rename category"
+    },
+    "alternatives": [],
+    "arguments": {
+      "to": {
+        "value": "Animals",
+        "source": "input",
+        "raw": "Animals"
+      },
+      "from": {
+        "value": "Pets",
+        "source": "input",
+        "raw": "Pets",
+        "display": "Pets",
+        "corrected": false
+      }
+    },
+    "targets": [
+      {
+        "param": "from",
+        "kind": "customCategory",
+        "id": "Pets",
+        "label": "Pets",
+        "via": "input"
+      }
+    ],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "medium",
+    "confirmation": "confirm",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  },
+  "zh_categorize": {
+    "protocol": "nlae/1",
+    "planId": "golden-plan-022",
+    "createdAt": "2026-11-11T12:00:00.000Z",
+    "input": "把星巴克改成餐饮",
+    "language": "zh-Hans",
+    "status": "ready",
+    "intent": {
+      "actionId": "transactions.categorize",
+      "score": 1,
+      "matched": "改成"
+    },
+    "alternatives": [],
+    "arguments": {
+      "category": {
+        "value": "Food & dining",
+        "source": "input",
+        "raw": "餐饮",
+        "display": "Food & dining",
+        "corrected": false
+      },
+      "query": {
+        "value": "星巴克",
+        "source": "input",
+        "raw": "星巴克"
+      }
+    },
+    "targets": [
+      {
+        "param": "category",
+        "kind": "category",
+        "id": "Food & dining",
+        "label": "Food & dining",
+        "via": "input"
+      }
+    ],
+    "ambiguity": {
+      "ambiguous": false,
+      "reasons": []
+    },
+    "clarification": null,
+    "operations": [],
+    "fingerprint": null,
+    "risk": "medium",
+    "confirmation": "confirm",
+    "confirmationPhrase": null,
+    "notes": [],
+    "scope": {
+      "product": "billieweather-web",
+      "tenant": "TENANT"
+    },
+    "issues": []
+  }
+}
