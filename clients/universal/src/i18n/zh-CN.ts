@@ -1,5 +1,6 @@
 import type { Messages } from "./en";
 import { universalZhCN } from "./universal";
+import { commandZhCN } from "./command";
 
 export const zhCN: Messages = {
   languageName: "简体中文",
@@ -273,4 +274,5 @@ export const zhCN: Messages = {
     yes: "是", no: "否",
   },
   universal: universalZhCN,
+  command: commandZhCN,
 };

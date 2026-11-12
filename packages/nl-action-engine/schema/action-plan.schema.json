@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nlae.dev/schema/nlae-1/action-plan.json",
+  "title": "NLAE ActionPlan (protocol nlae/1)",
+  "description": "A parsed, validated request. It is never an instruction: the trusted side re-checks scope, authorization, arguments, confirmation and preview freshness before executing.",
+  "type": "object",
+  "required": ["protocol", "planId", "createdAt", "input", "language", "status", "intent", "alternatives", "arguments", "targets", "ambiguity", "clarification", "operations", "fingerprint", "risk", "confirmation", "confirmationPhrase", "notes", "scope", "issues"],
+  "additionalProperties": false,
+  "properties": {
+    "protocol": { "const": "nlae/1" },
+    "planId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{8,100}$", "description": "Unique; the default idempotency key." },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "input": { "type": "string", "maxLength": 2000 },
+    "language": { "enum": ["en", "zh-Hans", "zh-Hant", "zh", "mixed", "unknown"] },
+    "status": { "enum": ["ready", "needs_clarification", "unsupported", "invalid", "cancelled"] },
+    "intent": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "object", "required": ["actionId", "score", "matched"], "properties": { "actionId": { "type": "string" }, "score": { "type": "number", "minimum": 0, "maximum": 1 }, "matched": { "type": "string" } } }
+      ]
+    },
+    "alternatives": { "type": "array", "items": { "type": "object", "required": ["actionId", "score"], "properties": { "actionId": { "type": "string" }, "score": { "type": "number" } } } },
+    "arguments": { "type": "object", "additionalProperties": { "$ref": "#/$defs/argument" } },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["param", "kind", "id", "label", "via"],
+        "properties": { "param": { "type": "string" }, "kind": { "type": "string" }, "id": { "type": "string" }, "label": { "type": "string" }, "via": { "enum": ["input", "context", "clarification", "edit"] } }
+      }
+    },
+    "ambiguity": { "type": "object", "required": ["ambiguous", "reasons"], "properties": { "ambiguous": { "type": "boolean" }, "reasons": { "type": "array", "items": { "type": "string" } } } },
+    "clarification": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/clarification" }] },
+    "operations": { "type": "array", "items": { "$ref": "#/$defs/operation" } },
+    "fingerprint": { "type": ["string", "null"] },
+    "risk": { "enum": ["none", "low", "medium", "high"] },
+    "confirmation": { "enum": ["none", "confirm", "typed"] },
+    "confirmationPhrase": { "type": ["string", "null"] },
+    "notes": { "type": "array", "items": { "$ref": "#/$defs/note" } },
+    "scope": { "type": "object", "required": ["product", "tenant"], "properties": { "product": { "type": "string" }, "tenant": { "type": "string" } } },
+    "issues": { "type": "array", "items": { "$ref": "#/$defs/message" } }
+  },
+  "$defs": {
+    "value": {
+      "oneOf": [
+        { "type": "string" }, { "type": "number" }, { "type": "boolean" },
+        { "type": "object", "required": ["start", "end"], "additionalProperties": false, "properties": { "start": { "type": ["string", "null"], "format": "date" }, "end": { "type": ["string", "null"], "format": "date" } } },
+        { "type": "object", "required": ["amountMinor", "currency", "comparator"], "additionalProperties": false, "properties": { "amountMinor": { "type": "integer", "minimum": 0 }, "currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" }, "comparator": { "enum": ["eq", "gt", "gte", "lt", "lte"] } } }
+      ]
+    },
+    "argument": {
+      "type": "object", "required": ["value", "source"],
+      "properties": {
+        "value": { "$ref": "#/$defs/value" },
+        "source": { "enum": ["input", "context", "default", "clarification", "edit"] },
+        "raw": { "type": "string", "description": "Exactly what the person typed." },
+        "display": { "type": "string" },
+        "corrected": { "type": "boolean" }
+      }
+    },
+    "message": { "type": "object", "required": ["code", "message"], "properties": { "code": { "type": "string" }, "message": { "type": "string" }, "vars": { "type": "object", "additionalProperties": { "type": ["string", "number"] } } } },
+    "note": { "allOf": [{ "$ref": "#/$defs/message" }], "required": ["kind"], "properties": { "kind": { "enum": ["typo", "homophone", "script", "assumption", "context", "followUp", "default", "ignored"] } } },
+    "clarification": {
+      "type": "object", "required": ["kind", "code", "message", "options"],
+      "properties": {
+        "kind": { "enum": ["missing", "choose", "intent", "reference", "confirmIntent", "invalid"] },
+        "param": { "type": "string" }, "code": { "type": "string" }, "message": { "type": "string" }, "freeText": { "type": "boolean" },
+        "vars": { "type": "object" },
+        "options": { "type": "array", "items": { "type": "object", "required": ["value", "label"], "properties": { "value": { "type": "string" }, "label": { "type": "string" } } } }
+      }
+    },
+    "operation": {
+      "type": "object", "required": ["op", "target"],
+      "properties": {
+        "op": { "type": "string" },
+        "target": { "type": "object", "required": ["kind", "id", "label"], "properties": { "kind": { "type": "string" }, "id": { "type": "string" }, "label": { "type": "string" } } },
+        "before": {}, "after": {}
+      }
+    }
+  }
+}

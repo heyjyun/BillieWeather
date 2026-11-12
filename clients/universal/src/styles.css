@@ -451,3 +451,14 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 /* Form controls match the website: 14px text; 16px on phones so iOS does not zoom on focus. */
 :is(.bw-field, .bw-account-form, .bw-sync-side, .bw-db-rename, .bw-tx-table, .bw-review-table, .bw-login-language) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select) { font-size: var(--bw-font-size-md); }
 @media (max-width: 760px) { :is(.bw-field, .bw-account-form, .bw-sync-side, .bw-db-rename, .bw-tx-table, .bw-review-table, .bw-confirm, .bw-login-language) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select) { font-size: 16px; } }
+
+/* ---------- Typed command bar (packages/nl-action-react, themed by these tokens) ---------- */
+.bw-command {
+  --nlae-bg: var(--bw-color-accent-soft); --nlae-surface: var(--bw-color-surface); --nlae-text: var(--bw-color-text); --nlae-muted: var(--bw-color-text-muted);
+  --nlae-border: var(--bw-color-border); --nlae-accent: var(--bw-color-accent-strong); --nlae-accent-text: var(--bw-color-text-on-accent);
+  --nlae-danger: var(--bw-color-negative-text); --nlae-success: var(--bw-color-positive-text); --nlae-warning: var(--bw-color-warning-text);
+  --nlae-radius: var(--bw-radius-md); --nlae-focus: var(--bw-color-focus-ring); --nlae-shadow: var(--bw-shadow-md);
+  margin-bottom: 16px;
+}
+.bw-command .nlae-suggestions li.is-active, .bw-command .nlae-suggestions li:hover { color: var(--bw-color-accent-soft-text); }
+.bw-command-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--bw-radius-md); background: var(--bw-color-accent-soft); color: var(--bw-color-accent-soft-text); }

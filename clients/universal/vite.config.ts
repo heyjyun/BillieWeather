@@ -57,7 +57,12 @@ export default defineConfig({
       "@billie/finance-core": `${packages}/finance-core/src/index.ts`,
       "@billie/reporting": `${packages}/reporting/src/index.ts`,
       "@billie/design-tokens": `${packages}/design-tokens/src/tokens.ts`,
+      "@nlae/core": `${packages}/nl-action-engine/src/index.ts`,
+      "@nlae/react/commandBar.css": `${packages}/nl-action-react/src/commandBar.css`,
+      "@nlae/react": `${packages}/nl-action-react/src/index.ts`,
     },
+    // packages/nl-action-react imports React from outside this folder; always use this app's copy.
+    dedupe: ["react", "react-dom"],
   },
   clearScreen: false,
   server: {

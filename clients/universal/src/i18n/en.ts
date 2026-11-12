@@ -1,6 +1,7 @@
 // English is the reference dictionary: every other language must have exactly these keys
 // (checked by TypeScript and by test/i18n.test.ts). Use {name} for interpolation.
 import { universalEn } from "./universal";
+import { commandEn } from "./command";
 
 export const en = {
   languageName: "English",
@@ -274,6 +275,7 @@ export const en = {
     yes: "Yes", no: "No",
   },
   universal: universalEn,
+  command: commandEn,
 };
 
 type Widen<T> = T extends string ? string : T extends readonly string[] ? string[] : { [K in keyof T]: Widen<T[K]> };

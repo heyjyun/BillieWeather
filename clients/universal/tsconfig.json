@@ -18,7 +18,11 @@
       "@billie/shared-types": ["../../packages/shared-types/src/index.ts"],
       "@billie/finance-core": ["../../packages/finance-core/src/index.ts"],
       "@billie/reporting": ["../../packages/reporting/src/index.ts"],
-      "@billie/design-tokens": ["../../packages/design-tokens/src/tokens.ts"]
+      "@billie/design-tokens": ["../../packages/design-tokens/src/tokens.ts"],
+      "@nlae/core": ["../../packages/nl-action-engine/src/index.ts"],
+      "@nlae/react": ["../../packages/nl-action-react/src/index.ts"],
+      "react": ["./node_modules/@types/react/index.d.ts"],
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime.d.ts"]
     }
   },
   "include": ["src", "test", "e2e", "vite.config.ts", "../../packages/*/src", "../../packages/*/test"]

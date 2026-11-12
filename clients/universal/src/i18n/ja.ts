@@ -1,5 +1,6 @@
 import type { Messages } from "./en";
 import { universalJa } from "./universal";
+import { commandJa } from "./command";
 
 export const ja: Messages = {
   languageName: "日本語",
@@ -273,4 +274,5 @@ export const ja: Messages = {
     yes: "はい", no: "いいえ",
   },
   universal: universalJa,
+  command: commandJa,
 };

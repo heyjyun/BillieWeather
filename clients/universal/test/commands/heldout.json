@@ -1,0 +1,770 @@
+{
+ "about": "Held-out commands: written after the parser was tuned on corpus.json and NOT used for tuning. Same conventions as corpus.json. Its accuracy is reported, not asserted to be perfect.",
+ "cases": [
+  {
+   "input": "find all target purchases",
+   "action": "transactions.find",
+   "args": {
+    "query": "target"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "show me costco from last week",
+   "action": "transactions.find",
+   "args": {
+    "query": "costco",
+    "period": {
+     "start": "2026-11-02",
+     "end": "2026-11-08"
+    }
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "search apple yesterday",
+   "action": "transactions.find",
+   "args": {
+    "query": "apple",
+    "period": {
+     "start": "2026-11-10",
+     "end": "2026-11-10"
+    }
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "list charges above $250 this month",
+   "action": "transactions.find",
+   "args": {
+    "amount": {
+     "amountMinor": 25000,
+     "currency": "USD",
+     "comparator": "gt"
+    },
+    "period": {
+     "start": "2026-11-01",
+     "end": "2026-11-30"
+    }
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "look up transactions in Health",
+   "action": "transactions.find",
+   "args": {
+    "category": "Health"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "show uber in september",
+   "action": "transactions.find",
+   "args": {
+    "query": "uber",
+    "period": {
+     "start": "2026-09-01",
+     "end": "2026-09-30"
+    }
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "找一下美团",
+   "action": "transactions.find",
+   "args": {
+    "query": "美团"
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "查询最近两周的交易",
+   "action": "transactions.find",
+   "args": {
+    "period": {
+     "start": "2026-10-29",
+     "end": "2026-11-11"
+    }
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "显示 9月 的 淘宝",
+   "action": "transactions.find",
+   "args": {
+    "query": "淘宝",
+    "period": {
+     "start": "2026-09-01",
+     "end": "2026-09-30"
+    }
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "查看昨天的消費",
+   "action": "transactions.find",
+   "args": {
+    "period": {
+     "start": "2026-11-10",
+     "end": "2026-11-10"
+    }
+   },
+   "tags": [
+    "zh-Hant"
+   ]
+  },
+  {
+   "input": "列出 Amazon 今年",
+   "action": "transactions.find",
+   "args": {
+    "query": "Amazon",
+    "period": {
+     "start": "2026-01-01",
+     "end": "2026-12-31"
+    }
+   },
+   "tags": [
+    "mixed"
+   ]
+  },
+  {
+   "input": "find spotfiy",
+   "action": "transactions.find",
+   "args": {
+    "query": "spotfiy"
+   },
+   "tags": [
+    "en",
+    "typo"
+   ]
+  },
+  {
+   "input": "seach walmart last moth",
+   "action": "transactions.find",
+   "args": {
+    "query": "walmart",
+    "period": {
+     "start": "2026-10-01",
+     "end": "2026-10-31"
+    }
+   },
+   "tags": [
+    "en",
+    "typo"
+   ]
+  },
+  {
+   "input": "how much did I spend on groceries this month",
+   "action": "finance.spending",
+   "args": {
+    "category": "Food & dining",
+    "period": {
+     "start": "2026-11-01",
+     "end": "2026-11-30"
+    }
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "how much have I spent on shopping in the last 90 days",
+   "action": "finance.spending",
+   "args": {
+    "category": "Shopping",
+    "period": {
+     "start": "2026-08-14",
+     "end": "2026-11-11"
+    }
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "how much did i spend at amazon last year",
+   "action": "finance.spending",
+   "args": {
+    "query": "amazon",
+    "period": {
+     "start": "2025-01-01",
+     "end": "2025-12-31"
+    }
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "what was my total spending last month",
+   "action": "finance.spending",
+   "args": {
+    "period": {
+     "start": "2026-10-01",
+     "end": "2026-10-31"
+    }
+   },
+   "tags": [
+    "en",
+    "paraphrase"
+   ]
+  },
+  {
+   "input": "how much money did I spend on coffee runs",
+   "action": "finance.spending",
+   "args": {
+    "category": "Coffee runs"
+   },
+   "tags": [
+    "en",
+    "paraphrase"
+   ]
+  },
+  {
+   "input": "去年住房花了多少钱",
+   "action": "finance.spending",
+   "args": {
+    "category": "Housing",
+    "period": {
+     "start": "2025-01-01",
+     "end": "2025-12-31"
+    }
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "这个月一共花了多少",
+   "action": "finance.spending",
+   "args": {
+    "period": {
+     "start": "2026-11-01",
+     "end": "2026-11-30"
+    }
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "上周外卖花了多少钱",
+   "action": "finance.spending",
+   "args": {
+    "category": "Food & dining",
+    "period": {
+     "start": "2026-11-02",
+     "end": "2026-11-08"
+    }
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "今年購物花了多少錢",
+   "action": "finance.spending",
+   "args": {
+    "category": "Shopping",
+    "period": {
+     "start": "2026-01-01",
+     "end": "2026-12-31"
+    }
+   },
+   "tags": [
+    "zh-Hant"
+   ]
+  },
+  {
+   "input": "how much did I spend on 购物 this year",
+   "action": "finance.spending",
+   "args": {
+    "category": "Shopping",
+    "period": {
+     "start": "2026-01-01",
+     "end": "2026-12-31"
+    }
+   },
+   "tags": [
+    "mixed"
+   ]
+  },
+  {
+   "input": "how much did I spedn on helth",
+   "action": "finance.spending",
+   "args": {
+    "category": "Health"
+   },
+   "tags": [
+    "en",
+    "typo"
+   ]
+  },
+  {
+   "input": "去年住房花了多少前",
+   "action": "finance.spending",
+   "args": {
+    "category": "Housing",
+    "period": {
+     "start": "2025-01-01",
+     "end": "2025-12-31"
+    }
+   },
+   "tags": [
+    "zh-Hans",
+    "homophone"
+   ]
+  },
+  {
+   "input": "how much income did I get this month",
+   "action": "finance.income",
+   "args": {
+    "period": {
+     "start": "2026-11-01",
+     "end": "2026-11-30"
+    }
+   },
+   "tags": [
+    "en",
+    "paraphrase"
+   ]
+  },
+  {
+   "input": "去年赚了多少",
+   "action": "finance.income",
+   "args": {
+    "period": {
+     "start": "2025-01-01",
+     "end": "2025-12-31"
+    }
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "categorize chipotle as food",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "chipotle",
+    "category": "Food & dining"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "move all comcast charges to utilities",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "comcast",
+    "category": "Utilities"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "set category of spotify to shopping",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "spotify",
+    "category": "Shopping"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "mark venmo as transfers",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "venmo",
+    "category": "Transfers"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "classify shell as transport",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "shell",
+    "category": "Transport"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "把美团改为餐饮",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "美团",
+    "category": "Food & dining"
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "将上个月的滴滴归为交通",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "滴滴",
+    "category": "Transport",
+    "period": {
+     "start": "2026-10-01",
+     "end": "2026-10-31"
+    }
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "把全聯改成購物",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "全聯",
+    "category": "Shopping"
+   },
+   "tags": [
+    "zh-Hant"
+   ]
+  },
+  {
+   "input": "move Petsmart to 宠物",
+   "action": "transactions.categorize",
+   "status": "needs_clarification",
+   "tags": [
+    "mixed",
+    "clarify"
+   ]
+  },
+  {
+   "input": "categorise trader joes as fod",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "trader joes",
+    "category": "Food & dining"
+   },
+   "tags": [
+    "en",
+    "typo"
+   ]
+  },
+  {
+   "input": "把美团该成餐饮",
+   "action": "transactions.categorize",
+   "args": {
+    "query": "美团",
+    "category": "Food & dining"
+   },
+   "tags": [
+    "zh-Hans",
+    "homophone"
+   ]
+  },
+  {
+   "input": "ignore zelle transfers",
+   "action": "transactions.exclude",
+   "args": {
+    "query": "zelle"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "exclude transactions from paypal this year",
+   "action": "transactions.exclude",
+   "args": {
+    "query": "paypal",
+    "period": {
+     "start": "2026-01-01",
+     "end": "2026-12-31"
+    }
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "剔除 信用卡还款",
+   "action": "transactions.exclude",
+   "args": {
+    "query": "信用卡还款"
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "count zelle again",
+   "action": "transactions.include",
+   "args": {
+    "query": "zelle"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "make a category named Travel",
+   "action": "categories.create",
+   "args": {
+    "name": "Travel"
+   },
+   "tags": [
+    "en",
+    "paraphrase"
+   ]
+  },
+  {
+   "input": "add a category \"Kids & School\"",
+   "action": "categories.create",
+   "args": {
+    "name": "Kids & School"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "创建分类 旅行",
+   "action": "categories.create",
+   "args": {
+    "name": "旅行"
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "rename Pets as Animals",
+   "action": "categories.rename",
+   "args": {
+    "from": "Pets",
+    "to": "Animals"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "把 Coffee runs 重命名为 咖啡",
+   "action": "categories.rename",
+   "args": {
+    "from": "Coffee runs",
+    "to": "咖啡"
+   },
+   "tags": [
+    "mixed"
+   ]
+  },
+  {
+   "input": "remove category coffee runs",
+   "action": "categories.delete",
+   "args": {
+    "target": "Coffee runs"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "删掉分类 Pets",
+   "action": "categories.delete",
+   "args": {
+    "target": "Pets"
+   },
+   "tags": [
+    "mixed"
+   ]
+  },
+  {
+   "input": "go to the categories page",
+   "action": "app.navigate",
+   "args": {
+    "page": "categories"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "navigate to data",
+   "action": "app.navigate",
+   "args": {
+    "page": "data"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "进入首页",
+   "action": "app.navigate",
+   "args": {
+    "page": "dashboard"
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "前往設定",
+   "action": "app.navigate",
+   "args": {
+    "page": "settings"
+   },
+   "tags": [
+    "zh-Hant"
+   ]
+  },
+  {
+   "input": "use dark theme",
+   "action": "app.theme",
+   "args": {
+    "theme": "dark"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "换成浅色",
+   "action": "app.theme",
+   "args": {
+    "theme": "light"
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "set language to korean",
+   "action": "app.language",
+   "args": {
+    "language": "ko"
+   },
+   "tags": [
+    "en"
+   ]
+  },
+  {
+   "input": "切换语言 日语",
+   "action": "app.language",
+   "args": {
+    "language": "ja"
+   },
+   "tags": [
+    "zh-Hans"
+   ]
+  },
+  {
+   "input": "what can you do",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "good morning",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "I should probably exclude some stuff at some point I guess",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "my sister renamed her cat",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "he deleted the category by accident",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "please don't change anything",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "千万别删除类别 Pets",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "我昨天在星巴克喝了咖啡",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "buy me a coffee",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "cancel my netflix subscription",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "refund the amazon order",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  },
+  {
+   "input": "帮我还信用卡",
+   "action": null,
+   "tags": [
+    "negative"
+   ]
+  }
+ ]
+}

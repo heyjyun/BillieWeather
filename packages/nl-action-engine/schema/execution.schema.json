@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nlae.dev/schema/nlae-1/execution.json",
+  "title": "NLAE execution request and result (protocol nlae/1)",
+  "$defs": {
+    "request": {
+      "type": "object", "required": ["protocol", "plan", "confirmation"], "additionalProperties": false,
+      "properties": {
+        "protocol": { "const": "nlae/1" },
+        "plan": { "$ref": "action-plan.schema.json" },
+        "confirmation": { "type": "object", "required": ["confirmed"], "properties": { "confirmed": { "type": "boolean" }, "typed": { "type": "string" } } },
+        "idempotencyKey": { "type": "string", "minLength": 8, "maxLength": 200, "description": "Defaults to plan.planId. Scoped by product and tenant on the trusted side." }
+      }
+    },
+    "result": {
+      "type": "object", "required": ["protocol", "planId", "status", "summary", "replayed", "operations"],
+      "properties": {
+        "protocol": { "const": "nlae/1" },
+        "planId": { "type": "string" },
+        "status": { "enum": ["succeeded", "rejected", "failed"] },
+        "code": {
+          "enum": ["protocol_mismatch", "malformed_plan", "not_ready", "unknown_action", "scope_mismatch", "unauthenticated", "forbidden", "invalid_arguments", "confirmation_required",
+            "typed_confirmation_mismatch", "stale_preview", "no_effect", "in_progress", "undo_unavailable", "undo_expired", "handler_error"]
+        },
+        "summary": { "$ref": "action-plan.schema.json#/$defs/message" },
+        "data": {},
+        "undo": { "oneOf": [{ "type": "null" }, { "type": "object", "required": ["token", "expiresAt"], "properties": { "token": { "type": "string" }, "expiresAt": { "type": "string", "format": "date-time" } } }] },
+        "replayed": { "type": "boolean" },
+        "operations": { "type": "array", "items": { "$ref": "action-plan.schema.json#/$defs/operation" } }
+      }
+    },
+    "undoRequest": { "type": "object", "required": ["protocol", "token"], "properties": { "protocol": { "const": "nlae/1" }, "token": { "type": "string" } } }
+  }
+}

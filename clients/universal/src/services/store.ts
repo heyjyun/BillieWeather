@@ -119,6 +119,17 @@ export interface LocalSummary {
   currency: Currency | null;
 }
 
+/** A transaction's editable flags exactly as stored (for undoing command changes). */
+export interface TransactionFlags {
+  id: number;
+  category: string;
+  categorySource: string;
+  taxReview: boolean;
+  excluded: boolean;
+  locallyModified: boolean;
+  updatedAt: string;
+}
+
 export interface WebSyncSettings {
   enabled: boolean;
   version: string | null;
@@ -551,6 +562,59 @@ export class FinanceStore {
   private static decidedByRegion(categorizer: Categorizer, row: { description: string; amountCents: number; category: Category }): boolean {
     const decided = categorizer.explain(row.description, row.amountCents);
     return decided.reason === "region" && decided.category === row.category;
+  }
+
+  /**
+   * The editable flags of these transactions exactly as stored, so a bulk change made by a typed
+   * command can be undone precisely (see `restoreTransactionFlags`). Unknown ids are skipped.
+   */
+  async transactionFlags(ids: readonly number[]): Promise<TransactionFlags[]> {
+    const out: TransactionFlags[] = [];
+    for (let start = 0; start < ids.length; start += 200) {
+      const batch = ids.slice(start, start + 200);
+      const rows = await this.db.select<Row>(
+        `SELECT id, category, category_source, tax_review, excluded, locally_modified, updated_at FROM transactions WHERE id IN (${batch.map((_, i) => `$${i + 1}`).join(", ")})`,
+        [...batch],
+      );
+      for (const row of rows) {
+        out.push({
+          id: Number(row.id), category: String(row.category), categorySource: String(row.category_source), taxReview: Number(row.tax_review) === 1,
+          excluded: Number(row.excluded) === 1, locallyModified: Number(row.locally_modified) === 1, updatedAt: String(row.updated_at),
+        });
+      }
+    }
+    return out;
+  }
+
+  /** Puts transactions back exactly as `transactionFlags` read them (undo or compensation). */
+  async restoreTransactionFlags(flags: readonly TransactionFlags[]): Promise<void> {
+    for (const flag of flags) {
+      await this.db.execute(
+        "UPDATE transactions SET category = $1, category_source = $2, tax_review = $3, excluded = $4, locally_modified = $5, updated_at = $6 WHERE id = $7",
+        [flag.category, flag.categorySource, flag.taxReview ? 1 : 0, flag.excluded ? 1 : 0, flag.locallyModified ? 1 : 0, flag.updatedAt, flag.id],
+      );
+    }
+  }
+
+  /**
+   * Gives these transactions one category as the person's own choice (like choosing it in the
+   * list, without saving a merchant rule). The category must exist. Returns how many changed.
+   */
+  async setCategoryMany(ids: readonly number[], category: Category): Promise<number> {
+    if (!isBuiltInCategory(category) && !(await this.customCategories()).includes(category)) throw new StoreError("invalid_category", "Unknown category.");
+    const changed = await this.applyCategories(ids.map((id) => ({ id, category })));
+    for (const id of ids) await this.db.execute("UPDATE transactions SET locally_modified = 1, category_source = 'user' WHERE id = $1", [id]);
+    return changed;
+  }
+
+  /** Re-saves merchant rules exactly (undo of a category deletion). */
+  async restoreRules(rules: readonly MerchantRule[]): Promise<void> {
+    for (const rule of rules) {
+      await this.db.execute(
+        "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO UPDATE SET category = excluded.category, updated_at = excluded.updated_at",
+        [rule.merchantKey, rule.income ? 1 : 0, rule.category, now()],
+      );
+    }
   }
 
   async setExcluded(id: number, excluded: boolean): Promise<void> {

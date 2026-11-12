@@ -12,6 +12,8 @@ import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { Transactions } from "./pages/Transactions";
 import { SyncStatus } from "./components/SyncStatus";
+import { CommandCenter } from "./components/CommandCenter";
+import type { TransactionFilter } from "./commands/handlers";
 import { saveSidebarCollapsed, savedSidebarCollapsed } from "./services/theme";
 
 export type Page = "dashboard" | "transactions" | "categories" | "import" | "reports" | "data" | "settings";
@@ -36,8 +38,11 @@ function Shell() {
   const [page, setPage] = useState<Page>("dashboard");
   // A part of a page to bring into view after navigating (e.g. the sync panel on the Data page).
   const [focus, setFocus] = useState<string | null>(null);
-  const go = (next: Page, part: string | null = null) => {
+  // A filter set by a typed command ("show coffee last month"); `key` remounts the page with it.
+  const [transactionFilter, setTransactionFilter] = useState<{ key: number; filter: TransactionFilter } | null>(null);
+  const go = (next: Page, part: string | null = null, filter?: TransactionFilter) => {
     setFocus(part);
+    setTransactionFilter(filter ? { key: Date.now(), filter } : null);
     setPage(next);
   };
   const { persistent } = useFinance();
@@ -68,9 +73,10 @@ function Shell() {
       </nav>
       <main className="bw-main" id="main">
         {!persistent && <p className="bw-preview-banner">{m.preview}</p>}
+        <CommandCenter go={go} />
         <SyncStatus />
         {page === "dashboard" && <Dashboard go={go} />}
-        {page === "transactions" && <Transactions />}
+        {page === "transactions" && <Transactions key={transactionFilter?.key ?? 0} preset={transactionFilter?.filter} />}
         {page === "categories" && <Categories key={focus ?? ""} focus={focus} />}
         {page === "import" && <Import />}
         {page === "reports" && <Reports />}

@@ -36,7 +36,7 @@ Web-only development (`npm run dev`, `npm test`) needs no Swift.
 ```sh
 cd clients/universal
 npm install          # isolated from the Rails app's yarn install
-npm test             # 461 tests (real OCR engines included where available): Ruby parity, universal import, SQLite storage, sign-in + full UI workflow, translations, privacy guards
+npm test             # 549 tests (real OCR engines included where available): Ruby parity, universal import, SQLite storage, typed commands, sign-in + full UI workflow, translations, privacy guards
 npm run typecheck
 npm run dev          # browser preview at http://localhost:1420 (in-memory, nothing saved)
 npm run desktop:dev  # the real app window, signing in to http://localhost:3000
@@ -72,6 +72,16 @@ The Mac uses Homebrew's Rust, which cannot add cross-compile targets. Install Ru
 
 Signing (Apple Developer ID and notarization, Windows code signing, Play/App Store) is deliberately
 not set up yet.
+
+## Typed commands
+
+A command bar above every page (⌘K / Ctrl+K) understands English and Chinese (Simplified,
+Traditional, mixed) commands such as “how much did I spend on food last month”, “把星巴克改成餐饮”
+or “exclude venmo”. It runs entirely on the device: reads answer directly, and every data change is
+previewed and confirmed first, with Undo afterwards. The engine is the reusable
+[`packages/nl-action-engine`](../../packages/nl-action-engine/README.md) (no dependencies); the
+app's capabilities are declared in `src/commands/`. Details, safety properties and measured accuracy:
+[`docs/natural-language-actions.md`](../../docs/natural-language-actions.md).
 
 ## Local-first privacy
 

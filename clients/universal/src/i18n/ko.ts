@@ -1,5 +1,6 @@
 import type { Messages } from "./en";
 import { universalKo } from "./universal";
+import { commandKo } from "./command";
 
 export const ko: Messages = {
   languageName: "한국어",
@@ -273,4 +274,5 @@ export const ko: Messages = {
     yes: "예", no: "아니요",
   },
   universal: universalKo,
+  command: commandKo,
 };
