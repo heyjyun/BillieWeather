@@ -12,7 +12,7 @@
     <%= stylesheet_link_tag "/billie.css" %>
     <script src="/billie-theme.js"></script>
     <script src="/billie.js" defer></script>
-  <% landing_page = controller_path == "public/home"; public_page = landing_page || devise_controller? || !user_signed_in?; admin_area = !public_page && controller_path.start_with?("admin/") %>
+  <% landing_page = controller_path == "public/home"; public_page = landing_page || devise_controller? || !user_signed_in?; admin_area = !public_page && controller_path.start_with?("admin/"); demo_session = !public_page && current_user.demo_account? %>
   <%# The command bar (public/billie-command.*, built from packages/billie-commands) only on the signed-in finance pages. %>
   <% command_bar = !public_page && !admin_area && controller_path.start_with?("finance/") && !current_user.needs_usage_region? %>
   <% if command_bar %>
@@ -48,7 +48,7 @@
           <%= link_to finance_dashboard_path, class: "bw-nav-link bw-nav-back" do %><%= finance_icon "arrow" %><span><%= t('billie.community.nav.back_to_app') %></span><% end %>
         </nav>
         <% else %>
-        <div class="bw-workspace"><span class="bw-workspace-avatar" aria-hidden="true"><%= current_user.email.to_s.first.upcase %></span><div><strong><%= t('billie.layout.my_workspace') %></strong><small><%= t('billie.layout.personal_finances') %></small></div></div>
+        <div class="bw-workspace<%= ' bw-workspace-demo' if demo_session %>"><span class="bw-workspace-avatar" aria-hidden="true"><%= current_user.email.to_s.first.upcase %></span><div><strong><%= demo_session ? t('billie.quick_access.demo.heading') : t('billie.layout.my_workspace') %></strong><small><%= demo_session ? t('billie.quick_access.demo.synthetic_data') : t('billie.layout.personal_finances') %></small></div></div>
         <span class="bw-nav-label"><%= t('billie.layout.workspace_label') %></span>
         <nav class="bw-nav" aria-label="<%= t('billie.layout.workspace_navigation') %>">
           <%= finance_nav t('billie.layout.dashboard'), finance_dashboard_path, "dashboard", active: controller_name == "dashboard" %>
@@ -63,13 +63,15 @@
         <% end %>
         <div class="bw-sidebar-bottom">
           <div class="bw-sidebar-note"><%= finance_icon "sun", size: 26 %><strong><%= t('billie.layout.clarity') %></strong><p><%= t('billie.layout.next_step') %></p></div>
-          <div class="bw-user"><div><strong><%= current_user.nickname.presence || t('billie.layout.your_account') %></strong><small title="<%= current_user.email %>"><%= current_user.email %></small></div><%= button_to destroy_user_session_path, method: :delete, class: "bw-icon-button", title: t('billie.layout.log_out'), form: {data: {turbo: false}}, "aria-label": t('billie.layout.log_out') do %><%= finance_icon "logout" %><% end %></div>
+          <div class="bw-user" aria-label="<%= t('billie.quick_access.signed_in_as', name: current_user.nickname.presence || current_user.email) %>"><div><span class="bw-user-kind"><%= demo_session ? t('billie.quick_access.demo.heading') : t('billie.quick_access.personal.heading') %></span><strong><%= demo_session ? t('billie.quick_access.demo.heading') : (current_user.nickname.presence || t('billie.layout.your_account')) %></strong><small title="<%= current_user.email unless demo_session %>"><%= demo_session ? t('billie.quick_access.demo.read_only_label') : current_user.email %></small></div><%= button_to destroy_user_session_path, method: :delete, class: "bw-icon-button", title: t('billie.layout.log_out'), form: {data: {turbo: false}}, "aria-label": t('billie.layout.log_out') do %><%= finance_icon "logout" %><% end %></div>
+          <%= button_to t('billie.quick_access.switch_account'), destroy_user_session_path, method: :delete, params: {switch_account: 1}, class: "bw-sidebar-switch", id: "switch-account", form: {data: {turbo: false}} %>
         </div>
       </aside>
     <% end %>
     <div class="<%= public_page ? 'bw-public-shell' : 'bw-main-shell' %>">
       <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb"><%= admin_area ? t('billie.community.nav.support_admin') : t('billie.layout.workspace') %> <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : t('billie.layout.overview') %></strong></div><% if command_bar %><div class="bw-command" data-smart-command data-locale="<%= I18n.locale %>" data-context-url="<%= finance_command_context_path %>" data-preview-url="<%= finance_command_preview_path %>" data-execute-url="<%= finance_command_execute_path %>" data-undo-url="<%= finance_command_undo_path %>"></div><% end %><div class="bw-topbar-actions"><%= render 'shared/billie_theme_switcher' %><%= render 'shared/billie_language_switcher' %></div></header><% end %>
       <main id="main-content" class="<%= 'bw-main' unless public_page %>">
+        <% if demo_session %><div class="bw-demo-banner" role="status" id="demo-banner"><div><strong><%= t('billie.quick_access.demo.banner_title') %></strong><span><%= t('billie.quick_access.demo.banner_body') %></span></div><%= button_to t('billie.quick_access.demo.exit'), destroy_user_session_path, method: :delete, params: {switch_account: 1}, class: "bw-button bw-button-small bw-button-outline", form: {data: {turbo: false}} %></div><% end %>
         <% flash.each do |type, message| %><div class="bw-flash <%= 'bw-flash-error' if type.to_s == 'alert' %>" role="<%= type.to_s == 'alert' ? 'alert' : 'status' %>"><%= message %></div><% end %>
         <%= yield %>
       </main>

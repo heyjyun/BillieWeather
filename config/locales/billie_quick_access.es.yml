@@ -1,0 +1,29 @@
+es:
+  billie:
+    quick_access:
+      welcome: Te damos la bienvenida a BillieWeather
+      other_account: O inicia sesión con otra cuenta
+      signed_in_as: Sesión iniciada como %{name}
+      switch_account: Cambiar de cuenta
+      personal:
+        heading: Cuenta personal
+        hint: Inicia sesión en tu propia cuenta con tu contraseña o con Google.
+        remembered_hint: Usada por última vez en este navegador. Aún tendrás que confirmar con tu contraseña o con Google.
+        continue_as: Continuar como %{name}
+        sign_in: Iniciar sesión en tu cuenta
+        not_you: "¿No eres tú? Olvidar esta cuenta"
+        confirm: Introduce la contraseña de %{name} para continuar, o usa Google.
+        forgotten: Este navegador ya no recuerda esa cuenta.
+      demo:
+        heading: Cuenta de ejemplo
+        badge: Datos ficticios
+        hint: Explora BillieWeather con finanzas de muestra inventadas. Solo lectura, sin registro.
+        try: Probar la cuenta de ejemplo
+        synthetic_data: Datos de muestra ficticios
+        read_only_label: Demostración de solo lectura
+        banner_title: Estás explorando la cuenta de ejemplo.
+        banner_body: Todas las cifras son datos de muestra ficticios y no se guarda nada de lo que hagas. Inicia sesión con tu propia cuenta para gestionar tus finanzas reales.
+        exit: Salir de la cuenta de ejemplo
+        read_only: La cuenta de ejemplo es de solo lectura, así que este cambio no se guardó. Inicia sesión con tu propia cuenta para hacer cambios.
+        unavailable: La cuenta de ejemplo no está disponible en este momento.
+        rate_limited: Demasiados intentos. Espera un minuto y vuelve a intentarlo.

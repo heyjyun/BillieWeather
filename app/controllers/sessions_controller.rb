@@ -8,6 +8,15 @@ class SessionsController < Devise::SessionsController
   after_action :prevent_sign_in_caching, only: [:new, :create]
   rescue_from ActionController::InvalidAuthenticityToken, with: :restart_sign_in
 
+  # The quick account selection: the account this browser last signed in with (a hint only;
+  # see RememberedAccount) and the read-only Example Account, when one has been seeded.
+  def new
+    @remembered_user = RememberedAccount.find(cookies)
+    @continue_as_remembered = @remembered_user.present? && params[:account] == "personal"
+    @demo_available = DemoAccount.available?
+    super
+  end
+
   def create
     super do |user|
       identity = session.delete(:pending_google_identity)
@@ -18,6 +27,11 @@ class SessionsController < Devise::SessionsController
   end
 
   private
+
+  # "Switch account" and "Exit example account" sign out and return to the account choice.
+  def after_sign_out_path_for(resource_or_scope)
+    params[:switch_account].present? ? new_user_session_path : super
+  end
 
   def prevent_sign_in_caching
     response.headers["Cache-Control"] = "no-store, private"

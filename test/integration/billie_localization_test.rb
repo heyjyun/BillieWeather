@@ -13,7 +13,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     assert_select "html[lang='en']"
     get new_user_session_path, headers: {"HTTP_ACCEPT_LANGUAGE" => "zh-CN"}
     assert_select "html[lang='en']"
-    assert_select "h1", text: "Your financial outlook awaits."
+    assert_select "h1", text: "Welcome to BillieWeather"
 
     get new_user_registration_path, params: {locale: "zh-CN"}
     assert_select "html[lang='zh-CN']"

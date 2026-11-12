@@ -1,0 +1,29 @@
+zh-TW:
+  billie:
+    quick_access:
+      welcome: 歡迎使用 BillieWeather
+      other_account: 或使用其他帳戶登入
+      signed_in_as: 目前登入：%{name}
+      switch_account: 切換帳戶
+      personal:
+        heading: 個人帳戶
+        hint: 使用密碼或 Google 登入你自己的帳戶。
+        remembered_hint: 這是此瀏覽器上次使用的帳戶。仍需透過密碼或 Google 驗證身分。
+        continue_as: 以 %{name} 繼續
+        sign_in: 登入你的帳戶
+        not_you: 不是你？忘記此帳戶
+        confirm: 請輸入 %{name} 的密碼以繼續，或使用 Google 登入。
+        forgotten: 此瀏覽器已不再記住該帳戶。
+      demo:
+        heading: 範例帳戶
+        badge: 虛構資料
+        hint: 使用虛構的範例財務資料體驗 BillieWeather。唯讀，無需註冊。
+        try: 試用範例帳戶
+        synthetic_data: 虛構範例資料
+        read_only_label: 唯讀示範
+        banner_title: 你正在瀏覽範例帳戶。
+        banner_body: 這裡的所有數字都是虛構的範例資料，你的任何操作都不會被儲存。如需管理真實財務，請登入你自己的帳戶。
+        exit: 離開範例帳戶
+        read_only: 範例帳戶為唯讀，此變更未儲存。如需修改，請登入你自己的帳戶。
+        unavailable: 範例帳戶暫時無法使用。
+        rate_limited: 嘗試次數過多，請稍候一分鐘再試。

@@ -10,6 +10,7 @@ module ClientApi
     PURPOSE = :client_api_session
 
     def self.issue(user)
+      raise ArgumentError, "the Example Account cannot use the apps" if user.demo_account?
       expires_at = LIFETIME.from_now
       token = verifier.generate({"uid" => user.id, "salt" => user.authenticatable_salt}, expires_at: expires_at, purpose: PURPOSE)
       [token, expires_at]
@@ -20,6 +21,9 @@ module ClientApi
       payload = verifier.verified(token.to_s, purpose: PURPOSE)
       return nil unless payload.is_a?(Hash)
       user = User.find_by(id: payload["uid"], platform_agent_of_id: nil)
+      # The website-only Example Account never gets app access (it has no password to sign in
+      # with either); the apps keep real financial data on the device.
+      return nil if user&.demo_account?
       return nil unless user && ActiveSupport::SecurityUtils.secure_compare(user.authenticatable_salt.to_s, payload["salt"].to_s)
       user.active_for_authentication? ? user : nil
     end

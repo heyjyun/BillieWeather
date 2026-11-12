@@ -25,6 +25,10 @@ class User < ApplicationRecord
   validates :usage_region, inclusion: {in: UsageRegion::CODES}, allow_nil: true
   validates :nickname, length: {maximum: 40}
   validates :cloud_database_name, length: {maximum: 60}
+  validate :reserved_demo_email
+
+  # Set only by DemoAccount::Seeder, the one place allowed to create the Example Account.
+  attr_accessor :demo_identity_allowed
 
   def usage_region=(value)
     @usage_region_selection_attempted = true
@@ -46,6 +50,36 @@ class User < ApplicationRecord
 
   def formatted_email_address
     email
+  end
+
+  # The shared, read-only Example Account (see DemoAccount). Uses email_was, like developer?,
+  # so an unsaved email change cannot make an account look like the demo or stop being it.
+  def demo_account?
+    DemoAccount.email?(email_was || email)
+  end
+
+  # The demo is never an administrator, whatever DEVELOPER_EMAILS says.
+  def developer?
+    return false if demo_account?
+    super
+  end
+
+  # The demo has no usable password: it is signed in only by DemoSessionsController. Refusing
+  # here covers the website form, the apps' API and the "change password" check.
+  def valid_password?(password)
+    return false if demo_account?
+    super
+  end
+
+  def send_reset_password_instructions
+    return if demo_account?
+    super
+  end
+
+  # Many people share the demo; do not record their sign-in times and IP addresses on it.
+  def update_tracked_fields!(request)
+    return if demo_account?
+    super
   end
 
   def needs_usage_region?
@@ -110,6 +144,13 @@ class User < ApplicationRecord
   def normalize_usage_region
     self[:usage_region] = usage_region.to_s.strip.upcase.presence
     self.usage_region_pending = false if usage_region.present?
+  end
+
+  def reserved_demo_email
+    return if persisted? && !will_save_change_to_email?
+    return unless DemoAccount.email?(email)
+    return if demo_identity_allowed && email.to_s.strip.downcase == DemoAccount::EMAIL
+    errors.add(:email, :exclusion)
   end
 
   def normalize_cloud_database_name

@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
   include Controllers::Base
+  include DemoAccount::ReadOnly
 
   protect_from_forgery with: :exception, prepend: true
   before_action :configure_billie_authentication, if: :devise_controller?

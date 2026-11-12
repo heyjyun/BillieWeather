@@ -1,0 +1,29 @@
+ko:
+  billie:
+    quick_access:
+      welcome: BillieWeather에 오신 것을 환영합니다
+      other_account: 또는 다른 계정으로 로그인
+      signed_in_as: "%{name}(으)로 로그인됨"
+      switch_account: 계정 전환
+      personal:
+        heading: 개인 계정
+        hint: 비밀번호 또는 Google로 내 계정에 로그인합니다.
+        remembered_hint: 이 브라우저에서 마지막으로 사용한 계정입니다. 비밀번호 또는 Google 확인은 계속 필요합니다.
+        continue_as: "%{name}(으)로 계속"
+        sign_in: 내 계정에 로그인
+        not_you: 본인이 아닌가요? 이 계정 잊기
+        confirm: "%{name}의 비밀번호를 입력해 계속하거나 Google을 사용하세요."
+        forgotten: 이 브라우저는 더 이상 해당 계정을 기억하지 않습니다.
+      demo:
+        heading: 예시 계정
+        badge: 가상 데이터
+        hint: 가상의 샘플 재무 데이터로 BillieWeather를 둘러보세요. 읽기 전용이며 가입이 필요 없습니다.
+        try: 예시 계정 사용해 보기
+        synthetic_data: 가상 샘플 데이터
+        read_only_label: 읽기 전용 데모
+        banner_title: 예시 계정을 둘러보고 있습니다.
+        banner_body: 여기의 모든 숫자는 가상 샘플 데이터이며 어떤 작업도 저장되지 않습니다. 실제 재무를 관리하려면 내 계정으로 로그인하세요.
+        exit: 예시 계정 나가기
+        read_only: 예시 계정은 읽기 전용이라 이 변경 사항은 저장되지 않았습니다. 변경하려면 내 계정으로 로그인하세요.
+        unavailable: 지금은 예시 계정을 사용할 수 없습니다.
+        rate_limited: 시도 횟수가 너무 많습니다. 1분 후 다시 시도하세요.

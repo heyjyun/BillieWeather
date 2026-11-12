@@ -1,13 +1,56 @@
 <% content_for :title, t("billie.auth.log_in") %>
 <section class="bw-auth-wrap">
-  <div class="bw-panel bw-auth-card">
+  <div class="bw-panel bw-auth-card bw-auth-card-choices">
     <p class="bw-eyebrow"><%= t("billie.auth.welcome_back") %></p>
-    <h1><%= t("billie.auth.outlook_awaits") %></h1>
+    <h1><%= t("billie.quick_access.welcome") %></h1>
     <p class="bw-muted"><%= t("billie.auth.login_description") %></p>
+
+    <div class="bw-account-choices">
+      <section class="bw-account-choice bw-account-choice-personal" aria-labelledby="personal-account-heading">
+        <div class="bw-account-choice-head">
+          <span class="bw-account-choice-avatar" aria-hidden="true"><%= @remembered_user ? RememberedAccount.label(@remembered_user).first.upcase : finance_icon("users", size: 18) %></span>
+          <div>
+            <h2 id="personal-account-heading"><%= t("billie.quick_access.personal.heading") %></h2>
+            <p><%= @remembered_user ? t("billie.quick_access.personal.remembered_hint") : t("billie.quick_access.personal.hint") %></p>
+          </div>
+        </div>
+        <% if @remembered_user %>
+          <%= link_to new_user_session_path(account: "personal", anchor: "sign-in-form"), class: "bw-button bw-button-personal", id: "continue-as-personal", "aria-describedby": "personal-account-identity" do %>
+            <span><%= t("billie.quick_access.personal.continue_as", name: RememberedAccount.label(@remembered_user)) %></span>
+          <% end %>
+          <p class="bw-account-choice-meta" id="personal-account-identity">
+            <span><%= RememberedAccount.masked_email(@remembered_user.email) %></span>
+            <%= button_to t("billie.quick_access.personal.not_you"), users_remembered_account_path, method: :delete, class: "bw-link-button", form: {class: "bw-inline-form", data: {turbo: false}} %>
+          </p>
+        <% else %>
+          <%= link_to t("billie.quick_access.personal.sign_in"), "#sign-in-form", class: "bw-button bw-button-personal", id: "continue-as-personal" %>
+        <% end %>
+      </section>
+
+      <% if @demo_available %>
+        <section class="bw-account-choice bw-account-choice-example" aria-labelledby="example-account-heading">
+          <div class="bw-account-choice-head">
+            <span class="bw-account-choice-avatar" aria-hidden="true"><%= finance_icon "insights", size: 18 %></span>
+            <div>
+              <h2 id="example-account-heading"><%= t("billie.quick_access.demo.heading") %> <span class="bw-pill bw-pill-demo"><%= t("billie.quick_access.demo.badge") %></span></h2>
+              <p id="example-account-hint"><%= t("billie.quick_access.demo.hint") %></p>
+            </div>
+          </div>
+          <%= button_to users_demo_session_path, class: "bw-button bw-button-example", id: "try-example-account", form: {data: {turbo: false}}, "aria-describedby": "example-account-hint" do %>
+            <span><%= t("billie.quick_access.demo.try") %></span>
+          <% end %>
+        </section>
+      <% end %>
+    </div>
+
+    <div class="bw-auth-divider bw-auth-divider-strong" id="sign-in-form"><span><%= t("billie.quick_access.other_account") %></span></div>
+    <% if @continue_as_remembered %>
+      <p class="bw-account-continue-note" role="status"><%= t("billie.quick_access.personal.confirm", name: RememberedAccount.label(@remembered_user)) %></p>
+    <% end %>
     <%= render "devise/shared/google_sign_in" %>
     <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: {data: {turbo: false}}) do |form| %>
-      <div class="bw-form-field"><%= form.label :email, t("billie.auth.email") %><%= form.email_field :email, required: true, autocomplete: "email", autofocus: true %></div>
-      <div class="bw-form-field"><%= form.label :password, t("billie.auth.password") %><%= form.password_field :password, required: true, autocomplete: "current-password" %></div>
+      <div class="bw-form-field"><%= form.label :email, t("billie.auth.email") %><%= form.email_field :email, required: true, autocomplete: "email", autofocus: !@continue_as_remembered, value: (@continue_as_remembered ? @remembered_user.email : resource.email) %></div>
+      <div class="bw-form-field"><%= form.label :password, t("billie.auth.password") %><%= form.password_field :password, required: true, autocomplete: "current-password", autofocus: @continue_as_remembered %></div>
       <label class="bw-checkbox"><%= form.check_box :remember_me %> <%= t("billie.auth.remember_me") %></label>
       <% if defined?(two_factor_authentication_enabled?) && two_factor_authentication_enabled? %><div class="bw-form-field"><%= form.label :otp_attempt, t("billie.auth.authentication_code") %><%= form.text_field :otp_attempt, autocomplete: "one-time-code", inputmode: "numeric" %></div><% end %>
       <%= form.submit t("billie.auth.log_in"), class: "bw-button bw-button-dark" %>

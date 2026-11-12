@@ -1,0 +1,29 @@
+en:
+  billie:
+    quick_access:
+      welcome: Welcome to BillieWeather
+      other_account: Or sign in with another account
+      signed_in_as: Signed in as %{name}
+      switch_account: Switch account
+      personal:
+        heading: Personal Account
+        hint: Sign in to your own account with your password or Google.
+        remembered_hint: Last used on this browser. You’ll still confirm with your password or Google.
+        continue_as: Continue as %{name}
+        sign_in: Sign in to your account
+        not_you: Not you? Forget this account
+        confirm: Enter the password for %{name} to continue, or use Google.
+        forgotten: This browser no longer remembers that account.
+      demo:
+        heading: Example Account
+        badge: Synthetic data
+        hint: Explore BillieWeather with made-up sample finances. Read-only, no sign-up needed.
+        try: Try Example Account
+        synthetic_data: Synthetic sample data
+        read_only_label: Read-only demo
+        banner_title: You’re exploring the Example Account.
+        banner_body: Every number here is synthetic sample data and nothing you do is saved. Sign in with your own account to manage your real finances.
+        exit: Exit example account
+        read_only: The Example Account is read-only, so this change was not saved. Sign in with your own account to make changes.
+        unavailable: The Example Account is not available right now.
+        rate_limited: Too many attempts. Please wait a minute and try again.
