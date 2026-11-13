@@ -9,7 +9,7 @@ module DemoAccount
     ALLOWED_WRITES = {
       "sessions" => %w[destroy],
       "demo_sessions" => %w[create],
-      "remembered_accounts" => %w[destroy]
+      "personal_sessions" => %w[create]
     }.freeze
 
     included do

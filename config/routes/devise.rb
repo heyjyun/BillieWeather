@@ -11,8 +11,8 @@ devise_scope :user do
   end
 end
 
-# Quick account selection on the sign-in page (see DemoAccount and RememberedAccount).
+# Quick login buttons on the sign-in page (see DemoAccount and PersonalAccount).
 scope :users, as: :users do
   post "demo", to: "demo_sessions#create", as: :demo_session
-  delete "remembered_account", to: "remembered_accounts#destroy", as: :remembered_account
+  post "quick_login/personal", to: "personal_sessions#create", as: :personal_session
 end

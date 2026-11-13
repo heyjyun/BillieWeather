@@ -31,6 +31,10 @@ services:
       # Optional Google sign-in: add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
       # in this web service's Environment settings after creating a Google OAuth
       # Web application client and registering its HTTPS callback URL.
+      # Optional "Quick Login — <nickname>" button: the email of the one personal
+      # account it signs in to. In production it always asks for that account's password.
+      - key: BILLIE_PERSONAL_ACCOUNT_EMAIL
+        sync: false
 
 envVarGroups:
   - name: settings

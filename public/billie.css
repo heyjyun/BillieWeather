@@ -1046,6 +1046,9 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-account-choice-example .bw-account-choice-avatar { background: var(--bw-color-accent-strong); color: var(--bw-color-text-on-accent); }
 .bw-account-choice form { margin: 0; display: block; }
 .bw-auth-card .bw-account-choice .bw-button { margin-top: auto; white-space: normal; }
+.bw-account-choice form.bw-quick-login-form { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+.bw-auth-card .bw-quick-login-form .bw-form-field { margin: 0; }
+.bw-auth-card .bw-account-choice .bw-button { width: 100%; }
 .bw-button-personal { color: var(--bw-color-sidebar-text); background: var(--bw-color-sidebar); border-color: var(--bw-color-sidebar); box-shadow: var(--bw-shadow-sm); }
 .bw-button-personal:hover { background: var(--bw-color-sidebar-active); border-color: var(--bw-color-sidebar-active); }
 /* Dark mode: the sidebar purple is close to the card colour, so lift the button and outline it. */
@@ -1053,13 +1056,8 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 :root[data-theme="dark"] .bw-button-personal { background: var(--bw-color-sidebar-active); border-color: var(--bw-color-sidebar-muted); }
 .bw-button-example { color: var(--bw-color-accent-soft-text); background: var(--bw-color-surface); border: 2px solid var(--bw-color-accent-strong); }
 .bw-button-example:hover:not(:disabled) { color: var(--bw-color-text-on-accent); background: var(--bw-color-accent-strong); }
-.bw-auth-card .bw-account-choice .bw-account-choice-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; margin: -4px 0 0; overflow-wrap: anywhere; }
-.bw-auth-card form.bw-inline-form { display: inline; margin: 0; }
-.bw-link-button { background: none; border: none; padding: 0; min-height: 32px; color: var(--bw-color-accent-strong); font-size: var(--bw-font-size-xs); font-weight: var(--bw-font-weight-semibold); cursor: pointer; }
-.bw-link-button:hover { text-decoration: underline; }
 .bw-pill-demo { padding: 2px 8px; font-size: var(--bw-font-size-xs); font-weight: var(--bw-font-weight-semibold); color: var(--bw-color-accent-soft-text); border-color: var(--bw-color-accent-tint-strong); }
 .bw-auth-divider-strong { margin-top: 28px; color: var(--bw-color-text); font-weight: var(--bw-font-weight-semibold); scroll-margin-top: 24px; }
-.bw-account-continue-note { margin: 14px 0 0; padding: 10px 12px; border-radius: var(--bw-radius-md); background: var(--bw-color-accent-tint); color: var(--bw-color-text); }
 
 /* Signed in: which account is active, switching, and the Example Account notice. */
 .bw-user-kind { display: block; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--bw-color-sidebar-muted); }

@@ -8,12 +8,12 @@ class SessionsController < Devise::SessionsController
   after_action :prevent_sign_in_caching, only: [:new, :create]
   rescue_from ActionController::InvalidAuthenticityToken, with: :restart_sign_in
 
-  # The quick account selection: the account this browser last signed in with (a hint only;
-  # see RememberedAccount) and the read-only Example Account, when one has been seeded.
+  # The quick login buttons: the read-only Example Account (when seeded) and the configured
+  # personal account (see PersonalAccount).
   def new
-    @remembered_user = RememberedAccount.find(cookies)
-    @continue_as_remembered = @remembered_user.present? && params[:account] == "personal"
     @demo_available = DemoAccount.available?
+    @personal_user = PersonalAccount.user
+    @personal_passwordless = @personal_user.present? && PersonalAccount.passwordless?(request)
     super
   end
 

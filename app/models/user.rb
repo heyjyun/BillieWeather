@@ -149,7 +149,7 @@ class User < ApplicationRecord
   def reserved_demo_email
     return if persisted? && !will_save_change_to_email?
     return unless DemoAccount.email?(email)
-    return if demo_identity_allowed && email.to_s.strip.downcase == DemoAccount::EMAIL
+    return if demo_identity_allowed
     errors.add(:email, :exclusion)
   end
 

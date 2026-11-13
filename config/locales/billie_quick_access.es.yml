@@ -7,18 +7,16 @@ es:
       switch_account: Cambiar de cuenta
       personal:
         heading: Cuenta personal
-        hint: Inicia sesión en tu propia cuenta con tu contraseña o con Google.
-        remembered_hint: Usada por última vez en este navegador. Aún tendrás que confirmar con tu contraseña o con Google.
-        continue_as: Continuar como %{name}
-        sign_in: Iniciar sesión en tu cuenta
-        not_you: "¿No eres tú? Olvidar esta cuenta"
-        confirm: Introduce la contraseña de %{name} para continuar, o usa Google.
-        forgotten: Este navegador ya no recuerda esa cuenta.
+        quick_login: "Acceso rápido — %{name}"
+        dev_hint: "Desarrollo local: inicia sesión directamente en este equipo, sin contraseña."
+        password_hint: Introduce la contraseña de esta cuenta para iniciar sesión.
+        unavailable: Esa cuenta no está disponible en este momento.
+        invalid_password: Contraseña incorrecta. Inténtalo de nuevo.
       demo:
         heading: Cuenta de ejemplo
         badge: Datos ficticios
         hint: Explora BillieWeather con finanzas de muestra inventadas. Solo lectura, sin registro.
-        try: Probar la cuenta de ejemplo
+        quick_login: "Acceso rápido — Ejemplo"
         synthetic_data: Datos de muestra ficticios
         read_only_label: Demostración de solo lectura
         banner_title: Estás explorando la cuenta de ejemplo.

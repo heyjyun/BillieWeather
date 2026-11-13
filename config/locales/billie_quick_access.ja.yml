@@ -7,18 +7,16 @@ ja:
       switch_account: アカウントを切り替える
       personal:
         heading: 個人アカウント
-        hint: パスワードまたは Google でご自身のアカウントにログインします。
-        remembered_hint: このブラウザで最後に使用したアカウントです。パスワードまたは Google での確認は引き続き必要です。
-        continue_as: "%{name} として続行"
-        sign_in: アカウントにログイン
-        not_you: ご本人でない場合：このアカウントを忘れる
-        confirm: "%{name} のパスワードを入力して続行するか、Google を使用してください。"
-        forgotten: このブラウザはそのアカウントを記憶しなくなりました。
+        quick_login: "クイックログイン — %{name}"
+        dev_hint: "ローカル開発：このコンピューターではパスワードなしで直接ログインします。"
+        password_hint: このアカウントのパスワードを入力してログインしてください。
+        unavailable: そのアカウントは現在利用できません。
+        invalid_password: パスワードが正しくありません。もう一度お試しください。
       demo:
         heading: サンプルアカウント
         badge: 架空のデータ
         hint: 架空のサンプル家計データで BillieWeather をお試しください。閲覧専用で、登録は不要です。
-        try: サンプルアカウントを試す
+        quick_login: "クイックログイン — サンプル"
         synthetic_data: 架空のサンプルデータ
         read_only_label: 閲覧専用デモ
         banner_title: サンプルアカウントを表示しています。

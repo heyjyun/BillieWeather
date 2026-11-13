@@ -31,8 +31,26 @@ module DemoAccount
       ["HOTEL ALFAMA LISBOA", "Travel"]
     ].freeze
 
+    # Raised instead of deleting anything when example@example.com holds real data.
+    class NotSyntheticError < StandardError; end
+
     def self.call(today: nil)
       new(today: today).call
+    end
+
+    # True when every finance record of the user is one this seeder writes: statements named
+    # example-*, the three made-up bank accounts, and no manual transactions or drafts. The
+    # seeder only resets, and the quick login only opens, an account that passes this check.
+    def self.synthetic_only?(user)
+      account_keys = ACCOUNTS.keys.map { |key| digest("account", key) }
+      Finance::Statement.where(user_id: user.id).where.not("filename LIKE 'example-%'").none? &&
+        Finance::BankAccount.where(user_id: user.id).where.not(identity_key: account_keys).none? &&
+        Finance::Transaction.where(user_id: user.id, statement_id: nil).none? &&
+        Finance::StatementDraft.where(user_id: user.id).none?
+    end
+
+    def self.digest(*parts)
+      Digest::SHA256.hexdigest(["billieweather-example-account", *parts].join(":"))
     end
 
     def initialize(today: nil)
@@ -47,6 +65,8 @@ module DemoAccount
 
       User.transaction do
         User.find(user.id).with_lock do
+          # Checked again under the lock, right before the reset deletes anything.
+          raise NotSyntheticError, "#{DemoAccount::EMAIL} holds data the seeder did not create; nothing was changed" unless self.class.synthetic_only?(user)
           Finance::DataDeletion.new(user: user).delete_records!
           build_finances!(user)
         end
@@ -62,8 +82,11 @@ module DemoAccount
     private
 
     def find_or_create_user!
-      existing = DemoAccount.user
-      return existing if existing
+      existing = User.find_by(email: DemoAccount::EMAIL, platform_agent_of_id: nil)
+      if existing
+        raise NotSyntheticError, "#{DemoAccount::EMAIL} holds data the seeder did not create; nothing was changed" unless self.class.synthetic_only?(existing)
+        return existing
+      end
 
       User.transaction do
         # A random password nobody ever sees; User#valid_password? refuses it anyway.
@@ -185,7 +208,7 @@ module DemoAccount
     end
 
     def digest(*parts)
-      Digest::SHA256.hexdigest(["billieweather-example-account", *parts].join(":"))
+      self.class.digest(*parts)
     end
 
     def tax_explanation

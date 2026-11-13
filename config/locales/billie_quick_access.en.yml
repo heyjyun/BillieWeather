@@ -7,18 +7,16 @@ en:
       switch_account: Switch account
       personal:
         heading: Personal Account
-        hint: Sign in to your own account with your password or Google.
-        remembered_hint: Last used on this browser. You’ll still confirm with your password or Google.
-        continue_as: Continue as %{name}
-        sign_in: Sign in to your account
-        not_you: Not you? Forget this account
-        confirm: Enter the password for %{name} to continue, or use Google.
-        forgotten: This browser no longer remembers that account.
+        quick_login: "Quick Login — %{name}"
+        dev_hint: "Local development: signs in directly on this computer, no password."
+        password_hint: Enter this account’s password to sign in.
+        unavailable: That account is not available right now.
+        invalid_password: Incorrect password. Please try again.
       demo:
         heading: Example Account
         badge: Synthetic data
         hint: Explore BillieWeather with made-up sample finances. Read-only, no sign-up needed.
-        try: Try Example Account
+        quick_login: "Quick Login — Example"
         synthetic_data: Synthetic sample data
         read_only_label: Read-only demo
         banner_title: You’re exploring the Example Account.

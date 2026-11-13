@@ -67,6 +67,31 @@ class DemoAccountSeederTest < ActiveSupport::TestCase
     assert_equal "Income", demo.finance_transactions.find_by(description: "ACME ANALYTICS PAYROLL DIRECT DEP").category
   end
 
+  test "real data at example@example.com is never wiped, reseeded or opened as the demo" do
+    owner = create(:onboarded_user, email: "real-owner@example.org")
+    owner.update_column(:email, DemoAccount::EMAIL)
+    statement = Finance::Statement.create!(user: owner, filename: "2024-10.csv", currency: "USD",
+      sha256: Digest::SHA256.hexdigest("real"), transaction_count: 1)
+    Finance::Transaction.create!(user: owner, statement: statement, booked_on: @today - 5,
+      description: "REAL BANK ROW", amount: -12, category: "Shopping")
+
+    assert_nil DemoAccount.user
+    assert_not DemoAccount.available?
+    assert_raises(DemoAccount::Seeder::NotSyntheticError) { DemoAccount::Seeder.call(today: @today) }
+    assert_equal 1, owner.finance_transactions.count
+    assert_equal ["2024-10.csv"], owner.finance_statements.pluck(:filename)
+  end
+
+  test "a seeded demo counts as synthetic until something else is added to it" do
+    demo = DemoAccount::Seeder.call(today: @today)
+    assert DemoAccount::Seeder.synthetic_only?(demo)
+    assert_equal demo, DemoAccount.user
+    Finance::Statement.create!(user: demo, filename: "mine.csv", currency: "USD", sha256: Digest::SHA256.hexdigest("x"), transaction_count: 1)
+    assert_not DemoAccount::Seeder.synthetic_only?(demo)
+    assert_raises(DemoAccount::Seeder::NotSyntheticError) { DemoAccount::Seeder.call(today: @today) }
+    assert demo.finance_statements.exists?(filename: "mine.csv")
+  end
+
   test "the same day always produces the same synthetic data" do
     first = DemoAccount::Seeder.call(today: @today).finance_transactions.order(:booked_on, :description, :amount).pluck(:booked_on, :description, :amount)
     second = DemoAccount::Seeder.call(today: @today).finance_transactions.order(:booked_on, :description, :amount).pluck(:booked_on, :description, :amount)

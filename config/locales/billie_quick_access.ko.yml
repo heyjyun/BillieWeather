@@ -7,18 +7,16 @@ ko:
       switch_account: 계정 전환
       personal:
         heading: 개인 계정
-        hint: 비밀번호 또는 Google로 내 계정에 로그인합니다.
-        remembered_hint: 이 브라우저에서 마지막으로 사용한 계정입니다. 비밀번호 또는 Google 확인은 계속 필요합니다.
-        continue_as: "%{name}(으)로 계속"
-        sign_in: 내 계정에 로그인
-        not_you: 본인이 아닌가요? 이 계정 잊기
-        confirm: "%{name}의 비밀번호를 입력해 계속하거나 Google을 사용하세요."
-        forgotten: 이 브라우저는 더 이상 해당 계정을 기억하지 않습니다.
+        quick_login: "빠른 로그인 — %{name}"
+        dev_hint: "로컬 개발: 이 컴퓨터에서는 비밀번호 없이 바로 로그인합니다."
+        password_hint: 이 계정의 비밀번호를 입력해 로그인하세요.
+        unavailable: 해당 계정은 현재 사용할 수 없습니다.
+        invalid_password: 비밀번호가 올바르지 않습니다. 다시 시도하세요.
       demo:
         heading: 예시 계정
         badge: 가상 데이터
         hint: 가상의 샘플 재무 데이터로 BillieWeather를 둘러보세요. 읽기 전용이며 가입이 필요 없습니다.
-        try: 예시 계정 사용해 보기
+        quick_login: "빠른 로그인 — 예시"
         synthetic_data: 가상 샘플 데이터
         read_only_label: 읽기 전용 데모
         banner_title: 예시 계정을 둘러보고 있습니다.

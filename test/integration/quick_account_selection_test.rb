@@ -1,8 +1,8 @@
 require "test_helper"
 require "digest"
 
-# The sign-in page's quick account selection: "Continue as …" (a remembered-account hint that
-# still requires real authentication) and the read-only, synthetic Example Account.
+# The sign-in page's two quick login buttons: the read-only, synthetic Example Account and the
+# one personal account configured on the server (see PersonalAccount).
 class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
   PASSWORD = "Qu1ck!Choice&Personal2026"
 
@@ -15,36 +15,43 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
       booked_on: Date.current - 3, description: "PRIVATE OWNER MERCHANT", amount: -42.5, category: "Shopping")
   end
 
+  setup do
+    ENV["BILLIE_PERSONAL_ACCOUNT_EMAIL"] = @personal.email
+  end
+
   teardown do
-    ENV.delete("BILLIE_DEMO_ENABLED")
+    %w[BILLIE_DEMO_ENABLED BILLIE_PERSONAL_ACCOUNT_EMAIL BILLIE_DEV_PASSWORDLESS_LOGIN].each { |name| ENV.delete(name) }
   end
 
   # --- Sign-in page --------------------------------------------------------------------------
 
-  test "the sign-in page offers both accounts above the ordinary form" do
+  test "the sign-in page offers both quick login buttons above the ordinary form" do
     seed_demo
     get new_user_session_path
     assert_response :success
     assert_select "h1", "Welcome to BillieWeather"
     assert_select "#personal-account-heading", "Personal Account"
     assert_select "#example-account-heading", /Example Account/
-    assert_select "form[action='#{users_demo_session_path}'][method=post] button#try-example-account", /Try Example Account/
+    assert_select "form[action='#{users_demo_session_path}'][method=post] button#quick-login-example", "Quick Login — Example"
+    assert_select "form[action='#{users_personal_session_path}'][method=post] button#quick-login-personal", "Quick Login — Billie Owner"
+    # Real buttons, not links to the form below.
+    assert_select "a[href*='#sign-in-form']", count: 0
     assert_select ".bw-auth-divider", /Or sign in with another account/
     assert_select "form[action='#{user_session_path}'] input[name='user[email]']"
     assert_select "form[action='#{user_session_path}'] input[name='user[password]']"
-    # Nothing identifies any account to a visitor this browser has never signed in as.
-    assert_no_match(/owner@example\.com|Billie Owner|Continue as/, response.body)
+    # Neither account's address is written into the page.
+    assert_not_includes response.body, @personal.email
     assert_not_includes response.body, DemoAccount::EMAIL
   end
 
   test "the Example Account button is hidden until the demo is seeded or when it is disabled" do
     get new_user_session_path
-    assert_select "#try-example-account", count: 0
+    assert_select "#quick-login-example", count: 0
 
     seed_demo
     ENV["BILLIE_DEMO_ENABLED"] = "false"
     get new_user_session_path
-    assert_select "#try-example-account", count: 0
+    assert_select "#quick-login-example", count: 0
     post users_demo_session_path
     assert_redirected_to new_user_session_path
     assert_equal "The Example Account is not available right now.", flash[:alert]
@@ -52,7 +59,7 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_session_path
   end
 
-  # --- Ordinary login and "Continue as" ------------------------------------------------------
+  # --- Ordinary login ------------------------------------------------------------------------------
 
   test "ordinary email and password login still works and wrong passwords still fail" do
     post user_session_path, params: {user: {email: @personal.email, password: "wrong-password"}}
@@ -69,63 +76,111 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
     assert_select "#demo-banner", count: 0
   end
 
-  test "continue as fills in the remembered email but never signs anyone in" do
-    sign_in_with_password
-    delete destroy_user_session_path(switch_account: 1)
-    assert_redirected_to new_user_session_path
+  # --- Quick Login — personal account -------------------------------------------------------
 
+  test "the personal quick login is hidden until an account is configured on the server" do
+    ENV.delete("BILLIE_PERSONAL_ACCOUNT_EMAIL")
     get new_user_session_path
-    assert_select "#continue-as-personal", /Continue as Billie Owner/
-    assert_select "#personal-account-identity", /o•••@example\.com/
-    assert_equal "", css_select("input[name='user[email]']").first["value"].to_s
-
-    get new_user_session_path(account: "personal")
-    assert_response :success
-    assert_select "input[name='user[email]'][value='owner@example.com']"
-    assert_select "input[name='user[password]'][autofocus]"
-    assert_equal "", css_select("input[name='user[password]']").first["value"].to_s
-    get finance_dashboard_path
+    assert_select "#quick-login-personal", count: 0
+    post users_personal_session_path, params: {password: PASSWORD}
     assert_redirected_to new_user_session_path
+    assert_equal "That account is not available right now.", flash[:alert]
+    assert_not_signed_in
 
-    # The password is still required.
-    post user_session_path, params: {user: {email: @personal.email, password: ""}}
-    get finance_dashboard_path
+    # The shared demo can never be the personal target.
+    seed_demo
+    ENV["BILLIE_PERSONAL_ACCOUNT_EMAIL"] = DemoAccount::EMAIL
+    get new_user_session_path
+    assert_select "#quick-login-personal", count: 0
+  end
+
+  test "outside development the personal quick login is a real password sign-in for that one account" do
+    assert_not Rails.env.development?
+    get new_user_session_path
+    assert_select "form[action='#{users_personal_session_path}'][method=post] input[type=password][name=password]"
+    assert_select "form[action='#{users_personal_session_path}'] button#quick-login-personal", "Quick Login — Billie Owner"
+    assert_select "form[action='#{users_personal_session_path}'] input[name=email]", count: 0
+    # The address stays on the server.
+    assert_not_includes response.body, @personal.email
+
+    # Anonymous requests without the right password get nothing.
+    post users_personal_session_path
     assert_redirected_to new_user_session_path
-    sign_in_with_password
+    assert_not_signed_in
+    post users_personal_session_path, params: {password: "wrong-password"}
+    assert_equal "Incorrect password. Please try again.", flash[:alert]
+    assert_not_signed_in
+    assert_equal 1, @personal.reload.failed_attempts
+    # The request cannot pick another account, even with that account's own password.
+    other = create(:onboarded_user, email: "other@example.com", password: "Oth3r!Account&2026", password_confirmation: "Oth3r!Account&2026")
+    post users_personal_session_path, params: {password: "Oth3r!Account&2026", email: other.email, user: {email: other.email}}
+    assert_not_signed_in
+
+    post users_personal_session_path, params: {password: PASSWORD}
     assert_redirected_to finance_dashboard_path
-  end
-
-  test "a forged or tampered remembered-account cookie is ignored" do
-    cookies[RememberedAccount::COOKIE] = {"id" => @personal.id}.to_json
-    get new_user_session_path(account: "personal")
-    assert_no_match(/Continue as|owner@example\.com/, response.body)
-    get finance_dashboard_path
-    assert_redirected_to new_user_session_path
-  end
-
-  test "not you forgets the remembered account without signing in or out" do
-    sign_in_with_password
-    delete destroy_user_session_path
-    get new_user_session_path
-    assert_select "#continue-as-personal", /Billie Owner/
-
-    delete users_remembered_account_path
-    assert_redirected_to new_user_session_path
     follow_redirect!
-    assert_no_match(/Continue as/, response.body)
+    assert_response :success
+    assert_select ".bw-user strong", "Billie Owner"
+    assert_select ".bw-user-kind", "Personal Account"
+    assert_select "#demo-banner", count: 0
+    assert_match "PRIVATE OWNER MERCHANT", get_body(finance_transactions_path)
   end
 
-  test "remembered accounts that can no longer sign in are not offered" do
-    sign_in_with_password
-    delete destroy_user_session_path
+  test "the passwordless personal quick login works only in development, from this computer, with the flag" do
+    ENV["BILLIE_DEV_PASSWORDLESS_LOGIN"] = "true"
+    # The flag alone does nothing outside development (here: test, then production).
+    post users_personal_session_path
+    assert_not_signed_in
+    with_rails_env("production") do
+      get new_user_session_path
+      assert_select "#quick-login-personal-password"
+      post users_personal_session_path
+      assert_not_signed_in
+    end
+
+    with_rails_env("development") do
+      # Not from this computer: refused.
+      post users_personal_session_path, env: {"REMOTE_ADDR" => "203.0.113.7"}
+      assert_not_signed_in
+      get new_user_session_path, env: {"REMOTE_ADDR" => "203.0.113.7"}
+      assert_select "#quick-login-personal-password"
+
+      # Flag off: refused.
+      ENV["BILLIE_DEV_PASSWORDLESS_LOGIN"] = "false"
+      post users_personal_session_path
+      assert_not_signed_in
+
+      ENV["BILLIE_DEV_PASSWORDLESS_LOGIN"] = "true"
+      get new_user_session_path
+      assert_select "#quick-login-personal-password", count: 0
+      assert_select "form[action='#{users_personal_session_path}'][method=post] button#quick-login-personal", "Quick Login — Billie Owner"
+      post users_personal_session_path
+      assert_redirected_to finance_dashboard_path
+      follow_redirect!
+      assert_select ".bw-user strong", "Billie Owner"
+    end
+  end
+
+  test "a locked personal account cannot use the quick login" do
     @personal.lock_access!
     get new_user_session_path
-    assert_no_match(/Continue as/, response.body)
+    assert_select "#quick-login-personal", count: 0
+    post users_personal_session_path, params: {password: PASSWORD}
+    assert_not_signed_in
+  end
+
+  test "the personal quick login requires the page's CSRF token" do
+    previous = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    post users_personal_session_path, params: {password: PASSWORD}
+    assert_not_signed_in
+  ensure
+    ActionController::Base.allow_forgery_protection = previous
   end
 
   # --- Example Account -----------------------------------------------------------------------
 
-  test "try example account signs in to synthetic data only" do
+  test "quick login example signs in to synthetic data only" do
     demo = seed_demo
     post users_demo_session_path
     assert_redirected_to finance_dashboard_path
@@ -148,10 +203,6 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
     get finance_transactions_path(format: :csv)
     assert_no_match(/PRIVATE OWNER MERCHANT/, response.body)
 
-    # The demo was never remembered as a personal account.
-    delete destroy_user_session_path(switch_account: 1)
-    get new_user_session_path
-    assert_no_match(/Continue as/, response.body)
     assert_equal 0, demo.reload.sign_in_count
     assert_nil demo.current_sign_in_ip
   end
@@ -221,7 +272,8 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
       post user_registration_path, params: {user: {email: DemoAccount::EMAIL, usage_region: "US",
                                                    password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}}
     end
-    assert_not build(:user, email: "someone@#{DemoAccount::DOMAIN}").valid?
+    assert_not build(:user, email: "Example@Example.com").valid?
+    assert build(:user, email: "someone-else@example.com").valid?
     @personal.email = DemoAccount::EMAIL
     assert_not @personal.valid?
     assert_includes @personal.errors.attribute_names, :email
@@ -259,9 +311,9 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
     get finance_dashboard_path
     assert_redirected_to new_user_session_path
 
-    get new_user_session_path
-    assert_select "#continue-as-personal", /Billie Owner/
-    sign_in_with_password
+    # Quick Login — personal leaves the demo session.
+    post users_demo_session_path
+    post users_personal_session_path, params: {password: PASSWORD}
     follow_redirect!
     assert_select "#demo-banner", count: 0
     assert_select ".bw-user strong", "Billie Owner"
@@ -286,7 +338,8 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
     expected.each do |locale, heading|
       get new_user_session_path(locale: locale)
       assert_select "h1", heading
-      assert_select "#try-example-account", I18n.t("billie.quick_access.demo.try", locale: locale)
+      assert_select "#quick-login-example", I18n.t("billie.quick_access.demo.quick_login", locale: locale)
+      assert_select "#quick-login-personal", I18n.t("billie.quick_access.personal.quick_login", name: "Billie Owner", locale: locale)
       assert_select ".bw-auth-divider-strong", I18n.t("billie.quick_access.other_account", locale: locale)
     end
   end
@@ -299,6 +352,24 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
 
   def sign_in_with_password
     post user_session_path, params: {user: {email: @personal.email, password: PASSWORD}}
+  end
+
+  def assert_not_signed_in
+    get finance_dashboard_path
+    assert_redirected_to new_user_session_path
+  end
+
+  def get_body(path)
+    get path
+    response.body
+  end
+
+  def with_rails_env(name)
+    previous = Rails.env
+    Rails.env = name
+    yield
+  ensure
+    Rails.env = previous
   end
 
   def finance_counts(user)

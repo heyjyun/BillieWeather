@@ -7,18 +7,16 @@ zh-TW:
       switch_account: 切換帳戶
       personal:
         heading: 個人帳戶
-        hint: 使用密碼或 Google 登入你自己的帳戶。
-        remembered_hint: 這是此瀏覽器上次使用的帳戶。仍需透過密碼或 Google 驗證身分。
-        continue_as: 以 %{name} 繼續
-        sign_in: 登入你的帳戶
-        not_you: 不是你？忘記此帳戶
-        confirm: 請輸入 %{name} 的密碼以繼續，或使用 Google 登入。
-        forgotten: 此瀏覽器已不再記住該帳戶。
+        quick_login: "快速登入 — %{name}"
+        dev_hint: "本機開發：在這台電腦上無需密碼直接登入。"
+        password_hint: 輸入此帳戶的密碼即可登入。
+        unavailable: 該帳戶目前無法使用。
+        invalid_password: 密碼錯誤，請再試一次。
       demo:
         heading: 範例帳戶
         badge: 虛構資料
         hint: 使用虛構的範例財務資料體驗 BillieWeather。唯讀，無需註冊。
-        try: 試用範例帳戶
+        quick_login: "快速登入 — 範例"
         synthetic_data: 虛構範例資料
         read_only_label: 唯讀示範
         banner_title: 你正在瀏覽範例帳戶。
