@@ -12,6 +12,7 @@ class User < ApplicationRecord
   has_many :finance_bank_accounts, class_name: "Finance::BankAccount", dependent: :destroy
   has_many :finance_local_database_reports, class_name: "Finance::LocalDatabaseReport", dependent: :delete_all
   has_many :finance_local_devices, class_name: "Finance::LocalDevice", dependent: :delete_all
+  has_many :finance_local_database_audits, class_name: "Finance::LocalDatabaseAudit", dependent: :delete_all
   has_many :finance_command_executions, class_name: "Finance::CommandExecution", dependent: :delete_all
   # Honorary badges (not roles: they grant no permissions) and private support-payment access.
   has_many :community_honors, class_name: "Community::Honor", dependent: :destroy

@@ -38,6 +38,7 @@ vi.mock("../src/services/platform", async () => {
     },
     resetDatabases: () => files.clear(),
     deviceName: async () => "Some Mac",
+    deviceIdentity: async (candidate: string) => ({ deviceId: candidate, platform: "macos", reportable: true }),
     saveFile: async () => true,
   };
 });

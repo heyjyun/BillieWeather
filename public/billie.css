@@ -531,6 +531,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--bw-color-accen
 .bw-local-db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
 .bw-local-db { border: 1px solid var(--bw-color-border); border-radius: var(--bw-radius-lg); padding: 14px; display: grid; gap: 8px; align-content: start; }
 .bw-local-db h4 { margin: 0; overflow-wrap: anywhere; }
+.bw-local-db-entry { border-top: 1px solid var(--bw-color-border); padding-top: 8px; display: grid; gap: 6px; }
+.bw-local-db-entry h5 { margin: 0; font-size: var(--bw-font-size-sm); overflow-wrap: anywhere; }
+.bw-local-dbs > .bw-eyebrow { margin-top: 18px; }
 .bw-usage-bar { display: flex; height: 12px; border-radius: var(--bw-radius-pill); overflow: hidden; background: var(--bw-color-surface-muted); margin: 6px 0 10px; gap: 2px; }
 .bw-usage-bar span { display: block; min-width: 3px; }
 .bw-usage-cloud { background: var(--bw-color-accent); }

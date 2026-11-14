@@ -58,6 +58,10 @@ Rails.application.routes.draw do
       patch :supporter_recognition
       post :password_reset
     end
+    # Website-only labels and review decisions for local database METADATA. Nothing here
+    # reaches a device or touches financial data.
+    resources :local_devices, only: :update, param: :device_id, controller: :local_devices
+    patch "local_database_reports/:id/review", to: "local_devices#review", as: :review_local_database_report
     resource :insights, only: :show, controller: :insights do
       post :generate
     end

@@ -19,6 +19,7 @@ vi.mock("../src/services/platform", () => ({
     return { driver: sqljsDriver(db), persistent: false };
   },
   deviceName: async () => null,
+  deviceIdentity: async (candidate: string) => ({ deviceId: candidate, platform: "macos", reportable: true }),
   saveFile: async () => true,
 }));
 const account = { email: "jyun@example.com", nickname: "jyun", locale: "en", timeZone: null, usageRegion: "US", registeredAt: "2026-11-01T12:00:00Z", badges: [] };

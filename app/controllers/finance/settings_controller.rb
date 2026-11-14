@@ -74,8 +74,16 @@ module Finance
       @account_deletion = AccountDeletion.new(@user)
       @database = DatabaseOverview.new(@user)
       # What the person's apps reported about their local databases (display only).
-      @local_reports = LocalDatabaseReport.where(user_id: @user.id).live.order(:device_id, :name, :id).to_a
+      # One card per device; only active records are part of a card. Review records (legacy or
+      # ambiguous identity) and archived snapshots are listed separately, never as cards.
+      live = LocalDatabaseReport.where(user_id: @user.id).live.order(:name, :id).to_a
       @local_devices = LocalDevice.where(user_id: @user.id).index_by(&:device_id)
+      @local_reports = live.select { |report| report.status == "active" }
+      @local_cards = @local_reports.group_by(&:device_id)
+        .sort_by { |device_id, reports| [-reports.map(&:reported_at).max.to_f, device_id] }
+        .map { |device_id, reports| [@local_devices[device_id], reports] }
+      @local_review = live.select { |report| report.status == "review" }.sort_by { |report| [-report.reported_at.to_f, report.id] }
+      @local_archived = live.select { |report| report.status == "archived" }.sort_by { |report| [-report.reported_at.to_f, report.id] }
       @privacy_counts = {statements: @user.finance_statements.count, transactions: @user.finance_transactions.count,
                          accounts: @user.finance_bank_accounts.count}
     end

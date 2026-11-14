@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AccountError } from "../services/account";
 import { freeSlot, loadRegistry, MAX_DATABASES, saveRegistry, type Registry } from "../services/databases";
 import { deviceName, openDatabase } from "../services/platform";
-import { queueDelete, reportAll, reportingStatus, type ReportingStatus } from "../services/reporting";
+import { queueDelete, reportAll, reportingIdentity, reportingStatus, type ReportingStatus } from "../services/reporting";
 import { FinanceStore, StoreError, type WebSyncResult } from "../services/store";
 import { syncFromWeb } from "../services/webSync";
 import { useAccount } from "./useAccount";
@@ -99,14 +99,17 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // Basic facts about the local databases for the website's cards. Never throws, never blocks.
   const reportMetadata = useCallback(async () => {
     try {
+      const identity = await reportingIdentity();
+      if (!identity) return; // browser preview, QA/debug build or unreadable identity: never reported
       const databases = (await Promise.all(registryRef.current.entries.map(async (entry) => {
         try {
-          return { id: entry.id, store: (await openById(entry.id)).store };
+          const opened = await openById(entry.id);
+          return opened.persistent ? { id: entry.id, store: opened.store } : null; // in-memory databases are never reported
         } catch {
           return null;
         }
       }))).filter((database): database is { id: string; store: FinanceStore } => database !== null);
-      await reportAll({ account: accountEmail, token: getToken(), deviceName: (await deviceName()) ?? "Unknown device", openedAt: APP_OPENED_AT, databases });
+      await reportAll({ account: accountEmail, token: getToken(), identity, deviceName: (await deviceName()) ?? "Unknown device", openedAt: APP_OPENED_AT, databases });
     } finally {
       setReportingState(reportingStatus(accountEmail));
     }

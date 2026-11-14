@@ -17,6 +17,12 @@ module ClientApi
         return render json: {error: "bad_request"}, status: :bad_request unless payload.is_a?(Hash)
         unexpected = payload.keys - Finance::LocalDatabaseReport::ALLOWED_FIELDS
         return render json: {error: "unexpected_fields", fields: unexpected}, status: :unprocessable_entity if unexpected.any?
+        # Only current apps (stable device id kept next to the SQLite files) say which platform
+        # they run on. Anything else is an incomplete identity: refused, never stored, so a
+        # browser preview or an old build cannot add "Unnamed database" cards.
+        unless Finance::LocalDevice::PLATFORMS.include?(payload["platform"])
+          return render json: {error: "incomplete_identity"}, status: :unprocessable_entity
+        end
 
         attributes = parse(payload)
         return render json: {error: "invalid"}, status: :unprocessable_entity unless attributes
@@ -66,9 +72,10 @@ module ClientApi
         period_end = parse_date(payload["period_end"])
         modified_at = parse_time(payload["modified_at"])
         opened_at = parse_time(payload["opened_at"])
-        return nil if period_start == :bad || period_end == :bad || modified_at == :bad || opened_at == :bad
-        {name: name, device_name: device_name, sequence: sequence, period_start: period_start, period_end: period_end,
-         modified_at: modified_at, opened_at: opened_at}.merge(numbers.symbolize_keys)
+        synced_at = parse_time(payload["synced_at"])
+        return nil if [period_start, period_end, modified_at, opened_at, synced_at].include?(:bad)
+        {name: name, device_name: device_name, platform: payload["platform"], sequence: sequence, period_start: period_start, period_end: period_end,
+         modified_at: modified_at, opened_at: opened_at, synced_at: synced_at}.merge(numbers.symbolize_keys)
       end
 
       # Control characters out, whitespace squeezed; nil if empty or too long.

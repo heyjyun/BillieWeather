@@ -1,4 +1,5 @@
 mod device;
+mod identity;
 mod ocr;
 mod session;
 
@@ -73,6 +74,7 @@ pub fn run() {
         .plugin(tauri_plugin_billie_ocr::init())
         .invoke_handler(tauri::generate_handler![
             device::device_name,
+            identity::device_identity,
             ocr::ocr_capabilities,
             ocr::ocr_recognize_image,
             session::session_load,
@@ -81,4 +83,20 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running BillieWeather");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::slot_file;
+
+    /// The SQLite file names never depend on the build, the launch or the session; the plugin
+    /// resolves them against the app's fixed config directory (one per identifier).
+    #[test]
+    fn database_paths_are_fixed_per_slot() {
+        assert_eq!(slot_file(1), "sqlite:billieweather.db");
+        assert_eq!(slot_file(2), "sqlite:billieweather-2.db");
+        for _ in 0..3 {
+            assert_eq!(slot_file(1), slot_file(1));
+        }
+    }
 }

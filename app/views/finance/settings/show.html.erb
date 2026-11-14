@@ -88,6 +88,8 @@
       the "delete everything" buttons so smaller clean-ups are found first. %>
   <% database = @database %>
   <section class="bw-panel" id="settings-database" aria-labelledby="settings-database-heading">
+    <div id="settings-web-database" data-section="web">
+    <p class="bw-eyebrow"><%= t("billie.database.web_section") %></p>
     <h2 id="settings-database-heading"><%= @user.cloud_database_name.presence || t("billie.database.default_name") %></h2>
     <p><%= t("billie.database.intro") %></p>
     <%= errors_for.call(:database) %>
@@ -116,63 +118,6 @@
         <div><dt><%= t("billie.database.last_updated") %></dt><dd><%= finance_date(changed, "%b %-d, %Y") %></dd></div>
       <% end %>
     </dl>
-
-    <%# Local databases reported by the person's apps: display only, never controlled from here. %>
-    <% cloud_bytes = database.storage_bytes %>
-    <% local_bytes = @local_reports.sum(&:size_bytes) %>
-    <% combined = cloud_bytes + local_bytes %>
-    <div id="settings-local-databases" class="bw-local-dbs">
-      <h3><%= t("billie.database.local.storage") %></h3>
-      <% if combined.positive? %>
-        <div class="bw-usage-bar" role="img" aria-label="<%= t("billie.database.local.bar_label") %>">
-          <% if cloud_bytes.positive? %><span class="bw-usage-cloud" style="width: <%= (cloud_bytes.to_f / combined * 100).round(2) %>%"></span><% end %>
-          <% @local_reports.each_with_index do |report, index| %>
-            <% next unless report.size_bytes.positive? %>
-            <span class="bw-usage-local bw-usage-local-<%= index % 4 %>" style="width: <%= (report.size_bytes.to_f / combined * 100).round(2) %>%"></span>
-          <% end %>
-        </div>
-      <% end %>
-      <ul class="bw-usage-legend">
-        <li data-usage="cloud"><i class="bw-usage-cloud" aria-hidden="true"></i><span><%= @user.cloud_database_name.presence || t("billie.database.default_name") %> <small>(<%= t("billie.database.local.kind_cloud") %>)</small></span><strong><%= database_share(cloud_bytes, combined) %></strong><small><%= database_size(cloud_bytes) %></small></li>
-        <% @local_reports.each_with_index do |report, index| %>
-          <li data-usage="local-<%= report.database_id %>"><i class="bw-usage-local bw-usage-local-<%= index % 4 %>" aria-hidden="true"></i><span><%= report.name %> <small>(<%= t("billie.database.local.kind_local") %>)</small></span><strong><%= database_share(report.size_bytes, combined) %></strong><small><%= database_size(report.size_bytes) %></small></li>
-        <% end %>
-      </ul>
-      <p class="bw-caption" data-usage-totals>
-        <%= t("billie.database.local.cloud_total", size: database_size(cloud_bytes)) %>
-        <%= t("billie.database.local.local_total", size: database_size(local_bytes)) %>
-        <%= t("billie.database.local.not_uploaded") %>
-      </p>
-
-      <h3><%= t("billie.database.local.heading") %></h3>
-      <% if @local_reports.empty? %>
-        <p class="bw-caption bw-db-empty"><%= t("billie.database.local.empty") %></p>
-      <% else %>
-        <div class="bw-local-db-grid">
-          <% @local_reports.each do |report| %>
-            <article class="bw-local-db" data-local-database="<%= report.database_id %>">
-              <h4><%= report.name %></h4>
-              <span class="bw-tag bw-tag-muted"><%= t("billie.database.local.status_local") %></span>
-              <dl class="bw-db-facts">
-                <div><dt><%= t("billie.database.local.device") %></dt><dd><%= @local_devices[report.device_id]&.name.presence || t("billie.database.local.unknown_device") %></dd></div>
-                <div><dt><%= t("billie.database.local.storage_label") %></dt><dd><%= database_size(report.size_bytes) %></dd></div>
-                <div><dt><%= t("billie.database.statements") %></dt><dd><%= number_with_delimiter(report.statement_count) %></dd></div>
-                <div><dt><%= t("billie.database.transactions") %></dt><dd><%= number_with_delimiter(report.transaction_count) %></dd></div>
-                <div><dt><%= t("billie.database.rules") %></dt><dd><%= number_with_delimiter(report.rule_count) %></dd></div>
-                <div><dt><%= t("billie.database.dates") %></dt><dd><%= database_range(report.period_start, report.period_end) %></dd></div>
-                <% if report.modified_at %><div><dt><%= t("billie.database.local.modified") %></dt><dd><%= local_report_time(report.modified_at, @user) %></dd></div><% end %>
-                <% if report.opened_at %><div><dt><%= t("billie.database.local.opened") %></dt><dd><%= local_report_time(report.opened_at, @user) %></dd></div><% end %>
-                <div><dt><%= t("billie.database.local.reported") %></dt><dd><%= local_report_time(report.reported_at, @user) %></dd></div>
-                <div><dt><%= t("billie.database.local.synced") %></dt><dd><%= t("billie.database.local.synced_value") %></dd></div>
-                <div><dt><%= t("billie.database.local.backed_up") %></dt><dd><%= t("billie.database.local.backed_up_value") %></dd></div>
-              </dl>
-              <% if report.stale? %><p class="bw-message bw-message-warn" data-stale><%= t("billie.database.local.stale") %></p><% end %>
-              <p class="bw-caption"><%= t("billie.database.local.notice") %> <%= t("billie.database.local.metadata_note") %></p>
-            </article>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
 
     <% items = database.statements %>
     <% if items.empty? %>
@@ -203,6 +148,120 @@
     <div class="bw-db-actions">
       <%= link_to t("billie.database.manage_statements"), finance_statements_path, class: "bw-button bw-button-outline" %>
       <%= link_to t("billie.export.button"), finance_report_path, class: "bw-button bw-button-outline" %>
+    </div>
+    </div>
+
+    <%# Section B: local databases. One card per device (only its active records); legacy or
+        ambiguous records are listed for review, never as cards. Display only: nothing here
+        reaches a device. A metadata report is not a sync and not a backup. %>
+    <% cloud_bytes = database.storage_bytes %>
+    <% local_bytes = @local_reports.sum { |report| report.size_bytes.to_i } %>
+    <% combined = cloud_bytes + local_bytes %>
+    <div id="settings-local-databases" class="bw-local-dbs" data-section="local">
+      <p class="bw-eyebrow"><%= t("billie.database.local.section") %></p>
+      <p class="bw-caption"><%= t("billie.database.local.section_intro") %></p>
+      <h3><%= t("billie.database.local.storage") %></h3>
+      <% if combined.positive? %>
+        <div class="bw-usage-bar" role="img" aria-label="<%= t("billie.database.local.bar_label") %>">
+          <% if cloud_bytes.positive? %><span class="bw-usage-cloud" style="width: <%= (cloud_bytes.to_f / combined * 100).round(2) %>%"></span><% end %>
+          <% @local_reports.each_with_index do |report, index| %>
+            <% next unless report.size_bytes.to_i.positive? %>
+            <span class="bw-usage-local bw-usage-local-<%= index % 4 %>" style="width: <%= (report.size_bytes.to_f / combined * 100).round(2) %>%"></span>
+          <% end %>
+        </div>
+      <% end %>
+      <ul class="bw-usage-legend">
+        <li data-usage="cloud"><i class="bw-usage-cloud" aria-hidden="true"></i><span><%= @user.cloud_database_name.presence || t("billie.database.default_name") %> <small>(<%= t("billie.database.local.kind_cloud") %>)</small></span><strong><%= database_share(cloud_bytes, combined) %></strong><small><%= database_size(cloud_bytes) %></small></li>
+        <% @local_reports.each_with_index do |report, index| %>
+          <li data-usage="local-<%= report.database_id %>"><i class="bw-usage-local bw-usage-local-<%= index % 4 %>" aria-hidden="true"></i><span><%= report.name %> <small>(<%= t("billie.database.local.kind_local") %>)</small></span><strong><%= database_share(report.size_bytes, combined) %></strong><small><%= database_size(report.size_bytes) %></small></li>
+        <% end %>
+      </ul>
+      <p class="bw-caption" data-usage-totals>
+        <%= t("billie.database.local.cloud_total", size: database_size(cloud_bytes)) %>
+        <%= t("billie.database.local.local_total", size: database_size(local_bytes)) %>
+        <%= t("billie.database.local.not_uploaded") %>
+      </p>
+
+      <h3><%= t("billie.database.local.heading") %></h3>
+      <% if @local_cards.empty? %>
+        <p class="bw-caption bw-db-empty"><%= t("billie.database.local.empty") %></p>
+      <% else %>
+        <div class="bw-local-db-grid">
+          <% @local_cards.each do |device, reports| %>
+            <% device_id = reports.first.device_id %>
+            <% last_seen = reports.map(&:reported_at).max %>
+            <article class="bw-local-db" data-local-device="<%= device_id %>">
+              <h4><%= device&.display_name || t("billie.database.local.unknown_device") %></h4>
+              <span class="bw-tag bw-tag-muted"><%= t("billie.database.local.status_local") %></span>
+              <dl class="bw-db-facts">
+                <div><dt><%= t("billie.database.local.platform") %></dt><dd><%= Finance::LocalDevice.platform_label(device&.platform) || t("billie.database.local.platform_unknown") %></dd></div>
+                <div><dt><%= t("billie.database.local.last_seen") %></dt><dd><%= local_report_time(last_seen, @user) %></dd></div>
+              </dl>
+              <% reports.each do |report| %>
+                <section class="bw-local-db-entry" data-local-database="<%= report.database_id %>">
+                  <h5><%= report.name %></h5>
+                  <dl class="bw-db-facts">
+                    <div><dt><%= t("billie.database.local.device") %></dt><dd><%= device&.name.presence || t("billie.database.local.unknown_device") %></dd></div>
+                    <div><dt><%= t("billie.database.local.storage_label") %></dt><dd><%= database_size(report.size_bytes) %></dd></div>
+                    <div><dt><%= t("billie.database.statements") %></dt><dd><%= number_with_delimiter(report.statement_count) %></dd></div>
+                    <div><dt><%= t("billie.database.transactions") %></dt><dd><%= number_with_delimiter(report.transaction_count) %></dd></div>
+                    <div><dt><%= t("billie.database.rules") %></dt><dd><%= number_with_delimiter(report.rule_count) %></dd></div>
+                    <div><dt><%= t("billie.database.dates") %></dt><dd><%= database_range(report.period_start, report.period_end) %></dd></div>
+                    <% if report.modified_at %><div><dt><%= t("billie.database.local.modified") %></dt><dd><%= local_report_time(report.modified_at, @user) %></dd></div><% end %>
+                    <% if report.opened_at %><div><dt><%= t("billie.database.local.opened") %></dt><dd><%= local_report_time(report.opened_at, @user) %></dd></div><% end %>
+                    <div><dt><%= t("billie.database.local.reported") %></dt><dd><%= local_report_time(report.reported_at, @user) %></dd></div>
+                    <div><dt><%= t("billie.database.local.synced") %></dt><dd><%= report.synced_at ? local_report_time(report.synced_at, @user) : t("billie.database.local.not_synced") %></dd></div>
+                    <div><dt><%= t("billie.database.local.backed_up") %></dt><dd><%= t("billie.database.local.backed_up_value") %></dd></div>
+                  </dl>
+                  <% if report.stale? %>
+                    <p class="bw-message bw-message-warn" data-stale><%= t("billie.database.local.stale") %></p>
+                  <% else %>
+                    <p class="bw-caption" data-fresh><%= t("billie.database.local.fresh", ago: time_ago_in_words(report.reported_at)) %></p>
+                  <% end %>
+                </section>
+              <% end %>
+              <p class="bw-caption"><%= t("billie.database.local.notice") %> <%= t("billie.database.local.metadata_note") %></p>
+              <% if device %>
+                <%= form_with model: device, scope: :local_device, url: finance_local_device_path(device.device_id), method: :patch, data: {turbo: false}, class: "bw-form bw-db-rename", html: {"data-local-rename": device_id} do |form| %>
+                  <div class="bw-field">
+                    <%= form.label :label, t("billie.database.local.rename_label"), for: "local_device_label_#{device_id}" %>
+                    <%= form.text_field :label, id: "local_device_label_#{device_id}", maxlength: 80, placeholder: device.name, autocomplete: "off" %>
+                    <small><%= t("billie.database.local.rename_help") %></small>
+                  </div>
+                  <%= form.submit t("billie.database.local.rename_save"), class: "bw-button bw-button-outline bw-button-small" %>
+                <% end %>
+              <% end %>
+            </article>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if @local_review.any? || @local_archived.any? %>
+        <details class="bw-db-details" id="settings-local-review" data-local-review>
+          <summary><%= t("billie.database.local.review_heading", count: @local_review.size, archived: @local_archived.size) %></summary>
+          <p class="bw-caption"><%= t("billie.database.local.review_intro") %></p>
+          <ul class="bw-db-list">
+            <% (@local_review + @local_archived).each do |report| %>
+              <li data-review-record="<%= report.id %>" data-status="<%= report.status %>">
+                <div class="bw-db-name">
+                  <strong><%= report.name %></strong>
+                  <small>
+                    <%= @local_devices[report.device_id]&.display_name || t("billie.database.local.unknown_device") %> ·
+                    <%= database_size(report.size_bytes) %> ·
+                    <%= t("billie.database.transaction_count", count: report.transaction_count.to_i) %> ·
+                    <%= t("billie.database.local.reported") %>: <%= local_report_time(report.reported_at, @user) %>
+                  </small>
+                  <small><%= t("billie.database.local.review_status.#{report.status}") %> — <%= t("billie.database.local.review_reason.#{report.status_reason.presence || "none"}", default: t("billie.database.local.review_reason.none")) %></small>
+                </div>
+                <% if report.status == "review" %>
+                  <%= button_to t("billie.database.local.review_archive"), finance_review_local_database_report_path(report), method: :patch, params: {decision: "archive"}, class: "bw-button bw-button-outline bw-button-small", form: {data: {turbo: false}} %>
+                <% end %>
+                <%= button_to t("billie.database.local.review_restore"), finance_review_local_database_report_path(report), method: :patch, params: {decision: "restore"}, class: "bw-button bw-button-outline bw-button-small", form: {data: {turbo: false}} %>
+              </li>
+            <% end %>
+          </ul>
+        </details>
+      <% end %>
     </div>
   </section>
 

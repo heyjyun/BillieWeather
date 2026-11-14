@@ -5,9 +5,15 @@
 // There is no background timer: reporting happens when the app opens and the person is signed
 // in, and after they create, rename or delete a database or finish a sync. Offline, the app
 // works as usual; removals of deleted databases are queued and retried until confirmed.
+//
+// Identity: the device id comes from a file the native app keeps next to its SQLite files
+// (see deviceIdentity in platform.ts), the database id from inside each SQLite file. Only the
+// released native app reports; a browser preview, a QA build or a debug build never does, and
+// a database is only reported once it has a name (never as "Unnamed database").
 import { AccountError } from "./account";
 import { randomId } from "./ids";
 import { deleteDatabaseReport, purgeDeviceReports, putDatabaseReport, type DatabaseReport } from "./localReport";
+import { deviceIdentity } from "./platform";
 import type { FinanceStore } from "./store";
 
 const K = {
@@ -39,14 +45,28 @@ function write(key: string, value: unknown): void {
 
 const acct = (email: string) => email.trim().toLowerCase();
 
-/** This installation's random id, created the first time it is needed and then kept. */
-export function deviceId(): string {
-  let id = read<string | null>(K.device, null);
-  if (!id) {
-    id = randomId();
-    write(K.device, id);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/** The id an older version kept in WebView storage (read only; it is never created any more). */
+export function legacyDeviceId(): string | null {
+  const id = read<string | null>(K.device, null);
+  return typeof id === "string" && UUID.test(id) ? id : null;
+}
+
+export interface ReportingIdentity { deviceId: string; platform: string }
+
+/**
+ * Who this installation is for the website, or null if it must not report. The first time,
+ * the native side adopts the older WebView id so the existing website card carries on.
+ */
+export async function reportingIdentity(): Promise<ReportingIdentity | null> {
+  try {
+    const identity = await deviceIdentity(legacyDeviceId() ?? randomId());
+    if (!identity?.reportable || !UUID.test(identity.deviceId) || !identity.platform) return null;
+    return { deviceId: identity.deviceId, platform: identity.platform };
+  } catch {
+    return null;
   }
-  return id;
 }
 
 /** Per-device counter that only goes up, so the server can tell a late retry from newer news. */
@@ -63,9 +83,12 @@ export interface ReportContext {
   /** The signed-in account's email (settings and the queue are kept per account). */
   account: string;
   token: string | null;
+  /** Null: this installation does not report (browser preview, QA/debug build, unreadable identity). */
+  identity: ReportingIdentity | null;
   deviceName: string;
   /** When this app session started. */
   openedAt: string;
+  /** Only databases stored in a file on this device (never an in-memory preview database). */
   databases: Array<{ id: string; store: FinanceStore }>;
 }
 
@@ -103,8 +126,8 @@ const serial = <T>(job: () => Promise<T>): Promise<T> => {
 /** Sends the queued removals for this account, oldest first. Returns true when none are left. */
 async function flush(ctx: ReportContext): Promise<boolean> {
   const a = acct(ctx.account);
-  if (!ctx.token) return !read<Op[]>(K.queue, []).some((op) => op.account === a);
-  const device = deviceId();
+  if (!ctx.token || !ctx.identity) return !read<Op[]>(K.queue, []).some((op) => op.account === a);
+  const device = ctx.identity.deviceId;
   for (;;) {
     const queue = read<Op[]>(K.queue, []);
     const op = queue.find((candidate) => candidate.account === a);
@@ -119,12 +142,15 @@ async function flush(ctx: ReportContext): Promise<boolean> {
   }
 }
 
-async function collect(ctx: ReportContext, database: ContextDatabase): Promise<{ id: string; report: Omit<DatabaseReport, "sequence">; fingerprint: string }> {
+async function collect(ctx: ReportContext & { identity: ReportingIdentity }, database: ContextDatabase): Promise<{ id: string; report: Omit<DatabaseReport, "sequence">; fingerprint: string } | null> {
   const summary = await database.store.reportSummary();
+  const name = clean(summary.name ?? "", 60);
+  if (!name) return null; // not set up yet: nothing to show, and no id is created for it
   const id = await database.store.reportId();
   const report = {
-    name: clean(summary.name ?? "Unnamed database", 60) || "Unnamed database",
+    name,
     device_name: clean(ctx.deviceName, 80) || "Unknown device",
+    platform: ctx.identity.platform,
     size_bytes: Math.max(0, Math.trunc(summary.sizeBytes)),
     statement_count: summary.statements,
     transaction_count: summary.transactions,
@@ -133,6 +159,8 @@ async function collect(ctx: ReportContext, database: ContextDatabase): Promise<{
     period_end: summary.periodEnd,
     modified_at: isoOrNull(summary.modifiedAt),
     opened_at: isoOrNull(ctx.openedAt),
+    // Only an explicit "Sync Now" in this app; null means "Not synced". Never a backup.
+    synced_at: isoOrNull(await database.store.lastSyncedAt()),
   };
   return { id, report, fingerprint: JSON.stringify(report) };
 }
@@ -148,10 +176,13 @@ export function reportAll(ctx: ReportContext): Promise<void> {
     try {
       if (!(await flush(ctx))) return; // removals come first; if they can't be sent, nothing else is
       const a = acct(ctx.account);
-      if (!ctx.token) return;
-      const device = deviceId();
+      const identity = ctx.identity;
+      if (!ctx.token || !identity) return;
+      const device = identity.deviceId;
       for (const database of ctx.databases) {
-        const { id, report, fingerprint } = await collect(ctx, database);
+        const collected = await collect({ ...ctx, identity }, database);
+        if (!collected) continue;
+        const { id, report, fingerprint } = collected;
         const sent = read<Record<string, string>>(K.sent, {});
         if (sent[sentKey(a, id)] === fingerprint) continue; // nothing changed: no request
         await putDatabaseReport(ctx.token, device, id, { ...report, sequence: nextSequence() });

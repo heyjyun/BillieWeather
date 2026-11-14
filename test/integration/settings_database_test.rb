@@ -102,11 +102,13 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
   # ---- local databases reported by the apps (display only)
   DEVICE_ID = "3f2b1c9e-7a4d-4e8b-9c11-0a1b2c3d4e5f"
 
-  def report_local(user, name: "Personal Finance 2026", database_id: SecureRandom.uuid, size: 19_293_798, reported_at: Time.current, device_name: "Jyun's MacBook")
-    Finance::LocalDevice.find_or_create_by!(user: user, device_id: DEVICE_ID) { |device| device.name = device_name }
-    Finance::LocalDatabaseReport.create!(user: user, device_id: DEVICE_ID, database_id: database_id, name: name, size_bytes: size, statement_count: 24,
+  def report_local(user, name: "Personal Finance 2026", database_id: SecureRandom.uuid, size: 19_293_798, reported_at: Time.current, device_name: "Jyun's MacBook",
+    device_id: DEVICE_ID, status: "active", status_reason: nil, synced_at: nil, platform: "macos")
+    Finance::LocalDevice.find_or_create_by!(user: user, device_id: device_id) { |device| device.name = device_name; device.platform = platform }
+    Finance::LocalDatabaseReport.create!(user: user, device_id: device_id, database_id: database_id, name: name, size_bytes: size, statement_count: 24,
       transaction_count: 1240, rule_count: 36, period_start: Date.new(2026, 1, 2), period_end: Date.new(2026, 10, 30),
-      modified_at: Time.utc(2026, 11, 9, 22, 0), opened_at: Time.utc(2026, 11, 9, 22, 25), sequence: 1, reported_at: reported_at)
+      modified_at: Time.utc(2026, 11, 9, 22, 0), opened_at: Time.utc(2026, 11, 9, 22, 25), sequence: 1, reported_at: reported_at,
+      status: status, status_reason: status_reason, synced_at: synced_at)
   end
 
   test "local databases appear as read-only cards, clearly separate from the cloud database" do
@@ -115,14 +117,18 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
     sign_in @user
     get finance_settings_path, params: {locale: "en"}
     assert_response :success
-    card = css_select("#settings-local-databases [data-local-database]").sole
-    assert_equal "Personal Finance 2026", card.at_css("h4").text
-    assert_includes card.text, "Local Database"
+    device_card = css_select("#settings-local-databases [data-local-device]").sole
+    card = device_card.css("[data-local-database]").sole
+    assert_equal "Jyun's MacBook", device_card.at_css("h4").text
+    assert_equal "Personal Finance 2026", card.at_css("h5").text
+    assert_includes device_card.text, "Local Database"
+    assert_includes device_card.text, "macOS"
     assert_includes card.text, "Jyun's MacBook"
     assert_includes card.text, "18.4 MB"
     assert_includes card.text, "1,240"
-    assert_includes card.text, "This database is stored on your device. You can only open or modify it from that device."
-    assert_empty card.css("form, button, a, input, select"), "no delete, rename, edit, open or sync controls"
+    assert_includes device_card.text, "This database is stored on your device. You can only open or modify it from that device."
+    assert_empty card.css("form, button, a, input, select"), "no delete, edit, open or sync controls for the database itself"
+    assert_equal 1, device_card.css("form[data-local-rename]").size, "only a website-side rename of the card"
     assert_not_includes response.body, "Someone else&#39;s"
     assert_no_match(/Not updated for over 30 days/, card.text)
     # Three different things, never merged: a metadata report is not a sync and not a backup.
@@ -132,7 +138,10 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
     assert_includes labels, "Last Backed Up"
     assert_not_includes labels, "Last reported"
     assert_equal "No backups yet", card.css("div").find { |row| row.at_css("dt")&.text == "Last Backed Up" }.at_css("dd").text
-    assert_includes card.text, "It is not a sync and not a backup."
+    assert_equal "Not synced", card.css("div").find { |row| row.at_css("dt")&.text == "Last Synced" }.at_css("dd").text
+    assert_not_includes response.body, "Shown in the app", "never claimed as a sync time"
+    assert_includes device_card.text, "It is not a sync and not a backup."
+    assert css_select("#settings-web-database").any?, "the web database is its own section"
   end
 
   test "storage keeps cloud and local separate and never counts local bytes as cloud storage" do
@@ -157,9 +166,10 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
     report_local(@user, name: "Fresh one", reported_at: 29.days.ago)
     sign_in @user
     get finance_settings_path, params: {locale: "en"}
-    old, fresh = css_select("[data-local-database]").partition { |card| card.at_css("h4").text == "Old one" }.map(&:first)
+    old, fresh = css_select("[data-local-database]").partition { |card| card.at_css("h5").text == "Old one" }.map(&:first)
     assert_includes old.text, "Not updated for over 30 days. Information may be outdated."
     assert_no_match(/Not updated for over 30 days/, fresh.text)
+    assert_includes fresh.text, "Up to date: metadata reported"
     assert_includes old.text, "Metadata Last Updated"
   end
 
@@ -206,13 +216,82 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
       get finance_settings_path, params: {locale: locale}
       assert_response :success
       assert_no_match(/translation_missing|Translation missing/, response.body, locale)
-      card = css_select("[data-local-database]").sole
+      card = css_select("[data-local-device]").sole
       assert_includes card.text, I18n.t("billie.database.local.status_local", locale: locale), locale
       assert_includes card.text, I18n.t("billie.database.local.reported", locale: locale), locale
     end
     get finance_settings_path, params: {locale: "zh-CN"}
-    card = css_select("[data-local-database]").sole.text
-    %w[本地数据库 元数据最近更新 最近同步 最近备份 还没有备份].each { |text| assert_includes card, text }
+    card = css_select("[data-local-device]").sole.text
+    %w[本地数据库 元数据最近更新 最近同步 未同步 最近备份 还没有备份].each { |text| assert_includes card, text }
     assert_no_match(/Metadata Last Updated|Last Synced|Local Database|No backups yet/, card)
+  end
+
+  # ---- one card per device, review list, isolation
+
+  test "two devices show exactly two cards; a device with two databases is still one card" do
+    report_local(@user, device_id: DEVICE_ID, name: "MacBook Air")
+    report_local(@user, device_id: DEVICE_ID, name: "Work")
+    report_local(@user, device_id: "9d8c7b6a-5e4f-4a3b-8c2d-1e0f9a8b7c6d", name: "Phone", device_name: "iPhone", platform: "ios")
+    sign_in @user
+    get finance_settings_path, params: {locale: "en"}
+    assert_equal 2, css_select("[data-local-device]").size
+    assert_equal 3, css_select("[data-local-device] [data-local-database]").size
+  end
+
+  test "review and archived records are never shown as cards, and can be reviewed safely" do
+    report_local(@user, name: "MacBook Air")
+    review = report_local(@user, name: "Unnamed database", device_id: "76cb29fd-45f3-4486-8c6a-6623eb50ec61", status: "review", status_reason: "unverified_empty")
+    report_local(@user, name: "Unnamed database", device_id: "0c681977-f5f1-4928-b75a-3e6c3e96564d", status: "archived", status_reason: "ephemeral_preview")
+    sign_in @user
+    get finance_settings_path, params: {locale: "en"}
+    assert_equal 1, css_select("[data-local-device]").size
+    list = css_select("[data-local-review]").sole
+    assert_includes list.text, "Records to review (1) · archived history (1)"
+    assert_includes list.text, "An empty, unnamed database from an older app"
+    assert_includes list.text, "never deletes a database"
+
+    patch finance_review_local_database_report_path(review), params: {decision: "archive"}
+    assert_redirected_to finance_settings_path(anchor: "settings-local-review")
+    assert_equal ["archived", "archived_by_person"], [review.reload.status, review.status_reason]
+    assert Finance::LocalDatabaseAudit.exists?(user_id: @user.id, event: "review_archived", database_id: review.database_id)
+    patch finance_review_local_database_report_path(review), params: {decision: "restore"}
+    assert_equal "active", review.reload.status
+  end
+
+  test "renaming a card is website-only, audited, and scoped to the owner" do
+    report_local(@user)
+    report_local(@other, name: "Someone else's")
+    sign_in @user
+    patch finance_local_device_path(DEVICE_ID), params: {local_device: {label: "Jyun’s laptop"}}
+    assert_redirected_to finance_settings_path(anchor: "settings-local-databases")
+    assert_equal "Jyun’s laptop", Finance::LocalDevice.find_by!(user: @user, device_id: DEVICE_ID).label
+    assert_nil Finance::LocalDevice.find_by!(user: @other, device_id: DEVICE_ID).label, "the same device id in another account is a different record"
+    assert Finance::LocalDatabaseAudit.exists?(user_id: @user.id, event: "device_renamed")
+    get finance_settings_path, params: {locale: "en"}
+    assert_equal "Jyun’s laptop", css_select("[data-local-device] h4").sole.text
+
+    other_report = Finance::LocalDatabaseReport.find_by!(user: @other)
+    patch finance_review_local_database_report_path(other_report), params: {decision: "archive"}
+    assert_response :not_found
+    assert_equal "active", other_report.reload.status
+  end
+
+  test "the Example Account never sees another account's local database inventory" do
+    example = create(:onboarded_user, email: "example-visitor@example.com", usage_region: "US")
+    report_local(@user, name: "heyjyun MacBook Air", device_name: "Jyun’s MacBook Air")
+    sign_in example
+    get finance_settings_path, params: {locale: "en"}
+    assert_empty css_select("[data-local-device]")
+    assert_not_includes response.body, "heyjyun MacBook Air"
+    assert_not_includes response.body, DEVICE_ID
+  end
+
+  test "a reported Sync Now time is shown; without one the card says Not synced" do
+    @user.update!(time_zone: "UTC")
+    report_local(@user, synced_at: Time.utc(2026, 11, 10, 8))
+    sign_in @user
+    get finance_settings_path, params: {locale: "en"}
+    synced = css_select("[data-local-database] div").find { |row| row.at_css("dt")&.text == "Last Synced" }.at_css("dd").text
+    assert_includes synced, "November 10, 2026"
   end
 end

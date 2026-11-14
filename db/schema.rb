@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_11_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -184,6 +184,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_000100) do
     t.index ["user_id"], name: "index_finance_insights_on_user_id"
   end
 
+  create_table "finance_local_database_audits", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "device_id", limit: 36
+    t.string "database_id", limit: 36
+    t.string "event", limit: 40, null: false
+    t.jsonb "details", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.index ["user_id"], name: "index_finance_local_database_audits_on_user_id"
+  end
+
   create_table "finance_local_database_reports", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "device_id", limit: 36, null: false
@@ -202,6 +212,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_000100) do
     t.datetime "deleted_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "status", limit: 16, default: "active", null: false
+    t.string "status_reason", limit: 40
+    t.datetime "status_changed_at"
+    t.datetime "synced_at"
+    t.index ["user_id", "database_id"], name: "index_local_database_reports_on_owner_database"
     t.index ["user_id", "device_id", "database_id"], name: "index_local_database_reports_on_owner_device_database", unique: true
     t.index ["user_id"], name: "index_finance_local_database_reports_on_user_id"
   end
@@ -213,6 +228,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_000100) do
     t.bigint "purged_through", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "platform", limit: 16
+    t.string "label", limit: 80
+    t.datetime "last_reported_at"
     t.index ["user_id", "device_id"], name: "index_finance_local_devices_on_user_id_and_device_id", unique: true
     t.index ["user_id"], name: "index_finance_local_devices_on_user_id"
   end
@@ -594,6 +612,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_11_000100) do
   add_foreign_key "finance_command_executions", "users"
   add_foreign_key "finance_custom_categories", "users"
   add_foreign_key "finance_insights", "users"
+  add_foreign_key "finance_local_database_audits", "users", on_delete: :cascade
   add_foreign_key "finance_local_database_reports", "users", on_delete: :cascade
   add_foreign_key "finance_local_devices", "users", on_delete: :cascade
   add_foreign_key "finance_merchant_rules", "users"

@@ -21,6 +21,7 @@ vi.mock("../src/services/platform", () => ({
     return { driver: sqljsDriver(db), persistent: true };
   },
   deviceName: async () => "Jyun's MacBook Pro",
+  deviceIdentity: async (candidate: string) => ({ deviceId: candidate, platform: "macos", reportable: true }),
   saveFile: async (filename: string, bytes: Uint8Array) => {
     saved.push({ filename, bytes });
     return true;

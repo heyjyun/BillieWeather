@@ -99,7 +99,7 @@ describe("data isolation", () => {
     expect(source).toMatch(/const DEVICES = `\$\{API_ORIGIN\}\/api\/client\/v1\/devices`/);
     expect([...source.matchAll(/call\("(\w+)"/g)].map((match) => match[1])).toEqual(["PUT", "DELETE", "DELETE"]);
     const fields = /REPORT_FIELDS = \[([^\]]+)\]/.exec(source)![1].match(/"(\w+)"/g)!.map((f) => f.replace(/"/g, ""));
-    expect(fields).toEqual(["name", "device_name", "size_bytes", "statement_count", "transaction_count", "rule_count", "period_start", "period_end", "modified_at", "opened_at", "sequence"]);
+    expect(fields).toEqual(["name", "device_name", "platform", "size_bytes", "statement_count", "transaction_count", "rule_count", "period_start", "period_end", "modified_at", "opened_at", "synced_at", "sequence"]);
     // The settings and queue code only ever reaches the network through this file.
     expect(readFileSync(join(ROOT, "src/services/reporting.ts"), "utf8")).not.toMatch(/\bfetch\s*\(/);
   });

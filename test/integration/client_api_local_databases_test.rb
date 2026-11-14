@@ -22,7 +22,7 @@ class ClientApiLocalDatabasesTest < ActionDispatch::IntegrationTest
   end
 
   def payload(overrides = {})
-    {name: "Personal Finance 2026", device_name: "Jyun's MacBook", size_bytes: 19_293_798, statement_count: 24, transaction_count: 1240,
+    {name: "Personal Finance 2026", device_name: "Jyun's MacBook", platform: "macos", size_bytes: 19_293_798, statement_count: 24, transaction_count: 1240,
      rule_count: 36, period_start: "2026-01-02", period_end: "2026-10-30", modified_at: "2026-11-09T14:00:00Z",
      opened_at: "2026-11-09T14:25:00Z", sequence: 1}.merge(overrides)
   end
@@ -50,7 +50,8 @@ class ClientApiLocalDatabasesTest < ActionDispatch::IntegrationTest
       assert_equal "Jyun's MacBook", Finance::LocalDevice.find_by!(user_id: @user.id, device_id: DEVICE).name
     end
     columns = Finance::LocalDatabaseReport.column_names - %w[id user_id created_at updated_at]
-    assert_equal %w[database_id deleted_at device_id modified_at name opened_at period_end period_start reported_at rule_count sequence size_bytes statement_count transaction_count].sort, columns.sort,
+    assert_equal %w[database_id deleted_at device_id modified_at name opened_at period_end period_start reported_at rule_count sequence size_bytes
+      statement_count status status_changed_at status_reason synced_at transaction_count].sort, columns.sort,
       "the table has no place to put financial content"
   end
 

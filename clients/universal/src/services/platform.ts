@@ -33,6 +33,25 @@ export async function openDatabase(file = "billieweather.db"): Promise<{ driver:
   return { driver: sqljsDriver(db), persistent: false };
 }
 
+/**
+ * This installation's identity for the website's "Local databases" cards, or null when it
+ * must not report: a plain browser (its database is in memory and disappears on reload), a QA
+ * or debug build, or an identity file that cannot be read. The id itself is kept by the native
+ * side in a file next to the SQLite databases (src-tauri/src/identity.rs), so it is the same
+ * for every WebView origin and survives restarts and updates. `candidate` is only used the
+ * very first time (a fresh random id, or the one an older version kept in WebView storage).
+ */
+export interface DeviceIdentity { deviceId: string; platform: string; reportable: boolean }
+export async function deviceIdentity(candidate: string): Promise<DeviceIdentity | null> {
+  if (!isTauri()) return null;
+  try {
+    const { invoke } = await import("@tauri-apps/api/core");
+    return await invoke<DeviceIdentity>("device_identity", { candidate });
+  } catch {
+    return null;
+  }
+}
+
 /** A generic label from the WebView when the OS gives no name ("iPhone", "Android", …). */
 export function genericDeviceName(userAgent = typeof navigator === "undefined" ? "" : navigator.userAgent): string | null {
   if (/iPad/.test(userAgent) || (/Macintosh/.test(userAgent) && typeof navigator !== "undefined" && navigator.maxTouchPoints > 1)) return "iPad";

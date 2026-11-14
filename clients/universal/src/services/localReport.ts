@@ -9,13 +9,15 @@ const DEVICES = `${API_ORIGIN}/api/client/v1/devices`;
 
 /** The complete list of fields that may leave the device. Keep in step with the server allowlist. */
 export const REPORT_FIELDS = [
-  "name", "device_name", "size_bytes", "statement_count", "transaction_count", "rule_count",
-  "period_start", "period_end", "modified_at", "opened_at", "sequence",
+  "name", "device_name", "platform", "size_bytes", "statement_count", "transaction_count", "rule_count",
+  "period_start", "period_end", "modified_at", "opened_at", "synced_at", "sequence",
 ] as const;
 
 export interface DatabaseReport {
   name: string;
   device_name: string;
+  /** "macos", "windows", "linux", "ios" or "android" (from the native app, never guessed). */
+  platform: string;
   size_bytes: number;
   statement_count: number;
   transaction_count: number;
@@ -24,6 +26,8 @@ export interface DatabaseReport {
   period_end: string | null;
   modified_at: string | null;
   opened_at: string | null;
+  /** When an explicit "Sync Now" last finished in this app, or null. */
+  synced_at: string | null;
   sequence: number;
 }
 

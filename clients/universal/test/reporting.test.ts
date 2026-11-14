@@ -5,11 +5,19 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { importFile } from "../src/services/importFile";
 import { REPORT_FIELDS } from "../src/services/localReport";
-import { metadataUpdatedAt, queueDelete, reportAll, reportingStatus, deviceId, type ReportContext } from "../src/services/reporting";
+import { metadataUpdatedAt, queueDelete, reportAll, reportingIdentity, reportingStatus, type ReportContext } from "../src/services/reporting";
+import * as platform from "../src/services/platform";
 import { API_ORIGIN } from "../src/services/account";
 import { fixtureBytes, newStore } from "./helpers";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+// The stable id the native app keeps in device-identity.json (see src-tauri/src/identity.rs).
+const DEVICE = "754309e7-4ba6-4336-9347-5eb71ddbd657";
+const deviceId = () => DEVICE;
+vi.mock("../src/services/platform", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/services/platform")>()),
+  deviceIdentity: vi.fn(async (candidate: string) => ({ deviceId: candidate, platform: "macos", reportable: true })),
+}));
 type Call = { method: string; url: string; body: Record<string, unknown> | null };
 let calls: Call[];
 let online: boolean;
@@ -35,13 +43,76 @@ async function setup(account = "jyun@example.com") {
   const second = await newStore();
   await second.store.setDatabaseName("Work");
   const ctx: ReportContext = {
-    account, token: "tok", deviceName: "Jyun's MacBook", openedAt: "2026-11-09T14:25:00.000Z",
+    account, token: "tok", identity: { deviceId: DEVICE, platform: "macos" }, deviceName: "Jyun's MacBook", openedAt: "2026-11-09T14:25:00.000Z",
     databases: [{ id: "1", store: first.store }, { id: "2", store: second.store }],
   };
   return { ctx, first: first.store, second: second.store };
 }
 
 describe("metadata reporting", () => {
+  it("reopening the app 20 times always targets the same device and database (one card)", async () => {
+    const { ctx, first } = await setup();
+    for (let launch = 0; launch < 20; launch += 1) {
+      localStorage.removeItem("billie.report.sent"); // force a request on every launch
+      await reportAll({ ...ctx, openedAt: new Date(Date.UTC(2026, 10, 9, 14, launch)).toISOString(), databases: [ctx.databases[0]] });
+    }
+    expect(calls.length).toBe(20);
+    expect(new Set(calls.map((c) => c.url)).size).toBe(1);
+    expect(calls[0].url).toBe(`/${DEVICE}/databases/${await first.reportId()}`);
+  });
+
+  it("a browser preview, QA or debug build (no identity) never reports anything", async () => {
+    const { ctx } = await setup();
+    await reportAll({ ...ctx, identity: null });
+    expect(calls).toEqual([]);
+    queueDelete(ctx.account, "11111111-2222-4333-8444-555555555555");
+    await reportAll({ ...ctx, identity: null });
+    expect(calls).toEqual([]);
+  });
+
+  it("a database that has no name yet is not reported and gets no id (never 'Unnamed database')", async () => {
+    const { ctx } = await setup();
+    const unnamed = await newStore();
+    await reportAll({ ...ctx, databases: [{ id: "3", store: unnamed.store }] });
+    expect(calls).toEqual([]);
+    expect(await unnamed.store.peekReportId()).toBeNull();
+    expect(JSON.stringify(calls)).not.toContain("Unnamed database");
+  });
+
+  it("two different databases on one device keep two different ids and are never combined", async () => {
+    const { ctx, first, second } = await setup();
+    await reportAll(ctx);
+    const ids = calls.map((c) => c.url.split("/")[3]);
+    expect(ids).toEqual([await first.reportId(), await second.reportId()]);
+    expect(new Set(ids).size).toBe(2);
+    expect(calls.map((c) => (c.body!.database as { transaction_count: number }).transaction_count)).toEqual([9, 0]);
+  });
+
+  it("reports the last explicit Sync Now only, and nothing when there was none", async () => {
+    const { ctx, first } = await setup();
+    await reportAll(ctx);
+    expect((calls[0].body!.database as { synced_at: string | null }).synced_at).toBeNull();
+    calls.length = 0;
+    await first.markSynced();
+    await reportAll(ctx);
+    expect((calls[0].body!.database as { synced_at: string | null }).synced_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it("the identity adopts the id an older version kept in WebView storage, and only reports when the native app allows it", async () => {
+    const mocked = vi.mocked(platform.deviceIdentity);
+    localStorage.setItem("billie.report.device", JSON.stringify(DEVICE));
+    expect(await reportingIdentity()).toEqual({ deviceId: DEVICE, platform: "macos" });
+    expect(mocked).toHaveBeenLastCalledWith(DEVICE);
+    localStorage.removeItem("billie.report.device");
+    await reportingIdentity();
+    expect(mocked.mock.lastCall![0]).toMatch(UUID);
+    expect(localStorage.getItem("billie.report.device")).toBeNull(); // never written to WebView storage any more
+    mocked.mockResolvedValueOnce({ deviceId: DEVICE, platform: "macos", reportable: false });
+    expect(await reportingIdentity()).toBeNull();
+    mocked.mockResolvedValueOnce(null);
+    expect(await reportingIdentity()).toBeNull();
+  });
+
   it("is automatic: there is no switch, and a signed-in app reports every database", async () => {
     const { ctx } = await setup();
     await reportAll(ctx);
@@ -64,7 +135,7 @@ describe("metadata reporting", () => {
       expect(Object.keys(call.body!.database as object)).toEqual([...REPORT_FIELDS]);
     }
     const body = calls[0].body!.database as Record<string, unknown>;
-    expect(body).toMatchObject({ name: "Personal Finance 2026", device_name: "Jyun's MacBook", statement_count: 1, transaction_count: 9, rule_count: 0, opened_at: "2026-11-09T14:25:00.000Z" });
+    expect(body).toMatchObject({ name: "Personal Finance 2026", device_name: "Jyun's MacBook", platform: "macos", synced_at: null, statement_count: 1, transaction_count: 9, rule_count: 0, opened_at: "2026-11-09T14:25:00.000Z" });
     expect(body.size_bytes).toBeGreaterThan(0);
     expect(body.period_start).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(body.modified_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
