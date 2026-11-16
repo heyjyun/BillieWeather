@@ -433,3 +433,67 @@ zh-TW:
         monthly: 最近 12 個月
         month: 月份
         empty: 這個時間段沒有收入或支出。
+      mode:
+        label: "介面模式"
+        default: "預設"
+        manual: "手動記帳"
+        default_help: "簡潔、以自動化為主的介面"
+        manual_help: "完整的手動記帳工作區"
+        manual_on: "手動記帳模式"
+        navigation: "手動記帳"
+        review_history: "核對與紀錄"
+        unsaved_warning: "此頁面有尚未儲存的變更。仍要切換模式並捨棄這些變更嗎？"
+        draft_restored: "已還原你未完成的輸入。"
+        draft_discard: "捨棄草稿"
+        groups:
+          record: "記帳"
+          organize: "帳戶與清單"
+          plan: "計畫與報表"
+          review: "核對與紀錄"
+          automatic: "自動功能"
+      manual:
+        nav: "手動記帳首頁"
+        eyebrow: "手動記帳模式"
+        title: "手動記帳"
+        intro: "手動記帳的所有工具，依工作分組。這些就是你在預設模式中看到的同一份紀錄。"
+        quick_add: "記一筆"
+        quick_add_body: "選擇類型開始記帳。"
+        recent: "最近手動紀錄"
+        recent_body: "你最近手動記下的紀錄。"
+        recent_empty: "還沒有手動紀錄"
+        same_records: "預設模式和手動記帳模式顯示同一份紀錄。切換模式不會複製、修改或刪除任何內容。"
+        book:
+          title: "帳本"
+          body: "這個帳本的本位幣是 %{currency}。帳戶、分類、商家、專案和標籤都屬於這個帳本。"
+          name: "帳本名稱"
+          saved: "帳本已儲存。"
+        tools:
+          entry: "支出、收入、轉帳、信用卡還款、退款或餘額調整。"
+          transactions: "搜尋，依帳戶、商家、專案或標籤篩選，批次編輯。"
+          categories: "兩層收入與支出分類，可排序、可隱藏。"
+          merchants: "你付款給誰，或誰付款給你。"
+          projects: "旅行、裝修、副業等專案。"
+          tags: "跨分類使用的自由標籤。"
+          reports: "依分類、帳戶、商家、專案、標籤或月份統計，含淨資產。"
+          activity: "每一次變更的紀錄，批次編輯可復原。"
+          merchants_title: "商家"
+          projects_title: "專案"
+          tags_title: "標籤"
+          recurring:
+            one: "%{count} 個啟用中的週期記帳"
+            other: "%{count} 個啟用中的週期記帳"
+          accounts:
+            one: "%{count} 個帳戶。資產、負債與借貸；輸入實際餘額即可對帳。"
+            other: "%{count} 個帳戶。資產、負債與借貸；輸入實際餘額即可對帳。"
+          budgets:
+            one: "%{count} 個預算，達到 90% 時提醒"
+            other: "%{count} 個預算，達到 90% 時提醒"
+          income_review:
+            one: "%{count} 筆收入待核對"
+            other: "%{count} 筆收入待核對"
+          duplicates:
+            one: "%{count} 筆可能重複"
+            other: "%{count} 筆可能重複"
+          trash:
+            one: "回收站中有 %{count} 筆"
+            other: "回收站中有 %{count} 筆"

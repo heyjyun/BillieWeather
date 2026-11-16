@@ -2,6 +2,7 @@
 import { formatMoney, FREQUENCIES, type Frequency, type TransactionKind } from "@billie/finance-core";
 import { allCategories } from "@billie/finance-core";
 import { useEffect, useState, type FormEvent } from "react";
+import { useDraftState } from "../hooks/useMode";
 import { Money, PageHeading } from "../components/common";
 import { parseAmount } from "../components/EntryForm";
 import { useFinance } from "../hooks/useFinance";
@@ -21,8 +22,9 @@ export function Planning() {
   const [due, setDue] = useState(0);
   const [monthStart, setMonthStart] = useState(1);
   const [status, setStatus] = useState("");
-  const [budgetForm, setBudgetForm] = useState({ period: "month" as "month" | "year", scope: "", amount: "", alert: "90" });
-  const [ruleForm, setRuleForm] = useState<null | { id?: number; name: string; kind: TransactionKind; amount: string; accountId: string; toAccountId: string; category: string; frequency: Frequency; interval: string; startOn: string; endOn: string; autoPost: boolean }>(null);
+  // Unsaved budget and schedule forms are drafts, kept across a mode switch.
+  const [budgetForm, setBudgetForm] = useDraftState("planning-page", "budget", { period: "month" as "month" | "year", scope: "", amount: "", alert: "90" });
+  const [ruleForm, setRuleForm] = useDraftState<null | { id?: number; name: string; kind: TransactionKind; amount: string; accountId: string; toAccountId: string; category: string; frequency: Frequency; interval: string; startOn: string; endOn: string; autoPost: boolean }>("planning-page", "schedule", null);
   const live = accounts.filter((a) => !a.archived && !a.unassigned);
   const categories = allCategories(customCategories).filter((c) => c !== "Transfers");
 

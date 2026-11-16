@@ -94,6 +94,8 @@ export const ledgerZhCN: LedgerMessages = {
     reasons: { rule: "与你记住的商家匹配", keywords: "与常见商家词匹配", ai: "由 AI 建议", opposite: "3 天内在你的两个账户中有相同金额的支出和收入", refund_words: "同一商家，消费之后有钱退回", same_row: "账户、日期、金额和文字都相同", cadence: "同一商家、同样金额，按固定间隔出现", merchant_words: "已去掉银行代码和数字", account_type: "信用卡上的入账，或含有退款字样" },
     autoRules: "同时记住每个已接受的分类对应的商家", recurringCreate: "创建周期记账",
   },
+  mode: { label: "界面模式", default: "默认", manual: "手动记账", defaultHelp: "简洁、以自动化为主的界面", manualHelp: "完整的手动记账工作区", manualOn: "手动记账模式", draftRestored: "已恢复你未完成的输入。", draftDiscard: "放弃草稿", groups: { record: "记账", organize: "账户与列表", plan: "计划与报表", automatic: "自动功能" } },
+  manual: { nav: "手动记账首页", eyebrow: "手动记账模式", title: "手动记账", intro: "手动记账的全部工具，按任务分组。这些就是你在默认模式中看到的同一份记录。", quickAdd: "记一笔", quickAddBody: "选择类型开始记账。", recent: "最近手动记录", recentEmpty: "还没有手动记录。", sameRecords: "默认模式和手动记账模式显示同一份记录。切换模式不会复制、修改或删除任何内容。", tools: { entry: "支出、收入、转账、信用卡还款、退款或余额调整。", transactions: "搜索，按类型、账户、商家、项目或标签筛选；编辑、复制、批量编辑。", accounts: "账户：{count} 个。资产、负债与借贷；填写实际余额即可对账。", categories: "两级收入与支出分类，可排序、隐藏、合并。", lists: "商家、项目和标签：新建、重命名、合并、归档。", planning: "带提醒的预算，以及可入账、跳过或暂停的周期记账。", reports: "按分类、账户、商家、项目、标签或月份统计，含净资产走势。", reviewTitle: "核对与回收站", review: "待核对的收入、回收站，以及用 AI 整理。", bookTitle: "账本、备份与操作日志", book: "新建和重命名账本（数据库）、备份与恢复，查看每一次修改。" } },
 };
 
 export const ledgerZhTW: LedgerMessages = {
@@ -190,6 +192,8 @@ export const ledgerZhTW: LedgerMessages = {
     reasons: { rule: "符合你記住的商家", keywords: "符合常見的商家用字", ai: "由 AI 建議", opposite: "3 天內在你的兩個帳戶中有相同金額的支出和收入", refund_words: "同一商家，消費之後有錢退回", same_row: "帳戶、日期、金額和文字都相同", cadence: "同一商家、相同金額，按固定間隔出現", merchant_words: "已移除銀行代碼和數字", account_type: "信用卡上的入帳，或含有退款字樣" },
     autoRules: "同時記住每個已接受的分類對應的商家", recurringCreate: "建立週期記帳",
   },
+  mode: { label: "介面模式", default: "預設", manual: "手動記帳", defaultHelp: "簡潔、以自動化為主的介面", manualHelp: "完整的手動記帳工作區", manualOn: "手動記帳模式", draftRestored: "已還原你未完成的輸入。", draftDiscard: "捨棄草稿", groups: { record: "記帳", organize: "帳戶與清單", plan: "計畫與報表", automatic: "自動功能" } },
+  manual: { nav: "手動記帳首頁", eyebrow: "手動記帳模式", title: "手動記帳", intro: "手動記帳的所有工具，依工作分組。這些就是你在預設模式中看到的同一份紀錄。", quickAdd: "記一筆", quickAddBody: "選擇類型開始記帳。", recent: "最近手動紀錄", recentEmpty: "還沒有手動紀錄。", sameRecords: "預設模式和手動記帳模式顯示同一份紀錄。切換模式不會複製、修改或刪除任何內容。", tools: { entry: "支出、收入、轉帳、信用卡還款、退款或餘額調整。", transactions: "搜尋，依類型、帳戶、商家、專案或標籤篩選；編輯、複製、批次編輯。", accounts: "帳戶：{count} 個。資產、負債與借貸；輸入實際餘額即可對帳。", categories: "兩層收入與支出分類，可排序、隱藏、合併。", lists: "商家、專案和標籤：新增、重新命名、合併、封存。", planning: "帶提醒的預算，以及可入帳、略過或暫停的週期記帳。", reports: "依分類、帳戶、商家、專案、標籤或月份統計，含淨資產走勢。", reviewTitle: "核對與回收站", review: "待核對的收入、回收站，以及用 AI 整理。", bookTitle: "帳本、備份與操作紀錄", book: "新增和重新命名帳本（資料庫）、備份與還原，查看每一次變更。" } },
 };
 
 export const ledgerJa: LedgerMessages = {
@@ -286,6 +290,8 @@ export const ledgerJa: LedgerMessages = {
     reasons: { rule: "覚えている店舗と一致", keywords: "よくある店舗名の語と一致", ai: "AI の提案", opposite: "3 日以内に、自分の 2 つの口座で同額の出金と入金", refund_words: "同じ店舗で、購入後にお金が戻っている", same_row: "口座、日付、金額、文字がすべて同じ", cadence: "同じ店舗・同じ金額が一定の間隔で発生", merchant_words: "銀行コードと数字を除去", account_type: "カードへの入金、または返金を示す語" },
     autoRules: "承認したカテゴリを、その店舗用に覚えておく", recurringCreate: "定期記帳を作成",
   },
+  mode: { label: "表示モード", default: "標準", manual: "手動記帳", defaultHelp: "シンプルで自動化中心の表示", manualHelp: "手動記帳のすべての機能", manualOn: "手動記帳モード", draftRestored: "入力途中の内容を復元しました。", draftDiscard: "下書きを破棄", groups: { record: "記帳", organize: "口座とリスト", plan: "計画とレポート", automatic: "自動ツール" } },
+  manual: { nav: "手動記帳ホーム", eyebrow: "手動記帳モード", title: "手動記帳", intro: "手で帳簿をつけるための機能を、作業ごとにまとめています。標準モードと同じ記録です。", quickAdd: "記帳する", quickAddBody: "種類を選んで始めましょう。", recent: "最近の手動記帳", recentEmpty: "まだ手動記帳はありません。", sameRecords: "標準モードと手動記帳モードは同じ記録を表示します。モードを切り替えても、記録がコピー・変更・削除されることはありません。", tools: { entry: "支出、収入、振替、カード返済、返金、残高調整。", transactions: "検索、種類・口座・取引先・プロジェクト・タグでの絞り込み、編集・複製・一括編集。", accounts: "口座: {count}。資産・負債・借入。実際の残高を入力して照合できます。", categories: "並べ替え・非表示・統合ができる 2 階層の収入・支出カテゴリ。", lists: "取引先・プロジェクト・タグの作成、名前変更、統合、アーカイブ。", planning: "警告つきの予算と、記帳・スキップ・一時停止できる定期記帳。", reports: "カテゴリ・口座・取引先・プロジェクト・タグ・月別、純資産の推移つき。", reviewTitle: "確認とごみ箱", review: "確認が必要な収入、ごみ箱、AI による整理。", bookTitle: "帳簿・バックアップ・履歴", book: "帳簿（データベース）の作成と名前変更、バックアップと復元、すべての変更履歴。" } },
 };
 
 export const ledgerKo: LedgerMessages = {
@@ -382,6 +388,8 @@ export const ledgerKo: LedgerMessages = {
     reasons: { rule: "기억해 둔 거래처와 일치", keywords: "흔한 거래처 단어와 일치", ai: "AI가 제안", opposite: "3일 이내에 내 두 계좌에서 같은 금액이 나가고 들어옴", refund_words: "같은 거래처, 구매 후 돈이 돌아옴", same_row: "계좌, 날짜, 금액, 문구가 모두 같음", cadence: "같은 거래처와 금액이 일정한 간격으로 발생", merchant_words: "은행 코드와 숫자를 제거함", account_type: "카드로 들어온 돈이거나 환불 단어 포함" },
     autoRules: "승인한 카테고리를 해당 거래처에 대해 기억하기", recurringCreate: "반복 거래 만들기",
   },
+  mode: { label: "화면 모드", default: "기본", manual: "수동 기록", defaultHelp: "간단하고 자동화 중심의 화면", manualHelp: "수동 가계부의 모든 기능", manualOn: "수동 기록 모드", draftRestored: "작성 중이던 내용을 복원했습니다.", draftDiscard: "임시 저장 삭제", groups: { record: "기록", organize: "계좌 및 목록", plan: "계획 및 보고서", automatic: "자동 도구" } },
+  manual: { nav: "수동 기록 홈", eyebrow: "수동 기록 모드", title: "수동 가계부", intro: "직접 가계부를 쓰는 데 필요한 모든 도구를 작업별로 모았습니다. 기본 모드와 같은 기록입니다.", quickAdd: "기록하기", quickAddBody: "유형을 골라 시작하세요.", recent: "최근 수동 기록", recentEmpty: "아직 수동 기록이 없습니다.", sameRecords: "기본 모드와 수동 기록 모드는 같은 기록을 보여 줍니다. 모드를 바꿔도 기록이 복사·변경·삭제되지 않습니다.", tools: { entry: "지출, 수입, 이체, 카드 대금 결제, 환불 또는 잔액 조정.", transactions: "검색, 유형·계좌·가맹점·프로젝트·태그로 필터, 편집·복사·일괄 편집.", accounts: "계좌: {count}개. 자산, 부채, 대출. 실제 잔액을 입력해 맞출 수 있습니다.", categories: "정렬·숨기기·병합할 수 있는 2단계 수입·지출 카테고리.", lists: "가맹점, 프로젝트, 태그: 만들기, 이름 바꾸기, 병합, 보관.", planning: "경고가 있는 예산과, 기록·건너뛰기·일시 중지할 수 있는 반복 기록.", reports: "카테고리·계좌·가맹점·프로젝트·태그·월별, 순자산 추이 포함.", reviewTitle: "검토 및 휴지통", review: "확인할 수입, 휴지통, AI 정리.", bookTitle: "가계부, 백업 및 기록", book: "가계부(데이터베이스) 만들기와 이름 바꾸기, 백업과 복원, 모든 변경 기록." } },
 };
 
 export const ledgerEs: LedgerMessages = {
@@ -478,4 +486,6 @@ export const ledgerEs: LedgerMessages = {
     reasons: { rule: "coincide con tus comercios recordados", keywords: "coincide con palabras comunes de comercios", ai: "sugerido por AI", opposite: "mismo importe de salida y entrada en 3 días entre dos de tus cuentas", refund_words: "mismo comercio, dinero devuelto tras la compra", same_row: "misma cuenta, fecha, importe y texto", cadence: "mismo comercio e importe a intervalos regulares", merchant_words: "códigos bancarios y números eliminados", account_type: "dinero que entra en una tarjeta o una palabra de reembolso" },
     autoRules: "Recordar también cada categoría aceptada para su comercio", recurringCreate: "Crear recurrente",
   },
+  mode: { label: "Modo de la interfaz", default: "Predeterminado", manual: "Manual", defaultHelp: "Vista sencilla y automática", manualHelp: "El espacio completo de contabilidad manual", manualOn: "Modo manual", draftRestored: "Se recuperó lo que dejaste sin terminar.", draftDiscard: "Descartar borrador", groups: { record: "Registrar", organize: "Cuentas y listas", plan: "Planificar e informar", automatic: "Herramientas automáticas" } },
+  manual: { nav: "Inicio manual", eyebrow: "MODO MANUAL", title: "Contabilidad manual", intro: "Todas las herramientas para llevar tus cuentas a mano, agrupadas por tarea. Son los mismos registros que ves en el modo predeterminado.", quickAdd: "Registrar un movimiento", quickAddBody: "Elige un tipo para empezar.", recent: "Movimientos manuales recientes", recentEmpty: "Aún no hay movimientos manuales.", sameRecords: "El modo predeterminado y el modo manual muestran los mismos registros. Cambiar de modo nunca copia, modifica ni borra nada.", tools: { entry: "Gasto, ingreso, transferencia, pago de tarjeta, reembolso o ajuste de saldo.", transactions: "Busca y filtra por tipo, cuenta, comercio, proyecto o etiqueta; edita, copia y edita en lote.", accounts: "Cuentas: {count}. Activos, pasivos y deudas; fija el saldo real para conciliar.", categories: "Categorías de ingresos y gastos en dos niveles que puedes ordenar, ocultar y combinar.", lists: "Comercios, proyectos y etiquetas: crea, renombra, combina y archiva.", planning: "Presupuestos con aviso y movimientos periódicos que puedes registrar, omitir o pausar.", reports: "Por categoría, cuenta, comercio, proyecto, etiqueta o mes, con la evolución del patrimonio neto.", reviewTitle: "Revisión y papelera", review: "Ingresos por revisar, la papelera y la organización con IA.", bookTitle: "Libros, copias y actividad", book: "Crea y renombra libros (bases de datos), haz y restaura copias, y consulta cada cambio." } },
 };

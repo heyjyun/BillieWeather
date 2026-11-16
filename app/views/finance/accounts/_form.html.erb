@@ -1,4 +1,4 @@
-<%= form_with model: account, url: account.persisted? ? finance_account_path(account) : finance_accounts_path, scope: :finance_bank_account, data: {turbo: false}, class: "bw-form" do |form| %>
+<%= form_with model: account, url: account.persisted? ? finance_account_path(account) : finance_accounts_path, scope: :finance_bank_account, data: {turbo: false, draft_key: account.persisted? ? "account-#{account.id}" : "account-new"}, class: "bw-form" do |form| %>
   <% if account.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= account.errors.full_messages.to_sentence %></div><% end %>
   <div class="bw-form-grid">
     <div class="bw-field"><%= form.label :custom_name, t("billie.ledger.accounts.name") %><%= form.text_field :custom_name, value: account.custom_name || (account.manual? ? account.name : nil), maxlength: 60, required: account.manual?, placeholder: account.manual? ? t("billie.ledger.accounts.name_placeholder") : account.auto_name %></div>

@@ -6,10 +6,13 @@ import { Empty, Money, PageHeading, PeriodPicker } from "../components/common";
 import { useFinance } from "../hooks/useFinance";
 import { useI18n } from "../i18n";
 import { saveFile } from "../services/platform";
+import { useMode } from "../hooks/useMode";
 
 export function Reports() {
   const { m, t } = useI18n();
   const { transactions, statements, currency, store, accounts } = useFinance();
+  // Reports by dimension and net worth over time are part of Manual Mode; exports stay in both.
+  const { manual } = useMode();
   const [dimension, setDimension] = useState<"category" | "account" | "merchant" | "project" | "tag" | "month">("category");
   const [report, setReport] = useState<Awaited<ReturnType<typeof store.ledger.report>> | null>(null);
   const [history, setHistory] = useState<Awaited<ReturnType<typeof store.ledger.netWorthHistory>>>([]);
@@ -20,8 +23,8 @@ export function Reports() {
   const rows = useMemo(() => reportRows(transactions, statements, period), [transactions, statements, period]);
   const x = m.reports;
   const r = m.ledger.reports;
-  useEffect(() => { void store.ledger.report(dimension, { from: period.startDate, to: period.endDate }).then(setReport); }, [store, dimension, period, transactions]);
-  useEffect(() => { void store.ledger.netWorthHistory(12).then(setHistory); }, [store, transactions, accounts]);
+  useEffect(() => { if (manual) void store.ledger.report(dimension, { from: period.startDate, to: period.endDate }).then(setReport); }, [manual, store, dimension, period, transactions]);
+  useEffect(() => { if (manual) void store.ledger.netWorthHistory(12).then(setHistory); }, [manual, store, transactions, accounts]);
 
   // CSV keeps canonical English categories (same as the Rails export); Excel is translated.
   async function exportCsv() {
@@ -53,7 +56,7 @@ export function Reports() {
         </section>
       </div>
       <p className="bw-caption">{t("reports.count", { count: rows.length })}</p>
-      {report && (
+      {manual && report && (
         <section className="bw-panel bw-section-gap" aria-labelledby="dimension-heading">
           <h2 id="dimension-heading">{r.by}: {r.dimensions[dimension]}</h2>
           <div className="bw-segmented" role="group" aria-label={r.by}>
@@ -83,7 +86,7 @@ export function Reports() {
           </div>
         </section>
       )}
-      {accounts.length > 0 && history.length > 0 && (
+      {manual && accounts.length > 0 && history.length > 0 && (
         <section className="bw-panel bw-section-gap" aria-labelledby="networth-heading">
           <h2 id="networth-heading">{r.netWorthTitle}</h2>
           <div className="bw-table-scroll">

@@ -4,11 +4,17 @@ module Finance
     before_action :authenticate_user!
     before_action :require_usage_region, unless: -> { controller_name == "settings" }
     before_action :load_finance_profile
-    helper_method :finance_today
+    helper_method :finance_today, :manual_mode?
     after_action :prevent_financial_page_caching
     after_action :preserve_flash_for_turbo_reload
 
     private
+
+    # Manual Mode (see Finance::ManualWorkspace). Off until the person turns it on, so the first visit
+    # always shows the simple, automation-first interface.
+    def manual_mode?
+      session[ManualWorkspace::SESSION_KEY] == "manual"
+    end
 
     def ledger
       @ledger ||= Ledger.new(current_user)
@@ -27,6 +33,16 @@ module Finance
 
     def audit_values(record, fields)
       record.attributes.slice(*fields).transform_values { |value| value.is_a?(BigDecimal) ? value.to_s("F") : (value.respond_to?(:iso8601) ? value.iso8601 : value) }
+    end
+
+    # Counts for the manual workspace's review lists (income to check, possible duplicates, trash).
+    def ledger_review_counts
+      income = current_user.finance_transactions.live.where(kind: "income").where.not("jsonb_exists(user_locked_fields, 'kind')")
+        .includes(:bank_account, statement: :bank_account).limit(2000).count do |entry|
+          Domain.suspect_income(kind: entry.kind, amount: entry.amount, account_type: entry.account_type, description: entry.original_description)
+        end
+      duplicates = current_user.finance_transaction_links.suggested.where(link_type: "duplicate_of").joins(:from_transaction).where(finance_transactions: {deleted_at: nil}).count
+      {income: income, duplicates: duplicates, trash: current_user.finance_transactions.trashed.count}
     end
 
     # Today's date where the person lives, so "this month" means the same thing on every page.

@@ -1,5 +1,6 @@
 <% content_for :title, t("billie.ledger.activity.title") %>
 <div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.activity.eyebrow") %></span><h1><%= t("billie.ledger.activity.title") %></h1><p><%= t("billie.ledger.activity.intro") %></p></div><%= link_to t("billie.finance.ui.back_to_transactions"), finance_transactions_path, class: "bw-text-link" %></div>
+<%= render "finance/manual/review_tabs" %>
 <section class="bw-panel bw-panel-flush">
   <%= form_with url: finance_activity_path, method: :get, data: {turbo: false}, class: "bw-filter-bar" do |form| %>
     <div><%= form.label :action_type, t("billie.ledger.activity.action"), class: "bw-sr-only" %><%= form.select :action_type, [[t("billie.ledger.activity.all_actions"), ""]] + Finance::Domain::AUDIT_ACTIONS.map { |a| [t("billie.ledger.actions.#{a}"), a] }, selected: @filters["action_type"] %></div>

@@ -96,3 +96,15 @@
 | P0-4: immutable original bank description | Implemented and tested (web model and local trigger) |
 | P0-5: backup file (optionally encrypted) plus verified restore into a new slot; automatic pre-migration snapshots (Rust) | Implemented and tested locally (Rust unit tests; sql.js round trip). The web relies on Neon branches (not run). |
 | "Organize my finances with AI": analyze, preview, approve, apply, undo | Implemented and tested locally. Web: `finance_organize_runs` table and batch undo in the activity log only; **no web analysis UI yet**. |
+
+## Manual Mode (progressive disclosure)
+
+Everything in this matrix that comes from Suishouji lives in **Manual Mode** (手动记账). Default Mode keeps the original, automation-first interface.
+
+- **Switch:** "Default | Manual" in the top bar on every finance page (web) and at the top of the main area (local). Each new session and each app launch starts in Default Mode.
+- **Same data:** the mode is a view preference only (web: `session[:billie_mode]`; local: `ModeProvider` state). Both modes use the same tables, `Finance::Ledger` and the same local store, so switching never copies, changes or deletes a record.
+- **Manual-only pages:** web `Finance::ManualWorkspace::CONTROLLERS` (manual home, accounts, entries, review lists, trash, activity, lists, budgets, recurring, ledger reports). Local `MANUAL_PAGES` (manual home, accounts, planning, lists). Opening one directly turns Manual Mode on. Leaving Manual Mode from one of them returns to the dashboard.
+- **Shared pages, extra controls in Manual Mode:** Transactions (new entry, extra kinds and dimension filters, batch edit, trash, review; local also edit, copy and delete per row), transaction edit (merchant, project, tags, note), Categories (two-level tree), local Reports (by dimension, net worth), local Data (activity log). Backup and "Organize with AI" stay in both modes.
+- **Unfinished input:** web forms marked `data-draft-key` keep a sessionStorage draft that is restored with a "Discard draft" option. Without storage, the switch warns instead. Local forms use `useDraftState`.
+- **Tests:** `test/integration/finance_manual_mode_test.rb`, `clients/universal/test/manualMode.test.tsx`.
+- **Not in Manual Mode yet:** transaction splits and a loan/debt centre with counterparties. Neither engine has them, and the Suishouji session did not verify them.

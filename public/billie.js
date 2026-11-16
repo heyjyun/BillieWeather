@@ -309,7 +309,96 @@
     input.addEventListener("change", showFiles);
   }
 
+  // Unfinished input survives switching between Default Mode and Manual Mode (or any other
+  // navigation): forms marked data-draft-key keep a draft in sessionStorage (this tab only, cleared on
+  // submit) and restore it on return, with a way to discard it. Without storage, the mode switch
+  // warns before leaving a changed form instead.
+  var draftStore = (function () {
+    try { var probe = "billie.draft.probe"; window.sessionStorage.setItem(probe, "1"); window.sessionStorage.removeItem(probe); return window.sessionStorage; } catch (error) { return null; }
+  })();
+
+  function draftFields(form) {
+    return Array.prototype.filter.call(form.elements, function (el) {
+      return el.name && !el.disabled && el.name !== "authenticity_token" && ["hidden", "submit", "button", "file", "reset", "password"].indexOf(el.type) === -1;
+    });
+  }
+
+  function draftKeyOf(el) { return el.type === "checkbox" || el.type === "radio" ? el.name + "|" + el.value : el.name; }
+
+  function draftSnapshot(form) {
+    var data = {};
+    draftFields(form).forEach(function (el) { data[draftKeyOf(el)] = el.type === "checkbox" || el.type === "radio" ? el.checked : el.value; });
+    return data;
+  }
+
+  function draftApply(form, data) {
+    draftFields(form).forEach(function (el) {
+      var key = draftKeyOf(el);
+      if (!Object.prototype.hasOwnProperty.call(data, key)) return;
+      if (el.type === "checkbox" || el.type === "radio") el.checked = Boolean(data[key]);
+      else if (el.tagName === "SELECT") { if (Array.prototype.some.call(el.options, function (o) { return o.value === data[key]; })) el.value = data[key]; }
+      else el.value = data[key];
+    });
+  }
+
+  function setupDraft(form) {
+    if (form.dataset.draftReady) return;
+    form.dataset.draftReady = "1";
+    var key = "billie.draft." + location.pathname + "#" + form.dataset.draftKey;
+    var initial = draftSnapshot(form);
+    var initialJson = JSON.stringify(initial);
+    var labels = document.body.dataset;
+
+    function save() {
+      var now = JSON.stringify(draftSnapshot(form));
+      var dirty = now !== initialJson;
+      if (dirty) form.dataset.dirty = "1"; else delete form.dataset.dirty;
+      if (!draftStore) return;
+      if (dirty) draftStore.setItem(key, now); else draftStore.removeItem(key);
+    }
+
+    if (draftStore) {
+      var saved = null;
+      try { saved = JSON.parse(draftStore.getItem(key) || "null"); } catch (error) { saved = null; }
+      if (saved && JSON.stringify(saved) !== initialJson) {
+        draftApply(form, saved);
+        form.dataset.dirty = "1";
+        var note = document.createElement("p");
+        note.className = "bw-draft-note";
+        note.setAttribute("role", "status");
+        note.dataset.draftNote = "";
+        note.appendChild(document.createTextNode((labels.draftRestored || "Your unfinished input was restored.") + " "));
+        var discard = document.createElement("button");
+        discard.type = "button";
+        discard.className = "bw-link-button";
+        discard.textContent = labels.draftDiscard || "Discard";
+        discard.addEventListener("click", function () {
+          draftApply(form, initial);
+          draftStore.removeItem(key);
+          delete form.dataset.dirty;
+          note.remove();
+        });
+        note.appendChild(discard);
+        form.insertBefore(note, form.firstChild);
+      }
+    }
+    form.addEventListener("input", save);
+    form.addEventListener("change", save);
+    form.addEventListener("submit", function () { if (draftStore) draftStore.removeItem(key); delete form.dataset.dirty; });
+  }
+
+  function setupModeSwitch(form) {
+    if (form.dataset.modeSwitchReady) return;
+    form.dataset.modeSwitchReady = "1";
+    form.addEventListener("submit", function (event) {
+      if (draftStore || !document.querySelector("form[data-draft-key][data-dirty]")) return;
+      if (!window.confirm(form.dataset.unsavedWarning)) event.preventDefault();
+    });
+  }
+
   function init() {
+    document.querySelectorAll("form[data-draft-key]").forEach(setupDraft);
+    document.querySelectorAll("form[data-mode-switch]").forEach(setupModeSwitch);
     document.querySelectorAll("[data-dropzone]").forEach(setupDropzone);
     document.querySelectorAll("[data-theme-menu]").forEach(setupThemeMenu);
     document.querySelectorAll("[data-sidebar-toggle]").forEach(setupSidebarToggle);

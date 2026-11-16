@@ -433,3 +433,67 @@ es:
         monthly: Últimos 12 meses
         month: Mes
         empty: No hay ingresos ni gastos en este periodo.
+      mode:
+        label: "Modo de la interfaz"
+        default: "Predeterminado"
+        manual: "Manual"
+        default_help: "Vista sencilla y automática"
+        manual_help: "El espacio completo de contabilidad manual"
+        manual_on: "Modo manual"
+        navigation: "Contabilidad manual"
+        review_history: "Revisión e historial"
+        unsaved_warning: "Esta página tiene cambios sin guardar. ¿Cambiar de modo y descartarlos?"
+        draft_restored: "Se recuperó lo que dejaste sin terminar."
+        draft_discard: "Descartar borrador"
+        groups:
+          record: "Registrar"
+          organize: "Cuentas y listas"
+          plan: "Planificar e informar"
+          review: "Revisión e historial"
+          automatic: "Herramientas automáticas"
+      manual:
+        nav: "Inicio manual"
+        eyebrow: "MODO MANUAL"
+        title: "Contabilidad manual"
+        intro: "Todas las herramientas para llevar tus cuentas a mano, agrupadas por tarea. Son los mismos registros que ves en el modo predeterminado."
+        quick_add: "Registrar un movimiento"
+        quick_add_body: "Elige un tipo para empezar."
+        recent: "Movimientos manuales recientes"
+        recent_body: "Los últimos movimientos que registraste a mano."
+        recent_empty: "Aún no hay movimientos manuales"
+        same_records: "El modo predeterminado y el modo manual muestran los mismos registros. Cambiar de modo nunca copia, modifica ni borra nada."
+        book:
+          title: "Libro"
+          body: "La moneda de tu libro es %{currency}. Las cuentas, categorías, comercios, proyectos y etiquetas pertenecen a este libro."
+          name: "Nombre del libro"
+          saved: "Libro guardado."
+        tools:
+          entry: "Gasto, ingreso, transferencia, pago de tarjeta, reembolso o ajuste de saldo."
+          transactions: "Busca, filtra por cuenta, comercio, proyecto o etiqueta, y edita en lote."
+          categories: "Categorías de ingresos y gastos en dos niveles, que puedes ordenar y ocultar."
+          merchants: "A quién pagaste o quién te pagó."
+          projects: "Viajes, reformas, trabajos extra y otros proyectos."
+          tags: "Etiquetas libres que sirven en cualquier categoría."
+          reports: "Por categoría, cuenta, comercio, proyecto, etiqueta o mes, con patrimonio neto."
+          activity: "Cada cambio, con opción de deshacer las ediciones en lote."
+          merchants_title: "Comercios"
+          projects_title: "Proyectos"
+          tags_title: "Etiquetas"
+          recurring:
+            one: "%{count} programación activa"
+            other: "%{count} programaciones activas"
+          accounts:
+            one: "%{count} cuenta. Activos, pasivos y deudas; fija el saldo real para conciliar."
+            other: "%{count} cuentas. Activos, pasivos y deudas; fija el saldo real para conciliar."
+          budgets:
+            one: "%{count} presupuesto, con aviso al 90%"
+            other: "%{count} presupuestos, con aviso al 90%"
+          income_review:
+            one: "%{count} ingreso por revisar"
+            other: "%{count} ingresos por revisar"
+          duplicates:
+            one: "%{count} posible duplicado"
+            other: "%{count} posibles duplicados"
+          trash:
+            one: "%{count} movimiento en la papelera"
+            other: "%{count} movimientos en la papelera"

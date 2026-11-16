@@ -1,0 +1,9 @@
+<%# Manual Mode: one place for review lists and history (contextual tabs on each of these pages). %>
+<nav class="bw-period-presets bw-section-tabs" aria-label="<%= t("billie.ledger.mode.review_history") %>" id="review-tabs">
+  <% [[t("billie.ledger.activity.title"), finance_activity_path, controller_name == "audit_events"],
+      [t("billie.ledger.review.income_title"), finance_review_income_path, controller_name == "reviews" && action_name == "income"],
+      [t("billie.ledger.review.duplicates_title"), finance_review_duplicates_path, controller_name == "reviews" && action_name == "duplicates"],
+      [t("billie.ledger.trash.title"), finance_trash_path, controller_name == "entries" && action_name == "trash"]].each do |label, path, active| %>
+    <%= link_to label, path, class: "bw-period-preset #{'is-active' if active}", "aria-current": (active ? "page" : nil) %>
+  <% end %>
+</nav>

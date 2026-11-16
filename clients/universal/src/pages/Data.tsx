@@ -5,6 +5,7 @@
 // manage statements one at a time in the database in use and in the cloud.
 import { BackupPanel } from "../components/BackupPanel";
 import { ActivityLog } from "../components/ActivityLog";
+import { useMode } from "../hooks/useMode";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { PageHeading } from "../components/common";
 import { useAccount } from "../hooks/useAccount";
@@ -55,6 +56,7 @@ export function formatBytes(bytes: number, locale: string): string {
 const endpointOf = (target: Target): Endpoint => (target === "cloud" ? { kind: "cloud" } : { kind: "local", id: target });
 
 export function Data({ focus = null }: { focus?: string | null } = {}) {
+  const { manual } = useMode(); // the activity log is part of Manual Mode; backup stays in both
   const { m, t, locale } = useI18n();
   const { getToken, expire, account } = useAccount();
   const email = account?.email ?? "";
@@ -472,7 +474,7 @@ export function Data({ focus = null }: { focus?: string | null } = {}) {
       </section>
 
       <BackupPanel />
-      <ActivityLog />
+      {manual && <ActivityLog />}
 
       <section className="bw-panel" aria-labelledby="list-device">
         <h2 id="list-device">{t("data.statementsIn", { name: active?.name ?? "" })}</h2>

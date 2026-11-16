@@ -4,6 +4,7 @@
 import { ACCOUNT_TYPES, formatMoney, isLiability, type AccountType } from "@billie/finance-core";
 import { CURRENCIES } from "@billie/shared-types";
 import { useState, type FormEvent } from "react";
+import { useDraftState, useMode } from "../hooks/useMode";
 import { Empty, Money, PageHeading } from "../components/common";
 import { parseAmount } from "../components/EntryForm";
 import { useFinance } from "../hooks/useFinance";
@@ -12,21 +13,44 @@ import { LedgerError, type Account, type AccountInput } from "../services/ledger
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-function AccountForm({ account, currency, onDone, onCancel }: { account: Account | null; currency: string; onDone: (message: string) => void; onCancel: () => void }) {
+type AccountFormProps = { account: Account | null; currency: string; onDone: (message: string) => void; onCancel: () => void };
+
+// The account form's fields are a draft (see useMode), kept across a switch to Default Mode and back.
+function AccountForm(props: AccountFormProps) {
+  const { m } = useI18n();
+  const { hasDraft, clearDraft } = useMode();
+  const draftKey = `account-${props.account?.id ?? "new"}`;
+  const [generation, setGeneration] = useState(0);
+  const [restored, setRestored] = useState(() => hasDraft(draftKey));
+  const finish = (done: () => void) => { clearDraft(draftKey); done(); };
+  return (
+    <>
+      {restored && (
+        <p className="bw-message bw-draft-note" role="status">
+          {m.ledger.mode.draftRestored}{" "}
+          <button type="button" className="bw-link-button" onClick={() => { clearDraft(draftKey); setRestored(false); setGeneration((g) => g + 1); }}>{m.ledger.mode.draftDiscard}</button>
+        </p>
+      )}
+      <AccountFormFields key={generation} {...props} draftKey={draftKey} onDone={(message) => finish(() => props.onDone(message))} onCancel={() => finish(props.onCancel)} />
+    </>
+  );
+}
+
+function AccountFormFields({ account, currency, onDone, onCancel, draftKey }: AccountFormProps & { draftKey: string }) {
   const { m } = useI18n();
   const x = m.ledger.accounts;
   const { store, refresh } = useFinance();
-  const [name, setName] = useState(account?.name ?? "");
-  const [type, setType] = useState<AccountType>(account?.type ?? "checking");
-  const [institution, setInstitution] = useState(account?.institution ?? "");
-  const [last4, setLast4] = useState(account?.last4 ?? "");
-  const [opening, setOpening] = useState(account ? (account.openingBalanceCents / 100).toFixed(2) : "0.00");
-  const [openingOn, setOpeningOn] = useState(account?.openingBalanceOn ?? "");
-  const [limit, setLimit] = useState(account?.creditLimitCents !== null && account?.creditLimitCents !== undefined ? (account.creditLimitCents / 100).toFixed(2) : "");
-  const [statementDay, setStatementDay] = useState(account?.statementDay ? String(account.statementDay) : "");
-  const [dueDay, setDueDay] = useState(account?.dueDay ? String(account.dueDay) : "");
-  const [include, setInclude] = useState(account?.includeInNetWorth ?? true);
-  const [note, setNote] = useState(account?.note ?? "");
+  const [name, setName] = useDraftState(draftKey, "name", account?.name ?? "");
+  const [type, setType] = useDraftState<AccountType>(draftKey, "type", account?.type ?? "checking");
+  const [institution, setInstitution] = useDraftState(draftKey, "institution", account?.institution ?? "");
+  const [last4, setLast4] = useDraftState(draftKey, "last4", account?.last4 ?? "");
+  const [opening, setOpening] = useDraftState(draftKey, "opening", account ? (account.openingBalanceCents / 100).toFixed(2) : "0.00");
+  const [openingOn, setOpeningOn] = useDraftState(draftKey, "openingOn", account?.openingBalanceOn ?? "");
+  const [limit, setLimit] = useDraftState(draftKey, "limit", account?.creditLimitCents !== null && account?.creditLimitCents !== undefined ? (account.creditLimitCents / 100).toFixed(2) : "");
+  const [statementDay, setStatementDay] = useDraftState(draftKey, "statementDay", account?.statementDay ? String(account.statementDay) : "");
+  const [dueDay, setDueDay] = useDraftState(draftKey, "dueDay", account?.dueDay ? String(account.dueDay) : "");
+  const [include, setInclude] = useDraftState(draftKey, "include", account?.includeInNetWorth ?? true);
+  const [note, setNote] = useDraftState(draftKey, "note", account?.note ?? "");
   const [error, setError] = useState("");
 
   async function submit(event: FormEvent) {
@@ -117,7 +141,8 @@ export function Accounts() {
   const { m } = useI18n();
   const x = m.ledger.accounts;
   const { store, accounts, currency, refresh } = useFinance();
-  const [editing, setEditing] = useState<Account | "new" | null>(null);
+  // Which form is open is part of the draft too, so it reopens after a mode switch.
+  const [editing, setEditing] = useDraftState<Account | "new" | null>("accounts-page", "editing", null);
   const [adjusting, setAdjusting] = useState<Account | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [status, setStatus] = useState("");

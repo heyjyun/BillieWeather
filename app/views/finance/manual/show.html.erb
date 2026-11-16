@@ -1,0 +1,68 @@
+<% content_for :title, t("billie.ledger.manual.title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.manual.eyebrow") %></span><h1><%= t("billie.ledger.manual.title") %></h1><p><%= t("billie.ledger.manual.intro") %></p></div></div>
+
+<section class="bw-panel" aria-labelledby="quick-add-heading" id="quick-add">
+  <div class="bw-panel-heading"><div><h2 id="quick-add-heading"><%= t("billie.ledger.manual.quick_add") %></h2><p><%= t("billie.ledger.manual.quick_add_body") %></p></div></div>
+  <div class="bw-quick-add">
+    <% Finance::Ledger::MANUAL_KINDS.each do |kind| %>
+      <%= link_to new_finance_entry_path(kind: kind), class: "bw-button #{kind == 'expense' ? 'bw-button-dark' : 'bw-button-outline'}", id: "quick-add-#{kind}" do %><%= finance_icon "transactions", size: 16 %> <%= t("billie.ledger.kinds.#{kind}") %><% end %>
+    <% end %>
+  </div>
+</section>
+
+<div class="bw-metrics bw-section-gap" id="manual-summary">
+  <div class="bw-metric"><span><%= t("billie.ledger.accounts.assets") %></span><strong><%= finance_money(@net_worth[:assets], @profile.currency) %></strong></div>
+  <div class="bw-metric"><span><%= t("billie.ledger.accounts.liabilities") %></span><strong><%= finance_money(@net_worth[:liabilities], @profile.currency) %></strong></div>
+  <div class="bw-metric bw-metric-mint"><span><%= t("billie.ledger.accounts.net_worth") %></span><strong><%= finance_money(@net_worth[:net_worth], @profile.currency) %></strong></div>
+</div>
+
+<% groups = [
+  [:record, [
+    [t("billie.ledger.entries.add"), new_finance_entry_path, "transactions", t("billie.ledger.manual.tools.entry")],
+    [t("billie.layout.transactions"), finance_transactions_path, "transactions", t("billie.ledger.manual.tools.transactions")],
+    [t("billie.ledger.recurring.title"), finance_recurring_rules_path, "forecast", t("billie.ledger.manual.tools.recurring", count: @recurring_count)]]],
+  [:organize, [
+    [t("billie.ledger.nav.accounts"), finance_accounts_path, "wallet", t("billie.ledger.manual.tools.accounts", count: @account_count)],
+    [t("billie.categories.nav"), finance_categories_path, "tag", t("billie.ledger.manual.tools.categories")],
+    [t("billie.ledger.manual.tools.merchants_title"), finance_dimension_index_path("merchants"), "users", t("billie.ledger.manual.tools.merchants")],
+    [t("billie.ledger.manual.tools.projects_title"), finance_dimension_index_path("projects"), "users", t("billie.ledger.manual.tools.projects")],
+    [t("billie.ledger.manual.tools.tags_title"), finance_dimension_index_path("tags"), "tag", t("billie.ledger.manual.tools.tags")]]],
+  [:plan, [
+    [t("billie.ledger.nav.budgets"), finance_budgets_path, "check", t("billie.ledger.manual.tools.budgets", count: @budget_count)],
+    [t("billie.ledger.nav.reports"), finance_ledger_report_path, "file", t("billie.ledger.manual.tools.reports")]]],
+  [:review, [
+    [t("billie.ledger.review.income_title"), finance_review_income_path, "insights", t("billie.ledger.manual.tools.income_review", count: @review_counts[:income])],
+    [t("billie.ledger.review.duplicates_title"), finance_review_duplicates_path, "insights", t("billie.ledger.manual.tools.duplicates", count: @review_counts[:duplicates])],
+    [t("billie.ledger.trash.title"), finance_trash_path, "file", t("billie.ledger.manual.tools.trash", count: @review_counts[:trash])],
+    [t("billie.ledger.activity.title"), finance_activity_path, "insights", t("billie.ledger.manual.tools.activity")]]]
+] %>
+<% groups.each do |group, tools| %>
+  <section class="bw-section-gap" aria-labelledby="tools-<%= group %>" id="manual-group-<%= group %>">
+    <h2 class="bw-tool-group-title" id="tools-<%= group %>"><%= t("billie.ledger.mode.groups.#{group}") %></h2>
+    <div class="bw-tool-grid">
+      <% tools.each do |label, path, icon, body| %>
+        <%= link_to path, class: "bw-tool-card" do %><span class="bw-tool-icon"><%= finance_icon icon, size: 20 %></span><span><strong><%= label %></strong><small><%= body %></small></span><% end %>
+      <% end %>
+    </div>
+  </section>
+<% end %>
+
+<div class="bw-two-column bw-section-gap">
+  <section class="bw-panel bw-panel-flush" aria-labelledby="recent-manual-heading" id="recent-manual">
+    <div class="bw-panel-heading"><div><h2 id="recent-manual-heading"><%= t("billie.ledger.manual.recent") %></h2><p><%= t("billie.ledger.manual.recent_body") %></p></div></div>
+    <% if @recent.any? %>
+      <%= render "finance/shared/transactions_table", transactions: @recent, currency: @profile.currency %>
+    <% else %>
+      <div class="bw-empty-state"><h3><%= t("billie.ledger.manual.recent_empty") %></h3><%= link_to t("billie.ledger.entries.add"), new_finance_entry_path, class: "bw-button bw-button-dark" %></div>
+    <% end %>
+  </section>
+  <section class="bw-panel" aria-labelledby="book-heading" id="book-settings">
+    <h2 id="book-heading"><%= t("billie.ledger.manual.book.title") %></h2>
+    <p class="bw-caption"><%= t("billie.ledger.manual.book.body", currency: @book.base_currency) %></p>
+    <%= form_with model: @book, url: finance_manual_book_path, method: :patch, scope: :book, data: {turbo: false}, class: "bw-form" do |form| %>
+      <div class="bw-field"><%= form.label :name, t("billie.ledger.manual.book.name") %><%= form.text_field :name, required: true, maxlength: 60 %></div>
+      <div class="bw-form-footer"><%= form.submit t("billie.ledger.save"), class: "bw-button bw-button-outline" %></div>
+    <% end %>
+    <p class="bw-caption"><%= t("billie.ledger.manual.same_records") %></p>
+  </section>
+</div>

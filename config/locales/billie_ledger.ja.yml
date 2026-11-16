@@ -433,3 +433,67 @@ ja:
         monthly: 過去 12 か月
         month: 月
         empty: この期間の収入・支出はありません。
+      mode:
+        label: "表示モード"
+        default: "標準"
+        manual: "手動記帳"
+        default_help: "シンプルで自動化中心の表示"
+        manual_help: "手動記帳のすべての機能"
+        manual_on: "手動記帳モード"
+        navigation: "手動記帳"
+        review_history: "確認と履歴"
+        unsaved_warning: "このページには保存されていない変更があります。破棄してモードを切り替えますか？"
+        draft_restored: "入力途中の内容を復元しました。"
+        draft_discard: "下書きを破棄"
+        groups:
+          record: "記帳"
+          organize: "口座とリスト"
+          plan: "計画とレポート"
+          review: "確認と履歴"
+          automatic: "自動ツール"
+      manual:
+        nav: "手動記帳ホーム"
+        eyebrow: "手動記帳モード"
+        title: "手動記帳"
+        intro: "手で帳簿をつけるための機能を、作業ごとにまとめています。標準モードと同じ記録です。"
+        quick_add: "記帳する"
+        quick_add_body: "種類を選んで始めましょう。"
+        recent: "最近の手動記帳"
+        recent_body: "最近手で記帳した明細です。"
+        recent_empty: "まだ手動記帳はありません"
+        same_records: "標準モードと手動記帳モードは同じ記録を表示します。モードを切り替えても、記録がコピー・変更・削除されることはありません。"
+        book:
+          title: "帳簿"
+          body: "この帳簿の通貨は %{currency} です。口座、カテゴリ、取引先、プロジェクト、タグはすべてこの帳簿に属します。"
+          name: "帳簿名"
+          saved: "帳簿を保存しました。"
+        tools:
+          entry: "支出、収入、振替、カード返済、返金、残高調整。"
+          transactions: "検索、口座・取引先・プロジェクト・タグでの絞り込み、一括編集。"
+          categories: "並べ替えや非表示ができる、2 階層の収入・支出カテゴリ。"
+          merchants: "支払った相手、または支払ってくれた相手。"
+          projects: "旅行、リフォーム、副業などのプロジェクト。"
+          tags: "カテゴリをまたいで使える自由なラベル。"
+          reports: "カテゴリ・口座・取引先・プロジェクト・タグ・月別、純資産つき。"
+          activity: "すべての変更履歴。一括編集は元に戻せます。"
+          merchants_title: "取引先"
+          projects_title: "プロジェクト"
+          tags_title: "タグ"
+          recurring:
+            one: "有効なスケジュール %{count} 件"
+            other: "有効なスケジュール %{count} 件"
+          accounts:
+            one: "%{count} 口座。資産・負債・借入。実際の残高を入力して照合できます。"
+            other: "%{count} 口座。資産・負債・借入。実際の残高を入力して照合できます。"
+          budgets:
+            one: "予算 %{count} 件（90% で警告）"
+            other: "予算 %{count} 件（90% で警告）"
+          income_review:
+            one: "確認が必要な収入 %{count} 件"
+            other: "確認が必要な収入 %{count} 件"
+          duplicates:
+            one: "重複の可能性 %{count} 件"
+            other: "重複の可能性 %{count} 件"
+          trash:
+            one: "ごみ箱に %{count} 件"
+            other: "ごみ箱に %{count} 件"

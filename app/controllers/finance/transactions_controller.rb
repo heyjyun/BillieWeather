@@ -43,7 +43,7 @@ module Finance
       @total_count = scope.count
       @total_pages = [(@total_count / 50.0).ceil, 1].max
       @page = params[:page].to_i.clamp(1, @total_pages)
-      @review_counts = review_counts
+      @review_counts = manual_mode? ? ledger_review_counts : {}
       respond_to do |format|
         format.html do
           @transactions = scope.offset((@page - 1) * 50).limit(50)
@@ -109,15 +109,6 @@ module Finance
 
     def load_transaction
       @transaction = current_user.finance_transactions.live.find(params[:id])
-    end
-
-    def review_counts
-      income = current_user.finance_transactions.live.where(kind: "income").where.not("jsonb_exists(user_locked_fields, 'kind')")
-        .includes(:bank_account, statement: :bank_account).limit(2000).count do |entry|
-          Domain.suspect_income(kind: entry.kind, amount: entry.amount, account_type: entry.account_type, description: entry.original_description)
-        end
-      duplicates = current_user.finance_transaction_links.suggested.where(link_type: "duplicate_of").joins(:from_transaction).where(finance_transactions: {deleted_at: nil}).count
-      {income: income, duplicates: duplicates, trash: current_user.finance_transactions.trashed.count}
     end
 
     # Recurring rules the person set to post automatically are posted when the list opens.

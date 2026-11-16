@@ -1,0 +1,9 @@
+<%# Default Mode / Manual Mode (Finance::ManualWorkspace). Only the session's view preference changes;
+    unfinished form input on the page is kept as a draft by billie.js and restored on return. %>
+<%= form_with url: finance_mode_path, method: :patch, class: "bw-mode-switch", id: "mode-switch", data: {turbo: false, mode_switch: true, unsaved_warning: t("billie.ledger.mode.unsaved_warning")} do %>
+  <input type="hidden" name="return_to" value="<%= request.get? ? request.fullpath : "" %>">
+  <span class="bw-mode-switch-group" role="group" aria-label="<%= t("billie.ledger.mode.label") %>">
+    <button type="submit" name="mode" value="default" class="bw-mode-option<%= ' is-active' unless manual %>" aria-pressed="<%= !manual %>" title="<%= t("billie.ledger.mode.default_help") %>"><%= t("billie.ledger.mode.default") %></button>
+    <button type="submit" name="mode" value="manual" class="bw-mode-option<%= ' is-active' if manual %>" aria-pressed="<%= manual %>" title="<%= t("billie.ledger.mode.manual_help") %>" id="manual-mode-button"><%= finance_icon "transactions", size: 15 %><span><%= t("billie.ledger.mode.manual") %></span></button>
+  </span>
+<% end %>

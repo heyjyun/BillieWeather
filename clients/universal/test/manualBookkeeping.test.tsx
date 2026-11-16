@@ -45,6 +45,8 @@ it("keeps a complete book by hand: accounts, an expense, edit, trash and restore
   sessionStorage.setItem("billie.token", "tok");
   render(<App />);
   await screen.findByRole("navigation");
+  // The manual bookkeeping tools live in Manual Mode (see manualMode.test.tsx).
+  await click(screen.getByRole("button", { name: "Manual" }));
 
   // Accounts: choose the book currency, add checking and a card.
   nav("Accounts");

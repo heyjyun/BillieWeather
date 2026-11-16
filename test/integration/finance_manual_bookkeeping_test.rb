@@ -10,6 +10,8 @@ class FinanceManualBookkeepingTest < ActionDispatch::IntegrationTest
     @user = create(:onboarded_user, usage_region: "US")
     @other = create(:onboarded_user, usage_region: "US")
     sign_in @user
+    # These flows run in the manual workspace (Manual Mode; see finance_manual_mode_test.rb).
+    patch finance_mode_path, params: {mode: "manual"}
   end
 
   # The app's "today" is the person's local date (America/Chicago by default), not UTC.

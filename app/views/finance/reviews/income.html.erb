@@ -1,5 +1,6 @@
 <% content_for :title, t("billie.ledger.review.income_title") %>
 <div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.review.eyebrow") %></span><h1><%= t("billie.ledger.review.income_title") %></h1><p><%= t("billie.ledger.review.income_intro") %></p></div><%= link_to t("billie.finance.ui.back_to_transactions"), finance_transactions_path, class: "bw-text-link" %></div>
+<%= render "finance/manual/review_tabs" %>
 <section class="bw-panel bw-panel-flush">
   <% if @suspects.any? %>
     <div class="bw-table-scroll"><table class="bw-table" id="income-review">

@@ -433,3 +433,67 @@ ko:
         monthly: 최근 12개월
         month: 월
         empty: 이 기간에는 수입이나 지출이 없습니다.
+      mode:
+        label: "화면 모드"
+        default: "기본"
+        manual: "수동 기록"
+        default_help: "간단하고 자동화 중심의 화면"
+        manual_help: "수동 가계부의 모든 기능"
+        manual_on: "수동 기록 모드"
+        navigation: "수동 가계부"
+        review_history: "검토 및 기록"
+        unsaved_warning: "이 페이지에 저장하지 않은 변경 사항이 있습니다. 버리고 모드를 전환할까요?"
+        draft_restored: "작성 중이던 내용을 복원했습니다."
+        draft_discard: "임시 저장 삭제"
+        groups:
+          record: "기록"
+          organize: "계좌 및 목록"
+          plan: "계획 및 보고서"
+          review: "검토 및 기록"
+          automatic: "자동 도구"
+      manual:
+        nav: "수동 기록 홈"
+        eyebrow: "수동 기록 모드"
+        title: "수동 가계부"
+        intro: "직접 가계부를 쓰는 데 필요한 모든 도구를 작업별로 모았습니다. 기본 모드와 같은 기록입니다."
+        quick_add: "기록하기"
+        quick_add_body: "유형을 골라 시작하세요."
+        recent: "최근 수동 기록"
+        recent_body: "최근에 직접 기록한 내역입니다."
+        recent_empty: "아직 수동 기록이 없습니다"
+        same_records: "기본 모드와 수동 기록 모드는 같은 기록을 보여 줍니다. 모드를 바꿔도 기록이 복사·변경·삭제되지 않습니다."
+        book:
+          title: "가계부"
+          body: "이 가계부의 통화는 %{currency}입니다. 계좌, 카테고리, 가맹점, 프로젝트, 태그는 모두 이 가계부에 속합니다."
+          name: "가계부 이름"
+          saved: "가계부를 저장했습니다."
+        tools:
+          entry: "지출, 수입, 이체, 카드 대금 결제, 환불 또는 잔액 조정."
+          transactions: "검색, 계좌·가맹점·프로젝트·태그로 필터, 일괄 편집."
+          categories: "정렬하고 숨길 수 있는 2단계 수입·지출 카테고리."
+          merchants: "돈을 준 곳 또는 받은 곳."
+          projects: "여행, 리모델링, 부업 등 프로젝트."
+          tags: "카테고리와 상관없이 쓰는 자유 라벨."
+          reports: "카테고리·계좌·가맹점·프로젝트·태그·월별, 순자산 포함."
+          activity: "모든 변경 기록. 일괄 편집은 되돌릴 수 있습니다."
+          merchants_title: "가맹점"
+          projects_title: "프로젝트"
+          tags_title: "태그"
+          recurring:
+            one: "활성 일정 %{count}개"
+            other: "활성 일정 %{count}개"
+          accounts:
+            one: "계좌 %{count}개. 자산, 부채, 대출. 실제 잔액을 입력해 맞출 수 있습니다."
+            other: "계좌 %{count}개. 자산, 부채, 대출. 실제 잔액을 입력해 맞출 수 있습니다."
+          budgets:
+            one: "예산 %{count}개, 90%에서 경고"
+            other: "예산 %{count}개, 90%에서 경고"
+          income_review:
+            one: "확인할 수입 %{count}건"
+            other: "확인할 수입 %{count}건"
+          duplicates:
+            one: "중복 가능성 %{count}건"
+            other: "중복 가능성 %{count}건"
+          trash:
+            one: "휴지통에 %{count}건"
+            other: "휴지통에 %{count}건"

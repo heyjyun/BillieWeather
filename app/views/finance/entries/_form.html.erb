@@ -4,7 +4,7 @@
 <% editing = entry.present? %>
 <% imported = editing && !entry.manual? %>
 <% category_kind = Finance::Domain.category_kind_for(kind) %>
-<%= form_with url: editing ? finance_entry_path(entry) : finance_entries_path, method: editing ? :patch : :post, scope: :entry, data: {turbo: false}, class: "bw-form", id: "entry-form" do |form| %>
+<%= form_with url: editing ? finance_entry_path(entry) : finance_entries_path, method: editing ? :patch : :post, scope: :entry, data: {turbo: false, draft_key: editing ? "entry-#{entry.id}" : ["entry-new", kind, ("copy-#{params[:copy_from].to_i}" if params[:copy_from].present?), ("refund-#{params[:refund_of_id].to_i}" if params[:refund_of_id].present?)].compact.join("-")}, class: "bw-form", id: "entry-form" do |form| %>
   <%= form.hidden_field :kind, value: kind %>
   <% if imported %>
     <div class="bw-info-line"><%= finance_icon "lock", size: 18 %><p><%= t("billie.ledger.entries.imported_note", original: entry.original_description) %></p></div>

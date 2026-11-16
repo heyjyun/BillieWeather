@@ -1,5 +1,5 @@
 <% t_data = rule.template || {} %>
-<%= form_with model: rule, url: rule.persisted? ? finance_recurring_rule_path(rule) : finance_recurring_rules_path, scope: :recurring_rule, data: {turbo: false}, class: "bw-form" do |form| %>
+<%= form_with model: rule, url: rule.persisted? ? finance_recurring_rule_path(rule) : finance_recurring_rules_path, scope: :recurring_rule, data: {turbo: false, draft_key: rule.persisted? ? "recurring-#{rule.id}" : "recurring-new"}, class: "bw-form" do |form| %>
   <% if rule.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= rule.errors.full_messages.to_sentence %></div><% end %>
   <div class="bw-form-grid">
     <div class="bw-field"><%= form.label :name, t("billie.ledger.recurring.name") %><%= form.text_field :name, required: true, maxlength: 60 %></div>

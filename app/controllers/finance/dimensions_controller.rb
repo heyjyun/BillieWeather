@@ -2,6 +2,8 @@ module Finance
   # Merchants (商家), projects (项目) and tags: create, rename, order, archive (hidden from pickers,
   # history kept), merge into another, delete (entries lose the reference). Every change is audited.
   class DimensionsController < BaseController
+    include ManualWorkspace
+
     MODELS = {"merchants" => Merchant, "projects" => Project, "tags" => Tag}.freeze
 
     before_action :load_model

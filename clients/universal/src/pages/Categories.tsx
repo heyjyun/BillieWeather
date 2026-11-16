@@ -4,6 +4,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { CategoryBadge, CategorySelect, Money, PageHeading } from "../components/common";
 import { CategoryInsights, MonthlySpendingChart, SpendingMixChart } from "../components/SpendingCharts";
 import { CategoryTree } from "../components/CategoryTree";
+import { useMode } from "../hooks/useMode";
 import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, useI18n } from "../i18n";
@@ -45,6 +46,7 @@ type AiState =
   | { step: "working" };
 
 export function Categories({ focus = null }: { focus?: string | null } = {}) {
+  const { manual } = useMode(); // the two-level tree (arrange, hide, merge) is part of Manual Mode
   const { m, t } = useI18n();
   const { getToken, expire } = useAccount();
   const { transactions, customCategories, currency, store, refresh } = useFinance();
@@ -256,7 +258,7 @@ export function Categories({ focus = null }: { focus?: string | null } = {}) {
           </form>
         </section>
       </div>
-      <CategoryTree />
+      {manual && <CategoryTree />}
       <div className="bw-two-column bw-section-gap">
         <section className="bw-panel" id="categories-spending-monthly" aria-labelledby="monthly-heading">
           <span className="bw-eyebrow">{m.spending.monthlyEyebrow}</span>

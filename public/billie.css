@@ -1072,3 +1072,35 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-demo-banner form { margin: 0; }
 @media (min-width: 761px) { html[data-sidebar="collapsed"] .bw-sidebar-switch { display: none; } }
 @media (max-width: 480px) { .bw-account-choice { padding: 14px; } .bw-demo-banner form, .bw-demo-banner .bw-button { width: 100%; } }
+
+/* Default Mode / Manual Mode (progressive disclosure). The switch sits in the top bar on every finance page. */
+.bw-mode-switch { display: inline-flex; margin: 0; }
+.bw-mode-switch-group { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--bw-radius-md); background: var(--bw-color-surface-muted); border: 1px solid var(--bw-color-border); }
+.bw-mode-option { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border: 0; border-radius: var(--bw-radius-sm); background: transparent; color: var(--bw-color-text-muted); font: inherit; font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-medium); white-space: nowrap; cursor: pointer; }
+.bw-mode-option:hover { color: var(--bw-color-text); }
+.bw-mode-option.is-active { background: var(--bw-color-surface); color: var(--bw-color-text); box-shadow: var(--bw-shadow-sm); }
+.bw-mode-option[value="manual"].is-active { background: var(--bw-color-accent); color: var(--bw-color-text-on-accent); }
+.bw-mode-option:focus-visible { outline: 2px solid var(--bw-color-focus-ring); outline-offset: 1px; }
+.bw-mode-badge { display: flex; align-items: center; gap: 8px; margin: 0 12px 14px; padding: 8px 10px; border-radius: var(--bw-radius-md); background: var(--bw-color-sidebar-active); color: var(--bw-color-sidebar-text); font-size: var(--bw-font-size-xs); font-weight: var(--bw-font-weight-semibold); white-space: nowrap; }
+.bw-nav-manual > .bw-nav-label { display: block; margin-top: 14px; }
+.bw-quick-add { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.bw-tool-group-title { margin: 0 0 10px; font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-semibold); color: var(--bw-color-text-muted); letter-spacing: .04em; text-transform: uppercase; }
+.bw-tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.bw-tool-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1px solid var(--bw-color-border); border-radius: var(--bw-radius-lg); background: var(--bw-color-surface); color: var(--bw-color-text); text-decoration: none; box-shadow: var(--bw-shadow-sm); min-width: 0; }
+.bw-tool-card:hover { border-color: var(--bw-color-border-strong); background: var(--bw-color-surface-raised); }
+.bw-tool-card:focus-visible { outline: 2px solid var(--bw-color-focus-ring); outline-offset: 2px; }
+.bw-tool-card strong { display: block; } .bw-tool-card small { display: block; margin-top: 2px; color: var(--bw-color-text-muted); font-size: var(--bw-font-size-xs); }
+.bw-tool-icon { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--bw-radius-md); background: var(--bw-color-accent-soft); color: var(--bw-color-accent-soft-text); }
+.bw-section-tabs { margin-bottom: 18px; }
+.bw-draft-note { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 14px; padding: 10px 12px; border-radius: var(--bw-radius-md); background: var(--bw-color-info-soft); color: var(--bw-color-info-text); font-size: var(--bw-font-size-sm); }
+.bw-draft-note button { padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: var(--bw-font-weight-semibold); text-decoration: underline; cursor: pointer; }
+@media (max-width: 1100px) { .bw-topbar { flex-wrap: wrap; row-gap: 8px; padding-block: 8px; } }
+@media (max-width: 760px) {
+  .bw-mode-badge { display: none; }
+  .bw-nav-manual > .bw-nav-label { display: none !important; }
+  .bw-mode-option { min-height: 40px; padding-inline: 10px; }
+  .bw-topbar-actions { flex-wrap: wrap; }
+  .bw-quick-add > .bw-button { flex: 1 1 140px; }
+  .bw-tool-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media print { .bw-mode-switch { display: none !important; } }

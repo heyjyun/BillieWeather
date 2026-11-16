@@ -3,6 +3,8 @@ module Finance
   # by hand with the same model imports use. Deleting moves an entry to the trash (回收站), from where
   # it can be restored or, for manual entries, removed for good.
   class EntriesController < BaseController
+    include ManualWorkspace
+
     PERMITTED = %i[kind amount booked_on occurred_at_time account_id to_account_id category merchant_id merchant_name project_id
       tag_names note description refund_of_id excluded tax_review].freeze
 

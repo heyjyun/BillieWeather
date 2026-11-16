@@ -2,6 +2,8 @@ module Finance
   # Operation log (操作日志): every change to accounts, entries, categories, dimensions, budgets and
   # recurring rules, newest first, filterable by action and subject. Batches (batch edits, AI) can be undone.
   class AuditEventsController < BaseController
+    include ManualWorkspace
+
     def index
       scope = current_user.finance_audit_events.newest_first
       @filters = params.permit(:action_type, :subject).to_h

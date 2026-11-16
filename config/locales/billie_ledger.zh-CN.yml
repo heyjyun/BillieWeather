@@ -433,3 +433,67 @@ zh-CN:
         monthly: 最近 12 个月
         month: 月份
         empty: 这个时间段没有收入或支出。
+      mode:
+        label: "界面模式"
+        default: "默认"
+        manual: "手动记账"
+        default_help: "简洁、以自动化为主的界面"
+        manual_help: "完整的手动记账工作区"
+        manual_on: "手动记账模式"
+        navigation: "手动记账"
+        review_history: "核对与记录"
+        unsaved_warning: "此页面有尚未保存的修改。仍要切换模式并放弃这些修改吗？"
+        draft_restored: "已恢复你未完成的输入。"
+        draft_discard: "放弃草稿"
+        groups:
+          record: "记账"
+          organize: "账户与列表"
+          plan: "计划与报表"
+          review: "核对与记录"
+          automatic: "自动功能"
+      manual:
+        nav: "手动记账首页"
+        eyebrow: "手动记账模式"
+        title: "手动记账"
+        intro: "手动记账的全部工具，按任务分组。这些就是你在默认模式中看到的同一份记录。"
+        quick_add: "记一笔"
+        quick_add_body: "选择类型开始记账。"
+        recent: "最近手动记录"
+        recent_body: "你最近手动记下的流水。"
+        recent_empty: "还没有手动记录"
+        same_records: "默认模式和手动记账模式显示同一份记录。切换模式不会复制、修改或删除任何内容。"
+        book:
+          title: "账本"
+          body: "这个账本的本位币是 %{currency}。账户、分类、商家、项目和标签都属于这个账本。"
+          name: "账本名称"
+          saved: "账本已保存。"
+        tools:
+          entry: "支出、收入、转账、信用卡还款、退款或余额调整。"
+          transactions: "搜索，按账户、商家、项目或标签筛选，批量编辑。"
+          categories: "两级收入与支出分类，可排序、可隐藏。"
+          merchants: "你付款给谁，或谁付款给你。"
+          projects: "旅行、装修、副业等项目。"
+          tags: "跨分类使用的自由标签。"
+          reports: "按分类、账户、商家、项目、标签或月份统计，含净资产。"
+          activity: "每一次修改的记录，批量编辑可撤销。"
+          merchants_title: "商家"
+          projects_title: "项目"
+          tags_title: "标签"
+          recurring:
+            one: "%{count} 个启用中的周期记账"
+            other: "%{count} 个启用中的周期记账"
+          accounts:
+            one: "%{count} 个账户。资产、负债与借贷；填写实际余额即可对账。"
+            other: "%{count} 个账户。资产、负债与借贷；填写实际余额即可对账。"
+          budgets:
+            one: "%{count} 个预算，达到 90% 时提醒"
+            other: "%{count} 个预算，达到 90% 时提醒"
+          income_review:
+            one: "%{count} 笔收入待核对"
+            other: "%{count} 笔收入待核对"
+          duplicates:
+            one: "%{count} 笔可能重复"
+            other: "%{count} 笔可能重复"
+          trash:
+            one: "回收站中有 %{count} 笔"
+            other: "回收站中有 %{count} 笔"

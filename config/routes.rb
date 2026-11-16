@@ -43,6 +43,10 @@ Rails.application.routes.draw do
     resources :transactions, only: [:index, :edit, :update] do
       post :batch, on: :collection
     end
+    # Default Mode / Manual Mode (progressive disclosure; see Finance::ManualWorkspace).
+    patch "mode", to: "modes#update", as: :mode
+    get "manual", to: "manual#show", as: :manual
+    patch "manual/book", to: "manual#update_book", as: :manual_book
     # Manual bookkeeping (docs/architecture/finance-domain-spec.md): accounts, entries of every kind,
     # trash, operation log, review lists, dimensions, budgets, recurring entries and reports.
     resources :accounts, only: [:index, :new, :create, :edit, :update, :destroy] do
