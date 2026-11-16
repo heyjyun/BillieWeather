@@ -16,7 +16,14 @@ describe("account service", () => {
     expect(init.method).toBe("POST");
     expect(init.credentials).toBe("omit");
     expect(JSON.parse(String(init.body))).toEqual({ email: "a@example.com", password: "secret", otp_attempt: "123456" });
-    expect(result.account).toEqual({ email: "a@example.com", nickname: "jyun", locale: "ja", timeZone: "Tokyo", usageRegion: "JP", registeredAt: "2026-01-02T03:04:05Z", badges: ["member"] });
+    expect(result.account).toEqual({ email: "a@example.com", nickname: "jyun", locale: "ja", timeZone: "Tokyo", usageRegion: "JP", registeredAt: "2026-01-02T03:04:05Z", badges: ["member"], ownerId: null });
+  });
+
+  it("reads the immutable owner id that binds local databases to the account (P0-1)", async () => {
+    mockFetch(201, { token: "tok", expires_at: "2026-12-01T00:00:00Z", account: { ...account, owner_id: "6F1C2B9A-3D4E-4F50-8A6B-7C8D9E0F1A2B" } });
+    expect((await signIn("a@example.com", "secret")).account.ownerId).toBe("6f1c2b9a-3d4e-4f50-8a6b-7c8d9e0f1a2b");
+    mockFetch(201, { token: "tok", expires_at: "2026-12-01T00:00:00Z", account: { ...account, owner_id: "../not-a-uuid" } });
+    expect((await signIn("a@example.com", "secret")).account.ownerId).toBeNull();
   });
 
   it("sends the bearer token and only preference fields", async () => {

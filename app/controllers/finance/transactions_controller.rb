@@ -1,11 +1,18 @@
 module Finance
   class TransactionsController < BaseController
+    KIND_FILTERS = %w[income expense refund transfer card_payment adjustment manual review excluded].freeze
+
     before_action :load_transaction, only: [:edit, :update]
 
     def index
       @categories = CustomCategory.names_for(current_user)
-      @filters = params.permit(:search, :category, :kind, :start_date, :end_date).to_h
-      scope = current_user.finance_transactions.includes(:statement).order(booked_on: :desc, id: :desc)
+      @accounts = current_user.finance_bank_accounts.ordered.to_a
+      @merchants = current_user.finance_merchants.ordered.to_a
+      @projects = current_user.finance_projects.ordered.to_a
+      @tags = current_user.finance_tags.ordered.to_a
+      @filters = params.permit(:search, :category, :kind, :start_date, :end_date, :account_id, :merchant_id, :project_id, :tag_id).to_h
+      post_auto_recurring
+      scope = current_user.finance_transactions.live.includes(:statement, :bank_account, :merchant, :project, :tags).order(booked_on: :desc, id: :desc)
       if params[:start_date].present? || params[:end_date].present?
         begin
           @date_range = DashboardPeriod.new(preset: "custom", start_date: params[:start_date], end_date: params[:end_date])
@@ -16,18 +23,27 @@ module Finance
         end
       end
       if @filters["search"].present?
-        scope = scope.where("description ILIKE ?", "%#{Transaction.sanitize_sql_like(@filters["search"].to_s.first(200))}%")
+        term = "%#{Transaction.sanitize_sql_like(@filters["search"].to_s.first(200))}%"
+        scope = scope.where("description ILIKE :term OR original_description ILIKE :term OR note ILIKE :term", term: term)
       end
       scope = scope.where(category: @filters["category"]) if @categories.include?(@filters["category"])
+      scope = scope.where(bank_account_id: @filters["account_id"]) if @accounts.any? { |a| a.id.to_s == @filters["account_id"] }
+      scope = scope.where(merchant_id: @filters["merchant_id"]) if @merchants.any? { |m| m.id.to_s == @filters["merchant_id"] }
+      scope = scope.where(project_id: @filters["project_id"]) if @projects.any? { |p| p.id.to_s == @filters["project_id"] }
+      scope = scope.where(id: TransactionTag.where(tag_id: @filters["tag_id"]).select(:transaction_id)) if @tags.any? { |t| t.id.to_s == @filters["tag_id"] }
+      # Income and expense follow the kind (a refund or a card repayment is not income).
       case @filters["kind"]
-      when "income" then scope = scope.where("amount > 0")
-      when "expense" then scope = scope.where("amount < 0")
+      when "income" then scope = scope.income_kind
+      when "expense" then scope = scope.where(kind: "expense")
+      when "refund", "transfer", "card_payment", "adjustment" then scope = scope.where(kind: @filters["kind"])
+      when "manual" then scope = scope.where(entry_origin: %w[manual recurring])
       when "review" then scope = scope.where(tax_review: true)
       when "excluded" then scope = scope.where(excluded: true)
       end
       @total_count = scope.count
       @total_pages = [(@total_count / 50.0).ceil, 1].max
       @page = params[:page].to_i.clamp(1, @total_pages)
+      @review_counts = review_counts
       respond_to do |format|
         format.html do
           @transactions = scope.offset((@page - 1) * 50).limit(50)
@@ -47,44 +63,81 @@ module Finance
       @categories = CustomCategory.names_for(current_user)
     end
 
+    # Display fields of any entry (description, category, flags, merchant, project, tags, note). The
+    # original description, and for imported rows the amount, date and account, never change here.
     def update
       @categories = CustomCategory.names_for(current_user)
-      if @transaction.update(params.require(:finance_transaction).permit(:description, :category, :tax_review, :excluded))
-        @profile.touch
-        redirect_to finance_transactions_path, notice: update_notice
-      else
-        render :edit, status: :unprocessable_entity
+      attributes = params.require(:finance_transaction).permit(:description, :category, :tax_review, :excluded, :note, :merchant_name, :project_id, :tag_names).to_h.symbolize_keys
+      if attributes.key?(:description) && attributes[:description].to_s.strip.empty?
+        @transaction.errors.add(:description, :blank)
+        return render :edit, status: :unprocessable_entity
       end
+      category_before = @transaction.category
+      ledger.update(@transaction, attributes)
+      @transaction.reload
+      redirect_to finance_transactions_path, notice: update_notice(category_before)
+    rescue Ledger::Invalid => error
+      @transaction.reload
+      @transaction.errors.add(:base, ledger_errors(error.codes))
+      render :edit, status: :unprocessable_entity
+    end
+
+    # One change for every selected entry (category, project, merchant, tag, delete), audited as one batch.
+    def batch
+      ids = Array(params[:ids]).map(&:to_i)
+      count = ledger.batch(ids, {action: params[:batch_action].to_s, value: params[:value]})
+      redirect_back fallback_location: finance_transactions_path, notice: I18n.t("billie.ledger.batch.done", count: count)
+    rescue Ledger::Invalid, ActiveRecord::RecordNotFound => error
+      redirect_back fallback_location: finance_transactions_path, alert: ledger_errors(error.respond_to?(:codes) ? error.codes : "not_found")
     end
 
     private
 
     # When the category changed, remember it for this merchant so future imports (and
     # other Uncategorized rows from the same merchant) are filed the same way.
-    def update_notice
+    def update_notice(category_before)
       notice = I18n.t("billie.backend.transaction_updated")
-      return notice unless @transaction.saved_change_to_category?
+      return notice if category_before == @transaction.category
 
-      similar = MerchantRule.remember!(user: current_user, description: @transaction.description, amount: @transaction.amount, category: @transaction.category)
+      source = @transaction.original_description.presence || @transaction.description
+      similar = MerchantRule.remember!(user: current_user, description: source, amount: @transaction.amount, category: @transaction.category)
       return notice if similar.nil?
 
-      merchant = Categorizer.merchant_key(@transaction.description).titleize
+      merchant = Categorizer.merchant_key(source).titleize
       notice + I18n.t("billie.backend.merchant_remembered", merchant: merchant, category: I18n.t("billie.backend.categories.#{@transaction.category}", default: @transaction.category)) + ((similar > 0) ? I18n.t("billie.backend.similar_updated", count: similar) : ".")
     end
 
     def load_transaction
-      @transaction = current_user.finance_transactions.find(params[:id])
+      @transaction = current_user.finance_transactions.live.find(params[:id])
+    end
+
+    def review_counts
+      income = current_user.finance_transactions.live.where(kind: "income").where.not("jsonb_exists(user_locked_fields, 'kind')")
+        .includes(:bank_account, statement: :bank_account).limit(2000).count do |entry|
+          Domain.suspect_income(kind: entry.kind, amount: entry.amount, account_type: entry.account_type, description: entry.original_description)
+        end
+      duplicates = current_user.finance_transaction_links.suggested.where(link_type: "duplicate_of").joins(:from_transaction).where(finance_transactions: {deleted_at: nil}).count
+      {income: income, duplicates: duplicates, trash: current_user.finance_transactions.trashed.count}
+    end
+
+    # Recurring rules the person set to post automatically are posted when the list opens.
+    def post_auto_recurring
+      rules = current_user.finance_recurring_rules.where(auto_post: true, paused: false).to_a
+      return if rules.empty?
+      result = RecurringPoster.call(user: current_user, today: finance_today, rules: rules)
+      flash.now[:notice] = I18n.t("billie.ledger.recurring.posted", count: result[:posted]) if result[:posted].positive?
     end
 
     # The Transactions page keeps its original columns so existing spreadsheets and scripts still work.
     # The fuller report CSV (account, merchant, byte-order mark) lives in Finance::ReportsController.
     def export_csv(scope)
       require "csv"
+      currency = @profile.currency
       csv = CSV.generate do |rows|
         rows << ["Date", "Description", "Amount", "Currency", "Category", "Tax review", "Excluded"]
         scope.find_each do |transaction|
           rows << [transaction.booked_on.iso8601, TransactionCsv.safe_text(transaction.description), transaction.amount.to_s("F"),
-            transaction.statement.currency, TransactionCsv.safe_text(transaction.category), transaction.tax_review, transaction.excluded]
+            transaction.statement&.currency || currency, TransactionCsv.safe_text(transaction.category), transaction.tax_review, transaction.excluded]
         end
       end
       send_data csv, type: "text/csv; charset=utf-8", disposition: "attachment", filename: "billieweather-transactions-#{Date.current.iso8601}.csv"

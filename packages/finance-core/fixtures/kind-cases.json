@@ -1,0 +1,231 @@
+{
+  "$comment": "inferKind contract (financial-schema.json kind_inference). Replayed by packages/finance-core/test/ledger.test.ts and test/services/finance/domain_contract_test.rb. All descriptions are synthetic. \"categorized\": kindForCategorized (kind stored for an imported row after its category is decided).",
+  "cases": [
+    {
+      "description": "ZXQ PAYROLL DEPOSIT",
+      "amountMinor": 200000,
+      "accountType": "checking",
+      "kind": "income"
+    },
+    {
+      "description": "ZXQ GROCERY #12",
+      "amountMinor": -12000,
+      "accountType": "credit_card",
+      "kind": "expense"
+    },
+    {
+      "description": "ZXQ OUTFITTERS RETURN",
+      "amountMinor": 3000,
+      "accountType": "credit_card",
+      "kind": "refund"
+    },
+    {
+      "description": "ZXQ OUTFITTERS",
+      "amountMinor": 3000,
+      "accountType": "credit_card",
+      "kind": "refund"
+    },
+    {
+      "description": "PAYMENT RECEIVED - THANK YOU",
+      "amountMinor": 17000,
+      "accountType": "credit_card",
+      "kind": "card_payment"
+    },
+    {
+      "description": "AUTOPAY 1234",
+      "amountMinor": 17000,
+      "accountType": "credit_card",
+      "kind": "card_payment"
+    },
+    {
+      "description": "CARD AUTOPAY 9188",
+      "amountMinor": -17000,
+      "accountType": "checking",
+      "kind": "card_payment"
+    },
+    {
+      "description": "ZXQ BANK CREDIT CRD AUTOPAY",
+      "amountMinor": -17000,
+      "accountType": "checking",
+      "kind": "card_payment"
+    },
+    {
+      "description": "PAYMENT THANK YOU",
+      "amountMinor": 17000,
+      "accountType": null,
+      "kind": "card_payment"
+    },
+    {
+      "description": "ZXQ STORE REFUND",
+      "amountMinor": 2599,
+      "accountType": "checking",
+      "kind": "refund"
+    },
+    {
+      "description": "ZXQ STORE REFUND",
+      "amountMinor": 2599,
+      "accountType": null,
+      "kind": "refund"
+    },
+    {
+      "description": "ONLINE TRANSFER FROM SAVINGS",
+      "amountMinor": 50000,
+      "accountType": "checking",
+      "kind": "transfer"
+    },
+    {
+      "description": "ONLINE TRANSFER TO SAVINGS",
+      "amountMinor": -50000,
+      "accountType": "checking",
+      "kind": "transfer"
+    },
+    {
+      "description": "ZELLE TO SAM Q",
+      "amountMinor": -6000,
+      "accountType": "checking",
+      "kind": "expense"
+    },
+    {
+      "description": "INTEREST PAYMENT",
+      "amountMinor": 123,
+      "accountType": "savings",
+      "kind": "income"
+    },
+    {
+      "description": "ZXQ LOAN PAYMENT RECEIVED",
+      "amountMinor": 30000,
+      "accountType": "loan",
+      "kind": "card_payment"
+    },
+    {
+      "description": "信用卡还款",
+      "amountMinor": -50000,
+      "accountType": "checking",
+      "kind": "card_payment"
+    },
+    {
+      "description": "淘宝退款",
+      "amountMinor": 1500,
+      "accountType": "payment_app",
+      "kind": "refund"
+    },
+    {
+      "description": "ZERO ROW",
+      "amountMinor": 0,
+      "accountType": "checking",
+      "kind": "ignored"
+    },
+    {
+      "description": "PAYMENT THANK YOURSELF SPA",
+      "amountMinor": 5000,
+      "accountType": null,
+      "kind": "income"
+    },
+    {
+      "description": "COMCAST AUTOPAY",
+      "amountMinor": -8000,
+      "accountType": "checking",
+      "kind": "expense"
+    },
+    {
+      "description": "微信转账 收款",
+      "amountMinor": 5000,
+      "accountType": "payment_app",
+      "kind": "income"
+    },
+    {
+      "description": "ZELLE FROM MOM",
+      "amountMinor": 5000,
+      "accountType": "checking",
+      "kind": "income"
+    },
+    {
+      "description": "RETURNED ITEM FEE",
+      "amountMinor": -3500,
+      "accountType": "checking",
+      "kind": "expense"
+    }
+  ],
+  "categorized": [
+    {
+      "description": "ONLINE TRANSFER TO SAVINGS",
+      "amountMinor": -50000,
+      "accountType": "checking",
+      "category": "Transfers",
+      "kind": "transfer"
+    },
+    {
+      "description": "PAYMENT THANK YOU",
+      "amountMinor": 17000,
+      "accountType": "credit_card",
+      "category": "Transfers",
+      "kind": "card_payment"
+    },
+    {
+      "description": "CARD AUTOPAY 9188",
+      "amountMinor": -17000,
+      "accountType": "checking",
+      "category": "Transfers",
+      "kind": "card_payment"
+    },
+    {
+      "description": "ZXQ PAYROLL",
+      "amountMinor": 200000,
+      "accountType": "checking",
+      "category": "Income",
+      "kind": "income"
+    },
+    {
+      "description": "ZXQ OUTFITTERS RETURN",
+      "amountMinor": 3000,
+      "accountType": "credit_card",
+      "category": "Shopping",
+      "kind": "refund"
+    },
+    {
+      "description": "ZXQ MYSTERY CREDIT",
+      "amountMinor": 3000,
+      "accountType": "credit_card",
+      "category": "Uncategorized",
+      "kind": "refund"
+    },
+    {
+      "description": "ZXQ GIFT FROM MOM",
+      "amountMinor": 5000,
+      "accountType": "checking",
+      "category": "Uncategorized",
+      "kind": "income"
+    },
+    {
+      "description": "ZXQ SIDE GIG",
+      "amountMinor": 5000,
+      "accountType": "checking",
+      "category": "Freelance",
+      "incomeCategories": [
+        "Freelance"
+      ],
+      "kind": "income"
+    },
+    {
+      "description": "ZXQ GROCERY",
+      "amountMinor": -1200,
+      "accountType": "credit_card",
+      "category": "Food & dining",
+      "kind": "expense"
+    },
+    {
+      "description": "ZXQ SALARY CLAWBACK",
+      "amountMinor": -1000,
+      "accountType": "checking",
+      "category": "Income",
+      "kind": "income"
+    },
+    {
+      "description": "ZXQ ZERO",
+      "amountMinor": 0,
+      "accountType": "checking",
+      "category": "Shopping",
+      "kind": "ignored"
+    }
+  ]
+}

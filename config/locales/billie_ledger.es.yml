@@ -1,0 +1,435 @@
+es:
+  billie:
+    ledger:
+      save: Guardar
+      nav:
+        accounts: Cuentas
+        lists: Comercios y proyectos
+        budgets: Presupuestos
+        reports: Informes
+      kinds:
+        expense: Gasto
+        income: Ingreso
+        refund: Reembolso
+        transfer: Transferencia
+        card_payment: Pago de tarjeta
+        opening_balance: Saldo inicial
+        adjustment: Ajuste de saldo
+        ignored: No contabilizado
+      account_types:
+        checking: Cuenta corriente
+        savings: Ahorros
+        cash: Efectivo
+        payment_app: App de pagos / billetera
+        investment: Inversión
+        receivable: Dinero que te deben
+        credit_card: Tarjeta de crédito
+        loan: Préstamo / deuda
+        other: Otra
+      origins:
+        import: Extracto importado
+        manual: Ingresado a mano
+        web_copy: Copiado del sitio web
+        upload: Enviado desde una app
+        recurring: Movimiento recurrente
+        legacy: Importado antes de esta versión
+      category_sources:
+        user: Elegida por ti
+        rule: Regla recordada
+        file: Del archivo del extracto
+        auto: Listas integradas
+        region: Lista regional
+        ai: Sugerencia de IA
+        legacy: Asignada antes de esta versión
+      locked_fields:
+        category: Categoría
+        kind: Tipo
+        description: Descripción
+        excluded: Excluido
+        merchant: Comercio
+        project: Proyecto
+        account: Cuenta
+      fields:
+        amount: Importe
+        amount_signed: Importe (negativo para reducir el saldo)
+        date: Fecha
+        time: Hora (opcional)
+        account: Cuenta
+        from_account: Cuenta de origen
+        to_account: Cuenta de destino
+        choose_account: Elige una cuenta
+        category: Categoría
+        merchant: Comercio
+        project: Proyecto
+        tags: Etiquetas
+        tags_placeholder: Separadas por comas, p. ej. viaje, regalo
+        note: Nota
+        description: Descripción
+        description_placeholder: Qué fue (se muestra en las listas)
+        refund_of: Compra original
+        refund_of_none: Sin vincular a una compra
+        none: Ninguno
+      filters:
+        all_accounts: Todas las cuentas
+        all_merchants: Todos los comercios
+        all_projects: Todos los proyectos
+        all_tags: Todas las etiquetas
+      errors:
+        generic: Algo en este movimiento no es válido.
+        amount_required: Introduce un importe.
+        amount_zero: El importe no puede ser cero.
+        amount_too_large: Ese importe es demasiado grande.
+        amount_precision: Usa como máximo dos decimales.
+        date_invalid: Introduce una fecha válida.
+        account_required: Elige una cuenta.
+        accounts_same: Elige dos cuentas distintas.
+        category_kind: Esa categoría pertenece al otro árbol (ingresos o gastos).
+        refund_target_required: Elige la compra a la que corresponde este reembolso.
+        refund_too_large: Un reembolso no puede superar lo que queda de la compra original.
+        refund_target_invalid: Los reembolsos solo se pueden vincular a un gasto.
+        kind_invalid: Ese tipo de movimiento no está disponible aquí.
+        category_unknown: Esa categoría no existe.
+        not_found: No se encontró.
+        not_in_trash: Ese movimiento no está en la papelera.
+        imported_entry: Los movimientos importados se quedan con su extracto; elimina el extracto para borrarlos definitivamente.
+        nothing_selected: Selecciona al menos una transacción.
+        unknown_action: Elige qué cambiar.
+        nothing_to_undo: No hay nada que deshacer en este cambio.
+        no_change: El saldo ya coincide.
+        parent_invalid: La categoría principal debe ser de primer nivel y del mismo árbol.
+        merge_same: Elige otro elemento con el que combinar.
+      accounts:
+        title: Cuentas
+        eyebrow: DÓNDE ESTÁ TU DINERO
+        intro: Cada cuenta, billetera, tarjeta y préstamo, con sus saldos y tu patrimonio neto. Añade a mano el efectivo o lo que no importes.
+        new: Añadir cuenta
+        new_intro: "Efectivo, una app de billetera, un préstamo, dinero que te deben: cualquier cosa que quieras registrar a mano."
+        back: Volver a cuentas
+        assets: Activos
+        liabilities: Pasivos
+        asset: Activos
+        liability: Pasivos
+        net_worth: Patrimonio neto
+        empty_title: Aún no hay cuentas
+        empty_body: Importa un extracto o añade una cuenta a mano para empezar.
+        col_account: Cuenta
+        col_entries: Movimientos
+        col_balance: Saldo
+        manual: Añadida a mano
+        imported: De extractos importados
+        not_in_net_worth: fuera del patrimonio neto
+        credit_limit_short: "límite %{amount}"
+        move_up: "Subir %{name}"
+        move_down: "Bajar %{name}"
+        edit: Editar
+        edit_label: "Editar %{name}"
+        archived_title: Cuentas archivadas
+        archived_body: Las cuentas archivadas conservan su historial pero salen de las listas.
+        unarchive: Restaurar
+        archive: Archivar
+        archive_confirm: "¿Archivar esta cuenta? Sus movimientos siguen en tu historial."
+        delete: Eliminar cuenta
+        delete_confirm: "¿Eliminar esta cuenta? Solo funciona si nada la usa."
+        delete_help: Una cuenta con movimientos o extractos no se puede eliminar; archívala.
+        balance_note: Saldo = saldo inicial + todos los movimientos que no están en la papelera. Ajusta un saldo para que coincida con tu banco.
+        name: Nombre
+        name_placeholder: p. ej. Billetera, Venmo, Préstamo del coche
+        type: Tipo
+        opening_balance: Saldo inicial
+        opening_balance_help: Lo que tenía la cuenta cuando empezaste a registrarla. Usa un importe negativo para lo que debes en una tarjeta o préstamo.
+        opening_balance_on: Fecha del saldo inicial
+        credit_limit: Límite de crédito
+        card_only: Para tarjetas de crédito y préstamos.
+        statement_day: Día de corte
+        due_day: Día de pago
+        include_in_net_worth: Incluir en el patrimonio neto
+        include_in_net_worth_help: Desactívalo para cuentas que registras pero no son tuyas.
+        current_balance: "Saldo actual: %{amount}"
+        adjust_title: Fijar el saldo real
+        adjust_body: Registra un ajuste de saldo por la diferencia. Nunca cuenta como ingreso ni gasto.
+        actual_balance: Saldo en tu banco o billetera
+        adjust: Ajustar saldo
+        manage_title: Gestionar
+        view_entries: Ver movimientos
+        created: "Cuenta %{name} añadida."
+        updated: "Cuenta %{name} guardada."
+        archived: "Cuenta %{name} archivada."
+        unarchived: "Cuenta %{name} restaurada."
+        deleted: "Cuenta %{name} eliminada."
+        in_use: "%{name} tiene movimientos o extractos, así que no se puede eliminar. Archívala para ocultarla."
+        adjusted: "Saldo de %{name} ajustado en %{amount}."
+      entries:
+        eyebrow: A MANO
+        new_title: Añadir un movimiento
+        edit_title: Editar movimiento
+        intro: Registra gastos, ingresos, transferencias entre tus cuentas, reembolsos y correcciones de saldo, sin importar nada ni usar IA.
+        add: Añadir movimiento
+        add_short: Añadir
+        kind_nav: Tipo de movimiento
+        kind_help:
+          expense: Dinero que gastaste desde una cuenta (también una compra con tarjeta).
+          income: Dinero que ganaste o recibiste.
+          transfer: Dinero que pasa entre tus propias cuentas. Pagar una tarjeta o un préstamo es una transferencia hacia ella y nunca cuenta dos veces como gasto.
+          refund: Dinero devuelto por una compra. Vincúlalo a la compra original para que reduzca ese gasto.
+          adjustment: Corrige el saldo de una cuenta sin contar como ingreso ni gasto.
+        save_and_add: Guardar y añadir otro
+        card_payment_help: Elegir una tarjeta de crédito o un préstamo lo convierte en pago de tarjeta.
+        refund_help: El reembolso toma la categoría de la compra y reduce su gasto; los reembolsos parciales están permitidos.
+        no_accounts_title: Primero añade una cuenta
+        no_accounts_body: Cada movimiento pertenece a una cuenta (el efectivo también es una cuenta).
+        imported_note: "Importado de un extracto. El importe, la fecha, la cuenta y el texto del banco («%{original}») no cambian; puedes cambiar cómo se describe y clasifica."
+        actions_title: Acciones
+        copy: Copiar
+        add_refund: Registrar un reembolso
+        delete: Mover a la papelera
+        delete_confirm: "¿Mover este movimiento a la papelera? Podrás restaurarlo."
+        origin: Origen
+        original: Texto original
+        original_label: "Original: %{original}"
+        category_source: Categoría asignada por
+        locked: Se mantiene como lo dejaste
+        manual_only: Añadidos a mano
+        more_options: Todos los campos
+        created: "%{kind} guardado."
+        deleted: Movido a la papelera.
+        restored: Restaurado de la papelera.
+        purged: Eliminado definitivamente.
+      trash:
+        title: Papelera
+        eyebrow: NADA SE PIERDE
+        intro: Los movimientos eliminados esperan aquí. Restáuralos o elimina definitivamente los que añadiste a mano.
+        deleted_at: Eliminado
+        restore: Restaurar
+        purge: Eliminar definitivamente
+        purge_confirm: "¿Eliminar este movimiento definitivamente? No se puede deshacer."
+        empty: La papelera está vacía.
+        imported_note: Los movimientos importados en la papelera siguen vinculados a su extracto; al eliminar el extracto se eliminan.
+        link: "Papelera (%{count})"
+      activity:
+        title: Registro de actividad
+        eyebrow: CADA CAMBIO
+        intro: "Qué cambió en tus registros, cuándo y quién lo hizo: tú, una importación, una regla, la IA o un movimiento recurrente."
+        action: Acción
+        subject: Elemento
+        when: Cuándo
+        changes: Cambios
+        all_actions: Todas las acciones
+        all_subjects: Todos los elementos
+        empty: Aún no hay actividad.
+        undo_batch: Deshacer este lote
+        undo_confirm: "¿Deshacer todos los cambios de este lote que no se hayan vuelto a modificar?"
+        undone: "%{count} cambios deshechos (%{skipped} omitidos porque cambiaron de nuevo)."
+      actions:
+        create: Creado
+        update: Modificado
+        delete: Eliminado
+        restore: Restaurado
+        purge: Eliminado definitivamente
+        link: Vinculado
+        unlink: Desvinculado
+        import: Importado
+        reverse_import: Importación revertida
+        ai_apply: Cambio de IA aplicado
+        ai_undo: Cambio deshecho
+        batch_update: Cambio en lote
+        batch_delete: Eliminación en lote
+        merge: Combinado
+        archive: Archivado
+        unarchive: Restaurado del archivo
+        backup: Copia de seguridad
+        restore_backup: Restaurado desde copia
+      actors:
+        user: por ti
+        import: por una importación
+        rule: por una regla
+        ai: por la IA
+        system: por BillieWeather
+        sync: por la sincronización
+        recurring: por un movimiento recurrente
+      subjects:
+        Transaction: Movimiento
+        BankAccount: Cuenta
+        Category: Categoría
+        Merchant: Comercio
+        Project: Proyecto
+        Tag: Etiqueta
+        Budget: Presupuesto
+        RecurringRule: Movimiento recurrente
+        TransactionLink: Vínculo
+      review:
+        eyebrow: NECESITA TU DECISIÓN
+        income_title: Ingresos por revisar
+        income_intro: Se contaron como ingresos antes de que BillieWeather conociera el tipo de cada transacción. Parecen reembolsos o pagos de tarjeta, que no son ingresos. Nada cambia hasta que decidas.
+        income_empty: Nada que revisar.
+        income_link:
+          one: "%{count} ingreso por revisar"
+          other: "%{count} ingresos por revisar"
+        suggestion: Parece
+        mark_as: "Marcar como %{kind}"
+        keep_income: Es un ingreso
+        reclassified: "Guardado como %{kind}."
+        duplicates_title: Posibles duplicados
+        duplicates_intro: Estas filas de una importación más reciente se parecen a filas que ya tenías (mismo día e importe, el comercio escrito de otra forma). Conserva ambas o mueve la nueva a la papelera.
+        duplicates_empty: No hay posibles duplicados.
+        duplicates_link:
+          one: "%{count} posible duplicado"
+          other: "%{count} posibles duplicados"
+        new_row: Fila nueva
+        existing_row: Ya registrada
+        in_trash: en la papelera
+        is_duplicate: Duplicado — eliminar la nueva
+        keep_both: Conservar ambas
+        duplicate_removed: El duplicado se movió a la papelera.
+        duplicate_kept: Se conservaron ambos movimientos.
+      batch:
+        title: Para la selección
+        select: Seleccionar
+        select_one: "Seleccionar %{description}"
+        action: Cambiar
+        value: A
+        apply: Aplicar
+        confirm: "¿Aplicar este cambio a cada transacción seleccionada?"
+        done: "%{count} transacciones cambiadas. Puedes deshacer el lote desde el registro de actividad."
+        actions:
+          category: Categoría
+          project: Proyecto
+          merchant: Comercio
+          tag: Añadir etiqueta
+          delete: Mover a la papelera
+      categories:
+        tree_eyebrow: DOS NIVELES
+        tree_title: Árbol de categorías
+        tree_body: Agrupa categorías bajo una principal, separa ingresos y gastos, reordena u oculta lo que no uses.
+        tree_expense: Gastos
+        tree_income: Ingresos
+        hidden: oculta
+        kind_label: Árbol
+        parent_label: Categoría principal
+        no_parent: Primer nivel
+        order_label: Orden
+        hide_label: Ocultar en los selectores (los movimientos existentes la conservan)
+        arrange: Guardar organización
+        arranged: "%{name} organizada."
+        merge_label: Combinar con
+        merge: Combinar
+        merge_confirm: "¿Mover todos los movimientos y reglas recordadas de %{name} a la categoría elegida y después eliminar %{name}?"
+        merged: "%{name} se combinó con %{into} (%{count} movimientos movidos)."
+      lists:
+        eyebrow: ORGANIZA
+        merchants:
+          title: Comercios
+          intro: Tiendas, pagadores y personas con las que tratas. Se asignan a mano en los movimientos o al escribir un nombre nuevo.
+        projects:
+          title: Proyectos
+          intro: "Viajes, reformas, un negocio paralelo: agrupa movimientos de cualquier cuenta y categoría."
+        tags:
+          title: Etiquetas
+          intro: Etiquetas libres; un movimiento puede tener varias.
+        new_name: Nombre
+        add: Añadir
+        name: Nombre
+        rename: Renombrar
+        rename_label: "Renombrar %{name}"
+        archive: Archivar
+        unarchive: Restaurar
+        archived: archivado
+        merge: Combinar
+        merge_into: Combinar con
+        merge_confirm: "¿Mover todos los movimientos de %{name} al elegido y después eliminar %{name}?"
+        delete: Eliminar
+        delete_confirm: "¿Eliminar %{name}? Los movimientos conservan importes y categorías pero pierden esta etiqueta."
+        empty: Aún no hay nada.
+        created: "%{name} añadido."
+        updated: "%{name} guardado."
+        merged: "%{name} se combinó con %{into} (%{count} movimientos)."
+        deleted: "%{name} eliminado (%{count} movimientos ya no lo tienen)."
+      budgets:
+        title: Presupuestos
+        eyebrow: PLANIFICA TUS GASTOS
+        intro: Fija un límite mensual o anual para todo el gasto, una categoría (con sus subcategorías) o un proyecto.
+        scope: Se aplica a
+        total: Todo el gasto
+        period: Periodo
+        periods:
+          month: Mensual
+          year: Anual
+        limit: Límite
+        alert: Avisar al (%)
+        add: Añadir presupuesto
+        spent: Gastado
+        progress: Progreso
+        levels:
+          ok: "%{percent}% usado · quedan %{remaining}"
+          warning: "%{percent}% usado · quedan %{remaining}"
+          over: "Presupuesto superado · %{percent}% (%{remaining})"
+        empty: Aún no hay presupuestos.
+        note: El gasto es neto de reembolsos; las transferencias y los pagos de tarjeta nunca cuentan.
+        saved: Presupuesto guardado.
+        deleted: Presupuesto eliminado.
+        delete_confirm: "¿Eliminar este presupuesto?"
+      recurring:
+        title: Movimientos recurrentes
+        eyebrow: CONFIGÚRALO UNA VEZ
+        intro: Alquiler, salario, suscripciones, una transferencia mensual a ahorros. Cada fecha se registra una sola vez.
+        new: Nuevo movimiento recurrente
+        back: Volver a movimientos recurrentes
+        name: Nombre
+        kind: Tipo
+        to_account: Cuenta de destino (transferencias)
+        frequency: Se repite
+        frequencies:
+          daily: día(s)
+          weekly: semana(s)
+          monthly: mes(es)
+          yearly: año(s)
+        interval: Cada
+        start_on: Primera fecha
+        end_on: Última fecha (opcional)
+        auto_post: Registrar automáticamente
+        auto_post_help: Los movimientos vencidos se añaden al abrir Transacciones. Si no, esperan a «Registrar vencidos».
+        every: "Cada %{count} %{unit}"
+        next: Próximas fechas
+        paused: en pausa
+        auto: automático
+        pause: Pausar
+        resume: Reanudar
+        post_due: "Registrar vencidos (%{count})"
+        posted:
+          one: "%{count} movimiento recurrente registrado."
+          other: "%{count} movimientos recurrentes registrados."
+        saved: "%{name} guardado."
+        deleted: "%{name} eliminado. Los movimientos ya registrados se conservan."
+        delete_confirm: "¿Eliminar este movimiento recurrente? Los movimientos ya registrados se conservan."
+        empty: Aún no hay movimientos recurrentes.
+      report:
+        title: Informes
+        eyebrow: POR TIPO, NO POR SIGNO
+        intro: Ingresos, gastos y patrimonio neto de cualquier periodo, por categoría, cuenta, comercio, proyecto o etiqueta.
+        period: Periodo
+        from: Desde
+        to: Hasta
+        by: Agrupar por
+        presets:
+          all_time: Todo el tiempo
+          this_month: Este mes
+          last_month: El mes pasado
+          last_30_days: Últimos 30 días
+          this_year: Este año
+          last_year: El año pasado
+          custom: Fechas personalizadas
+        dimensions:
+          category: Categoría
+          account: Cuenta
+          merchant: Comercio
+          project: Proyecto
+          tag: Etiqueta
+        income: Ingresos
+        spending: Gastos
+        net: Neto
+        share: Porcentaje
+        none: (ninguno)
+        by_title: "Por %{dimension}"
+        refund_note: Los reembolsos reducen el gasto de su categoría; las transferencias, los pagos de tarjeta y los ajustes quedan fuera.
+        monthly: Últimos 12 meses
+        month: Mes
+        empty: No hay ingresos ni gastos en este periodo.

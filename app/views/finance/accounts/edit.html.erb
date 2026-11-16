@@ -1,0 +1,30 @@
+<% content_for :title, @account.display_name %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.account_types.#{@account.account_type}") %></span><h1><%= @account.display_name %></h1><p><%= t("billie.ledger.accounts.current_balance", amount: finance_money(@balance, @profile.currency)) %></p></div><%= link_to t("billie.ledger.accounts.back"), finance_accounts_path, class: "bw-text-link" %></div>
+<div class="bw-two-column">
+  <section class="bw-panel"><%= render "form", account: @account %></section>
+  <aside class="bw-settings-stack">
+    <section class="bw-panel bw-panel-soft" id="adjust-balance">
+      <h2><%= t("billie.ledger.accounts.adjust_title") %></h2>
+      <p><%= t("billie.ledger.accounts.adjust_body") %></p>
+      <%= form_with url: adjust_finance_account_path(@account), data: {turbo: false}, class: "bw-form" do |form| %>
+        <div class="bw-field"><%= form.label :balance, t("billie.ledger.accounts.actual_balance") %><%= form.text_field :balance, required: true, inputmode: "decimal", value: @balance.to_s("F") %></div>
+        <div class="bw-field"><%= form.label :on, t("billie.ledger.fields.date") %><%= form.date_field :on, value: finance_today %></div>
+        <div class="bw-field"><%= form.label :note, t("billie.ledger.fields.note") %><%= form.text_field :note, maxlength: 200 %></div>
+        <%= form.submit t("billie.ledger.accounts.adjust"), class: "bw-button bw-button-outline" %>
+      <% end %>
+    </section>
+    <section class="bw-panel">
+      <h2><%= t("billie.ledger.accounts.manage_title") %></h2>
+      <div class="bw-inline-actions">
+        <%= link_to t("billie.ledger.accounts.view_entries"), finance_transactions_path(account_id: @account.id), class: "bw-text-link" %>
+        <% if @account.archived? %>
+          <%= button_to t("billie.ledger.accounts.unarchive"), unarchive_finance_account_path(@account), method: :patch, class: "bw-button bw-button-outline", form: {data: {turbo: false}} %>
+        <% else %>
+          <%= button_to t("billie.ledger.accounts.archive"), archive_finance_account_path(@account), method: :patch, class: "bw-button bw-button-outline", form: {data: {turbo: false, confirm: t("billie.ledger.accounts.archive_confirm")}} %>
+        <% end %>
+        <%= button_to t("billie.ledger.accounts.delete"), finance_account_path(@account), method: :delete, class: "bw-button bw-button-danger-outline", form: {data: {turbo: false, confirm: t("billie.ledger.accounts.delete_confirm")}} %>
+      </div>
+      <p class="bw-caption"><%= t("billie.ledger.accounts.delete_help") %></p>
+    </section>
+  </aside>
+</div>

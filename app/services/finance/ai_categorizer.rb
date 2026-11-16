@@ -174,9 +174,12 @@ module Finance
       batch.each_with_index do |group, index|
         category = suggestions[(index + 1).to_s]
         next unless category
-        attributes = {category: category, updated_at: now}
+        attributes = {category: category, category_source: "ai", category_model: "openai", updated_at: now}
         attributes[:tax_review] = true if category == "Business"
-        updated += Transaction.where(id: group[:ids], user_id: @user.id, category: "Uncategorized").update_all(attributes)
+        # Never overwrite a category a person chose or locked (invariant I-16).
+        scope = Categorizer.automatic(@user).where(id: group[:ids])
+        Transaction.sync_kinds_for_category!(scope, category, @user.id)
+        updated += scope.update_all(attributes)
       end
       Profile.where(user_id: @user.id).touch_all if updated.positive?
       Result.new(updated: updated, sent: items.length, remaining: [groups.length - batch.length, 0].max)
@@ -187,7 +190,7 @@ module Finance
     # Uncategorized transactions grouped by cleaned text (ignoring letter case) and direction, most frequent first.
     def uncategorized_groups
       groups = {}
-      Transaction.where(user_id: @user.id, category: "Uncategorized").order(:id).pluck(:id, :description, :amount).each do |id, description, amount|
+      Categorizer.automatic(@user).order(:id).pluck(:id, :original_description, :amount).each do |id, description, amount|
         text = self.class.clean_text(description)
         next unless text
         direction = amount.positive? ? "in" : "out"

@@ -1,21 +1,27 @@
 import type { PeriodPreset } from "@billie/shared-types";
 import { buildSnapshot, localToday, resolvePeriod } from "@billie/finance-core";
 import { excelReport, reportFilename, reportRows, transactionCsv } from "@billie/reporting";
-import { useMemo, useState } from "react";
-import { Empty, PageHeading, PeriodPicker } from "../components/common";
+import { useEffect, useMemo, useState } from "react";
+import { Empty, Money, PageHeading, PeriodPicker } from "../components/common";
 import { useFinance } from "../hooks/useFinance";
 import { useI18n } from "../i18n";
 import { saveFile } from "../services/platform";
 
 export function Reports() {
   const { m, t } = useI18n();
-  const { transactions, statements, currency } = useFinance();
+  const { transactions, statements, currency, store, accounts } = useFinance();
+  const [dimension, setDimension] = useState<"category" | "account" | "merchant" | "project" | "tag" | "month">("category");
+  const [report, setReport] = useState<Awaited<ReturnType<typeof store.ledger.report>> | null>(null);
+  const [history, setHistory] = useState<Awaited<ReturnType<typeof store.ledger.netWorthHistory>>>([]);
   const [preset, setPreset] = useState<PeriodPreset>("all_time");
   const [status, setStatus] = useState("");
   const cur = currency ?? "USD";
   const period = useMemo(() => resolvePeriod(preset, { today: localToday() }), [preset]);
   const rows = useMemo(() => reportRows(transactions, statements, period), [transactions, statements, period]);
   const x = m.reports;
+  const r = m.ledger.reports;
+  useEffect(() => { void store.ledger.report(dimension, { from: period.startDate, to: period.endDate }).then(setReport); }, [store, dimension, period, transactions]);
+  useEffect(() => { void store.ledger.netWorthHistory(12).then(setHistory); }, [store, transactions, accounts]);
 
   // CSV keeps canonical English categories (same as the Rails export); Excel is translated.
   async function exportCsv() {
@@ -47,6 +53,47 @@ export function Reports() {
         </section>
       </div>
       <p className="bw-caption">{t("reports.count", { count: rows.length })}</p>
+      {report && (
+        <section className="bw-panel bw-section-gap" aria-labelledby="dimension-heading">
+          <h2 id="dimension-heading">{r.by}: {r.dimensions[dimension]}</h2>
+          <div className="bw-segmented" role="group" aria-label={r.by}>
+            {(Object.keys(r.dimensions) as Array<keyof typeof r.dimensions>).map((key) => (
+              <button key={key} type="button" className={dimension === key ? "is-active" : ""} aria-pressed={dimension === key} onClick={() => setDimension(key)}>{r.dimensions[key]}</button>
+            ))}
+          </div>
+          <div className="bw-metrics">
+            <div className="bw-metric"><span>{r.income}</span><strong><Money cents={report.incomeMinor} currency={cur} /></strong></div>
+            <div className="bw-metric"><span>{r.expense}</span><strong><Money cents={report.expenseMinor} currency={cur} /></strong></div>
+            <div className="bw-metric bw-metric-accent"><span>{r.net}</span><strong><Money cents={report.netMinor} currency={cur} signed /></strong></div>
+          </div>
+          <div className="bw-table-scroll">
+            <table className="bw-cat-table">
+              <thead><tr><th scope="col">{r.dimensions[dimension]}</th><th scope="col">{r.income}</th><th scope="col">{r.expense}</th><th scope="col">{r.count}</th></tr></thead>
+              <tbody>
+                {report.rows.map((row) => (
+                  <tr key={row.key || "none"}>
+                    <td>{row.key ? (dimension === "category" ? (m.categories as Record<string, string>)[row.key] ?? row.key : row.key) : r.unlabeled}</td>
+                    <td><Money cents={row.incomeMinor} currency={cur} /></td>
+                    <td><Money cents={row.expenseMinor} currency={cur} /></td>
+                    <td>{row.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+      {accounts.length > 0 && history.length > 0 && (
+        <section className="bw-panel bw-section-gap" aria-labelledby="networth-heading">
+          <h2 id="networth-heading">{r.netWorthTitle}</h2>
+          <div className="bw-table-scroll">
+            <table className="bw-cat-table">
+              <thead><tr><th scope="col">{r.month}</th><th scope="col">{r.assets}</th><th scope="col">{r.liabilities}</th><th scope="col">{r.netWorth}</th></tr></thead>
+              <tbody>{history.map((row) => <tr key={row.month}><td>{row.month}</td><td><Money cents={row.assetsMinor} currency={cur} /></td><td><Money cents={row.liabilitiesMinor} currency={cur} /></td><td><Money cents={row.netWorthMinor} currency={cur} signed /></td></tr>)}</tbody>
+            </table>
+          </div>
+        </section>
+      )}
       <p role="status" aria-live="polite" className="bw-sr-status">{status}</p>
     </>
   );

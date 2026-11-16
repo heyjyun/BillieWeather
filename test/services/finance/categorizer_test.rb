@@ -54,7 +54,8 @@ class Finance::CategorizerTest < ActiveSupport::TestCase
     fresh = Finance::Categorizer.new(user: @user)
     assert_equal "Health", categorize("ZXQ WIDGETS 998", -5, fresh)
     assert_equal "Business", categorize("UBER TRIP HELP.UBER.COM", -18, fresh)
-    assert_equal "Income", categorize("ZXQ WIDGETS REFUND", 5, fresh)
+    # A refund is not income: it falls through to the keyword lists (none match here).
+    assert_equal "Uncategorized", categorize("ZXQ WIDGETS REFUND", 5, fresh)
     other = Finance::Categorizer.new(user: @other)
     assert_equal "Uncategorized", categorize("ZXQ WIDGETS 998", -5, other)
     assert_equal "Transport", categorize("UBER TRIP HELP.UBER.COM", -18, other)

@@ -1,0 +1,15 @@
+<% content_for :title, t("billie.ledger.entries.new_title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.entries.eyebrow") %></span><h1><%= t("billie.ledger.entries.new_title") %></h1><p><%= t("billie.ledger.entries.intro") %></p></div><%= link_to t("billie.finance.ui.back_to_transactions"), finance_transactions_path, class: "bw-text-link" %></div>
+<% if @accounts.empty? %>
+  <section class="bw-panel"><div class="bw-empty-state"><h3><%= t("billie.ledger.entries.no_accounts_title") %></h3><p><%= t("billie.ledger.entries.no_accounts_body") %></p><%= link_to t("billie.ledger.accounts.new"), new_finance_account_path, class: "bw-button bw-button-dark" %></div></section>
+<% else %>
+  <nav class="bw-period-presets" aria-label="<%= t("billie.ledger.entries.kind_nav") %>" id="kind-tabs">
+    <% Finance::Ledger::MANUAL_KINDS.each do |kind| %>
+      <%= link_to t("billie.ledger.kinds.#{kind}"), new_finance_entry_path(kind: kind, account_id: @form[:account_id]), class: "bw-period-preset #{'is-active' if @form[:kind].to_s == kind}", "aria-current": (@form[:kind].to_s == kind ? "page" : nil) %>
+    <% end %>
+  </nav>
+  <section class="bw-panel bw-section-gap">
+    <p class="bw-caption"><%= t("billie.ledger.entries.kind_help.#{@form[:kind]}") %></p>
+    <%= render "form", form_data: @form, entry: nil, accounts: @accounts, tree: @tree, merchants: @merchants, projects: @projects, refundable: @refundable %>
+  </section>
+<% end %>

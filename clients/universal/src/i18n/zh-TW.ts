@@ -1,3 +1,4 @@
+import { ledgerZhTW } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalZhTW } from "./universal";
 import { commandZhTW } from "./command";
@@ -274,5 +275,6 @@ export const zhTW: Messages = {
     yes: "是", no: "否",
   },
   universal: universalZhTW,
+  ledger: ledgerZhTW,
   command: commandZhTW,
 };

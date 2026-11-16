@@ -28,10 +28,42 @@ module Finance
       end
     end
 
+    # Deletes a custom category. With move_to (another category) this is a merge: entries and remembered
+    # rules move there. Without it, entries become Uncategorized (the original behaviour).
     def destroy
       category = current_user.finance_custom_categories.find(params[:id])
-      moved = category.remove!
-      redirect_to finance_categories_path, notice: I18n.t("billie.categories.deleted", name: category.name, count: moved)
+      target = params[:move_to].presence
+      return redirect_to(finance_categories_path, alert: I18n.t("billie.ledger.errors.category_unknown")) if target && !CustomCategory.valid_for?(current_user, target)
+      moved = category.remove!(move_to: target || "Uncategorized")
+      AuditEvent.record!(user: current_user, action: target ? "merge" : "delete", subject: ["Category", category.name], summary: category.name,
+        changes: {"before" => {"name" => category.name}, "after" => {"moved_to" => target || "Uncategorized", "entries" => moved}})
+      notice = target ? I18n.t("billie.ledger.categories.merged", name: category.name, into: target, count: moved) : I18n.t("billie.categories.deleted", name: category.name, count: moved)
+      redirect_to finance_categories_path, notice: notice
+    end
+
+    # Where a category sits: parent (two levels at most), income or expense tree, order, hidden.
+    def arrange
+      name = params[:name].to_s
+      return head(:not_found) unless CustomCategory.valid_for?(current_user, name) && !CategoryTree::SPECIAL.include?(name)
+      setting = current_user.finance_category_settings.where("lower(name) = ?", name.downcase).first_or_initialize(name: name)
+      before = setting.persisted? ? setting.attributes.slice("parent_name", "category_kind", "sort_order", "hidden") : {}
+      custom = !Transaction::CATEGORIES.include?(name)
+      attrs = params.fetch(:arrangement, {}).permit(:parent_name, :category_kind, :sort_order, :hidden).to_h
+      setting.parent_name = attrs["parent_name"].presence if custom && attrs.key?("parent_name")
+      setting.category_kind = custom ? (attrs["category_kind"].presence_in(Domain::CATEGORY_KINDS) || setting.category_kind || "expense") : ((name == "Income") ? "income" : "expense")
+      setting.sort_order = attrs["sort_order"].to_i if attrs.key?("sort_order")
+      setting.hidden = ActiveModel::Type::Boolean.new.cast(attrs["hidden"]) || false if attrs.key?("hidden")
+      if setting.parent_name.present? && (!CustomCategory.valid_for?(current_user, setting.parent_name) || CategoryTree::SPECIAL.include?(setting.parent_name) ||
+          CategoryTree.new(current_user).kind_of(setting.parent_name) != setting.category_kind)
+        return redirect_to(finance_categories_path(name: name), alert: I18n.t("billie.ledger.errors.parent_invalid"))
+      end
+      if setting.save
+        AuditEvent.record!(user: current_user, action: "update", subject: ["Category", name], summary: name,
+          changes: {"before" => before, "after" => setting.attributes.slice("parent_name", "category_kind", "sort_order", "hidden")})
+        redirect_to finance_categories_path(name: name), notice: I18n.t("billie.ledger.categories.arranged", name: name)
+      else
+        redirect_to finance_categories_path(name: name), alert: I18n.t("billie.ledger.errors.parent_invalid")
+      end
     end
 
     def ai_categorize
@@ -64,10 +96,11 @@ module Finance
     def load_page
       @custom_categories = current_user.finance_custom_categories.order(Arel.sql("lower(name)")).to_a
       names = Transaction::CATEGORIES + @custom_categories.map(&:name)
-      stats = current_user.finance_transactions.group(:category).pluck(
+      # Spending by kind: expenses minus refunds; income only from income entries (not refunds or repayments).
+      stats = current_user.finance_transactions.live.group(:category).pluck(
         :category, Arel.sql("COUNT(*)"),
-        Arel.sql("COALESCE(SUM(CASE WHEN amount < 0 AND NOT excluded THEN -amount ELSE 0 END), 0)"),
-        Arel.sql("COALESCE(SUM(CASE WHEN amount > 0 AND NOT excluded THEN amount ELSE 0 END), 0)"),
+        Arel.sql("COALESCE(SUM(CASE WHEN kind IN ('expense', 'refund') AND NOT excluded THEN -amount ELSE 0 END), 0)"),
+        Arel.sql("COALESCE(SUM(CASE WHEN kind = 'income' AND NOT excluded THEN amount ELSE 0 END), 0)"),
         Arel.sql("MAX(booked_on)")
       ).to_h { |name, count, spent, received, last| [name, {count: count, spent: spent, received: received, last_on: last}] }
       counted_spending = stats.except("Transfers").sum { |_name, row| row[:spent] }
@@ -87,11 +120,12 @@ module Finance
         @selected_tone = breakdown.tone(@selected)
         @selected_trend = breakdown.trend(@selected)
         @selected_merchants = breakdown.top_merchants(@selected)
-        scope = current_user.finance_transactions.where(category: @selected)
+        scope = current_user.finance_transactions.live.where(category: @selected)
         @selected_row = @category_rows.find { |row| row[:name] == @selected }
         @selected_transactions = scope.includes(:statement).recent_first.limit(DETAIL_LIMIT).to_a
       end
       @ai_available = AiCategorizer.available?
+      @tree = CategoryTree.new(current_user)
     end
   end
 end

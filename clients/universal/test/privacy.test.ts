@@ -115,10 +115,13 @@ describe("data isolation", () => {
     const body = /body: JSON\.stringify\(\{([\s\S]*?)\}\),\n\s*credentials/.exec(source)![1];
     expect([...body.matchAll(/(\w+):/g)].map((match) => match[1])).toEqual(["consent", "categories", "items", "key", "description", "direction"]);
     expect(body).toMatch(/description: item\.text/);
-    // Only the Categories page calls it, with text already cleaned on the device.
-    const callers = all.filter((file) => file !== AI && /\brequestAiCategories\b/.test(readFileSync(file, "utf8")));
-    expect(callers).toEqual([join(ROOT, "src/pages/Categories.tsx")]);
+    // Only the Categories page and the "Organize with AI" panel call it, with text already cleaned on the device
+    // (aiGroups/cleanForAi: no digits, no email addresses), and only after the person chose the AI option.
+    const callers = all.filter((file) => file !== AI && /\brequestAiCategories\b/.test(readFileSync(file, "utf8"))).sort();
+    expect(callers).toEqual([join(ROOT, "src/components/OrganizePanel.tsx"), join(ROOT, "src/pages/Categories.tsx")]);
     expect(readFileSync(join(ROOT, "src/pages/Categories.tsx"), "utf8")).toMatch(/store\.aiCandidates\(\)/);
+    expect(readFileSync(join(ROOT, "src/components/OrganizePanel.tsx"), "utf8")).toMatch(/cloud && token \? \{ cloud: \(items, custom\) => requestAiCategories\(token, items, custom\) \}/);
+    expect(readFileSync(join(ROOT, "src/services/organize.ts"), "utf8")).toMatch(/aiGroups\(leftover/);
   });
 
   it("the app never talks to OpenAI directly", () => {
@@ -172,7 +175,9 @@ describe("data isolation", () => {
   it("the app requests no network, shell, or broad file-system permissions", () => {
     const capability = JSON.parse(readFileSync(join(ROOT, "src-tauri/capabilities/default.json"), "utf8"));
     const permissions: string[] = capability.permissions.map((p: string | { identifier: string }) => (typeof p === "string" ? p : p.identifier));
-    expect(permissions.filter((p) => /^(http|shell|fs:allow-read|fs:scope|fs:default|opener:default)/.test(p))).toEqual([]);
+    // Reading is allowed only for the single file picked in the open dialog (backup restore): no fs scope is granted.
+    expect(permissions.filter((p) => /^(http|shell|fs:allow-read|fs:scope|fs:default|opener:default)/.test(p))).toEqual(["fs:allow-read-file"]);
+    expect(permissions.filter((p) => /^fs:/.test(p)).sort()).toEqual(["fs:allow-read-file", "fs:allow-write-file"]);
   });
 
   it("the local database file and build output are git-ignored", () => {

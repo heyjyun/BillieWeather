@@ -61,12 +61,19 @@ module Finance
       @user = user
     end
 
-    def categorize(description, amount)
+    # `account_type` (financial-schema account_types) makes money in on a credit card a refund or a
+    # repayment rather than income. Money in is "Income" only when Domain.infer_kind says income; a
+    # refund keeps an expense category (it reduces spending there); a repayment is a transfer.
+    def categorize(description, amount, account_type: nil)
       key = self.class.merchant_key(description)
       learned = key && learned_rules[[key, amount.positive?]]
       return learned if learned
       return "Transfers" if TRANSFERS.match?(description)
-      return "Income" if amount.positive?
+      if amount.positive?
+        kind = Domain.infer_kind(amount: amount, account_type: account_type, description: description)
+        return "Income" if kind == "income"
+        return "Transfers" if %w[card_payment transfer].include?(kind)
+      end
       RULES.find { |_category, pattern| pattern.match?(description) }&.first || "Uncategorized"
     end
 
@@ -76,8 +83,8 @@ module Finance
     def self.recategorize_uncategorized!(user:)
       categorizer = new(user: user)
       changes = Hash.new { |hash, category| hash[category] = [] }
-      Transaction.where(user_id: user.id, category: "Uncategorized").find_each do |transaction|
-        category = categorizer.categorize(transaction.description, transaction.amount)
+      automatic(user).includes(:bank_account).find_each do |transaction|
+        category = categorizer.categorize(transaction.original_description, transaction.amount, account_type: transaction.bank_account&.account_type)
         changes[category] << transaction.id unless category == "Uncategorized"
       end
       changes.sum { |category, ids| update_category(ids, category) }
@@ -86,16 +93,24 @@ module Finance
     # Used after a person corrects one transaction: same merchant, same direction.
     def self.apply_rule_to_uncategorized(user:, key:, income:, category:)
       direction = income ? "amount > 0" : "amount <= 0"
-      ids = Transaction.where(user_id: user.id, category: "Uncategorized").where(direction)
-        .pluck(:id, :description).filter_map { |id, description| id if merchant_key(description) == key }
+      ids = automatic(user).where(direction)
+        .pluck(:id, :original_description).filter_map { |id, description| id if merchant_key(description) == key }
       update_category(ids, category)
+    end
+
+    # Uncategorized rows automation may still decide: live, and the category not locked by a person.
+    def self.automatic(user)
+      Transaction.live.where(user_id: user.id, category: "Uncategorized").where.not("jsonb_exists(user_locked_fields, 'category')")
     end
 
     def self.update_category(ids, category)
       return 0 if ids.empty?
-      attributes = {category: category, updated_at: Time.current}
+      attributes = {category: category, category_source: "rule", updated_at: Time.current}
       attributes[:tax_review] = true if category == "Business"
-      Transaction.where(id: ids).update_all(attributes)
+      scope = Transaction.where(id: ids)
+      user_id = scope.pick(:user_id)
+      Transaction.sync_kinds_for_category!(scope, category, user_id)
+      scope.update_all(attributes)
     end
     private_class_method :update_category
 

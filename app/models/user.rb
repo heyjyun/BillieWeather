@@ -14,6 +14,16 @@ class User < ApplicationRecord
   has_many :finance_local_devices, class_name: "Finance::LocalDevice", dependent: :delete_all
   has_many :finance_local_database_audits, class_name: "Finance::LocalDatabaseAudit", dependent: :delete_all
   has_many :finance_command_executions, class_name: "Finance::CommandExecution", dependent: :delete_all
+  has_many :finance_transaction_links, class_name: "Finance::TransactionLink", dependent: :delete_all
+  has_many :finance_audit_events, class_name: "Finance::AuditEvent", dependent: :delete_all
+  has_many :finance_organize_runs, class_name: "Finance::OrganizeRun", dependent: :delete_all
+  has_many :finance_budgets, class_name: "Finance::Budget", dependent: :delete_all
+  has_many :finance_recurring_rules, class_name: "Finance::RecurringRule", dependent: :delete_all
+  has_many :finance_merchants, class_name: "Finance::Merchant", dependent: :delete_all
+  has_many :finance_projects, class_name: "Finance::Project", dependent: :delete_all
+  has_many :finance_tags, class_name: "Finance::Tag", dependent: :delete_all
+  has_many :finance_category_settings, class_name: "Finance::CategorySetting", dependent: :delete_all
+  has_many :finance_books, class_name: "Finance::Book", dependent: :delete_all
   # Honorary badges (not roles: they grant no permissions) and private support-payment access.
   has_many :community_honors, class_name: "Community::Honor", dependent: :destroy
   has_one :community_support_access, class_name: "Community::SupportAccess", dependent: :destroy

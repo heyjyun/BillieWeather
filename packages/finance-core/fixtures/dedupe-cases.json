@@ -1,0 +1,79 @@
+{
+  "$comment": "Row-level duplicate detection contract (financial-schema.json dedupe). existing = rows already stored; incoming = rows of a new file in file order. expected[i] is the result for incoming[i]: new | duplicate (automatic: bank reference or exact overlap in the same account) | review (possible duplicate a person must decide). Replayed by packages/finance-core/test/ledger.test.ts and test/services/finance/duplicate_detector_test.rb.",
+  "cases": [
+    {
+      "name": "overlapping statement of the same account",
+      "existing": [
+        { "id": 1, "account": "A", "date": "2026-10-03", "amountMinor": -12000, "description": "ZXQ GROCERY #12", "reference": null },
+        { "id": 2, "account": "A", "date": "2026-10-09", "amountMinor": -8000, "description": "ZXQ OUTFITTERS", "reference": null }
+      ],
+      "incoming": [
+        { "account": "A", "date": "2026-10-03", "amountMinor": -12000, "description": "zxq  grocery #12", "reference": null },
+        { "account": "A", "date": "2026-10-09", "amountMinor": -8000, "description": "ZXQ OUTFITTERS", "reference": null },
+        { "account": "A", "date": "2026-10-20", "amountMinor": -4500, "description": "ZXQ CINEMA", "reference": null }
+      ],
+      "expected": ["duplicate", "duplicate", "new"]
+    },
+    {
+      "name": "two genuine identical purchases: only one was stored before",
+      "existing": [
+        { "id": 1, "account": "A", "date": "2026-10-05", "amountMinor": -350, "description": "ZXQ COFFEE", "reference": null }
+      ],
+      "incoming": [
+        { "account": "A", "date": "2026-10-05", "amountMinor": -350, "description": "ZXQ COFFEE", "reference": null },
+        { "account": "A", "date": "2026-10-05", "amountMinor": -350, "description": "ZXQ COFFEE", "reference": null }
+      ],
+      "expected": ["duplicate", "new"]
+    },
+    {
+      "name": "same purchase on a different account is not a duplicate",
+      "existing": [
+        { "id": 1, "account": "A", "date": "2026-10-05", "amountMinor": -350, "description": "ZXQ COFFEE", "reference": null }
+      ],
+      "incoming": [
+        { "account": "B", "date": "2026-10-05", "amountMinor": -350, "description": "ZXQ COFFEE", "reference": null }
+      ],
+      "expected": ["new"]
+    },
+    {
+      "name": "bank reference wins over different text",
+      "existing": [
+        { "id": 1, "account": "A", "date": "2026-10-05", "amountMinor": -999, "description": "ZXQ SHOP", "reference": "FIT-77" }
+      ],
+      "incoming": [
+        { "account": "A", "date": "2026-10-06", "amountMinor": -999, "description": "ZXQ SHOP ONLINE", "reference": "FIT-77" }
+      ],
+      "expected": ["duplicate"]
+    },
+    {
+      "name": "same merchant written differently (CSV vs PDF) is only a possible duplicate",
+      "existing": [
+        { "id": 1, "account": "A", "date": "2026-10-07", "amountMinor": -2599, "description": "ZXQMART STORE 0042 CHICAGO", "reference": null }
+      ],
+      "incoming": [
+        { "account": "A", "date": "2026-10-07", "amountMinor": -2599, "description": "ZXQMART STORE #42", "reference": null }
+      ],
+      "expected": ["review"]
+    },
+    {
+      "name": "a legacy row without an account is never an automatic duplicate",
+      "existing": [
+        { "id": 1, "account": null, "date": "2026-10-05", "amountMinor": -350, "description": "ZXQ COFFEE", "reference": null }
+      ],
+      "incoming": [
+        { "account": "A", "date": "2026-10-05", "amountMinor": -350, "description": "ZXQ COFFEE", "reference": null }
+      ],
+      "expected": ["review"]
+    },
+    {
+      "name": "files without accounts still dedupe against each other",
+      "existing": [
+        { "id": 1, "account": null, "date": "2026-10-05", "amountMinor": -350, "description": "ZXQ COFFEE", "reference": null }
+      ],
+      "incoming": [
+        { "account": null, "date": "2026-10-05", "amountMinor": -350, "description": "ZXQ COFFEE", "reference": null }
+      ],
+      "expected": ["duplicate"]
+    }
+  ]
+}

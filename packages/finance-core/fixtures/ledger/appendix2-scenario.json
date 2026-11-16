@@ -1,0 +1,48 @@
+{
+  "$comment": "Shared ledger scenario (review Appendix 2, extended with manual entries). Amounts are signed minor units from the account's point of view. Replayed by packages/finance-core/test/ledger.test.ts (pure domain + SQLite store) and test/services/finance/domain_contract_test.rb (PostgreSQL). Synthetic data only.",
+  "currency": "USD",
+  "accounts": [
+    { "id": "CHK", "type": "checking", "openingBalanceMinor": 100000 },
+    { "id": "CARD", "type": "credit_card", "openingBalanceMinor": 0 },
+    { "id": "CASH", "type": "cash", "openingBalanceMinor": 5000 },
+    { "id": "OLD", "type": "savings", "openingBalanceMinor": 2500, "includeInNetWorth": false }
+  ],
+  "entries": [
+    { "id": "t1", "accountId": "CARD", "occurredOn": "2026-10-03", "amountMinor": -12000, "kind": "expense", "category": "Food & dining", "merchant": "ZXQ Grocery" },
+    { "id": "t2", "accountId": "CARD", "occurredOn": "2026-10-09", "amountMinor": -8000, "kind": "expense", "category": "Shopping", "merchant": "ZXQ Outfitters", "project": "Trip" },
+    { "id": "t3", "accountId": "CARD", "occurredOn": "2026-10-15", "amountMinor": 3000, "kind": "refund", "category": "Shopping", "merchant": "ZXQ Outfitters", "project": "Trip" },
+    { "id": "t4", "accountId": "CHK", "occurredOn": "2026-10-28", "amountMinor": -17000, "kind": "card_payment", "category": "Transfers" },
+    { "id": "t5", "accountId": "CARD", "occurredOn": "2026-10-28", "amountMinor": 17000, "kind": "card_payment", "category": "Transfers" },
+    { "id": "t6", "accountId": "CHK", "occurredOn": "2026-10-30", "amountMinor": 200000, "kind": "income", "category": "Income" },
+    { "id": "t7", "accountId": "CHK", "occurredOn": "2026-10-31", "amountMinor": -6000, "kind": "expense", "category": "Uncategorized" },
+    { "id": "m1", "accountId": "CASH", "occurredOn": "2026-10-12", "amountMinor": -1250, "kind": "expense", "category": "Food & dining", "tags": ["lunch"] },
+    { "id": "m2", "accountId": "CHK", "occurredOn": "2026-10-20", "amountMinor": -20000, "kind": "transfer", "category": "Transfers" },
+    { "id": "m3", "accountId": "CASH", "occurredOn": "2026-10-20", "amountMinor": 20000, "kind": "transfer", "category": "Transfers" },
+    { "id": "m4", "accountId": "CASH", "occurredOn": "2026-10-25", "amountMinor": -750, "kind": "adjustment", "category": "Transfers" },
+    { "id": "m5", "accountId": "CHK", "occurredOn": "2026-10-26", "amountMinor": -999, "kind": "expense", "category": "Shopping", "excluded": true },
+    { "id": "m6", "accountId": "CHK", "occurredOn": "2026-10-27", "amountMinor": -4321, "kind": "expense", "category": "Health", "deleted": true },
+    { "id": "n1", "accountId": "CHK", "occurredOn": "2026-11-02", "amountMinor": -3000, "kind": "expense", "category": "Food & dining" }
+  ],
+  "links": [
+    { "type": "refund_of", "from": "t3", "to": "t2", "amountMinor": 3000 },
+    { "type": "card_payment", "from": "t4", "to": "t5" },
+    { "type": "transfer", "from": "m2", "to": "m3" }
+  ],
+  "expected": {
+    "october": {
+      "from": "2026-10-01",
+      "to": "2026-10-31",
+      "incomeMinor": 200000,
+      "expenseMinor": 24250,
+      "netMinor": 175750,
+      "expenseByCategory": { "Food & dining": 13250, "Shopping": 5000, "Uncategorized": 6000 },
+      "incomeByCategory": { "Income": 200000 }
+    },
+    "allTime": { "incomeMinor": 200000, "expenseMinor": 27250, "netMinor": 172750 },
+    "balancesAsOf2026-10-31": { "CHK": 256001, "CARD": 0, "CASH": 23000, "OLD": 2500 },
+    "balancesAllTime": { "CHK": 253001, "CARD": 0, "CASH": 23000, "OLD": 2500 },
+    "netWorthAllTime": { "assetsMinor": 276001, "liabilitiesMinor": 0, "netWorthMinor": 276001 },
+    "refundableOf_t2": 5000,
+    "naiveSignBasedIncomeMinor": 203000
+  }
+}

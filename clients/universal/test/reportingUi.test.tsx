@@ -174,7 +174,7 @@ it("in Chinese, the disclosure, the three states and the sync buttons are all in
   expect(within(home).getByText("元数据最近更新")).toBeTruthy();
   expect(within(home).getByText("最近同步")).toBeTruthy();
   expect(within(home).getByText("最近备份")).toBeTruthy();
-  expect(screen.getByRole("button", { name: /立即备份 · 即将推出/ })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "备份与恢复" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "立即同步" })).toBeTruthy();
   expect(within(home).getByRole("button", { name: "立即同步到…" })).toBeTruthy();
   expect(within(home).getByRole("button", { name: "重命名" })).toBeTruthy();

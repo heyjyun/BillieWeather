@@ -1,0 +1,34 @@
+<% content_for :title, t("billie.ledger.activity.title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.activity.eyebrow") %></span><h1><%= t("billie.ledger.activity.title") %></h1><p><%= t("billie.ledger.activity.intro") %></p></div><%= link_to t("billie.finance.ui.back_to_transactions"), finance_transactions_path, class: "bw-text-link" %></div>
+<section class="bw-panel bw-panel-flush">
+  <%= form_with url: finance_activity_path, method: :get, data: {turbo: false}, class: "bw-filter-bar" do |form| %>
+    <div><%= form.label :action_type, t("billie.ledger.activity.action"), class: "bw-sr-only" %><%= form.select :action_type, [[t("billie.ledger.activity.all_actions"), ""]] + Finance::Domain::AUDIT_ACTIONS.map { |a| [t("billie.ledger.actions.#{a}"), a] }, selected: @filters["action_type"] %></div>
+    <div><%= form.label :subject, t("billie.ledger.activity.subject"), class: "bw-sr-only" %><%= form.select :subject, [[t("billie.ledger.activity.all_subjects"), ""]] + @subjects.map { |s| [t("billie.ledger.subjects.#{s}", default: s), s] }, selected: @filters["subject"] %></div>
+    <%= form.submit t("billie.finance.ui.apply_filters"), class: "bw-button bw-button-dark" %>
+  <% end %>
+  <% if @events.any? %>
+    <div class="bw-table-scroll"><table class="bw-table" id="activity-table">
+      <thead><tr><th scope="col"><%= t("billie.ledger.activity.when") %></th><th scope="col"><%= t("billie.ledger.activity.action") %></th><th scope="col"><%= t("billie.ledger.activity.subject") %></th><th scope="col"><%= t("billie.ledger.activity.changes") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <tbody>
+        <% shown_batches = [] %>
+        <% @events.each do |event| %>
+          <% before = event.changes_data["before"] || {} %><% after = event.changes_data["after"] || {} %>
+          <tr>
+            <td class="bw-nowrap"><%= l(event.created_at.in_time_zone(current_user.time_zone.presence || "UTC"), format: :short) %></td>
+            <td><span class="bw-tag"><%= t("billie.ledger.actions.#{event.action}") %></span><% unless event.actor == "user" %> <small class="bw-muted"><%= t("billie.ledger.actors.#{event.actor}") %></small><% end %></td>
+            <td><%= t("billie.ledger.subjects.#{event.subject_type}", default: event.subject_type) %> · <%= event.summary %></td>
+            <td><small><%= safe_join((before.keys | after.keys).first(6).map { |field| "#{field}: #{before[field].inspect} → #{after[field].inspect}" }, tag.br) %></small></td>
+            <td class="bw-text-right">
+              <% if event.batch_id && !shown_batches.include?(event.batch_id) && %w[batch_update ai_apply].include?(event.action) %>
+                <% shown_batches << event.batch_id %>
+                <%= button_to t("billie.ledger.activity.undo_batch"), finance_undo_activity_path(event.batch_id), class: "bw-button bw-button-small bw-button-outline", form: {data: {turbo: false, confirm: t("billie.ledger.activity.undo_confirm")}} %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.ledger.activity.empty") %></h3></div>
+  <% end %>
+</section>

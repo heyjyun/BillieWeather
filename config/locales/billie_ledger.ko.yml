@@ -1,0 +1,435 @@
+ko:
+  billie:
+    ledger:
+      save: 저장
+      nav:
+        accounts: 계좌
+        lists: 가맹점과 프로젝트
+        budgets: 예산
+        reports: 보고서
+      kinds:
+        expense: 지출
+        income: 수입
+        refund: 환불
+        transfer: 이체
+        card_payment: 카드 대금 상환
+        opening_balance: 시작 잔액
+        adjustment: 잔액 조정
+        ignored: 집계 제외
+      account_types:
+        checking: 입출금 계좌
+        savings: 저축
+        cash: 현금
+        payment_app: 간편결제·지갑
+        investment: 투자
+        receivable: 받을 돈
+        credit_card: 신용카드
+        loan: 대출·부채
+        other: 기타
+      origins:
+        import: 가져온 명세서
+        manual: 직접 입력
+        web_copy: 웹사이트에서 복사
+        upload: 앱에서 전송
+        recurring: 반복 기록
+        legacy: 이 버전 이전에 가져옴
+      category_sources:
+        user: 직접 선택
+        rule: 기억한 규칙
+        file: 명세서 파일의 분류
+        auto: 기본 목록
+        region: 지역 목록
+        ai: AI 제안
+        legacy: 이 버전 이전에 설정
+      locked_fields:
+        category: 카테고리
+        kind: 유형
+        description: 설명
+        excluded: 집계 제외
+        merchant: 가맹점
+        project: 프로젝트
+        account: 계좌
+      fields:
+        amount: 금액
+        amount_signed: 금액(잔액을 줄이려면 음수)
+        date: 날짜
+        time: 시간(선택)
+        account: 계좌
+        from_account: 보내는 계좌
+        to_account: 받는 계좌
+        choose_account: 계좌 선택
+        category: 카테고리
+        merchant: 가맹점
+        project: 프로젝트
+        tags: 태그
+        tags_placeholder: "쉼표로 구분(예: 여행, 선물)"
+        note: 메모
+        description: 설명
+        description_placeholder: 무엇이었는지(목록에 표시)
+        refund_of: 원래 구매
+        refund_of_none: 구매와 연결하지 않음
+        none: 없음
+      filters:
+        all_accounts: 모든 계좌
+        all_merchants: 모든 가맹점
+        all_projects: 모든 프로젝트
+        all_tags: 모든 태그
+      errors:
+        generic: 이 기록에 올바르지 않은 항목이 있습니다.
+        amount_required: 금액을 입력하세요.
+        amount_zero: 금액은 0일 수 없습니다.
+        amount_too_large: 금액이 너무 큽니다.
+        amount_precision: 소수점 둘째 자리까지만 입력하세요.
+        date_invalid: 올바른 날짜를 입력하세요.
+        account_required: 계좌를 선택하세요.
+        accounts_same: 서로 다른 두 계좌를 선택하세요.
+        category_kind: 이 카테고리는 다른 트리(수입/지출)에 속합니다.
+        refund_target_required: 이 환불에 해당하는 구매를 선택하세요.
+        refund_too_large: 환불액은 원래 구매의 남은 금액을 넘을 수 없습니다.
+        refund_target_invalid: 환불은 지출에만 연결할 수 있습니다.
+        kind_invalid: 여기서는 이 유형을 사용할 수 없습니다.
+        category_unknown: 그 카테고리가 없습니다.
+        not_found: 찾을 수 없습니다.
+        not_in_trash: 이 기록은 휴지통에 없습니다.
+        imported_entry: 가져온 기록은 명세서와 함께 유지됩니다. 완전히 지우려면 명세서를 삭제하세요.
+        nothing_selected: 거래를 하나 이상 선택하세요.
+        unknown_action: 변경할 항목을 선택하세요.
+        nothing_to_undo: 이 변경에는 되돌릴 것이 없습니다.
+        no_change: 잔액이 이미 일치합니다.
+        parent_invalid: 상위 카테고리는 같은 트리의 1단계 카테고리여야 합니다.
+        merge_same: 다른 병합 대상을 선택하세요.
+      accounts:
+        title: 계좌
+        eyebrow: 돈이 있는 곳
+        intro: 모든 계좌·지갑·카드·대출의 잔액과 순자산. 현금이나 가져오지 않는 계좌는 직접 추가하세요.
+        new: 계좌 추가
+        new_intro: 현금, 지갑 앱, 대출, 남에게 빌려준 돈 등 직접 기록하고 싶은 모든 것.
+        back: 계좌로 돌아가기
+        assets: 자산
+        liabilities: 부채
+        asset: 자산
+        liability: 부채
+        net_worth: 순자산
+        empty_title: 아직 계좌가 없습니다
+        empty_body: 명세서를 가져오거나 계좌를 직접 추가해 시작하세요.
+        col_account: 계좌
+        col_entries: 거래
+        col_balance: 잔액
+        manual: 직접 추가
+        imported: 가져온 명세서에서
+        not_in_net_worth: 순자산 제외
+        credit_limit_short: "한도 %{amount}"
+        move_up: "%{name} 위로"
+        move_down: "%{name} 아래로"
+        edit: 편집
+        edit_label: "%{name} 편집"
+        archived_title: 보관한 계좌
+        archived_body: 보관한 계좌는 기록은 유지되지만 선택 목록에서 사라집니다.
+        unarchive: 복원
+        archive: 보관
+        archive_confirm: 이 계좌를 보관할까요? 거래는 기록에 남습니다.
+        delete: 계좌 삭제
+        delete_confirm: 이 계좌를 삭제할까요? 사용하는 기록이 없을 때만 가능합니다.
+        delete_help: 거래나 명세서가 있는 계좌는 삭제할 수 없습니다. 대신 보관하세요.
+        balance_note: 잔액 = 시작 잔액 + 휴지통에 없는 모든 거래. 은행과 맞추려면 잔액을 조정하세요.
+        name: 이름
+        name_placeholder: "예: 지갑, 토스, 자동차 대출"
+        type: 유형
+        opening_balance: 시작 잔액
+        opening_balance_help: 기록을 시작할 때의 금액. 카드나 대출의 빚은 음수로 입력합니다.
+        opening_balance_on: 시작 잔액 날짜
+        credit_limit: 신용 한도
+        card_only: 신용카드와 대출용.
+        statement_day: 결제일 기준일
+        due_day: 납부일
+        include_in_net_worth: 순자산에 포함
+        include_in_net_worth_help: 기록만 하고 내 것이 아닌 계좌는 끄세요.
+        current_balance: "현재 잔액: %{amount}"
+        adjust_title: 실제 잔액으로 맞추기
+        adjust_body: 차액을 잔액 조정으로 기록합니다. 수입이나 지출로 집계되지 않습니다.
+        actual_balance: 은행이나 지갑의 실제 잔액
+        adjust: 잔액 조정
+        manage_title: 관리
+        view_entries: 거래 보기
+        created: "계좌 %{name}을(를) 추가했습니다."
+        updated: "계좌 %{name}을(를) 저장했습니다."
+        archived: "계좌 %{name}을(를) 보관했습니다."
+        unarchived: "계좌 %{name}을(를) 복원했습니다."
+        deleted: "계좌 %{name}을(를) 삭제했습니다."
+        in_use: "%{name}에는 거래나 명세서가 있어 삭제할 수 없습니다. 대신 보관해 숨길 수 있습니다."
+        adjusted: "%{name}의 잔액을 %{amount} 조정했습니다."
+      entries:
+        eyebrow: 직접 기록
+        new_title: 기록 추가
+        edit_title: 기록 편집
+        intro: 지출, 수입, 내 계좌 간 이체, 환불, 잔액 수정을 기록하세요. 가져오기나 AI가 필요 없습니다.
+        add: 기록 추가
+        add_short: 추가
+        kind_nav: 기록 유형
+        kind_help:
+          expense: 계좌에서 쓴 돈(신용카드 구매 포함).
+          income: 번 돈이나 받은 돈.
+          transfer: 내 계좌 사이의 돈 이동. 카드나 대출 상환은 그 계좌로의 이체이며 지출로 두 번 집계되지 않습니다.
+          refund: 구매에 대한 환불. 원래 구매에 연결하면 그 지출이 줄어듭니다.
+          adjustment: 수입이나 지출로 집계하지 않고 계좌 잔액을 수정합니다.
+        save_and_add: 저장하고 계속 추가
+        card_payment_help: 신용카드나 대출을 선택하면 카드 대금 상환이 됩니다.
+        refund_help: 환불은 원래 구매의 카테고리를 따르고 그 지출을 줄입니다. 부분 환불도 됩니다.
+        no_accounts_title: 먼저 계좌를 추가하세요
+        no_accounts_body: 모든 기록은 계좌에 속합니다(현금도 계좌입니다).
+        imported_note: "명세서에서 가져왔습니다. 은행의 금액·날짜·계좌·원문(“%{original}”)은 그대로이며, 설명과 분류를 바꿀 수 있습니다."
+        actions_title: 작업
+        copy: 복사
+        add_refund: 환불 기록
+        delete: 휴지통으로 이동
+        delete_confirm: 이 기록을 휴지통으로 옮길까요? 나중에 복원할 수 있습니다.
+        origin: 출처
+        original: 원문
+        original_label: "원문: %{original}"
+        category_source: 카테고리 설정 주체
+        locked: 내 설정 유지
+        manual_only: 직접 입력
+        more_options: 모든 항목
+        created: "%{kind}을(를) 저장했습니다."
+        deleted: 휴지통으로 옮겼습니다.
+        restored: 휴지통에서 복원했습니다.
+        purged: 완전히 삭제했습니다.
+      trash:
+        title: 휴지통
+        eyebrow: 사라지지 않습니다
+        intro: 삭제한 기록은 여기서 기다립니다. 복원하거나 직접 입력한 기록은 완전히 삭제할 수 있습니다.
+        deleted_at: 삭제 시각
+        restore: 복원
+        purge: 완전히 삭제
+        purge_confirm: 이 기록을 완전히 삭제할까요? 되돌릴 수 없습니다.
+        empty: 휴지통이 비어 있습니다.
+        imported_note: 휴지통에 있는 가져온 기록은 명세서와 연결되어 있습니다. 명세서를 삭제하면 사라집니다.
+        link: "휴지통(%{count})"
+      activity:
+        title: 작업 기록
+        eyebrow: 모든 변경
+        intro: 기록에서 무엇이, 언제, 누구에 의해 바뀌었는지(나, 가져오기, 규칙, AI, 반복 기록).
+        action: 작업
+        subject: 대상
+        when: 시각
+        changes: 변경 내용
+        all_actions: 모든 작업
+        all_subjects: 모든 대상
+        empty: 아직 작업 기록이 없습니다.
+        undo_batch: 이 일괄 변경 되돌리기
+        undo_confirm: 이 일괄 변경 중 이후에 다시 바뀌지 않은 것을 모두 되돌릴까요?
+        undone: "%{count}개 변경을 되돌렸습니다(%{skipped}개는 이후 다시 바뀌어 건너뜀)."
+      actions:
+        create: 생성
+        update: 변경
+        delete: 삭제
+        restore: 복원
+        purge: 완전히 삭제
+        link: 연결
+        unlink: 연결 해제
+        import: 가져오기
+        reverse_import: 가져오기 취소
+        ai_apply: AI 변경 적용
+        ai_undo: 변경 되돌림
+        batch_update: 일괄 변경
+        batch_delete: 일괄 삭제
+        merge: 병합
+        archive: 보관
+        unarchive: 보관 해제
+        backup: 백업
+        restore_backup: 백업에서 복원
+      actors:
+        user: 나
+        import: 가져오기
+        rule: 규칙
+        ai: AI
+        system: BillieWeather
+        sync: 동기화
+        recurring: 반복 기록
+      subjects:
+        Transaction: 기록
+        BankAccount: 계좌
+        Category: 카테고리
+        Merchant: 가맹점
+        Project: 프로젝트
+        Tag: 태그
+        Budget: 예산
+        RecurringRule: 반복 기록
+        TransactionLink: 연결
+      review:
+        eyebrow: 결정이 필요합니다
+        income_title: 확인할 수입
+        income_intro: BillieWeather가 거래 유형을 구분하기 전에 수입으로 집계된 항목입니다. 환불이나 카드 대금 상환으로 보이며 수입이 아닙니다. 결정하기 전까지 아무것도 바뀌지 않습니다.
+        income_empty: 확인할 항목이 없습니다.
+        income_link:
+          one: "확인할 수입 %{count}건"
+          other: "확인할 수입 %{count}건"
+        suggestion: 추정
+        mark_as: "%{kind}(으)로 표시"
+        keep_income: 수입입니다
+        reclassified: "%{kind}(으)로 저장했습니다."
+        duplicates_title: 중복 가능성
+        duplicates_intro: 새로 가져온 이 행들은 이미 있는 기록과 비슷합니다(같은 날, 같은 금액, 가맹점 표기가 다름). 둘 다 두거나 새 것을 휴지통으로 옮기세요.
+        duplicates_empty: 중복 가능성이 없습니다.
+        duplicates_link:
+          one: "중복 가능성 %{count}건"
+          other: "중복 가능성 %{count}건"
+        new_row: 새 행
+        existing_row: 기존 기록
+        in_trash: 휴지통에 있음
+        is_duplicate: 중복 — 새 것 삭제
+        keep_both: 둘 다 유지
+        duplicate_removed: 중복 기록을 휴지통으로 옮겼습니다.
+        duplicate_kept: 두 기록을 모두 유지했습니다.
+      batch:
+        title: 선택한 거래
+        select: 선택
+        select_one: "%{description} 선택"
+        action: 변경
+        value: 변경 값
+        apply: 적용
+        confirm: 선택한 모든 거래에 이 변경을 적용할까요?
+        done: "%{count}건의 거래를 변경했습니다. 작업 기록에서 일괄로 되돌릴 수 있습니다."
+        actions:
+          category: 카테고리
+          project: 프로젝트
+          merchant: 가맹점
+          tag: 태그 추가
+          delete: 휴지통으로 이동
+      categories:
+        tree_eyebrow: 2단계
+        tree_title: 카테고리 트리
+        tree_body: 카테고리를 상위 카테고리 아래로 묶고, 수입과 지출을 나누고, 순서를 바꾸거나 쓰지 않는 것을 숨기세요.
+        tree_expense: 지출
+        tree_income: 수입
+        hidden: 숨김
+        kind_label: 트리
+        parent_label: 상위 카테고리
+        no_parent: 1단계
+        order_label: 순서
+        hide_label: 선택 목록에서 숨기기(기존 기록은 유지)
+        arrange: 설정 저장
+        arranged: "%{name} 설정을 저장했습니다."
+        merge_label: 병합 대상
+        merge: 병합
+        merge_confirm: "%{name}의 모든 기록과 기억한 규칙을 선택한 카테고리로 옮기고 %{name}을(를) 삭제할까요?"
+        merged: "%{name}을(를) %{into}에 병합했습니다(기록 %{count}건 이동)."
+      lists:
+        eyebrow: 정리
+        merchants:
+          title: 가맹점
+          intro: 거래하는 상점, 지급처, 사람. 기록에서 직접 지정하거나 새 이름을 입력하면 만들어집니다.
+        projects:
+          title: 프로젝트
+          intro: 여행, 리모델링, 부업 등 계좌와 카테고리를 넘어 기록을 묶습니다.
+        tags:
+          title: 태그
+          intro: 자유로운 라벨. 한 기록에 여러 개를 붙일 수 있습니다.
+        new_name: 이름
+        add: 추가
+        name: 이름
+        rename: 이름 변경
+        rename_label: "%{name} 이름 변경"
+        archive: 보관
+        unarchive: 복원
+        archived: 보관됨
+        merge: 병합
+        merge_into: 병합 대상
+        merge_confirm: "%{name}의 모든 기록을 선택한 항목으로 옮기고 %{name}을(를) 삭제할까요?"
+        delete: 삭제
+        delete_confirm: "%{name}을(를) 삭제할까요? 기록의 금액과 카테고리는 그대로이고 이 라벨만 빠집니다."
+        empty: 아직 아무것도 없습니다.
+        created: "%{name}을(를) 추가했습니다."
+        updated: "%{name}을(를) 저장했습니다."
+        merged: "%{name}을(를) %{into}에 병합했습니다(%{count}건)."
+        deleted: "%{name}을(를) 삭제했습니다(%{count}건의 기록에서 빠짐)."
+      budgets:
+        title: 예산
+        eyebrow: 지출 계획
+        intro: 전체 지출, 한 카테고리(하위 포함) 또는 한 프로젝트에 월간·연간 한도를 정하세요.
+        scope: 적용 대상
+        total: 전체 지출
+        period: 기간
+        periods:
+          month: 매월
+          year: 매년
+        limit: 한도
+        alert: 알림(%)
+        add: 예산 추가
+        spent: 사용액
+        progress: 진행
+        levels:
+          ok: "%{percent}% 사용 · %{remaining} 남음"
+          warning: "%{percent}% 사용 · %{remaining} 남음"
+          over: "예산 초과 · %{percent}%(%{remaining})"
+        empty: 아직 예산이 없습니다.
+        note: 지출은 환불을 뺀 금액입니다. 이체와 카드 대금 상환은 집계하지 않습니다.
+        saved: 예산을 저장했습니다.
+        deleted: 예산을 삭제했습니다.
+        delete_confirm: 이 예산을 삭제할까요?
+      recurring:
+        title: 반복 기록
+        eyebrow: 한 번만 설정
+        intro: 월세, 급여, 구독, 매월 저축 이체 등. 각 날짜는 한 번만 기록됩니다.
+        new: 반복 기록 추가
+        back: 반복 기록으로 돌아가기
+        name: 이름
+        kind: 유형
+        to_account: 받는 계좌(이체)
+        frequency: 반복
+        frequencies:
+          daily: 일
+          weekly: 주
+          monthly: 개월
+          yearly: 년
+        interval: 간격
+        start_on: 첫 날짜
+        end_on: 마지막 날짜(선택)
+        auto_post: 자동 기록
+        auto_post_help: 거래 페이지를 열 때 기한이 된 기록을 추가합니다. 끄면 “기한 된 기록 추가”를 눌러야 합니다.
+        every: "%{count}%{unit}마다"
+        next: 다음 날짜
+        paused: 일시 중지됨
+        auto: 자동
+        pause: 일시 중지
+        resume: 재개
+        post_due: "기한 된 기록 추가(%{count})"
+        posted:
+          one: "반복 기록 %{count}건을 추가했습니다."
+          other: "반복 기록 %{count}건을 추가했습니다."
+        saved: "%{name}을(를) 저장했습니다."
+        deleted: "%{name}을(를) 삭제했습니다. 이미 추가된 기록은 남습니다."
+        delete_confirm: 이 반복 기록을 삭제할까요? 이미 추가된 기록은 남습니다.
+        empty: 아직 반복 기록이 없습니다.
+      report:
+        title: 보고서
+        eyebrow: 부호가 아닌 유형으로 집계
+        intro: 원하는 기간의 수입·지출·순자산을 카테고리·계좌·가맹점·프로젝트·태그별로 봅니다.
+        period: 기간
+        from: 시작
+        to: 끝
+        by: 기준
+        presets:
+          all_time: 전체 기간
+          this_month: 이번 달
+          last_month: 지난달
+          last_30_days: 최근 30일
+          this_year: 올해
+          last_year: 작년
+          custom: 날짜 지정
+        dimensions:
+          category: 카테고리
+          account: 계좌
+          merchant: 가맹점
+          project: 프로젝트
+          tag: 태그
+        income: 수입
+        spending: 지출
+        net: 순수익
+        share: 비중
+        none: (없음)
+        by_title: "%{dimension}별"
+        refund_note: 환불은 해당 카테고리의 지출을 줄입니다. 이체, 카드 대금 상환, 잔액 조정은 제외됩니다.
+        monthly: 최근 12개월
+        month: 월
+        empty: 이 기간에는 수입이나 지출이 없습니다.

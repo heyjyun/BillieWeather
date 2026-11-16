@@ -15,22 +15,25 @@ module Finance
     end
 
     def to_h
-      all_transactions = Transaction.where(user_id: @user.id)
+      # Trashed entries never count anywhere; income and expense follow `kind` (finance-domain-spec §2).
+      all_transactions = Transaction.live.where(user_id: @user.id)
       all_transactions = all_transactions.where("booked_on >= ?", @start_date) if @start_date
       all_transactions = all_transactions.where("booked_on <= ?", @end_date) if @end_date
       included = all_transactions.included
       profile = Profile.find_by(user_id: @user.id)
-      income = included.where("amount > 0").sum(:amount)
-      expenses = -included.where("amount < 0").sum(:amount)
-      monthly = included.order(:booked_on).pluck(:booked_on, :amount)
-        .group_by { |date, _amount| date.beginning_of_month }
+      income = included.income_kind.sum(:amount)
+      # A refund (positive, kind refund) reduces spending; a card repayment or transfer never counts.
+      expenses = -included.expense_kind.sum(:amount)
+      monthly = included.order(:booked_on).pluck(:booked_on, :amount, :kind)
+        .group_by { |date, _amount, _kind| date.beginning_of_month }
         .map do |month, values|
-          incoming = values.sum(BigDecimal(0)) { |_date, amount| amount.positive? ? amount : 0 }
-          outgoing = -values.sum(BigDecimal(0)) { |_date, amount| amount.negative? ? amount : 0 }
+          incoming = values.sum(BigDecimal(0)) { |_date, amount, kind| Domain::INCOME_KINDS.include?(kind) ? amount : 0 }
+          outgoing = -values.sum(BigDecimal(0)) { |_date, amount, kind| Domain::EXPENSE_KINDS.include?(kind) ? amount : 0 }
           {month: month, income: incoming, expenses: outgoing, net: incoming - outgoing}
         end
-      categories = included.where("amount < 0").group(:category).sum(:amount)
+      categories = included.expense_kind.group(:category).sum(:amount)
         .map { |name, amount| {name: name, amount: -amount} }
+        .select { |category| category[:amount].positive? }
         .sort_by { |category| -category[:amount] }
 
       {
@@ -44,7 +47,7 @@ module Finance
         uncategorized_count: included.where(category: "Uncategorized").count,
         tax_review_count: all_transactions.where(tax_review: true, excluded: false).count,
         excluded_count: all_transactions.where(excluded: true).count,
-        transfer_count: all_transactions.where(category: "Transfers", excluded: false).count,
+        transfer_count: all_transactions.where(kind: %w[transfer card_payment], excluded: false).count,
         period_start: included.minimum(:booked_on),
         period_end: included.maximum(:booked_on),
         categories: categories,

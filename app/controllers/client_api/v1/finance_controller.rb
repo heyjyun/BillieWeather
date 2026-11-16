@@ -80,14 +80,15 @@ module ClientApi
           # Categories the person made in the app arrive as names; the cloud adds them as its own custom categories.
           known = {}
           parsed.each { |row| row[:category] = (known[row[:category]] ||= Finance::CustomCategory.ensure_for!(current_user, row[:category])) }
+          # Same classification and cross-file duplicate check as a website import; the device's
+          # categories are kept (they were decided there).
+          plan = Finance::ImportPlan.new(user: current_user, rows: parsed, origin: "upload", category_source: "file")
+          next {error: "all_duplicates", skipped: plan.skipped, status: :conflict} if plan.empty?
           statement = Finance::Statement.create!(user: current_user, filename: payload[:filename].to_s.first(255), currency: currency,
-            sha256: sha256, status: "imported", transaction_count: parsed.length, closing_balance: closing,
+            sha256: sha256, status: "imported", transaction_count: plan.rows.length, closing_balance: closing,
             closing_balance_on: closing && parse_date(payload[:closing_balance_on]), balance_observed_on: parsed.map { |r| r[:booked_on] }.max)
-          now = Time.current
-          parsed.each_slice(500) do |batch|
-            Finance::Transaction.insert_all!(batch.map { |a| a.merge(user_id: current_user.id, statement_id: statement.id, created_at: now, updated_at: now) })
-          end
-          {id: statement.id, created: true, status: :created}
+          plan.insert!(statement)
+          {id: statement.id, created: true, skipped_duplicates: plan.skipped, flagged_duplicates: plan.flagged.length, status: :created}
         end
         status = result.delete(:status)
         Finance::BalanceSync.call(user: current_user) if result[:created]
@@ -125,12 +126,12 @@ module ClientApi
         after_id = params[:after_id].to_i
         limit = params[:limit].to_i.clamp(1, PAGE_SIZE)
         limit = PAGE_SIZE if params[:limit].blank?
-        page = Finance::Transaction.where(user_id: current_user.id).where("id > ?", after_id).order(:id).limit(limit).to_a
+        page = Finance::Transaction.live.where(user_id: current_user.id).where.not(statement_id: nil).where("id > ?", after_id).order(:id).limit(limit).to_a
         render json: {
           transactions: page.map do |transaction|
-            {id: transaction.id, statement_id: transaction.statement_id, booked_on: transaction.booked_on.iso8601,
-             description: transaction.description, amount: decimal(transaction.amount), category: transaction.category,
-             tax_review: transaction.tax_review, excluded: transaction.excluded}
+            {id: transaction.id, uuid: transaction.uuid, statement_id: transaction.statement_id, booked_on: transaction.booked_on.iso8601,
+             description: transaction.description, original_description: transaction.original_description, amount: decimal(transaction.amount),
+             category: transaction.category, kind: transaction.kind, tax_review: transaction.tax_review, excluded: transaction.excluded}
           end,
           next_after_id: (page.length == limit) ? page.last.id : nil
         }

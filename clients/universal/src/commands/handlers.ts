@@ -5,7 +5,7 @@
 
 import type { ActionArguments, ActionHandler, Authorizer, DateRangeValue, EntityProvider, Message, MoneyValue } from "@nlae/core";
 import type { Category, MerchantRule, Transaction } from "@billie/shared-types";
-import { formatMoney, isBuiltInCategory, merchantKey, normalizeCategoryName } from "@billie/finance-core";
+import { formatMoney, isBuiltInCategory, isCounted, kindOf, merchantKey, normalizeCategoryName } from "@billie/finance-core";
 import type { FinanceStore, TransactionFlags } from "../services/store";
 import type { Page } from "../App";
 import { categoryEntities } from "./actions";
@@ -60,8 +60,8 @@ const filterOf = (args: ActionArguments): TransactionFilter => ({
   amount: (args.amount as MoneyValue | undefined) ?? undefined,
 });
 
-/** Spending/income exactly as the dashboard counts it: excluded rows and transfers never count. */
-const counted = (t: Transaction) => !t.excluded && t.category !== "Transfers";
+/** Spending/income exactly as the dashboard counts it: by kind; excluded rows, transfers and card payments never count. */
+const counted = (t: Transaction) => isCounted(t);
 
 export function createEntities(deps: Pick<HostDeps, "data" | "categoryLabel">): EntityProvider {
   return {
@@ -143,7 +143,7 @@ export function createHandlers(deps: HostDeps): Record<string, ActionHandler> {
     "finance.spending": {
       async prepare() { return readOnly("read", "spending"); },
       async execute(_p, args) {
-        const rows = matches(args).filter((t) => counted(t) && t.amountCents < 0);
+        const rows = matches(args).filter((t) => counted(t) && kindOf(t) !== "income");
         const total = rows.reduce((sum, t) => sum - t.amountCents, 0);
         return { summary: msg("spending_total", "Spent {amount} across {count} transaction(s).", { amount: formatMoney(total, currency()), count: rows.length }), data: { totalCents: total, count: rows.length } };
       },
@@ -151,7 +151,7 @@ export function createHandlers(deps: HostDeps): Record<string, ActionHandler> {
     "finance.income": {
       async prepare() { return readOnly("read", "income"); },
       async execute(_p, args) {
-        const rows = matches(args).filter((t) => counted(t) && t.amountCents > 0);
+        const rows = matches(args).filter((t) => counted(t) && kindOf(t) === "income");
         const total = rows.reduce((sum, t) => sum + t.amountCents, 0);
         return { summary: msg("income_total", "Received {amount} across {count} transaction(s).", { amount: formatMoney(total, currency()), count: rows.length }), data: { totalCents: total, count: rows.length } };
       },

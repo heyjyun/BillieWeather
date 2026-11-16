@@ -38,8 +38,8 @@ module Finance
       avg_scope = window_end ? known.where(booked_on: (window_end - 89)..window_end) : known.none
       avg_first = avg_scope.minimum(:booked_on)
       history_days = avg_first ? (window_end - avg_first).to_i + 1 : 0
-      income = avg_scope.where("amount > 0").sum(:amount)
-      expenses = -avg_scope.where("amount < 0").sum(:amount)
+      income = avg_scope.income_kind.sum(:amount)
+      expenses = -avg_scope.expense_kind.sum(:amount)
       income_factor = 1 + @income_adjustment / 100
       expense_factor = 1 + @expense_adjustment / 100
       daily_income = history_days.positive? ? income / history_days * income_factor : BigDecimal(0)
@@ -125,8 +125,8 @@ module Finance
 
     def prophet_projection(today)
       scope = Transaction.where(user_id: @user.id).included.where(booked_on: ..today)
-      daily_income = scope.where("amount > 0").group(:booked_on).sum(:amount)
-      daily_expenses = scope.where("amount < 0").group(:booked_on).sum(:amount).transform_values(&:-@)
+      daily_income = scope.income_kind.group(:booked_on).sum(:amount)
+      daily_expenses = scope.expense_kind.group(:booked_on).sum(:amount).transform_values(&:-@)
       unless ProphetProjector.eligible?(daily_income, daily_expenses, today: today)
         @model_notice = I18n.t("billie.backend.prophet_short_history", history_days: ProphetProjector::MIN_HISTORY_DAYS, active_days: ProphetProjector::MIN_ACTIVE_DAYS)
         return
@@ -156,8 +156,8 @@ module Finance
         return
       end
 
-      income = transactions.where("amount > 0").group(:booked_on).sum(:amount)
-      expenses = transactions.where("amount < 0").group(:booked_on).sum(:amount).transform_values(&:-@)
+      income = transactions.income_kind.group(:booked_on).sum(:amount)
+      expenses = transactions.expense_kind.group(:booked_on).sum(:amount).transform_values(&:-@)
       history = (first_date..today).map do |day|
         {date: day.iso8601, income: income.fetch(day, BigDecimal(0)).to_s("F"),
          expenses: expenses.fetch(day, BigDecimal(0)).to_s("F")}

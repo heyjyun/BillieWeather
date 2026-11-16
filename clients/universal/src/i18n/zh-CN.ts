@@ -1,3 +1,4 @@
+import { ledgerZhCN } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalZhCN } from "./universal";
 import { commandZhCN } from "./command";
@@ -274,5 +275,6 @@ export const zhCN: Messages = {
     yes: "是", no: "否",
   },
   universal: universalZhCN,
+  ledger: ledgerZhCN,
   command: commandZhCN,
 };

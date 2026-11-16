@@ -1,0 +1,28 @@
+<% content_for :title, t("billie.ledger.recurring.title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.recurring.eyebrow") %></span><h1><%= t("billie.ledger.recurring.title") %></h1><p><%= t("billie.ledger.recurring.intro") %></p></div>
+  <div class="bw-heading-actions">
+    <%= button_to t("billie.ledger.recurring.post_due", count: @due), post_due_finance_recurring_rules_path, class: "bw-button bw-button-outline", disabled: @due.zero?, form: {data: {turbo: false}} %>
+    <%= link_to t("billie.ledger.recurring.new"), new_finance_recurring_rule_path, class: "bw-button bw-button-dark" %>
+  </div></div>
+<section class="bw-panel bw-panel-flush">
+  <% if @rules.any? %>
+    <div class="bw-table-scroll"><table class="bw-table" id="recurring-table">
+      <thead><tr><th scope="col"><%= t("billie.ledger.recurring.name") %></th><th scope="col"><%= t("billie.ledger.recurring.frequency") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.fields.amount") %></th><th scope="col"><%= t("billie.ledger.recurring.next") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <tbody>
+        <% @rules.each do |rule| %>
+          <tr><td><strong><%= rule.name %></strong><small class="bw-muted"><%= t("billie.ledger.kinds.#{rule.template["kind"]}", default: "") %><%= " · #{t("billie.ledger.recurring.paused")}" if rule.paused %><%= " · #{t("billie.ledger.recurring.auto")}" if rule.auto_post %></small></td>
+            <td><%= t("billie.ledger.recurring.every", count: rule.interval, unit: t("billie.ledger.recurring.frequencies.#{rule.frequency}")) %></td>
+            <td class="bw-text-right bw-nowrap"><%= finance_money(BigDecimal(rule.template["amount"].to_s.presence || "0", exception: false) || 0, @profile.currency) %></td>
+            <td class="bw-nowrap"><%= rule.paused ? "—" : rule.upcoming(3, from: rule.next_on || rule.start_on).map { |d| finance_date(d) }.join(", ") %></td>
+            <td class="bw-text-right bw-nowrap">
+              <%= link_to t("billie.ledger.accounts.edit"), edit_finance_recurring_rule_path(rule), class: "bw-table-link" %>
+              <%= button_to rule.paused ? t("billie.ledger.recurring.resume") : t("billie.ledger.recurring.pause"), toggle_finance_recurring_rule_path(rule), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+              <%= button_to t("billie.ledger.lists.delete"), finance_recurring_rule_path(rule), method: :delete, class: "bw-button bw-button-small bw-button-danger-outline", form: {class: "bw-inline-edit", data: {turbo: false, confirm: t("billie.ledger.recurring.delete_confirm")}} %>
+            </td></tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.ledger.recurring.empty") %></h3></div>
+  <% end %>
+</section>

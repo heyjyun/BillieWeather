@@ -1,0 +1,3 @@
+<% content_for :title, @rule.name %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.recurring.eyebrow") %></span><h1><%= @rule.name %></h1></div><%= link_to t("billie.ledger.recurring.back"), finance_recurring_rules_path, class: "bw-text-link" %></div>
+<section class="bw-panel"><%= render "form", rule: @rule, accounts: @accounts, tree: @tree, projects: @projects %></section>

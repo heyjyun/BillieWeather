@@ -1,0 +1,51 @@
+<% content_for :title, t("billie.ledger.report.title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.report.eyebrow") %></span><h1><%= t("billie.ledger.report.title") %></h1><p><%= t("billie.ledger.report.intro") %></p></div></div>
+<section class="bw-panel">
+  <%= form_with url: finance_ledger_report_path, method: :get, data: {turbo: false}, class: "bw-filter-bar" do |form| %>
+    <div><%= form.label :preset, t("billie.ledger.report.period"), class: "bw-sr-only" %><%= form.select :preset, Finance::DashboardPeriod::PRESETS.map { |p| [t("billie.ledger.report.presets.#{p}"), p] }, selected: @period.preset %></div>
+    <div><%= form.label :start_date, t("billie.ledger.report.from"), class: "bw-sr-only" %><%= form.date_field :start_date, value: params[:start_date] %></div>
+    <div><%= form.label :end_date, t("billie.ledger.report.to"), class: "bw-sr-only" %><%= form.date_field :end_date, value: params[:end_date] %></div>
+    <div><%= form.label :dimension, t("billie.ledger.report.by"), class: "bw-sr-only" %><%= form.select :dimension, Finance::LedgerReport::DIMENSIONS.map { |d| [t("billie.ledger.report.dimensions.#{d}"), d] }, selected: @dimension %></div>
+    <%= form.submit t("billie.finance.ui.apply_filters"), class: "bw-button bw-button-dark" %>
+  <% end %>
+  <p class="bw-caption"><%= @period.start_date ? "#{finance_date(@period.start_date)} – #{finance_date(@period.end_date)}" : t("billie.ledger.report.presets.all_time") %></p>
+</section>
+<% income = @report.income_total %><% expense = @report.expense_total %><% worth = @report.net_worth %>
+<div class="bw-metrics bw-section-gap" id="report-metrics">
+  <div class="bw-metric"><span><%= t("billie.ledger.report.income") %></span><strong><%= finance_money(income, @profile.currency) %></strong></div>
+  <div class="bw-metric"><span><%= t("billie.ledger.report.spending") %></span><strong><%= finance_money(expense, @profile.currency) %></strong></div>
+  <div class="bw-metric"><span><%= t("billie.ledger.report.net") %></span><strong><%= finance_money(income - expense, @profile.currency) %></strong></div>
+  <div class="bw-metric bw-metric-mint"><span><%= t("billie.ledger.accounts.net_worth") %></span><strong><%= finance_money(worth[:net_worth], @profile.currency) %></strong></div>
+</div>
+<section class="bw-panel bw-panel-flush bw-section-gap">
+  <div class="bw-panel-heading"><div><h2><%= t("billie.ledger.report.by_title", dimension: t("billie.ledger.report.dimensions.#{@dimension}")) %></h2><p><%= t("billie.ledger.report.refund_note") %></p></div></div>
+  <% if @rows.any? %>
+    <div class="bw-table-scroll"><table class="bw-table" id="report-table">
+      <thead><tr><th scope="col"><%= t("billie.ledger.report.dimensions.#{@dimension}") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.spending") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.share") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.income") %></th></tr></thead>
+      <tbody>
+        <% @rows.each do |label, row| %>
+          <tr><td><%= label.nil? ? t("billie.ledger.report.none") : (@dimension == "category" ? finance_label(label) : label) %></td>
+            <td class="bw-text-right bw-nowrap"><%= finance_money(row[:expense], @profile.currency) %></td>
+            <td class="bw-text-right"><%= finance_share(expense.positive? && row[:expense].positive? ? row[:expense] / expense : nil) %></td>
+            <td class="bw-text-right bw-nowrap"><%= finance_money(row[:income], @profile.currency) %></td></tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.ledger.report.empty") %></h3></div>
+  <% end %>
+</section>
+<div class="bw-two-column bw-section-gap">
+  <section class="bw-panel bw-panel-flush">
+    <div class="bw-panel-heading"><div><h2><%= t("billie.ledger.report.monthly") %></h2></div></div>
+    <div class="bw-table-scroll"><table class="bw-table" id="monthly-table">
+      <thead><tr><th scope="col"><%= t("billie.ledger.report.month") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.income") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.spending") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.net") %></th></tr></thead>
+      <tbody><% @monthly.each do |month| %><tr><td><%= finance_date(month[:month], "%b %Y") %></td><td class="bw-text-right"><%= finance_money(month[:income], @profile.currency) %></td><td class="bw-text-right"><%= finance_money(month[:expense], @profile.currency) %></td><td class="bw-text-right <%= 'bw-negative' if month[:net].negative? %>"><%= finance_money(month[:net], @profile.currency) %></td></tr><% end %></tbody>
+    </table></div>
+  </section>
+  <section class="bw-panel">
+    <h2><%= t("billie.ledger.accounts.net_worth") %></h2>
+    <dl class="bw-db-facts"><dt><%= t("billie.ledger.accounts.assets") %></dt><dd><%= finance_money(worth[:assets], @profile.currency) %></dd><dt><%= t("billie.ledger.accounts.liabilities") %></dt><dd><%= finance_money(worth[:liabilities], @profile.currency) %></dd><dt><%= t("billie.ledger.accounts.net_worth") %></dt><dd><strong><%= finance_money(worth[:net_worth], @profile.currency) %></strong></dd></dl>
+    <%= link_to t("billie.ledger.accounts.title"), finance_accounts_path, class: "bw-text-link" %>
+  </section>
+</div>

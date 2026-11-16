@@ -462,3 +462,18 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 }
 .bw-command .nlae-suggestions li.is-active, .bw-command .nlae-suggestions li:hover { color: var(--bw-color-accent-soft-text); }
 .bw-command-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--bw-radius-md); background: var(--bw-color-accent-soft); color: var(--bw-color-accent-soft-text); }
+
+/* Manual bookkeeping (accounts, entry form, batch edit, category tree, activity). Uses the existing tokens. */
+.bw-entry-form { display: grid; gap: 0.9rem; margin-bottom: 1rem; }
+.bw-form-grid { display: grid; gap: 0.75rem 1rem; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); align-items: start; }
+.bw-form-grid .bw-grow { grid-column: 1 / -1; }
+.bw-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.bw-row-actions { display: flex; flex-wrap: wrap; gap: 0.35rem 0.75rem; align-items: center; justify-content: flex-end; }
+.bw-field-error { color: var(--bw-negative-text, #b42318); }
+.bw-batch-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; position: sticky; top: 0; z-index: 2; }
+.bw-batch-bar input { max-width: 10rem; }
+.bw-account-balance { display: grid; justify-items: end; gap: 0.15rem; }
+.bw-inline-field select { min-width: 8rem; }
+.bw-category-tree li, .bw-account-list li, .bw-organize-list li { align-items: center; }
+.bw-activity li { padding: 0.35rem 0; border-bottom: 1px solid var(--bw-border, #e5e7eb); }
+.bw-claim { max-width: 34rem; margin: 10vh auto; display: grid; gap: 1rem; text-align: start; }

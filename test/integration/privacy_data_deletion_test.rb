@@ -26,7 +26,20 @@ class PrivacyDataDeletionTest < ActionDispatch::IntegrationTest
     Finance::Insight.create!(user: user, source: "rules", content: {"summary" => "x"}, generated_at: Time.current)
     # Command-bar history and undo data (Finance::SmartCommand) are financial data too.
     Finance::CommandExecution.create!(user: user, idempotency_key: "privacy-#{digit * 8}", action_id: "transactions.exclude", request_digest: digit * 64, undo_payload: {"field" => "excluded", "rows" => []})
-    Finance::Transaction.create!(user: user, statement: statement, booked_on: Date.current, description: "Coffee bar", amount: "-4.00", category: "Food & dining")
+    entry = Finance::Transaction.create!(user: user, statement: statement, booked_on: Date.current, description: "Coffee bar", amount: "-4.00", category: "Food & dining")
+    # The manual-bookkeeping tables (finance-domain-spec §3) are financial data too.
+    refund = Finance::Transaction.create!(user: user, bank_account: account, entry_origin: "manual", booked_on: Date.current, description: "Coffee refund", amount: "1.00", kind: "refund", category: "Food & dining")
+    Finance::TransactionLink.create!(user: user, link_type: "refund_of", from_transaction: refund, to_transaction: entry, amount: "1.00")
+    Finance::AuditEvent.record!(user: user, action: "create", subject: refund, changes: {"amount" => [nil, "1.00"]})
+    Finance::OrganizeRun.create!(user: user)
+    project = Finance::Project.create!(user: user, name: "Trip")
+    Finance::Budget.create!(user: user, period: "month", amount: "100.00")
+    Finance::RecurringRule.create!(user: user, name: "Rent", frequency: "monthly", start_on: Date.current, template: {})
+    Finance::Merchant.create!(user: user, name: "Coffee bar")
+    Finance::Tag.create!(user: user, name: "work")
+    Finance::CategorySetting.create!(user: user, name: "Pets", category_kind: "expense")
+    Finance::Book.default_for(user)
+    project && entry
   end
 
   def finance_counts(user)

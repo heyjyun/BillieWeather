@@ -15,6 +15,8 @@ export interface Account {
   usageRegion: string | null;
   registeredAt: string | null;
   badges: string[];
+  /** The account's immutable id (server `finance_owner_uid`); null from older servers. Binds local databases to this account. */
+  ownerId: string | null;
 }
 
 export interface AccountPreferences {
@@ -34,12 +36,13 @@ export class AccountError extends Error {
 
 interface AccountJson {
   email: string; nickname: string | null; locale: string | null; time_zone: string | null;
-  usage_region: string | null; registered_at: string | null; badges?: string[];
+  usage_region: string | null; registered_at: string | null; badges?: string[]; owner_id?: string | null;
 }
 
 const toAccount = (json: AccountJson): Account => ({
   email: json.email, nickname: json.nickname, locale: json.locale, timeZone: json.time_zone,
   usageRegion: json.usage_region, registeredAt: json.registered_at, badges: json.badges ?? [],
+  ownerId: typeof json.owner_id === "string" && /^[0-9a-f-]{36}$/i.test(json.owner_id) ? json.owner_id.toLowerCase() : null,
 });
 
 async function request<T>(path: string, init: { method: string; token?: string; body?: unknown }): Promise<T> {

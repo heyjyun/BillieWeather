@@ -20,7 +20,13 @@ export interface ExistingTransaction {
 
 const descriptionKey = (text: string) => text.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
 
-const compatible = (a: string | null, b: string | null) => a === null || b === null || a === b;
+/**
+ * Same account, or both without an account. A row and a stored entry where only ONE side has no
+ * account (legacy rows) are never an automatic duplicate: see `weak` below and the manifest rule
+ * dedupe.null_account (packages/finance-core/schema/financial-schema.json).
+ */
+const compatible = (a: string | null, b: string | null) => a === b;
+const weak = (a: string | null, b: string | null) => a !== b && (a === null || b === null);
 
 function cents(row: CanonicalTransaction): number | null {
   return row.amountMinor === null ? null : toStorageCents(row.amountMinor, row.currencyExponent);
@@ -68,6 +74,12 @@ export function markDuplicates(rows: CanonicalTransaction[], existing: readonly 
     const stored = (byKey.get(key) ?? []).filter((candidate) => compatible(candidate.accountKey, accountKey));
     if (seen <= stored.length) {
       addIssue(row, issue("duplicate_overlap", "review", undefined, { count: stored.length }));
+      continue;
+    }
+    // Exact match only against a row whose account is unknown: a person decides (suggested: keep).
+    const unknown = (byKey.get(key) ?? []).filter((candidate) => weak(candidate.accountKey, accountKey));
+    if (seen - stored.length <= unknown.length) {
+      addIssue(row, issue("possible_duplicate", "review", undefined, { id: unknown[0].id, unknownAccount: 1 }));
       continue;
     }
     // Same day and amount, same merchant written differently (e.g. a CSV and a PDF of the same account).

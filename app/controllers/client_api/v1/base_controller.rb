@@ -22,6 +22,7 @@ module ClientApi
       # Everything the apps may know about an account. No financial data.
       def account_json(user)
         {
+          owner_id: user.finance_owner_uid,
           email: user.email,
           nickname: user.nickname,
           locale: user.locale.presence,

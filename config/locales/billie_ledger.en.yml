@@ -1,0 +1,435 @@
+en:
+  billie:
+    ledger:
+      save: Save
+      nav:
+        accounts: Accounts
+        lists: Merchants & projects
+        budgets: Budgets
+        reports: Reports
+      kinds:
+        expense: Expense
+        income: Income
+        refund: Refund
+        transfer: Transfer
+        card_payment: Card payment
+        opening_balance: Opening balance
+        adjustment: Balance adjustment
+        ignored: Not counted
+      account_types:
+        checking: Checking
+        savings: Savings
+        cash: Cash
+        payment_app: Payment app / wallet
+        investment: Investment
+        receivable: Money owed to you
+        credit_card: Credit card
+        loan: Loan / debt
+        other: Other
+      origins:
+        import: Imported statement
+        manual: Entered by hand
+        web_copy: Copied from the website
+        upload: Sent from an app
+        recurring: Recurring entry
+        legacy: Imported before this version
+      category_sources:
+        user: Chosen by you
+        rule: Remembered rule
+        file: From the statement file
+        auto: Built-in lists
+        region: Regional list
+        ai: AI suggestion
+        legacy: Set before this version
+      locked_fields:
+        category: Category
+        kind: Type
+        description: Description
+        excluded: Excluded
+        merchant: Merchant
+        project: Project
+        account: Account
+      fields:
+        amount: Amount
+        amount_signed: Amount (negative to reduce the balance)
+        date: Date
+        time: Time (optional)
+        account: Account
+        from_account: From account
+        to_account: To account
+        choose_account: Choose an account
+        category: Category
+        merchant: Merchant
+        project: Project
+        tags: Tags
+        tags_placeholder: Comma-separated, e.g. travel, gift
+        note: Note
+        description: Description
+        description_placeholder: What it was (shown in lists)
+        refund_of: Original purchase
+        refund_of_none: Not linked to a purchase
+        none: None
+      filters:
+        all_accounts: All accounts
+        all_merchants: All merchants
+        all_projects: All projects
+        all_tags: All tags
+      errors:
+        generic: Something in this entry isn't valid.
+        amount_required: Enter an amount.
+        amount_zero: The amount can't be zero.
+        amount_too_large: That amount is too large.
+        amount_precision: Use at most two decimal places.
+        date_invalid: Enter a valid date.
+        account_required: Choose an account.
+        accounts_same: Choose two different accounts.
+        category_kind: That category belongs to the other tree (income vs. expense).
+        refund_target_required: Choose the purchase this refund belongs to.
+        refund_too_large: A refund can't be more than what is left of the original purchase.
+        refund_target_invalid: Refunds can only be linked to an expense.
+        kind_invalid: That entry type isn't available here.
+        category_unknown: That category doesn't exist.
+        not_found: That item was not found.
+        not_in_trash: That entry is not in the trash.
+        imported_entry: Imported entries stay with their statement; delete the statement to remove them for good.
+        nothing_selected: Select at least one transaction.
+        unknown_action: Choose what to change.
+        nothing_to_undo: There is nothing to undo for this change.
+        no_change: The balance already matches.
+        parent_invalid: The parent must be a top-level category in the same tree.
+        merge_same: Choose a different item to merge into.
+      accounts:
+        title: Accounts
+        eyebrow: WHERE YOUR MONEY IS
+        intro: Every account, wallet, card and loan, with balances and your net worth. Add accounts by hand for cash or anything you don't import.
+        new: Add account
+        new_intro: Cash, a wallet app, a loan, money someone owes you — anything you want to track by hand.
+        back: Back to accounts
+        assets: Assets
+        liabilities: Liabilities
+        asset: Assets
+        liability: Liabilities
+        net_worth: Net worth
+        empty_title: No accounts yet
+        empty_body: Import a statement or add an account by hand to start.
+        col_account: Account
+        col_entries: Entries
+        col_balance: Balance
+        manual: Added by hand
+        imported: From imported statements
+        not_in_net_worth: not in net worth
+        credit_limit_short: "limit %{amount}"
+        move_up: "Move %{name} up"
+        move_down: "Move %{name} down"
+        edit: Edit
+        edit_label: "Edit %{name}"
+        archived_title: Archived accounts
+        archived_body: Archived accounts keep their history but leave pickers and lists.
+        unarchive: Restore
+        archive: Archive
+        archive_confirm: Archive this account? Its entries stay in your history.
+        delete: Delete account
+        delete_confirm: Delete this account? This only works when nothing uses it.
+        delete_help: An account with entries or statements can't be deleted; archive it instead.
+        balance_note: Balance = opening balance + every entry not in the trash. Adjust a balance to match your bank.
+        name: Name
+        name_placeholder: e.g. Wallet, Venmo, Car loan
+        type: Type
+        opening_balance: Opening balance
+        opening_balance_help: What the account held when you started tracking it. Use a negative amount for money owed on a card or loan.
+        opening_balance_on: Opening balance date
+        credit_limit: Credit limit
+        card_only: For credit cards and loans.
+        statement_day: Statement day
+        due_day: Payment due day
+        include_in_net_worth: Include in net worth
+        include_in_net_worth_help: Leave off for accounts you track but don't own.
+        current_balance: "Current balance: %{amount}"
+        adjust_title: Set the real balance
+        adjust_body: Records a balance adjustment for the difference. It never counts as income or spending.
+        actual_balance: Balance on your bank or in your wallet
+        adjust: Adjust balance
+        manage_title: Manage
+        view_entries: View entries
+        created: "Account %{name} added."
+        updated: "Account %{name} saved."
+        archived: "Account %{name} archived."
+        unarchived: "Account %{name} restored."
+        deleted: "Account %{name} deleted."
+        in_use: "%{name} has entries or statements, so it can't be deleted. Archive it to hide it instead."
+        adjusted: "Balance of %{name} adjusted by %{amount}."
+      entries:
+        eyebrow: ADD BY HAND
+        new_title: Add an entry
+        edit_title: Edit entry
+        intro: Record spending, income, transfers between your accounts, refunds and balance corrections — no import or AI needed.
+        add: Add entry
+        add_short: Add
+        kind_nav: Entry type
+        kind_help:
+          expense: Money you spent from an account (a credit card purchase too).
+          income: Money you earned or received.
+          transfer: Money moving between your own accounts. Paying a credit card or loan is a transfer into it and never counts as spending twice.
+          refund: Money back for a purchase. Link it to the original purchase so it reduces that spending.
+          adjustment: Corrects an account's balance without counting as income or spending.
+        save_and_add: Save and add another
+        card_payment_help: Choosing a credit card or loan makes this a card payment.
+        refund_help: The refund takes the purchase's category and reduces its spending; partial refunds are fine.
+        no_accounts_title: Add an account first
+        no_accounts_body: Every entry belongs to an account (cash counts as an account too).
+        imported_note: "Imported from a statement. The bank's amount, date, account and text (“%{original}”) stay as they were; you can change how it's described and filed."
+        actions_title: Actions
+        copy: Copy
+        add_refund: Record a refund
+        delete: Move to trash
+        delete_confirm: Move this entry to the trash? You can restore it later.
+        origin: Source
+        original: Original text
+        original_label: "Original: %{original}"
+        category_source: Category set by
+        locked: Kept as you set it
+        manual_only: Added by hand
+        more_options: All fields
+        created: "%{kind} saved."
+        deleted: Moved to the trash.
+        restored: Restored from the trash.
+        purged: Deleted for good.
+      trash:
+        title: Trash
+        eyebrow: NOTHING IS LOST
+        intro: Deleted entries wait here. Restore them, or delete entries you added by hand for good.
+        deleted_at: Deleted
+        restore: Restore
+        purge: Delete for good
+        purge_confirm: Delete this entry for good? This can't be undone.
+        empty: The trash is empty.
+        imported_note: Imported entries in the trash stay linked to their statement; deleting the statement removes them.
+        link: "Trash (%{count})"
+      activity:
+        title: Activity log
+        eyebrow: EVERY CHANGE
+        intro: What changed in your records, when, and by whom — you, an import, a rule, AI or a recurring entry.
+        action: Action
+        subject: Item
+        when: When
+        changes: Changes
+        all_actions: All actions
+        all_subjects: All items
+        empty: No activity yet.
+        undo_batch: Undo this batch
+        undo_confirm: Undo every change in this batch that hasn't been changed again since?
+        undone: "%{count} changes undone (%{skipped} skipped because they changed again)."
+      actions:
+        create: Created
+        update: Changed
+        delete: Deleted
+        restore: Restored
+        purge: Deleted for good
+        link: Linked
+        unlink: Unlinked
+        import: Imported
+        reverse_import: Import reversed
+        ai_apply: AI change applied
+        ai_undo: Change undone
+        batch_update: Batch change
+        batch_delete: Batch delete
+        merge: Merged
+        archive: Archived
+        unarchive: Restored from archive
+        backup: Backed up
+        restore_backup: Restored from backup
+      actors:
+        user: by you
+        import: by an import
+        rule: by a rule
+        ai: by AI
+        system: by BillieWeather
+        sync: by sync
+        recurring: by a recurring entry
+      subjects:
+        Transaction: Entry
+        BankAccount: Account
+        Category: Category
+        Merchant: Merchant
+        Project: Project
+        Tag: Tag
+        Budget: Budget
+        RecurringRule: Recurring entry
+        TransactionLink: Link
+      review:
+        eyebrow: NEEDS YOUR DECISION
+        income_title: Income to check
+        income_intro: These were counted as income before BillieWeather knew each transaction's type. They look like refunds or card payments, which are not income. Nothing changes until you decide.
+        income_empty: Nothing to check.
+        income_link:
+          one: "%{count} income entry to check"
+          other: "%{count} income entries to check"
+        suggestion: Looks like
+        mark_as: "Mark as %{kind}"
+        keep_income: It's income
+        reclassified: "Saved as %{kind}."
+        duplicates_title: Possible duplicates
+        duplicates_intro: These rows from a newer import look like rows you already had (same day and amount, the merchant written differently). Keep both, or move the new one to the trash.
+        duplicates_empty: No possible duplicates.
+        duplicates_link:
+          one: "%{count} possible duplicate"
+          other: "%{count} possible duplicates"
+        new_row: New row
+        existing_row: Already recorded
+        in_trash: in the trash
+        is_duplicate: Duplicate — remove the new one
+        keep_both: Keep both
+        duplicate_removed: The duplicate was moved to the trash.
+        duplicate_kept: Both entries kept.
+      batch:
+        title: For selected
+        select: Select
+        select_one: "Select %{description}"
+        action: Change
+        value: To
+        apply: Apply
+        confirm: Apply this change to every selected transaction?
+        done: "%{count} transactions changed. You can undo the batch from the activity log."
+        actions:
+          category: Category
+          project: Project
+          merchant: Merchant
+          tag: Add tag
+          delete: Move to trash
+      categories:
+        tree_eyebrow: TWO LEVELS
+        tree_title: Category tree
+        tree_body: Group categories under a parent, keep income and spending apart, reorder or hide what you don't use.
+        tree_expense: Spending
+        tree_income: Income
+        hidden: hidden
+        kind_label: Tree
+        parent_label: Parent category
+        no_parent: Top level
+        order_label: Order
+        hide_label: Hide from pickers (existing entries keep it)
+        arrange: Save arrangement
+        arranged: "%{name} arranged."
+        merge_label: Merge into
+        merge: Merge
+        merge_confirm: "Move every entry and remembered rule from %{name} into the chosen category, then delete %{name}?"
+        merged: "%{name} merged into %{into} (%{count} entries moved)."
+      lists:
+        eyebrow: ORGANIZE
+        merchants:
+          title: Merchants
+          intro: Stores, payers and people you deal with. Merchants are set on entries by hand or when you type a new name.
+        projects:
+          title: Projects
+          intro: Trips, renovations, a side business — group entries from any account and category.
+        tags:
+          title: Tags
+          intro: Free labels; an entry can have several.
+        new_name: Name
+        add: Add
+        name: Name
+        rename: Rename
+        rename_label: "Rename %{name}"
+        archive: Archive
+        unarchive: Restore
+        archived: archived
+        merge: Merge
+        merge_into: Merge into
+        merge_confirm: "Move every entry of %{name} to the chosen one, then delete %{name}?"
+        delete: Delete
+        delete_confirm: "Delete %{name}? Entries keep their amounts and categories but lose this label."
+        empty: Nothing here yet.
+        created: "%{name} added."
+        updated: "%{name} saved."
+        merged: "%{name} merged into %{into} (%{count} entries)."
+        deleted: "%{name} deleted (%{count} entries no longer have it)."
+      budgets:
+        title: Budgets
+        eyebrow: PLAN YOUR SPENDING
+        intro: Set a monthly or yearly limit for all spending, one category (with its subcategories) or one project.
+        scope: Applies to
+        total: All spending
+        period: Period
+        periods:
+          month: Monthly
+          year: Yearly
+        limit: Limit
+        alert: Warn at (%)
+        add: Add budget
+        spent: Spent
+        progress: Progress
+        levels:
+          ok: "%{percent}% used · %{remaining} left"
+          warning: "%{percent}% used · %{remaining} left"
+          over: "Over budget · %{percent}% (%{remaining})"
+        empty: No budgets yet.
+        note: Spending is net of refunds; transfers and card payments never count.
+        saved: Budget saved.
+        deleted: Budget deleted.
+        delete_confirm: Delete this budget?
+      recurring:
+        title: Recurring entries
+        eyebrow: SET IT ONCE
+        intro: Rent, salary, subscriptions, a monthly transfer to savings. Each date is posted once.
+        new: New recurring entry
+        back: Back to recurring entries
+        name: Name
+        kind: Type
+        to_account: To account (transfers)
+        frequency: Repeats
+        frequencies:
+          daily: day(s)
+          weekly: week(s)
+          monthly: month(s)
+          yearly: year(s)
+        interval: Every
+        start_on: First date
+        end_on: Last date (optional)
+        auto_post: Post automatically
+        auto_post_help: Due entries are added when you open Transactions. Otherwise they wait for “Post due entries”.
+        every: "Every %{count} %{unit}"
+        next: Next dates
+        paused: paused
+        auto: automatic
+        pause: Pause
+        resume: Resume
+        post_due: "Post due entries (%{count})"
+        posted:
+          one: "%{count} recurring entry posted."
+          other: "%{count} recurring entries posted."
+        saved: "%{name} saved."
+        deleted: "%{name} deleted. Entries it already posted stay."
+        delete_confirm: Delete this recurring entry? Entries it already posted stay.
+        empty: No recurring entries yet.
+      report:
+        title: Reports
+        eyebrow: BY TYPE, NOT BY SIGN
+        intro: Income, spending and net worth for any period, by category, account, merchant, project or tag.
+        period: Period
+        from: From
+        to: To
+        by: Group by
+        presets:
+          all_time: All time
+          this_month: This month
+          last_month: Last month
+          last_30_days: Last 30 days
+          this_year: This year
+          last_year: Last year
+          custom: Custom dates
+        dimensions:
+          category: Category
+          account: Account
+          merchant: Merchant
+          project: Project
+          tag: Tag
+        income: Income
+        spending: Spending
+        net: Net
+        share: Share
+        none: (none)
+        by_title: "By %{dimension}"
+        refund_note: Refunds reduce spending in their category; transfers, card payments and adjustments are left out.
+        monthly: Last 12 months
+        month: Month
+        empty: No income or spending in this period.

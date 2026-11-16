@@ -2,7 +2,8 @@ require "bigdecimal"
 
 module Finance
   # Where the money goes: the numbers behind the spending charts on the dashboard and the
-  # Categories page. Only counted spending (amount < 0, not excluded, not Transfers) is used.
+  # Categories page. Only counted spending is used: kind expense or refund (refunds net
+  # within their category), not excluded, not in the trash.
   # The apps compute the same thing in packages/finance-core/src/spending.ts.
   #
   # Colors follow the category, never its rank in the current view: the SLOTS biggest
@@ -106,7 +107,7 @@ module Finance
     private
 
     def spending
-      Transaction.where(user_id: @user.id).included.where("amount < 0")
+      Transaction.where(user_id: @user.id).included.expense_kind
     end
 
     def within(scope, start_date, end_date)

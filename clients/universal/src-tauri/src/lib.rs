@@ -2,6 +2,7 @@ mod device;
 mod identity;
 mod ocr;
 mod session;
+mod snapshot;
 
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -11,12 +12,16 @@ use tauri_plugin_sql::{Migration, MigrationKind};
 /// Schema changes ship as new numbered migrations; existing files are never edited.
 const MAX_DATABASES: u32 = 8;
 
-fn slot_file(slot: u32) -> String {
+fn slot_name(slot: u32) -> String {
     if slot == 1 {
-        "sqlite:billieweather.db".to_string()
+        "billieweather.db".to_string()
     } else {
-        format!("sqlite:billieweather-{slot}.db")
+        format!("billieweather-{slot}.db")
     }
+}
+
+fn slot_file(slot: u32) -> String {
+    format!("sqlite:{}", slot_name(slot))
 }
 
 fn migrations() -> Vec<Migration> {
@@ -57,6 +62,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0006_statement_region_detection.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 7,
+            description: "hybrid ledger: accounts, kinds, links, dimensions, budgets, recurring, audit",
+            sql: include_str!("../migrations/0007_ledger.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -67,6 +78,20 @@ pub fn run() {
         sql = sql.add_migrations(&slot_file(slot), migrations());
     }
     tauri::Builder::default()
+        .setup(|app| {
+            // Before any database is opened (and migrated) by the web view: copy every slot file
+            // whose schema is about to change. A failed copy does not stop the app (nothing is
+            // printed: logs must never carry anything about a person's data); the app's Data page
+            // lists the copies that exist.
+            use tauri::Manager;
+            if let Ok(dir) = app.path().app_config_dir() {
+                let version = migrations().len() as u32;
+                for slot in 1..=MAX_DATABASES {
+                    let _ = snapshot::snapshot_if_needed(&dir, &slot_name(slot), version);
+                }
+            }
+            Ok(())
+        })
         .plugin(sql.build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -79,10 +104,34 @@ pub fn run() {
             ocr::ocr_recognize_image,
             session::session_load,
             session::session_save,
-            session::session_clear
+            session::session_clear,
+            snapshot_list,
+            snapshot_restore
         ])
         .run(tauri::generate_context!())
         .expect("error while running BillieWeather");
+}
+
+/// The automatic pre-migration copies on this device (file names only), newest first.
+#[tauri::command]
+fn snapshot_list(app: tauri::AppHandle) -> Result<Vec<snapshot::SnapshotInfo>, String> {
+    use tauri::Manager;
+    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    let names: Vec<String> = (1..=MAX_DATABASES).map(slot_name).collect();
+    snapshot::list(&dir, &names).map_err(|e| e.to_string())
+}
+
+/// Copies one automatic copy into an EMPTY slot (a file name that does not exist yet), so it can
+/// be opened as a new database. Never overwrites a file.
+#[tauri::command]
+fn snapshot_restore(app: tauri::AppHandle, snapshot: String, slot: u32) -> Result<(), String> {
+    use tauri::Manager;
+    if !(1..=MAX_DATABASES).contains(&slot) {
+        return Err("invalid slot".into());
+    }
+    let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    let names: Vec<String> = (1..=MAX_DATABASES).map(slot_name).collect();
+    snapshot::restore(&dir, &names, &snapshot, &slot_name(slot)).map_err(|e| e.to_string())
 }
 
 #[cfg(test)]

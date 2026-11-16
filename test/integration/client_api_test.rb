@@ -27,7 +27,10 @@ class ClientApiTest < ActionDispatch::IntegrationTest
     assert_equal @user.created_at.iso8601, account["registered_at"]
     assert_equal ["member"], account["badges"]
     # Never financial data.
-    assert_equal %w[badges email locale nickname registered_at time_zone usage_region], account.keys.sort
+    assert_equal %w[badges email locale nickname owner_id registered_at time_zone usage_region], account.keys.sort
+    # The immutable id each local database is bound to (I-13); never the integer user id.
+    assert_equal @user.reload.finance_owner_uid, account["owner_id"]
+    assert_match(/\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/, account["owner_id"])
   end
 
   test "wrong password, unknown email, and missing fields are refused" do

@@ -1,3 +1,4 @@
+import { ledgerEn } from "./ledger";
 // English is the reference dictionary: every other language must have exactly these keys
 // (checked by TypeScript and by test/i18n.test.ts). Use {name} for interpolation.
 import { universalEn } from "./universal";
@@ -275,6 +276,7 @@ export const en = {
     yes: "Yes", no: "No",
   },
   universal: universalEn,
+  ledger: ledgerEn,
   command: commandEn,
 };
 

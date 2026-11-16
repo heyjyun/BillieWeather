@@ -1,5 +1,6 @@
 import { icons } from "@billie/design-tokens";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { emailOwnerKey, ownerKeyFor } from "./services/databases";
 import { AccountProvider, useAccount } from "./hooks/useAccount";
 import { FinanceProvider, useFinance } from "./hooks/useFinance";
 import { I18nProvider, useI18n } from "./i18n";
@@ -11,17 +12,23 @@ import { Login } from "./pages/Login";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { Transactions } from "./pages/Transactions";
+import { Accounts } from "./pages/Accounts";
+import { Planning } from "./pages/Planning";
+import { Lists } from "./pages/Lists";
 import { SyncStatus } from "./components/SyncStatus";
 import { CommandCenter } from "./components/CommandCenter";
 import type { TransactionFilter } from "./commands/handlers";
 import { saveSidebarCollapsed, savedSidebarCollapsed } from "./services/theme";
 
-export type Page = "dashboard" | "transactions" | "categories" | "import" | "reports" | "data" | "settings";
+export type Page = "dashboard" | "transactions" | "accounts" | "categories" | "planning" | "lists" | "import" | "reports" | "data" | "settings";
 
 const NAV: Array<{ page: Page; icon: string }> = [
   { page: "dashboard", icon: icons.dashboard },
   { page: "transactions", icon: icons.transactions },
+  { page: "accounts", icon: icons.insights },
   { page: "categories", icon: icons.tag },
+  { page: "planning", icon: icons.forecast },
+  { page: "lists", icon: icons.file },
   { page: "import", icon: icons.upload },
   { page: "reports", icon: icons.file },
   { page: "data", icon: icons.data },
@@ -46,6 +53,7 @@ function Shell() {
     setPage(next);
   };
   const { persistent } = useFinance();
+  const navLabel = (target: Page) => (target === "accounts" || target === "planning" || target === "lists" ? m.ledger.nav[target] : m.nav[target]);
   const [collapsed, setCollapsed] = useState(savedSidebarCollapsed);
   const toggleSidebar = () => setCollapsed((was) => { saveSidebarCollapsed(!was); return !was; });
   return (
@@ -60,8 +68,8 @@ function Shell() {
         <ul>
           {NAV.map((item) => (
             <li key={item.page}>
-              <button type="button" className={page === item.page ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? m.nav[item.page] : undefined} aria-current={page === item.page ? "page" : undefined} onClick={() => go(item.page)}>
-                <Icon d={item.icon} /><span>{m.nav[item.page]}</span>
+              <button type="button" className={page === item.page ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? navLabel(item.page) : undefined} aria-current={page === item.page ? "page" : undefined} onClick={() => go(item.page)}>
+                <Icon d={item.icon} /><span>{navLabel(item.page)}</span>
               </button>
             </li>
           ))}
@@ -77,7 +85,10 @@ function Shell() {
         <SyncStatus />
         {page === "dashboard" && <Dashboard go={go} />}
         {page === "transactions" && <Transactions key={transactionFilter?.key ?? 0} preset={transactionFilter?.filter} />}
+        {page === "accounts" && <Accounts />}
         {page === "categories" && <Categories key={focus ?? ""} focus={focus} />}
+        {page === "planning" && <Planning />}
+        {page === "lists" && <Lists />}
         {page === "import" && <Import />}
         {page === "reports" && <Reports />}
         {page === "data" && <Data focus={focus} />}
@@ -89,11 +100,26 @@ function Shell() {
 }
 
 function Gate() {
-  const { status } = useAccount();
+  const { status, account } = useAccount();
   const { m } = useI18n();
+  // Which account owns the databases this session may open (review P0-1). A new key remounts the
+  // provider, so switching accounts never keeps another account's database open.
+  const [keys, setKeys] = useState<{ owner: string; email: string } | null>(null);
+  const ownerId = account?.ownerId ?? null;
+  const email = account?.email ?? null;
+  useEffect(() => {
+    if (!email) {
+      setKeys(null);
+      return;
+    }
+    let cancelled = false;
+    Promise.all([ownerKeyFor({ ownerId, email }), emailOwnerKey(email)]).then(([owner, emailKey]) => { if (!cancelled) setKeys({ owner, email: emailKey }); });
+    return () => { cancelled = true; };
+  }, [ownerId, email]);
   if (status === "loading") return <div className="bw-boot">{m.boot.opening}</div>;
   if (status === "signedOut") return <Login />;
-  return <FinanceProvider><Shell /></FinanceProvider>;
+  if (!keys) return <div className="bw-boot">{m.boot.opening}</div>;
+  return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><Shell /></FinanceProvider>;
 }
 
 export default function App() {

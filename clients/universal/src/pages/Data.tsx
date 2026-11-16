@@ -3,6 +3,8 @@
 // when it changed. From here they can name, create and delete databases (a delete needs a typed
 // confirmation and cannot be undone), copy data from one database into another ("Sync"), and
 // manage statements one at a time in the database in use and in the cloud.
+import { BackupPanel } from "../components/BackupPanel";
+import { ActivityLog } from "../components/ActivityLog";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { PageHeading } from "../components/common";
 import { useAccount } from "../hooks/useAccount";
@@ -469,11 +471,8 @@ export function Data({ focus = null }: { focus?: string | null } = {}) {
         )}
       </section>
 
-      <section className="bw-panel" aria-labelledby="backup-heading">
-        <h2 id="backup-heading">{d.backupTitle} <span className="bw-tag bw-tag-muted">{d.comingSoon}</span></h2>
-        <p className="bw-caption">{d.backupBody}</p>
-        <button type="button" className="bw-button bw-button-outline" disabled aria-disabled="true">{d.backupButton} · {d.comingSoon}</button>
-      </section>
+      <BackupPanel />
+      <ActivityLog />
 
       <section className="bw-panel" aria-labelledby="list-device">
         <h2 id="list-device">{t("data.statementsIn", { name: active?.name ?? "" })}</h2>

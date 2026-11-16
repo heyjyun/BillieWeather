@@ -1,7 +1,7 @@
 import { decodeStatementBytes, parseStatement, sha256Hex, buildSnapshot } from "@billie/finance-core";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fixtureBytes, migrate, newStore, FIXTURES } from "./helpers";
+import { fixtureBytes, legacyRow, migrate, newStore, FIXTURES } from "./helpers";
 import { normalizeDatabaseName, StoreError } from "../src/services/store";
 import { genericDeviceName } from "../src/services/platform";
 import { importFile } from "../src/services/importFile";
@@ -23,7 +23,7 @@ describe("local SQLite store", () => {
     const { store } = await newStore();
     await importFile(store, fixtureBytes("debit-credit-newest-first.csv"), "d.csv", "USD");
     const expected = JSON.parse(readFileSync(join(FIXTURES, "expected/debit-credit-newest-first.json"), "utf8"));
-    const stored = (await store.transactions()).sort((a, b) => a.id - b.id).map(({ id, statementId, ...rest }) => rest);
+    const stored = (await store.transactions()).sort((a, b) => a.id - b.id).map(legacyRow);
     expect(stored).toEqual(expected.rows);
     const [statement] = await store.statements();
     expect([statement.closingBalanceCents, statement.closingBalanceOn]).toEqual([expected.closingBalanceCents, expected.closingBalanceOn]);
@@ -46,7 +46,9 @@ describe("local SQLite store", () => {
     const byDescription = Object.fromEntries((await store.transactions()).map((t) => [t.description, t]));
     expect(byDescription["Zed Bakers 2"].category).toBe("Business");
     expect(byDescription["Zed Bakers 2"].taxReview).toBe(true);
-    expect(byDescription["ZED BAKERS REFUND"].category).toBe("Income");
+    // Money back from a merchant is a refund, not income (review P0-2): it keeps an expense category.
+    expect(byDescription["ZED BAKERS REFUND"].category).toBe("Uncategorized");
+    expect(byDescription["ZED BAKERS REFUND"].kind).toBe("refund");
     expect(byDescription["OTHER PLACE"].category).toBe("Uncategorized");
     expect(await store.rules()).toEqual([{ merchantKey: "zed bakers", income: false, category: "Business" }]);
 
@@ -161,8 +163,10 @@ describe("copying data between databases", () => {
     expect(result).toMatchObject({ statementsAdded: 1, transactionsAdded: 9, skipped: 0 });
     expect(result.rulesAdded).toBeGreaterThan(0);
 
-    const copied = (await target.store.transactions()).map(({ id, statementId, ...rest }) => rest).sort((a, b) => a.description.localeCompare(b.description));
-    const original = before.map(({ id, statementId, ...rest }) => rest).sort((a, b) => a.description.localeCompare(b.description));
+    // A copy between databases carries the imported fields (accounts, manual entries and provenance travel in a backup file).
+    const copied = (await target.store.transactions()).map(legacyRow).sort((a, b) => a.description.localeCompare(b.description));
+    const original = before.map(legacyRow).sort((a, b) => a.description.localeCompare(b.description));
+    expect((await target.store.transactions()).map((t) => t.kind).sort()).toEqual(before.map((t) => t.kind).sort());
     expect(copied).toEqual(original);
     expect(await target.store.currency()).toBe("USD");
     expect((await target.store.statements())[0]).toMatchObject({ sha256: data.statements[0].sha256, source: "local" });

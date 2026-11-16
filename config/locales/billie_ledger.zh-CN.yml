@@ -1,0 +1,435 @@
+zh-CN:
+  billie:
+    ledger:
+      save: 保存
+      nav:
+        accounts: 账户
+        lists: 商家与项目
+        budgets: 预算
+        reports: 报表
+      kinds:
+        expense: 支出
+        income: 收入
+        refund: 退款
+        transfer: 转账
+        card_payment: 还款
+        opening_balance: 期初余额
+        adjustment: 余额调整
+        ignored: 不计入
+      account_types:
+        checking: 储蓄卡/活期
+        savings: 储蓄
+        cash: 现金
+        payment_app: 网络账户/钱包
+        investment: 投资
+        receivable: 债权（别人欠你的钱）
+        credit_card: 信用卡
+        loan: 贷款/负债
+        other: 其他
+      origins:
+        import: 导入的账单
+        manual: 手动记账
+        web_copy: 从网站复制
+        upload: 从应用上传
+        recurring: 周期记账
+        legacy: 此版本之前导入
+      category_sources:
+        user: 你选择的
+        rule: 记住的规则
+        file: 账单文件中的分类
+        auto: 内置规则
+        region: 地区规则
+        ai: AI 建议
+        legacy: 此版本之前设置
+      locked_fields:
+        category: 分类
+        kind: 类型
+        description: 描述
+        excluded: 不计入统计
+        merchant: 商家
+        project: 项目
+        account: 账户
+      fields:
+        amount: 金额
+        amount_signed: 金额（负数表示减少余额）
+        date: 日期
+        time: 时间（可选）
+        account: 账户
+        from_account: 转出账户
+        to_account: 转入账户
+        choose_account: 选择账户
+        category: 分类
+        merchant: 商家
+        project: 项目
+        tags: 标签
+        tags_placeholder: 用逗号分隔，例如：旅行, 礼物
+        note: 备注
+        description: 描述
+        description_placeholder: 这笔是什么（显示在列表中）
+        refund_of: 原始消费
+        refund_of_none: 不关联消费
+        none: 无
+      filters:
+        all_accounts: 所有账户
+        all_merchants: 所有商家
+        all_projects: 所有项目
+        all_tags: 所有标签
+      errors:
+        generic: 这笔记录有内容无效。
+        amount_required: 请输入金额。
+        amount_zero: 金额不能为零。
+        amount_too_large: 金额过大。
+        amount_precision: 最多保留两位小数。
+        date_invalid: 请输入有效日期。
+        account_required: 请选择账户。
+        accounts_same: 请选择两个不同的账户。
+        category_kind: 该分类属于另一棵分类树（收入/支出）。
+        refund_target_required: 请选择这笔退款对应的消费。
+        refund_too_large: 退款金额不能超过原消费剩余可退金额。
+        refund_target_invalid: 退款只能关联支出。
+        kind_invalid: 这里不能使用此记账类型。
+        category_unknown: 该分类不存在。
+        not_found: 未找到该项目。
+        not_in_trash: 这笔记录不在回收站中。
+        imported_entry: 导入的记录随账单保留；删除账单才能彻底删除它们。
+        nothing_selected: 请至少选择一笔流水。
+        unknown_action: 请选择要修改的内容。
+        nothing_to_undo: 这次修改没有可撤销的内容。
+        no_change: 余额已经一致。
+        parent_invalid: 父分类必须是同一棵树中的一级分类。
+        merge_same: 请选择另一个合并目标。
+      accounts:
+        title: 账户
+        eyebrow: 你的钱在哪里
+        intro: 所有账户、钱包、信用卡和贷款的余额以及净资产。现金或任何不导入的账户都可以手动添加。
+        new: 添加账户
+        new_intro: 现金、钱包应用、贷款、别人欠你的钱——任何你想手动记录的账户。
+        back: 返回账户
+        assets: 资产
+        liabilities: 负债
+        asset: 资产
+        liability: 负债
+        net_worth: 净资产
+        empty_title: 还没有账户
+        empty_body: 导入一份账单或手动添加账户即可开始。
+        col_account: 账户
+        col_entries: 流水
+        col_balance: 余额
+        manual: 手动添加
+        imported: 来自导入的账单
+        not_in_net_worth: 不计入净资产
+        credit_limit_short: "额度 %{amount}"
+        move_up: "上移 %{name}"
+        move_down: "下移 %{name}"
+        edit: 编辑
+        edit_label: "编辑 %{name}"
+        archived_title: 已归档账户
+        archived_body: 归档的账户保留历史记录，但不再出现在选择列表中。
+        unarchive: 恢复
+        archive: 归档
+        archive_confirm: 归档此账户？它的流水仍保留在历史记录中。
+        delete: 删除账户
+        delete_confirm: 删除此账户？仅在没有任何记录使用它时可以删除。
+        delete_help: 有流水或账单的账户不能删除，请改为归档。
+        balance_note: 余额 = 期初余额 + 所有未删除的流水。可通过余额调整与银行保持一致。
+        name: 名称
+        name_placeholder: 例如：钱包、微信、车贷
+        type: 类型
+        opening_balance: 期初余额
+        opening_balance_help: 开始记账时账户中的金额。信用卡或贷款欠款请填负数。
+        opening_balance_on: 期初日期
+        credit_limit: 信用额度
+        card_only: 用于信用卡和贷款。
+        statement_day: 账单日
+        due_day: 还款日
+        include_in_net_worth: 计入净资产
+        include_in_net_worth_help: 你记录但不属于你的账户可不计入。
+        current_balance: "当前余额：%{amount}"
+        adjust_title: 设置实际余额
+        adjust_body: 为差额记录一笔余额调整，它不会计入收入或支出。
+        actual_balance: 银行或钱包中的实际余额
+        adjust: 调整余额
+        manage_title: 管理
+        view_entries: 查看流水
+        created: "已添加账户 %{name}。"
+        updated: "已保存账户 %{name}。"
+        archived: "已归档账户 %{name}。"
+        unarchived: "已恢复账户 %{name}。"
+        deleted: "已删除账户 %{name}。"
+        in_use: "%{name} 有流水或账单，不能删除。可以改为归档隐藏。"
+        adjusted: "%{name} 的余额已调整 %{amount}。"
+      entries:
+        eyebrow: 手动记账
+        new_title: 记一笔
+        edit_title: 编辑流水
+        intro: 记录支出、收入、自己账户间的转账、退款和余额修正——无需导入，也无需 AI。
+        add: 记一笔
+        add_short: 记账
+        kind_nav: 记账类型
+        kind_help:
+          expense: 从某个账户花出的钱（包括信用卡消费）。
+          income: 你赚到或收到的钱。
+          transfer: 自己账户之间的资金移动。还信用卡或贷款就是转入该账户，不会重复计为支出。
+          refund: 消费退回的钱。关联原消费后会冲减该消费。
+          adjustment: 修正账户余额，不计入收入或支出。
+        save_and_add: 保存并再记一笔
+        card_payment_help: 选择信用卡或贷款账户即为还款。
+        refund_help: 退款沿用原消费的分类并冲减其支出；可部分退款。
+        no_accounts_title: 请先添加账户
+        no_accounts_body: 每笔流水都属于一个账户（现金也是一个账户）。
+        imported_note: "来自导入的账单。银行的金额、日期、账户和原文（“%{original}”）保持不变；你可以修改描述和分类。"
+        actions_title: 操作
+        copy: 复制
+        add_refund: 记录退款
+        delete: 移到回收站
+        delete_confirm: 将这笔流水移到回收站？之后可以恢复。
+        origin: 来源
+        original: 原始文本
+        original_label: "原文：%{original}"
+        category_source: 分类设置者
+        locked: 保持你的设置
+        manual_only: 手动记账
+        more_options: 全部字段
+        created: "已保存%{kind}。"
+        deleted: 已移到回收站。
+        restored: 已从回收站恢复。
+        purged: 已彻底删除。
+      trash:
+        title: 回收站
+        eyebrow: 不会丢失
+        intro: 删除的流水会先放在这里。可以恢复，手动记录的流水也可以彻底删除。
+        deleted_at: 删除时间
+        restore: 恢复
+        purge: 彻底删除
+        purge_confirm: 彻底删除这笔流水？此操作无法撤销。
+        empty: 回收站是空的。
+        imported_note: 回收站中导入的流水仍与账单关联；删除账单才会移除它们。
+        link: "回收站（%{count}）"
+      activity:
+        title: 操作日志
+        eyebrow: 每一次修改
+        intro: 记录中改了什么、何时修改、由谁修改——你、导入、规则、AI 或周期记账。
+        action: 操作
+        subject: 对象
+        when: 时间
+        changes: 修改内容
+        all_actions: 所有操作
+        all_subjects: 所有对象
+        empty: 还没有操作记录。
+        undo_batch: 撤销这批修改
+        undo_confirm: 撤销这批中之后没有再被修改的所有更改？
+        undone: "已撤销 %{count} 项修改（%{skipped} 项因之后又被修改而跳过）。"
+      actions:
+        create: 新建
+        update: 修改
+        delete: 删除
+        restore: 恢复
+        purge: 彻底删除
+        link: 关联
+        unlink: 取消关联
+        import: 导入
+        reverse_import: 撤销导入
+        ai_apply: 应用 AI 修改
+        ai_undo: 撤销修改
+        batch_update: 批量修改
+        batch_delete: 批量删除
+        merge: 合并
+        archive: 归档
+        unarchive: 取消归档
+        backup: 备份
+        restore_backup: 从备份恢复
+      actors:
+        user: 由你
+        import: 由导入
+        rule: 由规则
+        ai: 由 AI
+        system: 由 BillieWeather
+        sync: 由同步
+        recurring: 由周期记账
+      subjects:
+        Transaction: 流水
+        BankAccount: 账户
+        Category: 分类
+        Merchant: 商家
+        Project: 项目
+        Tag: 标签
+        Budget: 预算
+        RecurringRule: 周期记账
+        TransactionLink: 关联
+      review:
+        eyebrow: 需要你决定
+        income_title: 待确认的收入
+        income_intro: 这些记录在 BillieWeather 区分交易类型之前被计为收入。它们看起来像退款或信用卡还款，并不是收入。在你决定之前不会有任何改动。
+        income_empty: 没有需要确认的内容。
+        income_link:
+          one: "%{count} 笔收入待确认"
+          other: "%{count} 笔收入待确认"
+        suggestion: 看起来像
+        mark_as: "标记为%{kind}"
+        keep_income: 是收入
+        reclassified: "已保存为%{kind}。"
+        duplicates_title: 疑似重复
+        duplicates_intro: 较新导入中的这些行与已有记录相似（同一天、同金额，商家写法不同）。保留两笔，或将新的一笔移到回收站。
+        duplicates_empty: 没有疑似重复。
+        duplicates_link:
+          one: "%{count} 笔疑似重复"
+          other: "%{count} 笔疑似重复"
+        new_row: 新导入
+        existing_row: 已有记录
+        in_trash: 在回收站中
+        is_duplicate: 是重复——删除新的
+        keep_both: 都保留
+        duplicate_removed: 重复的流水已移到回收站。
+        duplicate_kept: 两笔都已保留。
+      batch:
+        title: 批量操作
+        select: 选择
+        select_one: "选择 %{description}"
+        action: 修改
+        value: 改为
+        apply: 应用
+        confirm: 将此修改应用到所有选中的流水？
+        done: "已修改 %{count} 笔流水。可以在操作日志中撤销这批修改。"
+        actions:
+          category: 分类
+          project: 项目
+          merchant: 商家
+          tag: 添加标签
+          delete: 移到回收站
+      categories:
+        tree_eyebrow: 两级分类
+        tree_title: 分类树
+        tree_body: 把分类归到父分类下，收入与支出分开，可排序或隐藏不用的分类。
+        tree_expense: 支出
+        tree_income: 收入
+        hidden: 已隐藏
+        kind_label: 分类树
+        parent_label: 父分类
+        no_parent: 一级分类
+        order_label: 排序
+        hide_label: 在选择列表中隐藏（已有流水保留该分类）
+        arrange: 保存设置
+        arranged: "已保存 %{name} 的设置。"
+        merge_label: 合并到
+        merge: 合并
+        merge_confirm: "把 %{name} 的所有流水和记住的规则移到所选分类，然后删除 %{name}？"
+        merged: "%{name} 已合并到 %{into}（移动了 %{count} 笔流水）。"
+      lists:
+        eyebrow: 整理
+        merchants:
+          title: 商家
+          intro: 你打交道的商店、付款方和个人。可以在流水中手动设置，输入新名称时会自动创建。
+        projects:
+          title: 项目
+          intro: 旅行、装修、副业——把不同账户和分类的流水归到一起。
+        tags:
+          title: 标签
+          intro: 自由标签，一笔流水可以有多个。
+        new_name: 名称
+        add: 添加
+        name: 名称
+        rename: 重命名
+        rename_label: "重命名 %{name}"
+        archive: 归档
+        unarchive: 恢复
+        archived: 已归档
+        merge: 合并
+        merge_into: 合并到
+        merge_confirm: "把 %{name} 的所有流水移到所选项，然后删除 %{name}？"
+        delete: 删除
+        delete_confirm: "删除 %{name}？流水的金额和分类不变，只是不再带有此标记。"
+        empty: 这里还没有内容。
+        created: "已添加 %{name}。"
+        updated: "已保存 %{name}。"
+        merged: "%{name} 已合并到 %{into}（%{count} 笔流水）。"
+        deleted: "已删除 %{name}（%{count} 笔流水不再带有它）。"
+      budgets:
+        title: 预算
+        eyebrow: 规划支出
+        intro: 为全部支出、某个分类（含子分类）或某个项目设置每月或每年的限额。
+        scope: 适用于
+        total: 全部支出
+        period: 周期
+        periods:
+          month: 每月
+          year: 每年
+        limit: 限额
+        alert: 提醒比例（%）
+        add: 添加预算
+        spent: 已花费
+        progress: 进度
+        levels:
+          ok: "已用 %{percent}% · 剩余 %{remaining}"
+          warning: "已用 %{percent}% · 剩余 %{remaining}"
+          over: "已超支 · %{percent}%（%{remaining}）"
+        empty: 还没有预算。
+        note: 支出已扣除退款；转账和还款不计入。
+        saved: 预算已保存。
+        deleted: 预算已删除。
+        delete_confirm: 删除这个预算？
+      recurring:
+        title: 周期记账
+        eyebrow: 设置一次
+        intro: 房租、工资、订阅、每月转入储蓄。每个日期只会记一次。
+        new: 新建周期记账
+        back: 返回周期记账
+        name: 名称
+        kind: 类型
+        to_account: 转入账户（转账）
+        frequency: 重复周期
+        frequencies:
+          daily: 天
+          weekly: 周
+          monthly: 月
+          yearly: 年
+        interval: 每隔
+        start_on: 首次日期
+        end_on: 结束日期（可选）
+        auto_post: 自动记账
+        auto_post_help: 打开流水页面时自动添加到期的记录；否则需点击“记入到期项目”。
+        every: "每 %{count} %{unit}"
+        next: 接下来的日期
+        paused: 已暂停
+        auto: 自动
+        pause: 暂停
+        resume: 继续
+        post_due: "记入到期项目（%{count}）"
+        posted:
+          one: "已记入 %{count} 笔周期记账。"
+          other: "已记入 %{count} 笔周期记账。"
+        saved: "已保存 %{name}。"
+        deleted: "已删除 %{name}。已记入的流水保留。"
+        delete_confirm: 删除这个周期记账？已记入的流水会保留。
+        empty: 还没有周期记账。
+      report:
+        title: 报表
+        eyebrow: 按类型统计，而不是按正负号
+        intro: 任意时间段的收入、支出和净资产，可按分类、账户、商家、项目或标签查看。
+        period: 时间段
+        from: 开始
+        to: 结束
+        by: 分组方式
+        presets:
+          all_time: 全部时间
+          this_month: 本月
+          last_month: 上月
+          last_30_days: 最近 30 天
+          this_year: 今年
+          last_year: 去年
+          custom: 自定义日期
+        dimensions:
+          category: 分类
+          account: 账户
+          merchant: 商家
+          project: 项目
+          tag: 标签
+        income: 收入
+        spending: 支出
+        net: 结余
+        share: 占比
+        none: （无）
+        by_title: "按%{dimension}"
+        refund_note: 退款冲减对应分类的支出；转账、还款和余额调整不计入。
+        monthly: 最近 12 个月
+        month: 月份
+        empty: 这个时间段没有收入或支出。

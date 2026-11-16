@@ -1,0 +1,435 @@
+ja:
+  billie:
+    ledger:
+      save: 保存
+      nav:
+        accounts: 口座
+        lists: 店舗とプロジェクト
+        budgets: 予算
+        reports: レポート
+      kinds:
+        expense: 支出
+        income: 収入
+        refund: 返金
+        transfer: 振替
+        card_payment: カード返済
+        opening_balance: 開始残高
+        adjustment: 残高調整
+        ignored: 集計しない
+      account_types:
+        checking: 普通預金
+        savings: 貯蓄
+        cash: 現金
+        payment_app: 決済アプリ・ウォレット
+        investment: 投資
+        receivable: 貸付金（受け取る予定のお金）
+        credit_card: クレジットカード
+        loan: ローン・借入
+        other: その他
+      origins:
+        import: 取り込んだ明細
+        manual: 手入力
+        web_copy: ウェブサイトからコピー
+        upload: アプリから送信
+        recurring: 定期入力
+        legacy: このバージョン以前の取り込み
+      category_sources:
+        user: あなたが選択
+        rule: 記憶したルール
+        file: 明細ファイルの分類
+        auto: 内蔵リスト
+        region: 地域のリスト
+        ai: AI の提案
+        legacy: このバージョン以前に設定
+      locked_fields:
+        category: カテゴリ
+        kind: 種類
+        description: 説明
+        excluded: 集計から除外
+        merchant: 店舗
+        project: プロジェクト
+        account: 口座
+      fields:
+        amount: 金額
+        amount_signed: 金額（残高を減らす場合はマイナス）
+        date: 日付
+        time: 時刻（任意）
+        account: 口座
+        from_account: 振替元
+        to_account: 振替先
+        choose_account: 口座を選択
+        category: カテゴリ
+        merchant: 店舗
+        project: プロジェクト
+        tags: タグ
+        tags_placeholder: カンマ区切り（例：旅行, ギフト）
+        note: メモ
+        description: 説明
+        description_placeholder: 内容（一覧に表示）
+        refund_of: 元の購入
+        refund_of_none: 購入に紐付けない
+        none: なし
+      filters:
+        all_accounts: すべての口座
+        all_merchants: すべての店舗
+        all_projects: すべてのプロジェクト
+        all_tags: すべてのタグ
+      errors:
+        generic: この記録に無効な項目があります。
+        amount_required: 金額を入力してください。
+        amount_zero: 金額を 0 にはできません。
+        amount_too_large: 金額が大きすぎます。
+        amount_precision: 小数点以下は 2 桁までです。
+        date_invalid: 有効な日付を入力してください。
+        account_required: 口座を選択してください。
+        accounts_same: 異なる 2 つの口座を選択してください。
+        category_kind: このカテゴリは別のツリー（収入／支出）に属しています。
+        refund_target_required: この返金の元の購入を選択してください。
+        refund_too_large: 返金額は元の購入の残りを超えられません。
+        refund_target_invalid: 返金は支出にのみ紐付けられます。
+        kind_invalid: ここではこの種類は使えません。
+        category_unknown: そのカテゴリは存在しません。
+        not_found: 見つかりませんでした。
+        not_in_trash: この記録はごみ箱にありません。
+        imported_entry: 取り込んだ記録は明細とともに保持されます。完全に削除するには明細を削除してください。
+        nothing_selected: 取引を 1 件以上選択してください。
+        unknown_action: 変更する内容を選択してください。
+        nothing_to_undo: この変更には取り消せるものがありません。
+        no_change: 残高はすでに一致しています。
+        parent_invalid: 親は同じツリーの第 1 階層のカテゴリである必要があります。
+        merge_same: 別の統合先を選択してください。
+      accounts:
+        title: 口座
+        eyebrow: お金のありか
+        intro: すべての口座・ウォレット・カード・ローンの残高と純資産。現金や取り込まない口座は手で追加できます。
+        new: 口座を追加
+        new_intro: 現金、ウォレットアプリ、ローン、人に貸したお金など、手で記録したいものなら何でも。
+        back: 口座に戻る
+        assets: 資産
+        liabilities: 負債
+        asset: 資産
+        liability: 負債
+        net_worth: 純資産
+        empty_title: まだ口座がありません
+        empty_body: 明細を取り込むか、口座を手で追加して始めましょう。
+        col_account: 口座
+        col_entries: 取引
+        col_balance: 残高
+        manual: 手で追加
+        imported: 取り込んだ明細から
+        not_in_net_worth: 純資産に含めない
+        credit_limit_short: "限度額 %{amount}"
+        move_up: "%{name} を上へ"
+        move_down: "%{name} を下へ"
+        edit: 編集
+        edit_label: "%{name} を編集"
+        archived_title: アーカイブした口座
+        archived_body: アーカイブした口座は履歴を残したまま、選択肢や一覧から外れます。
+        unarchive: 元に戻す
+        archive: アーカイブ
+        archive_confirm: この口座をアーカイブしますか？取引は履歴に残ります。
+        delete: 口座を削除
+        delete_confirm: この口座を削除しますか？何にも使われていない場合のみ削除できます。
+        delete_help: 取引や明細がある口座は削除できません。代わりにアーカイブしてください。
+        balance_note: 残高 = 開始残高 + ごみ箱にないすべての取引。銀行と合わせるには残高を調整します。
+        name: 名前
+        name_placeholder: 例：財布、PayPay、自動車ローン
+        type: 種類
+        opening_balance: 開始残高
+        opening_balance_help: 記録を始めた時点の金額。カードやローンの借入はマイナスで入力します。
+        opening_balance_on: 開始残高の日付
+        credit_limit: 利用限度額
+        card_only: クレジットカードとローン用。
+        statement_day: 締め日
+        due_day: 支払日
+        include_in_net_worth: 純資産に含める
+        include_in_net_worth_help: 記録はするが自分のものではない口座はオフに。
+        current_balance: "現在の残高：%{amount}"
+        adjust_title: 実際の残高に合わせる
+        adjust_body: 差額を残高調整として記録します。収入や支出には数えません。
+        actual_balance: 銀行やウォレットの実際の残高
+        adjust: 残高を調整
+        manage_title: 管理
+        view_entries: 取引を見る
+        created: "口座 %{name} を追加しました。"
+        updated: "口座 %{name} を保存しました。"
+        archived: "口座 %{name} をアーカイブしました。"
+        unarchived: "口座 %{name} を元に戻しました。"
+        deleted: "口座 %{name} を削除しました。"
+        in_use: "%{name} には取引や明細があるため削除できません。代わりにアーカイブして非表示にできます。"
+        adjusted: "%{name} の残高を %{amount} 調整しました。"
+      entries:
+        eyebrow: 手で記録
+        new_title: 記録を追加
+        edit_title: 記録を編集
+        intro: 支出、収入、自分の口座間の振替、返金、残高の修正を記録できます。取り込みも AI も不要です。
+        add: 記録を追加
+        add_short: 追加
+        kind_nav: 記録の種類
+        kind_help:
+          expense: 口座から使ったお金（クレジットカードの買い物も含む）。
+          income: 稼いだお金、受け取ったお金。
+          transfer: 自分の口座間のお金の移動。カードやローンの返済はその口座への振替で、支出として二重に数えません。
+          refund: 購入の返金。元の購入に紐付けると、その支出を減らします。
+          adjustment: 収入や支出に数えずに口座残高を修正します。
+        save_and_add: 保存して続けて追加
+        card_payment_help: クレジットカードやローンを選ぶとカード返済になります。
+        refund_help: 返金は元の購入のカテゴリを引き継ぎ、その支出を減らします。一部返金も可能です。
+        no_accounts_title: まず口座を追加してください
+        no_accounts_body: すべての記録はいずれかの口座に属します（現金も口座です）。
+        imported_note: "明細から取り込みました。銀行の金額・日付・口座・原文（「%{original}」）はそのままで、説明と分類を変更できます。"
+        actions_title: 操作
+        copy: コピー
+        add_refund: 返金を記録
+        delete: ごみ箱へ移動
+        delete_confirm: この記録をごみ箱へ移動しますか？後で元に戻せます。
+        origin: 出所
+        original: 原文
+        original_label: "原文：%{original}"
+        category_source: カテゴリの設定元
+        locked: あなたの設定を保持
+        manual_only: 手入力
+        more_options: すべての項目
+        created: "%{kind}を保存しました。"
+        deleted: ごみ箱へ移動しました。
+        restored: ごみ箱から元に戻しました。
+        purged: 完全に削除しました。
+      trash:
+        title: ごみ箱
+        eyebrow: 失われません
+        intro: 削除した記録はここで待機します。元に戻すか、手入力の記録は完全に削除できます。
+        deleted_at: 削除日時
+        restore: 元に戻す
+        purge: 完全に削除
+        purge_confirm: この記録を完全に削除しますか？元に戻せません。
+        empty: ごみ箱は空です。
+        imported_note: ごみ箱にある取り込み記録は明細に紐付いたままです。明細を削除すると消えます。
+        link: "ごみ箱（%{count}）"
+      activity:
+        title: 操作履歴
+        eyebrow: すべての変更
+        intro: 記録の何が、いつ、誰によって変わったか（あなた、取り込み、ルール、AI、定期入力）。
+        action: 操作
+        subject: 対象
+        when: 日時
+        changes: 変更内容
+        all_actions: すべての操作
+        all_subjects: すべての対象
+        empty: まだ操作履歴はありません。
+        undo_batch: この一括変更を取り消す
+        undo_confirm: この一括変更のうち、その後変更されていないものをすべて取り消しますか？
+        undone: "%{count} 件の変更を取り消しました（%{skipped} 件はその後変更されたためスキップ）。"
+      actions:
+        create: 作成
+        update: 変更
+        delete: 削除
+        restore: 復元
+        purge: 完全に削除
+        link: 紐付け
+        unlink: 紐付け解除
+        import: 取り込み
+        reverse_import: 取り込みを取り消し
+        ai_apply: AI の変更を適用
+        ai_undo: 変更を取り消し
+        batch_update: 一括変更
+        batch_delete: 一括削除
+        merge: 統合
+        archive: アーカイブ
+        unarchive: アーカイブ解除
+        backup: バックアップ
+        restore_backup: バックアップから復元
+      actors:
+        user: あなた
+        import: 取り込み
+        rule: ルール
+        ai: AI
+        system: BillieWeather
+        sync: 同期
+        recurring: 定期入力
+      subjects:
+        Transaction: 記録
+        BankAccount: 口座
+        Category: カテゴリ
+        Merchant: 店舗
+        Project: プロジェクト
+        Tag: タグ
+        Budget: 予算
+        RecurringRule: 定期入力
+        TransactionLink: 紐付け
+      review:
+        eyebrow: 判断が必要です
+        income_title: 確認が必要な収入
+        income_intro: これらは BillieWeather が取引の種類を区別する前に収入として数えられていました。返金やカード返済のようで、収入ではありません。あなたが決めるまで何も変わりません。
+        income_empty: 確認するものはありません。
+        income_link:
+          one: "確認が必要な収入 %{count} 件"
+          other: "確認が必要な収入 %{count} 件"
+        suggestion: 推定
+        mark_as: "%{kind}にする"
+        keep_income: 収入です
+        reclassified: "%{kind}として保存しました。"
+        duplicates_title: 重複の可能性
+        duplicates_intro: 新しい取り込みのこれらの行は既存の記録に似ています（同じ日・同じ金額で店舗の表記が違う）。両方残すか、新しい方をごみ箱へ移動してください。
+        duplicates_empty: 重複の可能性はありません。
+        duplicates_link:
+          one: "重複の可能性 %{count} 件"
+          other: "重複の可能性 %{count} 件"
+        new_row: 新しい行
+        existing_row: 既存の記録
+        in_trash: ごみ箱内
+        is_duplicate: 重複 — 新しい方を削除
+        keep_both: 両方残す
+        duplicate_removed: 重複した記録をごみ箱へ移動しました。
+        duplicate_kept: 両方の記録を残しました。
+      batch:
+        title: 選択した取引
+        select: 選択
+        select_one: "%{description} を選択"
+        action: 変更
+        value: 変更後
+        apply: 適用
+        confirm: 選択したすべての取引にこの変更を適用しますか？
+        done: "%{count} 件の取引を変更しました。操作履歴から一括で取り消せます。"
+        actions:
+          category: カテゴリ
+          project: プロジェクト
+          merchant: 店舗
+          tag: タグを追加
+          delete: ごみ箱へ移動
+      categories:
+        tree_eyebrow: 2 階層
+        tree_title: カテゴリツリー
+        tree_body: カテゴリを親の下にまとめ、収入と支出を分け、並べ替えたり使わないものを非表示にしたりできます。
+        tree_expense: 支出
+        tree_income: 収入
+        hidden: 非表示
+        kind_label: ツリー
+        parent_label: 親カテゴリ
+        no_parent: 第 1 階層
+        order_label: 並び順
+        hide_label: 選択肢に表示しない（既存の記録はそのまま）
+        arrange: 設定を保存
+        arranged: "%{name} の設定を保存しました。"
+        merge_label: 統合先
+        merge: 統合
+        merge_confirm: "%{name} のすべての記録と記憶したルールを選んだカテゴリへ移し、%{name} を削除しますか？"
+        merged: "%{name} を %{into} に統合しました（%{count} 件の記録を移動）。"
+      lists:
+        eyebrow: 整理
+        merchants:
+          title: 店舗
+          intro: 取引のある店、支払元、人。記録に手で設定でき、新しい名前を入力すると作成されます。
+        projects:
+          title: プロジェクト
+          intro: 旅行、リフォーム、副業など、口座やカテゴリをまたいで記録をまとめます。
+        tags:
+          title: タグ
+          intro: 自由なラベル。1 件の記録に複数付けられます。
+        new_name: 名前
+        add: 追加
+        name: 名前
+        rename: 名前を変更
+        rename_label: "%{name} の名前を変更"
+        archive: アーカイブ
+        unarchive: 元に戻す
+        archived: アーカイブ済み
+        merge: 統合
+        merge_into: 統合先
+        merge_confirm: "%{name} のすべての記録を選んだものへ移し、%{name} を削除しますか？"
+        delete: 削除
+        delete_confirm: "%{name} を削除しますか？記録の金額やカテゴリはそのままで、このラベルだけが外れます。"
+        empty: まだ何もありません。
+        created: "%{name} を追加しました。"
+        updated: "%{name} を保存しました。"
+        merged: "%{name} を %{into} に統合しました（%{count} 件）。"
+        deleted: "%{name} を削除しました（%{count} 件の記録から外れました）。"
+      budgets:
+        title: 予算
+        eyebrow: 支出を計画
+        intro: すべての支出、1 つのカテゴリ（サブカテゴリを含む）、または 1 つのプロジェクトに月間・年間の上限を設定します。
+        scope: 対象
+        total: すべての支出
+        period: 期間
+        periods:
+          month: 毎月
+          year: 毎年
+        limit: 上限
+        alert: 通知（%）
+        add: 予算を追加
+        spent: 使用額
+        progress: 進捗
+        levels:
+          ok: "%{percent}% 使用 · 残り %{remaining}"
+          warning: "%{percent}% 使用 · 残り %{remaining}"
+          over: "予算超過 · %{percent}%（%{remaining}）"
+        empty: まだ予算はありません。
+        note: 支出は返金を差し引いた額です。振替とカード返済は数えません。
+        saved: 予算を保存しました。
+        deleted: 予算を削除しました。
+        delete_confirm: この予算を削除しますか？
+      recurring:
+        title: 定期入力
+        eyebrow: 一度設定するだけ
+        intro: 家賃、給与、サブスクリプション、毎月の貯蓄への振替など。各日付は一度だけ記録されます。
+        new: 定期入力を追加
+        back: 定期入力に戻る
+        name: 名前
+        kind: 種類
+        to_account: 振替先（振替の場合）
+        frequency: 繰り返し
+        frequencies:
+          daily: 日
+          weekly: 週
+          monthly: か月
+          yearly: 年
+        interval: 間隔
+        start_on: 初回の日付
+        end_on: 最終日（任意）
+        auto_post: 自動で記録
+        auto_post_help: 取引ページを開いたときに期日の記録を追加します。オフの場合は「期日の記録を追加」を押します。
+        every: "%{count} %{unit}ごと"
+        next: 次の日付
+        paused: 一時停止中
+        auto: 自動
+        pause: 一時停止
+        resume: 再開
+        post_due: "期日の記録を追加（%{count}）"
+        posted:
+          one: "定期入力を %{count} 件記録しました。"
+          other: "定期入力を %{count} 件記録しました。"
+        saved: "%{name} を保存しました。"
+        deleted: "%{name} を削除しました。すでに記録された取引は残ります。"
+        delete_confirm: この定期入力を削除しますか？すでに記録された取引は残ります。
+        empty: まだ定期入力はありません。
+      report:
+        title: レポート
+        eyebrow: 符号ではなく種類で集計
+        intro: 任意の期間の収入・支出・純資産を、カテゴリ・口座・店舗・プロジェクト・タグ別に。
+        period: 期間
+        from: 開始
+        to: 終了
+        by: 集計単位
+        presets:
+          all_time: 全期間
+          this_month: 今月
+          last_month: 先月
+          last_30_days: 過去 30 日
+          this_year: 今年
+          last_year: 昨年
+          custom: 日付を指定
+        dimensions:
+          category: カテゴリ
+          account: 口座
+          merchant: 店舗
+          project: プロジェクト
+          tag: タグ
+        income: 収入
+        spending: 支出
+        net: 収支
+        share: 割合
+        none: （なし）
+        by_title: "%{dimension}別"
+        refund_note: 返金はそのカテゴリの支出を減らします。振替、カード返済、残高調整は含みません。
+        monthly: 過去 12 か月
+        month: 月
+        empty: この期間の収入・支出はありません。

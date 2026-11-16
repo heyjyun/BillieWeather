@@ -40,9 +40,48 @@ Rails.application.routes.draw do
     resources :statement_drafts, only: [:show, :destroy] do
       post :confirm, on: :member
     end
-    resources :transactions, only: [:index, :edit, :update]
+    resources :transactions, only: [:index, :edit, :update] do
+      post :batch, on: :collection
+    end
+    # Manual bookkeeping (docs/architecture/finance-domain-spec.md): accounts, entries of every kind,
+    # trash, operation log, review lists, dimensions, budgets, recurring entries and reports.
+    resources :accounts, only: [:index, :new, :create, :edit, :update, :destroy] do
+      member do
+        patch :archive
+        patch :unarchive
+        patch :move
+        post :adjust
+      end
+    end
+    resources :entries, only: [:new, :create, :edit, :update, :destroy] do
+      member do
+        patch :restore
+        delete :purge
+      end
+    end
+    get "trash", to: "entries#trash", as: :trash
+    get "activity", to: "audit_events#index", as: :activity
+    post "activity/:batch_id/undo", to: "audit_events#undo", as: :undo_activity
+    get "review/income", to: "reviews#income", as: :review_income
+    patch "review/income/:id", to: "reviews#reclassify", as: :reclassify_income
+    get "review/duplicates", to: "reviews#duplicates", as: :review_duplicates
+    patch "review/duplicates/:id", to: "reviews#resolve_duplicate", as: :resolve_duplicate
+    scope "lists/:list", constraints: {list: /merchants|projects|tags/}, as: :dimension do
+      get "/", to: "dimensions#index", as: :index
+      post "/", to: "dimensions#create", as: :create
+      patch ":id", to: "dimensions#update", as: :update
+      delete ":id", to: "dimensions#destroy", as: :destroy
+      post ":id/merge", to: "dimensions#merge", as: :merge
+    end
+    resources :budgets, only: [:index, :create, :update, :destroy]
+    resources :recurring_rules, path: "recurring", only: [:index, :new, :create, :edit, :update, :destroy] do
+      post :post_due, on: :collection
+      patch :toggle, on: :member
+    end
+    resource :ledger_report, only: :show, path: "reports", controller: :ledger_reports
     resources :categories, only: [:index, :create, :update, :destroy] do
       post :ai_categorize, on: :collection
+      patch :arrange, on: :collection
     end
     resources :bank_accounts, only: :update
     resource :forecast, only: :show, controller: :forecast

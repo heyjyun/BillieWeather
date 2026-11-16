@@ -1,0 +1,41 @@
+<% content_for :title, t("billie.ledger.budgets.title") %>
+<% scope_options = [[t("billie.ledger.budgets.total"), ""]] + @tree.roots("expense").flat_map { |r| [r, *r.children] }.map { |n| [(n.parent ? "— " : "") + finance_label(n.name), "category:#{n.name}"] } + @projects.map { |p| ["#{t("billie.ledger.fields.project")}: #{p.name}", "project:#{p.id}"] } %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.budgets.eyebrow") %></span><h1><%= t("billie.ledger.budgets.title") %></h1><p><%= t("billie.ledger.budgets.intro") %></p></div></div>
+<section class="bw-panel">
+  <%= form_with url: finance_budgets_path, scope: :budget, data: {turbo: false}, class: "bw-form bw-form-grid" do |form| %>
+    <div class="bw-field"><%= form.label :scope, t("billie.ledger.budgets.scope") %><%= form.select :scope, scope_options %></div>
+    <div class="bw-field"><%= form.label :period, t("billie.ledger.budgets.period") %><%= form.select :period, Finance::Domain::BUDGET_PERIODS.map { |p| [t("billie.ledger.budgets.periods.#{p}"), p] } %></div>
+    <div class="bw-field"><%= form.label :amount, t("billie.ledger.budgets.limit") %><%= form.text_field :amount, required: true, inputmode: "decimal" %></div>
+    <div class="bw-field"><%= form.label :alert_percent, t("billie.ledger.budgets.alert") %><%= form.number_field :alert_percent, value: 90, min: 1, max: 100 %></div>
+    <%= form.submit t("billie.ledger.budgets.add"), class: "bw-button bw-button-dark" %>
+  <% end %>
+</section>
+<section class="bw-panel bw-panel-flush bw-section-gap">
+  <% if @budgets.any? %>
+    <div class="bw-table-scroll"><table class="bw-table" id="budget-table">
+      <thead><tr><th scope="col"><%= t("billie.ledger.budgets.scope") %></th><th scope="col"><%= t("billie.ledger.budgets.period") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.budgets.spent") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.budgets.limit") %></th><th scope="col"><%= t("billie.ledger.budgets.progress") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <tbody>
+        <% @budgets.each do |budget| %>
+          <% status = @statuses[budget.id] %>
+          <tr class="bw-budget-<%= status[:level] %>">
+            <td><strong><%= budget.project ? "#{t("billie.ledger.fields.project")}: #{budget.project.name}" : (budget.category.present? ? finance_label(budget.category) : t("billie.ledger.budgets.total")) %></strong><small class="bw-muted"><%= finance_date(status[:from]) %> – <%= finance_date(status[:to]) %></small></td>
+            <td><%= t("billie.ledger.budgets.periods.#{budget.period}") %></td>
+            <td class="bw-text-right bw-nowrap"><%= finance_money(status[:spent], @profile.currency) %></td>
+            <td class="bw-text-right bw-nowrap">
+              <%= form_with url: finance_budget_path(budget), method: :patch, scope: :budget, data: {turbo: false}, class: "bw-inline-edit" do |form| %>
+                <%= form.label :amount, t("billie.ledger.budgets.limit"), class: "bw-sr-only", for: "budget-#{budget.id}" %><%= form.text_field :amount, value: budget.amount.to_s("F"), id: "budget-#{budget.id}", size: 8, inputmode: "decimal" %>
+                <%= form.submit t("billie.ledger.save"), class: "bw-button bw-button-small bw-button-outline" %>
+              <% end %>
+            </td>
+            <td><span class="bw-category-track"><span class="bw-bar <%= status[:level] == 'ok' ? 'bw-bar-income' : 'bw-bar-expense' %>" style="width: <%= [(status[:ratio] * 100).round, 100].min %>%"></span></span>
+              <small class="<%= 'bw-negative' unless status[:level] == 'ok' %>"><%= t("billie.ledger.budgets.levels.#{status[:level]}", percent: (status[:ratio] * 100).round, remaining: finance_money(status[:remaining], @profile.currency)) %></small></td>
+            <td class="bw-text-right"><%= button_to t("billie.ledger.lists.delete"), finance_budget_path(budget), method: :delete, class: "bw-button bw-button-small bw-button-danger-outline", form: {data: {turbo: false, confirm: t("billie.ledger.budgets.delete_confirm")}} %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.ledger.budgets.empty") %></h3></div>
+  <% end %>
+</section>
+<div class="bw-info-line"><%= finance_icon "file", size: 18 %><p><%= t("billie.ledger.budgets.note") %></p></div>

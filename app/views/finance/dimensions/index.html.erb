@@ -1,0 +1,46 @@
+<% content_for :title, t("billie.ledger.lists.#{@dimension}.title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.lists.eyebrow") %></span><h1><%= t("billie.ledger.lists.#{@dimension}.title") %></h1><p><%= t("billie.ledger.lists.#{@dimension}.intro") %></p></div>
+  <nav class="bw-period-presets" aria-label="<%= t("billie.ledger.lists.eyebrow") %>"><% %w[merchants projects tags].each do |d| %><%= link_to t("billie.ledger.lists.#{d}.title"), finance_dimension_index_path(d), class: "bw-period-preset #{'is-active' if d == @dimension}", "aria-current": (d == @dimension ? "page" : nil) %><% end %></nav></div>
+<section class="bw-panel bw-section-gap">
+  <%= form_with url: finance_dimension_create_path(@dimension), scope: :dimension, data: {turbo: false}, class: "bw-form bw-cat-add" do |form| %>
+    <div class="bw-field"><%= form.label :name, t("billie.ledger.lists.new_name") %><%= form.text_field :name, required: true, maxlength: 60 %></div>
+    <div class="bw-field"><%= form.label :note, t("billie.ledger.fields.note") %><%= form.text_field :note, maxlength: 200 %></div>
+    <%= form.submit t("billie.ledger.lists.add"), class: "bw-button bw-button-dark" %>
+  <% end %>
+</section>
+<section class="bw-panel bw-panel-flush bw-section-gap">
+  <% if @records.any? %>
+    <div class="bw-table-scroll"><table class="bw-table" id="dimension-table">
+      <thead><tr><th scope="col"><%= t("billie.ledger.lists.name") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.accounts.col_entries") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.spending") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <tbody>
+        <% @records.each do |record| %>
+          <tr id="<%= @dimension.singularize %>-<%= record.id %>">
+            <td>
+              <%= form_with url: finance_dimension_update_path(@dimension, record), method: :patch, scope: :dimension, data: {turbo: false}, class: "bw-inline-edit" do |form| %>
+                <%= form.label :name, t("billie.ledger.lists.rename_label", name: record.name), class: "bw-sr-only", for: "rename-#{record.id}" %>
+                <%= form.text_field :name, value: record.name, id: "rename-#{record.id}", maxlength: 60, required: true %>
+                <%= form.submit t("billie.ledger.lists.rename"), class: "bw-button bw-button-small bw-button-outline" %>
+              <% end %>
+              <% if record.archived? %><small class="bw-cat-kind"><%= t("billie.ledger.lists.archived") %></small><% end %>
+            </td>
+            <td class="bw-text-right"><%= link_to number_with_delimiter(@counts[record.id].to_i), finance_transactions_path("#{@dimension.singularize}_id": record.id), class: "bw-table-link" %></td>
+            <td class="bw-text-right bw-nowrap"><%= finance_money(@report.dig(record.name, :expense) || 0, @profile.currency) %></td>
+            <td class="bw-text-right bw-nowrap">
+              <%= button_to record.archived? ? t("billie.ledger.lists.unarchive") : t("billie.ledger.lists.archive"), finance_dimension_update_path(@dimension, record, archive: record.archived? ? "0" : "1"), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+              <% if @records.size > 1 %>
+                <%= form_with url: finance_dimension_merge_path(@dimension, record), data: {turbo: false, confirm: t("billie.ledger.lists.merge_confirm", name: record.name)}, class: "bw-inline-edit" do |form| %>
+                  <%= label_tag "merge-#{record.id}", t("billie.ledger.lists.merge_into"), class: "bw-sr-only" %>
+                  <%= select_tag :into, options_for_select(@records.reject { |r| r == record }.map { |r| [r.name, r.id] }), id: "merge-#{record.id}" %>
+                  <%= submit_tag t("billie.ledger.lists.merge"), class: "bw-button bw-button-small bw-button-outline" %>
+                <% end %>
+              <% end %>
+              <%= button_to t("billie.ledger.lists.delete"), finance_dimension_destroy_path(@dimension, record), method: :delete, class: "bw-button bw-button-small bw-button-danger-outline", form: {class: "bw-inline-edit", data: {turbo: false, confirm: t("billie.ledger.lists.delete_confirm", name: record.name)}} %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.ledger.lists.empty") %></h3></div>
+  <% end %>
+</section>

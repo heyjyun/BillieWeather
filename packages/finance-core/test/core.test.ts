@@ -68,7 +68,8 @@ describe("remembered rules", () => {
     expect(rule).toEqual({ merchantKey: "starbucks store", income: false, category: "Business" });
     const categorizer = new Categorizer([rule]);
     expect(categorizer.categorize("Starbucks Store 99 Portland", -300)).toBe("Business");
-    expect(categorizer.categorize("Starbucks Store refund", 300)).toBe("Income");
+    // Money back is a refund, not Income: it falls through to the keyword lists (review P0-2).
+    expect(categorizer.categorize("Starbucks Store refund", 300)).toBe("Food & dining");
   });
   it("no rule for Uncategorized or merchant-less descriptions", () => {
     expect(ruleFor(starbucks, "Uncategorized")).toBeNull();

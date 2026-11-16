@@ -5,7 +5,7 @@ module Finance
   class CustomCategory < ActiveRecord::Base
     self.table_name = "finance_custom_categories"
 
-    MAX_PER_USER = 50
+    MAX_PER_USER = 200 # same as CUSTOM_CATEGORY_MAX in packages/finance-core (subcategories need room)
     MAX_LENGTH = 40
 
     belongs_to :user
@@ -62,6 +62,9 @@ module Finance
         now = Time.current
         Transaction.where(user_id: user_id, category: old_name).update_all(category: name, updated_at: now)
         MerchantRule.where(user_id: user_id, category: old_name).update_all(category: name, updated_at: now)
+        CategorySetting.where(user_id: user_id).where("lower(name) = lower(?)", old_name).update_all(name: name, updated_at: now)
+        CategorySetting.where(user_id: user_id).where("lower(parent_name) = lower(?)", old_name).update_all(parent_name: name, updated_at: now)
+        Budget.where(user_id: user_id, category: old_name).update_all(category: name, updated_at: now)
         Profile.where(user_id: user_id).touch_all
       end
       true
@@ -72,10 +75,25 @@ module Finance
 
     # Deletes the category. Its transactions become Uncategorized and its remembered rules are
     # forgotten; nothing else changes. Returns how many transactions moved.
-    def remove!
+    # With `move_to` (another category), entries move there and remembered rules point there too
+    # (this is also "merge"). Subcategories become top-level; budgets on it are removed.
+    def remove!(move_to: "Uncategorized")
+      target = move_to.presence || "Uncategorized"
+      raise ArgumentError, "unknown category" unless self.class.valid_for?(user, target) && !target.casecmp?(name)
       transaction do
-        moved = Transaction.where(user_id: user_id, category: name).update_all(category: "Uncategorized", updated_at: Time.current)
-        MerchantRule.where(user_id: user_id, category: name).delete_all
+        now = Time.current
+        scope = Transaction.where(user_id: user_id, category: name)
+        Transaction.sync_kinds_for_category!(scope, target, user_id) unless target == "Uncategorized"
+        moved = scope.update_all(category: target, updated_at: now)
+        rules = MerchantRule.where(user_id: user_id, category: name)
+        if target == "Uncategorized"
+          rules.delete_all
+        else
+          rules.find_each { |rule| MerchantRule.where(user_id: user_id, merchant_key: rule.merchant_key, income: rule.income).where.not(id: rule.id).exists? ? rule.destroy! : rule.update!(category: target) }
+        end
+        CategorySetting.where(user_id: user_id).where("lower(name) = lower(?)", name).delete_all
+        CategorySetting.where(user_id: user_id).where("lower(parent_name) = lower(?)", name).update_all(parent_name: nil, updated_at: now)
+        Budget.where(user_id: user_id, category: name).delete_all
         Profile.where(user_id: user_id).touch_all
         destroy!
         moved

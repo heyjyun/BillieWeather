@@ -3,7 +3,7 @@
 import { CATEGORIES, type BuiltInCategory, type Category } from "@billie/shared-types";
 
 export const CATEGORY_NAME_MAX = 40;
-export const CUSTOM_CATEGORY_MAX = 50;
+export const CUSTOM_CATEGORY_MAX = 200;
 /** Distinct merchants sent in one "Categorize with AI" request (Finance::AiCategorizer::MAX_ITEMS). */
 export const AI_BATCH_MAX = 150;
 const AI_TEXT_MAX = 80;

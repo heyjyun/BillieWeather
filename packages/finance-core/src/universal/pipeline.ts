@@ -27,6 +27,7 @@ import {
 } from "./schema";
 import { readXlsx, XlsxError, type XlsxCell } from "./xlsx";
 import { merchantKey, titleizeMerchant } from "../categorizer";
+import { accountTypeFromLegacy, kindForCategorized, type TransactionKind } from "../ledger/domain";
 
 export const MAX_IMPORT_ROWS = 20_000;
 
@@ -58,6 +59,8 @@ export interface ImportContext {
   today: IsoDate;
   /** The platform's on-device OCR engine, or null when this platform has none. */
   ocr: OcrEngine | null;
+  /** Custom categories of the income tree (category_meta); money in filed there is income, not a refund. */
+  incomeCategories?: ReadonlySet<string>;
 }
 
 export type RowDecision = "include" | "skip";
@@ -533,7 +536,7 @@ function buildOfx(draft: ImportDraft, context: ImportContext) {
       category = edit.category;
       categorySource = "user";
     } else if (amountMinor !== null && description) {
-      const decided = context.categorizer.explain(description, amountMinor);
+      const decided = context.categorizer.explain(description, amountMinor, accountTypeFromLegacy(account.kind, "local"));
       category = decided.category;
       categorySource = decided.reason === "region" ? "region" : "auto";
     }
@@ -566,7 +569,8 @@ export function decisionFor(draft: Pick<ImportDraft, "decisions">, row: Canonica
 /** What the preview recommends for a row that needs review (applied only when the person asks). */
 export function suggestedDecision(row: CanonicalTransaction): RowDecision {
   const skipCodes = new Set(["duplicate_overlap", "duplicate_bank_reference", "possible_duplicate", "repeated_bank_reference_in_file", "pending"]);
-  return row.issues.some((item) => skipCodes.has(item.code)) ? "skip" : "include";
+  // A match only against a legacy row with no account is kept unless the person says otherwise.
+  return row.issues.some((item) => skipCodes.has(item.code) && !(item.code === "possible_duplicate" && item.vars?.unknownAccount)) ? "skip" : "include";
 }
 
 const DUPLICATE_CODES = new Set(["duplicate_overlap", "duplicate_bank_reference", "possible_duplicate", "repeated_bank_reference_in_file"]);
@@ -609,6 +613,8 @@ export interface PlannedRow {
   taxReview: boolean;
   pending: boolean;
   kindHints: string;
+  /** Economic kind (financial-schema.json): decided from the category and the account type, never the sign alone. */
+  kind: TransactionKind;
   sourceRef: string;
   /** 0..100, the lowest field confidence. */
   confidence: number;
@@ -648,7 +654,7 @@ export interface PlannedStatement {
 }
 
 /** Confirm: what will be written, or why nothing may be written yet. */
-export function commitPlan(draft: ImportDraft, context: Pick<ImportContext, "deviceCurrency" | "storableCurrencies">): { ok: true; statements: PlannedStatement[] } | { ok: false; blockers: CommitBlocker[] } {
+export function commitPlan(draft: ImportDraft, context: Pick<ImportContext, "deviceCurrency" | "storableCurrencies" | "incomeCategories">): { ok: true; statements: PlannedStatement[] } | { ok: false; blockers: CommitBlocker[] } {
   const blockers: CommitBlocker[] = [];
   if (draft.needs.length > 0) blockers.push({ code: "needs", needs: draft.needs });
   if (draft.summary.undecided > 0) blockers.push({ code: "undecided_rows", count: draft.summary.undecided });
@@ -680,6 +686,7 @@ export function commitPlan(draft: ImportDraft, context: Pick<ImportContext, "dev
         bookedOn: row.transactionDate, postedOn: row.postingDate, description: row.originalDescription, normalizedMerchant: row.normalizedMerchant, amountCents,
         currency, direction: directionOf(row.amountMinor!), balanceCents, bankReference: row.bankReference, accountKey: row.account.key, category,
         categorySource: row.categorySource ?? "auto", taxReview: category === "Business", pending: row.pending, kindHints: row.kindHints.join(","),
+        kind: kindForCategorized({ amountMinor: amountCents, accountType: accountTypeFromLegacy(row.account.kind, "local"), description: row.originalDescription, category, incomeCategories: context.incomeCategories }),
         sourceRef: [row.source.sheet ? `sheet:${row.source.sheet}` : null, row.source.page ? `page:${row.source.page}` : null, `row:${row.source.row}`].filter(Boolean).join(" "),
         confidence: Math.round(Math.min(1, ...confidences) * 100), validationStatus: reviewed ? "user_confirmed" : "verified",
         raw: JSON.stringify(row.raw).slice(0, 4000),

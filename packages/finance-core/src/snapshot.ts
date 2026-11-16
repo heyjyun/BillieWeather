@@ -1,8 +1,13 @@
 // Port of app/services/finance/snapshot.rb. Transfers and excluded rows never count
 // toward income, spending, months, or categories.
-import type { Category, CategoryTotal, Currency, IsoDate, MonthlyTotal, Period, Snapshot, Statement, Transaction } from "@billie/shared-types";
+import type { Category, CategoryTotal, Currency, IsoDate, MonthlyTotal, Period, Snapshot, Statement, Transaction, TransactionKind } from "@billie/shared-types";
 
-export const isCounted = (transaction: Transaction) => !transaction.excluded && transaction.category !== "Transfers";
+/** The stored kind, or the legacy rule for rows without one (financial-schema.json legacyKind). */
+export const kindOf = (transaction: Transaction): TransactionKind =>
+  transaction.kind ?? (transaction.category === "Transfers" ? "transfer" : transaction.amountCents > 0 ? "income" : "expense");
+
+/** Counted in income/expense totals: only income, expense and refund kinds, never excluded rows. */
+export const isCounted = (transaction: Transaction) => !transaction.excluded && ["income", "expense", "refund"].includes(kindOf(transaction));
 
 export function inPeriod(transaction: Transaction, period: Pick<Period, "startDate" | "endDate">): boolean {
   return (!period.startDate || transaction.bookedOn >= period.startDate) && (!period.endDate || transaction.bookedOn <= period.endDate);
@@ -27,10 +32,11 @@ export function buildSnapshot(input: {
   for (const transaction of [...counted].sort((a, b) => (a.bookedOn < b.bookedOn ? -1 : a.bookedOn > b.bookedOn ? 1 : 0))) {
     const month = `${transaction.bookedOn.slice(0, 7)}-01`;
     const entry = months.get(month) ?? { month, incomeCents: 0, expensesCents: 0, netCents: 0 };
-    if (transaction.amountCents > 0) {
+    // Income and expense come from the kind; a refund (money in) reduces spending in its category.
+    if (kindOf(transaction) === "income") {
       incomeCents += transaction.amountCents;
       entry.incomeCents += transaction.amountCents;
-    } else if (transaction.amountCents < 0) {
+    } else if (transaction.amountCents !== 0) {
       expensesCents -= transaction.amountCents;
       entry.expensesCents -= transaction.amountCents;
       categories.set(transaction.category, (categories.get(transaction.category) ?? 0) - transaction.amountCents);
@@ -40,6 +46,7 @@ export function buildSnapshot(input: {
   }
 
   const categoryTotals: CategoryTotal[] = [...categories.entries()]
+    .filter(([, amountCents]) => amountCents !== 0)
     .map(([name, amountCents]) => ({ name, amountCents, share: expensesCents > 0 ? amountCents / expensesCents : null }))
     .sort((a, b) => b.amountCents - a.amountCents || a.name.localeCompare(b.name));
 
@@ -58,7 +65,7 @@ export function buildSnapshot(input: {
     uncategorizedCount: counted.filter((transaction) => transaction.category === "Uncategorized").length,
     taxReviewCount: all.filter((transaction) => transaction.taxReview && !transaction.excluded).length,
     excludedCount: all.filter((transaction) => transaction.excluded).length,
-    transferCount: all.filter((transaction) => transaction.category === "Transfers" && !transaction.excluded).length,
+    transferCount: all.filter((transaction) => ["transfer", "card_payment"].includes(kindOf(transaction)) && !transaction.excluded).length,
     periodStart: dates[0] ?? null,
     periodEnd: dates[dates.length - 1] ?? null,
     categories: categoryTotals,

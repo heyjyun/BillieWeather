@@ -6,7 +6,7 @@
 // page and in every date range. Everything else is drawn as "Other".
 import type { Category, IsoDate, Period, Transaction } from "@billie/shared-types";
 import { merchantKey } from "./categorizer";
-import { inPeriod, isCounted } from "./snapshot";
+import { inPeriod, isCounted, kindOf } from "./snapshot";
 
 export const SPENDING_SLOTS = 7;
 export const OTHER_KEY = "__other";
@@ -47,9 +47,10 @@ export interface MerchantTotal {
   count: number;
 }
 
-type Spend = Pick<Transaction, "bookedOn" | "amountCents" | "category" | "excluded" | "description">;
+type Spend = Pick<Transaction, "bookedOn" | "amountCents" | "category" | "excluded" | "description" | "kind">;
 
-const isSpending = (transaction: Spend) => isCounted(transaction as Transaction) && transaction.amountCents < 0;
+/** Spending by kind: expenses add, refunds (money in) subtract in their category. */
+const isSpending = (transaction: Spend) => isCounted(transaction as Transaction) && kindOf(transaction as Transaction) !== "income" && transaction.amountCents !== 0;
 const byAmountThenName = ([a, x]: [string, number], [b, y]: [string, number]) => y - x || (a < b ? -1 : a > b ? 1 : 0);
 const monthOf = (date: IsoDate): IsoDate => `${date.slice(0, 7)}-01`;
 

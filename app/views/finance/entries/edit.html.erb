@@ -1,0 +1,19 @@
+<% content_for :title, t("billie.ledger.entries.edit_title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.kinds.#{@entry.kind}") %></span><h1><%= @entry.description %></h1><p><%= finance_date(@entry.booked_on) %> · <%= finance_money(@entry.amount, @profile.currency) %></p></div><%= link_to t("billie.finance.ui.back_to_transactions"), finance_transactions_path, class: "bw-text-link" %></div>
+<div class="bw-two-column">
+  <section class="bw-panel"><%= render "form", form_data: @form, entry: @entry, accounts: @accounts, tree: @tree, merchants: @merchants, projects: @projects, refundable: @refundable %></section>
+  <aside class="bw-panel bw-panel-soft">
+    <h2><%= t("billie.ledger.entries.actions_title") %></h2>
+    <div class="bw-inline-actions">
+      <%= link_to t("billie.ledger.entries.copy"), new_finance_entry_path(copy_from: @entry.id), class: "bw-button bw-button-outline" %>
+      <% if @entry.kind == "expense" %><%= link_to t("billie.ledger.entries.add_refund"), new_finance_entry_path(refund_of_id: @entry.id), class: "bw-button bw-button-outline" %><% end %>
+      <%= button_to t("billie.ledger.entries.delete"), finance_entry_path(@entry), method: :delete, class: "bw-button bw-button-danger-outline", form: {data: {turbo: false, confirm: t("billie.ledger.entries.delete_confirm")}} %>
+    </div>
+    <dl class="bw-db-facts">
+      <dt><%= t("billie.ledger.entries.origin") %></dt><dd><%= t("billie.ledger.origins.#{@entry.entry_origin}") %></dd>
+      <dt><%= t("billie.ledger.entries.original") %></dt><dd><%= @entry.original_description %></dd>
+      <dt><%= t("billie.ledger.entries.category_source") %></dt><dd><%= t("billie.ledger.category_sources.#{@entry.category_source}") %></dd>
+      <% if @entry.user_locked_fields.any? %><dt><%= t("billie.ledger.entries.locked") %></dt><dd><%= @entry.user_locked_fields.map { |f| t("billie.ledger.locked_fields.#{f}") }.join(", ") %></dd><% end %>
+    </dl>
+  </aside>
+</div>

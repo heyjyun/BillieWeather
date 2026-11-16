@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Least privilege: local SQLite, a save dialog, writing only to the file the person picked, and opening BillieWeather web pages (sign-up, password reset) in the system browser.",
+  "description": "Least privilege: local SQLite, save and open dialogs, writing or reading only the file the person picked (exports, backups), and opening BillieWeather web pages (sign-up, password reset) in the system browser.",
   "windows": [
     "main"
   ],
@@ -19,7 +19,9 @@
     "sql:allow-select",
     "sql:allow-close",
     "dialog:allow-save",
+    "dialog:allow-open",
     "fs:allow-write-file",
+    "fs:allow-read-file",
     "billie-ocr:default",
     {
       "identifier": "opener:allow-open-url",

@@ -1,0 +1,22 @@
+<% content_for :title, t("billie.ledger.review.duplicates_title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.review.eyebrow") %></span><h1><%= t("billie.ledger.review.duplicates_title") %></h1><p><%= t("billie.ledger.review.duplicates_intro") %></p></div><%= link_to t("billie.finance.ui.back_to_transactions"), finance_transactions_path, class: "bw-text-link" %></div>
+<section class="bw-panel bw-panel-flush">
+  <% if @links.any? %>
+    <div class="bw-table-scroll"><table class="bw-table" id="duplicate-review">
+      <thead><tr><th scope="col"><%= t("billie.ledger.review.new_row") %></th><th scope="col"><%= t("billie.ledger.review.existing_row") %></th><th scope="col" class="bw-text-right"><%= t("billie.finance.ui.amount") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <tbody>
+        <% @links.each do |link| %>
+          <tr><td><strong><%= link.from_transaction.original_description %></strong><small class="bw-muted"><%= finance_date(link.from_transaction.booked_on) %></small></td>
+            <td><%= link.to_transaction.original_description %><small class="bw-muted"><%= finance_date(link.to_transaction.booked_on) %><%= " · #{t("billie.ledger.review.in_trash")}" if link.to_transaction.deleted_at %></small></td>
+            <td class="bw-text-right bw-nowrap"><%= finance_money(link.from_transaction.amount, @profile.currency) %></td>
+            <td class="bw-text-right bw-nowrap">
+              <%= button_to t("billie.ledger.review.is_duplicate"), finance_resolve_duplicate_path(link, decision: "duplicate"), method: :patch, class: "bw-button bw-button-small bw-button-dark", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+              <%= button_to t("billie.ledger.review.keep_both"), finance_resolve_duplicate_path(link, decision: "keep"), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+            </td></tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.ledger.review.duplicates_empty") %></h3></div>
+  <% end %>
+</section>

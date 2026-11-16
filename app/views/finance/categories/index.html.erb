@@ -45,6 +45,8 @@
   </section>
 </div>
 
+<%= render "finance/categories/tree", tree: @tree %>
+
 <section class="bw-panel bw-panel-flush bw-section-gap" aria-labelledby="all-heading">
   <div class="bw-panel-heading"><div><h2 id="all-heading"><%= t("billie.categories.all_title") %></h2><p><%= t("billie.categories.all_body") %></p></div></div>
   <div class="bw-table-scroll"><table class="bw-table">
@@ -93,6 +95,9 @@
         <% end %>
         <%= button_to t("billie.categories.delete"), finance_category_path(custom), method: :delete, form: {data: {turbo: false, confirm: t("billie.categories.delete_confirm", name: custom.name, count: @selected_row[:count])}}, class: "bw-button bw-button-danger-outline" %>
       </div>
+    <% end %>
+    <% unless Finance::CategoryTree::SPECIAL.include?(@selected) %>
+      <%= render "finance/categories/arrange", name: @selected, tree: @tree, custom_record: @selected_row[:custom] %>
     <% end %>
     <% if @selected_transactions.any? %>
       <%= render "finance/shared/transactions_table", transactions: @selected_transactions, currency: @profile.currency %>

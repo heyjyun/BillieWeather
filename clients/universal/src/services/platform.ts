@@ -79,6 +79,37 @@ export async function deviceName(): Promise<string | null> {
   return genericDeviceName();
 }
 
+/** Reads a file the person chooses (backup restore). Null when they cancelled. */
+export async function openFile(extensions: string[]): Promise<{ name: string; bytes: Uint8Array } | null> {
+  if (isTauri()) {
+    const [{ open }, { readFile }] = await Promise.all([import("@tauri-apps/plugin-dialog"), import("@tauri-apps/plugin-fs")]);
+    const path = await open({ multiple: false, directory: false, filters: [{ name: extensions.join("/").toUpperCase(), extensions }] });
+    if (!path || Array.isArray(path)) return null;
+    return { name: String(path).split(/[\\/]/).pop() ?? "backup", bytes: await readFile(String(path)) };
+  }
+  return new Promise((resolve) => {
+    const input = Object.assign(document.createElement("input"), { type: "file", accept: extensions.map((e) => `.${e}`).join(",") });
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      resolve(file ? { name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) } : null);
+    };
+    input.click();
+  });
+}
+
+/** The automatic pre-migration copies (native app only; names, never paths). */
+export async function listSnapshots(): Promise<Array<{ name: string; database: string; version: number; created: number; size: number }>> {
+  if (!isTauri()) return [];
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke("snapshot_list");
+}
+
+/** Copies an automatic copy into an empty slot (native app only). Throws when the slot is in use. */
+export async function restoreSnapshot(snapshot: string, slot: number): Promise<void> {
+  const { invoke } = await import("@tauri-apps/api/core");
+  await invoke("snapshot_restore", { snapshot, slot });
+}
+
 /** Saves bytes to a file the person chooses. Returns false if they cancelled. */
 export async function saveFile(filename: string, bytes: Uint8Array, mime: string): Promise<boolean> {
   if (isTauri()) {

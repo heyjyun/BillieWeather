@@ -1,0 +1,23 @@
+<% content_for :title, t("billie.ledger.review.income_title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.review.eyebrow") %></span><h1><%= t("billie.ledger.review.income_title") %></h1><p><%= t("billie.ledger.review.income_intro") %></p></div><%= link_to t("billie.finance.ui.back_to_transactions"), finance_transactions_path, class: "bw-text-link" %></div>
+<section class="bw-panel bw-panel-flush">
+  <% if @suspects.any? %>
+    <div class="bw-table-scroll"><table class="bw-table" id="income-review">
+      <thead><tr><th scope="col"><%= t("billie.finance.ui.transaction") %></th><th scope="col"><%= t("billie.finance.ui.date") %></th><th scope="col" class="bw-text-right"><%= t("billie.finance.ui.amount") %></th><th scope="col"><%= t("billie.ledger.review.suggestion") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <tbody>
+        <% @suspects.each do |entry, suggested| %>
+          <tr><td><strong><%= entry.description %></strong><small class="bw-muted"><%= entry.original_description %> · <%= entry.bank_account&.display_name || entry.statement&.bank_account&.display_name %></small></td>
+            <td class="bw-nowrap"><%= finance_date(entry.booked_on) %></td>
+            <td class="bw-text-right bw-nowrap bw-positive"><%= finance_money(entry.amount, @profile.currency) %></td>
+            <td><%= t("billie.ledger.kinds.#{suggested}") %></td>
+            <td class="bw-text-right bw-nowrap">
+              <%= button_to t("billie.ledger.review.mark_as", kind: t("billie.ledger.kinds.#{suggested}")), finance_reclassify_income_path(entry, kind: suggested), method: :patch, class: "bw-button bw-button-small bw-button-dark", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+              <%= button_to t("billie.ledger.review.keep_income"), finance_reclassify_income_path(entry, kind: "income"), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+            </td></tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.ledger.review.income_empty") %></h3></div>
+  <% end %>
+</section>

@@ -55,7 +55,7 @@ module Finance
     # category the person corrected is exactly what is exported.
     def each_transaction_row
       return enum_for(:each_transaction_row) unless block_given?
-      scope = Transaction.where(user_id: user.id).includes(statement: :bank_account).order(booked_on: :desc, id: :desc)
+      scope = Transaction.live.where(user_id: user.id).includes(:merchant, :bank_account, statement: :bank_account).order(booked_on: :desc, id: :desc)
       scope = scope.where("booked_on >= ?", period.start_date) if period.start_date
       scope = scope.where("booked_on <= ?", period.end_date) if period.end_date
       scope.each { |transaction| yield self.class.row_for(transaction, user: user) }
@@ -65,18 +65,18 @@ module Finance
     def self.row_for(transaction, user:)
       raise ArgumentError, "transaction must belong to user" unless transaction.user_id == user.id
       statement = transaction.statement
-      account = statement.bank_account if statement.bank_account&.user_id == user.id
+      account = [transaction.bank_account, statement&.bank_account].compact.find { |candidate| candidate.user_id == user.id }
       Row.new(
         booked_on: transaction.booked_on,
-        account: account&.display_name || statement.filename,
-        merchant: Categorizer.merchant_key(transaction.description)&.titleize,
+        account: account&.display_name || statement&.filename || "",
+        merchant: transaction.merchant&.name || Categorizer.merchant_key(transaction.original_description.presence || transaction.description)&.titleize,
         description: transaction.description,
         category: transaction.category,
         amount: transaction.amount,
-        currency: statement.currency,
+        currency: statement&.currency || Profile.find_by(user_id: user.id)&.currency || "USD",
         tax_review: transaction.tax_review,
         excluded: transaction.excluded,
-        counted: !transaction.excluded && transaction.category != "Transfers"
+        counted: transaction.counted?
       )
     end
 

@@ -1,0 +1,23 @@
+<% t_data = rule.template || {} %>
+<%= form_with model: rule, url: rule.persisted? ? finance_recurring_rule_path(rule) : finance_recurring_rules_path, scope: :recurring_rule, data: {turbo: false}, class: "bw-form" do |form| %>
+  <% if rule.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= rule.errors.full_messages.to_sentence %></div><% end %>
+  <div class="bw-form-grid">
+    <div class="bw-field"><%= form.label :name, t("billie.ledger.recurring.name") %><%= form.text_field :name, required: true, maxlength: 60 %></div>
+    <%= form.fields_for :template do |tf| %>
+      <div class="bw-field"><%= tf.label :kind, t("billie.ledger.recurring.kind") %><%= tf.select :kind, %w[expense income transfer].map { |k| [t("billie.ledger.kinds.#{k}"), k] }, selected: t_data["kind"] %></div>
+      <div class="bw-field"><%= tf.label :amount, t("billie.ledger.fields.amount") %><%= tf.text_field :amount, value: t_data["amount"], required: true, inputmode: "decimal" %></div>
+      <div class="bw-field"><%= tf.label :account_id, t("billie.ledger.fields.account") %><%= tf.select :account_id, accounts.map { |a| [a.display_name, a.id] }, {selected: t_data["account_id"], include_blank: t("billie.ledger.fields.choose_account")}, required: true %></div>
+      <div class="bw-field"><%= tf.label :to_account_id, t("billie.ledger.recurring.to_account") %><%= tf.select :to_account_id, accounts.map { |a| [a.display_name, a.id] }, {selected: t_data["to_account_id"], include_blank: t("billie.ledger.fields.none")} %></div>
+      <div class="bw-field"><%= tf.label :category, t("billie.ledger.fields.category") %><%= tf.select :category, (tree.options("expense", include: t_data["category"], label: method(:finance_label)) + tree.options("income", label: method(:finance_label))).uniq, selected: t_data["category"] || "Uncategorized" %></div>
+      <div class="bw-field"><%= tf.label :merchant_name, t("billie.ledger.fields.merchant") %><%= tf.text_field :merchant_name, value: t_data["merchant_name"], maxlength: 60 %></div>
+      <div class="bw-field"><%= tf.label :project_id, t("billie.ledger.fields.project") %><%= tf.select :project_id, projects.map { |p| [p.name, p.id] }, {selected: t_data["project_id"], include_blank: t("billie.ledger.fields.none")} %></div>
+      <div class="bw-field"><%= tf.label :description, t("billie.ledger.fields.description") %><%= tf.text_field :description, value: t_data["description"], maxlength: 200 %></div>
+    <% end %>
+    <div class="bw-field"><%= form.label :frequency, t("billie.ledger.recurring.frequency") %><%= form.select :frequency, Finance::Domain::FREQUENCIES.map { |f| [t("billie.ledger.recurring.frequencies.#{f}"), f] } %></div>
+    <div class="bw-field"><%= form.label :interval, t("billie.ledger.recurring.interval") %><%= form.number_field :interval, min: 1, max: 365 %></div>
+    <div class="bw-field"><%= form.label :start_on, t("billie.ledger.recurring.start_on") %><%= form.date_field :start_on, required: true %></div>
+    <div class="bw-field"><%= form.label :end_on, t("billie.ledger.recurring.end_on") %><%= form.date_field :end_on %></div>
+  </div>
+  <label class="bw-checkbox-card"><%= form.check_box :auto_post %><span><strong><%= t("billie.ledger.recurring.auto_post") %></strong><small><%= t("billie.ledger.recurring.auto_post_help") %></small></span></label>
+  <div class="bw-form-footer"><%= link_to t("billie.finance.ui.cancel"), finance_recurring_rules_path, class: "bw-text-link" %><%= form.submit t("billie.ledger.save"), class: "bw-button bw-button-dark" %></div>
+<% end %>

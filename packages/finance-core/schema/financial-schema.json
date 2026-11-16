@@ -1,0 +1,330 @@
+{
+  "$comment": "BillieWeather / FinRx logical finance model. Single source of truth for enums and semantics shared by PostgreSQL (Rails, app/models/finance/domain.rb reads this file) and SQLite (clients/universal, packages/finance-core/src/ledger/domain.ts imports it). Physical schemas may differ; semantics may not. Contract tests: packages/finance-core/test/ledger.test.ts and test/services/finance/domain_contract_test.rb.",
+  "version": 2,
+  "account_types": {
+    "checking": {
+      "class": "asset",
+      "zh": "储蓄卡/活期",
+      "en": "Checking"
+    },
+    "savings": {
+      "class": "asset",
+      "zh": "储蓄",
+      "en": "Savings"
+    },
+    "cash": {
+      "class": "asset",
+      "zh": "现金",
+      "en": "Cash"
+    },
+    "payment_app": {
+      "class": "asset",
+      "zh": "网络账户(微信/支付宝/PayPal)",
+      "en": "Payment app / wallet"
+    },
+    "investment": {
+      "class": "asset",
+      "zh": "投资",
+      "en": "Investment"
+    },
+    "receivable": {
+      "class": "asset",
+      "zh": "债权/应收",
+      "en": "Receivable"
+    },
+    "credit_card": {
+      "class": "liability",
+      "zh": "信用卡",
+      "en": "Credit card"
+    },
+    "loan": {
+      "class": "liability",
+      "zh": "负债/贷款",
+      "en": "Loan / liability"
+    },
+    "other": {
+      "class": "asset",
+      "zh": "其他",
+      "en": "Other"
+    }
+  },
+  "legacy_account_kinds": {
+    "$comment": "Existing vocabularies mapped onto account_types. Web finance_bank_accounts.kind: cash|credit|unknown. Local statements.account_kind: checking|savings|credit_card|loan|unknown.",
+    "web": {
+      "cash": "checking",
+      "credit": "credit_card",
+      "unknown": "other"
+    },
+    "local": {
+      "checking": "checking",
+      "savings": "savings",
+      "credit_card": "credit_card",
+      "loan": "loan",
+      "unknown": "other"
+    }
+  },
+  "transaction_kinds": {
+    "expense": {
+      "counts": "expense",
+      "category_kind": "expense",
+      "sign": "out",
+      "zh": "支出",
+      "en": "Expense"
+    },
+    "income": {
+      "counts": "income",
+      "category_kind": "income",
+      "sign": "in",
+      "zh": "收入",
+      "en": "Income"
+    },
+    "refund": {
+      "counts": "expense",
+      "category_kind": "expense",
+      "sign": "in",
+      "zh": "退款",
+      "en": "Refund"
+    },
+    "transfer": {
+      "counts": null,
+      "category_kind": null,
+      "sign": "either",
+      "zh": "转账",
+      "en": "Transfer"
+    },
+    "card_payment": {
+      "counts": null,
+      "category_kind": null,
+      "sign": "either",
+      "zh": "还款",
+      "en": "Card payment"
+    },
+    "opening_balance": {
+      "counts": null,
+      "category_kind": null,
+      "sign": "either",
+      "zh": "期初余额",
+      "en": "Opening balance"
+    },
+    "adjustment": {
+      "counts": null,
+      "category_kind": null,
+      "sign": "either",
+      "zh": "余额调整",
+      "en": "Balance adjustment"
+    },
+    "ignored": {
+      "counts": null,
+      "category_kind": null,
+      "sign": "either",
+      "zh": "不计入",
+      "en": "Ignored"
+    }
+  },
+  "income_expense_rule": "Income = sum(amount) over kind=income. Expenses = -sum(amount) over kind in (expense, refund); a refund (positive) reduces spending in its category. Excluded and deleted rows never count. The sign of an amount alone never decides income or expense.",
+  "link_types": {
+    "transfer": "Money moved between two of the person's accounts. from = outflow leg (negative), to = inflow leg (positive). Same currency: from.amount + to.amount = 0.",
+    "card_payment": "A payment from an asset account to a liability account (credit card, loan). Same balancing rule as transfer.",
+    "refund_of": "from = the refund (positive), to = the original expense (negative). amount = cents covered. Sum of refunds of one expense <= |expense amount|.",
+    "duplicate_of": "from = a row a person or rule confirmed is the same economic event as to (kept for audit; the duplicate is excluded).",
+    "pending_to_posted": "from = pending entry, to = posted entry."
+  },
+  "link_statuses": [
+    "suggested",
+    "confirmed",
+    "rejected"
+  ],
+  "decided_by": [
+    "user",
+    "rule",
+    "auto",
+    "ai"
+  ],
+  "category_kinds": [
+    "expense",
+    "income"
+  ],
+  "category_max_depth": 2,
+  "category_sources": [
+    "user",
+    "rule",
+    "file",
+    "auto",
+    "region",
+    "ai",
+    "legacy"
+  ],
+  "entry_origins": [
+    "import",
+    "manual",
+    "web_copy",
+    "upload",
+    "recurring",
+    "legacy"
+  ],
+  "locked_fields": [
+    "category",
+    "kind",
+    "description",
+    "excluded",
+    "merchant",
+    "project",
+    "account"
+  ],
+  "audit_actor_kinds": [
+    "user",
+    "import",
+    "rule",
+    "ai",
+    "system",
+    "sync",
+    "recurring"
+  ],
+  "audit_actions": [
+    "create",
+    "update",
+    "delete",
+    "restore",
+    "purge",
+    "link",
+    "unlink",
+    "import",
+    "reverse_import",
+    "ai_apply",
+    "ai_undo",
+    "batch_update",
+    "batch_delete",
+    "merge",
+    "archive",
+    "unarchive",
+    "backup",
+    "restore_backup"
+  ],
+  "budget_periods": [
+    "month",
+    "year"
+  ],
+  "recurrence_frequencies": [
+    "daily",
+    "weekly",
+    "monthly",
+    "yearly"
+  ],
+  "dimensions": [
+    "account",
+    "category",
+    "merchant",
+    "project",
+    "tag"
+  ],
+  "builtin_categories": [
+    {
+      "key": "Income",
+      "kind": "income"
+    },
+    {
+      "key": "Housing",
+      "kind": "expense"
+    },
+    {
+      "key": "Food & dining",
+      "kind": "expense"
+    },
+    {
+      "key": "Transport",
+      "kind": "expense"
+    },
+    {
+      "key": "Utilities",
+      "kind": "expense"
+    },
+    {
+      "key": "Shopping",
+      "kind": "expense"
+    },
+    {
+      "key": "Health",
+      "kind": "expense"
+    },
+    {
+      "key": "Business",
+      "kind": "expense"
+    },
+    {
+      "key": "Transfers",
+      "kind": "transfer"
+    },
+    {
+      "key": "Uncategorized",
+      "kind": "any"
+    }
+  ],
+  "kind_inference": {
+    "$comment": "Applied to imported rows only (manual entries carry an explicit kind). Patterns are case-insensitive, Unicode, tested against the ORIGINAL description. card_payment_patterns apply to money IN on a liability account; card_payment_outflow_patterns to money OUT of an asset account (stricter, so 'COMCAST AUTOPAY' stays an expense). Person-to-person transfers (Zelle, 微信转账) are not own-account transfers and stay income/expense. Cases: packages/finance-core/fixtures/kind-cases.json.",
+    "card_payment_patterns": [
+      "\\bpayment\\W+thank\\W+you\\b",
+      "\\bpayment\\W+received\\b",
+      "\\bautopay\\b",
+      "\\bauto\\W+pay\\b",
+      "\\bcredit\\W+card\\W+payment\\b",
+      "\\bcard\\W+payment\\b",
+      "\\bepayment\\b",
+      "\\be-payment\\b",
+      "\\bonline\\W+payment\\b",
+      "\\bpymt\\b",
+      "信用卡还款",
+      "信用卡還款",
+      "还款",
+      "還款"
+    ],
+    "refund_patterns": [
+      "\\brefund",
+      "\\breturn",
+      "\\breversal\\b",
+      "\\breversed\\b",
+      "\\bcredit\\W+adj",
+      "\\bmerchandise\\W+credit\\b",
+      "\\bchargeback\\b",
+      "\\brebate\\b",
+      "退款",
+      "退货",
+      "退貨"
+    ],
+    "transfer_patterns": [
+      "\\btransfer\\b",
+      "\\bxfer\\b",
+      "\\bopening\\W+balance\\b",
+      "\\bbalance\\W+forward\\b"
+    ],
+    "rules": [
+      "liability account, amount > 0: card_payment if a card_payment pattern matches, else refund",
+      "liability account, amount < 0: expense (transfer if a transfer pattern matches)",
+      "asset/other account, amount > 0: card_payment if 'payment thank you' / 'payment received' (a card statement exported without an account type), refund if a refund pattern matches, transfer if a transfer pattern matches, else income",
+      "asset/other account, amount < 0: card_payment if a card_payment_outflow pattern matches, transfer if a transfer pattern matches, else expense",
+      "amount = 0: ignored"
+    ],
+    "categorized_rule": "kindForCategorized: category 'Transfers' -> card_payment if inferKind says card_payment else transfer; category 'Income' or an income-kind category -> income (any sign); amount 0 -> ignored; amount < 0 -> expense; amount > 0 with 'Uncategorized' -> income if inferKind says income else refund; amount > 0 with any other category -> refund.",
+    "card_payment_outflow_patterns": [
+      "\\bcredit\\W+card\\W+payment\\b",
+      "\\bcard\\W+payment\\b",
+      "\\bcard\\W+autopay\\b",
+      "\\bcrd\\W+autopay\\b",
+      "\\bcredit\\W+crd\\b",
+      "\\bepayment\\b",
+      "\\be-payment\\b",
+      "\\bpayment\\W+to\\W+\\w+\\W+card\\b",
+      "信用卡还款",
+      "信用卡還款"
+    ]
+  },
+  "dedupe": {
+    "$comment": "Account-scoped. Same algorithm as packages/finance-core/src/universal/relations.ts markDuplicates; Rails port app/services/finance/duplicate_detector.rb. Cases: packages/finance-core/fixtures/dedupe-cases.json.",
+    "steps": [
+      "bank_reference within the same account",
+      "date + amount + normalized description with occurrence counting (an overlapping file's rows match; two genuine identical purchases are both kept)",
+      "near match: same date + amount + same merchant key, different description -> review"
+    ],
+    "null_account": "A match that exists only because one side has no account (legacy rows) is never an automatic duplicate: it becomes possible_duplicate with vars.unknownAccount=1, and the suggested decision is 'include'. Two rows with the same known account, or both without an account, follow the normal steps.",
+    "description_key": "NFKC, lower case, whitespace collapsed, trimmed"
+  }
+}

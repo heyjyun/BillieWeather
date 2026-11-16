@@ -1,0 +1,51 @@
+<%# The manual entry form (记一笔). `form_data` is a hash of field values; `entry` is set when editing. %>
+<% kind = form_data[:kind].to_s %>
+<% transfer = %w[transfer card_payment].include?(kind) %>
+<% editing = entry.present? %>
+<% imported = editing && !entry.manual? %>
+<% category_kind = Finance::Domain.category_kind_for(kind) %>
+<%= form_with url: editing ? finance_entry_path(entry) : finance_entries_path, method: editing ? :patch : :post, scope: :entry, data: {turbo: false}, class: "bw-form", id: "entry-form" do |form| %>
+  <%= form.hidden_field :kind, value: kind %>
+  <% if imported %>
+    <div class="bw-info-line"><%= finance_icon "lock", size: 18 %><p><%= t("billie.ledger.entries.imported_note", original: entry.original_description) %></p></div>
+  <% end %>
+  <div class="bw-form-grid">
+    <div class="bw-field">
+      <%= form.label :amount, kind == "adjustment" ? t("billie.ledger.fields.amount_signed") : t("billie.ledger.fields.amount") %>
+      <%= form.text_field :amount, value: form_data[:amount], required: true, inputmode: "decimal", autocomplete: "off", disabled: imported, autofocus: !editing,
+        pattern: kind == "adjustment" ? "-?[0-9,]+(\\.[0-9]{1,2})?" : "[0-9,]+(\\.[0-9]{1,2})?" %>
+    </div>
+    <div class="bw-field"><%= form.label :booked_on, t("billie.ledger.fields.date") %><%= form.date_field :booked_on, value: form_data[:booked_on], required: true, disabled: imported %></div>
+    <div class="bw-field"><%= form.label :occurred_at_time, t("billie.ledger.fields.time") %><%= form.time_field :occurred_at_time, value: form_data[:occurred_at_time] %></div>
+    <div class="bw-field">
+      <%= form.label :account_id, transfer ? t("billie.ledger.fields.from_account") : t("billie.ledger.fields.account") %>
+      <%= form.select :account_id, accounts.map { |a| [a.display_name, a.id] }, {selected: form_data[:account_id], include_blank: t("billie.ledger.fields.choose_account")}, required: true, disabled: imported %>
+    </div>
+    <% if transfer %>
+      <div class="bw-field"><%= form.label :to_account_id, t("billie.ledger.fields.to_account") %><%= form.select :to_account_id, accounts.map { |a| [a.display_name, a.id] }, {selected: form_data[:to_account_id], include_blank: t("billie.ledger.fields.choose_account")}, required: true %><small><%= t("billie.ledger.entries.card_payment_help") %></small></div>
+    <% end %>
+    <% if category_kind %>
+      <div class="bw-field"><%= form.label :category, t("billie.ledger.fields.category") %><%= form.select :category, tree.options(category_kind, include: form_data[:category], label: method(:finance_label)), {selected: form_data[:category].presence || "Uncategorized"} %></div>
+    <% end %>
+    <% if kind == "refund" && !editing %>
+      <div class="bw-field"><%= form.label :refund_of_id, t("billie.ledger.fields.refund_of") %><%= form.select :refund_of_id, refundable.map { |e| ["#{finance_date(e.booked_on)} · #{e.description.truncate(40)} · #{finance_money(e.amount, @profile.currency)}", e.id] }, {selected: form_data[:refund_of_id], include_blank: t("billie.ledger.fields.refund_of_none")} %><small><%= t("billie.ledger.entries.refund_help") %></small></div>
+    <% end %>
+    <% unless %w[adjustment].include?(kind) || transfer %>
+      <div class="bw-field"><%= form.label :merchant_name, t("billie.ledger.fields.merchant") %><%= form.text_field :merchant_name, value: form_data[:merchant_name] || merchants.find { |m| m.id.to_s == form_data[:merchant_id].to_s }&.name, list: "entry-merchants", maxlength: 60, autocomplete: "off" %><datalist id="entry-merchants"><% merchants.each do |merchant| %><option value="<%= merchant.name %>"></option><% end %></datalist></div>
+    <% end %>
+    <% unless kind == "adjustment" %>
+      <div class="bw-field"><%= form.label :project_id, t("billie.ledger.fields.project") %><%= form.select :project_id, projects.map { |p| [p.name, p.id] }, {selected: form_data[:project_id], include_blank: t("billie.ledger.fields.none")} %></div>
+      <div class="bw-field"><%= form.label :tag_names, t("billie.ledger.fields.tags") %><%= form.text_field :tag_names, value: form_data[:tag_names], maxlength: 300, placeholder: t("billie.ledger.fields.tags_placeholder") %></div>
+    <% end %>
+  </div>
+  <div class="bw-field"><%= form.label :description, t("billie.ledger.fields.description") %><%= form.text_field :description, value: form_data[:description], maxlength: 500, placeholder: t("billie.ledger.fields.description_placeholder") %></div>
+  <div class="bw-field"><%= form.label :note, t("billie.ledger.fields.note") %><%= form.text_area :note, value: form_data[:note], rows: 2, maxlength: 1000 %></div>
+  <% if editing && !transfer && kind != "adjustment" %>
+    <label class="bw-checkbox-inline"><%= form.check_box :excluded, {checked: form_data[:excluded].to_s == "true"}, "1", "0" %><span><%= t("billie.finance.ui.exclude_from_totals_and_forecasts") %></span></label>
+  <% end %>
+  <div class="bw-form-footer">
+    <%= link_to t("billie.finance.ui.cancel"), finance_transactions_path, class: "bw-text-link" %>
+    <% unless editing %><%= form.submit t("billie.ledger.entries.save_and_add"), name: "add_another", class: "bw-button bw-button-outline" %><% end %>
+    <%= form.submit t("billie.ledger.save"), class: "bw-button bw-button-dark" %>
+  </div>
+<% end %>

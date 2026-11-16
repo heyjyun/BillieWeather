@@ -1,0 +1,24 @@
+<% content_for :title, t("billie.ledger.trash.title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.trash.eyebrow") %></span><h1><%= t("billie.ledger.trash.title") %></h1><p><%= t("billie.ledger.trash.intro") %></p></div><%= link_to t("billie.finance.ui.back_to_transactions"), finance_transactions_path, class: "bw-text-link" %></div>
+<section class="bw-panel bw-panel-flush">
+  <% if @entries.any? %>
+    <div class="bw-table-scroll"><table class="bw-table" id="trash-table">
+      <thead><tr><th scope="col"><%= t("billie.finance.ui.transaction") %></th><th scope="col"><%= t("billie.finance.ui.date") %></th><th scope="col"><%= t("billie.ledger.trash.deleted_at") %></th><th scope="col" class="bw-text-right"><%= t("billie.finance.ui.amount") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <tbody>
+        <% @entries.each do |entry| %>
+          <tr><td><strong><%= entry.description %></strong><small class="bw-muted"><%= t("billie.ledger.kinds.#{entry.kind}") %> · <%= entry.bank_account&.display_name || entry.statement&.filename %></small></td>
+            <td class="bw-nowrap"><%= finance_date(entry.booked_on) %></td>
+            <td class="bw-nowrap"><%= l(entry.deleted_at.in_time_zone(current_user.time_zone.presence || "UTC"), format: :short) %></td>
+            <td class="bw-text-right bw-nowrap"><%= finance_money(entry.amount, @profile.currency) %></td>
+            <td class="bw-text-right bw-nowrap">
+              <%= button_to t("billie.ledger.trash.restore"), restore_finance_entry_path(entry), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+              <% if entry.manual? %><%= button_to t("billie.ledger.trash.purge"), purge_finance_entry_path(entry), method: :delete, class: "bw-button bw-button-small bw-button-danger-outline", form: {class: "bw-inline-edit", data: {turbo: false, confirm: t("billie.ledger.trash.purge_confirm")}} %><% end %>
+            </td></tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.ledger.trash.empty") %></h3></div>
+  <% end %>
+</section>
+<p class="bw-caption"><%= t("billie.ledger.trash.imported_note") %></p>

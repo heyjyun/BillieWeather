@@ -1,0 +1,435 @@
+zh-TW:
+  billie:
+    ledger:
+      save: 保存
+      nav:
+        accounts: 帳戶
+        lists: 商家與專案
+        budgets: 預算
+        reports: 報表
+      kinds:
+        expense: 支出
+        income: 收入
+        refund: 退款
+        transfer: 轉帳
+        card_payment: 還款
+        opening_balance: 期初餘額
+        adjustment: 餘額調整
+        ignored: 不計入
+      account_types:
+        checking: 儲蓄卡/活期
+        savings: 儲蓄
+        cash: 現金
+        payment_app: 網路帳戶/錢包
+        investment: 投資
+        receivable: 債權（別人欠你的錢）
+        credit_card: 信用卡
+        loan: 貸款/負債
+        other: 其他
+      origins:
+        import: 匯入的帳單
+        manual: 手動記帳
+        web_copy: 從網站復制
+        upload: 從應用程式上傳
+        recurring: 週期記帳
+        legacy: 此版本之前匯入
+      category_sources:
+        user: 你選擇的
+        rule: 記住的規則
+        file: 帳單文件中的分類
+        auto: 內置規則
+        region: 地區規則
+        ai: AI 建議
+        legacy: 此版本之前設定
+      locked_fields:
+        category: 分類
+        kind: 類型
+        description: 描述
+        excluded: 不計入統計
+        merchant: 商家
+        project: 專案
+        account: 帳戶
+      fields:
+        amount: 金額
+        amount_signed: 金額（負數表示減少餘額）
+        date: 日期
+        time: 時間（可選）
+        account: 帳戶
+        from_account: 轉出帳戶
+        to_account: 轉入帳戶
+        choose_account: 選擇帳戶
+        category: 分類
+        merchant: 商家
+        project: 專案
+        tags: 標籤
+        tags_placeholder: 用逗號分隔，例如：旅行, 禮物
+        note: 備注
+        description: 描述
+        description_placeholder: 這筆是什麼（顯示在列表中）
+        refund_of: 原始消費
+        refund_of_none: 不關聯消費
+        none: 無
+      filters:
+        all_accounts: 所有帳戶
+        all_merchants: 所有商家
+        all_projects: 所有專案
+        all_tags: 所有標籤
+      errors:
+        generic: 這筆記錄有內容無效。
+        amount_required: 請輸入金額。
+        amount_zero: 金額不能為零。
+        amount_too_large: 金額過大。
+        amount_precision: 最多保留兩位小數。
+        date_invalid: 請輸入有效日期。
+        account_required: 請選擇帳戶。
+        accounts_same: 請選擇兩個不同的帳戶。
+        category_kind: 該分類属於另一棵分類樹（收入/支出）。
+        refund_target_required: 請選擇這筆退款對應的消費。
+        refund_too_large: 退款金額不能超過原消費剩餘可退金額。
+        refund_target_invalid: 退款只能關聯支出。
+        kind_invalid: 這里不能使用此記帳類型。
+        category_unknown: 該分類不存在。
+        not_found: 未找到該專案。
+        not_in_trash: 這筆記錄不在回收站中。
+        imported_entry: 匯入的記錄隨帳單保留；刪除帳單才能徹底刪除它們。
+        nothing_selected: 請至少選擇一筆交易。
+        unknown_action: 請選擇要修改的內容。
+        nothing_to_undo: 這次修改沒有可撤銷的內容。
+        no_change: 餘額已經一致。
+        parent_invalid: 父分類必須是同一棵樹中的一級分類。
+        merge_same: 請選擇另一個合並目標。
+      accounts:
+        title: 帳戶
+        eyebrow: 你的錢在哪里
+        intro: 所有帳戶、錢包、信用卡和貸款的餘額以及淨資產。現金或任何不匯入的帳戶都可以手動添加。
+        new: 添加帳戶
+        new_intro: 現金、錢包應用程式、貸款、別人欠你的錢——任何你想手動記錄的帳戶。
+        back: 返回帳戶
+        assets: 資產
+        liabilities: 負債
+        asset: 資產
+        liability: 負債
+        net_worth: 淨資產
+        empty_title: 還沒有帳戶
+        empty_body: 匯入一份帳單或手動添加帳戶即可開始。
+        col_account: 帳戶
+        col_entries: 交易
+        col_balance: 餘額
+        manual: 手動添加
+        imported: 來自匯入的帳單
+        not_in_net_worth: 不計入淨資產
+        credit_limit_short: "額度 %{amount}"
+        move_up: "上移 %{name}"
+        move_down: "下移 %{name}"
+        edit: 編輯
+        edit_label: "編輯 %{name}"
+        archived_title: 已歸檔帳戶
+        archived_body: 歸檔的帳戶保留歷史記錄，但不再出現在選擇列表中。
+        unarchive: 恢復
+        archive: 歸檔
+        archive_confirm: 歸檔此帳戶？它的交易仍保留在歷史記錄中。
+        delete: 刪除帳戶
+        delete_confirm: 刪除此帳戶？僅在沒有任何記錄使用它時可以刪除。
+        delete_help: 有交易或帳單的帳戶不能刪除，請改為歸檔。
+        balance_note: 餘額 = 期初餘額 + 所有未刪除的交易。可通過餘額調整與銀行保持一致。
+        name: 名稱
+        name_placeholder: 例如：錢包、微信、車貸
+        type: 類型
+        opening_balance: 期初餘額
+        opening_balance_help: 開始記帳時帳戶中的金額。信用卡或貸款欠款請填負數。
+        opening_balance_on: 期初日期
+        credit_limit: 信用額度
+        card_only: 用於信用卡和貸款。
+        statement_day: 帳單日
+        due_day: 還款日
+        include_in_net_worth: 計入淨資產
+        include_in_net_worth_help: 你記錄但不属於你的帳戶可不計入。
+        current_balance: "當前餘額：%{amount}"
+        adjust_title: 設定實際餘額
+        adjust_body: 為差額記錄一筆餘額調整，它不會計入收入或支出。
+        actual_balance: 銀行或錢包中的實際餘額
+        adjust: 調整餘額
+        manage_title: 管理
+        view_entries: 查看交易
+        created: "已添加帳戶 %{name}。"
+        updated: "已保存帳戶 %{name}。"
+        archived: "已歸檔帳戶 %{name}。"
+        unarchived: "已恢復帳戶 %{name}。"
+        deleted: "已刪除帳戶 %{name}。"
+        in_use: "%{name} 有交易或帳單，不能刪除。可以改為歸檔隱藏。"
+        adjusted: "%{name} 的餘額已調整 %{amount}。"
+      entries:
+        eyebrow: 手動記帳
+        new_title: 記一筆
+        edit_title: 編輯交易
+        intro: 記錄支出、收入、自己帳戶間的轉帳、退款和餘額修正——無需匯入，也無需 AI。
+        add: 記一筆
+        add_short: 記帳
+        kind_nav: 記帳類型
+        kind_help:
+          expense: 從某個帳戶花出的錢（包括信用卡消費）。
+          income: 你賺到或收到的錢。
+          transfer: 自己帳戶之間的資金移動。還信用卡或貸款就是轉入該帳戶，不會重復計為支出。
+          refund: 消費退回的錢。關聯原消費後會沖減該消費。
+          adjustment: 修正帳戶餘額，不計入收入或支出。
+        save_and_add: 保存並再記一筆
+        card_payment_help: 選擇信用卡或貸款帳戶即為還款。
+        refund_help: 退款沿用原消費的分類並沖減其支出；可部分退款。
+        no_accounts_title: 請先添加帳戶
+        no_accounts_body: 每筆交易都属於一個帳戶（現金也是一個帳戶）。
+        imported_note: "來自匯入的帳單。銀行的金額、日期、帳戶和原文（“%{original}”）保持不變；你可以修改描述和分類。"
+        actions_title: 操作
+        copy: 復制
+        add_refund: 記錄退款
+        delete: 移到回收站
+        delete_confirm: 將這筆交易移到回收站？之後可以恢復。
+        origin: 來源
+        original: 原始文本
+        original_label: "原文：%{original}"
+        category_source: 分類設定者
+        locked: 保持你的設定
+        manual_only: 手動記帳
+        more_options: 全部字段
+        created: "已保存%{kind}。"
+        deleted: 已移到回收站。
+        restored: 已從回收站恢復。
+        purged: 已徹底刪除。
+      trash:
+        title: 回收站
+        eyebrow: 不會丟失
+        intro: 刪除的交易會先放在這里。可以恢復，手動記錄的交易也可以徹底刪除。
+        deleted_at: 刪除時間
+        restore: 恢復
+        purge: 徹底刪除
+        purge_confirm: 徹底刪除這筆交易？此操作無法撤銷。
+        empty: 回收站是空的。
+        imported_note: 回收站中匯入的交易仍與帳單關聯；刪除帳單才會移除它們。
+        link: "回收站（%{count}）"
+      activity:
+        title: 操作日誌
+        eyebrow: 每一次修改
+        intro: 記錄中改了什麼、何時修改、由誰修改——你、匯入、規則、AI 或週期記帳。
+        action: 操作
+        subject: 對象
+        when: 時間
+        changes: 修改內容
+        all_actions: 所有操作
+        all_subjects: 所有對象
+        empty: 還沒有操作記錄。
+        undo_batch: 撤銷這批修改
+        undo_confirm: 撤銷這批中之後沒有再被修改的所有更改？
+        undone: "已撤銷 %{count} 項修改（%{skipped} 項因之後又被修改而跳過）。"
+      actions:
+        create: 新建
+        update: 修改
+        delete: 刪除
+        restore: 恢復
+        purge: 徹底刪除
+        link: 關聯
+        unlink: 取消關聯
+        import: 匯入
+        reverse_import: 撤銷匯入
+        ai_apply: 應用程式 AI 修改
+        ai_undo: 撤銷修改
+        batch_update: 批量修改
+        batch_delete: 批量刪除
+        merge: 合並
+        archive: 歸檔
+        unarchive: 取消歸檔
+        backup: 備份
+        restore_backup: 從備份恢復
+      actors:
+        user: 由你
+        import: 由匯入
+        rule: 由規則
+        ai: 由 AI
+        system: 由 BillieWeather
+        sync: 由同步
+        recurring: 由週期記帳
+      subjects:
+        Transaction: 交易
+        BankAccount: 帳戶
+        Category: 分類
+        Merchant: 商家
+        Project: 專案
+        Tag: 標籤
+        Budget: 預算
+        RecurringRule: 週期記帳
+        TransactionLink: 關聯
+      review:
+        eyebrow: 需要你決定
+        income_title: 待確認的收入
+        income_intro: 這些記錄在 BillieWeather 區分交易類型之前被計為收入。它們看起來像退款或信用卡還款，並不是收入。在你決定之前不會有任何改動。
+        income_empty: 沒有需要確認的內容。
+        income_link:
+          one: "%{count} 筆收入待確認"
+          other: "%{count} 筆收入待確認"
+        suggestion: 看起來像
+        mark_as: "標記為%{kind}"
+        keep_income: 是收入
+        reclassified: "已保存為%{kind}。"
+        duplicates_title: 疑似重復
+        duplicates_intro: 較新匯入中的這些行與已有記錄相似（同一天、同金額，商家寫法不同）。保留兩筆，或將新的一筆移到回收站。
+        duplicates_empty: 沒有疑似重復。
+        duplicates_link:
+          one: "%{count} 筆疑似重復"
+          other: "%{count} 筆疑似重復"
+        new_row: 新匯入
+        existing_row: 已有記錄
+        in_trash: 在回收站中
+        is_duplicate: 是重復——刪除新的
+        keep_both: 都保留
+        duplicate_removed: 重復的交易已移到回收站。
+        duplicate_kept: 兩筆都已保留。
+      batch:
+        title: 批量操作
+        select: 選擇
+        select_one: "選擇 %{description}"
+        action: 修改
+        value: 改為
+        apply: 應用程式
+        confirm: 將此修改應用程式到所有選中的交易？
+        done: "已修改 %{count} 筆交易。可以在操作日誌中撤銷這批修改。"
+        actions:
+          category: 分類
+          project: 專案
+          merchant: 商家
+          tag: 添加標籤
+          delete: 移到回收站
+      categories:
+        tree_eyebrow: 兩級分類
+        tree_title: 分類樹
+        tree_body: 把分類歸到父分類下，收入與支出分開，可排序或隱藏不用的分類。
+        tree_expense: 支出
+        tree_income: 收入
+        hidden: 已隱藏
+        kind_label: 分類樹
+        parent_label: 父分類
+        no_parent: 一級分類
+        order_label: 排序
+        hide_label: 在選擇列表中隱藏（已有交易保留該分類）
+        arrange: 保存設定
+        arranged: "已保存 %{name} 的設定。"
+        merge_label: 合並到
+        merge: 合並
+        merge_confirm: "把 %{name} 的所有交易和記住的規則移到所選分類，然後刪除 %{name}？"
+        merged: "%{name} 已合並到 %{into}（移動了 %{count} 筆交易）。"
+      lists:
+        eyebrow: 整理
+        merchants:
+          title: 商家
+          intro: 你打交道的商店、付款方和個人。可以在交易中手動設定，輸入新名稱時會自動創建。
+        projects:
+          title: 專案
+          intro: 旅行、裝修、副業——把不同帳戶和分類的交易歸到一起。
+        tags:
+          title: 標籤
+          intro: 自由標籤，一筆交易可以有多個。
+        new_name: 名稱
+        add: 添加
+        name: 名稱
+        rename: 重命名
+        rename_label: "重命名 %{name}"
+        archive: 歸檔
+        unarchive: 恢復
+        archived: 已歸檔
+        merge: 合並
+        merge_into: 合並到
+        merge_confirm: "把 %{name} 的所有交易移到所選項，然後刪除 %{name}？"
+        delete: 刪除
+        delete_confirm: "刪除 %{name}？交易的金額和分類不變，只是不再帶有此標記。"
+        empty: 這里還沒有內容。
+        created: "已添加 %{name}。"
+        updated: "已保存 %{name}。"
+        merged: "%{name} 已合並到 %{into}（%{count} 筆交易）。"
+        deleted: "已刪除 %{name}（%{count} 筆交易不再帶有它）。"
+      budgets:
+        title: 預算
+        eyebrow: 規劃支出
+        intro: 為全部支出、某個分類（含子分類）或某個專案設定每月或每年的限額。
+        scope: 適用於
+        total: 全部支出
+        period: 週期
+        periods:
+          month: 每月
+          year: 每年
+        limit: 限額
+        alert: 提醒比例（%）
+        add: 添加預算
+        spent: 已花費
+        progress: 進度
+        levels:
+          ok: "已用 %{percent}% · 剩餘 %{remaining}"
+          warning: "已用 %{percent}% · 剩餘 %{remaining}"
+          over: "已超支 · %{percent}%（%{remaining}）"
+        empty: 還沒有預算。
+        note: 支出已扣除退款；轉帳和還款不計入。
+        saved: 預算已保存。
+        deleted: 預算已刪除。
+        delete_confirm: 刪除這個預算？
+      recurring:
+        title: 週期記帳
+        eyebrow: 設定一次
+        intro: 房租、工資、訂閱、每月轉入儲蓄。每個日期只會記一次。
+        new: 新建週期記帳
+        back: 返回週期記帳
+        name: 名稱
+        kind: 類型
+        to_account: 轉入帳戶（轉帳）
+        frequency: 重復週期
+        frequencies:
+          daily: 天
+          weekly: 週
+          monthly: 月
+          yearly: 年
+        interval: 每隔
+        start_on: 首次日期
+        end_on: 結束日期（可選）
+        auto_post: 自動記帳
+        auto_post_help: 打開交易頁面時自動添加到期的記錄；否則需點擊“記入到期專案”。
+        every: "每 %{count} %{unit}"
+        next: 接下來的日期
+        paused: 已暫停
+        auto: 自動
+        pause: 暫停
+        resume: 繼續
+        post_due: "記入到期專案（%{count}）"
+        posted:
+          one: "已記入 %{count} 筆週期記帳。"
+          other: "已記入 %{count} 筆週期記帳。"
+        saved: "已保存 %{name}。"
+        deleted: "已刪除 %{name}。已記入的交易保留。"
+        delete_confirm: 刪除這個週期記帳？已記入的交易會保留。
+        empty: 還沒有週期記帳。
+      report:
+        title: 報表
+        eyebrow: 按類型統計，而不是按正負號
+        intro: 任意時間段的收入、支出和淨資產，可按分類、帳戶、商家、專案或標籤查看。
+        period: 時間段
+        from: 開始
+        to: 結束
+        by: 分組方式
+        presets:
+          all_time: 全部時間
+          this_month: 本月
+          last_month: 上月
+          last_30_days: 最近 30 天
+          this_year: 今年
+          last_year: 去年
+          custom: 自定義日期
+        dimensions:
+          category: 分類
+          account: 帳戶
+          merchant: 商家
+          project: 專案
+          tag: 標籤
+        income: 收入
+        spending: 支出
+        net: 結餘
+        share: 占比
+        none: （無）
+        by_title: "按%{dimension}"
+        refund_note: 退款沖減對應分類的支出；轉帳、還款和餘額調整不計入。
+        monthly: 最近 12 個月
+        month: 月份
+        empty: 這個時間段沒有收入或支出。

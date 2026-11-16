@@ -3,8 +3,10 @@
 // browser preview). Nothing here touches the network.
 import type { Category, Currency, MerchantRule, ParsedStatement, Statement, Transaction } from "@billie/shared-types";
 import { CURRENCIES } from "@billie/shared-types";
+import { isAccountType, kindForCategorized, legacyKind, isTransactionKind, type AccountType } from "@billie/finance-core";
 import { aiGroups, Categorizer, categoryNameProblem, CUSTOM_CATEGORY_MAX, isBuiltInCategory, merchantKey, normalizeCategoryName, normalizeRegion, normalizeRegionSource, parseDetection, recategorizeUncategorized, serializeDetection, type RegionDetection, type RegionSource, ruleFor, titleizeMerchant, transactionsMatchingRule, type AiGroup, type CategoryNameProblem, type ExistingTransaction, type ImportReport, type ImportTemplate, type PlannedRow, type PlannedStatement } from "@billie/finance-core";
 import { randomId } from "./ids";
+import { LedgerStore, MANUAL_CONTAINER_SHA } from "./ledger";
 
 export interface SqlDriver {
   execute(sql: string, params?: unknown[]): Promise<{ rowsAffected: number; lastInsertId?: number }>;
@@ -48,16 +50,40 @@ const toStatement = (row: Row): Statement => ({
   closingBalanceOn: (row.closing_balance_on as string | null) ?? null, importedAt: String(row.imported_at),
   source: row.source === "web" ? "web" : "local", region: normalizeRegion(row.region),
 });
+const parseList = (value: unknown): string[] => {
+  try {
+    const parsed = JSON.parse(String(value ?? "[]")) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+  } catch {
+    return [];
+  }
+};
 const toTransaction = (row: Row): Transaction => ({
   id: Number(row.id), statementId: Number(row.statement_id), bookedOn: String(row.booked_on), description: String(row.description),
   amountCents: Number(row.amount_cents), category: row.category as Category, taxReview: Number(row.tax_review) === 1, excluded: Number(row.excluded) === 1,
+  ...(row.kind !== undefined ? {
+    kind: isTransactionKind(row.kind) ? row.kind : legacyKind({ amountMinor: Number(row.amount_cents), category: String(row.category) }),
+    accountId: row.account_id === null || row.account_id === undefined ? null : Number(row.account_id),
+    originalDescription: String(row.original_description ?? row.description), origin: String(row.entry_origin ?? "import"),
+    merchant: (row.merchant_name as string | null | undefined) ?? null, project: (row.project_name as string | null | undefined) ?? null,
+    tags: row.tag_names ? String(row.tag_names).split("\u001f") : [], note: (row.note as string | null | undefined) ?? null, time: (row.occurred_at_time as string | null | undefined) ?? null,
+    lockedFields: parseList(row.user_locked_fields), categorySource: String(row.category_source ?? "legacy"),
+  } : {}),
 });
+
+/** Live (not trashed) entries with their dimensions, newest first. */
+const TRANSACTIONS_SQL = `SELECT t.*, m.name AS merchant_name, p.name AS project_name,
+  (SELECT group_concat(g.name, char(31)) FROM transaction_tags tt JOIN tags g ON g.id = tt.tag_id WHERE tt.transaction_id = t.id) AS tag_names
+  FROM transactions t LEFT JOIN merchants m ON m.id = t.merchant_id LEFT JOIN projects p ON p.id = t.project_id
+  WHERE t.deleted_at IS NULL ORDER BY t.booked_on DESC, t.id DESC`;
+/** Imported statements only: the hidden manual-entries container (ledger.ts) is not a statement to people. */
+const REAL_STATEMENTS = "COALESCE(source_format, '') <> 'manual'";
 
 /** Financial data downloaded (read-only) from the person's BillieWeather web account. */
 export interface WebData {
   currency: Currency | null;
   statements: Array<{ remoteId: number; filename: string; currency: Currency; sha256: string; transactionCount: number; closingBalanceCents: number | null; closingBalanceOn: string | null; importedAt: string }>;
-  transactions: Array<{ remoteId: number; remoteStatementId: number; bookedOn: string; description: string; amountCents: number; category: Category; taxReview: boolean; excluded: boolean }>;
+  transactions: Array<{ remoteId: number; remoteStatementId: number; bookedOn: string; description: string; amountCents: number; category: Category; taxReview: boolean; excluded: boolean; kind?: string; originalDescription?: string }>;
   rules: MerchantRule[];
   /** The person's own categories on the website (older servers send none). */
   categories?: string[];
@@ -137,7 +163,40 @@ export interface WebSyncSettings {
 }
 
 export class FinanceStore {
-  constructor(private db: SqlDriver) {}
+  /** Manual bookkeeping on the same database (accounts, entries, links, budgets, …). */
+  readonly ledger: LedgerStore;
+
+  constructor(private db: SqlDriver) {
+    this.ledger = new LedgerStore(db);
+  }
+
+  /** The database connection (for backups and "Organize with AI"; still this device only). */
+  get sql(): SqlDriver {
+    return this.db;
+  }
+
+  /**
+   * Which signed-in account owns this database (`id:<uuid>` from the server, or `email:<sha256>`
+   * from older servers). Null for a database no account has opened since owners were recorded.
+   */
+  async owner(): Promise<string | null> {
+    const [row] = await this.db.select<Row>("SELECT value FROM settings WHERE key = $1", ["owner_account_id"]);
+    return row ? String(row.value) : null;
+  }
+
+  /** Records the owner. Only ever called for a database without one, or to upgrade `email:` to `id:` for the same account. */
+  async setOwner(owner: string): Promise<void> {
+    await this.setSetting("owner_account_id", owner);
+  }
+
+  /** This book's stable id (a database file is one book). Made on first use. */
+  async bookUuid(): Promise<string> {
+    const [row] = await this.db.select<Row>("SELECT value FROM settings WHERE key = $1", ["book_uuid"]);
+    if (row) return String(row.value);
+    const id = randomId();
+    await this.setSetting("book_uuid", id);
+    return id;
+  }
 
   /** The currency is fixed by the first import, like the Rails profile. */
   async currency(): Promise<Currency | null> {
@@ -146,11 +205,12 @@ export class FinanceStore {
   }
 
   async statements(): Promise<Statement[]> {
-    return (await this.db.select<Row>("SELECT * FROM statements ORDER BY id")).map(toStatement);
+    return (await this.db.select<Row>(`SELECT * FROM statements WHERE ${REAL_STATEMENTS} ORDER BY id`)).map(toStatement);
   }
 
+  /** Every live entry (imported and manual). Entries in the trash are left out. */
   async transactions(): Promise<Transaction[]> {
-    return (await this.db.select<Row>("SELECT * FROM transactions ORDER BY booked_on DESC, id DESC")).map(toTransaction);
+    return (await this.db.select<Row>(TRANSACTIONS_SQL)).map(toTransaction);
   }
 
   async rules(): Promise<MerchantRule[]> {
@@ -185,17 +245,36 @@ export class FinanceStore {
     await this.db.execute("UPDATE custom_categories SET name = $1 WHERE name = $2", [clean, from]);
     await this.db.execute("UPDATE transactions SET category = $1, locally_modified = 1, updated_at = $2 WHERE category = $3", [clean, stamp, from]);
     await this.db.execute("UPDATE merchant_rules SET category = $1, updated_at = $2 WHERE category = $3", [clean, stamp, from]);
+    await this.ledger.renameCategoryMeta(from, clean);
+    await this.ledger.audit({ action: "update", subjectType: "category", subjectId: clean, changes: { name: [from, clean] } });
     return clean;
   }
 
   /** Deletes a custom category: its transactions become Uncategorized, its rules are forgotten. Returns how many transactions moved. */
-  async deleteCategory(name: string): Promise<number> {
+  async deleteCategory(name: string, moveTo: Category = "Uncategorized"): Promise<number> {
     const [row] = await this.db.select<Row>("SELECT name FROM custom_categories WHERE name = $1", [name]);
     if (!row) throw new StoreError("not_found", "Category not found.");
-    const moved = await this.db.execute("UPDATE transactions SET category = 'Uncategorized', locally_modified = 1, updated_at = $1 WHERE category = $2", [now(), name]);
+    const target = moveTo.toLowerCase() === name.toLowerCase() ? "Uncategorized" : moveTo;
+    if (!isBuiltInCategory(target) && !(await this.customCategories()).includes(target)) throw new StoreError("invalid_category", "Unknown category.");
+    // Entries are moved, never deleted (I-9); the ids moved are kept in the operation log.
+    const ids = (await this.db.select<Row>("SELECT id FROM transactions WHERE category = $1", [name])).map((item) => Number(item.id));
+    const moved = await this.db.execute("UPDATE transactions SET category = $1, locally_modified = 1, updated_at = $2 WHERE category = $3", [target, now(), name]);
     await this.db.execute("DELETE FROM merchant_rules WHERE category = $1", [name]);
     await this.db.execute("DELETE FROM custom_categories WHERE name = $1", [name]);
+    await this.ledger.deleteCategoryMeta(name);
+    await this.ledger.audit({ action: "delete", subjectType: "category", subjectId: name, summary: `${ids.length} entries → ${target}`, changes: { entries: [ids, target] } });
     return moved.rowsAffected;
+  }
+
+  /** Merges one custom category into another: entries and rules move, the first category is removed. */
+  async mergeCategory(from: string, into: Category): Promise<number> {
+    if (from.toLowerCase() === into.toLowerCase()) return 0;
+    const ids = (await this.db.select<Row>("SELECT id FROM transactions WHERE category = $1", [from])).map((item) => Number(item.id));
+    await this.db.execute("UPDATE merchant_rules SET category = $1, updated_at = $2 WHERE category = $3 AND NOT EXISTS (SELECT 1 FROM merchant_rules r WHERE r.merchant_key = merchant_rules.merchant_key AND r.income = merchant_rules.income AND r.category = $4)",
+      [into, now(), from, into]);
+    const moved = await this.deleteCategory(from, into);
+    await this.ledger.audit({ action: "merge", subjectType: "category", subjectId: into, summary: `${from} → ${into}`, changes: { entries: [ids, into] } });
+    return moved;
   }
 
   /**
@@ -253,7 +332,8 @@ export class FinanceStore {
         const ids = group.ids.slice(start, start + 100);
         const placeholders = ids.map((_, i) => `$${i + 4}`).join(", ");
         const result = await this.db.execute(
-          `UPDATE transactions SET category = $1, tax_review = CASE WHEN $2 = 'Business' THEN 1 ELSE tax_review END, updated_at = $3 WHERE category = 'Uncategorized' AND id IN (${placeholders})`,
+          `UPDATE transactions SET category = $1, tax_review = CASE WHEN $2 = 'Business' THEN 1 ELSE tax_review END, category_source = 'ai', updated_at = $3
+            WHERE category = 'Uncategorized' AND deleted_at IS NULL AND COALESCE(user_locked_fields, '') NOT LIKE '%"category"%' AND id IN (${placeholders})`,
           [category, category, stamp, ...ids],
         );
         changed += result.rowsAffected;
@@ -286,6 +366,7 @@ export class FinanceStore {
     if (duplicate.length > 0) throw new StoreError("statement_duplicate", "This statement was already imported.");
 
     const region = normalizeRegion(input.region);
+    const incomeCategories = await this.ledger.incomeCategories(await this.customCategories());
     // Rows whose category only the region chose are marked, so a later reclassification can revisit exactly those.
     const regional = region ? await this.categorizer(region) : null;
     const rows: PlannedRow[] = input.parsed.rows.map((row, index) => ({
@@ -293,7 +374,8 @@ export class FinanceStore {
       amountCents: row.amountCents, currency: input.currency, direction: row.amountCents < 0 ? "debit" : row.amountCents > 0 ? "credit" : "zero",
       balanceCents: null, bankReference: null, accountKey: null, category: row.category,
       categorySource: regional && FinanceStore.decidedByRegion(regional, row) ? "region" : "auto", taxReview: row.taxReview, pending: false,
-      kindHints: "", sourceRef: `row:${index + 1}`, confidence: 100, validationStatus: "verified", raw: "{}",
+      kindHints: "", kind: kindForCategorized({ amountMinor: row.amountCents, accountType: null, description: row.description, category: row.category, incomeCategories }),
+      sourceRef: `row:${index + 1}`, confidence: 100, validationStatus: "verified", raw: "{}",
     }));
     const statementId = await this.commitStaged({
       filename: input.filename, currency: input.currency, sha256: input.sha256, sourceSha256: input.sha256, batchId: randomId(),
@@ -320,10 +402,11 @@ export class FinanceStore {
     const region = normalizeRegion(input.region);
     const detection = input.regionMeta?.detection ?? null;
     const stamp = now();
+    const accountId = await this.ledger.accountForImport({ key: input.account?.key ?? null, institution: input.account?.institution, last4: input.account?.last4, kind: input.account?.kind, currency: input.currency });
     // Staging rows older than an hour belong to an import that never finished.
     await this.db.execute("DELETE FROM import_staging_rows WHERE staging_key = $1 OR staged_at < $2", [input.sha256, new Date(Date.now() - 3_600_000).toISOString()]);
     try {
-      const columns = 22;
+      const columns = 25;
       for (let start = 0; start < input.rows.length; start += 50) {
         const batch = input.rows.slice(start, start + 50);
         const params: unknown[] = [];
@@ -331,23 +414,23 @@ export class FinanceStore {
           const base = params.length;
           params.push(input.sha256, start + offset, row.bookedOn, row.description, row.amountCents, row.category, row.taxReview ? 1 : 0, row.postedOn, row.normalizedMerchant,
             row.currency, row.direction, row.balanceCents, row.bankReference, row.accountKey, row.categorySource, row.pending ? 1 : 0, row.kindHints || null, row.sourceRef,
-            row.confidence, row.validationStatus, row.raw, stamp);
+            row.confidence, row.validationStatus, row.raw, stamp, row.kind, accountId, row.description);
           return `(${Array.from({ length: columns }, (_, i) => `$${base + i + 1}`).join(", ")})`;
         });
         await this.db.execute(
           `INSERT INTO import_staging_rows (staging_key, position, booked_on, description, amount_cents, category, tax_review, posted_on, normalized_merchant, currency, direction,
-            balance_cents, bank_reference, account_key, category_source, pending, kind_hints, source_ref, parse_confidence, validation_status, source_raw, staged_at) VALUES ${values.join(", ")}`,
+            balance_cents, bank_reference, account_key, category_source, pending, kind_hints, source_ref, parse_confidence, validation_status, source_raw, staged_at, kind, account_id, original_description) VALUES ${values.join(", ")}`,
           params,
         );
       }
       const result = await this.db.execute(
         `INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at, import_batch_id, source_sha256, source_format,
           account_key, institution, account_last4, account_kind, opening_balance_cents, opening_balance_on, import_report, region,
-          region_source, detected_region, region_confidence, region_evidence) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)`,
+          region_source, detected_region, region_confidence, region_evidence, account_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
         [input.filename, input.currency, input.sha256, input.rows.length, input.closingBalanceCents, input.closingBalanceOn, stamp, input.batchId, input.sourceSha256,
           input.format ?? null, input.account?.key ?? null, input.account?.institution ?? null, input.account?.last4 ?? null, input.account?.kind ?? "unknown",
           input.openingBalanceCents ?? null, input.openingBalanceOn ?? null, input.report ? JSON.stringify(input.report) : null, region,
-          regionSourceFor(region, input.regionMeta?.source), detection?.detectedRegion ?? null, detection?.confidence ?? null, detection ? serializeDetection(detection) : null],
+          regionSourceFor(region, input.regionMeta?.source), detection?.detectedRegion ?? null, detection?.confidence ?? null, detection ? serializeDetection(detection) : null, accountId],
       );
       return Number(result.lastInsertId);
     } catch (error) {
@@ -397,13 +480,13 @@ export class FinanceStore {
 
   /** File hashes already imported (the original file's hash, also for multi-account files). */
   async importedFileHashes(): Promise<Set<string>> {
-    const rows = await this.db.select<Row>("SELECT sha256, source_sha256 FROM statements");
+    const rows = await this.db.select<Row>(`SELECT sha256, source_sha256 FROM statements WHERE ${REAL_STATEMENTS}`);
     return new Set(rows.flatMap((row) => [String(row.sha256), ...(row.source_sha256 ? [String(row.source_sha256)] : [])]));
   }
 
   /** What duplicate detection compares against. */
   async dedupeIndex(): Promise<ExistingTransaction[]> {
-    const rows = await this.db.select<Row>("SELECT id, booked_on, amount_cents, description, account_key, bank_reference FROM transactions");
+    const rows = await this.db.select<Row>("SELECT id, booked_on, amount_cents, COALESCE(original_description, description) AS description, account_key, bank_reference FROM transactions WHERE deleted_at IS NULL AND entry_origin <> 'manual'");
     return rows.map((row) => ({
       id: Number(row.id), bookedOn: String(row.booked_on), amountCents: Number(row.amount_cents), description: String(row.description),
       accountKey: (row.account_key as string | null) ?? null, bankReference: (row.bank_reference as string | null) ?? null,
@@ -412,7 +495,7 @@ export class FinanceStore {
 
   /** Imports on this device, newest first, with their reports. Legacy imports have no report. */
   async importHistory(): Promise<Array<{ batchId: string | null; statementIds: number[]; filename: string; importedAt: string; format: string | null; transactionCount: number; accounts: string[]; reports: ImportReport[]; source: "local" | "web"; region: string | null; regionSource: RegionSource | null; detection: RegionDetection }>> {
-    const rows = await this.db.select<Row>("SELECT * FROM statements ORDER BY imported_at DESC, id DESC");
+    const rows = await this.db.select<Row>(`SELECT * FROM statements WHERE ${REAL_STATEMENTS} ORDER BY imported_at DESC, id DESC`);
     const result: Awaited<ReturnType<FinanceStore["importHistory"]>> = [];
     const groups = new Map<string, (typeof result)[number]>();
     for (const row of rows) {
@@ -487,7 +570,7 @@ export class FinanceStore {
     if (!row) throw new StoreError("not_found", "Transaction not found.");
     const transaction = toTransaction(row);
     await this.applyCategories([{ id, category }]);
-    await this.db.execute("UPDATE transactions SET locally_modified = 1, category_source = 'user' WHERE id = $1", [id]);
+    await this.lockCategory([id], category, String(row.category));
     if (!remember) return 0;
     const rule = ruleFor(transaction, category);
     if (!rule) return 0;
@@ -603,7 +686,10 @@ export class FinanceStore {
   async setCategoryMany(ids: readonly number[], category: Category): Promise<number> {
     if (!isBuiltInCategory(category) && !(await this.customCategories()).includes(category)) throw new StoreError("invalid_category", "Unknown category.");
     const changed = await this.applyCategories(ids.map((id) => ({ id, category })));
-    for (const id of ids) await this.db.execute("UPDATE transactions SET locally_modified = 1, category_source = 'user' WHERE id = $1", [id]);
+    for (const id of ids) {
+      const [row] = await this.db.select<Row>("SELECT category FROM transactions WHERE id = $1", [id]);
+      await this.lockCategory([id], category, row ? String(row.category) : category);
+    }
     return changed;
   }
 
@@ -618,7 +704,29 @@ export class FinanceStore {
   }
 
   async setExcluded(id: number, excluded: boolean): Promise<void> {
-    await this.db.execute("UPDATE transactions SET excluded = $1, locally_modified = 1, updated_at = $2 WHERE id = $3", [excluded ? 1 : 0, now(), id]);
+    const [row] = await this.db.select<Row>("SELECT uuid, user_locked_fields, excluded FROM transactions WHERE id = $1", [id]);
+    const locked = new Set(parseList(row?.user_locked_fields));
+    locked.add("excluded");
+    await this.db.execute("UPDATE transactions SET excluded = $1, locally_modified = 1, user_locked_fields = $2, updated_at = $3 WHERE id = $4", [excluded ? 1 : 0, JSON.stringify([...locked]), now(), id]);
+    if (row) await this.ledger.audit({ action: "update", subjectType: "transaction", subjectId: String(row.uuid), changes: { excluded: [Number(row.excluded) === 1, excluded] } });
+  }
+
+  /**
+   * A person chose this category: lock it against automation, record it, and keep the kind in step
+   * (Transfers <-> transfer-like, Income <-> income, an expense category on money in = refund).
+   */
+  private async lockCategory(ids: readonly number[], category: Category, previous: string): Promise<void> {
+    const income = await this.ledger.incomeCategories(await this.customCategories());
+    for (const id of ids) {
+      const [row] = await this.db.select<Row>("SELECT t.uuid, t.amount_cents, t.kind, t.original_description, t.description, t.user_locked_fields, a.account_type FROM transactions t LEFT JOIN accounts a ON a.id = t.account_id WHERE t.id = $1", [id]);
+      if (!row) continue;
+      const locked = new Set(parseList(row.user_locked_fields));
+      locked.add("category");
+      const type = isAccountType(row.account_type) && row.account_type !== "other" ? (row.account_type as AccountType) : null;
+      const kind = kindForCategorized({ amountMinor: Number(row.amount_cents), accountType: type, description: String(row.original_description ?? row.description), category, incomeCategories: income });
+      await this.db.execute("UPDATE transactions SET locally_modified = 1, category_source = 'user', user_locked_fields = $1, kind = $2 WHERE id = $3", [JSON.stringify([...locked]), kind, id]);
+      if (previous !== category || String(row.kind) !== kind) await this.ledger.audit({ action: "update", subjectType: "transaction", subjectId: String(row.uuid), changes: { category: [previous, category], kind: [row.kind, kind] } });
+    }
   }
 
   async deleteRule(rule: Pick<MerchantRule, "merchantKey" | "income">): Promise<void> {
@@ -631,9 +739,12 @@ export class FinanceStore {
    * (preferences, not financial data), unless `forgetName` clears those too.
    */
   async deleteAllData(options: { forgetName?: boolean } = {}): Promise<void> {
-    for (const table of ["transactions", "statements", "merchant_rules", "custom_categories", "import_staging_rows", "import_templates"]) await this.db.execute(`DELETE FROM ${table}`);
-    if (options.forgetName) await this.db.execute("DELETE FROM settings");
-    else await this.db.execute("DELETE FROM settings WHERE key NOT IN ($1, $2)", ["web_sync_enabled", "database_name"]);
+    await this.setSetting("audit_purge", "1");
+    for (const table of ["transaction_tags", "transaction_links", "transactions", "statements", "merchant_rules", "custom_categories", "import_staging_rows", "import_templates",
+      "category_meta", "budgets", "recurring_rules", "merchants", "projects", "tags", "accounts", "organize_runs", "audit_events"]) await this.db.execute(`DELETE FROM ${table}`);
+    // The owner stays: an emptied database still belongs to the same account.
+    if (options.forgetName) await this.db.execute("DELETE FROM settings WHERE key <> $1", ["owner_account_id"]);
+    else await this.db.execute("DELETE FROM settings WHERE key NOT IN ($1, $2, $3)", ["web_sync_enabled", "database_name", "owner_account_id"]);
     // Reclaim freed pages so deleted rows do not linger in the database file.
     try {
       await this.db.execute("VACUUM");
@@ -644,7 +755,7 @@ export class FinanceStore {
 
   /** Whether this database holds statements or has been named (so it is someone's database, not a fresh slot). */
   async hasContent(): Promise<boolean> {
-    const rows = await this.db.select<Row>("SELECT 1 FROM statements UNION ALL SELECT 1 FROM settings WHERE key = $1 LIMIT 1", ["database_name"]);
+    const rows = await this.db.select<Row>("SELECT 1 FROM statements UNION ALL SELECT 1 FROM accounts UNION ALL SELECT 1 FROM settings WHERE key = $1 LIMIT 1", ["database_name"]);
     return rows.length > 0;
   }
 
@@ -688,7 +799,7 @@ export class FinanceStore {
   async reportSummary(): Promise<{ name: string | null; sizeBytes: number; statements: number; transactions: number; rules: number; periodStart: string | null; periodEnd: string | null; modifiedAt: string | null }> {
     const [info, counts, modifiedAt, name] = await Promise.all([
       this.databaseInfo(),
-      this.db.select<Row>("SELECT (SELECT COUNT(*) FROM statements) AS statements, (SELECT COUNT(*) FROM transactions) AS transactions, (SELECT COUNT(*) FROM merchant_rules) AS rules"),
+      this.db.select<Row>(`SELECT (SELECT COUNT(*) FROM statements WHERE ${REAL_STATEMENTS}) AS statements, (SELECT COUNT(*) FROM transactions WHERE deleted_at IS NULL) AS transactions, (SELECT COUNT(*) FROM merchant_rules) AS rules`),
       this.lastChanged(),
       this.databaseName(),
     ]);
@@ -711,7 +822,7 @@ export class FinanceStore {
   /** Size and coverage of this device's database. */
   async databaseInfo(): Promise<{ sizeBytes: number; periodStart: string | null; periodEnd: string | null }> {
     const [pages] = await this.db.select<Row>("SELECT page_count * page_size AS bytes FROM pragma_page_count(), pragma_page_size()");
-    const [range] = await this.db.select<Row>("SELECT MIN(booked_on) AS first, MAX(booked_on) AS last FROM transactions");
+    const [range] = await this.db.select<Row>("SELECT MIN(booked_on) AS first, MAX(booked_on) AS last FROM transactions WHERE deleted_at IS NULL");
     return { sizeBytes: Number(pages?.bytes ?? 0), periodStart: (range?.first as string | null) ?? null, periodEnd: (range?.last as string | null) ?? null };
   }
 
@@ -724,8 +835,9 @@ export class FinanceStore {
 
   /** Everything in this database, to copy into another one. Statements keep their file hash. */
   async exportData(): Promise<TransferData> {
+    // Imported statements only; manual entries, accounts and the rest travel in a backup file (backup.ts).
     const statements = await this.statements();
-    const transactions = await this.transactions();
+    const transactions = (await this.transactions()).filter((transaction) => transaction.origin !== "manual" && transaction.origin !== "recurring");
     const byStatement = new Map<number, TransferStatement["rows"]>();
     for (const t of [...transactions].reverse()) {
       const rows = byStatement.get(t.statementId) ?? [];
@@ -751,6 +863,7 @@ export class FinanceStore {
   async mergeData(data: TransferData): Promise<MergeResult> {
     const result: MergeResult = { statementsAdded: 0, transactionsAdded: 0, rulesAdded: 0, skipped: 0 };
     const known = new Set((await this.db.select<Row>("SELECT sha256 FROM statements")).map((row) => String(row.sha256)));
+    const incomeCategories = await this.ledger.incomeCategories(await this.customCategories());
     const fresh = data.statements.filter((statement) => {
       if (known.has(statement.sha256)) result.skipped += 1;
       return !known.has(statement.sha256);
@@ -768,17 +881,21 @@ export class FinanceStore {
           normalizeRegion(statement.region), regionSourceFor(normalizeRegion(statement.region), "user")],
       );
       const statementId = Number(inserted.lastInsertId);
+      const accountId = await this.ledger.unassignedAccountId(statement.currency);
+      await this.db.execute("UPDATE statements SET account_id = $1 WHERE id = $2", [accountId, statementId]);
       try {
         for (let start = 0; start < statement.rows.length; start += 100) {
           const batch = statement.rows.slice(start, start + 100);
           const params: unknown[] = [];
           const values = batch.map((row) => {
             const base = params.length;
-            params.push(statementId, row.bookedOn, row.description, row.amountCents, FinanceStore.knownCategory(row.category, custom), row.taxReview ? 1 : 0, row.excluded ? 1 : 0, stamp);
-            return `(${Array.from({ length: 8 }, (_, i) => `$${base + i + 1}`).join(", ")})`;
+            const category = FinanceStore.knownCategory(row.category, custom);
+            params.push(statementId, row.bookedOn, row.description, row.amountCents, category, row.taxReview ? 1 : 0, row.excluded ? 1 : 0, stamp,
+              kindForCategorized({ amountMinor: row.amountCents, accountType: null, description: row.description, category, incomeCategories }), accountId);
+            return `(${Array.from({ length: 10 }, (_, i) => `$${base + i + 1}`).join(", ")})`;
           });
           await this.db.execute(
-            `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at) VALUES ${values.join(", ")}`,
+            `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, kind, account_id) VALUES ${values.join(", ")}`,
             params,
           );
         }
@@ -809,7 +926,7 @@ export class FinanceStore {
   /** Every statement on this device with its transaction count and date range. */
   async statementInventory(): Promise<StatementInventoryItem[]> {
     const rows = await this.db.select<Row>(`SELECT s.id, s.filename, s.sha256, s.source, COUNT(t.id) AS transactions, MIN(t.booked_on) AS first, MAX(t.booked_on) AS last
-      FROM statements s LEFT JOIN transactions t ON t.statement_id = s.id GROUP BY s.id ORDER BY last DESC, s.id DESC`);
+      FROM statements s LEFT JOIN transactions t ON t.statement_id = s.id AND t.deleted_at IS NULL WHERE COALESCE(s.source_format, '') <> 'manual' GROUP BY s.id ORDER BY last DESC, s.id DESC`);
     return rows.map((row) => ({
       id: Number(row.id), filename: String(row.filename), sha256: String(row.sha256), source: row.source === "web" ? "web" : "local",
       transactionCount: Number(row.transactions), periodStart: (row.first as string | null) ?? null, periodEnd: (row.last as string | null) ?? null,
@@ -822,7 +939,16 @@ export class FinanceStore {
    */
   async removeStatement(id: number): Promise<void> {
     const [row] = await this.db.select<Row>("SELECT sha256 FROM statements WHERE id = $1", [id]);
-    if (!row) throw new StoreError("not_found", "Statement not found.");
+    if (!row || String(row.sha256) === MANUAL_CONTAINER_SHA) throw new StoreError("not_found", "Statement not found.");
+    const ids = (await this.db.select<Row>("SELECT id FROM transactions WHERE statement_id = $1", [id])).map((item) => Number(item.id));
+    // Links and tags go with the rows (explicitly: sql.js runs without foreign-key cascades).
+    for (let start = 0; start < ids.length; start += 200) {
+      const batch = ids.slice(start, start + 200);
+      const list = batch.map((_, i) => `$${i + 1}`).join(", ");
+      await this.db.execute(`DELETE FROM transaction_links WHERE from_transaction_id IN (${list}) OR to_transaction_id IN (${list})`, batch);
+      await this.db.execute(`DELETE FROM transaction_tags WHERE transaction_id IN (${list})`, batch);
+    }
+    await this.ledger.audit({ actor: "user", action: "reverse_import", subjectType: "statement", subjectId: String(row.sha256), summary: `${ids.length} entries removed` });
     await this.db.execute("DELETE FROM transactions WHERE statement_id = $1", [id]);
     await this.db.execute("DELETE FROM statements WHERE id = $1", [id]);
     const skipped = await this.skippedHashes();
@@ -854,7 +980,7 @@ export class FinanceStore {
   /** What is stored on this device, split by where it came from. */
   async localSummary(): Promise<LocalSummary> {
     const [counts] = await this.db.select<Row>(`SELECT
-      (SELECT COUNT(*) FROM statements WHERE source = 'local') AS local_statements,
+      (SELECT COUNT(*) FROM statements WHERE source = 'local' AND COALESCE(source_format, '') <> 'manual') AS local_statements,
       (SELECT COUNT(*) FROM statements WHERE source = 'web') AS web_statements,
       (SELECT COUNT(*) FROM transactions WHERE remote_id IS NULL) AS local_transactions,
       (SELECT COUNT(*) FROM transactions WHERE remote_id IS NOT NULL) AS web_transactions,
@@ -945,7 +1071,8 @@ export class FinanceStore {
       result.statementsRemoved += 1;
     }
 
-    // Transactions belonging to the website copies.
+    // Transactions belonging to the website copies (kept in the "no account" account until web accounts travel too).
+    const webAccountId = web.transactions.length > 0 ? await this.ledger.unassignedAccountId(web.currency ?? deviceCurrency ?? "USD") : 0;
     const existingTx = new Map((await this.db.select<Row>("SELECT * FROM transactions WHERE remote_id IS NOT NULL")).map((row) => [Number(row.remote_id), row]));
     const incoming = web.transactions.filter((transaction) => statementIdFor.has(transaction.remoteStatementId));
     const seen = new Set<number>();
@@ -955,36 +1082,44 @@ export class FinanceStore {
       const statementId = statementIdFor.get(transaction.remoteStatementId)!;
       const row = existingTx.get(transaction.remoteId);
       if (!row) {
-        inserts.push([statementId, transaction.bookedOn, transaction.description, transaction.amountCents, FinanceStore.knownCategory(transaction.category, custom), transaction.taxReview ? 1 : 0, transaction.excluded ? 1 : 0, stamp, transaction.remoteId]);
+        const category = FinanceStore.knownCategory(transaction.category, custom);
+        const kind = transaction.kind && isTransactionKind(transaction.kind) ? transaction.kind : legacyKind({ amountMinor: transaction.amountCents, category });
+        inserts.push([statementId, transaction.bookedOn, transaction.description, transaction.amountCents, category, transaction.taxReview ? 1 : 0, transaction.excluded ? 1 : 0, stamp, transaction.remoteId,
+          kind, webAccountId, "web_copy", transaction.originalDescription ?? transaction.description]);
         continue;
       }
       const keepLocal = Number(row.locally_modified) === 1;
+      const locked = new Set(parseList(row.user_locked_fields));
       const next = {
-        statement_id: statementId, booked_on: transaction.bookedOn, description: transaction.description, amount_cents: transaction.amountCents,
+        statement_id: statementId, booked_on: transaction.bookedOn,
+        description: keepLocal && locked.has("description") ? String(row.description) : transaction.description, amount_cents: transaction.amountCents,
         category: keepLocal ? String(row.category) : FinanceStore.knownCategory(transaction.category, custom),
         tax_review: keepLocal ? Number(row.tax_review) : transaction.taxReview ? 1 : 0,
         excluded: keepLocal ? Number(row.excluded) : transaction.excluded ? 1 : 0,
+        kind: keepLocal || !transaction.kind || !isTransactionKind(transaction.kind) ? String(row.kind) : transaction.kind,
       };
       const changed = (Object.keys(next) as Array<keyof typeof next>).some((key) => String(row[key]) !== String(next[key]));
       if (!changed) continue;
       await this.db.execute(
-        "UPDATE transactions SET statement_id = $1, booked_on = $2, description = $3, amount_cents = $4, category = $5, tax_review = $6, excluded = $7, updated_at = $8 WHERE id = $9",
-        [next.statement_id, next.booked_on, next.description, next.amount_cents, next.category, next.tax_review, next.excluded, stamp, Number(row.id)],
+        "UPDATE transactions SET statement_id = $1, booked_on = $2, description = $3, amount_cents = $4, category = $5, tax_review = $6, excluded = $7, kind = $8, updated_at = $9 WHERE id = $10",
+        [next.statement_id, next.booked_on, next.description, next.amount_cents, next.category, next.tax_review, next.excluded, next.kind, stamp, Number(row.id)],
       );
       result.transactionsUpdated += 1;
     }
     for (let start = 0; start < inserts.length; start += 100) {
       const batch = inserts.slice(start, start + 100);
       const params = batch.flat();
-      const values = batch.map((_, i) => `(${Array.from({ length: 9 }, (_, j) => `$${i * 9 + j + 1}`).join(", ")})`);
+      const values = batch.map((_, i) => `(${Array.from({ length: 13 }, (_, j) => `$${i * 13 + j + 1}`).join(", ")})`);
       await this.db.execute(
-        `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, remote_id) VALUES ${values.join(", ")}`,
+        `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, remote_id, kind, account_id, entry_origin, original_description) VALUES ${values.join(", ")}`,
         params,
       );
       result.transactionsAdded += batch.length;
     }
     for (const [remoteId, row] of existingTx) {
       if (seen.has(remoteId)) continue;
+      await this.db.execute("DELETE FROM transaction_links WHERE from_transaction_id = $1 OR to_transaction_id = $1", [Number(row.id)]);
+      await this.db.execute("DELETE FROM transaction_tags WHERE transaction_id = $1", [Number(row.id)]);
       await this.db.execute("DELETE FROM transactions WHERE id = $1", [Number(row.id)]);
       result.transactionsRemoved += 1;
     }
@@ -1010,7 +1145,7 @@ export class FinanceStore {
    * these: a category the person chose, even "Uncategorized", is never changed by them.
    */
   private async automaticTransactions(): Promise<Transaction[]> {
-    const chosen = new Set((await this.db.select<Row>("SELECT id FROM transactions WHERE category_source = 'user'")).map((row) => Number(row.id)));
+    const chosen = new Set((await this.db.select<Row>(`SELECT id FROM transactions WHERE category_source = 'user' OR COALESCE(user_locked_fields, '') LIKE '%"category"%' OR entry_origin IN ('manual', 'recurring')`)).map((row) => Number(row.id)));
     return (await this.transactions()).filter((transaction) => !chosen.has(transaction.id));
   }
 

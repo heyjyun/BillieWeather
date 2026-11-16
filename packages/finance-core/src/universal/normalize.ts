@@ -4,6 +4,7 @@
 import type { Category, IsoDate } from "@billie/shared-types";
 import { CATEGORIES } from "@billie/shared-types";
 import { Categorizer, merchantKey, titleizeMerchant } from "../categorizer";
+import { accountTypeFromLegacy } from "../ledger/domain";
 import { currenciesForHint, detectDecimalSeparator, parseAmount, type DecimalDetection, type DecimalSeparator } from "./amount";
 import { currencyExponent, decimalToMinor, KNOWN_CURRENCIES, spreadsheetNumberToMinor } from "./currency";
 import { detectDateOrder, parseDate, type DateDetection, type DateOrder } from "./dates";
@@ -387,7 +388,7 @@ export function normalizeTable(input: {
         category = fromFile;
         categorySource = "file";
       } else if (amountMinor !== null && description) {
-        const decided = context.categorizer.explain(description, amountMinor);
+        const decided = context.categorizer.explain(description, amountMinor, accountTypeFromLegacy(rowAccount.kind, "local"));
         category = decided.category;
         categorySource = decided.reason === "region" ? "region" : "auto";
       }

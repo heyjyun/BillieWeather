@@ -45,9 +45,10 @@ describe("custom categories", () => {
     expect(categoryNameProblem("Childcare", ["Pets"])).toBeNull();
   });
 
-  it("keeps at most 50 custom categories", async () => {
+  // Raised from 50 to 200 with two-level categories (Rails Finance::CustomCategory has the same limit).
+  it("keeps at most 200 custom categories", async () => {
     const { store } = await newStore();
-    for (let i = 1; i <= 50; i += 1) await store.addCategory(`Category ${i}`);
+    for (let i = 1; i <= 200; i += 1) await store.addCategory(`Category ${i}`);
     await expect(store.addCategory("One more")).rejects.toMatchObject({ code: "too_many_categories" });
   });
 

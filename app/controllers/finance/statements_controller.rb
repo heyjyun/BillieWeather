@@ -19,7 +19,11 @@ module Finance
       importer = StatementImporter.new(user: current_user, file: params[:file], currency: @profile.currency, date_column: params[:date_column])
       statement = importer.call
       @profile.touch
-      redirect_to finance_transactions_path, notice: I18n.t("billie.backend.csv_imported", count: statement.transaction_count, filename: statement.filename, column: importer.date_column_used)
+      notice = I18n.t("billie.backend.csv_imported", count: statement.transaction_count, filename: statement.filename, column: importer.date_column_used)
+      if importer.duplicates_skipped.positive? || importer.duplicates_flagged.positive?
+        notice += " " + I18n.t("billie.backend.import_duplicates_notice", skipped: importer.duplicates_skipped, flagged: importer.duplicates_flagged)
+      end
+      redirect_to finance_transactions_path, notice: notice
     rescue StatementImporter::ImportError => error
       load_statement_lists
       @date_columns = error.date_columns if error.is_a?(StatementImporter::DateColumnRequired)

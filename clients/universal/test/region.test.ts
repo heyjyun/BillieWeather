@@ -6,7 +6,7 @@ import initSqlJs from "sql.js";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildSnapshot } from "@billie/finance-core";
-import { fixtureBytes, FIXTURES, makePdf, migrate, newStore } from "./helpers";
+import { fixtureBytes, FIXTURES, makePdf, migrate, newStore, legacyRow } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { FinanceStore, StoreError } from "../src/services/store";
 import { importFile } from "../src/services/importFile";
@@ -55,7 +55,7 @@ describe("1. importing without a region works exactly as before", () => {
     const { store } = await newStore();
     await importFile(store, fixtureBytes("debit-credit-newest-first.csv"), "d.csv", "USD", null);
     const expected = JSON.parse(readFileSync(join(FIXTURES, "expected/debit-credit-newest-first.json"), "utf8"));
-    expect((await store.transactions()).sort((a, b) => a.id - b.id).map(({ id, statementId, ...rest }) => rest)).toEqual(expected.rows);
+    expect((await store.transactions()).sort((a, b) => a.id - b.id).map(legacyRow)).toEqual(expected.rows);
   });
 });
 
@@ -219,8 +219,9 @@ describe("6. statements imported before this version", () => {
     const statementBefore = db.exec("SELECT * FROM statements")[0].values;
     migrate(db);
     expect(db.exec(`SELECT ${columns} FROM transactions ORDER BY id`)[0].values).toEqual(before);
-    // Version 5 adds region; version 6 adds region_source, detected_region, region_confidence, region_evidence. All empty.
-    expect(db.exec("SELECT * FROM statements")[0].values).toEqual([[...statementBefore[0], null, null, null, null, null]]);
+    // Version 5 adds region; version 6 adds region_source, detected_region, region_confidence, region_evidence (all empty);
+    // version 7 links the statement to the "Imported (no account)" account (id 1).
+    expect(db.exec("SELECT * FROM statements")[0].values).toEqual([[...statementBefore[0], null, null, null, null, null, 1]]);
 
     const store = new FinanceStore(sqljsDriver(db));
     const [statement] = await store.statements();

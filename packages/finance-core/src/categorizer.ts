@@ -1,6 +1,7 @@
 // Port of app/services/finance/categorizer.rb. Keep the lists and their ORDER in sync:
 // the first matching category wins. Parity is checked against Ruby-generated
 // fixtures in ../fixtures (see fixtures/README.md).
+import { inferKind, type AccountType } from "./ledger/domain";
 import type { Category, MerchantRule } from "@billie/shared-types";
 import { normalizeRegion, regionalCategory, type StatementRegion } from "./regions";
 
@@ -80,20 +81,26 @@ export class Categorizer {
     this.region = normalizeRegion(options.region);
   }
 
-  categorize(description: string, amountCents: number): Category {
-    return this.explain(description, amountCents).category;
+  categorize(description: string, amountCents: number, accountType: AccountType | null = null): Category {
+    return this.explain(description, amountCents, accountType).category;
   }
 
   /**
    * The category and the step that chose it. The order is the Rails order; the region is a last,
    * supplementary step, so without a region (or with one that has no rules) results are unchanged.
    */
-  explain(description: string, amountCents: number): { category: Category; reason: CategoryReason } {
+  explain(description: string, amountCents: number, accountType: AccountType | null = null): { category: Category; reason: CategoryReason } {
     const key = merchantKey(description);
     const learned = key ? this.learned.get(ruleKey(key, amountCents > 0)) : undefined;
     if (learned) return { category: learned, reason: "learned" };
     if (TRANSFERS.test(description)) return { category: "Transfers", reason: "transfer" };
-    if (amountCents > 0) return { category: "Income", reason: "income" };
+    if (amountCents > 0) {
+      // Money in is Income only when it is income: a refund keeps an expense category (it reduces
+      // spending there) and a card repayment is a transfer (financial-schema.json kind_inference).
+      const kind = inferKind({ amountMinor: amountCents, accountType, description });
+      if (kind === "income") return { category: "Income", reason: "income" };
+      if (kind === "card_payment" || kind === "transfer") return { category: "Transfers", reason: "transfer" };
+    }
     const rule = RULES.find(([, pattern]) => pattern.test(description));
     // "Uncategorized" is itself a rule (AWS): a deliberate decision the region must not override.
     if (rule) return { category: rule[0], reason: "rule" };

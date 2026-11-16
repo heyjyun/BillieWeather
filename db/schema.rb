@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pgcrypto"
 
   create_table "account_onboarding_invitation_lists", force: :cascade do |t|
     t.bigint "team_id", null: false
@@ -102,8 +103,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
     t.index ["user_id", "kind"], name: "index_community_honors_one_active_per_kind", unique: true, where: "(revoked_at IS NULL)"
     t.index ["user_id"], name: "index_community_honors_on_user_id"
     t.check_constraint "kind::text <> 'founding_patron'::text OR confirmed_at IS NOT NULL AND payment_method IS NOT NULL", name: "community_honors_patron_confirmed"
-    t.check_constraint "kind::text = ANY (ARRAY['founding_member'::character varying, 'founding_patron'::character varying]::text[])", name: "community_honors_kind_allowed"
-    t.check_constraint "payment_method IS NULL OR (payment_method::text = ANY (ARRAY['alipay'::character varying, 'wechat_pay'::character varying, 'zelle'::character varying, 'venmo'::character varying, 'other'::character varying]::text[]))", name: "community_honors_payment_method_allowed"
+    t.check_constraint "kind::text = ANY (ARRAY['founding_member'::character varying::text, 'founding_patron'::character varying::text])", name: "community_honors_kind_allowed"
+    t.check_constraint "payment_method IS NULL OR (payment_method::text = ANY (ARRAY['alipay'::character varying::text, 'wechat_pay'::character varying::text, 'zelle'::character varying::text, 'venmo'::character varying::text, 'other'::character varying::text]))", name: "community_honors_payment_method_allowed"
   end
 
   create_table "community_payment_methods", force: :cascade do |t|
@@ -115,7 +116,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
     t.boolean "enabled", default: false, null: false
     t.index ["key"], name: "index_community_payment_methods_on_key", unique: true
     t.index ["updated_by_id"], name: "index_community_payment_methods_on_updated_by_id"
-    t.check_constraint "key::text = ANY (ARRAY['alipay'::character varying, 'wechat_pay'::character varying, 'zelle'::character varying, 'venmo'::character varying]::text[])", name: "community_payment_methods_key_allowed"
+    t.check_constraint "key::text = ANY (ARRAY['alipay'::character varying::text, 'wechat_pay'::character varying::text, 'zelle'::character varying::text, 'venmo'::character varying::text])", name: "community_payment_methods_key_allowed"
   end
 
   create_table "community_support_accesses", force: :cascade do |t|
@@ -131,18 +132,108 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
     t.index ["user_id"], name: "index_community_support_accesses_on_user_id", unique: true
   end
 
+  create_table "finance_audit_events", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "actor", default: "user", null: false
+    t.string "action", null: false
+    t.string "subject_type", null: false
+    t.string "subject_id"
+    t.uuid "batch_id"
+    t.string "summary", limit: 300
+    t.jsonb "changes_data", default: {}, null: false
+    t.jsonb "undo_data"
+    t.bigint "book_id"
+    t.datetime "created_at", null: false
+    t.index ["batch_id"], name: "index_finance_audit_events_on_batch_id"
+    t.index ["user_id", "created_at"], name: "index_finance_audit_events_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_finance_audit_events_on_user_id"
+    t.index ["uuid"], name: "index_finance_audit_events_on_uuid", unique: true
+  end
+
   create_table "finance_bank_accounts", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.string "identity_key", null: false
-    t.string "bank_name", null: false
+    t.string "identity_key"
+    t.string "bank_name"
     t.string "name", null: false
-    t.string "last4", null: false
+    t.string "last4"
     t.string "kind", default: "unknown", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "custom_name"
+    t.string "account_type", default: "other", null: false
+    t.string "currency", limit: 3
+    t.decimal "opening_balance", precision: 15, scale: 2, default: "0.0", null: false
+    t.date "opening_balance_on"
+    t.decimal "credit_limit", precision: 15, scale: 2
+    t.integer "statement_day"
+    t.integer "due_day"
+    t.boolean "include_in_net_worth", default: true, null: false
+    t.text "note"
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "archived_at"
+    t.boolean "manual", default: false, null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "book_id"
     t.index ["user_id", "identity_key"], name: "index_finance_bank_accounts_on_user_id_and_identity_key", unique: true
     t.index ["user_id"], name: "index_finance_bank_accounts_on_user_id"
+    t.index ["uuid"], name: "index_finance_bank_accounts_on_uuid", unique: true
+    t.check_constraint "account_type::text = ANY (ARRAY['checking'::character varying::text, 'savings'::character varying::text, 'cash'::character varying::text, 'payment_app'::character varying::text, 'investment'::character varying::text, 'receivable'::character varying::text, 'credit_card'::character varying::text, 'loan'::character varying::text, 'other'::character varying::text])", name: "finance_bank_accounts_type"
+    t.check_constraint "due_day IS NULL OR due_day >= 1 AND due_day <= 31", name: "finance_bank_accounts_due_day"
+    t.check_constraint "manual OR identity_key IS NOT NULL", name: "finance_bank_accounts_identity_or_manual"
+    t.check_constraint "statement_day IS NULL OR statement_day >= 1 AND statement_day <= 31", name: "finance_bank_accounts_statement_day"
+  end
+
+  create_table "finance_books", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "name", limit: 60, null: false
+    t.string "base_currency", limit: 3, null: false
+    t.string "book_type", default: "personal", null: false
+    t.integer "month_start_day", default: 1, null: false
+    t.boolean "default_book", default: false, null: false
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_finance_books_on_user_id"
+    t.index ["user_id"], name: "index_finance_books_one_default", unique: true, where: "default_book"
+    t.index ["uuid"], name: "index_finance_books_on_uuid", unique: true
+    t.check_constraint "book_type::text = ANY (ARRAY['personal'::character varying::text, 'business'::character varying::text])", name: "finance_books_type"
+    t.check_constraint "month_start_day >= 1 AND month_start_day <= 28", name: "finance_books_month_start"
+  end
+
+  create_table "finance_budgets", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "period", default: "month", null: false
+    t.string "category"
+    t.bigint "project_id"
+    t.decimal "amount", precision: 15, scale: 2, null: false
+    t.integer "alert_percent", default: 90, null: false
+    t.bigint "book_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id"], name: "index_finance_budgets_on_project_id"
+    t.index ["user_id"], name: "index_finance_budgets_on_user_id"
+    t.index ["uuid"], name: "index_finance_budgets_on_uuid", unique: true
+    t.check_constraint "alert_percent >= 1 AND alert_percent <= 100", name: "finance_budgets_alert"
+    t.check_constraint "amount > 0::numeric", name: "finance_budgets_amount"
+    t.check_constraint "period::text = ANY (ARRAY['month'::character varying::text, 'year'::character varying::text])", name: "finance_budgets_period"
+  end
+
+  create_table "finance_category_settings", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", limit: 40, null: false
+    t.string "parent_name", limit: 40
+    t.string "category_kind", default: "expense", null: false
+    t.integer "sort_order", default: 0, null: false
+    t.boolean "hidden", default: false, null: false
+    t.bigint "book_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "user_id, lower((name)::text)", name: "index_finance_category_settings_on_user_and_lower_name", unique: true
+    t.index ["user_id"], name: "index_finance_category_settings_on_user_id"
+    t.check_constraint "category_kind::text = ANY (ARRAY['expense'::character varying::text, 'income'::character varying::text])", name: "finance_category_settings_kind"
   end
 
   create_table "finance_command_executions", force: :cascade do |t|
@@ -246,6 +337,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
     t.index ["user_id"], name: "index_finance_merchant_rules_on_user_id"
   end
 
+  create_table "finance_merchants", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "name", limit: 60, null: false
+    t.text "note"
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "archived_at"
+    t.bigint "book_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "user_id, lower((name)::text)", name: "index_finance_merchants_on_user_and_lower_name", unique: true
+    t.index ["user_id"], name: "index_finance_merchants_on_user_id"
+    t.index ["uuid"], name: "index_finance_merchants_on_uuid", unique: true
+  end
+
+  create_table "finance_organize_runs", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "status", default: "preview", null: false
+    t.string "engine", default: "rules", null: false
+    t.jsonb "proposals", default: [], null: false
+    t.uuid "batch_id"
+    t.datetime "applied_at"
+    t.datetime "undone_at"
+    t.bigint "book_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_finance_organize_runs_on_user_id"
+    t.index ["uuid"], name: "index_finance_organize_runs_on_uuid", unique: true
+    t.check_constraint "status::text = ANY (ARRAY['preview'::character varying::text, 'applied'::character varying::text, 'undone'::character varying::text, 'discarded'::character varying::text])", name: "finance_organize_runs_status"
+  end
+
   create_table "finance_profiles", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "currency", default: "USD", null: false
@@ -259,6 +382,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
     t.decimal "cash_on_hand", precision: 15, scale: 2, default: "0.0", null: false
     t.date "cash_on_hand_on"
     t.index ["user_id"], name: "index_finance_profiles_on_user_id", unique: true
+  end
+
+  create_table "finance_projects", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "name", limit: 60, null: false
+    t.text "note"
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "archived_at"
+    t.bigint "book_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "user_id, lower((name)::text)", name: "index_finance_projects_on_user_and_lower_name", unique: true
+    t.index ["user_id"], name: "index_finance_projects_on_user_id"
+    t.index ["uuid"], name: "index_finance_projects_on_uuid", unique: true
+  end
+
+  create_table "finance_recurring_rules", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "name", limit: 60, null: false
+    t.jsonb "template", default: {}, null: false
+    t.string "frequency", null: false
+    t.integer "interval", default: 1, null: false
+    t.date "start_on", null: false
+    t.date "end_on"
+    t.date "next_on"
+    t.boolean "auto_post", default: false, null: false
+    t.boolean "paused", default: false, null: false
+    t.bigint "book_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_finance_recurring_rules_on_user_id"
+    t.index ["uuid"], name: "index_finance_recurring_rules_on_uuid", unique: true
+    t.check_constraint "\"interval\" >= 1 AND \"interval\" <= 365", name: "finance_recurring_interval"
+    t.check_constraint "frequency::text = ANY (ARRAY['daily'::character varying::text, 'weekly'::character varying::text, 'monthly'::character varying::text, 'yearly'::character varying::text])", name: "finance_recurring_frequency"
   end
 
   create_table "finance_statement_drafts", force: :cascade do |t|
@@ -298,9 +457,52 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
     t.index ["user_id"], name: "index_finance_statements_on_user_id"
   end
 
+  create_table "finance_tags", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "name", limit: 60, null: false
+    t.text "note"
+    t.integer "sort_order", default: 0, null: false
+    t.datetime "archived_at"
+    t.bigint "book_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "user_id, lower((name)::text)", name: "index_finance_tags_on_user_and_lower_name", unique: true
+    t.index ["user_id"], name: "index_finance_tags_on_user_id"
+    t.index ["uuid"], name: "index_finance_tags_on_uuid", unique: true
+  end
+
+  create_table "finance_transaction_links", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "link_type", null: false
+    t.bigint "from_transaction_id", null: false
+    t.bigint "to_transaction_id"
+    t.decimal "amount", precision: 15, scale: 2
+    t.string "status", default: "confirmed", null: false
+    t.string "decided_by", default: "user", null: false
+    t.bigint "book_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["from_transaction_id"], name: "index_finance_transaction_links_on_from_transaction_id"
+    t.index ["link_type", "from_transaction_id", "to_transaction_id"], name: "index_finance_links_unique", unique: true
+    t.index ["to_transaction_id"], name: "index_finance_transaction_links_on_to_transaction_id"
+    t.index ["user_id"], name: "index_finance_transaction_links_on_user_id"
+    t.index ["uuid"], name: "index_finance_transaction_links_on_uuid", unique: true
+    t.check_constraint "decided_by::text = ANY (ARRAY['user'::character varying::text, 'rule'::character varying::text, 'auto'::character varying::text, 'ai'::character varying::text])", name: "finance_links_decided_by"
+    t.check_constraint "link_type::text = ANY (ARRAY['transfer'::character varying::text, 'card_payment'::character varying::text, 'refund_of'::character varying::text, 'duplicate_of'::character varying::text, 'pending_to_posted'::character varying::text])", name: "finance_links_type"
+    t.check_constraint "status::text = ANY (ARRAY['suggested'::character varying::text, 'confirmed'::character varying::text, 'rejected'::character varying::text])", name: "finance_links_status"
+  end
+
+  create_table "finance_transaction_tags", primary_key: ["transaction_id", "tag_id"], force: :cascade do |t|
+    t.bigint "transaction_id", null: false
+    t.bigint "tag_id", null: false
+    t.index ["tag_id"], name: "index_finance_transaction_tags_on_tag_id"
+  end
+
   create_table "finance_transactions", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.bigint "statement_id", null: false
+    t.bigint "statement_id"
     t.date "booked_on", null: false
     t.string "description", limit: 500, null: false
     t.decimal "amount", precision: 15, scale: 2, null: false
@@ -309,9 +511,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
     t.boolean "excluded", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "kind", default: "expense", null: false
+    t.string "original_description", limit: 500, null: false
+    t.bigint "bank_account_id"
+    t.string "entry_origin", default: "import", null: false
+    t.datetime "deleted_at"
+    t.string "category_source", default: "legacy", null: false
+    t.integer "category_confidence"
+    t.string "category_model"
+    t.jsonb "user_locked_fields", default: [], null: false
+    t.text "note"
+    t.bigint "merchant_id"
+    t.bigint "project_id"
+    t.string "occurred_at_time", limit: 5
+    t.bigint "recurring_rule_id"
+    t.date "recurring_on"
+    t.bigint "book_id"
+    t.string "fingerprint"
+    t.index ["bank_account_id", "booked_on", "amount"], name: "index_finance_transactions_on_account_date_amount"
+    t.index ["fingerprint"], name: "index_finance_transactions_on_fingerprint"
+    t.index ["recurring_rule_id", "recurring_on", "bank_account_id"], name: "index_finance_transactions_recurring_once", unique: true, where: "(recurring_rule_id IS NOT NULL)"
     t.index ["statement_id"], name: "index_finance_transactions_on_statement_id"
     t.index ["user_id", "booked_on"], name: "index_finance_transactions_on_user_id_and_booked_on"
+    t.index ["user_id", "deleted_at"], name: "index_finance_transactions_on_user_id_and_deleted_at"
+    t.index ["user_id", "kind"], name: "index_finance_transactions_on_user_id_and_kind"
     t.index ["user_id"], name: "index_finance_transactions_on_user_id"
+    t.index ["uuid"], name: "index_finance_transactions_on_uuid", unique: true
+    t.check_constraint "entry_origin::text = ANY (ARRAY['import'::character varying::text, 'manual'::character varying::text, 'web_copy'::character varying::text, 'upload'::character varying::text, 'recurring'::character varying::text, 'legacy'::character varying::text])", name: "finance_transactions_entry_origin"
+    t.check_constraint "kind::text = ANY (ARRAY['expense'::character varying::text, 'income'::character varying::text, 'refund'::character varying::text, 'transfer'::character varying::text, 'card_payment'::character varying::text, 'opening_balance'::character varying::text, 'adjustment'::character varying::text, 'ignored'::character varying::text])", name: "finance_transactions_kind"
+    t.check_constraint "occurred_at_time IS NULL OR occurred_at_time::text ~ '^[0-2][0-9]:[0-5][0-9]$'::text", name: "finance_transactions_time"
+    t.check_constraint "statement_id IS NOT NULL OR (entry_origin::text = ANY (ARRAY['manual'::character varying::text, 'recurring'::character varying::text]))", name: "finance_transactions_statement_or_manual"
   end
 
   create_table "integrations_stripe_installations", force: :cascade do |t|
@@ -517,13 +747,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
     t.boolean "supporter_recognition_public", default: false, null: false
     t.string "cloud_database_name", limit: 60
     t.datetime "finance_ai_categorized_at"
+    t.uuid "finance_owner_uid", default: -> { "gen_random_uuid()" }, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["finance_owner_uid"], name: "index_users_on_finance_owner_uid", unique: true
     t.index ["google_uid"], name: "index_users_on_google_uid", unique: true, where: "(google_uid IS NOT NULL)"
     t.index ["platform_agent_of_id"], name: "index_users_on_platform_agent_of_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
     t.check_constraint "usage_region IS NOT NULL OR usage_region_pending OR platform_agent_of_id IS NOT NULL", name: "users_usage_region_required"
-    t.check_constraint "usage_region IS NULL OR (usage_region::text = ANY (ARRAY['AD'::character varying, 'AE'::character varying, 'AF'::character varying, 'AG'::character varying, 'AI'::character varying, 'AL'::character varying, 'AM'::character varying, 'AO'::character varying, 'AQ'::character varying, 'AR'::character varying, 'AS'::character varying, 'AT'::character varying, 'AU'::character varying, 'AW'::character varying, 'AX'::character varying, 'AZ'::character varying, 'BA'::character varying, 'BB'::character varying, 'BD'::character varying, 'BE'::character varying, 'BF'::character varying, 'BG'::character varying, 'BH'::character varying, 'BI'::character varying, 'BJ'::character varying, 'BL'::character varying, 'BM'::character varying, 'BN'::character varying, 'BO'::character varying, 'BQ'::character varying, 'BR'::character varying, 'BS'::character varying, 'BT'::character varying, 'BV'::character varying, 'BW'::character varying, 'BY'::character varying, 'BZ'::character varying, 'CA'::character varying, 'CC'::character varying, 'CD'::character varying, 'CF'::character varying, 'CG'::character varying, 'CH'::character varying, 'CI'::character varying, 'CK'::character varying, 'CL'::character varying, 'CM'::character varying, 'CN'::character varying, 'CO'::character varying, 'CR'::character varying, 'CU'::character varying, 'CV'::character varying, 'CW'::character varying, 'CX'::character varying, 'CY'::character varying, 'CZ'::character varying, 'DE'::character varying, 'DJ'::character varying, 'DK'::character varying, 'DM'::character varying, 'DO'::character varying, 'DZ'::character varying, 'EC'::character varying, 'EE'::character varying, 'EG'::character varying, 'EH'::character varying, 'ER'::character varying, 'ES'::character varying, 'ET'::character varying, 'FI'::character varying, 'FJ'::character varying, 'FK'::character varying, 'FM'::character varying, 'FO'::character varying, 'FR'::character varying, 'GA'::character varying, 'GB'::character varying, 'GD'::character varying, 'GE'::character varying, 'GF'::character varying, 'GG'::character varying, 'GH'::character varying, 'GI'::character varying, 'GL'::character varying, 'GM'::character varying, 'GN'::character varying, 'GP'::character varying, 'GQ'::character varying, 'GR'::character varying, 'GS'::character varying, 'GT'::character varying, 'GU'::character varying, 'GW'::character varying, 'GY'::character varying, 'HK'::character varying, 'HM'::character varying, 'HN'::character varying, 'HR'::character varying, 'HT'::character varying, 'HU'::character varying, 'ID'::character varying, 'IE'::character varying, 'IL'::character varying, 'IM'::character varying, 'IN'::character varying, 'IO'::character varying, 'IQ'::character varying, 'IR'::character varying, 'IS'::character varying, 'IT'::character varying, 'JE'::character varying, 'JM'::character varying, 'JO'::character varying, 'JP'::character varying, 'KE'::character varying, 'KG'::character varying, 'KH'::character varying, 'KI'::character varying, 'KM'::character varying, 'KN'::character varying, 'KP'::character varying, 'KR'::character varying, 'KW'::character varying, 'KY'::character varying, 'KZ'::character varying, 'LA'::character varying, 'LB'::character varying, 'LC'::character varying, 'LI'::character varying, 'LK'::character varying, 'LR'::character varying, 'LS'::character varying, 'LT'::character varying, 'LU'::character varying, 'LV'::character varying, 'LY'::character varying, 'MA'::character varying, 'MC'::character varying, 'MD'::character varying, 'ME'::character varying, 'MF'::character varying, 'MG'::character varying, 'MH'::character varying, 'MK'::character varying, 'ML'::character varying, 'MM'::character varying, 'MN'::character varying, 'MO'::character varying, 'MP'::character varying, 'MQ'::character varying, 'MR'::character varying, 'MS'::character varying, 'MT'::character varying, 'MU'::character varying, 'MV'::character varying, 'MW'::character varying, 'MX'::character varying, 'MY'::character varying, 'MZ'::character varying, 'NA'::character varying, 'NC'::character varying, 'NE'::character varying, 'NF'::character varying, 'NG'::character varying, 'NI'::character varying, 'NL'::character varying, 'NO'::character varying, 'NP'::character varying, 'NR'::character varying, 'NU'::character varying, 'NZ'::character varying, 'OM'::character varying, 'PA'::character varying, 'PE'::character varying, 'PF'::character varying, 'PG'::character varying, 'PH'::character varying, 'PK'::character varying, 'PL'::character varying, 'PM'::character varying, 'PN'::character varying, 'PR'::character varying, 'PS'::character varying, 'PT'::character varying, 'PW'::character varying, 'PY'::character varying, 'QA'::character varying, 'RE'::character varying, 'RO'::character varying, 'RS'::character varying, 'RU'::character varying, 'RW'::character varying, 'SA'::character varying, 'SB'::character varying, 'SC'::character varying, 'SD'::character varying, 'SE'::character varying, 'SG'::character varying, 'SH'::character varying, 'SI'::character varying, 'SJ'::character varying, 'SK'::character varying, 'SL'::character varying, 'SM'::character varying, 'SN'::character varying, 'SO'::character varying, 'SR'::character varying, 'SS'::character varying, 'ST'::character varying, 'SV'::character varying, 'SX'::character varying, 'SY'::character varying, 'SZ'::character varying, 'TC'::character varying, 'TD'::character varying, 'TF'::character varying, 'TG'::character varying, 'TH'::character varying, 'TJ'::character varying, 'TK'::character varying, 'TL'::character varying, 'TM'::character varying, 'TN'::character varying, 'TO'::character varying, 'TR'::character varying, 'TT'::character varying, 'TV'::character varying, 'TW'::character varying, 'TZ'::character varying, 'UA'::character varying, 'UG'::character varying, 'UM'::character varying, 'US'::character varying, 'UY'::character varying, 'UZ'::character varying, 'VA'::character varying, 'VC'::character varying, 'VE'::character varying, 'VG'::character varying, 'VI'::character varying, 'VN'::character varying, 'VU'::character varying, 'WF'::character varying, 'WS'::character varying, 'XG'::character varying, 'YE'::character varying, 'YT'::character varying, 'ZA'::character varying, 'ZM'::character varying, 'ZW'::character varying]::text[]))", name: "users_usage_region_allowed"
+    t.check_constraint "usage_region IS NULL OR (usage_region::text = ANY (ARRAY['AD'::character varying::text, 'AE'::character varying::text, 'AF'::character varying::text, 'AG'::character varying::text, 'AI'::character varying::text, 'AL'::character varying::text, 'AM'::character varying::text, 'AO'::character varying::text, 'AQ'::character varying::text, 'AR'::character varying::text, 'AS'::character varying::text, 'AT'::character varying::text, 'AU'::character varying::text, 'AW'::character varying::text, 'AX'::character varying::text, 'AZ'::character varying::text, 'BA'::character varying::text, 'BB'::character varying::text, 'BD'::character varying::text, 'BE'::character varying::text, 'BF'::character varying::text, 'BG'::character varying::text, 'BH'::character varying::text, 'BI'::character varying::text, 'BJ'::character varying::text, 'BL'::character varying::text, 'BM'::character varying::text, 'BN'::character varying::text, 'BO'::character varying::text, 'BQ'::character varying::text, 'BR'::character varying::text, 'BS'::character varying::text, 'BT'::character varying::text, 'BV'::character varying::text, 'BW'::character varying::text, 'BY'::character varying::text, 'BZ'::character varying::text, 'CA'::character varying::text, 'CC'::character varying::text, 'CD'::character varying::text, 'CF'::character varying::text, 'CG'::character varying::text, 'CH'::character varying::text, 'CI'::character varying::text, 'CK'::character varying::text, 'CL'::character varying::text, 'CM'::character varying::text, 'CN'::character varying::text, 'CO'::character varying::text, 'CR'::character varying::text, 'CU'::character varying::text, 'CV'::character varying::text, 'CW'::character varying::text, 'CX'::character varying::text, 'CY'::character varying::text, 'CZ'::character varying::text, 'DE'::character varying::text, 'DJ'::character varying::text, 'DK'::character varying::text, 'DM'::character varying::text, 'DO'::character varying::text, 'DZ'::character varying::text, 'EC'::character varying::text, 'EE'::character varying::text, 'EG'::character varying::text, 'EH'::character varying::text, 'ER'::character varying::text, 'ES'::character varying::text, 'ET'::character varying::text, 'FI'::character varying::text, 'FJ'::character varying::text, 'FK'::character varying::text, 'FM'::character varying::text, 'FO'::character varying::text, 'FR'::character varying::text, 'GA'::character varying::text, 'GB'::character varying::text, 'GD'::character varying::text, 'GE'::character varying::text, 'GF'::character varying::text, 'GG'::character varying::text, 'GH'::character varying::text, 'GI'::character varying::text, 'GL'::character varying::text, 'GM'::character varying::text, 'GN'::character varying::text, 'GP'::character varying::text, 'GQ'::character varying::text, 'GR'::character varying::text, 'GS'::character varying::text, 'GT'::character varying::text, 'GU'::character varying::text, 'GW'::character varying::text, 'GY'::character varying::text, 'HK'::character varying::text, 'HM'::character varying::text, 'HN'::character varying::text, 'HR'::character varying::text, 'HT'::character varying::text, 'HU'::character varying::text, 'ID'::character varying::text, 'IE'::character varying::text, 'IL'::character varying::text, 'IM'::character varying::text, 'IN'::character varying::text, 'IO'::character varying::text, 'IQ'::character varying::text, 'IR'::character varying::text, 'IS'::character varying::text, 'IT'::character varying::text, 'JE'::character varying::text, 'JM'::character varying::text, 'JO'::character varying::text, 'JP'::character varying::text, 'KE'::character varying::text, 'KG'::character varying::text, 'KH'::character varying::text, 'KI'::character varying::text, 'KM'::character varying::text, 'KN'::character varying::text, 'KP'::character varying::text, 'KR'::character varying::text, 'KW'::character varying::text, 'KY'::character varying::text, 'KZ'::character varying::text, 'LA'::character varying::text, 'LB'::character varying::text, 'LC'::character varying::text, 'LI'::character varying::text, 'LK'::character varying::text, 'LR'::character varying::text, 'LS'::character varying::text, 'LT'::character varying::text, 'LU'::character varying::text, 'LV'::character varying::text, 'LY'::character varying::text, 'MA'::character varying::text, 'MC'::character varying::text, 'MD'::character varying::text, 'ME'::character varying::text, 'MF'::character varying::text, 'MG'::character varying::text, 'MH'::character varying::text, 'MK'::character varying::text, 'ML'::character varying::text, 'MM'::character varying::text, 'MN'::character varying::text, 'MO'::character varying::text, 'MP'::character varying::text, 'MQ'::character varying::text, 'MR'::character varying::text, 'MS'::character varying::text, 'MT'::character varying::text, 'MU'::character varying::text, 'MV'::character varying::text, 'MW'::character varying::text, 'MX'::character varying::text, 'MY'::character varying::text, 'MZ'::character varying::text, 'NA'::character varying::text, 'NC'::character varying::text, 'NE'::character varying::text, 'NF'::character varying::text, 'NG'::character varying::text, 'NI'::character varying::text, 'NL'::character varying::text, 'NO'::character varying::text, 'NP'::character varying::text, 'NR'::character varying::text, 'NU'::character varying::text, 'NZ'::character varying::text, 'OM'::character varying::text, 'PA'::character varying::text, 'PE'::character varying::text, 'PF'::character varying::text, 'PG'::character varying::text, 'PH'::character varying::text, 'PK'::character varying::text, 'PL'::character varying::text, 'PM'::character varying::text, 'PN'::character varying::text, 'PR'::character varying::text, 'PS'::character varying::text, 'PT'::character varying::text, 'PW'::character varying::text, 'PY'::character varying::text, 'QA'::character varying::text, 'RE'::character varying::text, 'RO'::character varying::text, 'RS'::character varying::text, 'RU'::character varying::text, 'RW'::character varying::text, 'SA'::character varying::text, 'SB'::character varying::text, 'SC'::character varying::text, 'SD'::character varying::text, 'SE'::character varying::text, 'SG'::character varying::text, 'SH'::character varying::text, 'SI'::character varying::text, 'SJ'::character varying::text, 'SK'::character varying::text, 'SL'::character varying::text, 'SM'::character varying::text, 'SN'::character varying::text, 'SO'::character varying::text, 'SR'::character varying::text, 'SS'::character varying::text, 'ST'::character varying::text, 'SV'::character varying::text, 'SX'::character varying::text, 'SY'::character varying::text, 'SZ'::character varying::text, 'TC'::character varying::text, 'TD'::character varying::text, 'TF'::character varying::text, 'TG'::character varying::text, 'TH'::character varying::text, 'TJ'::character varying::text, 'TK'::character varying::text, 'TL'::character varying::text, 'TM'::character varying::text, 'TN'::character varying::text, 'TO'::character varying::text, 'TR'::character varying::text, 'TT'::character varying::text, 'TV'::character varying::text, 'TW'::character varying::text, 'TZ'::character varying::text, 'UA'::character varying::text, 'UG'::character varying::text, 'UM'::character varying::text, 'US'::character varying::text, 'UY'::character varying::text, 'UZ'::character varying::text, 'VA'::character varying::text, 'VC'::character varying::text, 'VE'::character varying::text, 'VG'::character varying::text, 'VI'::character varying::text, 'VN'::character varying::text, 'VU'::character varying::text, 'WF'::character varying::text, 'WS'::character varying::text, 'XG'::character varying::text, 'YE'::character varying::text, 'YT'::character varying::text, 'ZA'::character varying::text, 'ZM'::character varying::text, 'ZW'::character varying::text]))", name: "users_usage_region_allowed"
   end
 
   create_table "webhooks_incoming_bullet_train_webhooks", force: :cascade do |t|
@@ -608,7 +840,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
   add_foreign_key "community_support_accesses", "users", column: "granted_by_id", on_delete: :nullify
   add_foreign_key "community_support_accesses", "users", column: "revoked_by_id", on_delete: :nullify
   add_foreign_key "community_support_accesses", "users", on_delete: :cascade
+  add_foreign_key "finance_audit_events", "users"
   add_foreign_key "finance_bank_accounts", "users"
+  add_foreign_key "finance_books", "users", on_delete: :cascade
+  add_foreign_key "finance_budgets", "finance_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "finance_budgets", "users"
+  add_foreign_key "finance_category_settings", "users"
   add_foreign_key "finance_command_executions", "users"
   add_foreign_key "finance_custom_categories", "users"
   add_foreign_key "finance_insights", "users"
@@ -616,11 +853,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_13_000100) do
   add_foreign_key "finance_local_database_reports", "users", on_delete: :cascade
   add_foreign_key "finance_local_devices", "users", on_delete: :cascade
   add_foreign_key "finance_merchant_rules", "users"
+  add_foreign_key "finance_merchants", "users"
+  add_foreign_key "finance_organize_runs", "users"
   add_foreign_key "finance_profiles", "users"
+  add_foreign_key "finance_projects", "users"
+  add_foreign_key "finance_recurring_rules", "users"
   add_foreign_key "finance_statement_drafts", "finance_bank_accounts", column: "bank_account_id"
   add_foreign_key "finance_statement_drafts", "users"
   add_foreign_key "finance_statements", "finance_bank_accounts", column: "bank_account_id"
   add_foreign_key "finance_statements", "users"
+  add_foreign_key "finance_tags", "users"
+  add_foreign_key "finance_transaction_links", "finance_transactions", column: "from_transaction_id", on_delete: :cascade
+  add_foreign_key "finance_transaction_links", "finance_transactions", column: "to_transaction_id", on_delete: :cascade
+  add_foreign_key "finance_transaction_links", "users"
+  add_foreign_key "finance_transaction_tags", "finance_tags", column: "tag_id", on_delete: :cascade
+  add_foreign_key "finance_transaction_tags", "finance_transactions", column: "transaction_id", on_delete: :cascade
+  add_foreign_key "finance_transactions", "finance_bank_accounts", column: "bank_account_id"
+  add_foreign_key "finance_transactions", "finance_merchants", column: "merchant_id", on_delete: :nullify
+  add_foreign_key "finance_transactions", "finance_projects", column: "project_id", on_delete: :nullify
+  add_foreign_key "finance_transactions", "finance_recurring_rules", column: "recurring_rule_id", on_delete: :nullify
   add_foreign_key "finance_transactions", "finance_statements", column: "statement_id"
   add_foreign_key "finance_transactions", "users"
   add_foreign_key "integrations_stripe_installations", "oauth_stripe_accounts"

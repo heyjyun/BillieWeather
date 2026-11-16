@@ -51,6 +51,8 @@
         "import_details_refreshed": "取り込み済みです。不足していた口座情報と残高を追加しました。取引は重複していません。",
         "import_success": "取り込みました。",
         "statement_duplicate": "同一の明細はすでに取り込まれています。",
+        "statement_all_duplicates": "このファイルの取引（%{count} 件）はすべて別のファイルから記録済みのため、新しく取り込むものはありません。",
+        "import_duplicates_notice": "別のファイルで記録済みの %{skipped} 行をスキップしました。重複の可能性がある %{flagged} 件を確認用に表示しています。",
         "pdf_existing_review": "この PDF は確認待ちです。下に表示される既存の下書きを開いてください。",
         "pdf_review_unclear": "取り込み前に不明確な日付や金額を確認してください。",
         "pdf_auto_imported": "PDF を自動で取り込みました。取引件数を元の明細と照合してください。",

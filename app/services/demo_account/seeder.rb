@@ -197,10 +197,7 @@ module DemoAccount
         filename: "example-#{account.bank_name.parameterize}-#{account.last4}-#{start.strftime("%Y-%m")}.csv",
         sha256: digest("statement", key, start.iso8601), status: "imported", transaction_count: entries.size,
         closing_balance: closing, closing_balance_on: finish, balance_observed_on: finish)
-      now = Time.current
-      Finance::Transaction.insert_all!(entries.map do |entry|
-        entry.merge(user_id: user.id, statement_id: statement.id, excluded: false, created_at: now, updated_at: now)
-      end)
+      Finance::ImportPlan.new(user: user, rows: entries, bank_account: account, category_source: "file", dedupe: false).insert!(statement)
     end
 
     def money(low, high)

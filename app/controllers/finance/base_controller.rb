@@ -4,10 +4,30 @@ module Finance
     before_action :authenticate_user!
     before_action :require_usage_region, unless: -> { controller_name == "settings" }
     before_action :load_finance_profile
+    helper_method :finance_today
     after_action :prevent_financial_page_caching
     after_action :preserve_flash_for_turbo_reload
 
     private
+
+    def ledger
+      @ledger ||= Ledger.new(current_user)
+    end
+
+    # Human messages for Finance::Ledger / Finance::Domain validation codes (shared with the apps).
+    def ledger_errors(codes)
+      Array(codes).map { |code| I18n.t("billie.ledger.errors.#{code}", default: I18n.t("billie.ledger.errors.generic")) }.uniq.to_sentence
+    end
+
+    def audit!(action, subject, before = {}, after = {}, summary: nil)
+      changed = (before.keys | after.keys).reject { |key| before[key] == after[key] }
+      AuditEvent.record!(user: current_user, action: action, subject: subject, summary: summary || subject.try(:display_name) || subject.try(:name),
+        changes: {"before" => before.slice(*changed), "after" => after.slice(*changed)})
+    end
+
+    def audit_values(record, fields)
+      record.attributes.slice(*fields).transform_values { |value| value.is_a?(BigDecimal) ? value.to_s("F") : (value.respond_to?(:iso8601) ? value.iso8601 : value) }
+    end
 
     # Today's date where the person lives, so "this month" means the same thing on every page.
     def finance_today

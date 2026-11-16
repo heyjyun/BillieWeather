@@ -3,6 +3,7 @@ import { join } from "node:path";
 import initSqlJs, { type Database } from "sql.js";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { FinanceStore } from "../src/services/store";
+import type { Transaction } from "@billie/shared-types";
 
 export const MIGRATIONS_DIR = join(__dirname, "../src-tauri/migrations");
 export const FIXTURES = join(__dirname, "../../../packages/finance-core/fixtures");
@@ -25,6 +26,9 @@ export async function newStore() {
   migrate(db);
   return { db, store: new FinanceStore(sqljsDriver(db)) };
 }
+
+/** The fields every platform stores for an imported row (the shared Ruby fixtures compare exactly these). */
+export const legacyRow = ({ bookedOn, description, amountCents, category, taxReview, excluded }: Transaction) => ({ bookedOn, description, amountCents, category, taxReview, excluded });
 
 export const fixtureBytes = (name: string) => new Uint8Array(readFileSync(join(FIXTURES, "statements", name)));
 

@@ -3,6 +3,7 @@ import { AI_BATCH_MAX, allCategories, CATEGORY_NAME_MAX, categoryTrend, CUSTOM_C
 import { useMemo, useState, type FormEvent } from "react";
 import { CategoryBadge, CategorySelect, Money, PageHeading } from "../components/common";
 import { CategoryInsights, MonthlySpendingChart, SpendingMixChart } from "../components/SpendingCharts";
+import { CategoryTree } from "../components/CategoryTree";
 import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, useI18n } from "../i18n";
@@ -255,6 +256,7 @@ export function Categories({ focus = null }: { focus?: string | null } = {}) {
           </form>
         </section>
       </div>
+      <CategoryTree />
       <div className="bw-two-column bw-section-gap">
         <section className="bw-panel" id="categories-spending-monthly" aria-labelledby="monthly-heading">
           <span className="bw-eyebrow">{m.spending.monthlyEyebrow}</span>

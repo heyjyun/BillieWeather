@@ -38,7 +38,7 @@ module Finance
       end
 
       def transactions
-        Transaction.where(user_id: @user.id)
+        Transaction.live.where(user_id: @user.id)
       end
 
       def navigate(args)
@@ -54,8 +54,11 @@ module Finance
       end
 
       def total(args, sign:)
-        rows = TransactionFilter.apply(transactions.included, args).where(sign.negative? ? "amount < 0" : "amount > 0")
-        sum = rows.sum(:amount).to_d.abs
+        # By kind, like the dashboard: refunds reduce spending, card repayments and transfers never count.
+        rows = TransactionFilter.apply(transactions.included, args)
+        rows = sign.negative? ? rows.expense_kind : rows.income_kind
+        sum = rows.sum(:amount).to_d
+        sum = -sum if sign.negative?
         count = rows.count
         if sign.negative?
           {summary: message("spending_total", "Spent {amount} across {count} transaction(s).", amount: @money.call(sum), count: count), data: {total: sum.to_s("F"), count: count}}

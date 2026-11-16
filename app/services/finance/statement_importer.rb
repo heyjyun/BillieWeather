@@ -17,6 +17,10 @@ module Finance
 
     attr_reader :date_column_used
 
+    # Rows of this file already stored from another file (skipped) and possible duplicates kept for review.
+    def duplicates_skipped = @duplicates_skipped.to_i
+    def duplicates_flagged = @duplicates_flagged.to_i
+
     # True when this call only filled in missing account/balance details on a statement that
     # was already imported, instead of importing anything new.
     def refreshed?
@@ -110,19 +114,20 @@ module Finance
         closing_balance, closing_balance_on = @given_closing || detected_closing_balance
         bank_account = @given_bank_account || BankAccount.resolve(user: @user, identity: @account_identity)
         observed_on = @given_observed_on || rows.map { |row| row[:booked_on] }.max
+        # Rows already stored from another file of the same account (an overlapping export, a PDF and a
+        # CSV of the same month) are skipped; possible duplicates are kept and listed for review.
+        plan = ImportPlan.new(user: @user, rows: rows, bank_account: bank_account, categorizer: @categorizer)
+        @duplicates_skipped = plan.skipped
+        @duplicates_flagged = plan.flagged.length
+        raise ImportError, I18n.t("billie.backend.statement_all_duplicates", count: plan.skipped) if plan.empty?
         statement = Statement.create!(user: @user, filename: filename, currency: @currency,
-          sha256: checksum, status: "imported", transaction_count: rows.length,
+          sha256: checksum, status: "imported", transaction_count: plan.rows.length,
           closing_balance: closing_balance, closing_balance_on: closing_balance_on,
           bank_account: bank_account, balance_observed_on: observed_on)
         # Every imported field is validated while parsing above. Bulk inserts
         # avoid thousands of round trips to the external Neon database, while
         # the enclosing transaction keeps every batch atomic.
-        now = Time.current
-        rows.each_slice(500) do |batch|
-          Transaction.insert_all!(batch.map do |attributes|
-            attributes.merge(user_id: @user.id, statement_id: statement.id, created_at: now, updated_at: now)
-          end)
-        end
+        plan.insert!(statement)
         statement
       end
       # Clean up older Uncategorized rows with the latest rules and remembered merchants.
@@ -265,7 +270,8 @@ module Finance
         @categorizer.categorize(description, amount)
       end
       {booked_on: parse_date(value(fields, :date), line), description: description,
-       amount: amount, category: category, tax_review: category == "Business", excluded: false}
+       amount: amount, category: category, tax_review: category == "Business", excluded: false,
+       file_category: @columns[:category].present? && value(fields, :category).present?}
     end
 
     def value(fields, name)

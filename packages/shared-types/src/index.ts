@@ -43,6 +43,9 @@ export interface Statement {
   region?: string | null;
 }
 
+/** Economic meaning (packages/finance-core/schema/financial-schema.json). */
+export type TransactionKind = "expense" | "income" | "refund" | "transfer" | "card_payment" | "opening_balance" | "adjustment" | "ignored";
+
 export interface Transaction {
   id: number;
   statementId: number;
@@ -52,6 +55,26 @@ export interface Transaction {
   category: Category;
   taxReview: boolean;
   excluded: boolean;
+  /**
+   * Economic kind. Totals use it instead of the sign: refunds reduce spending, transfers and card
+   * payments never count. Absent only for rows from older sources (then: Transfers category ->
+   * transfer, positive -> income, otherwise expense).
+   */
+  kind?: TransactionKind;
+  /** The account (accounts table) this entry belongs to. */
+  accountId?: number | null;
+  /** The bank's text exactly as imported; never edited. */
+  originalDescription?: string;
+  /** Where the entry came from: import, manual, web_copy, recurring, … */
+  origin?: string;
+  merchant?: string | null;
+  project?: string | null;
+  tags?: string[];
+  note?: string | null;
+  time?: string | null;
+  /** Fields a person set; automation never changes them. */
+  lockedFields?: string[];
+  categorySource?: string;
 }
 
 /** "Remember my change": same merchant + same direction gets the same category. */

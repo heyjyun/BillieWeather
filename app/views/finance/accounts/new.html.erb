@@ -1,0 +1,3 @@
+<% content_for :title, t("billie.ledger.accounts.new") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.accounts.eyebrow") %></span><h1><%= t("billie.ledger.accounts.new") %></h1><p><%= t("billie.ledger.accounts.new_intro") %></p></div><%= link_to t("billie.ledger.accounts.back"), finance_accounts_path, class: "bw-text-link" %></div>
+<section class="bw-panel"><%= render "form", account: @account %></section>

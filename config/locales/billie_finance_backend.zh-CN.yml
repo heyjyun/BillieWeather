@@ -51,6 +51,8 @@
         "import_details_refreshed": "此账单已导入。已补充缺失的账户和余额信息，没有重复导入交易。",
         "import_success": "导入成功。",
         "statement_duplicate": "此账单已导入过。",
+        "statement_all_duplicates": "此文件中的所有交易（%{count} 笔）已从其他文件记录过，没有导入新内容。",
+        "import_duplicates_notice": "已跳过 %{skipped} 笔已从其他文件记录的交易；%{flagged} 笔疑似重复已列出待确认。",
         "pdf_existing_review": "此 PDF 已在等待核对，请打开下方已有草稿。",
         "pdf_review_unclear": "请先核对不明确的日期或金额再导入。",
         "pdf_auto_imported": "PDF 已自动导入，请对照账单核对交易笔数。",

@@ -46,6 +46,14 @@ const account = { email: "jyun@example.com", nickname: "jyun", locale: "en", tim
 vi.mock("../src/services/account", async (importOriginal) => ({ ...(await importOriginal<typeof import("../src/services/account")>()), fetchAccount: vi.fn(async () => account) }));
 
 const { default: App } = await import("../src/App");
+/** This account's database list (each signed-in account has its own, review P0-1). */
+const ownList = () => {
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i)!;
+    if (key.startsWith("billie.databases:")) return localStorage.getItem(key);
+  }
+  return null;
+};
 const platform = (await import("../src/services/platform")) as unknown as { resetDatabases: () => void };
 
 function fakeCloud() {
@@ -158,13 +166,13 @@ it("creates, names and switches between local databases", async () => {
   expect(fact(work, "Statements")).toBe("0");
   expect(within(work).queryByText("In use")).toBeNull();
   expect(within(card("Home Mac")).getByText("In use")).toBeTruthy();
-  expect(JSON.parse(localStorage.getItem("billie.databases")!)).toEqual({ ids: [1, 2], active: 1 });
+  expect(JSON.parse(ownList()!)).toEqual({ ids: [1, 2], active: 1 });
 
   await click(within(work).getByRole("button", { name: "Use this database" }));
   await waitFor(() => expect(within(card("Work laptop")).getByText("In use")).toBeTruthy());
   expect(within(card("Home Mac")).queryByText("In use")).toBeNull();
   expect(list("Statements in “Work laptop”")).toBeTruthy();
-  expect(JSON.parse(localStorage.getItem("billie.databases")!).active).toBe(2);
+  expect(JSON.parse(ownList()!).active).toBe(2);
 
   await click(within(card("Work laptop")).getByRole("button", { name: "Rename" }));
   fireEvent.change(within(card("Work laptop")).getByLabelText("Name"), { target: { value: "Studio iMac" } });
@@ -177,12 +185,12 @@ it("creating a database never wipes a database the device's list forgot", async 
   try {
     fakeCloud();
     await openData();
-    expect(JSON.parse(localStorage.getItem("billie.databases") ?? "null")?.ids ?? [1]).toEqual([1]);
+    expect(JSON.parse(ownList() ?? "null")?.ids ?? [1]).toEqual([1]);
     await createDatabase("Work");
     expect(card("Work")).toBeTruthy();
     const old = card("Old laptop");
     expect(fact(old, "Statements")).toBe("1");
-    expect(JSON.parse(localStorage.getItem("billie.databases")!).ids).toEqual([1, 2, 3]);
+    expect(JSON.parse(ownList()!).ids).toEqual([1, 2, 3]);
   } finally {
     delete (globalThis as { __forgottenSlot?: boolean }).__forgottenSlot;
   }
@@ -207,7 +215,7 @@ it("deleting a database needs the typed word, says it can't be undone, and can b
   await click(within(work).getByRole("button", { name: "Delete permanently" }));
   await screen.findByText("“Work” was deleted.");
   await waitFor(() => expect(screen.queryByRole("heading", { name: "Work", level: 2 })).toBeNull());
-  expect(JSON.parse(localStorage.getItem("billie.databases")!).ids).toEqual([1]);
+  expect(JSON.parse(ownList()!).ids).toEqual([1]);
   // Home Mac is untouched.
   expect(fact(card("Home Mac"), "Statements")).toBe("2");
 });
@@ -424,10 +432,10 @@ it("Metadata Last Updated, Last Synced and Last Backed Up are separate; only a c
   expect(within(card("Work")).getByText("Metadata Last Updated")).not.toBe(within(card("Work")).getByText("Last Synced")); // separate rows
   expect(fact(card("Work"), "Last Backed Up")).toBe("No backups yet");
 
-  const backup = screen.getByRole("heading", { name: /Cloud backup/ }).closest("section")! as HTMLElement;
-  const button = within(backup).getByRole("button", { name: /Back Up Now/ }) as HTMLButtonElement;
-  expect(button.disabled).toBe(true);
-  expect(button.textContent).toContain("Coming Soon");
+  // Local backup is now real (review P0-5): a file the person keeps, restorable into a new database.
+  const backup = screen.getByRole("heading", { name: "Backup & restore" }).closest("section")! as HTMLElement;
+  expect((within(backup).getByRole("button", { name: "Back up now" }) as HTMLButtonElement).disabled).toBe(false);
+  expect(within(backup).getByRole("button", { name: "Choose backup file" })).toBeTruthy();
 });
 
 it("Settings has no website-data section any more; the website download still happens on its own", async () => {

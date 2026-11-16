@@ -1,3 +1,4 @@
+import { ledgerEs } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalEs } from "./universal";
 import { commandEs } from "./command";
@@ -274,5 +275,6 @@ export const es: Messages = {
     yes: "Sí", no: "No",
   },
   universal: universalEs,
+  ledger: ledgerEs,
   command: commandEs,
 };

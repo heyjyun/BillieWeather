@@ -1,0 +1,58 @@
+<% content_for :title, t("billie.ledger.accounts.title") %>
+<div class="bw-page-heading">
+  <div><span class="bw-eyebrow"><%= t("billie.ledger.accounts.eyebrow") %></span><h1><%= t("billie.ledger.accounts.title") %></h1><p><%= t("billie.ledger.accounts.intro") %></p></div>
+  <div class="bw-heading-actions">
+    <%= link_to t("billie.ledger.entries.add"), new_finance_entry_path, class: "bw-button bw-button-outline" %>
+    <%= link_to new_finance_account_path, class: "bw-button bw-button-dark" do %><%= finance_icon "wallet", size: 17 %> <%= t("billie.ledger.accounts.new") %><% end %>
+  </div>
+</div>
+
+<div class="bw-metrics bw-metrics-three" id="net-worth">
+  <div class="bw-metric"><span><%= t("billie.ledger.accounts.assets") %></span><strong><%= finance_money(@net_worth[:assets], @profile.currency) %></strong></div>
+  <div class="bw-metric"><span><%= t("billie.ledger.accounts.liabilities") %></span><strong><%= finance_money(@net_worth[:liabilities], @profile.currency) %></strong></div>
+  <div class="bw-metric bw-metric-mint"><span><%= t("billie.ledger.accounts.net_worth") %></span><strong><%= finance_money(@net_worth[:net_worth], @profile.currency) %></strong></div>
+</div>
+
+<% if @groups.empty? %>
+  <section class="bw-panel bw-section-gap"><div class="bw-empty-state"><span class="bw-empty-icon"><%= finance_icon "wallet", size: 32 %></span><h3><%= t("billie.ledger.accounts.empty_title") %></h3><p><%= t("billie.ledger.accounts.empty_body") %></p><%= link_to t("billie.ledger.accounts.new"), new_finance_account_path, class: "bw-button bw-button-dark" %></div></section>
+<% end %>
+
+<% @groups.each do |type, accounts| %>
+  <section class="bw-panel bw-panel-flush bw-section-gap" aria-labelledby="group-<%= type %>">
+    <div class="bw-panel-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.accounts.#{Finance::Domain.account_class(type)}") %></span><h2 id="group-<%= type %>"><%= t("billie.ledger.account_types.#{type}") %></h2></div>
+      <strong class="bw-nowrap"><%= finance_money(accounts.sum { |a| @balances[a.id] || 0 }, @profile.currency) %></strong></div>
+    <div class="bw-table-scroll"><table class="bw-table">
+      <thead><tr><th scope="col"><%= t("billie.ledger.accounts.col_account") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.accounts.col_entries") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.accounts.col_balance") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <tbody>
+        <% accounts.each do |account| %>
+          <tr id="account-<%= account.id %>">
+            <td><strong><%= account.display_name %></strong>
+              <small class="bw-muted"><%= account.manual? ? t("billie.ledger.accounts.manual") : t("billie.ledger.accounts.imported") %><%= " · #{t("billie.ledger.accounts.not_in_net_worth")}" unless account.include_in_net_worth %><%= " · #{t("billie.ledger.accounts.credit_limit_short", amount: finance_money(account.credit_limit, @profile.currency))}" if account.credit_limit %></small></td>
+            <td class="bw-text-right"><%= link_to number_with_delimiter(@entry_counts[account.id].to_i), finance_transactions_path(account_id: account.id), class: "bw-table-link" %></td>
+            <td class="bw-text-right bw-nowrap bw-amount <%= 'bw-negative' if (@balances[account.id] || 0).negative? %>"><%= finance_money(@balances[account.id], @profile.currency) %></td>
+            <td class="bw-text-right bw-nowrap">
+              <%= button_to "↑", move_finance_account_path(account, direction: "up"), method: :patch, class: "bw-icon-button", form: {class: "bw-inline-edit", data: {turbo: false}}, "aria-label": t("billie.ledger.accounts.move_up", name: account.display_name) %>
+              <%= button_to "↓", move_finance_account_path(account, direction: "down"), method: :patch, class: "bw-icon-button", form: {class: "bw-inline-edit", data: {turbo: false}}, "aria-label": t("billie.ledger.accounts.move_down", name: account.display_name) %>
+              <%= link_to t("billie.ledger.entries.add_short"), new_finance_entry_path(account_id: account.id), class: "bw-table-link" %>
+              <%= link_to t("billie.ledger.accounts.edit"), edit_finance_account_path(account), class: "bw-table-link", "aria-label": t("billie.ledger.accounts.edit_label", name: account.display_name) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  </section>
+<% end %>
+
+<% if @archived.any? %>
+  <section class="bw-panel bw-panel-flush bw-section-gap" aria-labelledby="archived-heading">
+    <div class="bw-panel-heading"><div><h2 id="archived-heading"><%= t("billie.ledger.accounts.archived_title") %></h2><p><%= t("billie.ledger.accounts.archived_body") %></p></div></div>
+    <div class="bw-table-scroll"><table class="bw-table"><tbody>
+      <% @archived.each do |account| %>
+        <tr><td><%= account.display_name %> <small class="bw-muted"><%= t("billie.ledger.account_types.#{account.account_type}") %></small></td>
+          <td class="bw-text-right bw-nowrap"><%= finance_money(@balances[account.id], @profile.currency) %></td>
+          <td class="bw-text-right"><%= button_to t("billie.ledger.accounts.unarchive"), unarchive_finance_account_path(account), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {data: {turbo: false}} %></td></tr>
+      <% end %>
+    </tbody></table></div>
+  </section>
+<% end %>
+<div class="bw-info-line"><%= finance_icon "file", size: 18 %><p><%= t("billie.ledger.accounts.balance_note") %></p></div>

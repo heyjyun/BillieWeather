@@ -54,7 +54,7 @@ module Finance
       end
 
       def transactions
-        Transaction.where(user_id: @user.id)
+        Transaction.live.where(user_id: @user.id)
       end
 
       def touch_profile
@@ -84,8 +84,11 @@ module Finance
       def execute_rows(action_id, prepared)
         payload = prepared[:payload]
         field = payload[:field]
-        restore = payload[:rows].map { |row| {"id" => row.id, "before" => row[field], "after" => payload[:value]} }
-        payload[:rows].each { |row| row.update!(field => payload[:value]) }
+        restore = payload[:rows].map { |row| {"id" => row.id, "before" => row[field], "after" => payload[:value], "kind" => row.kind} }
+        payload[:rows].each do |row|
+          row.lock_fields!(field) if field == "category"
+          row.update!(field => payload[:value])
+        end
         touch_profile
         count = restore.size
         summary = case action_id
@@ -105,7 +108,12 @@ module Finance
         conflict! if rows.any? { |row| row[field] != saved.fetch(row.id)["after"] }
         # A category deleted since cannot be restored.
         conflict! if field == "category" && saved.values.map { |row| row["before"] }.uniq.any? { |name| !CustomCategory.valid_for?(@user, name) }
-        rows.each { |row| row.update!(field => saved.fetch(row.id)["before"]) }
+        rows.each do |row|
+          entry = saved.fetch(row.id)
+          attributes = {field => entry["before"]}
+          attributes["kind"] = entry["kind"] if field == "category" && entry["kind"].present? # older undo payloads have none
+          row.update!(attributes)
+        end
         touch_profile
       end
 

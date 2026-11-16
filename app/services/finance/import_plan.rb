@@ -1,0 +1,75 @@
+module Finance
+  # How a batch of parsed statement rows becomes entries (every import path uses it: CSV, reviewed PDF,
+  # a statement sent from a device, the demo account):
+  #   1. classify each row's kind with the account type (EntryClassifier): a refund or a card
+  #      repayment on a credit card is never income;
+  #   2. compare with what is already stored for the same account (DuplicateDetector): automatic
+  #      duplicates are skipped, possible duplicates are kept and linked for a person to decide;
+  #   3. insert in bulk with provenance (original_description, kind, account, origin).
+  # Call inside the caller's per-user lock and database transaction.
+  class ImportPlan
+    attr_reader :rows, :skipped, :flagged
+
+    # `categorizer`: re-decides the category of rows whose category did not come from the file once the
+    # account type is known (money in on a credit card is a refund or a repayment, not Income).
+    def initialize(user:, rows:, bank_account: nil, origin: "import", category_source: "auto", dedupe: true, categorizer: nil)
+      @user = user
+      @bank_account = bank_account
+      @origin = origin
+      account_type = bank_account&.account_type
+      verdicts = dedupe ? DuplicateDetector.call(stored_rows, rows.map { |row| detector_row(row) }) : rows.map { nil }
+      @rows = []
+      @skipped = 0
+      @flagged = []
+      rows.zip(verdicts).each do |row, verdict|
+        if verdict&.result == "duplicate"
+          @skipped += 1
+          next
+        end
+        from_file = row[:file_category]
+        row = row.except(:file_category)
+        if categorizer && account_type && !from_file
+          row = row.merge(category: categorizer.categorize(row[:description], row[:amount], account_type: account_type))
+        end
+        source = row[:category_source] || (from_file ? "file" : category_source)
+        kind, category = EntryClassifier.classify(description: row[:description], amount: row[:amount], account_type: account_type,
+          category: row[:category], user_id: user.id)
+        @rows << row.merge(kind: kind, category: category, original_description: row[:description], entry_origin: origin,
+          category_source: source, bank_account_id: bank_account&.id,
+          tax_review: row[:tax_review] || category == "Business", excluded: row[:excluded] || false)
+        @flagged << [@rows.length - 1, verdict.of] if verdict&.result == "review"
+      end
+    end
+
+    def empty?
+      @rows.empty?
+    end
+
+    # Inserts the planned rows for `statement` and records suggested duplicate links. Returns the new ids.
+    def insert!(statement)
+      now = Time.current
+      ids = []
+      @rows.each_slice(500) do |batch|
+        result = Transaction.insert_all!(batch.map do |attributes|
+          attributes.merge(user_id: @user.id, statement_id: statement&.id, created_at: now, updated_at: now)
+        end, returning: [:id])
+        ids.concat(result.rows.flatten)
+      end
+      @flagged.each do |index, existing_id|
+        TransactionLink.create!(user: @user, link_type: "duplicate_of", from_transaction_id: ids[index], to_transaction_id: existing_id,
+          status: "suggested", decided_by: "auto")
+      end
+      ids
+    end
+
+    private
+
+    def stored_rows
+      DuplicateDetector.stored_rows(@user)
+    end
+
+    def detector_row(row)
+      {account: @bank_account&.id, date: row[:booked_on], amount: row[:amount], description: row[:description], reference: nil}
+    end
+  end
+end
