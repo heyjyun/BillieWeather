@@ -206,6 +206,25 @@
     });
   }
 
+  // Sign-in buttons rotate the CSRF token, so a second click would post a stale one.
+  // Submit once; pageshow re-enables the form when the browser restores this page from history.
+  function setupSingleSubmit(form) {
+    if (form.dataset.singleSubmitReady) return;
+    form.dataset.singleSubmitReady = "1";
+    form.addEventListener("submit", function (event) {
+      if (form.dataset.submitting) { event.preventDefault(); return; }
+      form.dataset.submitting = "1";
+      form.querySelectorAll("button[type=submit], input[type=submit], button:not([type])").forEach(function (button) {
+        button.setAttribute("aria-disabled", "true");
+      });
+    });
+    window.addEventListener("pageshow", function (event) {
+      if (!event.persisted) return;
+      delete form.dataset.submitting;
+      form.querySelectorAll("[aria-disabled]").forEach(function (button) { button.removeAttribute("aria-disabled"); });
+    });
+  }
+
   // Theme menu (System / Light / Dark). The choice stays in this browser only (see /billie-theme.js).
   function storageGet(key) { try { return window.localStorage.getItem(key); } catch (error) { return null; } }
   function storageSet(key, value) { try { if (value === null) window.localStorage.removeItem(key); else window.localStorage.setItem(key, value); } catch (error) { /* ignore */ } }
@@ -396,6 +415,226 @@
     });
   }
 
+  // "Ask Billie" on the Billie Insights page. The conversation stays in this tab (sessionStorage);
+  // each question sends the recent turns to the server, which answers and stores nothing.
+  function setupInsightChat(root) {
+    if (root.dataset.insightChatReady) return;
+    var form = root.querySelector("[data-chat-form]");
+    var log = root.querySelector("[data-chat-log]");
+    var input = root.querySelector("[data-chat-input]");
+    var consent = root.querySelector("[data-chat-consent]");
+    var status = root.querySelector("[data-chat-status]");
+    var send = root.querySelector("[data-chat-send]");
+    var empty = root.querySelector("[data-chat-empty]");
+    if (!form || !log || !input || !consent) return;
+    root.dataset.insightChatReady = "1";
+
+    var storeKey = root.dataset.storeKey || "billie-insight-chat";
+    var store = null;
+    try { store = window.sessionStorage; store.getItem(storeKey); } catch (error) { store = null; }
+    var messages = [];
+    try { messages = JSON.parse((store && store.getItem(storeKey)) || "[]"); } catch (error) { messages = []; }
+    if (!Array.isArray(messages)) messages = [];
+    var busy = false;
+
+    function persist() {
+      if (!store) return;
+      try { store.setItem(storeKey, JSON.stringify(messages.slice(-40))); } catch (error) { /* storage full or blocked */ }
+    }
+
+    function bubble(role, text, pending) {
+      var item = document.createElement("div");
+      item.className = "bw-chat-message bw-chat-message-" + role + (pending ? " bw-chat-message-pending" : "");
+      var author = document.createElement("span");
+      author.className = "bw-chat-author";
+      author.textContent = role === "user" ? root.dataset.you : root.dataset.billie;
+      var body = document.createElement("div");
+      body.className = "bw-chat-bubble";
+      body.textContent = text;
+      item.appendChild(author);
+      item.appendChild(body);
+      log.appendChild(item);
+      if (empty) empty.hidden = true;
+      log.scrollTop = log.scrollHeight;
+      return item;
+    }
+
+    function showError(text) {
+      if (!status) return;
+      status.textContent = text || "";
+      status.hidden = !text;
+    }
+
+    function setBusy(value) {
+      busy = value;
+      input.disabled = value;
+      if (send) send.disabled = value;
+    }
+
+    messages.forEach(function (message) { bubble(message.role, message.content); });
+
+    function ask(question) {
+      question = (question || "").trim();
+      if (!question || busy) return;
+      if (!consent.checked) { showError(root.dataset.consentError); consent.focus(); return; }
+      showError("");
+      messages.push({ role: "user", content: question });
+      persist();
+      bubble("user", question);
+      input.value = "";
+      var pending = bubble("assistant", root.dataset.thinking, true);
+      setBusy(true);
+      var token = document.querySelector('meta[name="csrf-token"]');
+      fetch(root.dataset.url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token ? token.content : "" },
+        body: JSON.stringify({ consent: "1", messages: messages.slice(-12) })
+      }).then(function (response) {
+        return response.json().catch(function () { return {}; }).then(function (data) { return { ok: response.ok, data: data }; });
+      }).then(function (result) {
+        pending.remove();
+        if (result.ok && result.data.answer) {
+          messages.push({ role: "assistant", content: result.data.answer });
+          persist();
+          bubble("assistant", result.data.answer);
+        } else {
+          // Keep the question so the person can retry, but take it out of the history sent next time.
+          messages.pop();
+          persist();
+          input.value = question;
+          showError(result.data.error || root.dataset.error);
+        }
+      }).catch(function () {
+        pending.remove();
+        messages.pop();
+        persist();
+        input.value = question;
+        showError(root.dataset.error);
+      }).then(function () {
+        setBusy(false);
+        input.focus();
+      });
+    }
+
+    form.addEventListener("submit", function (event) { event.preventDefault(); ask(input.value); });
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); ask(input.value); }
+    });
+    root.querySelectorAll("[data-chat-suggestion]").forEach(function (button) {
+      button.addEventListener("click", function () { ask(button.textContent); });
+    });
+    var clear = root.querySelector("[data-chat-clear]");
+    if (clear) clear.addEventListener("click", function () {
+      if (busy) return;
+      messages = [];
+      persist();
+      log.querySelectorAll(".bw-chat-message").forEach(function (item) { item.remove(); });
+      if (empty) empty.hidden = false;
+      showError("");
+      input.focus();
+    });
+  }
+
+  // Settings › Local databases › Manage. Without JS the forms post directly; with it, a
+  // selection toolbar (select all, select empty ones, live count) and one confirmation dialog
+  // shared by single and bulk removal, listing exactly what will be removed.
+  function setupLocalManage(root) {
+    if (root.dataset.localReady) return;
+    root.dataset.localReady = "1";
+    var bulk = root.querySelector("form[data-local-remove=bulk]");
+    var dialog = root.querySelector("[data-local-remove-dialog]");
+    var picks = Array.prototype.slice.call(root.querySelectorAll("input[data-local-pick]"));
+    var all = root.querySelector("[data-local-select-all]");
+    var empty = root.querySelector("[data-local-select-empty]");
+    var count = root.querySelector("[data-local-selected-count]");
+    var removeSelected = root.querySelector("[data-local-remove-selected]");
+    var confirmButton = dialog && dialog.querySelector("[data-local-remove-confirm]");
+    var pending = null;
+    root.querySelectorAll("[data-local-js-only]").forEach(function (el) { el.hidden = false; });
+    // Never start with a selection the person did not make on this page view (browsers can
+    // restore checkbox state on reload or history navigation).
+    picks.forEach(function (pick) { pick.checked = false; });
+    window.addEventListener("pageshow", function (event) { if (event.persisted) { picks.forEach(function (pick) { pick.checked = false; }); refresh(); } });
+
+    function fill(template, values) {
+      return template.replace(/%\{(\w+)\}/g, function (_, key) { return values[key] != null ? values[key] : ""; });
+    }
+    function size(bytes) {
+      var units = ["B", "KB", "MB", "GB"], value = bytes, unit = 0;
+      while (value >= 1024 && unit < units.length - 1) { value /= 1024; unit += 1; }
+      return (unit === 0 ? String(Math.round(value)) : value.toFixed(1).replace(/\.0$/, "")) + " " + units[unit];
+    }
+    function selected() { return picks.filter(function (pick) { return pick.checked; }); }
+    function refresh() {
+      var n = selected().length;
+      if (all) { all.checked = n > 0 && n === picks.length; all.indeterminate = n > 0 && n < picks.length; }
+      count.textContent = n ? fill(dialog.dataset.selected, { count: n }) : dialog.dataset.none;
+      bulk.classList.toggle("has-selection", n > 0);
+      removeSelected.disabled = n === 0;
+    }
+    function ask(form, items) {
+      if (!dialog || typeof dialog.showModal !== "function") return true; // no <dialog>: plain submit
+      pending = form;
+      var many = items.length > 1;
+      dialog.querySelector("[data-local-remove-title]").textContent = many ? fill(dialog.dataset.titleMany, { count: items.length }) : dialog.dataset.titleOne;
+      confirmButton.textContent = many ? fill(dialog.dataset.buttonMany, { count: items.length }) : dialog.dataset.buttonOne;
+      var list = dialog.querySelector("[data-local-remove-items]");
+      list.textContent = "";
+      var bytes = 0;
+      items.forEach(function (item) {
+        var li = document.createElement("li");
+        var name = document.createElement("strong");
+        name.textContent = item.name;
+        var detail = document.createElement("small");
+        detail.textContent = item.detail;
+        li.appendChild(name);
+        li.appendChild(detail);
+        list.appendChild(li);
+        bytes += Number(item.bytes) || 0;
+      });
+      dialog.querySelector("[data-local-remove-total]").textContent = fill(dialog.dataset.total, { count: items.length, size: size(bytes) });
+      confirmButton.disabled = false;
+      dialog.showModal();
+      return false;
+    }
+
+    picks.forEach(function (pick) { pick.addEventListener("change", refresh); });
+    if (all) all.addEventListener("change", function () {
+      var on = all.checked;
+      picks.forEach(function (pick) { pick.checked = on; });
+      refresh();
+    });
+    if (empty) empty.addEventListener("click", function () {
+      picks.forEach(function (pick) { pick.checked = pick.dataset.empty === "true"; });
+      refresh();
+    });
+    bulk.addEventListener("submit", function (event) {
+      var items = selected().map(function (pick) { return pick.dataset; });
+      if (!items.length) { event.preventDefault(); return; }
+      if (!ask(bulk, items)) event.preventDefault();
+    });
+    root.querySelectorAll("form[data-local-remove=single]").forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        if (!ask(form, [form.dataset])) event.preventDefault();
+      });
+    });
+    if (confirmButton) confirmButton.addEventListener("click", function () {
+      if (!pending) return;
+      confirmButton.disabled = true; // one request only
+      var form = pending;
+      pending = null;
+      form.submit(); // bypasses the submit listener above
+    });
+    if (dialog) dialog.addEventListener("close", function () { pending = null; });
+    if (dialog) dialog.addEventListener("click", function (event) {
+      if (event.target !== dialog) return;
+      var box = dialog.getBoundingClientRect();
+      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close();
+    });
+    refresh();
+  }
+
   function init() {
     document.querySelectorAll("form[data-draft-key]").forEach(setupDraft);
     document.querySelectorAll("form[data-mode-switch]").forEach(setupModeSwitch);
@@ -407,8 +646,11 @@
     document.querySelectorAll("[data-dialog-open]").forEach(setupDialogTrigger);
     document.querySelectorAll("[data-copy-text]").forEach(setupCopyButton);
     document.querySelectorAll("form[data-confirm]").forEach(setupConfirmForm);
+    document.querySelectorAll("form[data-single-submit]").forEach(setupSingleSubmit);
     document.querySelectorAll("[data-qr-zoom]").forEach(setupQrZoom);
     document.querySelectorAll("[data-qr-input]").forEach(setupQrPreview);
+    document.querySelectorAll("[data-insight-chat]").forEach(setupInsightChat);
+    document.querySelectorAll("[data-local-manage]").forEach(setupLocalManage);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

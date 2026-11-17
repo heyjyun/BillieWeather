@@ -84,6 +84,8 @@ module Finance
         .map { |device_id, reports| [@local_devices[device_id], reports] }
       @local_review = live.select { |report| report.status == "review" }.sort_by { |report| [-report.reported_at.to_f, report.id] }
       @local_archived = live.select { |report| report.status == "archived" }.sort_by { |report| [-report.reported_at.to_f, report.id] }
+      # Everything the person can remove from this website, in the order the page shows it.
+      @local_manage = @local_cards.flat_map(&:last) + @local_review + @local_archived
       @privacy_counts = {statements: @user.finance_statements.count, transactions: @user.finance_transactions.count,
                          accounts: @user.finance_bank_accounts.count}
     end

@@ -1,0 +1,32 @@
+ko:
+  billie:
+    insight_chat:
+      eyebrow: BILLIE에게 묻기
+      title: Billie에게 재정 질문하기
+      description: 지출, 수입, 예산, 세금 서류 등 무엇이든 물어보세요. Billie는 %{service}를 통해 요약 데이터를 바탕으로 답합니다. 대화는 이 브라우저 탭에만 남고 저장되지 않습니다.
+      empty: 편하게 질문하거나 아래 질문으로 시작해 보세요.
+      suggestions:
+        s1: "내 돈은 주로 어디에 쓰였나요?"
+        s2: "월별 지출은 어떻게 변했나요?"
+        s3: "간단한 월 예산은 어떻게 세우나요?"
+        s4: "세금 신고 시즌에 어떤 서류를 준비해야 하나요?"
+      consent: 내 질문, 이 대화, 요약 재정 데이터(합계, 카테고리별·월별 합계, 세금 정보)를 %{service}에 보내는 데 동의합니다.
+      placeholder: Billie에게 재정 질문하기…
+      send: 보내기
+      hint: Enter로 보내기 · Shift+Enter로 줄바꿈. 답변은 불완전하거나 틀릴 수 있으며 전문적인 조언이 아닙니다.
+      clear: 새 대화
+      you: 나
+      billie: Billie
+      thinking: Billie가 생각 중입니다…
+      unavailable: "'Billie에게 묻기'가 아직 연결되지 않았습니다. 기본 분석은 AI 서비스 없이 사용할 수 있습니다."
+      errors:
+        consent_required: 질문하기 전에 동의 상자를 선택해 주세요.
+        not_configured: 이 서버에는 'Billie에게 묻기'가 설정되어 있지 않습니다.
+        invalid_question: 먼저 질문을 입력해 주세요.
+        too_long: 질문은 %{count}자 이내로 입력해 주세요.
+        no_answer: Billie가 답변을 보내지 않았습니다. 다시 시도해 주세요.
+        failed: Billie가 지금은 답할 수 없습니다. 다시 시도해 주세요.
+        unavailable: AI 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.
+        auth_failed: "%{service}에서 API 키를 거부했습니다. 서버 설정을 확인해 주세요."
+        quota: "%{service} 사용 한도에 도달했습니다. 나중에 다시 시도해 주세요."
+        rate_limited: 질문이 너무 빠릅니다. 1분 후 다시 시도해 주세요.

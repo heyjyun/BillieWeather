@@ -120,8 +120,10 @@ Rails.application.routes.draw do
     # reaches a device or touches financial data.
     resources :local_devices, only: :update, param: :device_id, controller: :local_devices
     patch "local_database_reports/:id/review", to: "local_devices#review", as: :review_local_database_report
+    delete "local_database_reports", to: "local_devices#remove", as: :remove_local_database_reports
     resource :insights, only: :show, controller: :insights do
       post :generate
+      post :chat, defaults: {format: :json}
     end
     resource :tax_preparation, only: :show, path: "tax", controller: :tax_preparation do
       post :generate

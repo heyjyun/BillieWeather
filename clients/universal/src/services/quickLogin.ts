@@ -5,8 +5,8 @@
 //   VITE_QUICK_LOGIN_EXAMPLE_EMAIL=...   VITE_QUICK_LOGIN_EXAMPLE_PASSWORD=...
 //   VITE_QUICK_LOGIN_HEYJYUN_EMAIL=...   VITE_QUICK_LOGIN_HEYJYUN_PASSWORD=...
 //
-// To retire a shortcut, delete its lines from .env.local (the button disappears), or remove its
-// entry below.
+// A shortcut shows once its email is set. With a password too, one tap fills both and signs in;
+// without one, it fills the email and waits for the password. Empty the email to hide the button.
 
 export interface QuickLogin {
   id: "example" | "heyjyun";
@@ -17,7 +17,7 @@ export interface QuickLogin {
 function entry(id: QuickLogin["id"], email: unknown, password: unknown): QuickLogin[] {
   const e = typeof email === "string" ? email.trim() : "";
   const p = typeof password === "string" ? password : "";
-  return e && p ? [{ id, email: e, password: p }] : [];
+  return e ? [{ id, email: e, password: p }] : [];
 }
 
 export const QUICK_LOGINS: QuickLogin[] = import.meta.env.DEV

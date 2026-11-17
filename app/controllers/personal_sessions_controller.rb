@@ -3,6 +3,8 @@
 # CSRF token, and the account's password unless PersonalAccount.passwordless? (local
 # development only).
 class PersonalSessionsController < ApplicationController
+  include QuickLoginCsrf
+
   # Bullet Train callbacks may read current_user; verify the form first, as SessionsController does.
   prepend_before_action :verify_authenticity_token, only: :create
   rate_limit to: 10, within: 1.minute, by: -> { request.remote_ip }, only: :create,
@@ -21,6 +23,10 @@ class PersonalSessionsController < ApplicationController
   end
 
   private
+
+  def quick_login_target
+    PersonalAccount.user
+  end
 
   # The same checks as the ordinary form: password, lockable's attempt counter, two-factor code.
   def authenticated?(user)

@@ -1,0 +1,32 @@
+zh-CN:
+  billie:
+    insight_chat:
+      eyebrow: 问问 BILLIE
+      title: 向 Billie 提问你的财务问题
+      description: 关于支出、收入、预算或报税资料，什么都可以问。Billie 通过 %{service} 根据你的汇总数据回答；对话只保存在当前浏览器标签页中，不会被存储。
+      empty: 用你自己的话提问，或者从下面的问题开始。
+      suggestions:
+        s1: "我的钱主要花在哪里了？"
+        s2: "我每个月的支出有什么变化？"
+        s3: "怎样制定一个简单的月度预算？"
+        s4: "报税季我需要准备哪些资料？"
+      consent: 我同意将我的问题、本次对话以及我的汇总财务数据（总额、分类与月度汇总、税务信息）发送给 %{service}。
+      placeholder: 向 Billie 提一个财务问题…
+      send: 发送
+      hint: 按 Enter 发送 · Shift+Enter 换行。回答可能不完整或有误，不构成专业建议。
+      clear: 新对话
+      you: 你
+      billie: Billie
+      thinking: Billie 正在思考…
+      unavailable: “问问 Billie”尚未连接。无需 AI 服务也可以使用基础分析。
+      errors:
+        consent_required: 提问前请先勾选同意框。
+        not_configured: 此服务器尚未配置“问问 Billie”。
+        invalid_question: 请先输入问题。
+        too_long: 每个问题请控制在 %{count} 个字符以内。
+        no_answer: Billie 没有返回回答，请重试。
+        failed: Billie 暂时无法回答，请重试。
+        unavailable: AI 服务暂时不可用，请稍后再试。
+        auth_failed: "%{service} 拒绝了 API 密钥，请检查服务器配置。"
+        quota: 已达到 %{service} 的使用上限，请稍后再试。
+        rate_limited: 提问太频繁了，请等一分钟再试。

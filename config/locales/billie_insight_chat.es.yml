@@ -1,0 +1,32 @@
+es:
+  billie:
+    insight_chat:
+      eyebrow: PREGUNTA A BILLIE
+      title: Pregunta a Billie sobre tus finanzas
+      description: Pregunta lo que quieras sobre tus gastos, ingresos, presupuesto o documentos fiscales. Billie responde a partir de tu resumen agregado mediante %{service}; la conversación queda solo en esta pestaña del navegador y no se guarda.
+      empty: Haz una pregunta con tus propias palabras o empieza con una de estas.
+      suggestions:
+        s1: "¿En qué se fue la mayor parte de mi dinero?"
+        s2: "¿Cómo cambiaron mis gastos de un mes a otro?"
+        s3: "¿Cómo puedo hacer un presupuesto mensual sencillo?"
+        s4: "¿Qué documentos debo reunir para la temporada de impuestos?"
+      consent: Acepto enviar mi pregunta, esta conversación y mi resumen financiero agregado (totales, totales por categoría y por mes, contexto fiscal) a %{service}.
+      placeholder: Haz a Billie una pregunta financiera…
+      send: Enviar
+      hint: Enter para enviar · Mayús+Enter para nueva línea. Las respuestas pueden ser incompletas o incorrectas y no son asesoramiento profesional.
+      clear: Nueva conversación
+      you: Tú
+      billie: Billie
+      thinking: Billie está pensando…
+      unavailable: Pregunta a Billie aún no está conectado. El análisis básico sigue disponible sin un servicio de IA.
+      errors:
+        consent_required: Marca la casilla de consentimiento antes de preguntar a Billie.
+        not_configured: Pregunta a Billie no está configurado en este servidor.
+        invalid_question: Escribe una pregunta primero.
+        too_long: Cada pregunta debe tener menos de %{count} caracteres.
+        no_answer: Billie no devolvió ninguna respuesta. Inténtalo de nuevo.
+        failed: Billie no puede responder ahora. Inténtalo de nuevo.
+        unavailable: El servicio de IA no está disponible temporalmente. Inténtalo de nuevo en un momento.
+        auth_failed: "%{service} rechazó la clave de API. Revisa la configuración del servidor."
+        quota: Se alcanzó el límite de uso de %{service}. Inténtalo más tarde.
+        rate_limited: Estás preguntando muy rápido. Espera un minuto e inténtalo de nuevo.

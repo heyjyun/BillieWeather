@@ -182,6 +182,84 @@
         <%= t("billie.database.local.not_uploaded") %>
       </p>
 
+      <%# Manage: remove local database RECORDS from this website, one at a time or several at
+          once. The database files stay on the devices. Works without JavaScript (plain form
+          posts); with it, a selection toolbar and one shared confirmation dialog. %>
+      <% if @local_manage.any? %>
+        <% m = "billie.database.local.manage" %>
+        <% empty_count = @local_manage.count(&:no_records?) %>
+        <section class="bw-local-manage" id="settings-local-manage" aria-labelledby="settings-local-manage-heading" data-local-manage>
+          <h3 id="settings-local-manage-heading"><%= t("#{m}.heading") %></h3>
+          <p class="bw-caption"><%= t("#{m}.intro") %></p>
+          <%= form_with url: finance_remove_local_database_reports_path, method: :delete, id: "local-db-remove-form",
+                data: {turbo: false, local_remove: "bulk"}, class: "bw-local-manage-toolbar" do %>
+            <label class="bw-checkbox-inline bw-local-select-all" hidden data-local-js-only>
+              <input type="checkbox" autocomplete="off" data-local-select-all>
+              <span><%= t("#{m}.select_all") %></span>
+            </label>
+            <% if empty_count.positive? %>
+              <button type="button" class="bw-button bw-button-outline bw-button-small" hidden data-local-js-only data-local-select-empty><%= t("#{m}.select_empty", count: empty_count) %></button>
+            <% end %>
+            <span class="bw-local-selected" data-local-selected-count aria-live="polite"></span>
+            <button type="submit" class="bw-button bw-button-danger bw-button-small" data-local-remove-selected><%= t("#{m}.remove_selected") %></button>
+          <% end %>
+          <ul class="bw-db-list bw-local-manage-list">
+            <% @local_manage.each do |report| %>
+              <% device_label = @local_devices[report.device_id]&.display_name || t("billie.database.local.unknown_device") %>
+              <% size_label = database_size(report.size_bytes) %>
+              <%# Two records can share a name (e.g. two "MacBook Air"): a short id tells them apart. %>
+              <% short_id = t("#{m}.short_id", id: report.database_id.first(8)) %>
+              <li data-local-manage-row="<%= report.id %>">
+                <label class="bw-local-manage-pick">
+                  <input type="checkbox" name="ids[]" value="<%= report.id %>" form="local-db-remove-form" autocomplete="off" data-local-pick
+                    data-name="<%= report.name %>" data-detail="<%= device_label %> · <%= size_label %> · <%= short_id %>" data-bytes="<%= report.size_bytes.to_i %>"
+                    data-empty="<%= report.no_records? %>" aria-label="<%= t("#{m}.select_named", name: report.name, device: device_label) %>">
+                  <span class="bw-db-name">
+                    <strong>
+                      <%= report.name %>
+                      <% if report.no_records? %><span class="bw-tag"><%= t("#{m}.tag_empty") %></span><% end %>
+                      <% unless report.status == "active" %><span class="bw-tag bw-tag-warn"><%= t("billie.database.local.review_status.#{report.status}") %></span><% end %>
+                    </strong>
+                    <small>
+                      <%= device_label %> · <%= size_label %> ·
+                      <%= t("billie.database.transaction_count", count: report.transaction_count.to_i) %> ·
+                      <%= t("#{m}.updated", time: local_report_time(report.reported_at, @user)) %> ·
+                      <span class="bw-local-short-id"><%= short_id %></span>
+                    </small>
+                  </span>
+                </label>
+                <%= button_to t("#{m}.remove"), finance_remove_local_database_reports_path, method: :delete, params: {ids: [report.id]},
+                      class: "bw-button bw-button-danger-outline bw-button-small",
+                      form: {data: {turbo: false, local_remove: "single", name: report.name, detail: "#{device_label} · #{size_label} · #{short_id}", bytes: report.size_bytes.to_i}},
+                      "aria-label": t("#{m}.remove_named", name: report.name, device: device_label) %>
+              </li>
+            <% end %>
+          </ul>
+
+          <dialog class="bw-modal" id="local-db-remove-dialog" aria-labelledby="local-db-remove-title" data-local-remove-dialog
+            data-title-one="<%= t("#{m}.confirm_title_one") %>" data-title-many="<%= t("#{m}.confirm_title_many") %>"
+            data-total="<%= t("#{m}.confirm_total") %>" data-selected="<%= t("#{m}.selected") %>" data-none="<%= t("#{m}.selected_none") %>"
+            data-button-one="<%= t("#{m}.confirm_button_one") %>" data-button-many="<%= t("#{m}.confirm_button_many") %>">
+            <div class="bw-modal-header">
+              <h3 id="local-db-remove-title" data-local-remove-title><%= t("#{m}.confirm_title_one") %></h3>
+              <form method="dialog"><button type="submit" class="bw-icon-button bw-modal-close" aria-label="<%= t("billie.community.dialog.close") %>"><%= finance_icon "close" %></button></form>
+            </div>
+            <ul class="bw-local-remove-items" data-local-remove-items></ul>
+            <p class="bw-caption" data-local-remove-total></p>
+            <ul class="bw-privacy-list">
+              <% %w[website device return].each do |item| %>
+                <li><%= t("#{m}.confirm_points.#{item}") %></li>
+              <% end %>
+            </ul>
+            <p class="bw-modal-note"><%= t("#{m}.confirm_note") %></p>
+            <div class="bw-modal-actions">
+              <form method="dialog"><button type="submit" class="bw-button bw-button-outline" autofocus><%= t("#{m}.cancel") %></button></form>
+              <button type="button" class="bw-button bw-button-danger" data-local-remove-confirm><%= t("#{m}.confirm_button_one") %></button>
+            </div>
+          </dialog>
+        </section>
+      <% end %>
+
       <h3><%= t("billie.database.local.heading") %></h3>
       <% if @local_cards.empty? %>
         <p class="bw-caption bw-db-empty"><%= t("billie.database.local.empty") %></p>

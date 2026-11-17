@@ -1,5 +1,6 @@
 require "test_helper"
 require "digest"
+require "nokogiri"
 
 # The sign-in page's two quick login buttons: the read-only, synthetic Example Account and the
 # one personal account configured on the server (see PersonalAccount).
@@ -284,10 +285,72 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
     previous = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true
     post users_demo_session_path
+    assert_response :see_other
+    assert_redirected_to new_user_session_path
+    assert_equal "Your sign-in page expired. Please enter your details again.", flash[:alert]
     get finance_dashboard_path
     assert_redirected_to new_user_session_path
   ensure
     ActionController::Base.allow_forgery_protection = previous
+  end
+
+  test "a second click on the Example Account button lands on the dashboard, not an error" do
+    seed_demo
+    previous = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    token = quick_login_token(users_demo_session_path)
+
+    post users_demo_session_path, params: {authenticity_token: token}
+    assert_redirected_to finance_dashboard_path
+    # Signing in rotated the token; the double click posts the old one.
+    post users_demo_session_path, params: {authenticity_token: token}
+    assert_response :see_other
+    assert_redirected_to finance_dashboard_path
+    get finance_dashboard_path
+    assert_response :success
+    assert_select "#demo-banner"
+  ensure
+    ActionController::Base.allow_forgery_protection = previous
+  end
+
+  test "a stale Example Account token does not replace another signed-in account" do
+    seed_demo
+    previous = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    stale = quick_login_token(users_demo_session_path)
+    password_token = Nokogiri::HTML(response.body).at_css("form[action='#{user_session_path}'] input[name='authenticity_token']")["value"]
+    post user_session_path, params: {authenticity_token: password_token, user: {email: @personal.email, password: PASSWORD}}
+    assert_redirected_to finance_dashboard_path
+
+    post users_demo_session_path, params: {authenticity_token: stale}
+    assert_redirected_to new_user_session_path
+    get finance_dashboard_path
+    assert_response :success
+    assert_select "#demo-banner", count: 0
+    assert_includes response.body, "PRIVATE OWNER MERCHANT"
+  ensure
+    ActionController::Base.allow_forgery_protection = previous
+  end
+
+  test "a second click on the personal quick login lands on the dashboard, not an error" do
+    previous = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    token = quick_login_token(users_personal_session_path)
+
+    post users_personal_session_path, params: {authenticity_token: token, password: PASSWORD}
+    assert_redirected_to finance_dashboard_path
+    post users_personal_session_path, params: {authenticity_token: token, password: PASSWORD}
+    assert_response :see_other
+    assert_redirected_to finance_dashboard_path
+  ensure
+    ActionController::Base.allow_forgery_protection = previous
+  end
+
+  test "both quick login forms submit only once" do
+    seed_demo
+    get new_user_session_path
+    assert_select "form[action='#{users_demo_session_path}'][data-single-submit]"
+    assert_select "form[action='#{users_personal_session_path}'][data-single-submit]"
   end
 
   # --- Switching accounts --------------------------------------------------------------------
@@ -348,6 +411,13 @@ class QuickAccountSelectionTest < ActionDispatch::IntegrationTest
 
   def seed_demo
     DemoAccount::Seeder.call
+  end
+
+  def quick_login_token(action)
+    get new_user_session_path
+    field = Nokogiri::HTML(response.body).at_css("form[action='#{action}'] input[name='authenticity_token']")
+    assert field, "The quick login form must carry its own CSRF token"
+    field["value"]
   end
 
   def sign_in_with_password

@@ -7,7 +7,7 @@ module Finance
     self.record_timestamps = false
 
     EVENTS = %w[database_added database_superseded database_on_multiple_devices legacy_archived legacy_review
-      review_archived review_restored device_renamed].freeze
+      review_archived review_restored device_renamed removed_by_person].freeze
 
     belongs_to :user
 

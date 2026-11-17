@@ -1,0 +1,26 @@
+<%# "Ask Billie": free-form questions about the person's finances (Finance::InsightChat). The conversation lives in this browser tab only; public/billie.js sends it to chat_finance_insights_path. %>
+<section class="bw-panel bw-section-gap bw-chat" id="ask-billie" aria-labelledby="ask-billie-title"<% if @ai_available %> data-insight-chat data-url="<%= chat_finance_insights_path %>" data-store-key="billie-insight-chat-<%= current_user.id %>" data-you="<%= t("billie.insight_chat.you") %>" data-billie="<%= t("billie.insight_chat.billie") %>" data-thinking="<%= t("billie.insight_chat.thinking") %>" data-error="<%= t("billie.insight_chat.errors.failed") %>" data-consent-error="<%= t("billie.insight_chat.errors.consent_required") %>"<% end %>>
+  <div class="bw-panel-heading"><div><span class="bw-eyebrow"><%= t("billie.insight_chat.eyebrow") %></span><h2 id="ask-billie-title"><%= t("billie.insight_chat.title") %></h2><p><%= t("billie.insight_chat.description", service: Finance::InsightChat.service_name) %></p></div><%= finance_icon "insights" %></div>
+  <% if @ai_available %>
+    <div class="bw-chat-log" data-chat-log role="log" aria-live="polite" aria-label="<%= t("billie.insight_chat.title") %>">
+      <div class="bw-chat-empty" data-chat-empty>
+        <p><%= t("billie.insight_chat.empty") %></p>
+        <div class="bw-chat-suggestions">
+          <% %w[s1 s2 s3 s4].each do |key| %><% suggestion = t("billie.insight_chat.suggestions.#{key}") %><button type="button" class="bw-chat-suggestion" data-chat-suggestion><%= suggestion %></button><% end %>
+        </div>
+      </div>
+    </div>
+    <form class="bw-chat-form" data-chat-form novalidate>
+      <label class="bw-checkbox-inline"><input type="checkbox" data-chat-consent> <span><%= t("billie.insight_chat.consent", service: Finance::InsightChat.service_name) %></span></label>
+      <div class="bw-chat-input-row">
+        <label class="bw-sr-only" for="ask-billie-input"><%= t("billie.insight_chat.placeholder") %></label>
+        <textarea id="ask-billie-input" data-chat-input rows="2" maxlength="<%= Finance::InsightChat::MAX_MESSAGE_LENGTH %>" placeholder="<%= t("billie.insight_chat.placeholder") %>"></textarea>
+        <button type="submit" class="bw-button bw-button-dark" data-chat-send><%= t("billie.insight_chat.send") %></button>
+      </div>
+      <p class="bw-chat-status" data-chat-status role="alert" hidden></p>
+      <div class="bw-chat-footer"><span class="bw-caption"><%= t("billie.insight_chat.hint") %></span><button type="button" class="bw-chat-clear" data-chat-clear><%= t("billie.insight_chat.clear") %></button></div>
+    </form>
+  <% else %>
+    <p class="bw-caption"><%= t("billie.insight_chat.unavailable") %></p>
+  <% end %>
+</section>

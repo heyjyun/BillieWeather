@@ -49,6 +49,11 @@ module Finance
       statement_count.to_i.zero? && transaction_count.to_i.zero? && rule_count.to_i.zero? && modified_at.nil? && period_start.nil?
     end
 
+    # Nothing was ever saved in it (the usual leftover "Unnamed database"); shown with a tag.
+    def no_records?
+      statement_count.to_i.zero? && transaction_count.to_i.zero? && rule_count.to_i.zero?
+    end
+
     def snapshot = attributes.slice(*SNAPSHOT_FIELDS).transform_values { |value| value.respond_to?(:iso8601) ? value.iso8601 : value }
 
     def set_status!(status, reason, now = Time.current)
@@ -94,6 +99,26 @@ module Finance
         return :ignored unless row
         where(user_id: user.id, device_id: device_id).delete_all
         :applied
+      end
+    end
+
+    # The person removed these records on the website. Only the website's metadata goes away:
+    # the SQLite file stays on the device, untouched. The row becomes a tombstone that keeps its
+    # sequence, so a late retry of an old report cannot bring it back, while a NEWER report
+    # (the database still exists and was opened or changed on the device) shows it again.
+    # Ids that are not this account's, or already removed, are skipped. Returns the count.
+    def self.remove_by_person!(user:, ids:)
+      transaction do
+        lock_account(user)
+        now = Time.current
+        rows = live.where(user_id: user.id, id: ids).order(:id).to_a
+        rows.each do |row|
+          LocalDatabaseAudit.record!(user_id: user.id, event: "removed_by_person", device_id: row.device_id, database_id: row.database_id,
+            from_status: row.status, previous_snapshot: row.snapshot)
+          row.update_columns(deleted_at: now, name: nil, size_bytes: nil, statement_count: nil, transaction_count: nil, rule_count: nil,
+            period_start: nil, period_end: nil, modified_at: nil, opened_at: nil, synced_at: nil, updated_at: now)
+        end
+        rows.size
       end
     end
 

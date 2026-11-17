@@ -415,7 +415,8 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     with_openai_env("test-key", "test-model") do
       get finance_insights_path
       assert_response :success
-      assert_select "label", text: /OpenAI/, count: 1
+      # Billie Insights consent and the Ask Billie chat consent.
+      assert_select "label", text: /OpenAI/, count: 2
       get finance_tax_preparation_path
       assert_response :success
       assert_select "label", text: /OpenAI/, count: 1

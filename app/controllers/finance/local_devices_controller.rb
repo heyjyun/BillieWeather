@@ -2,8 +2,25 @@ module Finance
   # Website-side housekeeping for the local database cards: a display label for a device, and
   # review decisions for legacy or ambiguous records. Metadata only, always scoped to the
   # signed-in account (another account's ids simply are not found). Never contacts a device,
-  # never deletes a record and never touches statements, transactions or rules.
+  # never deletes a database file and never touches statements, transactions or rules.
   class LocalDevicesController < BaseController
+    MAX_REMOVE = 500
+
+    # Removes one or several local database records from this website (Settings › Local
+    # databases). The databases themselves stay on the devices.
+    def remove
+      ids = Array(params[:ids]).filter_map { |id| Integer(id.to_s, exception: false) }.select(&:positive?).uniq.first(MAX_REMOVE)
+      anchor = {anchor: "settings-local-manage"}
+      return redirect_to finance_settings_path(anchor), status: :see_other, alert: t("billie.database.local.manage.none_selected") if ids.empty?
+
+      removed = LocalDatabaseReport.remove_by_person!(user: current_user, ids: ids)
+      if removed.zero?
+        redirect_to finance_settings_path(anchor), status: :see_other, alert: t("billie.database.local.manage.nothing_removed")
+      else
+        redirect_to finance_settings_path(anchor), status: :see_other, notice: t("billie.database.local.manage.removed", count: removed)
+      end
+    end
+
     def update
       device = LocalDevice.find_by!(user_id: current_user.id, device_id: params[:device_id])
       previous = device.label

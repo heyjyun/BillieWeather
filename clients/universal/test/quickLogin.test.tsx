@@ -23,6 +23,13 @@ describe("quick sign-in", () => {
     await waitFor(() => expect(signIn).toHaveBeenCalledWith("me@example.com", "my-pass", undefined));
   });
 
+  it("fills only the email when the shortcut has no password yet", () => {
+    render(<I18nProvider initial="en"><Login quickLogins={[{ id: "heyjyun", email: "me@example.com", password: "" }]} /></I18nProvider>);
+    fireEvent.click(screen.getByRole("button", { name: MESSAGES.en.login.quick.heyjyun }));
+    expect((screen.getByLabelText(MESSAGES.en.login.email) as HTMLInputElement).value).toBe("me@example.com");
+    expect(signIn).not.toHaveBeenCalled();
+  });
+
   it("shows nothing when no shortcuts are configured", () => {
     render(<I18nProvider initial="en"><Login quickLogins={[]} /></I18nProvider>);
     expect(screen.queryByRole("group", { name: MESSAGES.en.login.quick.heading })).toBeNull();

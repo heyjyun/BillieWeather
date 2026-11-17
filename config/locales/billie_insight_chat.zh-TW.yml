@@ -1,0 +1,32 @@
+zh-TW:
+  billie:
+    insight_chat:
+      eyebrow: 問問 BILLIE
+      title: 向 Billie 詢問你的財務問題
+      description: 關於支出、收入、預算或報稅資料，什麼都可以問。Billie 透過 %{service} 根據你的彙總資料回答；對話只保留在目前的瀏覽器分頁中，不會被儲存。
+      empty: 用你自己的話提問，或從下面的問題開始。
+      suggestions:
+        s1: "我的錢主要花在哪裡？"
+        s2: "我每個月的支出有什麼變化？"
+        s3: "怎樣制定一個簡單的每月預算？"
+        s4: "報稅季我需要準備哪些資料？"
+      consent: 我同意將我的問題、本次對話以及我的彙總財務資料（總額、分類與每月彙總、稅務資訊）傳送給 %{service}。
+      placeholder: 向 Billie 提一個財務問題…
+      send: 傳送
+      hint: 按 Enter 傳送 · Shift+Enter 換行。回答可能不完整或有誤，不構成專業建議。
+      clear: 新對話
+      you: 你
+      billie: Billie
+      thinking: Billie 正在思考…
+      unavailable: 「問問 Billie」尚未連線。不需 AI 服務也可以使用基礎分析。
+      errors:
+        consent_required: 提問前請先勾選同意框。
+        not_configured: 此伺服器尚未設定「問問 Billie」。
+        invalid_question: 請先輸入問題。
+        too_long: 每個問題請控制在 %{count} 個字元以內。
+        no_answer: Billie 沒有回傳回答，請重試。
+        failed: Billie 暫時無法回答，請重試。
+        unavailable: AI 服務暫時無法使用，請稍後再試。
+        auth_failed: "%{service} 拒絕了 API 金鑰，請檢查伺服器設定。"
+        quota: 已達到 %{service} 的使用上限，請稍後再試。
+        rate_limited: 提問太頻繁了，請等一分鐘再試。

@@ -1,0 +1,32 @@
+en:
+  billie:
+    insight_chat:
+      eyebrow: ASK BILLIE
+      title: Ask Billie about your finances
+      description: Ask anything about your spending, income, budget or tax records. Billie answers from your aggregate summary through %{service}; the conversation stays in this browser tab and is not saved.
+      empty: Ask a question in your own words, or start with one of these.
+      suggestions:
+        s1: "Where did most of my money go?"
+        s2: "How did my spending change month to month?"
+        s3: "How could I build a simple monthly budget?"
+        s4: "What records should I gather for tax season?"
+      consent: I agree to send my question, this conversation and my aggregate financial summary (totals, category and monthly totals, tax context) to %{service}.
+      placeholder: Ask Billie a financial question…
+      send: Send
+      hint: Enter to send · Shift+Enter for a new line. Answers can be incomplete or wrong and are not professional advice.
+      clear: New conversation
+      you: You
+      billie: Billie
+      thinking: Billie is thinking…
+      unavailable: Ask Billie is not connected yet. Basic analysis is still available without an AI service.
+      errors:
+        consent_required: Please tick the consent box before asking Billie.
+        not_configured: Ask Billie is not configured on this server.
+        invalid_question: Please type a question first.
+        too_long: Please keep each question under %{count} characters.
+        no_answer: Billie did not return an answer. Please try again.
+        failed: Billie could not answer right now. Please try again.
+        unavailable: The AI service is temporarily unavailable. Please try again in a moment.
+        auth_failed: "%{service} rejected the API key. Please check the server configuration."
+        quota: The %{service} usage limit has been reached. Please try again later.
+        rate_limited: You are asking very quickly. Please wait a minute and try again.

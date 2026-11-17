@@ -15,7 +15,7 @@
               <p id="example-account-hint"><%= t("billie.quick_access.demo.hint") %></p>
             </div>
           </div>
-          <%= button_to users_demo_session_path, class: "bw-button bw-button-example", id: "quick-login-example", form: {data: {turbo: false}}, "aria-describedby": "example-account-hint" do %>
+          <%= button_to users_demo_session_path, class: "bw-button bw-button-example", id: "quick-login-example", form: {data: {turbo: false, single_submit: true}}, "aria-describedby": "example-account-hint" do %>
             <span><%= t("billie.quick_access.demo.quick_login") %></span>
           <% end %>
         </section>
@@ -30,7 +30,7 @@
               <p id="personal-account-hint"><%= @personal_passwordless ? t("billie.quick_access.personal.dev_hint") : t("billie.quick_access.personal.password_hint") %></p>
             </div>
           </div>
-          <%= form_with url: users_personal_session_path, method: :post, id: "quick-login-personal-form", class: "bw-quick-login-form", data: {turbo: false} do |form| %>
+          <%= form_with url: users_personal_session_path, method: :post, id: "quick-login-personal-form", class: "bw-quick-login-form", data: {turbo: false, single_submit: true} do |form| %>
             <% unless @personal_passwordless %>
               <div class="bw-form-field"><%= form.label :password, t("billie.auth.password"), for: "quick-login-personal-password" %><%= form.password_field :password, id: "quick-login-personal-password", required: true, autocomplete: "current-password" %></div>
               <% if @personal_user.otp_required_for_login? %><div class="bw-form-field"><%= form.label :otp_attempt, t("billie.auth.authentication_code"), for: "quick-login-personal-otp" %><%= form.text_field :otp_attempt, id: "quick-login-personal-otp", autocomplete: "one-time-code", inputmode: "numeric" %></div><% end %>

@@ -25,7 +25,8 @@ export function Login({ quickLogins = QUICK_LOGINS }: { quickLogins?: QuickLogin
     setPassword(shortcut.password);
     setOtp("");
     setNeedsOtp(false);
-    await attempt(shortcut.email, shortcut.password);
+    setError(null);
+    if (shortcut.password) await attempt(shortcut.email, shortcut.password);
   }
 
   async function attempt(email: string, password: string, otpAttempt?: string) {

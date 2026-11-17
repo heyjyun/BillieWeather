@@ -1,0 +1,32 @@
+ja:
+  billie:
+    insight_chat:
+      eyebrow: BILLIE に質問
+      title: お金のことを Billie に質問
+      description: 支出、収入、予算、税金の書類など、何でも質問できます。Billie は %{service} を通じて集計データをもとに回答します。会話はこのブラウザのタブにのみ残り、保存されません。
+      empty: 自由に質問するか、次の質問から始めてください。
+      suggestions:
+        s1: "お金を一番使っているのは何ですか？"
+        s2: "毎月の支出はどう変わっていますか？"
+        s3: "シンプルな月の予算はどう作ればいいですか？"
+        s4: "確定申告に向けて何を準備すればいいですか？"
+      consent: 質問、この会話、集計した財務データ（合計、カテゴリ別・月別の合計、税務情報）を %{service} に送信することに同意します。
+      placeholder: Billie にお金の質問をする…
+      send: 送信
+      hint: Enter で送信 · Shift+Enter で改行。回答は不完全または誤っている場合があり、専門的な助言ではありません。
+      clear: 新しい会話
+      you: あなた
+      billie: Billie
+      thinking: Billie が考えています…
+      unavailable: 「Billie に質問」はまだ接続されていません。基本分析は AI サービスなしで利用できます。
+      errors:
+        consent_required: 質問する前に同意のチェックを入れてください。
+        not_configured: このサーバーでは「Billie に質問」が設定されていません。
+        invalid_question: 先に質問を入力してください。
+        too_long: 質問は %{count} 文字以内にしてください。
+        no_answer: Billie から回答がありませんでした。もう一度お試しください。
+        failed: Billie は今は回答できません。もう一度お試しください。
+        unavailable: AI サービスが一時的に利用できません。少し待ってからお試しください。
+        auth_failed: "%{service} が API キーを拒否しました。サーバー設定を確認してください。"
+        quota: "%{service} の利用上限に達しました。後でもう一度お試しください。"
+        rate_limited: 質問の間隔が短すぎます。1 分ほど待ってからお試しください。
