@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { findFileInput } from "./uiHelpers";
 // The complete workflow through the real UI: sign in → website data downloads automatically →
 // import a local statement → dashboard → correct a category (remembered) → export CSV and Excel →
 // switch language → delete local data → sign out.
@@ -105,7 +106,7 @@ it("signs in, works with local data, switches language, and signs out", async ()
   expect(sessionStorage.getItem("billie.token")).toBe("tok");
 
   nav("Import");
-  const input = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  const input = await findFileInput();
   await act(async () => upload(input, "basic-amount.csv", fixtureBytes("basic-amount.csv")));
   // Reading a file crosses real async boundaries (hashing, decoding); let React apply the result.
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
@@ -114,7 +115,7 @@ it("signs in, works with local data, switches language, and signs out", async ()
   await screen.findByText("basic-amount.csv: 9 transactions imported, 0 skipped, 0 could not be imported.");
   expect(screen.getByText("web-checking.csv").parentElement!.textContent).toContain("From website");
   // The preview replaced the file picker while it was open, so pick the (new) input again.
-  const again = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  const again = await findFileInput();
   await act(async () => upload(again, "basic-amount.csv", fixtureBytes("basic-amount.csv")));
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
   await screen.findByText(/basic-amount\.csv: This statement has already been imported|basic-amount\.csv: .*already/i);
@@ -129,7 +130,8 @@ it("signs in, works with local data, switches language, and signs out", async ()
   await screen.findByText(/"amazon services" will be Business from now on/);
 
   nav("Reports");
-  await act(async () => fireEvent.click(await screen.findByRole("button", { name: "Export CSV" })));
+  const exportCsv = await screen.findByRole("button", { name: "Export CSV" });
+  await act(async () => fireEvent.click(exportCsv));
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Export Excel" })));
   await waitFor(() => expect(saved.length).toBe(2));
   expect(new TextDecoder().decode(saved[0].bytes)).toContain("AMAZON WEB SERVICES AWS.AMAZON.CO,Business,-61.2,USD,true,false,true");

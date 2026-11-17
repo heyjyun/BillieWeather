@@ -1,7 +1,7 @@
 import type { Currency, MerchantRule, Statement, Transaction } from "@billie/shared-types";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AccountError } from "../services/account";
-import { adoptsLegacyList, declinedSlots, declineSlot, fileForSlot, freeSlot, freeSlots, loadRegistry, MAX_DATABASES, ownership, saveRegistry, slotsOfOthers, type Registry } from "../services/databases";
+import { declinedSlots, declineSlot, fileForSlot, freeSlot, freeSlots, loadRegistry, MAX_DATABASES, ownership, saveRegistry, slotsOfOthers, type Registry } from "../services/databases";
 import { deviceName, openDatabase, restoreSnapshot as restoreSnapshotFile } from "../services/platform";
 import { queueDelete, reportAll, reportingIdentity, reportingStatus, type ReportingStatus } from "../services/reporting";
 import { FinanceStore, StoreError, type WebSyncResult } from "../services/store";
@@ -88,8 +88,6 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
   const registryRef = useRef(registry);
   // A database from an older version that holds data but has no owner: the person is asked once.
   const [claim, setClaim] = useState<{ id: string } | null>(null);
-  // Decided once, before this provider saves a list of its own.
-  const adopter = useRef(ownerKey ? adoptsLegacyList(ownerKey, emailKey && emailKey !== ownerKey ? [emailKey] : []) : false);
   // One open handle per database, shared by every page. Keeping the promise (not the result)
   // means two quick calls (React StrictMode, or the Data page and a switch) share one handle.
   const handles = useRef(new Map<string, Promise<Opened>>());
@@ -190,7 +188,9 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
   const decide = useCallback(async (id: string): Promise<"use" | "ask" | "skip"> => {
     if (!ownerKey) return "use";
     const { store } = await openById(id);
-    const verdict = ownership(await store.owner(), ownerKey, emailKey ?? "", await store.hasContent());
+    const hasContent = await store.hasContent();
+    const verdict = ownership(await store.owner(), ownerKey, emailKey ?? "", hasContent);
+    if (verdict === "upgrade" && hasContent) return "ask";
     if (verdict === "mine") return "use";
     if (verdict === "upgrade" || verdict === "claim") {
       await store.setOwner(ownerKey);
@@ -212,11 +212,6 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
       if (declined.has(entry.id)) continue;
       const verdict = await decide(entry.id).catch(() => "skip" as const);
       if (verdict === "use") return entry.id;
-      if (verdict === "ask" && adopter.current && ownerKey) {
-        // This account took over the pre-owner list: its unowned databases are its own.
-        await (await openById(entry.id)).store.setOwner(ownerKey);
-        return entry.id;
-      }
       if (verdict === "ask") {
         setClaim({ id: entry.id });
         return null;
@@ -372,11 +367,22 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
           } catch {
             continue; // that slot's file exists; try the next one
           }
-          commitRegistry({ ...registryRef.current, entries: [...registryRef.current.entries, slot].sort((a, b) => Number(a.id) - Number(b.id)) });
-          const { store } = await openById(slot.id);
+          // Snapshot names identify slots, not owners. A slot may have been reused by another
+          // account since the copy was made: check the copied file before listing or reporting it.
+          const opened = await openDatabase(slot.file);
+          const store = new FinanceStore(opened.driver);
+          const recorded = await store.owner();
+          if (ownerKey && recorded && recorded !== ownerKey && recorded !== emailKey) {
+            // Only this just-created disposable copy is cleared; its source snapshot is untouched.
+            await store.deleteAllData({ forgetName: true });
+            throw new Error("This snapshot belongs to another account.");
+          }
+          await store.sql.execute("DELETE FROM settings WHERE key IN ('report_id', 'web_sync_version', 'web_sync_checked_at', 'last_synced_at', 'web_sync_skip')");
           if (ownerKey) await store.setOwner(ownerKey);
           const name0 = await store.databaseName();
           await store.setDatabaseName(`${name0 ?? "BillieWeather"} (${new Date().toISOString().slice(0, 10)})`);
+          handles.current.set(slot.id, Promise.resolve({ store, persistent: opened.persistent }));
+          commitRegistry({ ...registryRef.current, entries: [...registryRef.current.entries, slot].sort((a, b) => Number(a.id) - Number(b.id)) });
           void reportMetadata();
           return slot.id;
         }

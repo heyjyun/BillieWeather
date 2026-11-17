@@ -17,7 +17,7 @@ import { randomId } from "./ids";
 export const BACKUP_FORMAT = "billieweather-backup";
 export const BACKUP_VERSION = 1;
 /** The local schema version these backups describe (the highest migration number). */
-export const LOCAL_SCHEMA_VERSION = 7;
+export const LOCAL_SCHEMA_VERSION = 8;
 
 type Row = Record<string, unknown>;
 type Cell = string | number | null;
@@ -78,6 +78,32 @@ const b64 = (bytes: Uint8Array) => {
   return btoa(binary);
 };
 const unb64 = (text: string) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
+const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
+const safeInteger = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value);
+
+/** Validate before any write, even when an internal caller did not use readBackup. */
+async function verifyContent(value: unknown): Promise<BackupContent> {
+  if (!record(value) || value.format !== BACKUP_FORMAT) throw new BackupError("not_a_backup", "This is not a BillieWeather backup file.");
+  if (Number(value.version) > BACKUP_VERSION || Number(value.schemaVersion) > LOCAL_SCHEMA_VERSION) throw new BackupError("newer_version", "This backup was made by a newer version of BillieWeather.");
+  const damaged = () => new BackupError("damaged", "The backup file is incomplete or damaged.");
+  if (value.version !== BACKUP_VERSION || !safeInteger(value.schemaVersion) || value.schemaVersion < 1 || !record(value.tables) || !record(value.manifest) || !record(value.book) ||
+      typeof value.createdAt !== "string" || !Number.isFinite(Date.parse(value.createdAt)) || typeof value.checksum !== "string") throw damaged();
+  const manifest = value.manifest;
+  if (!record(manifest.rows) || !safeInteger(manifest.transactionsAmountCents) || !safeInteger(manifest.openingBalancesCents)) throw damaged();
+  for (const [name, table] of Object.entries(value.tables)) {
+    if (!(BACKUP_TABLES as readonly string[]).includes(name) || !record(table) || !Array.isArray(table.columns) || !Array.isArray(table.rows)) throw damaged();
+    const columns = table.columns;
+    if (columns.length === 0 || !columns.every((column) => typeof column === "string") || new Set(columns).size !== columns.length) throw damaged();
+    if (!table.rows.every((row) => Array.isArray(row) && row.length === columns.length && row.every((cell) => cell === null || typeof cell === "string" || (typeof cell === "number" && Number.isFinite(cell))))) throw damaged();
+    const moneyColumns = columns.flatMap((column, index) => String(column).endsWith("_cents") ? [index] : []);
+    if (table.rows.some((row) => moneyColumns.some((index) => row[index] !== null && !safeInteger(row[index])))) throw damaged();
+    if (manifest.rows[name] !== table.rows.length) throw damaged();
+  }
+  if (!["settings", "statements", "transactions"].every((name) => Object.hasOwn(value.tables as object, name)) ||
+      Object.keys(manifest.rows).some((name) => !Object.hasOwn(value.tables as object, name))) throw damaged();
+  if ((await sha256(JSON.stringify(value.tables))) !== value.checksum) throw damaged();
+  return value as unknown as BackupContent;
+}
 
 async function tableNames(db: SqlDriver): Promise<Set<string>> {
   const rows = await db.select<Row>("SELECT name FROM sqlite_master WHERE type = 'table'");
@@ -118,7 +144,13 @@ export async function createBackup(db: SqlDriver): Promise<BackupContent> {
   return {
     format: BACKUP_FORMAT, version: BACKUP_VERSION, schemaVersion: LOCAL_SCHEMA_VERSION, createdAt: new Date().toISOString(),
     book: { uuid: setting("book_uuid"), name: setting("database_name"), currency: setting("currency") },
-    tables, manifest: await manifestOf(db), checksum: await sha256(JSON.stringify(tables)),
+    // Compute the manifest from the captured rows, rather than a second read that can disagree
+    // when background sync changes the database while the backup is being assembled.
+    tables, manifest: {
+      rows: Object.fromEntries(Object.entries(tables).map(([name, table]) => [name, table.rows.length])),
+      transactionsAmountCents: tables.transactions.rows.reduce((sum, row) => sum + Number(row[tables.transactions.columns.indexOf("amount_cents")]), 0),
+      openingBalancesCents: tables.accounts?.rows.reduce((sum, row) => sum + Number(row[tables.accounts.columns.indexOf("opening_balance_cents")]), 0) ?? 0,
+    }, checksum: await sha256(JSON.stringify(tables)),
   };
 }
 
@@ -162,23 +194,27 @@ export async function readBackup(bytes: Uint8Array, passphrase?: string | null):
   } catch {
     throw new BackupError("not_a_backup", "This is not a BillieWeather backup file.");
   }
-  if (parsed.format !== BACKUP_FORMAT) throw new BackupError("not_a_backup", "This is not a BillieWeather backup file.");
+  if (!record(parsed) || parsed.format !== BACKUP_FORMAT) throw new BackupError("not_a_backup", "This is not a BillieWeather backup file.");
   if (Number(parsed.version) > BACKUP_VERSION) throw new BackupError("newer_version", "This backup was made by a newer version of BillieWeather.");
   if (parsed.encrypted) {
+    if (parsed.version !== BACKUP_VERSION || parsed.kdf?.name !== "PBKDF2" || parsed.kdf.hash !== "SHA-256" || !safeInteger(parsed.kdf.iterations) ||
+        parsed.kdf.iterations < 100_000 || parsed.kdf.iterations > 1_000_000 || parsed.cipher?.name !== "AES-GCM" ||
+        typeof parsed.kdf.salt !== "string" || typeof parsed.cipher.iv !== "string" || typeof parsed.data !== "string") {
+      throw new BackupError("damaged", "The encrypted backup header is invalid.");
+    }
     if (!passphrase) throw new BackupError("passphrase_required", "Enter the backup's passphrase.");
     try {
-      const key = await keyFrom(passphrase, unb64(parsed.kdf!.salt), parsed.kdf!.iterations);
-      const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(parsed.cipher!.iv) as BufferSource }, key, unb64(parsed.data!) as BufferSource);
+      const salt = unb64(parsed.kdf.salt);
+      const iv = unb64(parsed.cipher.iv);
+      if (salt.length !== 16 || iv.length !== 12) throw new Error("invalid encryption parameters");
+      const key = await keyFrom(passphrase, salt, parsed.kdf.iterations);
+      const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as BufferSource }, key, unb64(parsed.data) as BufferSource);
       parsed = JSON.parse(decoder.decode(plain)) as Partial<BackupContent>;
     } catch {
       throw new BackupError("wrong_passphrase", "The passphrase is not right, or the file is damaged.");
     }
   }
-  const content = parsed as BackupContent;
-  if (!content.tables || !content.manifest || typeof content.checksum !== "string") throw new BackupError("damaged", "The backup file is incomplete.");
-  if (Number(content.schemaVersion) > LOCAL_SCHEMA_VERSION) throw new BackupError("newer_version", "This backup was made by a newer version of BillieWeather.");
-  if ((await sha256(JSON.stringify(content.tables))) !== content.checksum) throw new BackupError("damaged", "The backup file has been changed or damaged.");
-  return content;
+  return verifyContent(parsed);
 }
 
 /**
@@ -187,9 +223,19 @@ export async function readBackup(bytes: Uint8Array, passphrase?: string | null):
  * the manifest: on any difference the database is emptied again and BackupError("verify_failed") is thrown.
  */
 export async function restoreInto(db: SqlDriver, content: BackupContent, options: { owner?: string | null; name?: string | null } = {}): Promise<BackupManifest> {
-  const [used] = await db.select<Row>("SELECT (SELECT COUNT(*) FROM transactions) + (SELECT COUNT(*) FROM statements) + (SELECT COUNT(*) FROM accounts) AS n");
-  if (Number(used.n) > 0) throw new BackupError("target_not_empty", "Backups are restored into a new, empty database only.");
+  content = await verifyContent(content);
   const existing = await tableNames(db);
+  for (const table of BACKUP_TABLES) {
+    if (!existing.has(table)) continue;
+    const used = await db.select<Row>(`SELECT 1 FROM ${table}${table === "settings" ? ` WHERE key NOT IN (${[...DEVICE_SETTINGS].map(() => "?").join(", ")})` : ""} LIMIT 1`, table === "settings" ? [...DEVICE_SETTINGS] : []);
+    if (used.length) throw new BackupError("target_not_empty", "Backups are restored into a new, empty database only.");
+  }
+  // Schema compatibility is checked before inserting anything; silently discarding a column or
+  // table could lose financial evidence while still producing matching row counts and sums.
+  for (const [table, data] of Object.entries(content.tables)) {
+    const target = new Set(existing.has(table) ? await columnsOf(db, table) : []);
+    if (data.columns.some((column) => !target.has(column))) throw new BackupError("damaged", "The backup schema is not supported.");
+  }
   try {
     for (const table of BACKUP_TABLES) {
       const data = content.tables[table];
@@ -197,7 +243,7 @@ export async function restoreInto(db: SqlDriver, content: BackupContent, options
       const target = new Set(await columnsOf(db, table));
       const keep = data.columns.map((column, index) => ({ column, index })).filter(({ column }) => target.has(column));
       let rows = data.rows;
-      if (table === "settings") rows = rows.filter((row) => !DEVICE_SETTINGS.has(String(row[0])));
+      if (table === "settings") rows = rows.filter((row) => !DEVICE_SETTINGS.has(String(row[data.columns.indexOf("key")])));
       // statements_commit_staged fires on statements with an import batch: write it after the row exists.
       const batchIndex = table === "statements" ? data.columns.indexOf("import_batch_id") : -1;
       const perBatch = Math.max(1, Math.floor(900 / Math.max(1, keep.length)));
@@ -217,8 +263,9 @@ export async function restoreInto(db: SqlDriver, content: BackupContent, options
     if (options.name) await db.execute("INSERT INTO settings (key, value) VALUES ('database_name', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [options.name]);
     const restored = await manifestOf(db);
     const expected = content.manifest;
-    const sameRows = Object.entries(expected.rows).every(([table, count]) => table === "settings" || !existing.has(table) || restored.rows[table] === count);
-    if (!sameRows || restored.transactionsAmountCents !== expected.transactionsAmountCents || restored.openingBalancesCents !== expected.openingBalancesCents) {
+    const sameRows = Object.entries(expected.rows).every(([table, count]) => table === "settings" || restored.rows[table] === count);
+    const foreignKeyErrors = await db.select<Row>("PRAGMA foreign_key_check");
+    if (!sameRows || foreignKeyErrors.length > 0 || restored.transactionsAmountCents !== expected.transactionsAmountCents || restored.openingBalancesCents !== expected.openingBalancesCents) {
       throw new BackupError("verify_failed", "The restored copy does not match the backup.");
     }
     await db.execute("INSERT INTO audit_events (uuid, at, actor, action, subject_type, subject_id, summary) VALUES (?, ?, 'user', 'restore_backup', 'book', ?, ?)",

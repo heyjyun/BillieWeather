@@ -77,17 +77,6 @@ export function saveRegistry(registry: Registry, owner?: string | null): void {
   }
 }
 
-/**
- * Whether `owner` takes over the device-wide list from versions before owners were recorded: the
- * first account to sign in does (review decision Q1, default). Its unowned databases are claimed
- * without asking; anyone else is asked about unowned data.
- */
-export function adoptsLegacyList(owner: string, aliases: readonly string[] = []): boolean {
-  if (read(OWNER_PREFIX + owner) || aliases.some((alias) => read(OWNER_PREFIX + alias))) return read(ADOPTED_KEY) === owner || aliases.includes(read(ADOPTED_KEY) ?? "");
-  const adoptedBy = read(ADOPTED_KEY);
-  return adoptedBy === null || adoptedBy === owner || aliases.includes(adoptedBy);
-}
-
 /** Slots listed for any OTHER account on this device (never offered to `owner`). */
 export function slotsOfOthers(owner: string | null | undefined, aliases: readonly string[] = []): Set<string> {
   const taken = new Set<string>();

@@ -44,7 +44,7 @@ module ApplicationHelper
 
   def billie_language_path(locale)
     # Failed form submissions may render at a URL without a GET action.
-    path = if request.get?
+    path = if request.get? || request.head?
       request.path
     elsif controller_name == "google_regions"
       new_google_region_path

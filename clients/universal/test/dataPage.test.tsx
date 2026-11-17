@@ -4,6 +4,7 @@
 // statements one at a time.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
+import { emailOwnerKey } from "../src/services/databases";
 import { migrate } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
@@ -18,6 +19,7 @@ vi.mock("../src/services/platform", async () => {
       if (!files.has(file)) {
         const db = new SQL.Database();
         migrate(db);
+        db.run("INSERT INTO settings (key, value) VALUES ('owner_account_id', ?)", [await emailOwnerKey("jyun@example.com")]);
         if (file === "billieweather.db") {
           db.run("INSERT INTO statements (filename, currency, sha256, transaction_count, imported_at) VALUES ('mine.csv','USD','m',1,'2026-01-01')");
           db.run("INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, updated_at) VALUES (1,'2026-01-02','LOCAL ONLY',-500,'Shopping','2026-01-02T10:00:00Z')");
@@ -125,7 +127,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 it("shows the cloud and each local database by name, with size, share of the total, contents and dates", async () => {
   fakeCloud();
   await openData();
-  const device = card("Home Mac");
+  const device = await waitFor(() => card("Home Mac"));
   await waitFor(() => expect(fact(device, "Statements")).toBe("2"));
   expect(fact(device, "Transactions")).toBe("3");
   expect(fact(device, "Size")).toMatch(/KB$/);
@@ -303,7 +305,7 @@ it("with the box ticked, a local-to-local sync also keeps the statements in the 
   const posts = requests.filter((r) => r.method === "POST");
   expect(posts.length).toBe(2); // mine.csv is new to the cloud; web.csv was already there
   const sent = JSON.parse(String(posts.find((r) => String(r.body).includes("mine.csv"))!.body)).statement;
-  expect(sent.transactions).toEqual([{ booked_on: "2026-01-02", description: "LOCAL ONLY", amount: "-5.0", category: "Shopping", tax_review: false, excluded: false }]);
+  expect(sent.transactions).toEqual([{ booked_on: "2026-01-02", description: "LOCAL ONLY", amount: "-5.0", category: "Shopping", tax_review: false, excluded: false, kind: "expense", original_description: "LOCAL ONLY" }]);
   expect(cloud.statements.map((s) => s.filename)).toContain("mine.csv");
 });
 

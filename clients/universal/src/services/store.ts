@@ -108,7 +108,7 @@ export interface TransferStatement {
   importedAt: string;
   /** Optional region; copied between local databases only (cloudUpload.ts never sends it). */
   region?: string | null;
-  rows: Array<{ bookedOn: string; description: string; amountCents: number; category: Category; taxReview: boolean; excluded: boolean }>;
+  rows: Array<{ bookedOn: string; description: string; amountCents: number; category: Category; taxReview: boolean; excluded: boolean; kind?: string; originalDescription?: string }>;
 }
 
 export interface TransferData {
@@ -753,9 +753,10 @@ export class FinanceStore {
     }
   }
 
-  /** Whether this database holds statements or has been named (so it is someone's database, not a fresh slot). */
+  /** Any user content makes a slot occupied, including books with only rules or dimensions. */
   async hasContent(): Promise<boolean> {
-    const rows = await this.db.select<Row>("SELECT 1 FROM statements UNION ALL SELECT 1 FROM accounts UNION ALL SELECT 1 FROM settings WHERE key = $1 LIMIT 1", ["database_name"]);
+    const tables = ["statements", "accounts", "merchant_rules", "custom_categories", "category_meta", "budgets", "recurring_rules", "merchants", "projects", "tags", "import_templates", "organize_runs", "audit_events"];
+    const rows = await this.db.select<Row>(`${tables.map((table) => `SELECT 1 FROM ${table}`).join(" UNION ALL ")} UNION ALL SELECT 1 FROM settings WHERE key IN ('database_name', 'currency', 'book_uuid') LIMIT 1`);
     return rows.length > 0;
   }
 
@@ -841,7 +842,8 @@ export class FinanceStore {
     const byStatement = new Map<number, TransferStatement["rows"]>();
     for (const t of [...transactions].reverse()) {
       const rows = byStatement.get(t.statementId) ?? [];
-      rows.push({ bookedOn: t.bookedOn, description: t.description, amountCents: t.amountCents, category: t.category, taxReview: t.taxReview, excluded: t.excluded });
+      rows.push({ bookedOn: t.bookedOn, description: t.description, amountCents: t.amountCents, category: t.category, taxReview: t.taxReview, excluded: t.excluded,
+        kind: t.kind, originalDescription: t.originalDescription });
       byStatement.set(t.statementId, rows);
     }
     return {
@@ -891,11 +893,12 @@ export class FinanceStore {
             const base = params.length;
             const category = FinanceStore.knownCategory(row.category, custom);
             params.push(statementId, row.bookedOn, row.description, row.amountCents, category, row.taxReview ? 1 : 0, row.excluded ? 1 : 0, stamp,
-              kindForCategorized({ amountMinor: row.amountCents, accountType: null, description: row.description, category, incomeCategories }), accountId);
-            return `(${Array.from({ length: 10 }, (_, i) => `$${base + i + 1}`).join(", ")})`;
+              isTransactionKind(row.kind) ? row.kind : kindForCategorized({ amountMinor: row.amountCents, accountType: null, description: row.originalDescription ?? row.description, category, incomeCategories }),
+              accountId, row.originalDescription ?? row.description);
+            return `(${Array.from({ length: 11 }, (_, i) => `$${base + i + 1}`).join(", ")})`;
           });
           await this.db.execute(
-            `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, kind, account_id) VALUES ${values.join(", ")}`,
+            `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, kind, account_id, original_description) VALUES ${values.join(", ")}`,
             params,
           );
         }

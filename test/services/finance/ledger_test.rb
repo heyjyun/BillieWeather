@@ -106,6 +106,17 @@ class Finance::LedgerTest < ActiveSupport::TestCase
     assert_equal %w[Shopping Shopping], [a.reload.category, b.reload.category]
     assert_equal({undone: 2, skipped: 0}, @ledger.undo_batch(batch_id))
     assert_equal %w[Uncategorized Health], [a.reload.category, b.reload.category]
+    assert_equal({undone: 0, skipped: 2}, @ledger.undo_batch(batch_id), "undoing a batch twice must not replay its undo events")
+  end
+
+  test "batch tag undo restores the prior tags" do
+    entry = @ledger.create(kind: "expense", amount: "5", booked_on: "2026-10-01", account_id: @cash.id, tag_names: "original")
+    tag = Finance::Tag.create!(user: @user, name: "added")
+    @ledger.batch([entry.id], {action: "tag", value: tag.id})
+    batch_id = Finance::AuditEvent.where(action: "batch_update").pick(:batch_id)
+    assert_equal %w[added original], entry.reload.tags.order(:name).pluck(:name)
+    assert_equal({undone: 1, skipped: 0}, @ledger.undo_batch(batch_id))
+    assert_equal ["original"], entry.reload.tags.pluck(:name)
   end
 
   test "audit events are read-only once saved" do
@@ -113,5 +124,50 @@ class Finance::LedgerTest < ActiveSupport::TestCase
     event = Finance::AuditEvent.where(subject_id: entry.id.to_s).sole
     assert_equal({"amount" => "-5.0"}, event.changes_data["after"].slice("amount"))
     assert_raises(ActiveRecord::ReadOnlyRecord) { event.update!(action: "delete") }
+  end
+
+  test "a trashed refund cannot be restored after its allowance has been reused" do
+    purchase = @ledger.create(kind: "expense", amount: "80", booked_on: "2026-10-01", account_id: @card.id)
+    refund = @ledger.create(kind: "refund", amount: "50", booked_on: "2026-10-02", account_id: @card.id, refund_of_id: purchase.id)
+    @ledger.delete(refund)
+    @ledger.create(kind: "refund", amount: "80", booked_on: "2026-10-03", account_id: @card.id, refund_of_id: purchase.id)
+    assert_equal ["refund_too_large"], assert_raises(Finance::Ledger::Invalid) { @ledger.restore(refund) }.codes
+    assert_not_nil refund.reload.deleted_at
+  end
+
+  test "an expense cannot be reduced or reclassified below its posted refunds" do
+    purchase = @ledger.create(kind: "expense", amount: "80", booked_on: "2026-10-01", account_id: @card.id)
+    @ledger.create(kind: "refund", amount: "50", booked_on: "2026-10-02", account_id: @card.id, refund_of_id: purchase.id)
+    assert_raises(Finance::Ledger::Invalid) { @ledger.update(purchase, amount: "40") }
+    assert_equal BigDecimal("-80"), purchase.reload.amount
+    assert_raises(Finance::Ledger::Invalid) { @ledger.update(purchase, kind: "income", category: "Income") }
+    assert_equal "expense", purchase.reload.kind
+  end
+
+  test "reclassifying a refund releases its link and refundable allowance" do
+    purchase = @ledger.create(kind: "expense", amount: "80", booked_on: "2026-10-01", account_id: @card.id)
+    refund = @ledger.create(kind: "refund", amount: "50", booked_on: "2026-10-02", account_id: @card.id, refund_of_id: purchase.id)
+    @ledger.update(refund, kind: "income", category: "Income")
+    assert_empty refund.outgoing_links.where(link_type: "refund_of")
+    @ledger.create(kind: "refund", amount: "80", booked_on: "2026-10-03", account_id: @card.id, refund_of_id: purchase.id)
+  end
+  test "category normalization cannot turn a refunded imported expense into a transfer" do
+    statement = Finance::Statement.create!(user: @user, filename: "synthetic-expense.csv", currency: "USD", sha256: "7" * 64, transaction_count: 1)
+    purchase = Finance::Transaction.create!(user: @user, statement: statement, bank_account: @card, entry_origin: "import", kind: "expense",
+      amount: "-80", booked_on: "2026-10-01", description: "Synthetic purchase", category: "Shopping")
+    @ledger.create(kind: "refund", amount: "50", booked_on: "2026-10-02", account_id: @card.id, refund_of_id: purchase.id)
+    assert_raises(Finance::Ledger::Invalid) { @ledger.update(purchase, category: "Transfers") }
+    assert_equal "expense", purchase.reload.kind
+  end
+
+  test "normalizing an imported refund into income releases its old refund relation" do
+    purchase = @ledger.create(kind: "expense", amount: "80", booked_on: "2026-10-01", account_id: @card.id)
+    statement = Finance::Statement.create!(user: @user, filename: "synthetic.csv", currency: "USD", sha256: "8" * 64, transaction_count: 1)
+    refund = Finance::Transaction.create!(user: @user, statement: statement, bank_account: @card, entry_origin: "import", kind: "refund",
+      amount: "50", booked_on: "2026-10-02", description: "Synthetic bank credit", category: "Shopping")
+    Finance::TransactionLink.create!(user: @user, link_type: "refund_of", from_transaction: refund, to_transaction: purchase, amount: "50", status: "confirmed", decided_by: "user")
+    @ledger.update(refund, category: "Income")
+    assert_equal "income", refund.reload.kind
+    assert_empty refund.outgoing_links.where(link_type: "refund_of")
   end
 end

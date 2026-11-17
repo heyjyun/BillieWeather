@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { findFileInput } from "./uiHelpers";
 // The optional Country / Region field through the real UI: defaults to Not specified, is saved
 // with the statement, and can be changed later and reclassified on request. Synthetic data only.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -87,7 +88,7 @@ it("imports with an optional region, then changes it and reclassifies on request
   expect(screen.getByText("Optional. Helps BillieWeather recognize regional banking formats and improve rule-based transaction categorization.")).toBeTruthy();
 
   fireEvent.change(select, { target: { value: "GB" } });
-  const input = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  const input = await findFileInput();
   const bytes = new TextEncoder().encode("%PDF-uk");
   const file = new File([bytes as BlobPart], "uk.pdf", { type: "application/pdf" });
   Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(0) });

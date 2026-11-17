@@ -14,8 +14,8 @@ class FinanceManualBookkeepingTest < ActionDispatch::IntegrationTest
     patch finance_mode_path, params: {mode: "manual"}
   end
 
-  # The app's "today" is the person's local date (America/Chicago by default), not UTC.
-  def today = Time.current.in_time_zone("America/Chicago").to_date
+  # Match the controller's actual user time zone; the factory may use a different calendar date.
+  def today = Time.current.in_time_zone(@user.time_zone.presence || "America/Chicago").to_date
 
   def create_account(name, type, opening = "0")
     post finance_accounts_path, params: {finance_bank_account: {custom_name: name, account_type: type, opening_balance: opening, include_in_net_worth: "1"}}

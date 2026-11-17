@@ -1,0 +1,62 @@
+BillieWeather / FinRx independent engineering audit — 2026-11-16
+
+Git baseline: main @ cf7a1b0; initial tracked/untracked status empty.
+All changes remain local and uncommitted. No push, deployment, production DB operation,
+real financial-data access, environment-file change, or real-backup access was performed.
+
+FINAL CHECKS
+Rails: explicit RAILS_ENV=test, local DATABASE_URL and DATABASE_URL_UNPOOLED:
+  postgresql://localhost/billieweather_codex_audit_test
+  bin/rails test
+  650 tests; 24,969 assertions; 0 failures; 0 errors; 2 existing skips (648 passed).
+  Default Rails suite; browser system/scaffolding suites are not included.
+  Skips: TeamMemberScenarios membership destruction; CreativeConcepts temporary redirect.
+
+Client/shared packages (clients/universal):
+  npm test
+  58 test files; 689 passed; 0 failed; 46.63s.
+  Includes real Apple Vision/Tesseract, Chromium OCR, shared contract fixtures,
+  20,000-row overlap import, ownership, restore, refunds, privacy, and UI tests.
+  npm run build (tsc --noEmit + Vite): PASS.
+  Main JS: 1,179.42 kB -> 913.97 kB; gzip 368.35 kB -> 290.31 kB.
+  Large-chunk warning remains; this is a size improvement, not a measured launch-time claim.
+
+Rust (clients/universal/src-tauri): cargo test --locked
+  15 passed; 0 failed. macOS host only; no packaged/native financial database was opened.
+
+Python (billieforecast): .venv/bin/python -m pytest -q
+  55 passed; 0 failed; 24.35s. Synthetic/mock forecasting; no production model benchmark.
+
+Chromium smoke (clients/universal/scripts/audit-smoke.mjs):
+  PASS against loopback Vite dev server and final production preview.
+  Manual accounts -> expense -> linked refund -> $950 net worth -> Default mode -> lazy Reports.
+  All non-loopback requests intercepted with synthetic responses; no live account used.
+
+Rails asset pipeline: yarn build && yarn build:css — PASS after compatible lockfile refresh.
+Modified/new Ruby syntax: PASS. git diff --check: PASS.
+StandardRB on changed Ruby files: 3 pre-existing style findings; no new code offense remains.
+  client_api_finance_test.rb: BigDecimal numeric argument
+  finance_manual_bookkeeping_test.rb: existing hash alignment
+  duplicate_import_test.rb: existing rescue modifier
+  Each was checked against the original HEAD source; no unrelated formatting rewrite.
+
+SECURITY SCANS
+Client npm audit --package-lock-only: 0 vulnerabilities (after Vitest 4.1.12 upgrade).
+Ruby bundle-audit: No vulnerabilities found (25 advisory entries initially).
+Root yarn npm audit --recursive: 75 -> 38 warning/advisory entries, including deprecations.
+  3 critical entries remain: Handlebars (documentation CLI) and tar (native build tooling).
+  Existing version constraints/pinned parent dependencies were respected.
+Brakeman: 2 -> 1 weak HTTP Verb Confusion warning; no medium/high-confidence warnings.
+  GET and HEAD are explicitly handled; scanner warning retained rather than suppressed.
+Rust/Python advisory databases and deployed production headers were not exhaustively scanned.
+
+PERFORMANCE / INTEGRITY EVIDENCE
+Candidate hydration on 20,150 synthetic stored rows: 20,150 -> 100, identical verdicts.
+Successful full-run sample: 153.75 ms -> 4.86 ms (local single-run observation only).
+Custom income categories for 400 incoming rows: one settings query, all 400 kinds correct.
+25 manual exported rows: zero additional profile SELECTs, all currencies correct.
+Changed-version cloud sync: one summary request instead of two.
+New local schema version: 8; migration only adds integrity triggers, without rewriting rows.
+
+Full rationale, limitations, and changed-file inventory:
+  docs/audits/codex-independent-engineering-audit-2026-11-16.md

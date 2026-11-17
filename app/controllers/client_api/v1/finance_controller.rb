@@ -191,14 +191,19 @@ module ClientApi
 
       # One uploaded transaction, validated like an imported one; nil if anything is off.
       def parse_row(row)
+        return nil unless row.respond_to?(:key?) && row.respond_to?(:[])
         amount = BigDecimal(row[:amount].to_s, exception: false)
         booked_on = parse_date(row[:booked_on])
         description = row[:description].to_s
         return nil if amount.nil? || !amount.finite? || amount != amount.round(2) || amount.abs >= 10**13
         return nil if booked_on.nil? || description.blank? || description.length > 500
+        original_description = row.key?(:original_description) ? row[:original_description] : description
+        return nil unless original_description.is_a?(String) && original_description.present? && original_description.length <= 500
+        kind = row[:kind]
+        return nil if row.key?(:kind) && !Finance::Domain::TRANSACTION_KINDS.include?(kind)
         category = Finance::CustomCategory.normalize_name(row[:category])
         return nil if category.empty? || category.length > Finance::CustomCategory::MAX_LENGTH
-        {booked_on: booked_on, description: description, amount: amount, category: category,
+        {booked_on: booked_on, description: description, original_description: original_description, kind: kind, amount: amount, category: category,
          tax_review: row[:tax_review] == true, excluded: row[:excluded] == true}
       end
 

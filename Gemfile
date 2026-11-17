@@ -152,7 +152,8 @@ gem "devise-two-factor"
 gem "rqrcode"
 
 # Admin panel
-gem "avo", ">= 3.1.7"
+# Stay on the supported 3.33 patch line with both 2026 authorization fixes.
+gem "avo", "~> 3.33.2"
 
 # Background processing
 gem "sidekiq"

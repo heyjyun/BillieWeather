@@ -13,10 +13,11 @@ module ClientApi
       INTEGER_FIELDS = %w[size_bytes statement_count transaction_count rule_count].freeze
 
       def upsert
-        payload = params.permit!.to_h.fetch("database", nil)
-        return render json: {error: "bad_request"}, status: :bad_request unless payload.is_a?(Hash)
-        unexpected = payload.keys - Finance::LocalDatabaseReport::ALLOWED_FIELDS
+        database = params[:database]
+        return render json: {error: "bad_request"}, status: :bad_request unless database.is_a?(ActionController::Parameters)
+        unexpected = database.keys - Finance::LocalDatabaseReport::ALLOWED_FIELDS
         return render json: {error: "unexpected_fields", fields: unexpected}, status: :unprocessable_entity if unexpected.any?
+        payload = database.permit(*Finance::LocalDatabaseReport::ALLOWED_FIELDS).to_h
         # Only current apps (stable device id kept next to the SQLite files) say which platform
         # they run on. Anything else is an incomplete identity: refused, never stored, so a
         # browser preview or an old build cannot add "Unnamed database" cards.

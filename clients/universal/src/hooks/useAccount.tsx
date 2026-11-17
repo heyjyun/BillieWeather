@@ -21,6 +21,7 @@ interface AccountContextValue {
 }
 
 const AccountContext = createContext<AccountContextValue | null>(null);
+const identityOf = (account: Account | null) => account ? account.ownerId ? `id:${account.ownerId}` : `email:${account.email.trim().toLowerCase()}` : null;
 
 export function AccountProvider({ children }: { children: ReactNode }) {
   const { locale, setLocale } = useI18n();
@@ -28,6 +29,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<Account | null>(null);
   const [offline, setOffline] = useState(false);
   const token = useRef<string | null>(null);
+  // Keychain and cached account writes can be interrupted independently. Until the server binds
+  // this token to an identity, cached local data may be opened offline but must not sync or upload.
+  const tokenOwner = useRef<string | null>(null);
 
   const adopt = useCallback((next: Account) => {
     setAccount(next);
@@ -37,6 +41,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
   const forget = useCallback(async () => {
     token.current = null;
+    tokenOwner.current = null;
     await clearSession().catch(() => undefined);
     setAccount(null);
     setStatus("signedOut");
@@ -44,37 +49,45 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    const verify = async (saved: string, cached: Account | null) => {
+      try {
+        const fresh = await fetchAccount(saved);
+        if (cancelled || token.current !== saved) return;
+        tokenOwner.current = identityOf(fresh);
+        adopt(fresh);
+        setOffline(false);
+        setStatus("signedIn");
+      } catch (error) {
+        if (cancelled || token.current !== saved) return;
+        if (error instanceof AccountError && error.code === "unauthorized") return forget();
+        // Offline (or server trouble): keep working with the cached account if we have one.
+        setOffline(true);
+        if (!cached) setStatus("signedOut");
+      }
+    };
     (async () => {
       const saved = await loadToken().catch(() => null);
       if (cancelled) return;
       if (!saved) return setStatus("signedOut");
+      if (token.current !== saved) tokenOwner.current = null;
       token.current = saved;
       const cached = loadCachedAccount();
       if (cached) {
         setAccount(cached);
         setStatus("signedIn");
       }
-      try {
-        const fresh = await fetchAccount(saved);
-        if (cancelled) return;
-        adopt(fresh);
-        setOffline(false);
-        setStatus("signedIn");
-      } catch (error) {
-        if (cancelled) return;
-        if (error instanceof AccountError && error.code === "unauthorized") return forget();
-        // Offline (or server trouble): keep working with the cached account if we have one.
-        setOffline(true);
-        if (!cached) setStatus("signedOut");
-      }
+      await verify(saved, cached);
     })();
-    return () => { cancelled = true; };
+    const reconnect = () => { if (token.current) void verify(token.current, loadCachedAccount()); };
+    window.addEventListener("online", reconnect);
+    return () => { cancelled = true; window.removeEventListener("online", reconnect); };
   }, [adopt, forget]);
 
   const signIn = useCallback(async (email: string, password: string, otp?: string) => {
     const result = await apiSignIn(email, password, otp);
     await saveToken(result.token);
     token.current = result.token;
+    tokenOwner.current = identityOf(result.account);
     setOffline(false);
     if (isLocale(result.account.locale)) {
       adopt(result.account);
@@ -92,7 +105,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   }, [forget]);
 
   const savePreferences = useCallback(async (preferences: AccountPreferences) => {
-    if (!token.current) throw new AccountError("unauthorized");
+    if (!token.current || tokenOwner.current !== identityOf(account)) throw new AccountError("unauthorized");
     try {
       adopt(await updateAccount(token.current, preferences));
       setOffline(false);
@@ -101,9 +114,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       if (error instanceof AccountError && error.code === "offline") setOffline(true);
       throw error;
     }
-  }, [adopt, forget]);
+  }, [adopt, forget, account]);
 
-  const getToken = useCallback(() => token.current, []);
+  const getToken = useCallback(() => tokenOwner.current !== null && tokenOwner.current === identityOf(account) ? token.current : null, [account]);
   const value = useMemo(() => ({ status, account, offline, signIn, signOut, savePreferences, getToken, expire: forget }),
     [status, account, offline, signIn, signOut, savePreferences, getToken, forget]);
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;

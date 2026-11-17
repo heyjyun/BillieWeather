@@ -83,10 +83,10 @@ class FinanceAccountBalancesTest < ActionDispatch::IntegrationTest
     assert_equal 1, @user.finance_transactions.count
   end
 
-  test "assigning statements to a new or existing account updates totals without rewriting transactions" do
+  test "assigning statements updates ledger accounts while preserving bank evidence" do
     older = import_unidentified(balance: "300.00", name: "older.csv", date: "2026-10-31")
     newer = import_unidentified(balance: "450.00", name: "newer.csv", date: "2026-11-05")
-    transactions_before = @user.finance_transactions.order(:id).map(&:attributes)
+    transactions_before = @user.finance_transactions.order(:id).map { |row| row.attributes.except("bank_account_id", "updated_at") }
 
     assert_difference "Finance::BankAccount.where(user_id: @user.id).count", 1 do
       patch finance_statement_path(older), params: {bank_account: {
@@ -103,8 +103,9 @@ class FinanceAccountBalancesTest < ActionDispatch::IntegrationTest
     end
     assert_response :redirect
     assert_equal account.id, newer.reload.bank_account_id
+    assert_equal [account.id], @user.finance_transactions.distinct.pluck(:bank_account_id), "the ledger follows statement assignment"
     assert_equal BigDecimal("450.00"), @user.finance_profile.reload.current_balance
-    assert_equal transactions_before, @user.finance_transactions.order(:id).map(&:attributes)
+    assert_equal transactions_before, @user.finance_transactions.order(:id).map { |row| row.attributes.except("bank_account_id", "updated_at") }
 
     get finance_forecast_path
     assert_select "#account-balances", text: /Everyday checking|Local Community Bank/
@@ -114,7 +115,7 @@ class FinanceAccountBalancesTest < ActionDispatch::IntegrationTest
   test "older imports with no saved balances explain both missing inputs and keep transactions" do
     first = import_unidentified(balance: nil, name: "older-one.csv", date: "2026-10-30")
     second = import_unidentified(balance: nil, name: "older-two.csv", date: "2026-10-31")
-    transactions_before = @user.finance_transactions.order(:id).map(&:attributes)
+    transactions_before = @user.finance_transactions.order(:id).map { |row| row.attributes.except("bank_account_id", "updated_at") }
 
     get finance_forecast_path
     assert_response :success
@@ -127,7 +128,7 @@ class FinanceAccountBalancesTest < ActionDispatch::IntegrationTest
     [first, second].each do |statement|
       assert_select "#statement-#{statement.id}", text: /No closing balance saved/
     end
-    assert_equal transactions_before, @user.finance_transactions.order(:id).map(&:attributes)
+    assert_equal transactions_before, @user.finance_transactions.order(:id).map { |row| row.attributes.except("bank_account_id", "updated_at") }
 
     patch finance_statement_path(first), params: {bank_account: {
       bank_name: "Chase", name: "Checking", last4: "1111", kind: "cash"
@@ -136,7 +137,9 @@ class FinanceAccountBalancesTest < ActionDispatch::IntegrationTest
     get finance_forecast_path
     assert_select "#forecast-starting-balance strong", text: "Not available"
     assert_select "#forecast-starting-balance small", text: /latest statements.*no usable closing balances saved/
-    assert_equal transactions_before, @user.finance_transactions.order(:id).map(&:attributes)
+    assert_equal [first.reload.bank_account_id], first.transactions.distinct.pluck(:bank_account_id)
+    assert_nil second.transactions.sole.bank_account_id
+    assert_equal transactions_before, @user.finance_transactions.order(:id).map { |row| row.attributes.except("bank_account_id", "updated_at") }
   end
 
   test "a credit-only account explains why its debt is not a cash balance" do

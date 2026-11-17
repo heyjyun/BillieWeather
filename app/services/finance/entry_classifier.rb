@@ -6,9 +6,12 @@ module Finance
     module_function
 
     # Returns [kind, category].
-    def classify(description:, amount:, account_type:, category:, user_id: nil)
+    def classify(description:, amount:, account_type:, category:, user_id: nil, income_categories: nil)
       category = category.presence || "Uncategorized"
-      income = (user_id && !Transaction::CATEGORIES.include?(category) && Transaction.income_category?(user_id, category)) ? [category] : []
+      custom_income = if user_id && !Transaction::CATEGORIES.include?(category)
+        income_categories ? income_categories.include?(category.downcase) : Transaction.income_category?(user_id, category)
+      end
+      income = custom_income ? [category] : []
       kind = Domain.kind_for_categorized(amount: amount, account_type: account_type, description: description, category: category, income_categories: income)
       [kind, Transaction.category_for_kind(kind, category)]
     end

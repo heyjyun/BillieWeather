@@ -16,6 +16,7 @@ vi.mock("../src/services/platform", async () => {
       if (!files.has(file)) {
         const db = new SQL.Database();
         migrate(db);
+        db.run("INSERT INTO settings (key, value) VALUES ('owner_account_id', 'id:12345678-1234-4123-8123-123456789abd')");
         db.run("INSERT INTO settings (key, value) VALUES ('database_name', 'Mode book')");
         files.set(file, sqljsDriver(db));
       }

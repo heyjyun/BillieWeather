@@ -199,4 +199,31 @@ class ClientApiFinanceTest < ActionDispatch::IntegrationTest
       assert_raises(ActionController::RoutingError) { Rails.application.routes.recognize_path("/api/client/v1/finance/transactions", method: verb) }
     end
   end
+
+  test "uploaded statements preserve explicit kinds and original bank descriptions" do
+    rows = [{booked_on: "2026-10-15", description: "My edited label", original_description: "ZXQ OUTFITTERS 0042",
+             amount: "30.00", category: "Uncategorized", kind: "refund", tax_review: false, excluded: false}]
+    upload(statement_payload(rows: rows))
+    assert_response :created
+    entry = Finance::Statement.find(response.parsed_body["id"]).transactions.sole
+    assert_equal ["refund", "My edited label", "ZXQ OUTFITTERS 0042"], [entry.kind, entry.description, entry.original_description]
+
+    # Re-uploading the same bank row with another display label must still deduplicate.
+    upload(statement_payload(sha: "b" * 64, rows: rows.map { |row| row.merge(description: "Another edited label") }))
+    assert_response :conflict
+    assert_equal "all_duplicates", response.parsed_body["error"]
+  end
+
+  test "invalid transferred classification or evidence is rejected without inserting anything" do
+    [{kind: "made_up"}, {original_description: ""}, {original_description: "x" * 501}, {original_description: 42}].each do |invalid|
+      payload = statement_payload
+      payload[:transactions][0].merge!(invalid)
+      assert_no_difference -> { Finance::Transaction.count } do
+        upload(payload)
+      end
+      assert_response :unprocessable_entity
+    end
+    upload(statement_payload(rows: ["malformed"]))
+    assert_response :unprocessable_entity
+  end
 end

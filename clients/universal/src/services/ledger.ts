@@ -290,7 +290,7 @@ export class LedgerStore {
   private async runUndo(step: UndoStep): Promise<void> {
     switch (step.op) {
       case "set": {
-        const allowed = ["category", "category_source", "category_confidence", "category_model", "kind", "description", "excluded", "merchant_id", "project_id", "user_locked_fields", "locally_modified", "tax_review", "note", "account_id"];
+        const allowed = ["category", "category_source", "category_confidence", "category_model", "kind", "description", "excluded", "merchant_id", "project_id", "user_locked_fields", "locally_modified", "tax_review", "note", "account_id", "link_hint", "link_target_id"];
         const fields = Object.entries(step.fields).filter(([key]) => allowed.includes(key));
         if (fields.length === 0) return;
         await this.db.execute(`UPDATE transactions SET ${fields.map(([key]) => `${key} = ?`).join(", ")}, updated_at = ? WHERE id = ?`, [...fields.map(([, value]) => value), now(), step.id]);
@@ -850,7 +850,8 @@ export class LedgerStore {
   async updateEntry(id: number, input: EntryInput, actor = "user"): Promise<void> {
     const before = await this.entry(id);
     if (before.deletedAt) throw new LedgerError("not_found", "Restore the entry from the trash first.");
-    const problems = await this.validate({ ...input, refundOf: input.kind === "refund" && input.refundOf !== undefined ? input.refundOf : undefined }, id);
+    const refundTarget = input.kind === "refund" ? input.refundOf === undefined ? before.refundOf?.id : input.refundOf : undefined;
+    const problems = await this.validate({ ...input, refundOf: refundTarget }, id);
     if (problems.length > 0) throw new LedgerError(problems.includes("refund_too_large") ? "refund_too_large" : "invalid_entry", `Cannot save: ${problems.join(", ")}`, problems);
     const merchantId = await this.dimensionId("merchant", input.merchant, actor);
     const projectId = await this.dimensionId("project", input.project, actor);
@@ -904,19 +905,11 @@ export class LedgerStore {
       const manual = before.origin === "manual" || before.origin === "recurring";
       await this.db.execute(
         `UPDATE transactions SET account_id = ?, ${manual ? "amount_cents = ?, booked_on = ?, direction = ?," : ""} occurred_at_time = ?, kind = ?, category = ?, description = ?, note = ?, merchant_id = ?, project_id = ?,
-           category_source = CASE WHEN category <> ? THEN 'user' ELSE category_source END, user_locked_fields = ?, locally_modified = 1, tax_review = CASE WHEN ? = 'Business' THEN 1 ELSE tax_review END, updated_at = ? WHERE id = ?`,
+           category_source = CASE WHEN category <> ? THEN 'user' ELSE category_source END, user_locked_fields = ?, locally_modified = 1, tax_review = CASE WHEN ? = 'Business' THEN 1 ELSE tax_review END,
+           link_hint = ?, link_target_id = ?, updated_at = ? WHERE id = ?`,
         [input.accountId, ...(manual ? [amount, input.occurredOn, amount < 0 ? "debit" : amount > 0 ? "credit" : "zero"] : []), time, input.kind, category, description, note, merchantId, projectId,
-          category, JSON.stringify([...locked]), category, stamp, id],
+          category, JSON.stringify([...locked]), category, input.kind === "refund" ? "refund_of" : null, refundTarget ?? null, stamp, id],
       );
-      if (input.kind === "refund" && input.refundOf !== undefined) {
-        await this.db.execute("DELETE FROM transaction_links WHERE from_transaction_id = ? AND link_type = 'refund_of'", [id]);
-        if (input.refundOf) {
-          await this.db.execute("INSERT INTO transaction_links (uuid, link_type, from_transaction_id, to_transaction_id, amount_cents, status, decided_by, created_at) VALUES (?, 'refund_of', ?, ?, ?, 'confirmed', 'user', ?)",
-            [randomId(), id, input.refundOf, manual ? amount : before.amountCents, stamp]);
-        }
-      } else if (before.kind === "refund" && input.kind !== "refund") {
-        await this.db.execute("DELETE FROM transaction_links WHERE from_transaction_id = ? AND link_type = 'refund_of'", [id]);
-      }
       if (input.tags) await this.setTags([id], input.tags, actor, false);
     }
     const after = await this.entry(id);
@@ -1090,17 +1083,16 @@ export class LedgerStore {
     const refund = await this.entry(refundId);
     const expense = await this.entry(expenseId);
     if (refund.deletedAt || expense.deletedAt) throw new LedgerError("not_found", "Restore the entry from the trash first.");
-    if (refund.amountCents <= 0 || expense.amountCents >= 0) throw new LedgerError("invalid_entry", "A refund links money in to an expense.", ["refund_target_required"]);
+    if (refund.amountCents <= 0 || expense.amountCents >= 0 || expense.kind !== "expense") throw new LedgerError("invalid_entry", "A refund links money in to an expense.", ["refund_target_required"]);
+    if (refund.refundOf?.id === expenseId) return;
     if (refund.amountCents > (await this.entry(expenseId)).refundableCents) throw new LedgerError("refund_too_large", "The refunds would be larger than the expense.", ["refund_too_large"]);
     const [row] = await this.db.select<Row>("SELECT kind, category, user_locked_fields, category_source FROM transactions WHERE id = ?", [refundId]);
-    await this.db.execute("UPDATE transactions SET kind = 'refund', category = ?, category_source = CASE WHEN ? = 'ai' THEN 'ai' ELSE 'user' END, locally_modified = 1, updated_at = ? WHERE id = ?",
-      [expense.category, decidedBy, now(), refundId]);
-    await this.db.execute("INSERT INTO transaction_links (uuid, link_type, from_transaction_id, to_transaction_id, amount_cents, status, decided_by, created_at) VALUES (?, 'refund_of', ?, ?, ?, 'confirmed', ?, ?)",
-      [randomId(), refundId, expenseId, refund.amountCents, decidedBy, now()]);
-    const [link] = await this.db.select<Row>("SELECT id FROM transaction_links WHERE from_transaction_id = ? AND to_transaction_id = ? AND link_type = 'refund_of'", [refundId, expenseId]);
+    await this.db.execute("UPDATE transactions SET kind = 'refund', category = ?, category_source = ?, locally_modified = 1, link_hint = 'refund_of', link_target_id = ?, updated_at = ? WHERE id = ?",
+      [expense.category, decidedBy === "ai" || decidedBy === "rule" ? decidedBy : "user", expenseId, now(), refundId]);
     await this.audit({ actor, action: "link", subjectType: "transaction", subjectId: refund.uuid, batchId, summary: `refund of ${expense.description}`,
       changes: { kind: [row.kind, "refund"], category: [row.category, expense.category] },
-      undo: [{ op: "delete_link", id: Number(link.id) }, { op: "set", table: "transactions", id: refundId, fields: { kind: row.kind, category: row.category, category_source: row.category_source, user_locked_fields: row.user_locked_fields } }] });
+      undo: [{ op: "set", table: "transactions", id: refundId, fields: { kind: row.kind, category: row.category, category_source: row.category_source,
+        user_locked_fields: row.user_locked_fields, link_hint: "refund_of", link_target_id: refund.refundOf?.id ?? null } }] });
   }
 
   /** Pairs two existing rows (one out, one in, opposite amounts, different accounts) as a transfer or card payment. */

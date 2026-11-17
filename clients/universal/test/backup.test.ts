@@ -98,4 +98,61 @@ describe("local backup and restore", () => {
     expect(backupFileName("ZXQ Household / 2026", new Date("2026-11-15T00:00:00Z"))).toBe("billieweather-backup-ZXQ-Household-2026-2026-11-15.bwbackup");
     expect(backupFileName(null, new Date("2026-11-15T00:00:00Z"))).toBe("billieweather-backup-book-2026-11-15.bwbackup");
   });
+
+  it("refuses a target holding only custom categories and preserves that data on failure", async () => {
+    const backup = await createBackup((await populated()).driver);
+    const target = await emptyDatabase();
+    await target.store.addCategory("Existing category");
+    expect(await target.store.hasContent()).toBe(true);
+    await expect(restoreInto(target.driver, backup)).rejects.toMatchObject({ code: "target_not_empty" });
+    expect(await target.store.customCategories()).toEqual(["Existing category"]);
+  });
+
+  it("rejects malformed JSON documents and never silently drops orphaned financial rows", async () => {
+    for (const invalid of [null, [], { format: "billieweather-backup", version: 1, tables: {}, manifest: {} }]) {
+      await expect(readBackup(new TextEncoder().encode(JSON.stringify(invalid)))).rejects.toBeInstanceOf(BackupError);
+    }
+    const backup = await createBackup((await populated()).driver);
+    const index = backup.tables.transactions.columns.indexOf("account_id");
+    backup.tables.transactions.rows[0][index] = 999999;
+    backup.checksum = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(backup.tables))))].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    const target = await emptyDatabase();
+    await expect(restoreInto(target.driver, backup)).rejects.toMatchObject({ code: "verify_failed" });
+    expect(await target.store.transactions()).toEqual([]);
+  });
+
+  it("checks integrity at the restore boundary, including callers that bypass readBackup", async () => {
+    const backup = await createBackup((await populated()).driver);
+    backup.tables.transactions.rows[0][backup.tables.transactions.columns.indexOf("description")] = "changed";
+    const target = await emptyDatabase();
+    await expect(restoreInto(target.driver, backup)).rejects.toMatchObject({ code: "damaged" });
+    expect(await target.store.hasContent()).toBe(false);
+  });
+  it("rejects fractional cents even when their sum and checksum are valid", async () => {
+    const backup = await createBackup((await populated()).driver);
+    const data = backup.tables.transactions;
+    const index = data.columns.indexOf("amount_cents");
+    data.rows[0][index] = 1.5;
+    data.rows[1][index] = 2.5;
+    backup.manifest.transactionsAmountCents = data.rows.reduce((sum, row) => sum + Number(row[index]), 0);
+    backup.checksum = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(backup.tables))))].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    const target = await emptyDatabase();
+    await expect(restoreInto(target.driver, backup)).rejects.toMatchObject({ code: "damaged" });
+    expect(await target.store.hasContent()).toBe(false);
+  });
+
+  it("excludes device settings by column name when a backup reorders its columns", async () => {
+    const backup = await createBackup((await populated()).driver);
+    const settings = backup.tables.settings;
+    settings.rows.push(["report_id", "source-device-identity"]);
+    settings.columns.reverse();
+    settings.rows = settings.rows.map((row) => [...row].reverse());
+    backup.manifest.rows.settings = settings.rows.length;
+    backup.checksum = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(backup.tables))))].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    const target = await emptyDatabase();
+    await restoreInto(target.driver, backup, { owner: "id:new-owner" });
+    expect(await target.store.peekReportId()).toBeNull();
+    expect(await target.store.owner()).toBe("id:new-owner");
+  });
+
 });

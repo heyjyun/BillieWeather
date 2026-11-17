@@ -58,11 +58,12 @@ module Finance
       scope = Transaction.live.where(user_id: user.id).includes(:merchant, :bank_account, statement: :bank_account).order(booked_on: :desc, id: :desc)
       scope = scope.where("booked_on >= ?", period.start_date) if period.start_date
       scope = scope.where("booked_on <= ?", period.end_date) if period.end_date
-      scope.each { |transaction| yield self.class.row_for(transaction, user: user) }
+      currency = profile.currency || "USD"
+      scope.each { |transaction| yield self.class.row_for(transaction, user: user, currency: currency) }
     end
 
     # One export row for a transaction the caller has already scoped to `user`.
-    def self.row_for(transaction, user:)
+    def self.row_for(transaction, user:, currency: nil)
       raise ArgumentError, "transaction must belong to user" unless transaction.user_id == user.id
       statement = transaction.statement
       account = [transaction.bank_account, statement&.bank_account].compact.find { |candidate| candidate.user_id == user.id }
@@ -73,7 +74,7 @@ module Finance
         description: transaction.description,
         category: transaction.category,
         amount: transaction.amount,
-        currency: statement&.currency || Profile.find_by(user_id: user.id)&.currency || "USD",
+        currency: statement&.currency || currency || Profile.find_by(user_id: user.id)&.currency || "USD",
         tax_review: transaction.tax_review,
         excluded: transaction.excluded,
         counted: transaction.counted?

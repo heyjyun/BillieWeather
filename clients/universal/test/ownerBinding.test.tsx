@@ -22,6 +22,8 @@ vi.mock("../src/services/platform", async () => {
           db.run("INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, updated_at, kind) VALUES (1,'2026-01-02','ALICE PRIVATE ROW',-500,'Shopping','x','expense')");
           db.run("INSERT INTO settings (key, value) VALUES ('currency','USD'), ('database_name','Alice Mac')");
         }
+        const bound = (globalThis as { __boundOwner?: string | null }).__boundOwner;
+        if (file === "billieweather.db" && bound) db.run("INSERT INTO settings (key, value) VALUES ('owner_account_id', ?)", [bound]);
         files.set(file, sqljsDriver(db));
       }
       return { driver: files.get(file)!, persistent: true };
@@ -70,11 +72,15 @@ async function ownerOf(file: string): Promise<string | null> {
   return row?.value ?? null;
 }
 
-beforeEach(() => { localStorage.clear(); sessionStorage.clear(); files.clear(); webRequests.length = 0; (globalThis as { __legacy?: boolean }).__legacy = true; fakeServer(); });
+beforeEach(() => { localStorage.clear(); sessionStorage.clear(); files.clear(); webRequests.length = 0; (globalThis as { __boundOwner?: string | null }).__boundOwner = null; (globalThis as { __legacy?: boolean }).__legacy = true; fakeServer(); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
-it("the first account claims the pre-owner database; a second account gets its own and never sees, downloads into or changes the first", async () => {
+it("the first account explicitly claims the pre-owner database; a second account gets its own and never sees, downloads into or changes the first", async () => {
   await signInAs({ email: "alice@example.com", owner_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" });
+  await screen.findByRole("heading", { name: "Is this database yours?" });
+  expect(await ownerOf("billieweather.db")).toBeNull();
+  expect(webRequests).toEqual([]);
+  await act(async () => screen.getByRole("button", { name: "Yes, it's mine" }).click());
   await screen.findByRole("navigation");
   await waitFor(async () => expect(await rowsIn("billieweather.db")).toContain("ALICE WEB ROW"));
   expect(await ownerOf("billieweather.db")).toBe("id:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
@@ -112,10 +118,33 @@ it("an unowned database with data outside this account's list is only used after
 
 it("an older server without owner ids binds by the email hash and upgrades to the id later", async () => {
   await signInAs({ email: "erin@example.com", owner_id: null as unknown as string });
+  await screen.findByRole("heading", { name: "Is this database yours?" });
+  await act(async () => screen.getByRole("button", { name: "Yes, it's mine" }).click());
   await screen.findByRole("navigation");
   expect(await ownerOf("billieweather.db")).toMatch(/^email:[0-9a-f]{64}$/);
   await act(async () => { await signInAs({ email: "erin@example.com", owner_id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee" }); });
+  await screen.findByRole("heading", { name: "Is this database yours?" });
+  await act(async () => screen.getByRole("button", { name: "Yes, it's mine" }).click());
   await screen.findByRole("navigation");
   await waitFor(async () => expect(await ownerOf("billieweather.db")).toBe("id:eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"));
   expect(await rowsIn("billieweather.db")).toContain("ALICE PRIVATE ROW");
+});
+
+it("does not use a saved token for cloud access until its cached account has been verified", async () => {
+  (globalThis as { __boundOwner?: string }).__boundOwner = "id:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  who = { email: "bob@example.com", owner_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" };
+  sessionStorage.setItem("billie.token", "bob-token");
+  localStorage.setItem("billie.account", JSON.stringify({ email: "alice@example.com", ownerId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", locale: "en" }));
+  let verify!: (response: Response) => void;
+  const pending = new Promise<Response>((resolve) => { verify = resolve; });
+  const original = vi.mocked(fetch).getMockImplementation()!;
+  vi.mocked(fetch).mockImplementation((input, init) => String(input).endsWith("/api/client/v1/account") ? pending : original(input, init));
+  render(<App />);
+  await screen.findByRole("navigation");
+  await waitFor(async () => expect(await ownerOf("billieweather.db")).toBe("id:aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"));
+  await act(async () => { await Promise.resolve(); });
+  expect(webRequests).toEqual([]);
+  await act(async () => { verify(new Response(JSON.stringify({ account: accountJson() }), { status: 200 })); });
+  await screen.findByRole("heading", { name: "Name this device's database" });
+  expect(await rowsIn("billieweather.db")).toEqual(["ALICE PRIVATE ROW"]);
 });

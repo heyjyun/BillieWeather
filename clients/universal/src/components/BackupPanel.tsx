@@ -88,7 +88,12 @@ export function BackupPanel() {
           {snapshots.map((snapshot) => (
             <li key={snapshot.name}>
               <span>{snapshot.database} · v{snapshot.version} · {new Date(snapshot.created * 1000).toLocaleString()} · {Math.ceil(snapshot.size / 1024)} KB</span>{" "}
-              <button type="button" className="bw-link-button" disabled={busy} onClick={async () => setStatus((await openSnapshot(snapshot.name)) ? { ok: true, text: x.snapshotRestored } : { ok: false, text: x.errors.no_room })}>{x.restoreSnapshot}</button>
+              <button type="button" className="bw-link-button" disabled={busy} onClick={async () => {
+                setBusy(true);
+                try { setStatus((await openSnapshot(snapshot.name)) ? { ok: true, text: x.snapshotRestored } : { ok: false, text: x.errors.no_room }); }
+                catch (error) { fail(error); }
+                finally { setBusy(false); }
+              }}>{x.restoreSnapshot}</button>
             </li>
           ))}
         </ul>

@@ -22,6 +22,7 @@ export async function uploadStatement(token: string, statement: TransferStatemen
           transactions: statement.rows.map((row) => ({
             booked_on: row.bookedOn, description: row.description, amount: centsToDecimalString(row.amountCents),
             category: row.category, tax_review: row.taxReview, excluded: row.excluded,
+            kind: row.kind, original_description: row.originalDescription,
           })),
         },
       }),

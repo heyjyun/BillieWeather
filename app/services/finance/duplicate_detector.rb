@@ -22,8 +22,12 @@ module Finance
     end
 
     # Existing stored rows of a user, in the shape the detector reads.
-    def self.stored_rows(user)
-      Transaction.live.where(user_id: user.id).pluck(:id, :bank_account_id, :booked_on, :amount, :original_description).map do |id, account, date, amount, description|
+    def self.stored_rows(user, dates: nil, account_id: nil)
+      scope = Transaction.live.where(user_id: user.id)
+      scope = scope.where(booked_on: dates) if dates
+      # An unknown account must remain a review candidate; a different known account cannot match.
+      scope = scope.where(bank_account_id: [account_id, nil]) if account_id
+      scope.pluck(:id, :bank_account_id, :booked_on, :amount, :original_description).map do |id, account, date, amount, description|
         {id: id, account: account, date: date, amount: amount, description: description, reference: nil}
       end
     end

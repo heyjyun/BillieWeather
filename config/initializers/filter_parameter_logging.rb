@@ -10,5 +10,7 @@ Rails.application.config.filter_parameters += [
   # Transaction search words ("pharmacy", a payee name) describe someone's spending.
   :search,
   # Typed commands (Finance::CommandsController): the text, merchant phrases and amounts in a plan.
-  :plan, :confirmation
+  :plan, :confirmation,
+  # Manual ledger fields and automation payloads contain private financial context too.
+  :entry, :transaction, :recurring_rule, :budget, :dimension, :merchant, :project, :tag, :note, :template, :proposals, :undo
 ]

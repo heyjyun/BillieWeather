@@ -2,6 +2,7 @@
 // Local database metadata is reported automatically (there is no switch), and when the app reports.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
+import { emailOwnerKey } from "../src/services/databases";
 import { migrate } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
@@ -15,6 +16,7 @@ vi.mock("../src/services/platform", async () => {
       if (!files.has(file)) {
         const db = new SQL.Database();
         migrate(db);
+        db.run("INSERT INTO settings (key, value) VALUES ('owner_account_id', ?)", [await emailOwnerKey("jyun@example.com")]);
         if (file === "billieweather.db") db.run("INSERT INTO settings (key, value) VALUES ('database_name','Home Mac')");
         files.set(file, sqljsDriver(db));
       }

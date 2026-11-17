@@ -41,7 +41,8 @@ async function readCloud(token: string): Promise<TransferData> {
   const rows = new Map<number, TransferData["statements"][number]["rows"]>();
   for (const t of web.transactions) {
     const list = rows.get(t.remoteStatementId) ?? [];
-    list.push({ bookedOn: t.bookedOn, description: t.description, amountCents: t.amountCents, category: t.category, taxReview: t.taxReview, excluded: t.excluded });
+    list.push({ bookedOn: t.bookedOn, description: t.description, amountCents: t.amountCents, category: t.category, taxReview: t.taxReview, excluded: t.excluded,
+      kind: t.kind, originalDescription: t.originalDescription });
     rows.set(t.remoteStatementId, list);
   }
   return {
@@ -50,6 +51,7 @@ async function readCloud(token: string): Promise<TransferData> {
       closingBalanceOn: s.closingBalanceOn, importedAt: s.importedAt, rows: rows.get(s.remoteId) ?? [],
     })),
     rules: web.rules,
+    categories: web.categories,
   };
 }
 

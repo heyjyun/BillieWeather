@@ -20,7 +20,7 @@ module Finance
     MANUAL_KINDS = %w[expense income transfer refund adjustment].freeze
     # Fields of an imported entry a person may change (the amount, date and account are the bank's).
     DISPLAY_FIELDS = %w[description category kind merchant_id project_id note excluded tax_review occurred_at_time].freeze
-    AUDITED = %w[booked_on occurred_at_time amount kind category description note bank_account_id merchant_id project_id excluded tax_review deleted_at].freeze
+    AUDITED = %w[booked_on occurred_at_time amount kind category description note bank_account_id merchant_id project_id excluded tax_review deleted_at category_source user_locked_fields].freeze
 
     attr_reader :user
 
@@ -64,6 +64,10 @@ module Finance
         else
           apply_display(entry, p)
         end
+        # Category validation may normalize kind; check relations against the final kind.
+        entry.validate!
+        entry.outgoing_links.where(link_type: "refund_of").destroy_all if entry.kind != "refund"
+        validate_refund_integrity!(entry)
         entry.lock_fields!(*locked_fields_for(p, entry))
         entry.save!
         audit("update", entry, before, snapshot(entry), actor: actor)
@@ -89,6 +93,8 @@ module Finance
         group(own(entry.id, trashed: true)).each do |record|
           next unless record.deleted_at
           before = snapshot(record)
+          record.deleted_at = nil
+          validate_refund_integrity!(record)
           record.update_columns(deleted_at: nil, updated_at: Time.current)
           audit("restore", record, before, snapshot(record), actor: actor)
         end
@@ -145,7 +151,7 @@ module Finance
 
     # Undoes every audited change of one batch (AI apply, batch edit) that has not changed since.
     def undo_batch(batch_id, actor: "user")
-      events = AuditEvent.where(user_id: @user.id, batch_id: batch_id).where(subject_type: "Transaction").order(id: :desc).to_a
+      events = AuditEvent.where(user_id: @user.id, batch_id: batch_id).where(subject_type: "Transaction").where.not(action: "ai_undo").order(id: :desc).to_a
       raise Invalid, "nothing_to_undo" if events.empty?
       skipped = 0
       locked do
@@ -158,9 +164,13 @@ module Finance
           end
           before = snapshot(entry)
           (event.changes_data["before"] || {}).each do |field, value|
-            next if field == "tag_ids"
-            entry.public_send("#{field}=", (field == "deleted_at" && value) ? Time.zone.parse(value) : value)
+            if field == "tag_ids"
+              entry.tag_ids = value
+            else
+              entry.public_send("#{field}=", (field == "deleted_at" && value) ? Time.zone.parse(value) : value)
+            end
           end
+          validate_refund_integrity!(entry)
           entry.save!(validate: false)
           audit("ai_undo", entry, before, snapshot(entry), actor: actor, batch_id: batch_id)
         end
@@ -387,7 +397,25 @@ module Finance
     end
 
     def refunded_total(expense)
-      TransactionLink.joins(:from_transaction).where(link_type: "refund_of", to_transaction_id: expense.id, finance_transactions: {deleted_at: nil}).sum(:amount)
+      TransactionLink.confirmed.joins(:from_transaction).where(link_type: "refund_of", to_transaction_id: expense.id, finance_transactions: {deleted_at: nil}).sum("finance_transactions.amount")
+    end
+
+    # Creation is only one way the cap can change: restoring a trashed refund and reducing or
+    # reclassifying its expense must satisfy the same invariant, under the same per-user lock.
+    def validate_refund_integrity!(entry)
+      received = refunded_total(entry)
+      if received.positive? && (entry.kind != "expense" || entry.amount >= 0 || received > -entry.amount)
+        raise Invalid, "refund_too_large"
+      end
+      return if entry.deleted_at || entry.kind != "refund"
+      entry.outgoing_links.confirmed.where(link_type: "refund_of").each do |link|
+        target = link.to_transaction
+        other_refunds = TransactionLink.confirmed.joins(:from_transaction).where(link_type: "refund_of", to_transaction_id: target.id,
+          finance_transactions: {deleted_at: nil}).where.not(from_transaction_id: entry.id).sum("finance_transactions.amount")
+        if target.kind != "expense" || entry.amount <= 0 || other_refunds + entry.amount > -target.amount
+          raise Invalid, "refund_too_large"
+        end
+      end
     end
 
     def transfer_partner(entry)

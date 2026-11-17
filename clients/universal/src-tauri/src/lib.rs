@@ -68,6 +68,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0007_ledger.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 8,
+            description: "refund integrity on edits, links and restore",
+            sql: include_str!("../migrations/0008_refund_integrity.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -80,15 +86,14 @@ pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
             // Before any database is opened (and migrated) by the web view: copy every slot file
-            // whose schema is about to change. A failed copy does not stop the app (nothing is
-            // printed: logs must never carry anything about a person's data); the app's Data page
-            // lists the copies that exist.
+            // whose schema is about to change. Refuse startup if protection fails: otherwise the
+            // SQL plugin could migrate the only copy. Report a generic error without data paths.
             use tauri::Manager;
-            if let Ok(dir) = app.path().app_config_dir() {
-                let version = migrations().len() as u32;
-                for slot in 1..=MAX_DATABASES {
-                    let _ = snapshot::snapshot_if_needed(&dir, &slot_name(slot), version);
-                }
+            let dir = app.path().app_config_dir()?;
+            let version = migrations().len() as u32;
+            for slot in 1..=MAX_DATABASES {
+                snapshot::snapshot_if_needed(&dir, &slot_name(slot), version)
+                    .map_err(|_| std::io::Error::other("Could not protect the local database before migration"))?;
             }
             Ok(())
         })

@@ -62,4 +62,22 @@ class Finance::DuplicateImportTest < ActiveSupport::TestCase
     assert_equal "ZELLE TO SAM Q", entry.reload.original_description
     assert_equal "Dinner split with Sam", entry.description
   end
+
+  test "assigning and reassigning a statement moves its ledger entries and dedupe account" do
+    statement, = import("unassigned.csv", "Date,Description,Amount\n2026-10-01,ZXQ COFFEE,-3.50\n")
+    account = Finance::BankAccount.create!(user: @user, manual: true, name: "Checking", account_type: "checking")
+    statement.update!(bank_account: account)
+    entry = statement.transactions.sole
+    assert_equal account.id, entry.bank_account_id
+    assert_equal BigDecimal("-3.50"), account.balance
+    _, importer = import("overlap.csv", "Date,Description,Amount\n2026-10-01,ZXQ COFFEE,-3.50\n2026-10-02,ZXQ COFFEE,-4.50\n", account: account)
+    assert_equal 1, importer.duplicates_skipped
+    replacement = Finance::BankAccount.create!(user: @user, manual: true, name: "Replacement", account_type: "checking")
+    statement.update!(bank_account: replacement)
+    assert_equal replacement.id, entry.reload.bank_account_id
+    entry.lock_fields!("account")
+    entry.save!
+    statement.update!(bank_account: account)
+    assert_equal replacement.id, entry.reload.bank_account_id, "an explicit entry override wins"
+  end
 end

@@ -1,27 +1,29 @@
 import { icons } from "@billie/design-tokens";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { emailOwnerKey, ownerKeyFor } from "./services/databases";
 import { AccountProvider, useAccount } from "./hooks/useAccount";
 import { FinanceProvider, useFinance } from "./hooks/useFinance";
 import { I18nProvider, useI18n } from "./i18n";
 import { Dashboard } from "./pages/Dashboard";
-import { Categories } from "./pages/Categories";
-import { Data } from "./pages/Data";
-import { Import } from "./pages/Import";
 import { Login } from "./pages/Login";
-import { Reports } from "./pages/Reports";
-import { Settings } from "./pages/Settings";
-import { Transactions } from "./pages/Transactions";
-import { Accounts } from "./pages/Accounts";
-import { Planning } from "./pages/Planning";
-import { Lists } from "./pages/Lists";
-import { Manual } from "./pages/Manual";
 import { ModeProvider, useMode, type Mode } from "./hooks/useMode";
 import { SyncStatus } from "./components/SyncStatus";
 import { CommandCenter } from "./components/CommandCenter";
 import type { TransactionFilter } from "./commands/handlers";
 import type { TransactionKind } from "@billie/shared-types";
 import { saveSidebarCollapsed, savedSidebarCollapsed } from "./services/theme";
+
+// Load secondary workspaces when opened, so startup does not parse the import/report/editor UI.
+const Categories = lazy(() => import("./pages/Categories").then((module) => ({ default: module.Categories })));
+const Data = lazy(() => import("./pages/Data").then((module) => ({ default: module.Data })));
+const Import = lazy(() => import("./pages/Import").then((module) => ({ default: module.Import })));
+const Reports = lazy(() => import("./pages/Reports").then((module) => ({ default: module.Reports })));
+const Settings = lazy(() => import("./pages/Settings").then((module) => ({ default: module.Settings })));
+const Transactions = lazy(() => import("./pages/Transactions").then((module) => ({ default: module.Transactions })));
+const Accounts = lazy(() => import("./pages/Accounts").then((module) => ({ default: module.Accounts })));
+const Planning = lazy(() => import("./pages/Planning").then((module) => ({ default: module.Planning })));
+const Lists = lazy(() => import("./pages/Lists").then((module) => ({ default: module.Lists })));
+const Manual = lazy(() => import("./pages/Manual").then((module) => ({ default: module.Manual })));
 
 export type Page = "dashboard" | "manual" | "transactions" | "accounts" | "categories" | "planning" | "lists" | "import" | "reports" | "data" | "settings";
 
@@ -134,6 +136,7 @@ function Shell() {
         <div className="bw-topline"><ModeSwitch mode={mode} onChange={switchMode} /></div>
         <CommandCenter go={go} />
         <SyncStatus />
+        <Suspense fallback={<div className="bw-boot" role="status">{m.boot.opening}</div>}>
         {page === "dashboard" && <Dashboard go={go} />}
         {page === "manual" && <Manual go={go} />}
         {page === "transactions" && <Transactions key={`${transactionFilter?.key ?? 0}-${transactionIntent?.key ?? 0}`} preset={transactionFilter?.filter} intent={transactionIntent?.intent} />}
@@ -145,6 +148,7 @@ function Shell() {
         {page === "reports" && <Reports />}
         {page === "data" && <Data focus={focus} />}
         {page === "settings" && <Settings />}
+        </Suspense>
         <footer className="bw-footer">{m.footer}</footer>
       </main>
     </div>
@@ -156,21 +160,22 @@ function Gate() {
   const { m } = useI18n();
   // Which account owns the databases this session may open (review P0-1). A new key remounts the
   // provider, so switching accounts never keeps another account's database open.
-  const [keys, setKeys] = useState<{ owner: string; email: string } | null>(null);
+  const [keys, setKeys] = useState<{ owner: string; email: string; identity: string } | null>(null);
   const ownerId = account?.ownerId ?? null;
   const email = account?.email ?? null;
+  const identity = JSON.stringify([ownerId, email]);
   useEffect(() => {
     if (!email) {
       setKeys(null);
       return;
     }
     let cancelled = false;
-    Promise.all([ownerKeyFor({ ownerId, email }), emailOwnerKey(email)]).then(([owner, emailKey]) => { if (!cancelled) setKeys({ owner, email: emailKey }); });
+    Promise.all([ownerKeyFor({ ownerId, email }), emailOwnerKey(email)]).then(([owner, emailKey]) => { if (!cancelled) setKeys({ owner, email: emailKey, identity }); });
     return () => { cancelled = true; };
-  }, [ownerId, email]);
+  }, [ownerId, email, identity]);
   if (status === "loading") return <div className="bw-boot">{m.boot.opening}</div>;
   if (status === "signedOut") return <Login />;
-  if (!keys) return <div className="bw-boot">{m.boot.opening}</div>;
+  if (!keys || keys.identity !== identity) return <div className="bw-boot">{m.boot.opening}</div>;
   return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><ModeProvider><Shell /></ModeProvider></FinanceProvider>;
 }
 

@@ -28,8 +28,8 @@ async function get<T>(path: string, token: string): Promise<T> {
 
 interface Summary { currency: Currency | null; version: string; statement_count: number; transaction_count: number }
 
-export async function fetchWebData(token: string): Promise<WebData & { version: string }> {
-  const summary = await get<Summary>("", token);
+export async function fetchWebData(token: string, knownSummary?: Summary): Promise<WebData & { version: string }> {
+  const summary = knownSummary ?? await get<Summary>("", token);
   const [{ statements }, { rules }, { categories }] = await Promise.all([
     get<{ statements: Array<{ id: number; filename: string; currency: Currency; sha256: string; transaction_count: number; closing_balance: string | null; closing_balance_on: string | null; imported_at: string }> }>("/statements", token),
     get<{ rules: Array<{ merchant_key: string; income: boolean; category: MerchantRule["category"] }> }>("/rules", token),
@@ -42,12 +42,17 @@ export async function fetchWebData(token: string): Promise<WebData & { version: 
   const transactions: WebData["transactions"] = [];
   let afterId = 0;
   for (let page = 0; page < 500; page += 1) {
-    const body = await get<{ transactions: Array<{ id: number; statement_id: number; booked_on: string; description: string; amount: string; category: Category; tax_review: boolean; excluded: boolean }>; next_after_id: number | null }>(`/transactions?after_id=${afterId}`, token);
+    const body = await get<{ transactions: Array<{ id: number; statement_id: number; booked_on: string; description: string; original_description?: string; kind?: string; amount: string; category: Category; tax_review: boolean; excluded: boolean }>; next_after_id: number | null }>(`/transactions?after_id=${afterId}`, token);
     for (const row of body.transactions) {
+      if (!Number.isSafeInteger(row.id) || row.id <= (transactions.at(-1)?.remoteId ?? 0)) throw new AccountError("unknown");
       transactions.push({ remoteId: row.id, remoteStatementId: row.statement_id, bookedOn: row.booked_on, description: row.description,
-        amountCents: decimalToCents(row.amount), category: row.category, taxReview: row.tax_review, excluded: row.excluded });
+        amountCents: decimalToCents(row.amount), category: row.category, taxReview: row.tax_review, excluded: row.excluded,
+        kind: row.kind, originalDescription: row.original_description });
     }
     if (!body.next_after_id) break;
+    // applyWebData removes absent copies. Never let a truncated or looping page sequence reach
+    // it, because absence in a partial response is not evidence that a transaction was deleted.
+    if (page === 499 || !Number.isSafeInteger(body.next_after_id) || body.next_after_id <= afterId || body.next_after_id !== body.transactions.at(-1)?.id) throw new AccountError("unknown");
     afterId = body.next_after_id;
   }
   return {
@@ -75,7 +80,7 @@ export async function syncFromWeb(store: FinanceStore, token: string, options: {
     await store.markWebChecked(null);
     return { status: "upToDate" };
   }
-  const data = await fetchWebData(token);
+  const data = await fetchWebData(token, summary);
   const result = await store.applyWebData(data);
   await store.markWebChecked(data.version);
   return { status: "updated", result };

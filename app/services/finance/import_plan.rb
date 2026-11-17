@@ -16,7 +16,10 @@ module Finance
       @user = user
       @bank_account = bank_account
       @origin = origin
+      @dates = rows.map { |row| row[:booked_on] }.minmax.then { |first, last| first..last } unless rows.empty?
       account_type = bank_account&.account_type
+      custom = rows.any? { |row| row[:category].present? && !Transaction::CATEGORIES.include?(row[:category]) }
+      income_categories = custom ? CategorySetting.where(user_id: user.id, category_kind: "income").pluck(:name).map(&:downcase).to_set : Set.new
       verdicts = dedupe ? DuplicateDetector.call(stored_rows, rows.map { |row| detector_row(row) }) : rows.map { nil }
       @rows = []
       @skipped = 0
@@ -33,8 +36,11 @@ module Finance
         end
         source = row[:category_source] || (from_file ? "file" : category_source)
         kind, category = EntryClassifier.classify(description: row[:description], amount: row[:amount], account_type: account_type,
-          category: row[:category], user_id: user.id)
-        @rows << row.merge(kind: kind, category: category, original_description: row[:description], entry_origin: origin,
+          category: row[:category], user_id: user.id, income_categories: income_categories)
+        # Device transfers already carry the person's explicit classification and bank evidence.
+        kind = row[:kind] || kind
+        category = Transaction.category_for_kind(kind, row[:category] || category)
+        @rows << row.merge(kind: kind, category: category, original_description: row[:original_description] || row[:description], entry_origin: origin,
           category_source: source, bank_account_id: bank_account&.id,
           tax_review: row[:tax_review] || category == "Business", excluded: row[:excluded] || false)
         @flagged << [@rows.length - 1, verdict.of] if verdict&.result == "review"
@@ -65,11 +71,11 @@ module Finance
     private
 
     def stored_rows
-      DuplicateDetector.stored_rows(@user)
+      DuplicateDetector.stored_rows(@user, dates: @dates, account_id: @bank_account&.id)
     end
 
     def detector_row(row)
-      {account: @bank_account&.id, date: row[:booked_on], amount: row[:amount], description: row[:description], reference: nil}
+      {account: @bank_account&.id, date: row[:booked_on], amount: row[:amount], description: row[:original_description] || row[:description], reference: nil}
     end
   end
 end

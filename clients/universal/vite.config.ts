@@ -83,6 +83,11 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    // SQL/WASM and real OCR suites each allocate substantial memory. Unbounded workers cause
+    // contention, spurious UI timeouts, and slower large-import tests on developer machines.
+    maxWorkers: 2,
+    setupFiles: ["./test/setup.ts"],
+    testTimeout: 10_000,
     environment: "node",
     include: ["test/**/*.test.{ts,tsx}", "../../packages/*/test/**/*.test.{ts,tsx}"],
     root: fileURLToPath(new URL(".", import.meta.url)),

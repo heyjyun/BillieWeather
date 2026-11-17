@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { findFileInput } from "./uiHelpers";
 // Automatic region detection on import and the region validator, through the store (real SQLite
 // migrations, sql.js) and the real Import page. Detection is a suggestion: it never changes the
 // region a person selected. Synthetic data only.
@@ -154,7 +155,7 @@ async function openImport() {
 }
 
 async function upload(bytes: Uint8Array, name: string) {
-  const input = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  const input = await findFileInput();
   const file = new File([bytes as BlobPart], name, { type: "text/csv" });
   Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(0) });
   await act(async () => fireEvent.change(input, { target: { files: [file] } }));

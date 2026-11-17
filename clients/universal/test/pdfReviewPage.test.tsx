@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { findFileInput } from "./uiHelpers";
 // Importing a PDF through the real UI: a clear statement imports straight away; an unclear
 // one opens the review, where a row is corrected, another left out, and nothing is saved
 // until the person confirms. (PDF text reading itself is covered in pdfImport.test.ts.)
@@ -49,7 +50,7 @@ beforeEach(() => { localStorage.clear(); sessionStorage.clear(); localStorage.se
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 async function upload(name: string, content: string) {
-  const input = await waitFor(() => document.querySelector<HTMLInputElement>('input[type="file"]')!);
+  const input = await findFileInput();
   expect(input.accept).toContain(".pdf");
   const bytes = new TextEncoder().encode(content);
   const file = new File([bytes as BlobPart], name, { type: "application/pdf" });

@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { findFileInput } from "./uiHelpers";
 // The Categories page through the real UI: add a custom category, run "Categorize with AI"
 // (consent panel → one request to the BillieWeather server → results applied locally), then
 // open the category's details, rename it and delete it.
@@ -69,7 +70,7 @@ it("adds a category, categorizes with AI after consent, and manages the category
   await screen.findByRole("navigation");
 
   nav("Import");
-  const input = await waitFor(() => document.querySelector<HTMLInputElement>('input[type="file"]')!);
+  const input = await findFileInput();
   const bytes = fixtureBytes("basic-amount.csv");
   const file = new File([bytes as BlobPart], "basic-amount.csv", { type: "text/csv" });
   Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
@@ -166,7 +167,7 @@ it("explains a server without AI and an offline device, and changes nothing", as
   await act(async () => fireEvent.click(create));
   await screen.findByRole("navigation");
   nav("Import");
-  const input = await waitFor(() => document.querySelector<HTMLInputElement>('input[type="file"]')!);
+  const input = await findFileInput();
   const bytes = fixtureBytes("basic-amount.csv");
   const file = new File([bytes as BlobPart], "basic-amount.csv", { type: "text/csv" });
   Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
