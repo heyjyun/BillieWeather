@@ -1,0 +1,322 @@
+zh-TW:
+  billie:
+    ledger:
+      origins:
+        receipt: 來自收據
+      errors:
+        match_not_open: 這則建議已經處理過了。
+        already_matched: 這張收據已關聯到一筆交易。請先取消該關聯。
+        match_not_confirmed: 只能取消已確認的關聯。
+        match_not_rejected: 只能重新考慮已拒絕的建議。
+        entry_has_receipt: 這筆交易已經有收據了。
+        entry_is_receipt: 請選擇銀行交易或手動記錄的交易，而不是另一筆收據記錄。
+        already_recorded: 這張收據已記為支出。
+        receipt_incomplete: 請先填寫收據的日期和總額。
+        currency_mismatch: 這張收據的幣別與帳戶不同，無法記為支出。請改為將它關聯到銀行的扣款紀錄。
+        receipt_in_use: 這張收據正作為某筆交易的憑證。請先取消關聯（或刪除該記錄）。
+        not_a_duplicate: 這張收據未被標記為重複。
+        not_dismissed: 這張收據未被略過。
+        source_invalid: 未知的收據來源。
+        receipt_empty: 請選擇照片、圖片或 PDF，或手動輸入收據資訊。
+        file_empty: 檔案是空的。
+        file_invalid: 無法讀取該檔案。
+        file_too_large: 每個收據檔案最大 10 MB。
+        file_type: 請使用 JPEG、PNG、HEIC 或 WebP 圖片，或 PDF。
+        account_not_found: 找不到該帳戶。
+        purchased_on_invalid: 請輸入有效日期。
+        purchased_at_time_invalid: 請輸入有效時間（HH:MM）。
+        total_invalid: 總額須為數字，最多兩位小數。
+        subtotal_invalid: 小計須為數字，最多兩位小數。
+        tax_invalid: 稅額須為數字，最多兩位小數。
+        tip_invalid: 小費須為數字，最多兩位小數。
+        discount_invalid: 折扣須為數字，最多兩位小數。
+        currency_invalid: 請輸入三個字母的幣別代碼，例如 USD。
+        direction_invalid: 請選擇消費或退款。
+        payment_method_invalid: 請選擇付款方式。
+        card_last4_invalid: 請輸入卡號末四碼。
+        category_invalid: 請選擇你的分類之一。
+    receipts:
+      nav: 收據
+      title: 收據
+      eyebrow: 擷取
+      intro: 掃描紙本收據，上傳電子收據、截圖和 PDF。BillieWeather 會讀取內容、與銀行紀錄核對，絕不會把同一筆消費算兩次。
+      untitled: 收據
+      entry_note: 來自收據
+      back: 返回收據
+      unknown: 未知
+      reopen: 重新開啟
+      dismiss: 略過收據
+      dismiss_confirm: 略過這張收據？它仍保留在你的紀錄中，之後可以重新開啟。
+      capture:
+        heading: 新增收據
+        scan: 掃描收據
+        scan_help: 在手機上會開啟相機。請將收據放平，並保持光線充足。
+        scan_input: 收據照片
+        scan_submit: 使用照片
+        upload: 上傳收據
+        upload_help: 將圖片、截圖或 PDF 收據拖到這裡，或選擇檔案。
+        upload_input: 收據檔案
+        limits: "最多 %{count} 個檔案，每個 10 MB。支援 JPEG、PNG、HEIC、WebP 或 PDF。"
+        upload_submit: 上傳
+        statement: 匯入帳單
+        statement_help: 銀行和信用卡帳單（CSV 或 PDF）會自動與你的收據比對。
+        statement_link: 前往帳單
+        manual: 手動輸入收據
+        manual_submit: 新增收據
+      privacy:
+        local_ocr: 收據檔案私密保存在你的 BillieWeather 紀錄中。文字由本伺服器上的本機引擎辨識，收據絕不會傳送給其他服務。
+        no_server_ocr: 收據檔案私密保存在你的 BillieWeather 紀錄中，絕不會傳送給其他服務。網站可以讀取 PDF 收據；照片請手動輸入資訊，或使用 BillieWeather App 或 iOS 捷徑掃描，它們會在手機上辨識文字。
+      recent:
+        heading: 最近匯入
+        source: 來源
+        status: 狀態
+        empty: 還沒有收據
+        empty_help: 掃描或上傳一張收據即可開始。
+        statements: 最近的帳單
+        statement_rows:
+          one: "%{count} 筆交易 · 匯入於 %{date}"
+          other: "%{count} 筆交易 · 匯入於 %{date}"
+      sources:
+        camera: 相機
+        upload: 上傳
+        shortcut: Siri / 捷徑
+        app: BillieWeather App
+        email: 電子郵件
+        manual: 手動輸入
+      fields:
+        merchant_name: 商家
+        purchased_on: 日期
+        purchased_at_time: 時間
+        total: 總額
+        subtotal: 小計
+        tax: 稅額
+        tip: 小費
+        discount: 折扣
+        receipt_number: 收據或發票號碼
+        card_last4: 卡號（末四碼）
+        currency: 幣別
+        payment_method: 付款方式
+        direction: 類型
+        bank_account_id: 付款帳戶
+      payment_methods:
+        card: 卡片
+        cash: 現金
+        mobile: 行動支付
+        other: 其他
+      directions:
+        purchase: 消費
+        refund: 退款或退貨
+      verification:
+        verified: 已核實
+        auto_matched: 已自動比對
+        matched: 已比對
+        bank_record: 銀行紀錄
+        cash: 現金 · 不需銀行紀錄
+        pending_bank_match: 等待銀行入帳
+        needs_review: 待核對
+        possible_duplicate: 可能重複
+        duplicate: 重複副本
+        amount_mismatch: 金額不符
+        foreign_currency: 其他幣別
+        entry_in_trash: 記錄在回收站中
+        dismissed: 已略過
+        missing_receipt: 缺少收據
+        superseded: 已由銀行紀錄取代
+        unverified_manual: 手動輸入
+      field_state:
+        confirmed: 已確認
+        read: 已辨識
+        uncertain: 不確定
+        missing: 缺少
+      levels:
+        exact: 完全相符
+        probable: 很可能相符
+        ambiguous: 可能相符
+        manual: 由你關聯
+      reasons:
+        amount_equal: 金額相同
+        amount_differs_tip: 銀行扣款較多（可能含小費）
+        split_payment: 兩筆扣款合計等於總額
+        currency_differs: 幣別不同，未比較金額
+        merchant_same: 商家相同
+        merchant_similar: 商家名稱寫法不同
+        merchant_weak: 商家名稱僅部分相似
+        merchant_unknown: 無法辨識商家
+        same_day: 同一天
+        posted_later: 銀行較晚入帳
+        posted_earlier: 早一天入帳
+        card_last4_match: 同一張卡
+        receipt_number_match: 收據號碼與銀行參考號一致
+        multiple_candidates: 有多筆交易符合
+        similar_candidates: 另有一筆交易相似
+        low_confidence: 部分收據資訊不確定
+      issues:
+        merchant_missing: 無法辨識商家。
+        date_missing: 無法辨識日期。
+        total_missing: 找不到總額。
+        total_inferred: 沒有標示「總計」的行，已使用最大金額。請核對。
+        totals_inconsistent: 小計、稅額和小費相加不等於總額。
+        multiple_totals: 收據上顯示了不同的總額。
+        date_ambiguous: 日期可解讀為日在前或月在前。
+        future_date: 日期在未來。
+        currency_assumed: 收據上沒有幣別，已預設使用帳戶幣別。
+        low_confidence: 部分資訊難以辨識。
+        text_unavailable: 無法從此檔案讀取文字。請在下方輸入資訊。
+      detail:
+        captured: "%{source} · 新增於 %{date}"
+        details: 收據資訊
+        details_help: 從收據辨識出的值會標示為「已辨識」或「不確定」，直到你確認。儲存即確認顯示的所有欄位。
+        issues: 請核對
+        suggest_category: 自動建議
+        save: 儲存並重新核對
+        line_items: 品項
+        item: 品項
+        quantity: 數量
+        unit_price: 單價
+        line_items_note: 品項從收據辨識，僅供參考；合計以收據總額為準。
+        evidence: 原件與比對
+        original_alt: "%{name} 的收據原件"
+        open_original: 開啟原件
+        download_original: 下載
+        no_file: 無檔案 — 這張收據是手動輸入或以文字傳送的。
+      duplicate:
+        is_copy: 這是你已新增收據的副本，不計入統計。
+        possible: 這張收據似乎已經新增過。在你決定之前不計入統計。
+        confirm: 是的，是副本
+        different: 這是另一筆消費
+      matching:
+        heading: 銀行紀錄
+        auto_linked: 已自動比對
+        linked: 已關聯
+        bank_record: 銀行紀錄
+        why: 原因
+        chosen_by_you: 由你選擇
+        confirm_auto: 確認比對
+        undo: 取消關聯
+        superseded_note: 由這張收據記錄的支出已被擱置，因此這筆消費只按銀行交易計算一次。
+        question: 我們找到一筆可能相符的銀行交易。它們是同一筆消費嗎？
+        score: "分數 %{score}"
+        confirm: 確認比對
+        keep_separate: 保持分開
+        review_details: 查看詳情
+        none: 尚無相符的銀行交易。帳單送達後會自動核對。
+        none_cash: 現金支付 — 不會有銀行紀錄。
+        rejected:
+          one: "%{count} 則你選擇保持分開的建議"
+          other: "%{count} 則你選擇保持分開的建議"
+        reconsider: 重新考慮
+      entry:
+        heading: 在你的交易中
+        superseded: 已擱置 — 改為計算銀行交易
+        trashed: 在回收站中
+        counted: 已計入合計
+        not_recorded: 尚未記為支出。
+        record: 記為支出
+      link:
+        heading: 手動關聯到交易
+        choose: 交易
+        submit: 關聯
+      shortcuts:
+        heading: Siri 與捷徑
+        intro: 搭配一個 iOS 捷徑，說「嘿 Siri，用 BillieWeather 掃描收據」，即可拍下收據、在 iPhone 上辨識文字並傳送到這裡。擷取權杖只允許捷徑新增收據，無法讀取或更改其他任何內容。
+        copy_now: 請立即複製此權杖，它不會再次顯示。
+        step_token: 在下方建立一個擷取權杖並複製。
+        step_actions: 在「捷徑」App 中，加入「拍照」，然後加入「從影像中擷取文字」。
+        step_request: "加入「取得 URL 內容」：以 POST 方式傳送到 %{url}，標頭 Authorization: Bearer <your token>，要求主體選擇「表單」，text = 擷取的文字，file = 照片。"
+        step_name: 將捷徑命名為「用 BillieWeather 掃描收據」，讓 Siri 能辨識這句話。
+        native_note: BillieWeather iPhone App 內建的 Siri 動作需要原生 iOS 版本；在此之前，請使用捷徑。
+        name: 權杖名稱
+        default_name: iPhone 捷徑
+        create: 建立擷取權杖
+        active: "有效期限至 %{date}"
+        inactive: 已撤銷或已過期
+        last_used: "上次使用 %{date}"
+        revoke: 撤銷
+        revoked: 擷取權杖已撤銷。
+        too_many: "最多可有 %{count} 個有效的擷取權杖。請先撤銷一個。"
+      flash:
+        too_many: "每次最多選擇 %{count} 個檔案。"
+        added: 收據已新增。
+        already_added: 這張收據已新增過，未建立新內容。
+        batch: "已新增 %{added} 張，已存在 %{existing} 張，%{failed} 張未新增。"
+        saved: 收據已儲存並重新核對。
+        recorded: 已記為支出。
+        dismissed: 收據已略過。
+        reopened: 收據已重新開啟。
+        not_duplicate: 已作為單獨的消費保留。
+        marked_duplicate: 已標記為副本，不計入統計。
+        linked: 收據已關聯到交易。
+        decision:
+          confirm: 比對已確認。
+          reject: 已保持分開。此組合不會再被建議。
+          undo: 關聯已取消。收據重新單獨計算。
+          reconsider: 該建議已重新開啟。
+      transaction:
+        heading: 來源與核實
+        source: 來源
+        statement: "帳單 %{name}"
+        receipt: 收據
+        no_receipt: 未附收據。
+        attach: 新增收據
+        set_aside:
+          one: "此交易有 %{count} 筆收據記錄已擱置"
+          other: "此交易有 %{count} 筆收據記錄已擱置"
+    reconciliation:
+      nav: 對帳
+      title: 對帳
+      eyebrow: 核實
+      intro: 收據、銀行紀錄和你的帳本相互核對。在你決定之前，任何內容都不會更改。
+      metrics:
+        review: 待核對
+        review_help: 需要你決定的收據
+        matched: 已比對
+        matched_help: 已關聯銀行交易的收據
+        unmatched: 未比對
+        unmatched_help: "%{bank} 張等待銀行入帳 · %{cash} 張現金"
+        discrepancies: 差異
+        discrepancies_help: 不一致的紀錄
+      review:
+        heading: 待核對的交易
+        empty: 沒有需要核對的內容。
+        check_details: 請核對從這張收據辨識出的資訊。
+      discrepancies:
+        heading: 對帳差異
+        intro: 以下內容僅供查看，不會自動更改。第二筆扣款也可能是真實的消費。
+        none: 未發現差異。
+        amount_mismatch:
+          one: "%{count} 張收據與銀行扣款金額不符"
+          other: "%{count} 張收據與銀行扣款金額不符"
+        receipt_vs_bank: "收據 %{receipt}，銀行 %{bank}"
+        duplicate_charges:
+          one: "%{count} 筆可能重複的銀行扣款"
+          other: "%{count} 筆可能重複的銀行扣款"
+        missing_receipts:
+          one: "%{count} 筆待稅務核對的支出沒有收據"
+          other: "%{count} 筆待稅務核對的支出沒有收據"
+        refunds_without_purchase:
+          one: "%{count} 筆退款未關聯消費"
+          other: "%{count} 筆退款未關聯消費"
+        transfers_as_spending:
+          one: "%{count} 筆可能的轉帳被計為支出"
+          other: "%{count} 筆可能的轉帳被計為支出"
+      balances:
+        heading: 帳單餘額
+        consistent: 一致
+        differs: "相差 %{amount}"
+        scope: 僅在同一帳戶中兩份都顯示期末餘額的帳單之間比較餘額。這是連續性檢查，並非完整的銀行對帳，也無法發現兩份帳單中都缺少的交易。
+      matched:
+        heading: 已比對的交易
+        empty: 還沒有已比對的收據。
+      unmatched:
+        heading: 未比對的交易
+        intro: 沒有銀行紀錄的收據。刷卡消費可能需要幾天才會入帳；現金消費永遠不會出現。
+        awaiting_bank:
+          one: "%{count} 張等待銀行入帳"
+          other: "%{count} 張等待銀行入帳"
+        stale: "%{days} 天後仍未出現 — 請查看信用卡帳單"
+        cash:
+          one: "%{count} 筆現金消費"
+          other: "%{count} 筆現金消費"
+      verified:
+        heading: 最近核實
+        empty: 你確認的比對會顯示在這裡。

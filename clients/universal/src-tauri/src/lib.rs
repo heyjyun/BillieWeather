@@ -108,6 +108,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_billie_ocr::init())
         .invoke_handler(tauri::generate_handler![
             device::device_name,

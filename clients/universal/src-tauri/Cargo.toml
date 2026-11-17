@@ -23,6 +23,8 @@ sqlx = { version = "0.8", default-features = false, features = ["sqlite", "runti
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-opener = "2"
+# billieweather:// links (Siri / Shortcuts App Intents, the URL scheme): open a screen, never carry data.
+tauri-plugin-deep-link = "2"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
 # On-device OCR on Android (ML Kit) and iOS (Apple Vision); desktop builds use src/ocr.rs instead.

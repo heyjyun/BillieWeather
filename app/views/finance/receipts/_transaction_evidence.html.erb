@@ -1,0 +1,21 @@
+<% matches = entry.receipt_matches.includes(:receipt).to_a %>
+<% confirmed = matches.select { |match| match.status == "confirmed" } %>
+<% suggested = matches.select { |match| match.status == "suggested" } %>
+<% set_aside = entry.superseded_entries.to_a %>
+<section id="transaction-evidence" aria-labelledby="transaction-evidence-heading">
+  <h2 id="transaction-evidence-heading"><%= t("billie.receipts.transaction.heading") %></h2>
+  <p><%= receipt_badge(entry_verification(entry), id: "transaction-verification") %></p>
+  <dl class="bw-match-card">
+    <dt><%= t("billie.receipts.transaction.source") %></dt>
+    <dd><%= entry.statement ? t("billie.receipts.transaction.statement", name: entry.statement.filename) : t("billie.ledger.origins.#{entry.entry_origin}") %></dd>
+    <dt><%= t("billie.receipts.transaction.receipt") %></dt>
+    <dd><% if confirmed.any? %><% confirmed.each do |match| %><%= link_to match.receipt.display_name, finance_receipt_path(match.receipt) %> <small class="bw-muted"><%= t("billie.receipts.levels.#{match.level}") %><%= " · #{receipt_reasons(match.reason_codes)}" if match.reason_codes.any? %></small><% end %>
+      <% elsif entry.recorded_receipt %><%= link_to entry.recorded_receipt.display_name, finance_receipt_path(entry.recorded_receipt) %>
+      <% elsif suggested.any? %><%= link_to t("billie.receipts.matching.question"), finance_receipt_path(suggested.first.receipt) %>
+      <% else %><%= t("billie.receipts.transaction.no_receipt") %> <%= link_to t("billie.receipts.transaction.attach"), finance_receipts_path, class: "bw-text-link" %><% end %></dd>
+  </dl>
+  <% if confirmed.any? && (receipt = confirmed.first.receipt).verification == "amount_mismatch" %>
+    <p class="bw-review-label"><%= t("billie.reconciliation.discrepancies.receipt_vs_bank", receipt: finance_money(-(receipt.total || 0), receipt.currency || @profile.currency), bank: finance_money(entry.amount, @profile.currency)) %></p>
+  <% end %>
+  <% if set_aside.any? %><p class="bw-caption"><%= t("billie.receipts.transaction.set_aside", count: set_aside.length) %></p><% end %>
+</section>

@@ -1,0 +1,102 @@
+<% content_for :title, t("billie.reconciliation.title") %>
+<% currency = @profile.currency %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.reconciliation.eyebrow") %></span><h1><%= t("billie.reconciliation.title") %></h1><p><%= t("billie.reconciliation.intro") %></p></div><%= link_to t("billie.receipts.capture.upload"), finance_receipts_path, class: "bw-button bw-button-dark" %></div>
+
+<div class="bw-metrics" id="reconciliation-summary">
+  <div class="bw-metric" id="metric-review"><span><%= t("billie.reconciliation.metrics.review") %></span><strong><%= @report.awaiting_review.length %></strong><small><%= t("billie.reconciliation.metrics.review_help") %></small></div>
+  <div class="bw-metric" id="metric-matched"><span><%= t("billie.reconciliation.metrics.matched") %></span><strong><%= @report.matched.length %></strong><small><%= t("billie.reconciliation.metrics.matched_help") %></small></div>
+  <div class="bw-metric" id="metric-unmatched"><span><%= t("billie.reconciliation.metrics.unmatched") %></span><strong><%= @report.awaiting_bank.length + @report.cash.length %></strong><small><%= t("billie.reconciliation.metrics.unmatched_help", bank: @report.awaiting_bank.length, cash: @report.cash.length) %></small></div>
+  <div class="bw-metric" id="metric-discrepancies"><span><%= t("billie.reconciliation.metrics.discrepancies") %></span><strong><%= @report.discrepancy_count %></strong><small><%= t("billie.reconciliation.metrics.discrepancies_help") %></small></div>
+</div>
+
+<section class="bw-panel" id="awaiting-review" aria-labelledby="review-heading">
+  <h2 id="review-heading"><%= t("billie.reconciliation.review.heading") %></h2>
+  <% if @report.awaiting_review.any? %>
+    <% @report.awaiting_review.each do |receipt| suggestion = receipt.suggested_matches.max_by(&:score) %>
+      <div class="bw-match-card" id="review-receipt-<%= receipt.id %>">
+        <div class="bw-field-head"><strong><%= link_to receipt.display_name, finance_receipt_path(receipt) %></strong><%= receipt_badge(receipt.verification) %></div>
+        <small class="bw-muted"><%= [receipt.purchased_on && finance_date(receipt.purchased_on, "%b %-d, %Y"), receipt.total && finance_money(receipt.refund? ? receipt.total : -receipt.total, receipt.currency || currency)].compact.join(" · ") %></small>
+        <% if suggestion %>
+          <p><%= t("billie.receipts.matching.question") %></p>
+          <dl><dt><%= t("billie.receipts.matching.bank_record") %></dt><dd><%= suggestion.finance_transaction.original_description %> · <%= finance_date(suggestion.finance_transaction.booked_on, "%b %-d, %Y") %> · <%= finance_money(suggestion.finance_transaction.amount, currency) %></dd>
+            <dt><%= t("billie.receipts.matching.why") %></dt><dd><%= t("billie.receipts.levels.#{suggestion.level}") %> — <%= receipt_reasons(suggestion.reason_codes) %></dd></dl>
+          <div class="bw-inline-actions">
+            <%= button_to t("billie.receipts.matching.confirm"), finance_receipt_match_decision_path(suggestion, decision: "confirm", from: "reconciliation"), method: :patch, class: "bw-button bw-button-small bw-button-dark", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+            <%= button_to t("billie.receipts.matching.keep_separate"), finance_receipt_match_decision_path(suggestion, decision: "reject", from: "reconciliation"), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+            <%= link_to t("billie.receipts.matching.review_details"), finance_receipt_path(receipt), class: "bw-text-link" %>
+          </div>
+        <% else %>
+          <p class="bw-caption"><%= receipt.status == "possible_duplicate" ? t("billie.receipts.duplicate.possible") : (receipt.issues.map { |code| receipt_issue(code) }.first(2).join(" · ").presence || t("billie.reconciliation.review.check_details")) %></p>
+          <%= link_to t("billie.receipts.matching.review_details"), finance_receipt_path(receipt), class: "bw-text-link" %>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.reconciliation.review.empty") %></h3></div>
+  <% end %>
+  <% if @suspect_income.positive? || @duplicate_rows.positive? %>
+    <p class="bw-inline-actions bw-section-gap"><%= link_to t("billie.ledger.review.income_link", count: @suspect_income), finance_review_income_path, class: "bw-text-link" if @suspect_income.positive? %><%= link_to t("billie.ledger.review.duplicates_link", count: @duplicate_rows), finance_review_duplicates_path, class: "bw-text-link" if @duplicate_rows.positive? %></p>
+  <% end %>
+</section>
+
+<section class="bw-panel bw-section-gap" id="discrepancies" aria-labelledby="discrepancies-heading">
+  <h2 id="discrepancies-heading"><%= t("billie.reconciliation.discrepancies.heading") %></h2>
+  <p class="bw-caption"><%= t("billie.reconciliation.discrepancies.intro") %></p>
+  <% d = @report.discrepancies %>
+  <% if @report.discrepancy_count.zero? %>
+    <div class="bw-empty-state"><h3><%= t("billie.reconciliation.discrepancies.none") %></h3></div>
+  <% end %>
+  <% if d[:amount_mismatch].any? %>
+    <h3 id="amount-mismatches"><%= t("billie.reconciliation.discrepancies.amount_mismatch", count: d[:amount_mismatch].length) %></h3>
+    <ul class="bw-plain-list"><% d[:amount_mismatch].each do |receipt| %><li><%= link_to receipt.display_name, finance_receipt_path(receipt) %> <small class="bw-muted"><%= t("billie.reconciliation.discrepancies.receipt_vs_bank", receipt: receipt.total && finance_money(-receipt.total, receipt.currency || currency), bank: finance_money(receipt.matched_entries.sum(&:amount), currency)) %></small><%= receipt_badge(receipt.verification) %></li><% end %></ul>
+  <% end %>
+  <% if d[:duplicate_charges].any? %>
+    <h3 id="duplicate-charges"><%= t("billie.reconciliation.discrepancies.duplicate_charges", count: d[:duplicate_charges].length) %></h3>
+    <ul class="bw-plain-list"><% d[:duplicate_charges].each do |first, second| %><li><%= link_to first.original_description, edit_finance_transaction_path(first) %> <small class="bw-muted"><%= finance_date(first.booked_on, "%b %-d") %> / <%= finance_date(second.booked_on, "%b %-d") %> · <%= finance_money(first.amount, currency) %></small></li><% end %></ul>
+  <% end %>
+  <% if d[:missing_receipts].any? %>
+    <h3 id="missing-receipts"><%= t("billie.reconciliation.discrepancies.missing_receipts", count: d[:missing_receipts].length) %></h3>
+    <ul class="bw-plain-list"><% d[:missing_receipts].first(20).each do |entry| %><li><%= link_to entry.description, edit_finance_transaction_path(entry) %> <small class="bw-muted"><%= finance_date(entry.booked_on, "%b %-d, %Y") %> · <%= finance_money(entry.amount, currency) %></small></li><% end %></ul>
+  <% end %>
+  <% if d[:refunds_without_purchase].any? %>
+    <h3 id="refunds-without-purchase"><%= t("billie.reconciliation.discrepancies.refunds_without_purchase", count: d[:refunds_without_purchase].length) %></h3>
+    <ul class="bw-plain-list"><% d[:refunds_without_purchase].first(20).each do |entry| %><li><%= link_to entry.description, edit_finance_transaction_path(entry) %> <small class="bw-muted"><%= finance_date(entry.booked_on, "%b %-d, %Y") %> · <%= finance_money(entry.amount, currency) %></small></li><% end %></ul>
+  <% end %>
+  <% if d[:transfers_as_spending].any? %>
+    <h3 id="transfers-as-spending"><%= t("billie.reconciliation.discrepancies.transfers_as_spending", count: d[:transfers_as_spending].length) %></h3>
+    <ul class="bw-plain-list"><% d[:transfers_as_spending].first(20).each do |entry| %><li><%= link_to entry.description, edit_finance_transaction_path(entry) %> <small class="bw-muted"><%= finance_date(entry.booked_on, "%b %-d, %Y") %> · <%= finance_money(entry.amount, currency) %></small></li><% end %></ul>
+  <% end %>
+  <h3 id="balance-checks"><%= t("billie.reconciliation.balances.heading") %></h3>
+  <% checks = @report.balance_checks %>
+  <% if checks.any? %>
+    <ul class="bw-plain-list"><% checks.each do |check| %><li><strong><%= check.account.display_name %></strong> <small class="bw-muted"><%= finance_date(check.from_on, "%b %-d, %Y") %> → <%= finance_date(check.to_on, "%b %-d, %Y") %></small>
+      <% if check.consistent? %><span class="bw-badge"><%= t("billie.reconciliation.balances.consistent") %></span><% else %><span class="bw-badge bw-badge-failed"><%= t("billie.reconciliation.balances.differs", amount: finance_money(check.difference, currency)) %></span><% end %></li><% end %></ul>
+  <% end %>
+  <p class="bw-caption"><%= t("billie.reconciliation.balances.scope") %></p>
+</section>
+
+<div class="bw-two-column bw-section-gap">
+  <section class="bw-panel bw-panel-flush" id="matched" aria-labelledby="matched-heading">
+    <div class="bw-panel-heading"><h2 id="matched-heading"><%= t("billie.reconciliation.matched.heading") %></h2></div>
+    <% if @report.matched.any? %>
+      <div class="bw-table-scroll"><table class="bw-table"><thead><tr><th scope="col"><%= t("billie.receipts.fields.merchant_name") %></th><th scope="col"><%= t("billie.receipts.matching.bank_record") %></th><th scope="col"><%= t("billie.receipts.recent.status") %></th></tr></thead>
+        <tbody><% @report.matched.first(30).each do |receipt| %><tr><td><%= link_to receipt.display_name, finance_receipt_path(receipt) %><small class="bw-muted"><%= receipt.purchased_on && finance_date(receipt.purchased_on, "%b %-d, %Y") %></small></td><td><%= receipt.matched_entries.map(&:original_description).join(" + ") %><small class="bw-muted"><%= finance_money(receipt.matched_entries.sum(&:amount), currency) %></small></td><td><%= receipt_badge(receipt.verification) %></td></tr><% end %></tbody></table></div>
+    <% else %>
+      <div class="bw-empty-state"><h3><%= t("billie.reconciliation.matched.empty") %></h3></div>
+    <% end %>
+  </section>
+  <section class="bw-panel" id="unmatched" aria-labelledby="unmatched-heading">
+    <h2 id="unmatched-heading"><%= t("billie.reconciliation.unmatched.heading") %></h2>
+    <p class="bw-caption"><%= t("billie.reconciliation.unmatched.intro") %></p>
+    <h3><%= t("billie.reconciliation.unmatched.awaiting_bank", count: @report.awaiting_bank.length) %></h3>
+    <ul class="bw-plain-list" id="awaiting-bank"><% @report.awaiting_bank.first(20).each do |receipt| %><li><%= link_to receipt.display_name, finance_receipt_path(receipt) %> <small class="bw-muted"><%= finance_date(receipt.purchased_on, "%b %-d, %Y") if receipt.purchased_on %><%= " · #{t("billie.reconciliation.unmatched.stale", days: (@report.today - receipt.purchased_on).to_i)}" if @report.stale_receipts.include?(receipt) %></small></li><% end %></ul>
+    <h3><%= t("billie.reconciliation.unmatched.cash", count: @report.cash.length) %></h3>
+    <ul class="bw-plain-list" id="cash-receipts"><% @report.cash.first(20).each do |receipt| %><li><%= link_to receipt.display_name, finance_receipt_path(receipt) %> <small class="bw-muted"><%= finance_date(receipt.purchased_on, "%b %-d, %Y") if receipt.purchased_on %></small></li><% end %></ul>
+    <h3 class="bw-section-gap"><%= t("billie.reconciliation.verified.heading") %></h3>
+    <% if @report.recently_verified.any? %>
+      <ul class="bw-plain-list" id="recently-verified"><% @report.recently_verified.each do |match| %><li><%= link_to match.receipt.display_name, finance_receipt_path(match.receipt) %> <small class="bw-muted"><%= match.decided_at && finance_date(match.decided_at.to_date, "%b %-d, %Y") %></small></li><% end %></ul>
+    <% else %>
+      <p class="bw-caption"><%= t("billie.reconciliation.verified.empty") %></p>
+    <% end %>
+  </section>
+</div>

@@ -1,5 +1,5 @@
 import { icons } from "@billie/design-tokens";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { emailOwnerKey, ownerKeyFor } from "./services/databases";
 import { AccountProvider, useAccount } from "./hooks/useAccount";
 import { FinanceProvider, useFinance } from "./hooks/useFinance";
@@ -12,6 +12,7 @@ import { CommandCenter } from "./components/CommandCenter";
 import type { TransactionFilter } from "./commands/handlers";
 import type { TransactionKind } from "@billie/shared-types";
 import { saveSidebarCollapsed, savedSidebarCollapsed } from "./services/theme";
+import { subscribeDeepLinks, type DeepLinkRoute } from "./services/deepLink";
 
 // Load secondary workspaces when opened, so startup does not parse the import/report/editor UI.
 const Categories = lazy(() => import("./pages/Categories").then((module) => ({ default: module.Categories })));
@@ -24,8 +25,9 @@ const Accounts = lazy(() => import("./pages/Accounts").then((module) => ({ defau
 const Planning = lazy(() => import("./pages/Planning").then((module) => ({ default: module.Planning })));
 const Lists = lazy(() => import("./pages/Lists").then((module) => ({ default: module.Lists })));
 const Manual = lazy(() => import("./pages/Manual").then((module) => ({ default: module.Manual })));
+const Receipt = lazy(() => import("./pages/Receipt").then((module) => ({ default: module.Receipt })));
 
-export type Page = "dashboard" | "manual" | "transactions" | "accounts" | "categories" | "planning" | "lists" | "import" | "reports" | "data" | "settings";
+export type Page = "dashboard" | "manual" | "transactions" | "accounts" | "categories" | "planning" | "lists" | "import" | "receipt" | "reports" | "data" | "settings";
 
 /** Pages that exist only in Manual Mode; opening one (e.g. from a typed command) turns Manual Mode on. */
 export const MANUAL_PAGES: ReadonlySet<Page> = new Set<Page>(["manual", "accounts", "planning", "lists"]);
@@ -35,12 +37,16 @@ export interface TransactionIntent { entryKind?: TransactionKind; view?: "trash"
 
 type NavItem = { page: Page; icon: string };
 
+// A receipt (not in the shared icon set yet).
+const RECEIPT_ICON = "M6 2h12v20l-3-2-3 2-3-2-3 2z M9 7h6 M9 11h6 M9 15h4";
+
 // Default Mode: the simple, automation-first navigation.
 const NAV: NavItem[] = [
   { page: "dashboard", icon: icons.dashboard },
   { page: "transactions", icon: icons.transactions },
   { page: "categories", icon: icons.tag },
   { page: "import", icon: icons.upload },
+  { page: "receipt", icon: RECEIPT_ICON },
   { page: "reports", icon: icons.file },
   { page: "data", icon: icons.data },
   { page: "settings", icon: icons.settings },
@@ -48,7 +54,7 @@ const NAV: NavItem[] = [
 
 // Manual Mode: the manual bookkeeping workspace grouped by task, then the automatic tools.
 const MANUAL_NAV: Array<{ group: "record" | "organize" | "plan" | "automatic"; items: NavItem[] }> = [
-  { group: "record", items: [{ page: "manual", icon: icons.dashboard }, { page: "transactions", icon: icons.transactions }] },
+  { group: "record", items: [{ page: "manual", icon: icons.dashboard }, { page: "transactions", icon: icons.transactions }, { page: "receipt", icon: RECEIPT_ICON }] },
   { group: "organize", items: [{ page: "accounts", icon: icons.insights }, { page: "categories", icon: icons.tag }, { page: "lists", icon: icons.file }] },
   { group: "plan", items: [{ page: "planning", icon: icons.forecast }, { page: "reports", icon: icons.file }] },
   { group: "automatic", items: [{ page: "dashboard", icon: icons.dashboard }, { page: "import", icon: icons.upload }, { page: "data", icon: icons.data }, { page: "settings", icon: icons.settings }] },
@@ -96,7 +102,14 @@ function Shell() {
     else if (MANUAL_PAGES.has(page)) setPage("dashboard");
   };
   const { persistent } = useFinance();
-  const navLabel = (target: Page) => (target === "manual" ? m.ledger.manual.nav : target === "accounts" || target === "planning" || target === "lists" ? m.ledger.nav[target] : m.nav[target]);
+  // billieweather:// links and #/capture/… open one screen; they never save or send anything.
+  const goRef = useRef(go);
+  goRef.current = go;
+  useEffect(() => subscribeDeepLinks((route: DeepLinkRoute) => {
+    if (route === "capture/receipt") goRef.current("receipt");
+    else if (route === "capture/expense") goRef.current("transactions", null, undefined, { entryKind: "expense" });
+  }), []);
+  const navLabel = (target: Page) => (target === "manual" ? m.ledger.manual.nav : target === "receipt" ? m.receipt.nav : target === "accounts" || target === "planning" || target === "lists" ? m.ledger.nav[target] : m.nav[target]);
   const navButton = (item: NavItem) => (
     <li key={item.page}>
       <button type="button" className={page === item.page ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? navLabel(item.page) : undefined} aria-current={page === item.page ? "page" : undefined} onClick={() => go(item.page)}>
@@ -144,7 +157,8 @@ function Shell() {
         {page === "categories" && <Categories key={focus ?? ""} focus={focus} />}
         {page === "planning" && <Planning />}
         {page === "lists" && <Lists />}
-        {page === "import" && <Import />}
+        {page === "import" && <Import onReceipt={() => go("receipt")} />}
+        {page === "receipt" && <Receipt />}
         {page === "reports" && <Reports />}
         {page === "data" && <Data focus={focus} />}
         {page === "settings" && <Settings />}

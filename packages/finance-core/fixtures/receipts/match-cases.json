@@ -1,0 +1,220 @@
+{
+  "$comment": "Receipt ↔ ledger matching, receipt ↔ receipt duplicates and merchant identity. Replayed by packages/finance-core/test/receipt.test.ts and test/services/finance/receipt_contract_test.rb. Amounts are minor units; candidate amounts are signed from the account's view (a purchase is negative). `ids` is the best proposal's ids (null when level is none). Synthetic data only.",
+  "merchants": {
+    "keys": [
+      ["WHOLEFDS MKT #10234 AUSTIN TX", "whole foods"],
+      ["Whole Foods Market", "whole foods"],
+      ["PURCHASE AUTHORIZED ON 11/16 WHOLEFDS", "whole foods"],
+      ["SQ *BLUE BOTTLE COFFEE", "blue bottle"],
+      ["TST* JOE'S DINER", "joes diner"],
+      ["AMZN Mktp US*2K4L19", "amazon"],
+      ["POS PURCHASE TARGET T-1123", "target"],
+      ["TRADER JOE S #552", "trader joes"],
+      ["Eleven Madison Park", "eleven madison park"],
+      ["12345 6789", null]
+    ],
+    "similarity": [
+      ["Whole Foods Market", "WHOLEFDS", 1, 1],
+      ["Trader Joe's", "TRADER JOE S #552", 1, 1],
+      ["Chipotle 1234", "CHIPOTLE ONLINE", 1, 1],
+      ["Golden Dragon", "GOLDEN DRAGON RESTAURANT 22", 0.8, 0.95],
+      ["Starbucks", "SHELL OIL 5744", 0, 0.29],
+      ["Corner Market", "Main Street Market", 0, 0.79],
+      [null, "WHOLEFDS", null, null]
+    ]
+  },
+  "cases": [
+    {
+      "name": "the Whole Foods example: same amount, same day, abbreviated merchant → exact",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-16", "description": "WHOLEFDS MKT #10234 AUSTIN TX", "kind": "expense" }],
+      "expect": { "level": "exact", "ids": [1], "reasons": ["amount_equal", "merchant_same", "same_day"] }
+    },
+    {
+      "name": "delayed bank posting within three days is still exact",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-19", "description": "WHOLEFDS MKT", "kind": "expense" }],
+      "expect": { "level": "exact", "ids": [1], "reasons": ["posted_later"] }
+    },
+    {
+      "name": "posting five days later needs a person (probable)",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-21", "description": "WHOLEFDS MKT", "kind": "expense" }],
+      "expect": { "level": "probable", "ids": [1] }
+    },
+    {
+      "name": "posting one day earlier (time zones) is probable, never exact",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-15", "description": "WHOLEFDS MKT", "kind": "expense" }],
+      "expect": { "level": "probable", "ids": [1], "reasons": ["posted_earlier"] }
+    },
+    {
+      "name": "same amount at a different merchant is not a match",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-16", "description": "SHELL OIL 5744", "kind": "expense" }],
+      "expect": { "level": "none", "ids": null }
+    },
+    {
+      "name": "two identical coffees on one day: a person picks",
+      "receipt": { "amountMinor": 450, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "Starbucks", "confident": true },
+      "candidates": [
+        { "id": 1, "amountMinor": -450, "currency": "USD", "date": "2026-11-16", "description": "STARBUCKS STORE 0123", "kind": "expense" },
+        { "id": 2, "amountMinor": -450, "currency": "USD", "date": "2026-11-16", "description": "STARBUCKS STORE 0123", "kind": "expense" }
+      ],
+      "expect": { "level": "ambiguous", "ids": [1], "proposals": 2, "reasons": ["multiple_candidates"] }
+    },
+    {
+      "name": "same merchant, same amount, outside the posting window",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": true },
+      "candidates": [
+        { "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-26", "description": "WHOLEFDS MKT", "kind": "expense" },
+        { "id": 2, "amountMinor": -4860, "currency": "USD", "date": "2026-11-02", "description": "WHOLEFDS MKT", "kind": "expense" }
+      ],
+      "expect": { "level": "none", "ids": null }
+    },
+    {
+      "name": "the amount alone (unreadable merchant) is only a suggestion",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": null, "confident": false },
+      "candidates": [{ "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-16", "description": "WHOLEFDS MKT", "kind": "expense" }],
+      "expect": { "level": "ambiguous", "ids": [1], "reasons": ["merchant_unknown"] }
+    },
+    {
+      "name": "bank charge includes a tip the receipt did not show",
+      "receipt": { "amountMinor": 4330, "direction": "purchase", "currency": "USD", "date": "2026-11-14", "merchant": "Blue Bottle Coffee", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -5130, "currency": "USD", "date": "2026-11-15", "description": "SQ *BLUE BOTTLE COFFEE", "kind": "expense" }],
+      "expect": { "level": "ambiguous", "ids": [1], "reasons": ["amount_differs_tip"] }
+    },
+    {
+      "name": "a tip already on the receipt: amounts agree",
+      "receipt": { "amountMinor": 1255, "direction": "purchase", "currency": "USD", "date": "2026-11-14", "merchant": "Blue Bottle Coffee", "tipMinor": 200, "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -1255, "currency": "USD", "date": "2026-11-15", "description": "SQ *BLUE BOTTLE COFFEE", "kind": "expense" }],
+      "expect": { "level": "exact", "ids": [1] }
+    },
+    {
+      "name": "a refund receipt matches the refund, not the original purchase",
+      "receipt": { "amountMinor": 2164, "direction": "refund", "currency": "USD", "date": "2026-11-22", "merchant": "TARGET", "confident": true },
+      "candidates": [
+        { "id": 1, "amountMinor": -2164, "currency": "USD", "date": "2026-11-20", "description": "TARGET T-1123", "kind": "expense" },
+        { "id": 2, "amountMinor": 2164, "currency": "USD", "date": "2026-11-23", "description": "TARGET T-1123 REFUND", "kind": "refund" }
+      ],
+      "expect": { "level": "exact", "ids": [2] }
+    },
+    {
+      "name": "transfers and card payments are never receipt matches",
+      "receipt": { "amountMinor": 50000, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "Online transfer", "confident": true },
+      "candidates": [
+        { "id": 1, "amountMinor": -50000, "currency": "USD", "date": "2026-11-16", "description": "ONLINE TRANSFER TO SAVINGS", "kind": "transfer" },
+        { "id": 2, "amountMinor": -50000, "currency": "USD", "date": "2026-11-16", "description": "ONLINE TRANSFER PAYMENT", "kind": "card_payment" }
+      ],
+      "expect": { "level": "none", "ids": null }
+    },
+    {
+      "name": "an entry that already has a receipt, or that a person rejected, is skipped",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": true },
+      "candidates": [
+        { "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-16", "description": "WHOLEFDS MKT", "kind": "expense", "hasReceipt": true },
+        { "id": 2, "amountMinor": -4860, "currency": "USD", "date": "2026-11-16", "description": "WHOLEFDS MKT", "kind": "expense", "rejected": true }
+      ],
+      "expect": { "level": "none", "ids": null }
+    },
+    {
+      "name": "a different card's last four digits rule a charge out",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "cardLast4": "4821", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-16", "description": "WHOLEFDS MKT", "kind": "expense", "accountLast4": "9999" }],
+      "expect": { "level": "none", "ids": null }
+    },
+    {
+      "name": "a weakly similar name is probable when the card's last four digits agree",
+      "receipt": { "amountMinor": 3125, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "Golden Dragon Restaurant", "cardLast4": "4821", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -3125, "currency": "USD", "date": "2026-11-17", "description": "GD RESTAURANT 0042", "kind": "expense", "accountLast4": "4821" }],
+      "expect": { "level": "probable", "ids": [1], "reasons": ["card_last4_match", "merchant_weak"] }
+    },
+    {
+      "name": "a receipt number equal to the bank reference proves the match",
+      "receipt": { "amountMinor": 4400, "direction": "purchase", "currency": "USD", "date": "2026-11-03", "merchant": "Acme Web Hosting LLC", "receiptNumber": "INV-2026-1187", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -4400, "currency": "USD", "date": "2026-11-04", "description": "ACH DEBIT 88213", "kind": "expense", "reference": "INV20261187" }],
+      "expect": { "level": "exact", "ids": [1], "reasons": ["receipt_number_match"] }
+    },
+    {
+      "name": "another currency: same merchant and date are suggested, amounts are not compared",
+      "receipt": { "amountMinor": 1180, "direction": "purchase", "currency": "EUR", "date": "2026-11-16", "merchant": "Café de Flore", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": -1302, "currency": "USD", "date": "2026-11-17", "description": "CAFE DE FLORE PARIS", "kind": "expense" }],
+      "expect": { "level": "ambiguous", "ids": [1], "reasons": ["currency_differs"] }
+    },
+    {
+      "name": "split payment: two charges at the same store add up to the receipt",
+      "receipt": { "amountMinor": 10000, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "Costco Wholesale", "confident": true },
+      "candidates": [
+        { "id": 1, "amountMinor": -6000, "currency": "USD", "date": "2026-11-16", "description": "COSTCO WHSE #0123", "kind": "expense" },
+        { "id": 2, "amountMinor": -4000, "currency": "USD", "date": "2026-11-16", "description": "COSTCO WHSE #0123", "kind": "expense" },
+        { "id": 3, "amountMinor": -2500, "currency": "USD", "date": "2026-11-16", "description": "SHELL OIL", "kind": "expense" }
+      ],
+      "expect": { "level": "ambiguous", "ids": [1, 2], "reasons": ["split_payment"] }
+    },
+    {
+      "name": "untrusted OCR fields cap the level at probable",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": false },
+      "candidates": [{ "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-16", "description": "WHOLEFDS MKT", "kind": "expense" }],
+      "expect": { "level": "probable", "ids": [1], "reasons": ["low_confidence"] }
+    },
+    {
+      "name": "an unrelated charge with the same amount does not disturb an exact match",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": true },
+      "candidates": [
+        { "id": 1, "amountMinor": -4860, "currency": "USD", "date": "2026-11-16", "description": "WHOLEFDS MKT", "kind": "expense" },
+        { "id": 2, "amountMinor": -4860, "currency": "USD", "date": "2026-11-16", "description": "AMZN Mktp US*2K4L19", "kind": "expense" }
+      ],
+      "expect": { "level": "exact", "ids": [1] }
+    },
+    {
+      "name": "a cash purchase with no bank record stays unmatched",
+      "receipt": { "amountMinor": 1150, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "Downtown Deli", "confident": true },
+      "candidates": [],
+      "expect": { "level": "none", "ids": null }
+    },
+    {
+      "name": "a purchase receipt never matches money coming in",
+      "receipt": { "amountMinor": 4860, "direction": "purchase", "currency": "USD", "date": "2026-11-16", "merchant": "WHOLE FOODS MARKET", "confident": true },
+      "candidates": [{ "id": 1, "amountMinor": 4860, "currency": "USD", "date": "2026-11-16", "description": "WHOLEFDS MKT REFUND", "kind": "refund" }],
+      "expect": { "level": "none", "ids": null }
+    }
+  ],
+  "duplicates": [
+    {
+      "name": "the same file uploaded twice",
+      "incoming": { "id": "new", "sha256": "aa11", "amountMinor": 4860, "date": "2026-11-16", "merchant": "Whole Foods Market" },
+      "existing": [{ "id": 7, "sha256": "aa11", "amountMinor": 4860, "date": "2026-11-16", "merchant": "Whole Foods Market" }],
+      "expect": { "kind": "same_file", "of": 7 }
+    },
+    {
+      "name": "a cropped photo of the same receipt (same receipt number)",
+      "incoming": { "id": "new", "sha256": "bb22", "amountMinor": 4860, "date": "2026-11-16", "merchant": "WHOLE FOODS MKT", "receiptNumber": "004512" },
+      "existing": [{ "id": 7, "sha256": "aa11", "amountMinor": 4860, "date": "2026-11-16", "merchant": "Whole Foods Market", "receiptNumber": "004512" }],
+      "expect": { "kind": "same_receipt", "of": 7 }
+    },
+    {
+      "name": "different receipt numbers prove two receipts",
+      "incoming": { "id": "new", "amountMinor": 450, "date": "2026-11-16", "merchant": "Starbucks", "receiptNumber": "1001" },
+      "existing": [{ "id": 7, "amountMinor": 450, "date": "2026-11-16", "merchant": "Starbucks", "receiptNumber": "1002" }],
+      "expect": null
+    },
+    {
+      "name": "same merchant, date and total without a receipt number: possible duplicate",
+      "incoming": { "id": "new", "amountMinor": 4860, "date": "2026-11-16", "merchant": "WHOLEFDS" },
+      "existing": [{ "id": 7, "amountMinor": 4860, "date": "2026-11-16", "merchant": "Whole Foods Market" }],
+      "expect": { "kind": "possible", "of": 7 }
+    },
+    {
+      "name": "different times on the same day are two purchases",
+      "incoming": { "id": "new", "amountMinor": 450, "date": "2026-11-16", "time": "08:10", "merchant": "Starbucks" },
+      "existing": [{ "id": 7, "amountMinor": 450, "date": "2026-11-16", "time": "15:42", "merchant": "Starbucks" }],
+      "expect": null
+    },
+    {
+      "name": "a different total is a different receipt",
+      "incoming": { "id": "new", "amountMinor": 4861, "date": "2026-11-16", "merchant": "Whole Foods Market" },
+      "existing": [{ "id": 7, "amountMinor": 4860, "date": "2026-11-16", "merchant": "Whole Foods Market" }],
+      "expect": null
+    }
+  ]
+}

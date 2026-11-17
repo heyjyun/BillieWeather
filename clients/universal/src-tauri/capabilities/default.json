@@ -23,6 +23,7 @@
     "fs:allow-write-file",
     "fs:allow-read-file",
     "billie-ocr:default",
+    "deep-link:default",
     {
       "identifier": "opener:allow-open-url",
       "allow": [

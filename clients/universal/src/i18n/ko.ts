@@ -2,6 +2,7 @@ import { ledgerKo } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalKo } from "./universal";
 import { commandKo } from "./command";
+import { receiptKo } from "./receipt";
 
 export const ko: Messages = {
   languageName: "한국어",
@@ -277,4 +278,5 @@ export const ko: Messages = {
   universal: universalKo,
   ledger: ledgerKo,
   command: commandKo,
+  receipt: receiptKo,
 };

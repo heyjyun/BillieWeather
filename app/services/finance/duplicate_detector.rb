@@ -23,7 +23,8 @@ module Finance
 
     # Existing stored rows of a user, in the shape the detector reads.
     def self.stored_rows(user, dates: nil, account_id: nil)
-      scope = Transaction.live.where(user_id: user.id)
+      # Receipt entries are matched by Finance::ReceiptReconciler (merchant identity, posting delay), not here.
+      scope = Transaction.live.where(user_id: user.id).where.not(entry_origin: "receipt")
       scope = scope.where(booked_on: dates) if dates
       # An unknown account must remain a review candidate; a different known account cannot match.
       scope = scope.where(bank_account_id: [account_id, nil]) if account_id

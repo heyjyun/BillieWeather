@@ -1104,3 +1104,25 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
   .bw-tool-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media print { .bw-mode-switch { display: none !important; } }
+
+/* Receipts and reconciliation (app/views/finance/receipts, app/views/finance/reconciliation). */
+.bw-badge-neutral { color: var(--bw-color-text-muted); background: var(--bw-color-surface-muted); }
+.bw-capture-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.bw-capture-card { display: grid; gap: 8px; align-content: start; padding: 18px 20px; border: 1px solid var(--bw-color-border); border-radius: var(--bw-radius-lg); background: var(--bw-color-surface); }
+.bw-capture-card h3 { margin: 0; font-size: var(--bw-font-size-md); }
+.bw-capture-card p { margin: 0; color: var(--bw-color-text-muted); font-size: var(--bw-font-size-sm); }
+.bw-capture-card .bw-file-input { max-width: 100%; }
+.bw-receipt-preview { display: block; max-width: 100%; max-height: 520px; margin: 0 auto; border-radius: var(--bw-radius-md); border: 1px solid var(--bw-color-border); object-fit: contain; background: var(--bw-color-surface-muted); }
+.bw-field-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bw-match-card { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid var(--bw-color-border); border-radius: var(--bw-radius-md); background: var(--bw-color-surface); margin-top: 12px; }
+.bw-match-card dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: var(--bw-font-size-sm); }
+.bw-match-card dt { color: var(--bw-color-text-muted); }
+.bw-match-card dd { margin: 0; }
+.bw-section-gap { margin-top: 20px; }
+.bw-token-once { padding: 12px 14px; border-radius: var(--bw-radius-md); background: var(--bw-color-warning-soft); color: var(--bw-color-warning-text); overflow-wrap: anywhere; }
+.bw-token-once code { font-size: var(--bw-font-size-sm); user-select: all; }
+@media (max-width: 720px) { .bw-match-card dl { grid-template-columns: 1fr; } }
+.bw-panel-body { padding: 12px 20px 18px; }
+.bw-plain-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.bw-plain-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bw-steps { margin: 8px 0 12px; padding-left: 20px; display: grid; gap: 6px; font-size: var(--bw-font-size-sm); line-height: var(--bw-line-height-relaxed); }

@@ -34,7 +34,9 @@ describe("data isolation", () => {
   const REPORT = join(ROOT, "src/services/localReport.ts");
   // aiCategorize.ts: "Categorize with AI", after the consent panel: cleaned merchant text, direction and category names only.
   const AI = join(ROOT, "src/services/aiCategorize.ts");
-  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI];
+  // receiptUpload.ts: "Send to BillieWeather web" for one captured receipt, only when the person presses the button.
+  const RECEIPT = join(ROOT, "src/services/receiptUpload.ts");
+  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI, RECEIPT];
 
   it.each([
     ["fetch(", /\bfetch\s*\(/],
@@ -122,6 +124,28 @@ describe("data isolation", () => {
     expect(readFileSync(join(ROOT, "src/pages/Categories.tsx"), "utf8")).toMatch(/store\.aiCandidates\(\)/);
     expect(readFileSync(join(ROOT, "src/components/OrganizePanel.tsx"), "utf8")).toMatch(/cloud && token \? \{ cloud: \(items, custom\) => requestAiCategories\(token, items, custom\) \}/);
     expect(readFileSync(join(ROOT, "src/services/organize.ts"), "utf8")).toMatch(/aiGroups\(leftover/);
+  });
+
+  it("only the receipt screen sends a receipt: one POST to the receipts endpoint, with a fixed body, after the Send button", () => {
+    const source = readFileSync(RECEIPT, "utf8");
+    expect(source.match(/^import .*$/gm)).toEqual(['import { API_ORIGIN, AccountError } from "./account";']);
+    expect(source).not.toMatch(/@billie\/|\bFinanceStore\b|merchantKey|\bStatement\b|sha256/);
+    expect(source).toMatch(/const ENDPOINT = `\$\{API_ORIGIN\}\/api\/client\/v1\/finance\/receipts`/);
+    expect([...source.matchAll(/method:\s*"(\w+)"/g)].map((match) => match[1])).toEqual(["POST"]);
+    expect(source.match(/fetch\(/g)?.length).toBe(1);
+    // The request body, key by key: no account, ledger or other receipts ever travel with it.
+    const body = /body: JSON\.stringify\(\{([\s\S]*?)\}\),\n\s*credentials/.exec(source)![1];
+    expect([...body.matchAll(/(\w+):/g)].map((match) => match[1])).toEqual(["receipt", "client_request_id", "source", "engine", "lines", "text", "confidence", "fields", "file_base64", "filename", "content_type"]);
+    expect(source).toMatch(/MAX_RECEIPT_UPLOAD_BYTES = 8 \* 1024 \* 1024/);
+    // Only the receipt page calls it, from the Send button's handler.
+    const callers = all.filter((file) => file !== RECEIPT && /\bsendReceipt\b/.test(readFileSync(file, "utf8")));
+    expect(callers).toEqual([join(ROOT, "src/pages/Receipt.tsx")]);
+    const page = readFileSync(join(ROOT, "src/pages/Receipt.tsx"), "utf8");
+    expect(page.match(/sendReceipt\(/g)?.length).toBe(1);
+    expect(page).toMatch(/onClick=\{\(\) => void send\(\)\}/);
+    // Deep links name a screen only: the adapter has no network code and reads no query data.
+    const links = readFileSync(join(ROOT, "src/services/deepLink.ts"), "utf8");
+    expect(links).not.toMatch(/\bfetch\s*\(|api\/client|searchParams|URLSearchParams/);
   });
 
   it("the app never talks to OpenAI directly", () => {

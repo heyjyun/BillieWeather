@@ -82,7 +82,7 @@ module Finance
 
     def usage_counts
       if @model == Tag
-        TransactionTag.joins(:finance_transaction).where(finance_transactions: {user_id: current_user.id, deleted_at: nil}).group(:tag_id).count
+        TransactionTag.joins(:finance_transaction).where(finance_transactions: {user_id: current_user.id, deleted_at: nil, superseded_by_id: nil}).group(:tag_id).count
       else
         Transaction.live.where(user_id: current_user.id).group((@model == Merchant) ? :merchant_id : :project_id).count
       end

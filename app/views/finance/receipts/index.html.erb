@@ -1,0 +1,103 @@
+<% content_for :title, t("billie.receipts.title") %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.receipts.eyebrow") %></span><h1><%= t("billie.receipts.title") %></h1><p><%= t("billie.receipts.intro") %></p></div><%= link_to t("billie.reconciliation.title"), finance_reconciliation_path, class: "bw-button bw-button-outline" %></div>
+
+<section class="bw-panel" id="capture" aria-labelledby="capture-heading">
+  <h2 id="capture-heading" class="bw-sr-only"><%= t("billie.receipts.capture.heading") %></h2>
+  <div class="bw-capture-grid">
+    <%= form_with url: finance_receipts_path, multipart: true, data: {turbo: false}, class: "bw-capture-card", id: "scan-receipt" do |form| %>
+      <span class="bw-feature-icon"><%= finance_icon "phone", size: 24 %></span>
+      <h3><%= t("billie.receipts.capture.scan") %></h3>
+      <p><%= t("billie.receipts.capture.scan_help") %></p>
+      <%= hidden_field_tag "receipt[source]", "camera" %>
+      <%= label_tag "receipt_camera_file", t("billie.receipts.capture.scan_input"), class: "bw-sr-only" %>
+      <input type="file" name="receipt[files][]" id="receipt_camera_file" accept="image/*" capture="environment" class="bw-file-input" required>
+      <%= form.submit t("billie.receipts.capture.scan_submit"), class: "bw-button bw-button-dark" %>
+    <% end %>
+
+    <%= form_with url: finance_receipts_path, multipart: true, data: {turbo: false}, class: "bw-capture-card", id: "upload-receipts" do |form| %>
+      <div class="bw-upload-box" data-dropzone>
+        <span class="bw-upload-icon"><%= finance_icon "upload", size: 28 %></span>
+        <h3><%= t("billie.receipts.capture.upload") %></h3>
+        <p><%= t("billie.receipts.capture.upload_help") %></p>
+        <%= hidden_field_tag "receipt[source]", "upload" %>
+        <%= label_tag "receipt_files", t("billie.receipts.capture.upload_input"), class: "bw-sr-only" %>
+        <input type="file" name="receipt[files][]" id="receipt_files" multiple accept="image/jpeg,image/png,image/heic,image/heif,image/webp,application/pdf,.heic,.pdf" class="bw-file-input" required aria-describedby="receipt-limits">
+        <small id="receipt-limits"><%= t("billie.receipts.capture.limits", count: Finance::ReceiptsController::MAX_FILES) %></small>
+        <ul class="bw-dropzone-files" data-dropzone-files aria-live="polite" hidden></ul>
+      </div>
+      <%= form.submit t("billie.receipts.capture.upload_submit"), class: "bw-button bw-button-dark" %>
+    <% end %>
+
+    <div class="bw-capture-card" id="import-statement">
+      <span class="bw-feature-icon"><%= finance_icon "file", size: 24 %></span>
+      <h3><%= t("billie.receipts.capture.statement") %></h3>
+      <p><%= t("billie.receipts.capture.statement_help") %></p>
+      <%= link_to t("billie.receipts.capture.statement_link"), finance_statements_path, class: "bw-button bw-button-outline" %>
+    </div>
+
+    <details class="bw-capture-card" id="manual-receipt">
+      <summary><strong><%= t("billie.receipts.capture.manual") %></strong></summary>
+      <%= form_with url: finance_receipts_path, scope: :receipt, data: {turbo: false}, class: "bw-form" do |form| %>
+        <div class="bw-field"><%= form.label :merchant_name, t("billie.receipts.fields.merchant_name") %><%= form.text_field :merchant_name, maxlength: 200, required: true %></div>
+        <div class="bw-field"><%= form.label :purchased_on, t("billie.receipts.fields.purchased_on") %><%= form.date_field :purchased_on, required: true, value: finance_today.iso8601 %></div>
+        <div class="bw-field"><%= form.label :total, t("billie.receipts.fields.total") %><%= form.text_field :total, inputmode: "decimal", required: true %></div>
+        <div class="bw-field"><%= form.label :payment_method, t("billie.receipts.fields.payment_method") %><%= form.select :payment_method, Finance::Receipt::PAYMENT_METHODS.map { |method| [t("billie.receipts.payment_methods.#{method}"), method] }, include_blank: t("billie.receipts.unknown") %></div>
+        <%= form.submit t("billie.receipts.capture.manual_submit"), class: "bw-button bw-button-dark" %>
+      <% end %>
+    </details>
+  </div>
+  <div class="bw-form-note"><%= finance_icon "lock", size: 18 %><span><%= @local_ocr ? t("billie.receipts.privacy.local_ocr") : t("billie.receipts.privacy.no_server_ocr") %></span></div>
+</section>
+
+<section class="bw-panel bw-panel-flush bw-section-gap" id="recent-receipts" aria-labelledby="recent-heading">
+  <div class="bw-panel-heading"><h2 id="recent-heading"><%= t("billie.receipts.recent.heading") %></h2></div>
+  <% if @receipts.any? %>
+    <div class="bw-table-scroll"><table class="bw-table">
+      <thead><tr><th scope="col"><%= t("billie.receipts.fields.merchant_name") %></th><th scope="col"><%= t("billie.receipts.fields.purchased_on") %></th><th scope="col"><%= t("billie.receipts.recent.source") %></th><th scope="col"><%= t("billie.receipts.recent.status") %></th><th scope="col" class="bw-text-right"><%= t("billie.receipts.fields.total") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <tbody>
+        <% @receipts.each do |receipt| %>
+          <tr id="receipt-<%= receipt.id %>">
+            <td><strong><%= receipt.display_name %></strong><% if receipt.issues.any? %><small class="bw-muted"><%= receipt.issues.first(2).map { |code| receipt_issue(code) }.join(" · ") %></small><% end %></td>
+            <td class="bw-nowrap"><%= receipt.purchased_on ? finance_date(receipt.purchased_on, "%b %-d, %Y") : t("billie.receipts.unknown") %></td>
+            <td><%= t("billie.receipts.sources.#{receipt.source}") %></td>
+            <td><%= receipt_badge(receipt.verification) %></td>
+            <td class="bw-text-right bw-nowrap"><%= receipt.total ? finance_money(receipt.refund? ? receipt.total : -receipt.total, receipt.currency || @profile.currency) : t("billie.receipts.unknown") %></td>
+            <td class="bw-text-right"><%= link_to t("billie.finance.ui.review"), finance_receipt_path(receipt), class: "bw-table-link" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table></div>
+  <% else %>
+    <div class="bw-empty-state"><h3><%= t("billie.receipts.recent.empty") %></h3><p><%= t("billie.receipts.recent.empty_help") %></p></div>
+  <% end %>
+  <% if @statements.any? %>
+    <div class="bw-panel-body"><h3><%= t("billie.receipts.recent.statements") %></h3><ul class="bw-plain-list" id="recent-statements"><% @statements.each do |statement| %><li><%= link_to statement.filename, finance_statements_path %> <small class="bw-muted"><%= t("billie.receipts.recent.statement_rows", count: statement.transaction_count, date: finance_date(statement.created_at.to_date, "%b %-d, %Y")) %></small></li><% end %></ul></div>
+  <% end %>
+</section>
+
+<section class="bw-panel bw-section-gap" id="shortcuts" aria-labelledby="shortcuts-heading">
+  <h2 id="shortcuts-heading"><%= t("billie.receipts.shortcuts.heading") %></h2>
+  <p><%= t("billie.receipts.shortcuts.intro") %></p>
+  <% if @new_token %>
+    <div class="bw-token-once" role="status" id="new-capture-token"><strong><%= t("billie.receipts.shortcuts.copy_now") %></strong><br><code><%= @new_token %></code></div>
+  <% end %>
+  <ol class="bw-steps">
+    <li><%= t("billie.receipts.shortcuts.step_token") %></li>
+    <li><%= t("billie.receipts.shortcuts.step_actions") %></li>
+    <li><%= t("billie.receipts.shortcuts.step_request", url: "#{request.base_url}/api/client/v1/finance/receipts") %></li>
+    <li><%= t("billie.receipts.shortcuts.step_name") %></li>
+  </ol>
+  <p class="bw-caption"><%= t("billie.receipts.shortcuts.native_note") %></p>
+  <%= form_with url: finance_capture_tokens_path, scope: :capture_token, data: {turbo: false}, class: "bw-inline-edit" do |form| %>
+    <%= form.label :name, t("billie.receipts.shortcuts.name"), class: "bw-sr-only" %><%= form.text_field :name, maxlength: 60, placeholder: t("billie.receipts.shortcuts.default_name") %>
+    <%= form.submit t("billie.receipts.shortcuts.create"), class: "bw-button bw-button-small bw-button-dark" %>
+  <% end %>
+  <% if @tokens.any? %>
+    <ul class="bw-plain-list" id="capture-tokens">
+      <% @tokens.each do |token| %>
+        <li><strong><%= token.name %></strong> <small class="bw-muted"><%= token.token_prefix %>… · <%= token.active? ? t("billie.receipts.shortcuts.active", date: finance_date(token.expires_at.to_date, "%b %-d, %Y")) : t("billie.receipts.shortcuts.inactive") %><%= " · #{t("billie.receipts.shortcuts.last_used", date: finance_date(token.last_used_at.to_date, "%b %-d, %Y"))}" if token.last_used_at %></small>
+          <% if token.active? %><%= button_to t("billie.receipts.shortcuts.revoke"), finance_capture_token_path(token), method: :delete, class: "bw-button bw-button-small bw-button-danger-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %><% end %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

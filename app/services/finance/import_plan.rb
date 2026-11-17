@@ -5,7 +5,8 @@ module Finance
   #      repayment on a credit card is never income;
   #   2. compare with what is already stored for the same account (DuplicateDetector): automatic
   #      duplicates are skipped, possible duplicates are kept and linked for a person to decide;
-  #   3. insert in bulk with provenance (original_description, kind, account, origin).
+  #   3. insert in bulk with provenance (original_description, kind, account, origin);
+  #   4. match the new rows against captured receipts (ReceiptReconciler#after_import).
   # Call inside the caller's per-user lock and database transaction.
   class ImportPlan
     attr_reader :rows, :skipped, :flagged
@@ -65,6 +66,9 @@ module Finance
         TransactionLink.create!(user: @user, link_type: "duplicate_of", from_transaction_id: ids[index], to_transaction_id: existing_id,
           status: "suggested", decided_by: "auto")
       end
+      # Deduplicate against receipts (one purchase, one entry): bank rows that arrive for purchases already
+      # captured from a receipt are matched; exact matches set the receipt entry aside, others wait for a person.
+      ReceiptReconciler.new(@user, actor: "import").after_import(ids) if ids.any? && Receipt.where(user_id: @user.id, status: Receipt::OPEN_STATUSES).exists?
       ids
     end
 

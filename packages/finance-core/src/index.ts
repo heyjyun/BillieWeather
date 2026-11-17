@@ -12,3 +12,4 @@ export * from "./snapshot";
 export * from "./spending";
 export * from "./universal";
 export * from "./ledger";
+export * from "./receipt";

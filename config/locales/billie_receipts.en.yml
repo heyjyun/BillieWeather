@@ -1,0 +1,322 @@
+en:
+  billie:
+    ledger:
+      origins:
+        receipt: Recorded from a receipt
+      errors:
+        match_not_open: This suggestion was already decided.
+        already_matched: This receipt is already linked to a transaction. Undo that link first.
+        match_not_confirmed: Only a confirmed link can be undone.
+        match_not_rejected: Only a rejected suggestion can be reconsidered.
+        entry_has_receipt: That transaction already has a receipt.
+        entry_is_receipt: Choose a bank or hand-entered transaction, not another receipt entry.
+        already_recorded: This receipt is already recorded as an expense.
+        receipt_incomplete: Enter the receipt's date and total first.
+        currency_mismatch: This receipt is in another currency than your account, so it can't be recorded as an expense. Link it to the bank's charge instead.
+        receipt_in_use: This receipt supports a transaction. Undo the link (or delete the entry) first.
+        not_a_duplicate: This receipt isn't marked as a duplicate.
+        not_dismissed: This receipt isn't dismissed.
+        source_invalid: Unknown receipt source.
+        receipt_empty: Choose a photo, an image or a PDF, or type the receipt details.
+        file_empty: The file is empty.
+        file_invalid: The file couldn't be read.
+        file_too_large: Each receipt file can be up to 10 MB.
+        file_type: Use a JPEG, PNG, HEIC or WebP image, or a PDF.
+        account_not_found: That account wasn't found.
+        purchased_on_invalid: Enter a valid date.
+        purchased_at_time_invalid: Enter a valid time (HH:MM).
+        total_invalid: Enter the total as a number with at most two decimals.
+        subtotal_invalid: Enter the subtotal as a number with at most two decimals.
+        tax_invalid: Enter the tax as a number with at most two decimals.
+        tip_invalid: Enter the tip as a number with at most two decimals.
+        discount_invalid: Enter the discount as a number with at most two decimals.
+        currency_invalid: Enter a three-letter currency code, such as USD.
+        direction_invalid: Choose purchase or refund.
+        payment_method_invalid: Choose a payment method.
+        card_last4_invalid: Enter the card's last four digits.
+        category_invalid: Choose one of your categories.
+    receipts:
+      nav: Receipts
+      title: Receipts
+      eyebrow: Capture
+      intro: Scan paper receipts, upload electronic receipts, screenshots and PDFs. BillieWeather reads them, checks them against your bank records and never counts one purchase twice.
+      untitled: Receipt
+      entry_note: From a receipt
+      back: Back to receipts
+      unknown: Unknown
+      reopen: Reopen
+      dismiss: Dismiss receipt
+      dismiss_confirm: Dismiss this receipt? It stays in your records and can be reopened.
+      capture:
+        heading: Add receipts
+        scan: Scan receipt
+        scan_help: On a phone this opens the camera. Hold the receipt flat, in good light.
+        scan_input: Receipt photo
+        scan_submit: Use photo
+        upload: Upload receipts
+        upload_help: Drop images, screenshots or PDF receipts here, or choose files.
+        upload_input: Receipt files
+        limits: Up to %{count} files, 10 MB each. JPEG, PNG, HEIC, WebP or PDF.
+        upload_submit: Upload
+        statement: Import statement
+        statement_help: Bank and card statements (CSV or PDF) are matched against your receipts automatically.
+        statement_link: Go to statements
+        manual: Type a receipt by hand
+        manual_submit: Add receipt
+      privacy:
+        local_ocr: Receipt files are kept privately in your BillieWeather records. Text is recognized on this server with a local engine; receipts are never sent to another service.
+        no_server_ocr: Receipt files are kept privately in your BillieWeather records and never sent to another service. The website reads PDF receipts; for photos, type the details or scan with the BillieWeather app or an iOS Shortcut, which recognize text on your phone.
+      recent:
+        heading: Recent imports
+        source: Source
+        status: Status
+        empty: No receipts yet
+        empty_help: Scan or upload a receipt to start.
+        statements: Recent statements
+        statement_rows:
+          one: "%{count} transaction · imported %{date}"
+          other: "%{count} transactions · imported %{date}"
+      sources:
+        camera: Camera
+        upload: Upload
+        shortcut: Siri / Shortcuts
+        app: BillieWeather app
+        email: Email
+        manual: Typed
+      fields:
+        merchant_name: Merchant
+        purchased_on: Date
+        purchased_at_time: Time
+        total: Total
+        subtotal: Subtotal
+        tax: Tax
+        tip: Tip
+        discount: Discount
+        receipt_number: Receipt or invoice number
+        card_last4: Card (last 4 digits)
+        currency: Currency
+        payment_method: Payment method
+        direction: Type
+        bank_account_id: Paid from account
+      payment_methods:
+        card: Card
+        cash: Cash
+        mobile: Mobile wallet
+        other: Other
+      directions:
+        purchase: Purchase
+        refund: Refund or return
+      verification:
+        verified: Verified
+        auto_matched: Matched automatically
+        matched: Matched
+        bank_record: Bank record
+        cash: Cash · no bank record expected
+        pending_bank_match: Waiting for the bank
+        needs_review: Needs review
+        possible_duplicate: Possible duplicate
+        duplicate: Duplicate copy
+        amount_mismatch: Amount differs
+        foreign_currency: Other currency
+        entry_in_trash: Entry in trash
+        dismissed: Dismissed
+        missing_receipt: Receipt missing
+        superseded: Replaced by the bank's record
+        unverified_manual: Entered by hand
+      field_state:
+        confirmed: Confirmed
+        read: Read
+        uncertain: Uncertain
+        missing: Missing
+      levels:
+        exact: Exact match
+        probable: Probable match
+        ambiguous: Possible match
+        manual: Linked by you
+      reasons:
+        amount_equal: same amount
+        amount_differs_tip: the bank charged more (maybe a tip)
+        split_payment: two charges add up to the total
+        currency_differs: different currency, amounts not compared
+        merchant_same: same merchant
+        merchant_similar: merchant name written differently
+        merchant_weak: merchant name only partly similar
+        merchant_unknown: merchant unreadable
+        same_day: same day
+        posted_later: posted later by the bank
+        posted_earlier: posted a day earlier
+        card_last4_match: same card
+        receipt_number_match: receipt number matches the bank reference
+        multiple_candidates: several transactions fit
+        similar_candidates: another transaction is similar
+        low_confidence: some receipt details are uncertain
+      issues:
+        merchant_missing: The merchant couldn't be read.
+        date_missing: The date couldn't be read.
+        total_missing: No total was found.
+        total_inferred: No line said "total"; the largest amount was used. Please check it.
+        totals_inconsistent: The subtotal, tax and tip don't add up to the total.
+        multiple_totals: The receipt shows different totals.
+        date_ambiguous: The date could be read either day-first or month-first.
+        future_date: The date is in the future.
+        currency_assumed: No currency on the receipt; your account's currency is assumed.
+        low_confidence: Some details were hard to read.
+        text_unavailable: No text could be read from this file. Type the details below.
+      detail:
+        captured: "%{source} · added %{date}"
+        details: Receipt details
+        details_help: Values read from the receipt are marked Read or Uncertain until you confirm them. Saving confirms every field shown.
+        issues: Please check
+        suggest_category: Suggest automatically
+        save: Save and check again
+        line_items: Items
+        item: Item
+        quantity: Qty
+        unit_price: Unit price
+        line_items_note: Items are read from the receipt and kept for reference; totals use the receipt total.
+        evidence: Original and matching
+        original_alt: Original receipt for %{name}
+        open_original: Open original
+        download_original: Download
+        no_file: No file — this receipt was typed or sent as text.
+      duplicate:
+        is_copy: This is a copy of a receipt you already added. It isn't counted.
+        possible: This looks like a receipt you already added. It isn't counted until you decide.
+        confirm: Yes, it's a copy
+        different: It's a different purchase
+      matching:
+        heading: Bank record
+        auto_linked: Matched automatically
+        linked: Linked
+        bank_record: Bank record
+        why: Why
+        chosen_by_you: chosen by you
+        confirm_auto: Confirm match
+        undo: Undo link
+        superseded_note: The expense recorded from this receipt is set aside, so this purchase counts once — as the bank's transaction.
+        question: We found a possible matching bank transaction. Are these records for the same purchase?
+        score: "score %{score}"
+        confirm: Confirm match
+        keep_separate: Keep separate
+        review_details: Review details
+        none: No matching bank transaction yet. When your statement arrives, it is checked automatically.
+        none_cash: Paid in cash — no bank record is expected.
+        rejected:
+          one: "%{count} suggestion you kept separate"
+          other: "%{count} suggestions you kept separate"
+        reconsider: Reconsider
+      entry:
+        heading: In your transactions
+        superseded: set aside — the bank's transaction counts instead
+        trashed: in the trash
+        counted: counted in your totals
+        not_recorded: Not recorded as an expense yet.
+        record: Record as expense
+      link:
+        heading: Link to a transaction yourself
+        choose: Transaction
+        submit: Link
+      shortcuts:
+        heading: Siri and Shortcuts
+        intro: Say "Hey Siri, scan a receipt with BillieWeather" with an iOS Shortcut that photographs the receipt, reads its text on your iPhone and sends it here. A capture token lets the Shortcut add receipts only — it can't read or change anything else.
+        copy_now: Copy this token now. It won't be shown again.
+        step_token: Create a capture token below and copy it.
+        step_actions: In the Shortcuts app, add Take Photo, then Extract Text from Image.
+        step_request: "Add Get Contents of URL: POST to %{url}, header Authorization: Bearer <your token>, request body Form with text = the extracted text and file = the photo."
+        step_name: Name the Shortcut "Scan a receipt with BillieWeather" so Siri recognizes the phrase.
+        native_note: The BillieWeather iPhone app's own Siri actions need the native iOS build; until then, Shortcuts is the supported way.
+        name: Token name
+        default_name: iPhone Shortcut
+        create: Create capture token
+        active: active until %{date}
+        inactive: revoked or expired
+        last_used: last used %{date}
+        revoke: Revoke
+        revoked: Capture token revoked.
+        too_many: You can have up to %{count} active capture tokens. Revoke one first.
+      flash:
+        too_many: Choose up to %{count} files at a time.
+        added: Receipt added.
+        already_added: This receipt was already added; nothing new was created.
+        batch: "%{added} added, %{existing} already there, %{failed} not added."
+        saved: Receipt saved and checked again.
+        recorded: Recorded as an expense.
+        dismissed: Receipt dismissed.
+        reopened: Receipt reopened.
+        not_duplicate: Kept as a separate purchase.
+        marked_duplicate: Marked as a copy; it isn't counted.
+        linked: Receipt linked to the transaction.
+        decision:
+          confirm: Match confirmed.
+          reject: Kept separate. This pair won't be suggested again.
+          undo: Link undone. The receipt counts on its own again.
+          reconsider: The suggestion is open again.
+      transaction:
+        heading: Source and verification
+        source: Source
+        statement: Statement %{name}
+        receipt: Receipt
+        no_receipt: No receipt attached.
+        attach: Add a receipt
+        set_aside:
+          one: "%{count} receipt entry set aside for this transaction"
+          other: "%{count} receipt entries set aside for this transaction"
+    reconciliation:
+      nav: Reconciliation
+      title: Reconciliation
+      eyebrow: Verify
+      intro: Receipts, bank records and your ledger, checked against each other. Nothing changes until you decide.
+      metrics:
+        review: Awaiting review
+        review_help: Receipts that need your decision
+        matched: Matched
+        matched_help: Receipts linked to a bank transaction
+        unmatched: Unmatched
+        unmatched_help: "%{bank} waiting for the bank · %{cash} cash"
+        discrepancies: Discrepancies
+        discrepancies_help: Records that don't agree
+      review:
+        heading: Transactions awaiting review
+        empty: Nothing to review.
+        check_details: Check the details read from this receipt.
+      discrepancies:
+        heading: Reconciliation discrepancies
+        intro: These are listed for a look; none is changed automatically. A second charge can be a real purchase.
+        none: No discrepancies found.
+        amount_mismatch:
+          one: "%{count} receipt differs from its bank charge"
+          other: "%{count} receipts differ from their bank charges"
+        receipt_vs_bank: "receipt %{receipt}, bank %{bank}"
+        duplicate_charges:
+          one: "%{count} possible duplicate bank charge"
+          other: "%{count} possible duplicate bank charges"
+        missing_receipts:
+          one: "%{count} tax-review expense without a receipt"
+          other: "%{count} tax-review expenses without a receipt"
+        refunds_without_purchase:
+          one: "%{count} refund not linked to a purchase"
+          other: "%{count} refunds not linked to a purchase"
+        transfers_as_spending:
+          one: "%{count} possible transfer counted as spending"
+          other: "%{count} possible transfers counted as spending"
+      balances:
+        heading: Statement balances
+        consistent: Consistent
+        differs: Differs by %{amount}
+        scope: Balances are compared only between two statements of one account that both show a closing balance. This is a continuity check, not a full bank reconciliation, and it can't see transactions missing from both statements.
+      matched:
+        heading: Matched transactions
+        empty: No matched receipts yet.
+      unmatched:
+        heading: Unmatched transactions
+        intro: Receipts without a bank record. A card purchase can take several days to post; cash never appears.
+        awaiting_bank:
+          one: "%{count} waiting for the bank"
+          other: "%{count} waiting for the bank"
+        stale: not seen after %{days} days — check your card statement
+        cash:
+          one: "%{count} cash purchase"
+          other: "%{count} cash purchases"
+      verified:
+        heading: Recently verified
+        empty: Matches you confirm appear here.

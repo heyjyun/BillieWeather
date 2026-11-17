@@ -35,5 +35,11 @@
     "macOS": {
       "minimumSystemVersion": "11.0"
     }
+  },
+  "plugins": {
+    "deep-link": {
+      "mobile": [{ "scheme": ["billieweather"], "appLink": false }],
+      "desktop": { "schemes": ["billieweather"] }
+    }
   }
 }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_16_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -217,6 +217,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000100) do
     t.check_constraint "period::text = ANY (ARRAY['month'::character varying::text, 'year'::character varying::text])", name: "finance_budgets_period"
   end
 
+  create_table "finance_capture_tokens", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", limit: 60, null: false
+    t.string "token_digest", limit: 64, null: false
+    t.string "token_prefix", limit: 12, null: false
+    t.datetime "last_used_at"
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token_digest"], name: "index_finance_capture_tokens_on_token_digest", unique: true
+    t.index ["user_id", "revoked_at"], name: "index_finance_capture_tokens_on_user_id_and_revoked_at"
+    t.check_constraint "token_digest::text ~ '^[0-9a-f]{64}$'::text", name: "finance_capture_tokens_digest"
+  end
+
   create_table "finance_category_settings", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "name", limit: 40, null: false
@@ -385,6 +400,91 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000100) do
     t.index ["uuid"], name: "index_finance_projects_on_uuid", unique: true
   end
 
+  create_table "finance_receipt_matches", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.bigint "receipt_id", null: false
+    t.bigint "transaction_id", null: false
+    t.string "status", default: "suggested", null: false
+    t.string "level", null: false
+    t.integer "score", default: 0, null: false
+    t.jsonb "reasons", default: [], null: false
+    t.uuid "group_key"
+    t.string "decided_by", default: "auto", null: false
+    t.datetime "decided_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["receipt_id", "transaction_id"], name: "index_finance_receipt_matches_pair", unique: true
+    t.index ["transaction_id"], name: "index_finance_receipt_matches_one_receipt", unique: true, where: "((status)::text = 'confirmed'::text)"
+    t.index ["user_id", "status"], name: "index_finance_receipt_matches_on_owner_status"
+    t.index ["uuid"], name: "index_finance_receipt_matches_on_uuid", unique: true
+    t.check_constraint "NOT (status::text = 'confirmed'::text AND decided_by::text = 'auto'::text AND level::text <> 'exact'::text)", name: "finance_receipt_matches_auto_exact"
+    t.check_constraint "decided_by::text = ANY (ARRAY['user'::character varying, 'auto'::character varying]::text[])", name: "finance_receipt_matches_decided_by"
+    t.check_constraint "jsonb_typeof(reasons) = 'array'::text", name: "finance_receipt_matches_reasons"
+    t.check_constraint "level::text = ANY (ARRAY['exact'::character varying, 'probable'::character varying, 'ambiguous'::character varying, 'manual'::character varying]::text[])", name: "finance_receipt_matches_level"
+    t.check_constraint "score >= 0 AND score <= 100", name: "finance_receipt_matches_score"
+    t.check_constraint "status::text = 'suggested'::text OR decided_at IS NOT NULL", name: "finance_receipt_matches_decided"
+    t.check_constraint "status::text = ANY (ARRAY['suggested'::character varying, 'confirmed'::character varying, 'rejected'::character varying]::text[])", name: "finance_receipt_matches_status"
+  end
+
+  create_table "finance_receipts", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.string "source", default: "upload", null: false
+    t.string "status", default: "needs_review", null: false
+    t.string "client_request_id", limit: 100
+    t.string "filename", limit: 255
+    t.string "content_type", limit: 100
+    t.bigint "byte_size"
+    t.string "sha256", limit: 64
+    t.string "extraction_engine", limit: 60
+    t.text "ocr_text"
+    t.jsonb "extraction", default: {}, null: false
+    t.jsonb "issues", default: [], null: false
+    t.string "merchant_name", limit: 200
+    t.date "purchased_on"
+    t.string "purchased_at_time", limit: 5
+    t.decimal "total", precision: 15, scale: 2
+    t.decimal "subtotal", precision: 15, scale: 2
+    t.decimal "tax", precision: 15, scale: 2
+    t.decimal "tip", precision: 15, scale: 2
+    t.decimal "discount", precision: 15, scale: 2
+    t.string "currency", limit: 3
+    t.string "direction", default: "purchase", null: false
+    t.string "payment_method", limit: 20
+    t.string "card_last4", limit: 4
+    t.string "receipt_number", limit: 64
+    t.string "category"
+    t.jsonb "line_items", default: [], null: false
+    t.jsonb "confirmed_fields", default: [], null: false
+    t.datetime "reviewed_at"
+    t.bigint "bank_account_id"
+    t.bigint "transaction_id"
+    t.bigint "duplicate_of_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["duplicate_of_id"], name: "index_finance_receipts_on_duplicate_of_id", where: "(duplicate_of_id IS NOT NULL)"
+    t.index ["id", "user_id"], name: "index_finance_receipts_on_id_and_owner", unique: true
+    t.index ["transaction_id"], name: "index_finance_receipts_one_entry", unique: true, where: "(transaction_id IS NOT NULL)"
+    t.index ["user_id", "client_request_id"], name: "index_finance_receipts_idempotency", unique: true, where: "(client_request_id IS NOT NULL)"
+    t.index ["user_id", "sha256"], name: "index_finance_receipts_one_file", unique: true, where: "(sha256 IS NOT NULL)"
+    t.index ["user_id", "status", "purchased_on"], name: "index_finance_receipts_on_owner_status_date"
+    t.index ["uuid"], name: "index_finance_receipts_on_uuid", unique: true
+    t.check_constraint "(status::text = ANY (ARRAY['duplicate'::character varying, 'possible_duplicate'::character varying]::text[])) = (duplicate_of_id IS NOT NULL)", name: "finance_receipts_duplicate_status"
+    t.check_constraint "(total IS NULL OR total >= 0::numeric AND total < '10000000000000'::bigint::numeric) AND (subtotal IS NULL OR abs(subtotal) < '10000000000000'::bigint::numeric) AND (tax IS NULL OR abs(tax) < '10000000000000'::bigint::numeric) AND (tip IS NULL OR tip >= 0::numeric AND tip < '10000000000000'::bigint::numeric) AND (discount IS NULL OR discount >= 0::numeric AND discount < '10000000000000'::bigint::numeric)", name: "finance_receipts_money"
+    t.check_constraint "byte_size IS NULL OR byte_size > 0 AND byte_size <= 10485760", name: "finance_receipts_byte_size"
+    t.check_constraint "card_last4 IS NULL OR card_last4::text ~ '^[0-9]{4}$'::text", name: "finance_receipts_card_last4"
+    t.check_constraint "currency IS NULL OR currency::text ~ '^[A-Z]{3}$'::text", name: "finance_receipts_currency"
+    t.check_constraint "direction::text = ANY (ARRAY['purchase'::character varying, 'refund'::character varying]::text[])", name: "finance_receipts_direction"
+    t.check_constraint "duplicate_of_id IS NULL OR duplicate_of_id <> id", name: "finance_receipts_not_own_duplicate"
+    t.check_constraint "jsonb_typeof(extraction) = 'object'::text AND jsonb_typeof(issues) = 'array'::text AND jsonb_typeof(line_items) = 'array'::text AND jsonb_typeof(confirmed_fields) = 'array'::text", name: "finance_receipts_json_shapes"
+    t.check_constraint "payment_method IS NULL OR (payment_method::text = ANY (ARRAY['card'::character varying, 'cash'::character varying, 'mobile'::character varying, 'other'::character varying]::text[]))", name: "finance_receipts_payment_method"
+    t.check_constraint "purchased_at_time IS NULL OR purchased_at_time::text ~ '^[0-2][0-9]:[0-5][0-9]$'::text", name: "finance_receipts_time"
+    t.check_constraint "sha256 IS NULL OR sha256::text ~ '^[0-9a-f]{64}$'::text", name: "finance_receipts_sha256"
+    t.check_constraint "source::text = ANY (ARRAY['camera'::character varying, 'upload'::character varying, 'shortcut'::character varying, 'app'::character varying, 'email'::character varying, 'manual'::character varying]::text[])", name: "finance_receipts_source"
+    t.check_constraint "status::text = ANY (ARRAY['needs_review'::character varying, 'possible_duplicate'::character varying, 'duplicate'::character varying, 'pending_bank_match'::character varying, 'cash'::character varying, 'matched'::character varying, 'dismissed'::character varying]::text[])", name: "finance_receipts_status"
+  end
+
   create_table "finance_recurring_rules", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
@@ -516,25 +616,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000100) do
     t.string "occurred_at_time", limit: 5
     t.bigint "recurring_rule_id"
     t.date "recurring_on"
+    t.bigint "superseded_by_id"
     t.index ["bank_account_id", "booked_on", "amount"], name: "index_finance_transactions_on_account_date_amount"
     t.index ["id", "user_id"], name: "index_finance_transactions_on_id_and_owner", unique: true
     t.index ["merchant_id"], name: "index_finance_transactions_on_merchant", where: "(merchant_id IS NOT NULL)"
     t.index ["project_id"], name: "index_finance_transactions_on_project", where: "(project_id IS NOT NULL)"
     t.index ["recurring_rule_id", "recurring_on", "bank_account_id"], name: "index_finance_transactions_recurring_once", unique: true, where: "(recurring_rule_id IS NOT NULL)"
     t.index ["statement_id"], name: "index_finance_transactions_on_statement_id"
+    t.index ["superseded_by_id"], name: "index_finance_transactions_on_superseded_by", where: "(superseded_by_id IS NOT NULL)"
     t.index ["user_id", "booked_on", "id"], name: "index_finance_transactions_on_live_recent", order: { booked_on: :desc, id: :desc }, where: "(deleted_at IS NULL)"
     t.index ["user_id", "deleted_at"], name: "index_finance_transactions_on_trash", where: "(deleted_at IS NOT NULL)"
     t.index ["user_id", "kind"], name: "index_finance_transactions_on_user_id_and_kind"
     t.index ["uuid"], name: "index_finance_transactions_on_uuid", unique: true
     t.check_constraint "amount > '-10000000000000'::bigint::numeric AND amount < '10000000000000'::bigint::numeric", name: "finance_transactions_amount_range"
     t.check_constraint "category::text <> ''::text", name: "finance_transactions_category_present"
-    t.check_constraint "category_source::text = ANY (ARRAY['user'::character varying, 'rule'::character varying, 'file'::character varying, 'auto'::character varying, 'region'::character varying, 'ai'::character varying, 'legacy'::character varying]::text[])", name: "finance_transactions_category_source"
-    t.check_constraint "entry_origin::text = ANY (ARRAY['import'::character varying::text, 'manual'::character varying::text, 'web_copy'::character varying::text, 'upload'::character varying::text, 'recurring'::character varying::text, 'legacy'::character varying::text])", name: "finance_transactions_entry_origin"
+    t.check_constraint "category_source::text = ANY (ARRAY['user'::character varying::text, 'rule'::character varying::text, 'file'::character varying::text, 'auto'::character varying::text, 'region'::character varying::text, 'ai'::character varying::text, 'legacy'::character varying::text])", name: "finance_transactions_category_source"
+    t.check_constraint "entry_origin::text = ANY (ARRAY['import'::character varying, 'manual'::character varying, 'web_copy'::character varying, 'upload'::character varying, 'recurring'::character varying, 'legacy'::character varying, 'receipt'::character varying]::text[])", name: "finance_transactions_entry_origin"
     t.check_constraint "jsonb_typeof(user_locked_fields) = 'array'::text", name: "finance_transactions_locked_fields_array"
     t.check_constraint "kind::text = ANY (ARRAY['expense'::character varying::text, 'income'::character varying::text, 'refund'::character varying::text, 'transfer'::character varying::text, 'card_payment'::character varying::text, 'opening_balance'::character varying::text, 'adjustment'::character varying::text, 'ignored'::character varying::text])", name: "finance_transactions_kind"
     t.check_constraint "occurred_at_time IS NULL OR occurred_at_time::text ~ '^[0-2][0-9]:[0-5][0-9]$'::text", name: "finance_transactions_time"
     t.check_constraint "original_description::text <> ''::text", name: "finance_transactions_original_present"
-    t.check_constraint "statement_id IS NOT NULL OR (entry_origin::text = ANY (ARRAY['manual'::character varying::text, 'recurring'::character varying::text]))", name: "finance_transactions_statement_or_manual"
+    t.check_constraint "statement_id IS NOT NULL OR (entry_origin::text = ANY (ARRAY['manual'::character varying, 'recurring'::character varying, 'receipt'::character varying]::text[]))", name: "finance_transactions_statement_or_manual"
+    t.check_constraint "superseded_by_id IS NULL OR superseded_by_id <> id AND entry_origin::text = 'receipt'::text", name: "finance_transactions_superseded_receipt_only"
   end
 
   create_table "integrations_stripe_installations", force: :cascade do |t|
@@ -838,6 +941,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000100) do
   add_foreign_key "finance_books", "users", on_delete: :cascade
   add_foreign_key "finance_budgets", "finance_projects", column: ["project_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_budgets_project_owner", on_delete: :cascade
   add_foreign_key "finance_budgets", "users"
+  add_foreign_key "finance_capture_tokens", "users"
   add_foreign_key "finance_category_settings", "users"
   add_foreign_key "finance_command_executions", "users"
   add_foreign_key "finance_custom_categories", "users"
@@ -850,6 +954,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000100) do
   add_foreign_key "finance_organize_runs", "users"
   add_foreign_key "finance_profiles", "users"
   add_foreign_key "finance_projects", "users"
+  add_foreign_key "finance_receipt_matches", "finance_receipts", column: ["receipt_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_finance_receipt_matches_receipt_id_owner", on_delete: :cascade
+  add_foreign_key "finance_receipt_matches", "finance_transactions", column: ["transaction_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_finance_receipt_matches_transaction_id_owner", on_delete: :cascade
+  add_foreign_key "finance_receipt_matches", "users"
+  add_foreign_key "finance_receipts", "finance_bank_accounts", column: ["bank_account_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_finance_receipts_bank_account_id_owner"
+  add_foreign_key "finance_receipts", "finance_receipts", column: ["duplicate_of_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_finance_receipts_duplicate_of_id_owner"
+  add_foreign_key "finance_receipts", "finance_transactions", column: ["transaction_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_finance_receipts_transaction_id_owner"
+  add_foreign_key "finance_receipts", "users"
   add_foreign_key "finance_recurring_rules", "users"
   add_foreign_key "finance_statement_drafts", "finance_bank_accounts", column: ["bank_account_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_statement_drafts_bank_account_owner"
   add_foreign_key "finance_statement_drafts", "users"
@@ -870,6 +981,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_16_000100) do
   add_foreign_key "finance_transactions", "finance_recurring_rules", column: "recurring_rule_id", on_delete: :nullify
   add_foreign_key "finance_transactions", "finance_recurring_rules", column: ["recurring_rule_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transactions_recurring_rule_owner"
   add_foreign_key "finance_transactions", "finance_statements", column: ["statement_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transactions_statement_owner"
+  add_foreign_key "finance_transactions", "finance_transactions", column: ["superseded_by_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_finance_transactions_superseded_by_id_owner"
   add_foreign_key "finance_transactions", "users"
   add_foreign_key "integrations_stripe_installations", "oauth_stripe_accounts"
   add_foreign_key "integrations_stripe_installations", "teams"

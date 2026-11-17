@@ -2,6 +2,7 @@ import { ledgerJa } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalJa } from "./universal";
 import { commandJa } from "./command";
+import { receiptJa } from "./receipt";
 
 export const ja: Messages = {
   languageName: "日本語",
@@ -277,4 +278,5 @@ export const ja: Messages = {
   universal: universalJa,
   ledger: ledgerJa,
   command: commandJa,
+  receipt: receiptJa,
 };

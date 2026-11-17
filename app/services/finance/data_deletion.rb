@@ -1,14 +1,15 @@
 module Finance
   # "Delete my financial data": removes every finance record that belongs to one person and
   # keeps their login. BillieWeather does not store uploaded statement files (they are parsed
-  # in memory and only the extracted rows are saved), and no background jobs hold finance
-  # data, so the database rows below plus the cached forecast are everything there is.
+  # in memory and only the extracted rows are saved). Receipt files ARE kept (private database
+  # storage, Finance::Receipt#file) and are purged here first. No background jobs hold finance
+  # data, so the database rows below, the receipt files and the cached forecast are everything there is.
   #
   # Deletion runs under the same per-user row lock that statement imports and balance
   # syncing take, inside one database transaction: it either removes everything or nothing.
   class DataDeletion
     # Order matters: children before the rows their foreign keys point at.
-    MODELS = [CommandExecution, AuditEvent, OrganizeRun, TransactionLink, Transaction, Budget, RecurringRule, Merchant, Project, Tag, CategorySetting,
+    MODELS = [CommandExecution, AuditEvent, OrganizeRun, CaptureToken, ReceiptMatch, Receipt, TransactionLink, Transaction, Budget, RecurringRule, Merchant, Project, Tag, CategorySetting,
       StatementDraft, Statement, BankAccount, MerchantRule, CustomCategory, Insight, Book, Profile].freeze
 
     def self.call(user:)
@@ -29,6 +30,7 @@ module Finance
 
     # For callers that already hold the user's lock inside their own transaction.
     def delete_records!
+      ActiveStorage::Attachment.where(record_type: Receipt.name, record_id: Receipt.where(user_id: @user.id).select(:id)).includes(:blob).find_each(&:purge)
       MODELS.to_h { |model| [model.table_name, model.where(user_id: @user.id).delete_all] }
     end
 

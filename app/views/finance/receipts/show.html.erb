@@ -1,0 +1,133 @@
+<% content_for :title, @receipt.display_name %>
+<% currency = @receipt.currency || @profile.currency %>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.receipts.eyebrow") %></span><h1><%= @receipt.display_name %></h1><p><%= receipt_badge(@receipt.verification, id: "receipt-verification") %> <span class="bw-muted"><%= t("billie.receipts.detail.captured", source: t("billie.receipts.sources.#{@receipt.source}"), date: finance_date(@receipt.created_at.to_date, "%b %-d, %Y")) %><%= " · #{@receipt.extraction_engine}" if @receipt.extraction_engine %></span></p></div><%= link_to t("billie.receipts.back"), finance_receipts_path, class: "bw-text-link" %></div>
+
+<div class="bw-two-column">
+  <section class="bw-panel" aria-labelledby="receipt-details-heading">
+    <h2 id="receipt-details-heading"><%= t("billie.receipts.detail.details") %></h2>
+    <p class="bw-caption"><%= t("billie.receipts.detail.details_help") %></p>
+    <% if @receipt.issues.any? %>
+      <div class="bw-flash bw-flash-error" role="status" id="receipt-issues"><strong><%= t("billie.receipts.detail.issues") %></strong><ul><% @receipt.issues.each do |code| %><li><%= receipt_issue(code) %></li><% end %></ul></div>
+    <% end %>
+    <%= form_with model: @receipt, url: finance_receipt_path(@receipt), scope: :receipt, method: :patch, data: {turbo: false}, class: "bw-form", id: "receipt-form" do |form| %>
+      <div class="bw-form-grid">
+        <% [[:merchant_name, :text_field, {maxlength: 200}], [:purchased_on, :date_field, {}], [:purchased_at_time, :time_field, {}], [:total, :text_field, {inputmode: "decimal"}],
+            [:subtotal, :text_field, {inputmode: "decimal"}], [:tax, :text_field, {inputmode: "decimal"}], [:tip, :text_field, {inputmode: "decimal"}], [:discount, :text_field, {inputmode: "decimal"}],
+            [:receipt_number, :text_field, {maxlength: 64}], [:card_last4, :text_field, {maxlength: 4, inputmode: "numeric", pattern: "[0-9]{4}"}]].each do |name, input, options| %>
+          <div class="bw-field" id="field-<%= name %>"><div class="bw-field-head"><%= form.label name, t("billie.receipts.fields.#{name}") %><%= receipt_field_tag(@receipt, name.to_s) %></div>
+            <%= form.public_send(input, name, value: (value = @receipt.public_send(name)).is_a?(BigDecimal) ? value.to_s("F") : value, **options) %></div>
+        <% end %>
+        <div class="bw-field" id="field-currency"><div class="bw-field-head"><%= form.label :currency, t("billie.receipts.fields.currency") %><%= receipt_field_tag(@receipt, "currency") %></div><%= form.text_field :currency, maxlength: 3, pattern: "[A-Za-z]{3}" %></div>
+        <div class="bw-field"><div class="bw-field-head"><%= form.label :payment_method, t("billie.receipts.fields.payment_method") %><%= receipt_field_tag(@receipt, "payment_method") %></div><%= form.select :payment_method, Finance::Receipt::PAYMENT_METHODS.map { |method| [t("billie.receipts.payment_methods.#{method}"), method] }, include_blank: t("billie.receipts.unknown") %></div>
+        <div class="bw-field"><%= form.label :direction, t("billie.receipts.fields.direction") %><%= form.select :direction, Finance::Receipt::DIRECTIONS.map { |direction| [t("billie.receipts.directions.#{direction}"), direction] } %></div>
+        <div class="bw-field"><%= form.label :category, t("billie.finance.ui.category") %><%= form.select :category, @categories.map { |category| [finance_label(category), category] }, include_blank: t("billie.receipts.detail.suggest_category") %></div>
+        <div class="bw-field"><%= form.label :bank_account_id, t("billie.receipts.fields.bank_account_id") %><%= form.select :bank_account_id, @accounts.map { |account| [account.display_name, account.id] }, include_blank: t("billie.receipts.unknown") %></div>
+      </div>
+      <div class="bw-form-footer"><%= form.submit t("billie.receipts.detail.save"), class: "bw-button bw-button-dark" %></div>
+    <% end %>
+
+    <% if @receipt.line_items.any? %>
+      <h3 class="bw-section-gap"><%= t("billie.receipts.detail.line_items") %></h3>
+      <div class="bw-table-scroll"><table class="bw-table" id="receipt-line-items"><thead><tr><th scope="col"><%= t("billie.receipts.detail.item") %></th><th scope="col"><%= t("billie.receipts.detail.quantity") %></th><th scope="col" class="bw-text-right"><%= t("billie.receipts.detail.unit_price") %></th><th scope="col" class="bw-text-right"><%= t("billie.finance.ui.amount") %></th></tr></thead>
+        <tbody><% @receipt.line_items.each do |item| %><tr><td><%= item["description"] %></td><td><%= item["quantity"] || "—" %></td><td class="bw-text-right"><%= item["unitPrice"] || "—" %></td><td class="bw-text-right"><%= item["amount"] || "—" %></td></tr><% end %></tbody></table></div>
+      <p class="bw-caption"><%= t("billie.receipts.detail.line_items_note") %></p>
+    <% end %>
+  </section>
+
+  <aside class="bw-panel bw-panel-soft" aria-labelledby="receipt-evidence-heading">
+    <h2 id="receipt-evidence-heading"><%= t("billie.receipts.detail.evidence") %></h2>
+    <% if @receipt.file.attached? %>
+      <% if @receipt.content_type.to_s.start_with?("image/") && @receipt.content_type != "image/heic" %>
+        <img src="<%= file_finance_receipt_path(@receipt) %>" alt="<%= t("billie.receipts.detail.original_alt", name: @receipt.display_name) %>" class="bw-receipt-preview" id="receipt-original">
+      <% end %>
+      <p><%= link_to t("billie.receipts.detail.open_original"), file_finance_receipt_path(@receipt), target: "_blank", rel: "noopener", class: "bw-text-link", id: "receipt-original-link" %> · <%= link_to t("billie.receipts.detail.download_original"), file_finance_receipt_path(@receipt, download: 1), class: "bw-text-link" %></p>
+    <% else %>
+      <p class="bw-caption"><%= t("billie.receipts.detail.no_file") %></p>
+    <% end %>
+
+    <% if @duplicate_of %>
+      <div class="bw-match-card" id="duplicate-panel">
+        <strong><%= @receipt.status == "duplicate" ? t("billie.receipts.duplicate.is_copy") : t("billie.receipts.duplicate.possible") %></strong>
+        <p><%= link_to @duplicate_of.display_name, finance_receipt_path(@duplicate_of) %> · <%= @duplicate_of.purchased_on && finance_date(@duplicate_of.purchased_on, "%b %-d, %Y") %> · <%= @duplicate_of.total && finance_money(-@duplicate_of.total, currency) %></p>
+        <div class="bw-inline-actions">
+          <% if @receipt.status == "possible_duplicate" %><%= button_to t("billie.receipts.duplicate.confirm"), mark_duplicate_finance_receipt_path(@receipt), method: :patch, class: "bw-button bw-button-small bw-button-dark", form: {class: "bw-inline-edit", data: {turbo: false}} %><% end %>
+          <%= button_to t("billie.receipts.duplicate.different"), not_duplicate_finance_receipt_path(@receipt), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+        </div>
+      </div>
+    <% end %>
+
+    <h3 class="bw-section-gap"><%= t("billie.receipts.matching.heading") %></h3>
+    <% suggestions = @matches.select { |match| match.status == "suggested" } %>
+    <% confirmed = @matches.select { |match| match.status == "confirmed" } %>
+    <% rejected = @matches.select { |match| match.status == "rejected" } %>
+    <% if confirmed.any? %>
+      <% confirmed.each do |match| entry = match.finance_transaction %>
+        <div class="bw-match-card" id="match-<%= match.id %>">
+          <strong><%= match.decided_by == "auto" ? t("billie.receipts.matching.auto_linked") : t("billie.receipts.matching.linked") %></strong>
+          <dl><dt><%= t("billie.receipts.matching.bank_record") %></dt><dd><%= link_to entry.original_description, edit_finance_transaction_path(entry) %></dd>
+            <dt><%= t("billie.finance.ui.date") %></dt><dd><%= finance_date(entry.booked_on, "%b %-d, %Y") %></dd>
+            <dt><%= t("billie.finance.ui.amount") %></dt><dd><%= finance_money(entry.amount, @profile.currency) %></dd>
+            <dt><%= t("billie.receipts.matching.why") %></dt><dd><%= receipt_reasons(match.reason_codes).presence || t("billie.receipts.matching.chosen_by_you") %></dd></dl>
+          <div class="bw-inline-actions">
+            <% if match.decided_by == "auto" %><%= button_to t("billie.receipts.matching.confirm_auto"), finance_receipt_match_decision_path(match, decision: "confirm"), method: :patch, class: "bw-button bw-button-small bw-button-dark", form: {class: "bw-inline-edit", data: {turbo: false}} %><% end %>
+            <%= button_to t("billie.receipts.matching.undo"), finance_receipt_match_decision_path(match, decision: "undo"), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+          </div>
+        </div>
+      <% end %>
+      <% if @receipt.entry&.superseded? %><p class="bw-caption" id="superseded-note"><%= t("billie.receipts.matching.superseded_note") %></p><% end %>
+    <% elsif suggestions.any? %>
+      <p id="match-question"><%= t("billie.receipts.matching.question") %></p>
+      <% suggestions.group_by { |match| match.group_key || match.id }.each_value do |group| match = group.first %>
+        <div class="bw-match-card" id="match-<%= match.id %>">
+          <strong><%= t("billie.receipts.levels.#{match.level}") %> · <%= t("billie.receipts.matching.score", score: match.score) %></strong>
+          <% group.each do |item| entry = item.finance_transaction %>
+            <dl><dt><%= t("billie.receipts.matching.bank_record") %></dt><dd><%= entry.original_description %></dd>
+              <dt><%= t("billie.finance.ui.date") %></dt><dd><%= finance_date(entry.booked_on, "%b %-d, %Y") %></dd>
+              <dt><%= t("billie.finance.ui.amount") %></dt><dd><%= finance_money(entry.amount, @profile.currency) %></dd></dl>
+          <% end %>
+          <p class="bw-caption"><%= receipt_reasons(match.reason_codes) %></p>
+          <div class="bw-inline-actions">
+            <%= button_to t("billie.receipts.matching.confirm"), finance_receipt_match_decision_path(match, decision: "confirm"), method: :patch, class: "bw-button bw-button-small bw-button-dark", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+            <%= button_to t("billie.receipts.matching.keep_separate"), finance_receipt_match_decision_path(match, decision: "reject"), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+            <%= link_to t("billie.receipts.matching.review_details"), edit_finance_transaction_path(match.finance_transaction), class: "bw-text-link" %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="bw-caption" id="no-match"><%= @receipt.cash? ? t("billie.receipts.matching.none_cash") : t("billie.receipts.matching.none") %></p>
+    <% end %>
+
+    <% if rejected.any? %>
+      <details class="bw-section-gap"><summary><%= t("billie.receipts.matching.rejected", count: rejected.length) %></summary>
+        <% rejected.each do |match| %><p><%= match.finance_transaction.original_description %> · <%= finance_money(match.finance_transaction.amount, @profile.currency) %> <%= button_to t("billie.receipts.matching.reconsider"), finance_receipt_match_decision_path(match, decision: "reconsider"), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %></p><% end %>
+      </details>
+    <% end %>
+
+    <h3 class="bw-section-gap"><%= t("billie.receipts.entry.heading") %></h3>
+    <% if @receipt.entry %>
+      <p id="recorded-entry"><%= (@receipt.entry.superseded? || @receipt.entry.deleted_at) ? @receipt.entry.description : link_to(@receipt.entry.description, edit_finance_entry_path(@receipt.entry)) %> · <%= finance_money(@receipt.entry.amount, @profile.currency) %>
+        <small class="bw-muted"><%= @receipt.entry.superseded? ? t("billie.receipts.entry.superseded") : (@receipt.entry.deleted_at ? t("billie.receipts.entry.trashed") : t("billie.receipts.entry.counted")) %></small></p>
+    <% elsif confirmed.none? && !%w[duplicate possible_duplicate dismissed].include?(@receipt.status) %>
+      <p class="bw-caption"><%= t("billie.receipts.entry.not_recorded") %></p>
+      <%= button_to t("billie.receipts.entry.record"), record_finance_receipt_path(@receipt), class: "bw-button bw-button-dark", form: {data: {turbo: false}}, disabled: !@receipt.complete? %>
+    <% end %>
+
+    <% if @candidates.any? %>
+      <details class="bw-section-gap" id="manual-link"><summary><%= t("billie.receipts.link.heading") %></summary>
+        <%= form_with url: link_finance_receipt_path(@receipt), data: {turbo: false}, class: "bw-form" do |form| %>
+          <%= form.label :transaction_id, t("billie.receipts.link.choose") %>
+          <%= form.select :transaction_id, @candidates.map { |entry| ["#{finance_date(entry.booked_on, "%b %-d")} · #{entry.original_description} · #{finance_money(entry.amount, @profile.currency)}", entry.id] } %>
+          <%= form.submit t("billie.receipts.link.submit"), class: "bw-button bw-button-small bw-button-outline" %>
+        <% end %>
+      </details>
+    <% end %>
+
+    <div class="bw-inline-actions bw-section-gap">
+      <% if @receipt.status == "dismissed" %>
+        <%= button_to t("billie.receipts.reopen"), reopen_finance_receipt_path(@receipt), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-edit", data: {turbo: false}} %>
+      <% elsif confirmed.none? && (@receipt.entry.nil? || @receipt.entry.deleted_at) %>
+        <%= button_to t("billie.receipts.dismiss"), dismiss_finance_receipt_path(@receipt), method: :patch, class: "bw-button bw-button-small bw-button-danger-outline", form: {class: "bw-inline-edit", data: {turbo: false, confirm: t("billie.receipts.dismiss_confirm")}} %>
+      <% end %>
+    </div>
+  </aside>
+</div>

@@ -2,6 +2,7 @@ import { ledgerEs } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalEs } from "./universal";
 import { commandEs } from "./command";
+import { receiptEs } from "./receipt";
 
 export const es: Messages = {
   languageName: "Español",
@@ -277,4 +278,5 @@ export const es: Messages = {
   universal: universalEs,
   ledger: ledgerEs,
   command: commandEs,
+  receipt: receiptEs,
 };

@@ -1,0 +1,38 @@
+{
+  "$comment": "Merchant identity for receipt ↔ bank matching (packages/finance-core/src/receipt/merchant.ts, app/services/finance/merchant_identity.rb). Bank descriptors abbreviate and decorate merchant names (WHOLEFDS MKT #10234, SQ *BLUE BOTTLE). prefixes are removed from the start; aliases map a normalized phrase (lowercase letters and spaces, matched at the start) to one canonical key. Add entries here only; both platforms read this file and replay fixtures/receipts/*.json.",
+  "version": 1,
+  "prefixes": [
+    "pos purchase", "pos debit", "pos", "debit card purchase", "debit purchase", "card purchase", "checkcard", "check card", "purchase authorized on",
+    "purchase", "visa purchase", "dbt crd", "point of sale", "recurring payment", "ach debit", "apple pay", "google pay",
+    "sq", "tst", "sp", "pp", "paypal", "apl", "py", "dd", "ext", "in", "sqc"
+  ],
+  "prefix_markers": ["*"],
+  "noise": ["inc", "llc", "ltd", "co", "corp", "corporation", "company", "store", "stores", "the", "of", "and", "online", "com", "www", "us", "usa"],
+  "generic": ["cafe", "restaurant", "market", "shop", "store", "bar", "grill", "kitchen", "deli", "pharmacy", "gas", "station", "food", "foods", "coffee", "super", "mart"],
+  "aliases": {
+    "whole foods": ["whole foods market", "whole foods", "wholefds", "whole fds", "wfm", "wholefoods"],
+    "trader joes": ["trader joe s", "trader joes", "trader joe"],
+    "amazon": ["amazon com", "amazon mktplace", "amazon marketplace", "amazon mktp", "amzn mktp", "amzn digital", "amzn", "amazon"],
+    "starbucks": ["starbucks store", "starbucks coffee", "starbucks", "sbux"],
+    "walmart": ["wal mart", "walmart supercenter", "walmart", "wm supercenter", "wal sams"],
+    "target": ["target store", "target"],
+    "costco": ["costco wholesale", "costco whse", "costco gas", "costco"],
+    "mcdonalds": ["mcdonald s", "mcdonalds", "mcd"],
+    "cvs": ["cvs pharmacy", "cvs"],
+    "walgreens": ["walgreens", "walgreen"],
+    "safeway": ["safeway"],
+    "kroger": ["kroger"],
+    "chipotle": ["chipotle mexican grill", "chipotle"],
+    "uber eats": ["uber eats", "ubereats", "uber trip eats"],
+    "uber": ["uber trip", "uber"],
+    "lyft": ["lyft ride", "lyft"],
+    "doordash": ["doordash", "door dash"],
+    "home depot": ["the home depot", "home depot"],
+    "lowes": ["lowe s", "lowes"],
+    "shell": ["shell oil", "shell service", "shell"],
+    "chevron": ["chevron"],
+    "seven eleven": ["seven eleven"],
+    "blue bottle": ["blue bottle coffee", "blue bottle"],
+    "apple": ["apple store", "apple com bill", "apple"]
+  }
+}

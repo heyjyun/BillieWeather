@@ -1,0 +1,135 @@
+{
+  "$comment": "Receipt text → fields. Replayed by packages/finance-core/test/receipt.test.ts and test/services/finance/receipt_contract_test.rb. `expect` lists exact values (null = must be unknown); `issues` is the exact sorted list; minConfidence/maxConfidence bound field confidences. All merchants, numbers and cards are synthetic.",
+  "cases": [
+    {
+      "name": "grocery receipt paid by card (Whole Foods example)",
+      "options": { "defaultCurrency": "USD", "today": "2026-11-16" },
+      "lines": [
+        "WHOLE FOODS MARKET", "2525 Lamar Blvd", "Austin, TX 78705", "(512) 555-0142", "11/16/2026 6:42 PM",
+        "ORGANIC BANANAS 1.98", "GREEK YOGURT 2 @ 3.49 6.98", "SOURDOUGH LOAF 5.99", "ROTISSERIE CHICKEN 12.99", "SALMON FILLET 17.00",
+        "SUBTOTAL 44.94", "TAX 3.66", "TOTAL 48.60", "VISA **** 4821 48.60", "TRANS# 004512", "THANK YOU FOR SHOPPING"
+      ],
+      "expect": {
+        "merchant": "WHOLE FOODS MARKET", "date": "2026-11-16", "time": "18:42", "currency": "USD", "total": "48.60", "subtotal": "44.94",
+        "tax": "3.66", "tip": null, "discount": null, "paymentMethod": "card", "cardLast4": "4821", "receiptNumber": "004512", "direction": "purchase",
+        "issues": ["currency_assumed"], "confident": true, "lineItemCount": 5,
+        "lineItem": { "index": 1, "description": "GREEK YOGURT", "quantity": "2", "unitPrice": "3.49", "amount": "6.98" }
+      },
+      "minConfidence": { "total": 0.95, "date": 0.85, "merchant": 0.8 }
+    },
+    {
+      "name": "cafe receipt with a tip line and two totals",
+      "options": { "defaultCurrency": "USD" },
+      "lines": ["BLUE BOTTLE COFFEE", "Order #A1029", "Date: 2026-11-14 09:15", "Latte 5.50", "Croissant 4.25", "Subtotal 9.75", "Sales Tax 0.80", "Total 10.55", "Tip 2.00", "Total 12.55", "Mastercard ending in 7710"],
+      "expect": {
+        "merchant": "BLUE BOTTLE COFFEE", "date": "2026-11-14", "time": "09:15", "total": "12.55", "subtotal": "9.75", "tax": "0.80", "tip": "2.00",
+        "paymentMethod": "card", "cardLast4": "7710", "receiptNumber": "A1029", "issues": ["currency_assumed"], "confident": true, "lineItemCount": 2
+      }
+    },
+    {
+      "name": "blurry photo: the total line has low OCR confidence",
+      "options": { "defaultCurrency": "USD" },
+      "lines": [
+        { "text": "CORNER MARKET", "confidence": 0.93 }, { "text": "11/15/2026", "confidence": 0.91 }, { "text": "SNACKS 3.99", "confidence": 0.7 },
+        { "text": "TOTAL 23.40", "confidence": 0.5 }
+      ],
+      "expect": { "merchant": "CORNER MARKET", "date": "2026-11-15", "total": "23.40", "issues": ["currency_assumed", "low_confidence"], "confident": false },
+      "maxConfidence": { "total": 0.6 }
+    },
+    {
+      "name": "incomplete receipt without a date",
+      "options": { "defaultCurrency": "USD" },
+      "lines": ["DOWNTOWN DELI", "Turkey sandwich 9.50", "Soda 2.00", "TOTAL 11.50", "CASH 20.00", "CHANGE 8.50"],
+      "expect": { "merchant": "DOWNTOWN DELI", "date": null, "time": null, "total": "11.50", "paymentMethod": "cash", "issues": ["currency_assumed", "date_missing"], "confident": false, "lineItemCount": 2 }
+    },
+    {
+      "name": "refund receipt (return) is a refund, not a purchase",
+      "options": { "defaultCurrency": "USD" },
+      "lines": ["TARGET", "Store 1123", "RETURN", "Throw Pillow -19.99", "SUBTOTAL -19.99", "TAX -1.65", "REFUND TOTAL -21.64", "VISA ****3321 REFUND -21.64", "11/22/2026"],
+      "expect": { "merchant": "TARGET", "date": "2026-11-22", "total": "21.64", "subtotal": "19.99", "tax": "1.65", "direction": "refund", "cardLast4": "3321", "paymentMethod": "card", "issues": ["currency_assumed"], "confident": true }
+    },
+    {
+      "name": "day/month order not proven by the text is read month-first and marked for review",
+      "options": { "defaultCurrency": "USD" },
+      "lines": ["HARDWARE PLUS", "03/04/2026 10:01", "TOTAL 15.00"],
+      "expect": { "date": "2026-03-04", "time": "10:01", "issues": ["currency_assumed", "date_ambiguous", "low_confidence"], "confident": false },
+      "maxConfidence": { "date": 0.5 }
+    },
+    {
+      "name": "a known day/month order is trusted",
+      "options": { "defaultCurrency": "GBP", "dateOrder": "dmy" },
+      "lines": ["HARDWARE PLUS", "03/04/2026 10:01", "TOTAL £15.00"],
+      "expect": { "date": "2026-04-03", "currency": "GBP", "total": "15.00", "issues": [], "confident": true }
+    },
+    {
+      "name": "euro receipt with decimal commas and a dotted date",
+      "options": {},
+      "lines": ["Café de Flore", "172 Boulevard Saint-Germain", "75006 Paris", "16.11.2026 14:05", "2 x Café crème 4,50 9,00", "Croissant 2,80", "Total 11,80 €", "TVA 10% 1,07", "Carte **** 5521"],
+      "expect": {
+        "merchant": "Café de Flore", "date": "2026-11-16", "time": "14:05", "currency": "EUR", "total": "11.80", "tax": "1.07", "paymentMethod": "card", "cardLast4": "5521",
+        "issues": [], "confident": true, "lineItemCount": 2, "lineItem": { "index": 0, "description": "Café crème", "quantity": "2", "unitPrice": "4.50", "amount": "9.00" }
+      }
+    },
+    {
+      "name": "Japanese convenience store receipt in yen, paid in cash",
+      "options": {},
+      "lines": ["ローソン 渋谷店", "2026年11月15日 12:30", "おにぎり ¥150", "お茶 ¥140", "合計 ¥290", "現金 ¥500", "お釣り ¥210"],
+      "expect": { "merchant": "ローソン 渋谷店", "date": "2026-11-15", "time": "12:30", "currency": "JPY", "total": "290.00", "paymentMethod": "cash", "issues": [], "confident": true, "lineItemCount": 2 }
+    },
+    {
+      "name": "conflicting totals are reported, not resolved silently",
+      "options": { "defaultCurrency": "USD" },
+      "lines": ["PARKING GARAGE 5", "2026-11-10", "TOTAL DUE 30.00", "TOTAL DUE 32.50"],
+      "expect": { "total": "32.50", "issues": ["currency_assumed", "multiple_totals"], "confident": false }
+    },
+    {
+      "name": "electronic invoice (text PDF) with an invoice number",
+      "options": { "defaultCurrency": "USD", "textConfidence": 0.98 },
+      "lines": [
+        "Invoice", "Acme Web Hosting LLC", "Invoice Number: INV-2026-1187", "Invoice Date: November 3, 2026", "Description Amount",
+        "Pro hosting plan (monthly) $29.00", "Domain renewal $15.00", "Subtotal $44.00", "Tax $0.00", "Total Due $44.00", "Paid with Visa ending 9901"
+      ],
+      "expect": {
+        "merchant": "Acme Web Hosting LLC", "date": "2026-11-03", "total": "44.00", "subtotal": "44.00", "tax": "0.00", "receiptNumber": "INV-2026-1187",
+        "paymentMethod": "card", "cardLast4": "9901", "issues": ["currency_assumed"], "confident": true, "lineItemCount": 2
+      }
+    },
+    {
+      "name": "store discount reduces the total",
+      "options": { "defaultCurrency": "USD" },
+      "lines": ["SAFEWAY", "11/19/2026", "MILK 4.29", "EGGS 5.49", "CLUB CARD SAVINGS -2.00", "SUBTOTAL 9.78", "TAX 0.00", "BALANCE DUE 7.78", "DEBIT ****1188 7.78", "CHANGE DUE 0.00"],
+      "expect": { "merchant": "SAFEWAY", "total": "7.78", "subtotal": "9.78", "discount": "2.00", "cardLast4": "1188", "paymentMethod": "card", "issues": ["currency_assumed"], "confident": true, "lineItemCount": 2 }
+    },
+    {
+      "name": "header without a usable merchant name",
+      "options": { "defaultCurrency": "USD" },
+      "lines": ["1200 Main St", "(312) 555-0101", "11/18/2026", "ITEM 4.00", "TOTAL 4.00"],
+      "expect": { "merchant": null, "total": "4.00", "issues": ["currency_assumed", "merchant_missing"], "confident": false }
+    },
+    {
+      "name": "a date in the future is not trusted",
+      "options": { "defaultCurrency": "USD", "today": "2026-11-16" },
+      "lines": ["BOOK NOOK", "12/25/2026", "TOTAL 18.00"],
+      "expect": { "date": "2026-12-25", "issues": ["currency_assumed", "future_date", "low_confidence"], "confident": false }
+    },
+    {
+      "name": "plain text from iOS Shortcuts (Extract Text from Image)",
+      "options": { "defaultCurrency": "USD" },
+      "text": "Trader Joe's\n#552\n11-16-2026 5:10 pm\nBANANAS 0.99\nTOTAL $0.99\nDEBIT CARD ****2290",
+      "expect": { "merchant": "Trader Joe's", "date": "2026-11-16", "time": "17:10", "total": "0.99", "cardLast4": "2290", "paymentMethod": "card", "issues": ["currency_assumed"], "confident": true }
+    },
+    {
+      "name": "no amounts at all",
+      "options": { "defaultCurrency": "USD" },
+      "lines": ["THANK YOU", "PLEASE COME AGAIN"],
+      "expect": { "total": null, "merchant": null, "issues": ["currency_assumed", "date_missing", "merchant_missing", "total_missing"], "confident": false }
+    },
+    {
+      "name": "unlabeled amounts: the largest is a guess, marked as one",
+      "options": { "defaultCurrency": "USD" },
+      "lines": ["FARM STAND", "2026-11-12", "TOMATOES 4.00", "PEPPERS 6.50"],
+      "expect": { "total": "6.50", "issues": ["currency_assumed", "low_confidence", "total_inferred"], "confident": false },
+      "maxConfidence": { "total": 0.4 }
+    }
+  ]
+}

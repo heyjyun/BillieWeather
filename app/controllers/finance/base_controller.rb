@@ -41,7 +41,7 @@ module Finance
         .includes(:bank_account, statement: :bank_account).limit(2000).count do |entry|
           Domain.suspect_income(kind: entry.kind, amount: entry.amount, account_type: entry.account_type, description: entry.original_description)
         end
-      duplicates = current_user.finance_transaction_links.suggested.where(link_type: "duplicate_of").joins(:from_transaction).where(finance_transactions: {deleted_at: nil}).count
+      duplicates = current_user.finance_transaction_links.suggested.where(link_type: "duplicate_of").joins(:from_transaction).where(finance_transactions: {deleted_at: nil, superseded_by_id: nil}).count
       {income: income, duplicates: duplicates, trash: current_user.finance_transactions.trashed.count}
     end
 

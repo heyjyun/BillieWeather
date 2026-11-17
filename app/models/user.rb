@@ -24,6 +24,9 @@ class User < ApplicationRecord
   has_many :finance_tags, class_name: "Finance::Tag", dependent: :delete_all
   has_many :finance_category_settings, class_name: "Finance::CategorySetting", dependent: :delete_all
   has_many :finance_books, class_name: "Finance::Book", dependent: :delete_all
+  has_many :finance_receipts, class_name: "Finance::Receipt", dependent: :destroy
+  has_many :finance_receipt_matches, class_name: "Finance::ReceiptMatch", dependent: :delete_all
+  has_many :finance_capture_tokens, class_name: "Finance::CaptureToken", dependent: :delete_all
   # Honorary badges (not roles: they grant no permissions) and private support-payment access.
   has_many :community_honors, class_name: "Community::Honor", dependent: :destroy
   has_one :community_support_access, class_name: "Community::SupportAccess", dependent: :destroy

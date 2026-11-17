@@ -32,7 +32,7 @@ function RegionSelect({ value, onChange, disabled, label }: { value: string; onC
   );
 }
 
-export function Import() {
+export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
   const { m, t, locale } = useI18n();
   const pdf = usePdfMessages();
   const { store, refresh, currency: deviceCurrency, statements, customCategories } = useFinance();
@@ -330,6 +330,9 @@ export function Import() {
             <small>{u.requirements}</small>
           </label>
           {recognition && <button type="button" className="bw-button bw-button-outline bw-button-small" onClick={() => recognition.abort()}>{u.ocr.stop}</button>}
+          {onReceipt && (
+            <p className="bw-caption">{m.receipt.fromImport}{" "}<button type="button" className="bw-link-button" onClick={onReceipt}>{m.receipt.openFromImport}</button></p>
+          )}
         </section>
       )}
       {message && <p className={`bw-message bw-message-${message.tone}`} role={message.tone === "error" ? "alert" : "status"}>{message.text}</p>}

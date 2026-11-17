@@ -203,6 +203,19 @@ html[lang="ko"] :is(h1, h2, p) { word-break: keep-all; overflow-wrap: anywhere; 
 .bw-dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .bw-dropzone small { color: var(--muted); font-size: var(--bw-font-size-xs); }
 .bw-dropzone.is-busy { opacity: 0.6; cursor: progress; }
+/* ---------- Receipts ---------- */
+.bw-file-button { position: relative; overflow: hidden; }
+.bw-file-button input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.bw-file-button.is-busy { opacity: 0.6; cursor: progress; }
+.bw-certainty { font-size: var(--bw-font-size-xs); font-weight: var(--bw-font-weight-semibold); }
+.bw-certainty.is-read { color: var(--muted); font-weight: normal; }
+.bw-certainty.is-edited { color: var(--muted); }
+.bw-certainty.is-uncertain { color: var(--bw-color-warning-text); }
+.bw-certainty.is-missing { color: var(--bw-color-negative-text, var(--bw-color-warning-text)); }
+.bw-field:has([data-certainty="uncertain"]) input, .bw-field:has([data-certainty="uncertain"]) select { border-color: var(--bw-color-warning-border); }
+.bw-field:has([data-certainty="missing"]) input, .bw-field:has([data-certainty="missing"]) select { border-style: dashed; }
+.bw-receipt-items li { display: flex; justify-content: space-between; gap: 12px; }
+.bw-receipt-web { display: grid; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); justify-items: start; }
 .bw-export { display: grid; gap: 10px; align-content: start; }
 .bw-export p { color: var(--muted); font-size: var(--bw-font-size-sm); }
 .bw-danger { border-color: var(--bw-color-negative-border); display: grid; gap: 12px; }

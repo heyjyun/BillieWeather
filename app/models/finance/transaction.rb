@@ -20,11 +20,19 @@ module Finance
     has_many :tags, through: :transaction_tags, class_name: "Finance::Tag"
     has_many :outgoing_links, class_name: "Finance::TransactionLink", foreign_key: :from_transaction_id, dependent: :delete_all
     has_many :incoming_links, class_name: "Finance::TransactionLink", foreign_key: :to_transaction_id, dependent: :delete_all
+    # Receipts (docs/architecture/receipt-capture-and-reconciliation.md). An entry recorded from a receipt is
+    # `superseded_by` the bank's own row for the same purchase once they are matched: it stays stored (and
+    # restorable) but is no longer live, so the purchase counts once. Matches go with the entry (database cascade).
+    belongs_to :superseded_by, class_name: "Finance::Transaction", optional: true
+    has_many :superseded_entries, class_name: "Finance::Transaction", foreign_key: :superseded_by_id, inverse_of: :superseded_by
+    has_many :receipt_matches, class_name: "Finance::ReceiptMatch", foreign_key: :transaction_id, inverse_of: :finance_transaction
+    has_one :recorded_receipt, class_name: "Finance::Receipt", foreign_key: :transaction_id, inverse_of: :entry
 
     attr_readonly :original_description
 
-    # Live rows: everything not in the trash. `included` rows count in income/expense totals.
-    scope :live, -> { where(deleted_at: nil) }
+    # Live rows: everything not in the trash and not set aside for the bank's row of the same purchase.
+    # `included` rows count in income/expense totals. Every total, balance, report and forecast reads one of these.
+    scope :live, -> { where(deleted_at: nil, superseded_by_id: nil) }
     scope :trashed, -> { where.not(deleted_at: nil) }
     scope :included, -> { live.where(excluded: false, kind: Domain::COUNTED_KINDS) }
     scope :income_kind, -> { where(kind: Domain::INCOME_KINDS) }
@@ -33,6 +41,8 @@ module Finance
 
     before_validation :fill_original_description, on: :create
     before_validation :keep_kind_with_category
+    before_destroy :release_receipt_evidence
+    after_destroy :refresh_released_receipts
 
     validates :booked_on, :description, presence: true
     validates :description, length: {maximum: 500}
@@ -49,6 +59,7 @@ module Finance
     validate :statement_or_manual
     validate :amount_has_cent_precision
     validate :locked_fields_are_known
+    validate :only_receipt_entries_superseded
 
     # The category name a transfer-like kind carries (kept for older readers of the text column).
     def self.category_for_kind(kind, category)
@@ -83,8 +94,18 @@ module Finance
       TRANSFER_LIKE.include?(kind)
     end
 
+    # Not bank evidence: typed by a person, posted by a recurring rule, or recorded from a receipt.
+    # Every field of these may be edited, and they may be purged from the trash.
     def manual?
-      %w[manual recurring].include?(entry_origin)
+      %w[manual recurring receipt].include?(entry_origin)
+    end
+
+    def from_receipt?
+      entry_origin == "receipt"
+    end
+
+    def superseded?
+      superseded_by_id.present?
     end
 
     def locked?(field)
@@ -156,6 +177,25 @@ module Finance
 
     def statement_or_manual
       errors.add(:statement, :blank) if statement_id.nil? && !manual?
+    end
+
+    def only_receipt_entries_superseded
+      return if superseded_by_id.nil?
+      errors.add(:superseded_by, :receipt_only) unless from_receipt? && superseded_by_id != id
+      errors.add(:superseded_by, :same_owner) if superseded_by && superseded_by.user_id != user_id
+    end
+
+    # Removing a row (statement removal, purge) must not leave a receipt's purchase uncounted: entries it had
+    # superseded count again, and receipts it was evidence for go back to waiting for the bank.
+    def release_receipt_evidence
+      @released_receipt_ids = (ReceiptMatch.where(user_id: user_id, transaction_id: id).pluck(:receipt_id) +
+        Receipt.where(user_id: user_id, transaction_id: id).pluck(:id)).uniq
+      Transaction.where(user_id: user_id, superseded_by_id: id).update_all(superseded_by_id: nil, updated_at: Time.current)
+      Receipt.where(user_id: user_id, transaction_id: id).update_all(transaction_id: nil, updated_at: Time.current)
+    end
+
+    def refresh_released_receipts
+      Receipt.where(user_id: user_id, id: @released_receipt_ids).find_each(&:refresh_status!) if @released_receipt_ids.present?
     end
 
     def locked_fields_are_known

@@ -43,6 +43,21 @@ Rails.application.routes.draw do
     resources :transactions, only: [:index, :edit, :update] do
       post :batch, on: :collection
     end
+    # Multi-source capture and reconciliation (docs/architecture/receipt-capture-and-reconciliation.md).
+    resources :receipts, only: [:index, :create, :show, :update] do
+      member do
+        get :file
+        post :record
+        post :link
+        patch :dismiss
+        patch :reopen
+        patch :not_duplicate
+        patch :mark_duplicate
+      end
+    end
+    patch "receipts/matches/:match_id/:decision", to: "receipts#decide", as: :receipt_match_decision, constraints: {decision: /confirm|reject|undo|reconsider/}
+    resources :capture_tokens, only: [:create, :destroy]
+    get "reconciliation", to: "reconciliation#show", as: :reconciliation
     # Default Mode / Manual Mode (progressive disclosure; see Finance::ManualWorkspace).
     patch "mode", to: "modes#update", as: :mode
     get "manual", to: "manual#show", as: :manual
@@ -173,6 +188,9 @@ Rails.application.routes.draw do
     get "finance/rules", to: "finance#rules", as: :finance_rules
     get "finance/categories", to: "finance#categories", as: :finance_categories
     post "finance/categorize", to: "finance#categorize", as: :finance_categorize
+    # Receipt capture from the apps (bearer session) and iOS Shortcuts / Siri (receipt-only capture token).
+    post "finance/receipts", to: "receipts#create", as: :finance_receipts
+    get "finance/receipts/:id", to: "receipts#show", as: :finance_receipt
   end
 
   namespace :api do

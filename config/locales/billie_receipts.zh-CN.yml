@@ -1,0 +1,322 @@
+zh-CN:
+  billie:
+    ledger:
+      origins:
+        receipt: 来自小票
+      errors:
+        match_not_open: 这条建议已经处理过了。
+        already_matched: 这张小票已关联到一笔流水。请先撤销该关联。
+        match_not_confirmed: 只能撤销已确认的关联。
+        match_not_rejected: 只能重新考虑已拒绝的建议。
+        entry_has_receipt: 这笔流水已经有小票了。
+        entry_is_receipt: 请选择银行流水或手动记录的流水，而不是另一条小票记录。
+        already_recorded: 这张小票已记为支出。
+        receipt_incomplete: 请先填写小票的日期和总额。
+        currency_mismatch: 这张小票的币种与账户不同，无法记为支出。请改为将它关联到银行的扣款记录。
+        receipt_in_use: 这张小票正作为某笔流水的凭证。请先撤销关联（或删除该记录）。
+        not_a_duplicate: 这张小票未被标记为重复。
+        not_dismissed: 这张小票未被忽略。
+        source_invalid: 未知的小票来源。
+        receipt_empty: 请选择照片、图片或 PDF，或手动输入小票信息。
+        file_empty: 文件为空。
+        file_invalid: 无法读取该文件。
+        file_too_large: 每个小票文件最大 10 MB。
+        file_type: 请使用 JPEG、PNG、HEIC 或 WebP 图片，或 PDF。
+        account_not_found: 找不到该账户。
+        purchased_on_invalid: 请输入有效日期。
+        purchased_at_time_invalid: 请输入有效时间（HH:MM）。
+        total_invalid: 总额须为数字，最多两位小数。
+        subtotal_invalid: 小计须为数字，最多两位小数。
+        tax_invalid: 税额须为数字，最多两位小数。
+        tip_invalid: 小费须为数字，最多两位小数。
+        discount_invalid: 折扣须为数字，最多两位小数。
+        currency_invalid: 请输入三个字母的币种代码，例如 USD。
+        direction_invalid: 请选择消费或退款。
+        payment_method_invalid: 请选择付款方式。
+        card_last4_invalid: 请输入卡号后四位。
+        category_invalid: 请选择你的分类之一。
+    receipts:
+      nav: 小票
+      title: 小票
+      eyebrow: 采集
+      intro: 扫描纸质小票，上传电子小票、截图和 PDF。BillieWeather 会识别内容，与银行记录核对，绝不会把同一笔消费算两次。
+      untitled: 小票
+      entry_note: 来自小票
+      back: 返回小票
+      unknown: 未知
+      reopen: 重新打开
+      dismiss: 忽略小票
+      dismiss_confirm: 忽略这张小票？它仍保留在你的记录中，之后可以重新打开。
+      capture:
+        heading: 添加小票
+        scan: 扫描小票
+        scan_help: 在手机上会打开相机。请将小票放平，并保持光线充足。
+        scan_input: 小票照片
+        scan_submit: 使用照片
+        upload: 上传小票
+        upload_help: 将图片、截图或 PDF 小票拖到这里，或选择文件。
+        upload_input: 小票文件
+        limits: "最多 %{count} 个文件，每个 10 MB。支持 JPEG、PNG、HEIC、WebP 或 PDF。"
+        upload_submit: 上传
+        statement: 导入账单
+        statement_help: 银行和信用卡账单（CSV 或 PDF）会自动与你的小票匹配。
+        statement_link: 前往账单
+        manual: 手动输入小票
+        manual_submit: 添加小票
+      privacy:
+        local_ocr: 小票文件私密保存在你的 BillieWeather 记录中。文字由本服务器上的本地引擎识别，小票绝不会发送给其他服务。
+        no_server_ocr: 小票文件私密保存在你的 BillieWeather 记录中，绝不会发送给其他服务。网站可以读取 PDF 小票；照片请手动输入信息，或使用 BillieWeather App 或 iOS 快捷指令扫描，它们会在手机上识别文字。
+      recent:
+        heading: 最近导入
+        source: 来源
+        status: 状态
+        empty: 还没有小票
+        empty_help: 扫描或上传一张小票即可开始。
+        statements: 最近的账单
+        statement_rows:
+          one: "%{count} 笔流水 · 导入于 %{date}"
+          other: "%{count} 笔流水 · 导入于 %{date}"
+      sources:
+        camera: 相机
+        upload: 上传
+        shortcut: Siri / 快捷指令
+        app: BillieWeather App
+        email: 邮件
+        manual: 手动输入
+      fields:
+        merchant_name: 商家
+        purchased_on: 日期
+        purchased_at_time: 时间
+        total: 总额
+        subtotal: 小计
+        tax: 税额
+        tip: 小费
+        discount: 折扣
+        receipt_number: 小票或发票号
+        card_last4: 卡号（后四位）
+        currency: 币种
+        payment_method: 付款方式
+        direction: 类型
+        bank_account_id: 付款账户
+      payment_methods:
+        card: 银行卡
+        cash: 现金
+        mobile: 移动支付
+        other: 其他
+      directions:
+        purchase: 消费
+        refund: 退款或退货
+      verification:
+        verified: 已核实
+        auto_matched: 已自动匹配
+        matched: 已匹配
+        bank_record: 银行记录
+        cash: 现金 · 无需银行记录
+        pending_bank_match: 等待银行入账
+        needs_review: 待核对
+        possible_duplicate: 可能重复
+        duplicate: 重复副本
+        amount_mismatch: 金额不符
+        foreign_currency: 其他币种
+        entry_in_trash: 记录在回收站中
+        dismissed: 已忽略
+        missing_receipt: 缺少小票
+        superseded: 已由银行记录取代
+        unverified_manual: 手动输入
+      field_state:
+        confirmed: 已确认
+        read: 已识别
+        uncertain: 不确定
+        missing: 缺失
+      levels:
+        exact: 完全匹配
+        probable: 很可能匹配
+        ambiguous: 可能匹配
+        manual: 由你关联
+      reasons:
+        amount_equal: 金额相同
+        amount_differs_tip: 银行扣款更多（可能含小费）
+        split_payment: 两笔扣款合计等于总额
+        currency_differs: 币种不同，未比较金额
+        merchant_same: 商家相同
+        merchant_similar: 商家名称写法不同
+        merchant_weak: 商家名称仅部分相似
+        merchant_unknown: 无法识别商家
+        same_day: 同一天
+        posted_later: 银行较晚入账
+        posted_earlier: 早一天入账
+        card_last4_match: 同一张卡
+        receipt_number_match: 小票号与银行参考号一致
+        multiple_candidates: 有多笔流水符合
+        similar_candidates: 另有一笔流水相似
+        low_confidence: 部分小票信息不确定
+      issues:
+        merchant_missing: 无法识别商家。
+        date_missing: 无法识别日期。
+        total_missing: 未找到总额。
+        total_inferred: 没有标为“合计”的行，已使用最大金额。请核对。
+        totals_inconsistent: 小计、税额和小费相加不等于总额。
+        multiple_totals: 小票上显示了不同的总额。
+        date_ambiguous: 日期既可按日在前也可按月在前解读。
+        future_date: 日期在未来。
+        currency_assumed: 小票上没有币种，已默认使用账户币种。
+        low_confidence: 部分信息难以识别。
+        text_unavailable: 无法从此文件读取文字。请在下方输入信息。
+      detail:
+        captured: "%{source} · 添加于 %{date}"
+        details: 小票信息
+        details_help: 从小票识别出的值会标为“已识别”或“不确定”，直到你确认。保存即确认显示的所有字段。
+        issues: 请核对
+        suggest_category: 自动建议
+        save: 保存并重新核对
+        line_items: 商品
+        item: 商品
+        quantity: 数量
+        unit_price: 单价
+        line_items_note: 商品明细从小票识别，仅供参考；合计以小票总额为准。
+        evidence: 原件与匹配
+        original_alt: "%{name} 的小票原件"
+        open_original: 打开原件
+        download_original: 下载
+        no_file: 无文件 — 这张小票是手动输入或以文字发送的。
+      duplicate:
+        is_copy: 这是你已添加小票的副本，不计入统计。
+        possible: 这张小票似乎已经添加过。在你决定之前不计入统计。
+        confirm: 是的，是副本
+        different: 这是另一笔消费
+      matching:
+        heading: 银行记录
+        auto_linked: 已自动匹配
+        linked: 已关联
+        bank_record: 银行记录
+        why: 原因
+        chosen_by_you: 由你选择
+        confirm_auto: 确认匹配
+        undo: 撤销关联
+        superseded_note: 由这张小票记录的支出已被搁置，因此这笔消费只按银行流水计算一次。
+        question: 我们找到一笔可能匹配的银行流水。它们是同一笔消费吗？
+        score: "得分 %{score}"
+        confirm: 确认匹配
+        keep_separate: 保持分开
+        review_details: 查看详情
+        none: 暂无匹配的银行流水。账单到达后会自动核对。
+        none_cash: 现金支付 — 不会有银行记录。
+        rejected:
+          one: "%{count} 条你选择保持分开的建议"
+          other: "%{count} 条你选择保持分开的建议"
+        reconsider: 重新考虑
+      entry:
+        heading: 在你的流水中
+        superseded: 已搁置 — 改为计算银行流水
+        trashed: 在回收站中
+        counted: 已计入合计
+        not_recorded: 尚未记为支出。
+        record: 记为支出
+      link:
+        heading: 手动关联到流水
+        choose: 流水
+        submit: 关联
+      shortcuts:
+        heading: Siri 与快捷指令
+        intro: 配合一个 iOS 快捷指令，说“嘿 Siri，用 BillieWeather 扫描小票”，即可拍下小票、在 iPhone 上识别文字并发送到这里。采集令牌只允许快捷指令添加小票，无法读取或更改其他任何内容。
+        copy_now: 请立即复制此令牌，它不会再次显示。
+        step_token: 在下方创建一个采集令牌并复制。
+        step_actions: 在“快捷指令” App 中，添加“拍照”，然后添加“从图像中提取文本”。
+        step_request: "添加“获取 URL 内容”：以 POST 方式发送到 %{url}，请求头 Authorization: Bearer <your token>，请求体选择“表单”，text = 提取的文本，file = 照片。"
+        step_name: 将快捷指令命名为“用 BillieWeather 扫描小票”，以便 Siri 识别这句话。
+        native_note: BillieWeather iPhone App 自带的 Siri 操作需要原生 iOS 版本；在此之前，请使用快捷指令。
+        name: 令牌名称
+        default_name: iPhone 快捷指令
+        create: 创建采集令牌
+        active: "有效期至 %{date}"
+        inactive: 已撤销或已过期
+        last_used: "上次使用 %{date}"
+        revoke: 撤销
+        revoked: 采集令牌已撤销。
+        too_many: "最多可有 %{count} 个有效的采集令牌。请先撤销一个。"
+      flash:
+        too_many: "每次最多选择 %{count} 个文件。"
+        added: 小票已添加。
+        already_added: 这张小票已添加过，未创建新内容。
+        batch: "已添加 %{added} 张，已存在 %{existing} 张，%{failed} 张未添加。"
+        saved: 小票已保存并重新核对。
+        recorded: 已记为支出。
+        dismissed: 小票已忽略。
+        reopened: 小票已重新打开。
+        not_duplicate: 已作为单独的消费保留。
+        marked_duplicate: 已标记为副本，不计入统计。
+        linked: 小票已关联到流水。
+        decision:
+          confirm: 匹配已确认。
+          reject: 已保持分开。此组合不会再次被建议。
+          undo: 关联已撤销。小票重新单独计算。
+          reconsider: 该建议已重新打开。
+      transaction:
+        heading: 来源与核实
+        source: 来源
+        statement: "账单 %{name}"
+        receipt: 小票
+        no_receipt: 未附小票。
+        attach: 添加小票
+        set_aside:
+          one: "此流水有 %{count} 条小票记录已搁置"
+          other: "此流水有 %{count} 条小票记录已搁置"
+    reconciliation:
+      nav: 对账
+      title: 对账
+      eyebrow: 核实
+      intro: 小票、银行记录和你的账本相互核对。在你决定之前，任何内容都不会更改。
+      metrics:
+        review: 待核对
+        review_help: 需要你决定的小票
+        matched: 已匹配
+        matched_help: 已关联银行流水的小票
+        unmatched: 未匹配
+        unmatched_help: "%{bank} 张等待银行入账 · %{cash} 张现金"
+        discrepancies: 差异
+        discrepancies_help: 不一致的记录
+      review:
+        heading: 待核对的流水
+        empty: 没有需要核对的内容。
+        check_details: 请核对从这张小票识别出的信息。
+      discrepancies:
+        heading: 对账差异
+        intro: 以下内容仅供查看，不会自动更改。第二笔扣款也可能是真实的消费。
+        none: 未发现差异。
+        amount_mismatch:
+          one: "%{count} 张小票与银行扣款金额不符"
+          other: "%{count} 张小票与银行扣款金额不符"
+        receipt_vs_bank: "小票 %{receipt}，银行 %{bank}"
+        duplicate_charges:
+          one: "%{count} 笔可能重复的银行扣款"
+          other: "%{count} 笔可能重复的银行扣款"
+        missing_receipts:
+          one: "%{count} 笔待税务核对的支出没有小票"
+          other: "%{count} 笔待税务核对的支出没有小票"
+        refunds_without_purchase:
+          one: "%{count} 笔退款未关联消费"
+          other: "%{count} 笔退款未关联消费"
+        transfers_as_spending:
+          one: "%{count} 笔可能的转账被计为支出"
+          other: "%{count} 笔可能的转账被计为支出"
+      balances:
+        heading: 账单余额
+        consistent: 一致
+        differs: "相差 %{amount}"
+        scope: 仅在同一账户的两份都显示期末余额的账单之间比较余额。这是连续性检查，并非完整的银行对账，也无法发现两份账单中都缺失的流水。
+      matched:
+        heading: 已匹配的流水
+        empty: 还没有已匹配的小票。
+      unmatched:
+        heading: 未匹配的流水
+        intro: 没有银行记录的小票。刷卡消费可能需要几天才会入账；现金消费永远不会出现。
+        awaiting_bank:
+          one: "%{count} 张等待银行入账"
+          other: "%{count} 张等待银行入账"
+        stale: "%{days} 天后仍未出现 — 请查看信用卡账单"
+        cash:
+          one: "%{count} 笔现金消费"
+          other: "%{count} 笔现金消费"
+      verified:
+        heading: 最近核实
+        empty: 你确认的匹配会显示在这里。

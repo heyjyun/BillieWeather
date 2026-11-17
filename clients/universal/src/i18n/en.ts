@@ -3,6 +3,7 @@ import { ledgerEn } from "./ledger";
 // (checked by TypeScript and by test/i18n.test.ts). Use {name} for interpolation.
 import { universalEn } from "./universal";
 import { commandEn } from "./command";
+import { receiptEn } from "./receipt";
 
 export const en = {
   languageName: "English",
@@ -278,6 +279,7 @@ export const en = {
   universal: universalEn,
   ledger: ledgerEn,
   command: commandEn,
+  receipt: receiptEn,
 };
 
 type Widen<T> = T extends string ? string : T extends readonly string[] ? string[] : { [K in keyof T]: Widen<T[K]> };

@@ -1,0 +1,322 @@
+ja:
+  billie:
+    ledger:
+      origins:
+        receipt: レシートから記録
+      errors:
+        match_not_open: この候補はすでに判断済みです。
+        already_matched: このレシートはすでに取引に紐付いています。先にその紐付けを取り消してください。
+        match_not_confirmed: 取り消せるのは確定した紐付けだけです。
+        match_not_rejected: 再検討できるのは却下した候補だけです。
+        entry_has_receipt: その取引にはすでにレシートがあります。
+        entry_is_receipt: 別のレシートの記録ではなく、銀行の取引か手入力の取引を選んでください。
+        already_recorded: このレシートはすでに支出として記録されています。
+        receipt_incomplete: 先にレシートの日付と合計を入力してください。
+        currency_mismatch: このレシートは口座と通貨が異なるため、支出として記録できません。代わりに銀行の請求に紐付けてください。
+        receipt_in_use: このレシートは取引の裏付けになっています。先に紐付けを取り消す（または記録を削除する）必要があります。
+        not_a_duplicate: このレシートは重複としてマークされていません。
+        not_dismissed: このレシートは非表示になっていません。
+        source_invalid: 不明なレシートの取得元です。
+        receipt_empty: 写真・画像・PDF を選ぶか、レシートの内容を入力してください。
+        file_empty: ファイルが空です。
+        file_invalid: ファイルを読み取れませんでした。
+        file_too_large: レシートのファイルは 1 件あたり 10 MB までです。
+        file_type: JPEG、PNG、HEIC、WebP の画像か PDF を使ってください。
+        account_not_found: その口座が見つかりません。
+        purchased_on_invalid: 有効な日付を入力してください。
+        purchased_at_time_invalid: 有効な時刻（HH:MM）を入力してください。
+        total_invalid: 合計は小数点以下 2 桁までの数値で入力してください。
+        subtotal_invalid: 小計は小数点以下 2 桁までの数値で入力してください。
+        tax_invalid: 税額は小数点以下 2 桁までの数値で入力してください。
+        tip_invalid: チップは小数点以下 2 桁までの数値で入力してください。
+        discount_invalid: 割引は小数点以下 2 桁までの数値で入力してください。
+        currency_invalid: USD のような 3 文字の通貨コードを入力してください。
+        direction_invalid: 購入か返金を選んでください。
+        payment_method_invalid: 支払い方法を選んでください。
+        card_last4_invalid: カード番号の下 4 桁を入力してください。
+        category_invalid: 登録済みのカテゴリから選んでください。
+    receipts:
+      nav: レシート
+      title: レシート
+      eyebrow: 取り込み
+      intro: 紙のレシートをスキャンし、電子レシート、スクリーンショット、PDF をアップロードできます。BillieWeather が読み取って銀行の記録と照合し、同じ購入を二重に数えることはありません。
+      untitled: レシート
+      entry_note: レシートから
+      back: レシートに戻る
+      unknown: 不明
+      reopen: 再表示
+      dismiss: レシートを非表示
+      dismiss_confirm: このレシートを非表示にしますか？記録には残り、あとで再表示できます。
+      capture:
+        heading: レシートを追加
+        scan: レシートをスキャン
+        scan_help: スマートフォンではカメラが開きます。明るい場所でレシートを平らにして撮影してください。
+        scan_input: レシートの写真
+        scan_submit: 写真を使う
+        upload: レシートをアップロード
+        upload_help: 画像、スクリーンショット、PDF のレシートをここにドロップするか、ファイルを選んでください。
+        upload_input: レシートのファイル
+        limits: "最大 %{count} ファイル、各 10 MB まで。JPEG、PNG、HEIC、WebP、PDF に対応。"
+        upload_submit: アップロード
+        statement: 明細を取り込む
+        statement_help: 銀行やカードの明細（CSV または PDF）は、レシートと自動的に照合されます。
+        statement_link: 明細へ
+        manual: レシートを手入力
+        manual_submit: レシートを追加
+      privacy:
+        local_ocr: レシートのファイルは BillieWeather の記録内に非公開で保存されます。文字はこのサーバー上のローカルエンジンで認識され、レシートがほかのサービスに送られることはありません。
+        no_server_ocr: レシートのファイルは BillieWeather の記録内に非公開で保存され、ほかのサービスに送られることはありません。Web サイトでは PDF のレシートを読み取れます。写真の場合は内容を入力するか、iPhone 上で文字を認識する BillieWeather アプリまたは iOS のショートカットでスキャンしてください。
+      recent:
+        heading: 最近の取り込み
+        source: 取得元
+        status: 状態
+        empty: レシートはまだありません
+        empty_help: レシートをスキャンまたはアップロードして始めましょう。
+        statements: 最近の明細
+        statement_rows:
+          one: "%{count} 件の取引 · %{date} に取り込み"
+          other: "%{count} 件の取引 · %{date} に取り込み"
+      sources:
+        camera: カメラ
+        upload: アップロード
+        shortcut: Siri / ショートカット
+        app: BillieWeather アプリ
+        email: メール
+        manual: 手入力
+      fields:
+        merchant_name: 店舗
+        purchased_on: 日付
+        purchased_at_time: 時刻
+        total: 合計
+        subtotal: 小計
+        tax: 税額
+        tip: チップ
+        discount: 割引
+        receipt_number: レシート番号・請求書番号
+        card_last4: カード（下 4 桁）
+        currency: 通貨
+        payment_method: 支払い方法
+        direction: 種類
+        bank_account_id: 支払い口座
+      payment_methods:
+        card: カード
+        cash: 現金
+        mobile: モバイル決済
+        other: その他
+      directions:
+        purchase: 購入
+        refund: 返金・返品
+      verification:
+        verified: 確認済み
+        auto_matched: 自動で照合済み
+        matched: 照合済み
+        bank_record: 銀行の記録
+        cash: 現金 · 銀行の記録なし
+        pending_bank_match: 銀行の反映待ち
+        needs_review: 要確認
+        possible_duplicate: 重複の可能性
+        duplicate: 重複したコピー
+        amount_mismatch: 金額が異なる
+        foreign_currency: 別の通貨
+        entry_in_trash: 記録はごみ箱にあります
+        dismissed: 非表示
+        missing_receipt: レシートなし
+        superseded: 銀行の記録に置き換え済み
+        unverified_manual: 手入力
+      field_state:
+        confirmed: 確定
+        read: 読み取り済み
+        uncertain: 不確か
+        missing: なし
+      levels:
+        exact: 完全一致
+        probable: ほぼ一致
+        ambiguous: 一致の可能性
+        manual: 手動で紐付け
+      reasons:
+        amount_equal: 金額が同じ
+        amount_differs_tip: 銀行の請求額が多い（チップの可能性）
+        split_payment: 2 件の請求の合計が一致
+        currency_differs: 通貨が異なるため金額は比較していません
+        merchant_same: 店舗が同じ
+        merchant_similar: 店舗名の表記が異なる
+        merchant_weak: 店舗名が一部だけ似ている
+        merchant_unknown: 店舗名を読み取れない
+        same_day: 同じ日
+        posted_later: 銀行での反映が遅い
+        posted_earlier: 1 日早く反映
+        card_last4_match: 同じカード
+        receipt_number_match: レシート番号が銀行の参照番号と一致
+        multiple_candidates: 該当する取引が複数あります
+        similar_candidates: 似た取引がほかにもあります
+        low_confidence: レシートの一部の内容が不確かです
+      issues:
+        merchant_missing: 店舗名を読み取れませんでした。
+        date_missing: 日付を読み取れませんでした。
+        total_missing: 合計が見つかりませんでした。
+        total_inferred: 「合計」と書かれた行がないため、最も大きい金額を使いました。確認してください。
+        totals_inconsistent: 小計・税額・チップの合計が、合計金額と一致しません。
+        multiple_totals: レシートに異なる合計が記載されています。
+        date_ambiguous: 日付は日が先とも月が先とも読めます。
+        future_date: 日付が未来になっています。
+        currency_assumed: レシートに通貨の記載がないため、口座の通貨とみなしました。
+        low_confidence: 一部の内容が読み取りにくい状態でした。
+        text_unavailable: このファイルから文字を読み取れませんでした。下に内容を入力してください。
+      detail:
+        captured: "%{source} · %{date} に追加"
+        details: レシートの内容
+        details_help: レシートから読み取った値は、確定するまで「読み取り済み」または「不確か」と表示されます。保存すると、表示中のすべての項目が確定します。
+        issues: 確認してください
+        suggest_category: 自動で提案
+        save: 保存して再確認
+        line_items: 明細行
+        item: 品目
+        quantity: 数量
+        unit_price: 単価
+        line_items_note: 品目はレシートから読み取った参考情報です。合計にはレシートの合計を使います。
+        evidence: 原本と照合
+        original_alt: "%{name} のレシート原本"
+        open_original: 原本を開く
+        download_original: ダウンロード
+        no_file: ファイルなし — このレシートは手入力か、テキストで送信されました。
+      duplicate:
+        is_copy: 追加済みのレシートのコピーです。集計には含めません。
+        possible: 追加済みのレシートと同じようです。判断するまで集計には含めません。
+        confirm: はい、コピーです
+        different: 別の購入です
+      matching:
+        heading: 銀行の記録
+        auto_linked: 自動で照合済み
+        linked: 紐付け済み
+        bank_record: 銀行の記録
+        why: 理由
+        chosen_by_you: 手動で選択
+        confirm_auto: 照合を確定
+        undo: 紐付けを取り消す
+        superseded_note: このレシートから記録した支出は保留にしたため、この購入は銀行の取引として 1 回だけ数えられます。
+        question: 一致する可能性のある銀行の取引が見つかりました。同じ購入の記録ですか？
+        score: "スコア %{score}"
+        confirm: 照合を確定
+        keep_separate: 別々にする
+        review_details: 詳細を確認
+        none: 一致する銀行の取引はまだありません。明細が届くと自動で照合します。
+        none_cash: 現金払い — 銀行の記録は発生しません。
+        rejected:
+          one: "別々にした候補 %{count} 件"
+          other: "別々にした候補 %{count} 件"
+        reconsider: 再検討
+      entry:
+        heading: 取引での扱い
+        superseded: 保留中 — 代わりに銀行の取引を計上
+        trashed: ごみ箱にあります
+        counted: 合計に計上済み
+        not_recorded: まだ支出として記録されていません。
+        record: 支出として記録
+      link:
+        heading: 自分で取引に紐付ける
+        choose: 取引
+        submit: 紐付ける
+      shortcuts:
+        heading: Siri とショートカット
+        intro: iOS のショートカットを使えば、「Hey Siri、BillieWeather でレシートをスキャン」と話しかけるだけで、レシートを撮影し、iPhone 上で文字を読み取ってここに送れます。取り込みトークンで許可されるのはレシートの追加だけで、ほかの情報の閲覧や変更はできません。
+        copy_now: このトークンを今すぐコピーしてください。再表示はされません。
+        step_token: 下で取り込みトークンを作成してコピーします。
+        step_actions: ショートカット App で「写真を撮る」を追加し、続けて「画像からテキストを抽出」を追加します。
+        step_request: "「URL の内容を取得」を追加します：%{url} に POST、ヘッダは Authorization: Bearer <your token>、本文は「フォーム」で text = 抽出したテキスト、file = 写真。"
+        step_name: Siri がフレーズを認識できるよう、ショートカットに「BillieWeather でレシートをスキャン」という名前を付けます。
+        native_note: BillieWeather iPhone アプリ独自の Siri アクションにはネイティブの iOS 版が必要です。それまではショートカットをご利用ください。
+        name: トークン名
+        default_name: iPhone ショートカット
+        create: 取り込みトークンを作成
+        active: "%{date} まで有効"
+        inactive: 取り消し済みまたは期限切れ
+        last_used: "最終使用 %{date}"
+        revoke: 取り消す
+        revoked: 取り込みトークンを取り消しました。
+        too_many: "有効な取り込みトークンは %{count} 個までです。先に 1 つ取り消してください。"
+      flash:
+        too_many: "一度に選べるファイルは %{count} 個までです。"
+        added: レシートを追加しました。
+        already_added: このレシートは追加済みのため、新しく作成されたものはありません。
+        batch: "%{added} 件追加、%{existing} 件は追加済み、%{failed} 件は追加できませんでした。"
+        saved: レシートを保存し、再確認しました。
+        recorded: 支出として記録しました。
+        dismissed: レシートを非表示にしました。
+        reopened: レシートを再表示しました。
+        not_duplicate: 別の購入として残しました。
+        marked_duplicate: コピーとしてマークしました。集計には含めません。
+        linked: レシートを取引に紐付けました。
+        decision:
+          confirm: 照合を確定しました。
+          reject: 別々にしました。この組み合わせは今後提案されません。
+          undo: 紐付けを取り消しました。レシートは再び単独で計上されます。
+          reconsider: 候補を再び開きました。
+      transaction:
+        heading: 取得元と確認
+        source: 取得元
+        statement: "明細 %{name}"
+        receipt: レシート
+        no_receipt: レシートは添付されていません。
+        attach: レシートを追加
+        set_aside:
+          one: "この取引のために保留したレシートの記録 %{count} 件"
+          other: "この取引のために保留したレシートの記録 %{count} 件"
+    reconciliation:
+      nav: 照合
+      title: 照合
+      eyebrow: 確認
+      intro: レシート、銀行の記録、家計簿を相互に照合します。あなたが判断するまで何も変更されません。
+      metrics:
+        review: 確認待ち
+        review_help: 判断が必要なレシート
+        matched: 照合済み
+        matched_help: 銀行の取引に紐付いたレシート
+        unmatched: 未照合
+        unmatched_help: "銀行の反映待ち %{bank} · 現金 %{cash}"
+        discrepancies: 不一致
+        discrepancies_help: 内容が一致しない記録
+      review:
+        heading: 確認待ちの取引
+        empty: 確認するものはありません。
+        check_details: このレシートから読み取った内容を確認してください。
+      discrepancies:
+        heading: 照合の不一致
+        intro: 確認用に一覧表示しているだけで、自動では何も変更しません。2 回目の請求が実際の購入である場合もあります。
+        none: 不一致は見つかりませんでした。
+        amount_mismatch:
+          one: "銀行の請求と金額が異なるレシート %{count} 件"
+          other: "銀行の請求と金額が異なるレシート %{count} 件"
+        receipt_vs_bank: "レシート %{receipt}、銀行 %{bank}"
+        duplicate_charges:
+          one: "重複の可能性がある銀行の請求 %{count} 件"
+          other: "重複の可能性がある銀行の請求 %{count} 件"
+        missing_receipts:
+          one: "レシートのない税務確認対象の支出 %{count} 件"
+          other: "レシートのない税務確認対象の支出 %{count} 件"
+        refunds_without_purchase:
+          one: "購入に紐付いていない返金 %{count} 件"
+          other: "購入に紐付いていない返金 %{count} 件"
+        transfers_as_spending:
+          one: "支出として計上された振替の可能性 %{count} 件"
+          other: "支出として計上された振替の可能性 %{count} 件"
+      balances:
+        heading: 明細の残高
+        consistent: 一致
+        differs: "%{amount} の差異"
+        scope: 残高を比較するのは、同じ口座の明細のうち、どちらにも期末残高が記載されている 2 つの明細の間だけです。これは連続性のチェックであり、完全な銀行照合ではありません。両方の明細に載っていない取引は検出できません。
+      matched:
+        heading: 照合済みの取引
+        empty: 照合済みのレシートはまだありません。
+      unmatched:
+        heading: 未照合の取引
+        intro: 銀行の記録がないレシートです。カードでの購入は反映まで数日かかることがあり、現金払いは反映されません。
+        awaiting_bank:
+          one: "銀行の反映待ち %{count} 件"
+          other: "銀行の反映待ち %{count} 件"
+        stale: "%{days} 日たっても見つかりません — カードの明細を確認してください"
+        cash:
+          one: "現金での購入 %{count} 件"
+          other: "現金での購入 %{count} 件"
+      verified:
+        heading: 最近確認したもの
+        empty: 確定した照合がここに表示されます。

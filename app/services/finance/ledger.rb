@@ -83,6 +83,9 @@ module Finance
           before = snapshot(record)
           record.update_columns(deleted_at: Time.current, updated_at: Time.current)
           audit("delete", record, before, snapshot(record), actor: actor, batch_id: batch_id)
+          # A bank row that stood for a receipt's purchase leaves: the receipt entry counts again.
+          ReceiptReconciler.new(@user, actor: actor).release_superseded(record)
+          Receipt.where(user_id: @user.id, transaction_id: record.id).find_each(&:refresh_status!)
         end
         touch
       end
@@ -97,6 +100,8 @@ module Finance
           validate_refund_integrity!(record)
           record.update_columns(deleted_at: nil, updated_at: Time.current)
           audit("restore", record, before, snapshot(record), actor: actor)
+          ReceiptReconciler.new(@user, actor: actor).resupersede(record)
+          Receipt.where(user_id: @user.id, transaction_id: record.id).find_each(&:refresh_status!)
         end
         touch
       end
@@ -237,9 +242,10 @@ module Finance
       name
     end
 
-    def validate!(p, account, to_account: nil, refund_of: :unset)
+    def validate!(p, account, to_account: nil, refund_of: :unset, account_optional: false)
       codes = Domain.entry_problems(kind: p[:kind], amount: p[:amount], occurred_on: p[:booked_on], account_id: account&.id,
         to_account_id: to_account&.id, category_kind: p[:category].present? ? tree.kind_of(p[:category].to_s) : nil, refund_of: refund_of)
+      codes.delete("account_required") if account_optional && account.nil?
       codes << "kind_invalid" unless MANUAL_KINDS.include?(p[:kind]) || p[:kind] == "card_payment"
       raise Invalid, codes.uniq if codes.any?
     end
@@ -266,7 +272,8 @@ module Finance
       refund_info = if p[:kind] != "refund" then :unset
       elsif refund_target then {amount: refund_target.amount, refunded: refunded_total(refund_target)}
       end
-      validate!(p, account, refund_of: (p[:kind] == "refund" && p[:refund_of_id].present?) ? refund_info : :unset)
+      # An entry recorded from a receipt may not know the account yet (the bank row will).
+      validate!(p, account, refund_of: (p[:kind] == "refund" && p[:refund_of_id].present?) ? refund_info : :unset, account_optional: origin == "receipt")
       raise Invalid, "refund_target_invalid" if refund_target && !%w[expense].include?(refund_target.kind)
       amount = Domain.signed_amount(p[:kind], money!(p[:amount]))
       category = p[:category].presence || refund_target&.category || "Uncategorized"
@@ -276,9 +283,10 @@ module Finance
       entry = Transaction.new(user: @user, bank_account: account, entry_origin: origin, kind: p[:kind], amount: amount,
         booked_on: date!(p[:booked_on]), occurred_at_time: p[:occurred_at_time].presence, category: category,
         description: description_for(p, dims[:merchant], category), note: p[:note].presence, merchant: dims[:merchant] || refund_target&.merchant,
-        project: dims[:project] || refund_target&.project, category_source: "user", tax_review: category == "Business",
-        recurring_rule: recurring&.first, recurring_on: recurring&.last)
-      entry.user_locked_fields = %w[category kind]
+        project: dims[:project] || refund_target&.project, category_source: (origin == "receipt") ? (p[:category_source].presence_in(%w[user auto]) || "auto") : "user",
+        tax_review: category == "Business", recurring_rule: recurring&.first, recurring_on: recurring&.last)
+      # A person typed these; a receipt entry's category may be an automatic suggestion (only a person's choice is locked).
+      entry.user_locked_fields = (origin == "receipt" && entry.category_source != "user") ? [] : %w[category kind]
       entry.tags = dims[:tags]
       entry.save!
       if refund_target
@@ -397,7 +405,7 @@ module Finance
     end
 
     def refunded_total(expense)
-      TransactionLink.confirmed.joins(:from_transaction).where(link_type: "refund_of", to_transaction_id: expense.id, finance_transactions: {deleted_at: nil}).sum("finance_transactions.amount")
+      TransactionLink.confirmed.joins(:from_transaction).where(link_type: "refund_of", to_transaction_id: expense.id, finance_transactions: {deleted_at: nil, superseded_by_id: nil}).sum("finance_transactions.amount")
     end
 
     # Creation is only one way the cap can change: restoring a trashed refund and reducing or
@@ -411,7 +419,7 @@ module Finance
       entry.outgoing_links.confirmed.where(link_type: "refund_of").each do |link|
         target = link.to_transaction
         other_refunds = TransactionLink.confirmed.joins(:from_transaction).where(link_type: "refund_of", to_transaction_id: target.id,
-          finance_transactions: {deleted_at: nil}).where.not(from_transaction_id: entry.id).sum("finance_transactions.amount")
+          finance_transactions: {deleted_at: nil, superseded_by_id: nil}).where.not(from_transaction_id: entry.id).sum("finance_transactions.amount")
         if target.kind != "expense" || entry.amount <= 0 || other_refunds + entry.amount > -target.amount
           raise Invalid, "refund_too_large"
         end

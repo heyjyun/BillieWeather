@@ -160,7 +160,8 @@
     "web_copy",
     "upload",
     "recurring",
-    "legacy"
+    "legacy",
+    "receipt"
   ],
   "locked_fields": [
     "category",
