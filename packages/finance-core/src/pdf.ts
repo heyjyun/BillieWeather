@@ -6,7 +6,10 @@
 import { CURRENCIES, type Currency, type IsoDate, type ParsedStatement } from "@billie/shared-types";
 import type { Categorizer } from "./categorizer";
 import { ImportError, parseStatement } from "./importer";
+import { detectDuplicates } from "./ledger/dedupe";
 import { decimalToCents, MONEY_LIMIT_CENTS } from "./money";
+import type { ExistingTransaction } from "./universal/relations";
+import { accountKey, type AccountKind, type AccountRef } from "./universal/schema";
 
 export const PDF_MAX_BYTES = 2 * 1024 * 1024;
 export const PDF_MAX_PAGES = 20;
@@ -36,6 +39,12 @@ export interface PdfDraftRow {
   bookedOn: IsoDate;
   description: string;
   amount: string;
+  /**
+   * How this row relates to what is already stored (markPdfDuplicates): "duplicate" = already
+   * imported from another file of the same account (suggested: leave out), "review" = looks like
+   * an existing transaction and a person decides (suggested: keep).
+   */
+  duplicate?: "duplicate" | "review";
 }
 
 export interface PdfDraft {
@@ -45,6 +54,8 @@ export interface PdfDraft {
   closingBalanceOn: IsoDate | null;
   /** Nothing needs a person's attention: every amount has a clear sign, the year came from the statement, nothing was skipped. */
   autoImportable: boolean;
+  /** The account the statement names (bank, last four digits, kind); `key` is null when the text does not identify exactly one. */
+  account?: AccountRef;
 }
 
 export function isPdf(bytes: Uint8Array, filename: string): boolean {
@@ -103,6 +114,7 @@ export function extractPdfStatement(pages: string[], options: PdfExtractOptions)
 
   const draft = extractRows(pages.join("\n"), options);
   if (draft.rows.length === 0) throw new ImportError("pdf_no_rows");
+  draft.account = pdfAccountIdentity(pages.join("\n"));
   if (pages.some(isBlank)) draft.warnings.push({ code: "pdf_blank_pages", vars: {} });
   draft.warnings = limitWarnings(uniqueWarnings(draft.warnings));
   draft.autoImportable = draft.warnings.every((warning) => (PDF_GENERIC_NOTICES as readonly string[]).includes(warning.code)) &&
@@ -341,4 +353,107 @@ export function pdfDraftToStatement(draft: Pick<PdfDraft, "closingBalanceCents" 
   const csv = ["Date,Description,Amount,Currency", ...included.map((row) => [row.bookedOn, row.description, row.amount, options.currency].map(cell).join(","))].join("\n");
   const parsed = parseStatement(csv, { filename: "reviewed-transactions.csv", currency: options.currency, categorizer: options.categorizer });
   return { ...parsed, closingBalanceCents: draft.closingBalanceCents, closingBalanceOn: draft.closingBalanceOn, dateColumnUsed: null };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Account identity and duplicates: the same evidence rules as the website
+// (app/services/finance/statement_account_identity.rb `from_pdf`) and the same duplicate contract
+// as every other import path (ledger/dedupe.ts detectDuplicates).
+
+const BANK_ALIASES: ReadonlyArray<readonly [string, RegExp]> = [
+  ["Chase", /\b(?:j\s*p\s*morgan\s+chase|jpmorgan\s+chase|chase)(?:\s+bank)?\b/i],
+  ["Bank of America", /\b(?:bank\s+of\s+america|bofa)\b/i],
+  ["Wells Fargo", /\bwells\s+fargo\b/i],
+  ["Capital One", /\bcapital\s+one\b/i],
+  ["Citibank", /\b(?:citibank|citi\s+bank)\b/i],
+  ["U.S. Bank", /\bu\.?\s*s\.?\s+bank\b/i],
+  ["PNC", /\bpnc(?:\s+bank)?\b/i],
+  ["TD Bank", /\btd\s+bank\b/i],
+  ["Ally Bank", /\bally\s+bank\b/i],
+  ["Discover Bank", /\bdiscover\s+bank\b/i],
+  ["American Express", /\bamerican\s+express\b/i],
+];
+const CARD_WORDS = /\b(?:credit\s+card|card\s+account|visa|mastercard|amex)\b/i;
+const LOAN_WORDS = /\b(?:loan|mortgage|line\s+of\s+credit)\b/i;
+const CHECKING_WORDS = /\b(?:checking|chequing)\b/i;
+const SAVINGS_WORDS = /\bsavings?\b/i;
+const OTHER_CASH_WORDS = /\b(?:deposit|money\s+market|cash)\b/i;
+const ACCOUNT_TOKEN = "(?:[xX*\\u2022#\\d][xX*\\u2022#\\d \\t-]*\\d)";
+const ACCOUNT_NUMBER = new RegExp(
+  `\\b(?:account\\s*(?:number|no\\.?|#)|(?:checking|savings?|chequing)\\s+account(?:\\s*(?:number|no\\.?|#))?|card\\s*(?:number|no\\.?|#)|(?:account|card)\\s+ending\\s+(?:in\\s+)?)\\s*[:#-]?\\s*(${ACCOUNT_TOKEN})`, "gi");
+const ACTIVITY_LINE = /^\s*(?:\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}(?:\/\d{4})?)\s+/;
+const EXPLICIT_BANK = /^\s*(?:bank(?:\s+name)?|financial\s+institution|institution)\s*:\s*(.{1,100})\s*$/i;
+
+const recognizedBanks = (text: string) => BANK_ALIASES.filter(([, pattern]) => pattern.test(text)).map(([name]) => name);
+const compactNumber = (value: string) => value.trim().replace(/[ \t-]/g, "");
+
+function lastFour(value: string): string | null {
+  const compact = compactNumber(value);
+  if (!/^[xX*\u2022#\d]*\d{4}$/.test(compact)) return null;
+  const digits = compact.replace(/\D/g, "");
+  return digits.length >= 4 && digits.length <= 24 ? digits.slice(-4) : null;
+}
+
+function canonicalBank(value: string): string | null {
+  const text = value.trim().replace(/\s+/g, " ");
+  if (text === "" || text.length > 100) return null;
+  const known = recognizedBanks(text);
+  if (known.length > 1) return null;
+  return known[0] ?? text.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
+}
+
+/**
+ * The account a PDF statement names. Account metadata is evidence, never a guess: date-prefixed
+ * activity lines are ignored (payees often name another bank), the institution is read from the
+ * first 100 lines only, and account numbers are collected from the whole document so a combined
+ * statement (two accounts) is recognized as ambiguous. Only the last four digits are kept.
+ * `key` is set only when exactly one bank, one number and one account kind are found.
+ */
+export function pdfAccountIdentity(text: string): AccountRef {
+  const lines = text.split("\n");
+  const headerLines = lines.slice(0, 100).filter((line) => !ACTIVITY_LINE.test(line));
+  const header = headerLines.join("\n").slice(0, 12_000);
+  const banks = [...new Set([...recognizedBanks(header), ...headerLines.flatMap((line) => {
+    const value = EXPLICIT_BANK.exec(line)?.[1];
+    const bank = value ? canonicalBank(value) : null;
+    return bank ? [bank] : [];
+  })])];
+  const rawNumbers = [...lines.filter((line) => !ACTIVITY_LINE.test(line)).join("\n").matchAll(ACCOUNT_NUMBER)].map((match) => match[1]);
+  const numbers = [...new Set(rawNumbers.flatMap((value) => lastFour(value) ?? []))];
+  const fullNumbers = new Set(rawNumbers.map(compactNumber).filter((value) => /^\d{5,24}$/.test(value)));
+  const ambiguous = banks.length > 1 || numbers.length > 1 || fullNumbers.size > 1;
+
+  const card = CARD_WORDS.test(header);
+  const loan = LOAN_WORDS.test(header);
+  const checking = CHECKING_WORDS.test(header);
+  const savings = SAVINGS_WORDS.test(header);
+  const cash = checking || savings || OTHER_CASH_WORDS.test(header);
+  let kind: AccountKind = "unknown";
+  if ((card || loan) && !cash) kind = card ? "credit_card" : "loan";
+  else if (cash && !card && !loan && checking !== savings) kind = checking ? "checking" : "savings";
+
+  const institution = banks.length === 1 ? banks[0] : null;
+  const last4 = numbers.length === 1 ? numbers[0] : null;
+  const identified = institution !== null && last4 !== null && kind !== "unknown" && !ambiguous;
+  return { key: identified ? accountKey(institution, last4, kind) : null, institution, last4, kind: ambiguous ? "unknown" : kind, country: null };
+}
+
+/**
+ * Compares a PDF draft's rows with what is already stored, with the shared detector. Rows whose
+ * amount is still unclear are not compared. Nothing is dropped here: every match is shown in the
+ * review, and a draft with any match is never imported without review.
+ */
+export function markPdfDuplicates(draft: PdfDraft, existing: readonly ExistingTransaction[]): PdfDraft {
+  const account = draft.account?.key ?? null;
+  const readable = draft.rows.map((row, index) => ({ row, index })).filter(({ row }) => /^[+-]?\d+\.\d{2}$/.test(row.amount));
+  const verdicts = detectDuplicates(
+    existing.map((row) => ({ id: row.id, account: row.accountKey, date: row.bookedOn, amountMinor: row.amountCents, description: row.description, reference: row.bankReference })),
+    readable.map(({ row }) => ({ account, date: row.bookedOn, amountMinor: decimalToCents(row.amount), description: row.description })),
+  );
+  const marks = new Map<number, "duplicate" | "review">();
+  verdicts.forEach((verdict, position) => {
+    if (verdict.result !== "new") marks.set(readable[position].index, verdict.result);
+  });
+  const rows = draft.rows.map(({ duplicate: _previous, ...row }, index) => (marks.has(index) ? { ...row, duplicate: marks.get(index) } : row));
+  return { ...draft, rows, autoImportable: draft.autoImportable && marks.size === 0 };
 }

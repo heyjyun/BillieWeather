@@ -106,7 +106,7 @@ class Finance::CategorizerTest < ActiveSupport::TestCase
   private
 
   def statement_for(user)
-    Finance::Statement.create!(user: user, filename: "s.csv", currency: "USD", sha256: SecureRandom.hex(32), status: "imported", transaction_count: 1)
+    Finance::Statement.create!(user: user, filename: "s.csv", currency: "USD", sha256: SecureRandom.hex(32), transaction_count: 1)
   end
 
   def transaction_for(user, statement, description, amount, category = "Uncategorized")

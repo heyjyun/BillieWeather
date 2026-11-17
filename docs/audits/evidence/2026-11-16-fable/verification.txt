@@ -1,0 +1,29 @@
+BillieWeather follow-up (Claude Fable 5.2) - 2026-11-16
+Baseline: main @ cb84e71 (working tree clean at start). All changes local and uncommitted.
+No push, deployment, production DB access, real financial data, or access to ../local-db-backups-20261113/.
+
+BASELINE (reproduces Codex)
+  Rails 650 run / 648 passed / 2 skips; client 689 passed; Rust 15 passed; Python 55 passed.
+
+FINAL
+  Rails  (RAILS_ENV=test, DATABASE_URL and DATABASE_URL_UNPOOLED = postgresql://localhost/billieweather_codex_audit_test)
+         661 tests, 25018 assertions, 0 failures, 0 errors, 2 skips. Line coverage 95.41%.
+  Client (clients/universal: npm test)   58 files, 712 passed, 0 failed.
+  Client build (npm run build)           PASS. Main chunk 923.79 kB / gzip 293.49 kB (not optimized in this pass).
+  Rust   (cargo test --locked)           19 passed. First attempt failed with "No space left on device";
+                                         passed after `cargo clean -p billieweather`.
+  Python (billieforecast pytest)         55 passed.
+  Chromium smoke (scripts/audit-smoke.mjs, loopback Vite dev server)  PASS. Production preview not run.
+  PG migration 20261116000100            up, down, up: db/schema.rb identical.
+  Rails assets (yarn build, yarn build:css) PASS after dependency changes; CSS byte-identical.
+  OpenAPI lint (@redocly/cli 2.79.0)     PASS with two 2.x-only rules disabled (see report section F8).
+
+SECURITY SCANS
+  Root yarn npm audit --recursive: 38 (3 critical, 14 high, 20 moderate, 1 low) -> 6 moderate.
+  bundle-audit: No vulnerabilities found. Brakeman: 1 weak HTTP Verb Confusion (unchanged).
+  OSV, uv.lock (81 packages): 0. OSV, Cargo.lock (544 packages): 7 entries; only libsqlite3-sys 0.30.1
+  (RUSTSEC-2026-0459) is compiled for this target and has no compatible upstream fix.
+
+NOT VERIFIED
+  Packaged native app (the new db_transaction / db_snapshot commands through the WebView), Windows, iOS, Android.
+  Either migration against real data. Client start-up, rendering, memory, OCR and import throughput.

@@ -2,14 +2,17 @@
 // saved. Inside Tauri (macOS, Windows, iOS, Android) data goes to SQLite in the app's
 // private directory. In a plain browser (`npm run dev`) an in-memory database is used
 // and nothing is persisted.
-import type { SqlDriver } from "./store";
+import type { SqlDriver, SqlStatement } from "./store";
 
 export const isTauri = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 export async function openDatabase(file = "billieweather.db"): Promise<{ driver: SqlDriver; persistent: boolean }> {
   if (isTauri()) {
     const { default: Database } = await import("@tauri-apps/plugin-sql");
-    const db = await Database.load(`sqlite:${file}`);
+    const url = `sqlite:${file}`;
+    const db = await Database.load(url);
+    const { invoke } = await import("@tauri-apps/api/core");
+    const batch = (statements: readonly SqlStatement[]) => statements.map((statement) => ({ sql: statement.sql, params: statement.params ?? [] }));
     return {
       persistent: true,
       driver: {
@@ -18,6 +21,10 @@ export async function openDatabase(file = "billieweather.db"): Promise<{ driver:
           return { rowsAffected: result.rowsAffected, lastInsertId: result.lastInsertId };
         },
         select: (sql, params) => db.select(sql, params),
+        // The plugin pools connections, so a transaction cannot span calls: the whole batch goes to
+        // the native side, which runs it on one connection in one transaction (src-tauri/src/transaction.rs).
+        transaction: (statements) => invoke("db_transaction", { db: url, statements: batch(statements) }),
+        snapshot: (queries) => invoke("db_snapshot", { db: url, queries: batch(queries) }),
       },
     };
   }

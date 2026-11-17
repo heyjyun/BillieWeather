@@ -195,7 +195,7 @@ module DemoAccount
     def create_statement!(user, account, key, start, finish, entries, closing)
       statement = Finance::Statement.create!(user: user, bank_account: account, currency: "USD",
         filename: "example-#{account.bank_name.parameterize}-#{account.last4}-#{start.strftime("%Y-%m")}.csv",
-        sha256: digest("statement", key, start.iso8601), status: "imported", transaction_count: entries.size,
+        sha256: digest("statement", key, start.iso8601), transaction_count: entries.size,
         closing_balance: closing, closing_balance_on: finish, balance_observed_on: finish)
       Finance::ImportPlan.new(user: user, rows: entries, bank_account: account, category_source: "file", dedupe: false).insert!(statement)
     end

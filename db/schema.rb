@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_16_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -143,11 +143,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.string "summary", limit: 300
     t.jsonb "changes_data", default: {}, null: false
     t.jsonb "undo_data"
-    t.bigint "book_id"
     t.datetime "created_at", null: false
     t.index ["batch_id"], name: "index_finance_audit_events_on_batch_id"
     t.index ["user_id", "created_at"], name: "index_finance_audit_events_on_user_id_and_created_at"
-    t.index ["user_id"], name: "index_finance_audit_events_on_user_id"
     t.index ["uuid"], name: "index_finance_audit_events_on_uuid", unique: true
   end
 
@@ -174,9 +172,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.datetime "archived_at"
     t.boolean "manual", default: false, null: false
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
-    t.bigint "book_id"
+    t.index ["id", "user_id"], name: "index_finance_bank_accounts_on_id_and_owner", unique: true
     t.index ["user_id", "identity_key"], name: "index_finance_bank_accounts_on_user_id_and_identity_key", unique: true
-    t.index ["user_id"], name: "index_finance_bank_accounts_on_user_id"
     t.index ["uuid"], name: "index_finance_bank_accounts_on_uuid", unique: true
     t.check_constraint "account_type::text = ANY (ARRAY['checking'::character varying::text, 'savings'::character varying::text, 'cash'::character varying::text, 'payment_app'::character varying::text, 'investment'::character varying::text, 'receivable'::character varying::text, 'credit_card'::character varying::text, 'loan'::character varying::text, 'other'::character varying::text])", name: "finance_bank_accounts_type"
     t.check_constraint "due_day IS NULL OR due_day >= 1 AND due_day <= 31", name: "finance_bank_accounts_due_day"
@@ -210,7 +207,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.bigint "project_id"
     t.decimal "amount", precision: 15, scale: 2, null: false
     t.integer "alert_percent", default: 90, null: false
-    t.bigint "book_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["project_id"], name: "index_finance_budgets_on_project_id"
@@ -228,11 +224,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.string "category_kind", default: "expense", null: false
     t.integer "sort_order", default: 0, null: false
     t.boolean "hidden", default: false, null: false
-    t.bigint "book_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index "user_id, lower((name)::text)", name: "index_finance_category_settings_on_user_and_lower_name", unique: true
-    t.index ["user_id"], name: "index_finance_category_settings_on_user_id"
     t.check_constraint "category_kind::text = ANY (ARRAY['expense'::character varying::text, 'income'::character varying::text])", name: "finance_category_settings_kind"
   end
 
@@ -259,7 +253,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index "user_id, lower((name)::text)", name: "index_finance_custom_categories_on_user_and_lower_name", unique: true
-    t.index ["user_id"], name: "index_finance_custom_categories_on_user_id"
   end
 
   create_table "finance_insights", force: :cascade do |t|
@@ -272,7 +265,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.string "kind", default: "general", null: false
     t.index ["user_id", "generated_at"], name: "index_finance_insights_on_user_id_and_generated_at"
     t.index ["user_id", "kind", "generated_at"], name: "index_finance_insights_on_user_id_and_kind_and_generated_at"
-    t.index ["user_id"], name: "index_finance_insights_on_user_id"
   end
 
   create_table "finance_local_database_audits", force: :cascade do |t|
@@ -309,7 +301,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.datetime "synced_at"
     t.index ["user_id", "database_id"], name: "index_local_database_reports_on_owner_database"
     t.index ["user_id", "device_id", "database_id"], name: "index_local_database_reports_on_owner_device_database", unique: true
-    t.index ["user_id"], name: "index_finance_local_database_reports_on_user_id"
   end
 
   create_table "finance_local_devices", force: :cascade do |t|
@@ -323,7 +314,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.string "label", limit: 80
     t.datetime "last_reported_at"
     t.index ["user_id", "device_id"], name: "index_finance_local_devices_on_user_id_and_device_id", unique: true
-    t.index ["user_id"], name: "index_finance_local_devices_on_user_id"
   end
 
   create_table "finance_merchant_rules", force: :cascade do |t|
@@ -334,7 +324,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id", "merchant_key", "income"], name: "index_finance_merchant_rules_on_user_merchant_direction", unique: true
-    t.index ["user_id"], name: "index_finance_merchant_rules_on_user_id"
   end
 
   create_table "finance_merchants", force: :cascade do |t|
@@ -344,11 +333,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.text "note"
     t.integer "sort_order", default: 0, null: false
     t.datetime "archived_at"
-    t.bigint "book_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index "user_id, lower((name)::text)", name: "index_finance_merchants_on_user_and_lower_name", unique: true
-    t.index ["user_id"], name: "index_finance_merchants_on_user_id"
+    t.index ["id", "user_id"], name: "index_finance_merchants_on_id_and_owner", unique: true
     t.index ["uuid"], name: "index_finance_merchants_on_uuid", unique: true
   end
 
@@ -361,7 +349,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.uuid "batch_id"
     t.datetime "applied_at"
     t.datetime "undone_at"
-    t.bigint "book_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_finance_organize_runs_on_user_id"
@@ -391,11 +378,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.text "note"
     t.integer "sort_order", default: 0, null: false
     t.datetime "archived_at"
-    t.bigint "book_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index "user_id, lower((name)::text)", name: "index_finance_projects_on_user_and_lower_name", unique: true
-    t.index ["user_id"], name: "index_finance_projects_on_user_id"
+    t.index ["id", "user_id"], name: "index_finance_projects_on_id_and_owner", unique: true
     t.index ["uuid"], name: "index_finance_projects_on_uuid", unique: true
   end
 
@@ -411,9 +397,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.date "next_on"
     t.boolean "auto_post", default: false, null: false
     t.boolean "paused", default: false, null: false
-    t.bigint "book_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["id", "user_id"], name: "index_finance_recurring_rules_on_id_and_owner", unique: true
     t.index ["user_id"], name: "index_finance_recurring_rules_on_user_id"
     t.index ["uuid"], name: "index_finance_recurring_rules_on_uuid", unique: true
     t.check_constraint "\"interval\" >= 1 AND \"interval\" <= 365", name: "finance_recurring_interval"
@@ -444,7 +430,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.string "filename", null: false
     t.string "currency", null: false
     t.string "sha256", null: false
-    t.string "status", default: "imported", null: false
     t.integer "transaction_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -453,8 +438,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.bigint "bank_account_id"
     t.date "balance_observed_on"
     t.index ["bank_account_id"], name: "index_finance_statements_on_bank_account_id"
+    t.index ["id", "user_id"], name: "index_finance_statements_on_id_and_owner", unique: true
     t.index ["user_id", "sha256"], name: "index_finance_statements_on_user_id_and_sha256", unique: true
-    t.index ["user_id"], name: "index_finance_statements_on_user_id"
+    t.check_constraint "sha256::text ~ '^[0-9a-f]{64}$'::text", name: "finance_statements_sha256"
+    t.check_constraint "transaction_count > 0", name: "finance_statements_rows"
   end
 
   create_table "finance_tags", force: :cascade do |t|
@@ -464,11 +451,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.text "note"
     t.integer "sort_order", default: 0, null: false
     t.datetime "archived_at"
-    t.bigint "book_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index "user_id, lower((name)::text)", name: "index_finance_tags_on_user_and_lower_name", unique: true
-    t.index ["user_id"], name: "index_finance_tags_on_user_id"
+    t.index ["id", "user_id"], name: "index_finance_tags_on_id_and_owner", unique: true
     t.index ["uuid"], name: "index_finance_tags_on_uuid", unique: true
   end
 
@@ -481,7 +467,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.decimal "amount", precision: 15, scale: 2
     t.string "status", default: "confirmed", null: false
     t.string "decided_by", default: "user", null: false
-    t.bigint "book_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["from_transaction_id"], name: "index_finance_transaction_links_on_from_transaction_id"
@@ -489,15 +474,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.index ["to_transaction_id"], name: "index_finance_transaction_links_on_to_transaction_id"
     t.index ["user_id"], name: "index_finance_transaction_links_on_user_id"
     t.index ["uuid"], name: "index_finance_transaction_links_on_uuid", unique: true
+    t.check_constraint "amount IS NULL OR amount >= 0::numeric", name: "finance_links_amount"
     t.check_constraint "decided_by::text = ANY (ARRAY['user'::character varying::text, 'rule'::character varying::text, 'auto'::character varying::text, 'ai'::character varying::text])", name: "finance_links_decided_by"
     t.check_constraint "link_type::text = ANY (ARRAY['transfer'::character varying::text, 'card_payment'::character varying::text, 'refund_of'::character varying::text, 'duplicate_of'::character varying::text, 'pending_to_posted'::character varying::text])", name: "finance_links_type"
     t.check_constraint "status::text = ANY (ARRAY['suggested'::character varying::text, 'confirmed'::character varying::text, 'rejected'::character varying::text])", name: "finance_links_status"
+    t.check_constraint "to_transaction_id IS NULL OR to_transaction_id <> from_transaction_id", name: "finance_links_two_entries"
   end
 
   create_table "finance_transaction_tags", primary_key: ["transaction_id", "tag_id"], force: :cascade do |t|
     t.bigint "transaction_id", null: false
     t.bigint "tag_id", null: false
+    t.bigint "user_id", null: false
     t.index ["tag_id"], name: "index_finance_transaction_tags_on_tag_id"
+    t.index ["user_id", "tag_id"], name: "index_finance_transaction_tags_on_owner_tag"
   end
 
   create_table "finance_transactions", force: :cascade do |t|
@@ -527,20 +516,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
     t.string "occurred_at_time", limit: 5
     t.bigint "recurring_rule_id"
     t.date "recurring_on"
-    t.bigint "book_id"
-    t.string "fingerprint"
     t.index ["bank_account_id", "booked_on", "amount"], name: "index_finance_transactions_on_account_date_amount"
-    t.index ["fingerprint"], name: "index_finance_transactions_on_fingerprint"
+    t.index ["id", "user_id"], name: "index_finance_transactions_on_id_and_owner", unique: true
+    t.index ["merchant_id"], name: "index_finance_transactions_on_merchant", where: "(merchant_id IS NOT NULL)"
+    t.index ["project_id"], name: "index_finance_transactions_on_project", where: "(project_id IS NOT NULL)"
     t.index ["recurring_rule_id", "recurring_on", "bank_account_id"], name: "index_finance_transactions_recurring_once", unique: true, where: "(recurring_rule_id IS NOT NULL)"
     t.index ["statement_id"], name: "index_finance_transactions_on_statement_id"
-    t.index ["user_id", "booked_on"], name: "index_finance_transactions_on_user_id_and_booked_on"
-    t.index ["user_id", "deleted_at"], name: "index_finance_transactions_on_user_id_and_deleted_at"
+    t.index ["user_id", "booked_on", "id"], name: "index_finance_transactions_on_live_recent", order: { booked_on: :desc, id: :desc }, where: "(deleted_at IS NULL)"
+    t.index ["user_id", "deleted_at"], name: "index_finance_transactions_on_trash", where: "(deleted_at IS NOT NULL)"
     t.index ["user_id", "kind"], name: "index_finance_transactions_on_user_id_and_kind"
-    t.index ["user_id"], name: "index_finance_transactions_on_user_id"
     t.index ["uuid"], name: "index_finance_transactions_on_uuid", unique: true
+    t.check_constraint "amount > '-10000000000000'::bigint::numeric AND amount < '10000000000000'::bigint::numeric", name: "finance_transactions_amount_range"
+    t.check_constraint "category::text <> ''::text", name: "finance_transactions_category_present"
+    t.check_constraint "category_source::text = ANY (ARRAY['user'::character varying, 'rule'::character varying, 'file'::character varying, 'auto'::character varying, 'region'::character varying, 'ai'::character varying, 'legacy'::character varying]::text[])", name: "finance_transactions_category_source"
     t.check_constraint "entry_origin::text = ANY (ARRAY['import'::character varying::text, 'manual'::character varying::text, 'web_copy'::character varying::text, 'upload'::character varying::text, 'recurring'::character varying::text, 'legacy'::character varying::text])", name: "finance_transactions_entry_origin"
+    t.check_constraint "jsonb_typeof(user_locked_fields) = 'array'::text", name: "finance_transactions_locked_fields_array"
     t.check_constraint "kind::text = ANY (ARRAY['expense'::character varying::text, 'income'::character varying::text, 'refund'::character varying::text, 'transfer'::character varying::text, 'card_payment'::character varying::text, 'opening_balance'::character varying::text, 'adjustment'::character varying::text, 'ignored'::character varying::text])", name: "finance_transactions_kind"
     t.check_constraint "occurred_at_time IS NULL OR occurred_at_time::text ~ '^[0-2][0-9]:[0-5][0-9]$'::text", name: "finance_transactions_time"
+    t.check_constraint "original_description::text <> ''::text", name: "finance_transactions_original_present"
     t.check_constraint "statement_id IS NOT NULL OR (entry_origin::text = ANY (ARRAY['manual'::character varying::text, 'recurring'::character varying::text]))", name: "finance_transactions_statement_or_manual"
   end
 
@@ -843,7 +836,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
   add_foreign_key "finance_audit_events", "users"
   add_foreign_key "finance_bank_accounts", "users"
   add_foreign_key "finance_books", "users", on_delete: :cascade
-  add_foreign_key "finance_budgets", "finance_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "finance_budgets", "finance_projects", column: ["project_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_budgets_project_owner", on_delete: :cascade
   add_foreign_key "finance_budgets", "users"
   add_foreign_key "finance_category_settings", "users"
   add_foreign_key "finance_command_executions", "users"
@@ -858,21 +851,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_15_000400) do
   add_foreign_key "finance_profiles", "users"
   add_foreign_key "finance_projects", "users"
   add_foreign_key "finance_recurring_rules", "users"
-  add_foreign_key "finance_statement_drafts", "finance_bank_accounts", column: "bank_account_id"
+  add_foreign_key "finance_statement_drafts", "finance_bank_accounts", column: ["bank_account_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_statement_drafts_bank_account_owner"
   add_foreign_key "finance_statement_drafts", "users"
-  add_foreign_key "finance_statements", "finance_bank_accounts", column: "bank_account_id"
+  add_foreign_key "finance_statements", "finance_bank_accounts", column: ["bank_account_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_statements_bank_account_owner"
   add_foreign_key "finance_statements", "users"
   add_foreign_key "finance_tags", "users"
-  add_foreign_key "finance_transaction_links", "finance_transactions", column: "from_transaction_id", on_delete: :cascade
-  add_foreign_key "finance_transaction_links", "finance_transactions", column: "to_transaction_id", on_delete: :cascade
+  add_foreign_key "finance_transaction_links", "finance_transactions", column: ["from_transaction_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transaction_links_from_transaction_owner", on_delete: :cascade
+  add_foreign_key "finance_transaction_links", "finance_transactions", column: ["to_transaction_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transaction_links_to_transaction_owner", on_delete: :cascade
   add_foreign_key "finance_transaction_links", "users"
-  add_foreign_key "finance_transaction_tags", "finance_tags", column: "tag_id", on_delete: :cascade
-  add_foreign_key "finance_transaction_tags", "finance_transactions", column: "transaction_id", on_delete: :cascade
-  add_foreign_key "finance_transactions", "finance_bank_accounts", column: "bank_account_id"
+  add_foreign_key "finance_transaction_tags", "finance_tags", column: ["tag_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transaction_tags_tag_owner", on_delete: :cascade
+  add_foreign_key "finance_transaction_tags", "finance_transactions", column: ["transaction_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transaction_tags_transaction_owner", on_delete: :cascade
+  add_foreign_key "finance_transaction_tags", "users"
+  add_foreign_key "finance_transactions", "finance_bank_accounts", column: ["bank_account_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transactions_bank_account_owner"
   add_foreign_key "finance_transactions", "finance_merchants", column: "merchant_id", on_delete: :nullify
+  add_foreign_key "finance_transactions", "finance_merchants", column: ["merchant_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transactions_merchant_owner"
   add_foreign_key "finance_transactions", "finance_projects", column: "project_id", on_delete: :nullify
+  add_foreign_key "finance_transactions", "finance_projects", column: ["project_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transactions_project_owner"
   add_foreign_key "finance_transactions", "finance_recurring_rules", column: "recurring_rule_id", on_delete: :nullify
-  add_foreign_key "finance_transactions", "finance_statements", column: "statement_id"
+  add_foreign_key "finance_transactions", "finance_recurring_rules", column: ["recurring_rule_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transactions_recurring_rule_owner"
+  add_foreign_key "finance_transactions", "finance_statements", column: ["statement_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_transactions_statement_owner"
   add_foreign_key "finance_transactions", "users"
   add_foreign_key "integrations_stripe_installations", "oauth_stripe_accounts"
   add_foreign_key "integrations_stripe_installations", "teams"

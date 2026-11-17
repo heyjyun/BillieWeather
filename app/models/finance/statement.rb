@@ -9,7 +9,6 @@ module Finance
     validates :filename, presence: true, length: {maximum: 255}
     validates :currency, inclusion: {in: Finance::Profile::CURRENCIES}
     validates :sha256, format: {with: /\A[0-9a-f]{64}\z/}, uniqueness: {scope: :user_id}
-    validates :status, inclusion: {in: %w[imported]}
     validates :transaction_count, numericality: {only_integer: true, greater_than: 0}
     validate :bank_account_belongs_to_user
     after_update :sync_transaction_account, if: :saved_change_to_bank_account_id?

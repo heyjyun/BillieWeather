@@ -65,3 +65,56 @@ it("rejects an incomplete download before deleting or updating any existing copi
   expect(await store.transactions()).toHaveLength(1);
   expect((await store.webSyncSettings()).version).toBe("v1");
 });
+
+// Synthetic data. Account identity travels with a statement (bank, last four digits, kind).
+describe("account identity in transfers", () => {
+  const cardCsv = "Bank: Synthetic Bank\nCard number: ****9876\nCredit card statement\nDate,Description,Amount\n2026-10-03,ZXQ OUTFITTERS,-80.00\n2026-10-15,ZXQ OUTFITTERS RETURN,30.00\n";
+
+  async function sourceWithCard() {
+    const { importDraftFile, commitDraft, importContext } = await import("../src/services/universalImport");
+    const { reviseDraft } = await import("@billie/finance-core");
+    const source = await newStore();
+    let draft = await importDraftFile(source.store, new TextEncoder().encode(cardCsv), "card.csv", "USD");
+    const context = await importContext(source.store);
+    // Whatever the preview still asks about is answered the way a person would: keep every row.
+    draft = reviseDraft(draft, { conventions: { amountSign: "as_is" }, decisions: Object.fromEntries(draft.rows.map((row) => [row.id, "include" as const])) }, context);
+    await commitDraft(source.store, draft, context);
+    return source;
+  }
+
+  it("a copy to another local database keeps the account, so a later import of that account is compared exactly", async () => {
+    const source = await sourceWithCard();
+    const exported = await source.store.exportData();
+    expect(exported.statements[0].account).toEqual({ institution: "Synthetic Bank", last4: "9876", kind: "credit_card" });
+    expect(JSON.stringify(exported)).not.toContain("****");
+
+    const target = await newStore();
+    await target.store.mergeData(exported);
+    const rows = target.db.exec("SELECT t.account_key, a.account_type, t.kind FROM transactions t JOIN accounts a ON a.id = t.account_id ORDER BY t.id")[0].values;
+    expect(rows).toEqual([["synthetic bank|9876|credit_card", "credit_card", "expense"], ["synthetic bank|9876|credit_card", "credit_card", "refund"]]);
+    expect(target.db.exec("SELECT account_key, account_last4 FROM statements")[0].values).toEqual([["synthetic bank|9876|credit_card", "9876"]]);
+    // The copied rows are found by the account-scoped duplicate index of the target.
+    expect((await target.store.dedupeIndex()).every((row) => row.accountKey === "synthetic bank|9876|credit_card")).toBe(true);
+  });
+
+  it("a merge is one transaction: a failure in a later statement leaves nothing of the earlier ones", async () => {
+    const source = await sourceWithCard();
+    const exported = await source.store.exportData();
+    const broken = { ...exported, statements: [exported.statements[0], { ...exported.statements[0], sha256: "e".repeat(64), rows: [{ ...exported.statements[0].rows[0], bookedOn: null as unknown as string }] }] };
+    const target = await newStore();
+    await expect(target.store.mergeData(broken)).rejects.toThrow();
+    expect(target.db.exec("SELECT COUNT(*) FROM statements")[0].values[0][0]).toBe(0);
+    expect(target.db.exec("SELECT COUNT(*) FROM transactions")[0].values[0][0]).toBe(0);
+    expect(await target.store.currency()).toBeNull();
+  });
+
+  it("an upload names the account, never a full number", async () => {
+    const source = await sourceWithCard();
+    const [statement] = (await source.store.exportData()).statements;
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ id: 1, created: true }), { status: 201 }));
+    await uploadStatement("synthetic-token", statement);
+    const body = JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body));
+    expect(body.statement.account).toEqual({ institution: "Synthetic Bank", last4: "9876", kind: "credit_card" });
+    fetchMock.mockRestore();
+  });
+});

@@ -1,6 +1,6 @@
-// Row-level duplicate detection over plain rows: the contract shared with Rails
-// (app/services/finance/duplicate_detector.rb) and with the universal import pipeline
-// (universal/relations.ts markDuplicates, which applies the same steps to canonical rows).
+// Row-level duplicate detection over plain rows: the one implementation every local import path
+// uses (universal/relations.ts markDuplicates for CSV/XLSX/OFX/OCR drafts, pdf.ts markPdfDuplicates
+// for text PDFs) and the contract shared with Rails (app/services/finance/duplicate_detector.rb).
 // Cases: packages/finance-core/fixtures/dedupe-cases.json.
 import { merchantKey } from "../categorizer";
 
@@ -18,7 +18,9 @@ export interface StoredDedupeRow extends DedupeRow {
 
 export type DedupeVerdict =
   | { result: "new" }
-  | { result: "duplicate"; of: StoredDedupeRow["id"]; reason: "bank_reference" | "overlap" }
+  | { result: "duplicate"; of: StoredDedupeRow["id"]; reason: "bank_reference" }
+  /** `matches`: how many stored rows of the same account have this exact date, amount and description. */
+  | { result: "duplicate"; of: StoredDedupeRow["id"]; reason: "overlap"; matches: number }
   | { result: "review"; of: StoredDedupeRow["id"]; reason: "near_match" | "unknown_account" };
 
 export const descriptionKey = (text: string) => text.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
@@ -55,7 +57,7 @@ export function detectDuplicates(existing: readonly StoredDedupeRow[], incoming:
     occurrences.set(scoped, seen);
     const candidates = byKey.get(key) ?? [];
     const same = candidates.filter((candidate) => candidate.account === row.account);
-    if (seen <= same.length) return { result: "duplicate", of: same[seen - 1].id, reason: "overlap" };
+    if (seen <= same.length) return { result: "duplicate", of: same[seen - 1].id, reason: "overlap", matches: same.length };
     const unknown = candidates.filter((candidate) => candidate.account !== row.account && (candidate.account === null || row.account === null));
     if (seen - same.length <= unknown.length) return { result: "review", of: unknown[seen - same.length - 1].id, reason: "unknown_account" };
     const merchant = merchantKey(row.description);

@@ -3,6 +3,7 @@ mod identity;
 mod ocr;
 mod session;
 mod snapshot;
+mod transaction;
 
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -74,6 +75,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0008_refund_integrity.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 9,
+            description: "refund guard independent of insert helpers, derived link amounts, lookup indexes",
+            sql: include_str!("../migrations/0009_refund_guard_and_link_hygiene.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -111,7 +118,9 @@ pub fn run() {
             session::session_save,
             session::session_clear,
             snapshot_list,
-            snapshot_restore
+            snapshot_restore,
+            db_transaction,
+            db_snapshot
         ])
         .run(tauri::generate_context!())
         .expect("error while running BillieWeather");
@@ -137,6 +146,34 @@ fn snapshot_restore(app: tauri::AppHandle, snapshot: String, slot: u32) -> Resul
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
     let names: Vec<String> = (1..=MAX_DATABASES).map(slot_name).collect();
     snapshot::restore(&dir, &names, &snapshot, &slot_name(slot)).map_err(|e| e.to_string())
+}
+
+/// The plugin's pool for one of this app's database slots (only after the web view loaded it).
+async fn slot_pool(instances: &tauri_plugin_sql::DbInstances, db: &str) -> Result<sqlx::SqlitePool, String> {
+    if !(1..=MAX_DATABASES).any(|slot| slot_file(slot) == db) {
+        return Err("unknown database".into());
+    }
+    let pools = instances.0.read().await;
+    #[allow(unreachable_patterns)]
+    match pools.get(db) {
+        Some(tauri_plugin_sql::DbPool::Sqlite(pool)) => Ok(pool.clone()),
+        _ => Err("database not loaded".into()),
+    }
+}
+
+/// Runs the statements in ONE transaction on one connection: all of them apply or none
+/// (src/transaction.rs). SQLite's own message is returned so trigger codes reach the app.
+#[tauri::command]
+async fn db_transaction(instances: tauri::State<'_, tauri_plugin_sql::DbInstances>, db: String, statements: Vec<transaction::Statement>) -> Result<Vec<transaction::Outcome>, String> {
+    let pool = slot_pool(&instances, &db).await?;
+    transaction::execute_all(&pool, &statements).await.map_err(|error| error.to_string())
+}
+
+/// Answers the queries from one read transaction, so a backup describes a single instant.
+#[tauri::command]
+async fn db_snapshot(instances: tauri::State<'_, tauri_plugin_sql::DbInstances>, db: String, queries: Vec<transaction::Statement>) -> Result<Vec<Vec<serde_json::Map<String, serde_json::Value>>>, String> {
+    let pool = slot_pool(&instances, &db).await?;
+    transaction::select_all(&pool, &queries).await.map_err(|error| error.to_string())
 }
 
 #[cfg(test)]

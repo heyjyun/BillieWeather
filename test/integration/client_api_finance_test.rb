@@ -226,4 +226,51 @@ class ClientApiFinanceTest < ActionDispatch::IntegrationTest
     upload(statement_payload(rows: ["malformed"]))
     assert_response :unprocessable_entity
   end
+
+  # Synthetic statements. The device names the account (bank, last four digits, kind).
+  def card_upload(sha, rows, account: {institution: "Capital One", last4: "9876", kind: "credit_card"})
+    post "/api/client/v1/finance/statements", headers: @auth, as: :json, params: {statement: {filename: "card.csv", currency: "USD", sha256: sha,
+      account: account, transactions: rows.map { |date, description, amount| {booked_on: date, description: description, amount: amount, category: "Uncategorized"} }}.compact}
+  end
+
+  test "an uploaded statement is filed under the account the device identified, shared with website imports of it" do
+    card_upload("a" * 64, [["2026-10-03", "ZXQ OUTFITTERS", "-80.00"], ["2026-10-15", "ZXQ OUTFITTERS RETURN", "30.00"]])
+    assert_response :created
+    statement = Finance::Statement.find(response.parsed_body["id"])
+    account = statement.bank_account
+    assert_equal ["Capital One", "9876", "credit_card", @user.id], [account.bank_name, account.last4, account.account_type, account.user_id]
+    assert_equal [account.id], statement.transactions.pluck(:bank_account_id).uniq
+    # Money in on a card is a refund, never income.
+    assert_equal({BigDecimal("-80") => "expense", BigDecimal("30") => "refund"}, statement.transactions.pluck(:amount, :kind).to_h)
+    # The website's own detector gives the same account for the same card.
+    identity = Finance::StatementAccountIdentity.from_pdf(text: "Capital One\nCredit card statement\nAccount ending in 9876\n")
+    assert_equal account, Finance::BankAccount.resolve(user: @user, identity: identity)
+  end
+
+  test "an overlapping upload of the same account adds only new rows; the same rows on another account are kept" do
+    card_upload("a" * 64, [["2026-10-03", "ZXQ OUTFITTERS", "-80.00"]])
+    card_upload("b" * 64, [["2026-10-03", "ZXQ OUTFITTERS", "-80.00"], ["2026-10-20", "ZXQ GROCERY", "-12.00"]])
+    assert_response :created
+    assert_equal 1, response.parsed_body["skipped_duplicates"]
+    card_upload("c" * 64, [["2026-10-03", "ZXQ OUTFITTERS", "-80.00"]], account: {institution: "Capital One", last4: "1111", kind: "credit_card"})
+    assert_response :created
+    assert_equal 0, response.parsed_body["skipped_duplicates"]
+    assert_equal 2, Finance::Transaction.where(user_id: @user.id, description: "ZXQ OUTFITTERS").count
+    assert_equal 0, Finance::BankAccount.where(user_id: @other.id, last4: %w[9876 1111]).count
+  end
+
+  test "an account identity that is malformed or carries a full number is rejected without storing anything" do
+    before = Finance::Statement.count
+    [{institution: "Capital One", last4: "4111111111119876", kind: "credit_card"}, {institution: "Capital One", last4: "9876", kind: "wallet"}, "9876"].each do |account|
+      card_upload("d" * 64, [["2026-10-03", "ZXQ OUTFITTERS", "-80.00"]], account: account)
+      assert_response :unprocessable_entity
+    end
+    assert_equal before, Finance::Statement.count
+    assert_equal 0, Finance::BankAccount.where(user_id: @user.id, last4: "9876").count
+    # No bank or an unknown kind: accepted, but not filed under an account.
+    card_upload("e" * 64, [["2026-10-03", "ZXQ OUTFITTERS", "-80.00"]], account: {institution: nil, last4: "9876", kind: "unknown"})
+    assert_response :created
+    assert_nil Finance::Statement.find(response.parsed_body["id"]).bank_account_id
+  end
+
 end

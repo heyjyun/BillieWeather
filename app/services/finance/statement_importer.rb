@@ -121,7 +121,7 @@ module Finance
         @duplicates_flagged = plan.flagged.length
         raise ImportError, I18n.t("billie.backend.statement_all_duplicates", count: plan.skipped) if plan.empty?
         statement = Statement.create!(user: @user, filename: filename, currency: @currency,
-          sha256: checksum, status: "imported", transaction_count: plan.rows.length,
+          sha256: checksum, transaction_count: plan.rows.length,
           closing_balance: closing_balance, closing_balance_on: closing_balance_on,
           bank_account: bank_account, balance_observed_on: observed_on)
         # Every imported field is validated while parsing above. Bulk inserts

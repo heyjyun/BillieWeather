@@ -2,9 +2,14 @@
 // CSV files are imported directly. PDF statements are read on this device; when nothing
 // looks unclear they are imported straight away, otherwise they come back as a draft for
 // the person to review (like the website). Drafts live only in memory, never on disk.
+//
+// A text PDF is account-aware like every other import: the account the statement names is
+// detected from its text (finance-core pdfAccountIdentity), its rows are compared with what is
+// already stored by the shared duplicate detector (markPdfDuplicates), and any match sends the
+// draft to review instead of importing it. Nothing is dropped or duplicated without a person seeing it.
 import type { Currency } from "@billie/shared-types";
 import {
-  checkPdfBytes, decodeStatementBytes, detectRegion, extractPdfStatement, ImportError, isPdf, parseStatement, pdfDraftToStatement, sha256Hex,
+  accountTypeFromLegacy, checkPdfBytes, decodeStatementBytes, detectRegion, extractPdfStatement, ImportError, isPdf, markPdfDuplicates, parseStatement, pdfDraftToStatement, sha256Hex,
   type PdfDraft, type RegionDetection, type RegionSource, type ReviewedPdfRow,
 } from "@billie/finance-core";
 import { readPdfPages } from "./pdfText";
@@ -62,7 +67,7 @@ async function importPdf(store: FinanceStore, bytes: Uint8Array, filename: strin
     throw new StoreError("statement_duplicate", "This statement was already imported.");
   }
   const pages = await readPdfPages(bytes);
-  const draft = extractPdfStatement(pages, { currency });
+  const draft = markPdfDuplicates(extractPdfStatement(pages, { currency }), await store.dedupeIndex());
   const detection = detectRegion({ text: pages.join("\n"), currency });
   const review: PdfReview = { kind: "review", filename: base, currency, sha256, draft, region, regionSource: region ? regionSource ?? "user" : null, detection };
   if (!draft.autoImportable) return review;
@@ -78,8 +83,18 @@ async function importPdf(store: FinanceStore, bytes: Uint8Array, filename: strin
 /** Imports the rows a person reviewed (included rows only). */
 export async function importPdfReview(store: FinanceStore, review: PdfReview, rows: ReviewedPdfRow[]): Promise<ImportedFile> {
   await checkCurrency(store, review.currency);
-  const parsed = pdfDraftToStatement(review.draft, rows, { currency: review.currency, categorizer: await store.categorizer(review.region) });
+  const categorizer = await store.categorizer(review.region);
+  const parsed = pdfDraftToStatement(review.draft, rows, { currency: review.currency, categorizer });
+  const account = review.draft.account;
+  const accountType = account?.key ? accountTypeFromLegacy(account.kind, "local") : null;
+  if (accountType) {
+    // The account type changes what money in means: on a credit card it is a refund or a repayment, never income.
+    for (const row of parsed.rows) {
+      row.category = categorizer.categorize(row.description, row.amountCents, accountType);
+      row.taxReview = row.category === "Business";
+    }
+  }
   const result = await store.importStatement({ filename: review.filename, currency: review.currency, sha256: review.sha256, parsed, region: review.region,
-    regionMeta: { source: review.regionSource, detection: review.detection } });
+    regionMeta: { source: review.regionSource, detection: review.detection }, account, format: "pdf_text" });
   return { kind: "imported", format: "pdf", ...result, count: parsed.rows.length, closingBalanceCents: parsed.closingBalanceCents };
 }

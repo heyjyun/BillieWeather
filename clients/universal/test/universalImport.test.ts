@@ -84,18 +84,19 @@ describe("universal import into the local database", () => {
   it("leaves no trace when a write fails part-way (staging) or the row count does not match (trigger)", async () => {
     const { store: probe, db } = await newStore();
     const real = sqljsDriver(db);
-    let calls = 0;
+    // The import is one database transaction: its second staging statement fails inside it, after
+    // the first one already ran, so the database has to roll the whole batch back.
     const flaky: SqlDriver = {
-      select: real.select,
-      execute: async (sql, params) => {
-        if (/INSERT INTO import_staging_rows/.test(sql) && ++calls === 2) throw new Error("disk full");
-        return real.execute(sql, params);
+      ...real,
+      transaction: (statements) => {
+        let staging = 0;
+        return real.transaction(statements.map((statement) => (/INSERT INTO import_staging_rows/.test(statement.sql) && ++staging === 2 ? { sql: "INSERT INTO disk_full VALUES (1)" } : statement)));
       },
     };
     const store = new FinanceStore(flaky);
     const many = `Date,Description,Amount\n${Array.from({ length: 120 }, (_, i) => `2026-01-${String((i % 28) + 1).padStart(2, "0")},Item ${i},-1.00`).join("\n")}\n`;
     const draft = await importDraftFile(store, enc(many), "many.csv", "USD");
-    await expect(confirmAll(store, draft)).rejects.toThrow("disk full");
+    await expect(confirmAll(store, draft)).rejects.toThrow(/disk_full/);
     expect(await probe.statements()).toEqual([]);
     expect(await probe.transactions()).toEqual([]);
     expect(db.exec("SELECT COUNT(*) FROM import_staging_rows")[0].values[0][0]).toBe(0);

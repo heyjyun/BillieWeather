@@ -17,7 +17,7 @@ import {
 } from "@billie/finance-core";
 import { CATEGORIES } from "@billie/shared-types";
 import { randomId } from "./ids";
-import type { SqlDriver } from "./store";
+import type { SqlDriver, SqlStatement } from "./store";
 
 type Row = Record<string, unknown>;
 const now = () => new Date().toISOString();
@@ -243,18 +243,35 @@ const toAccount = (row: Row): Account => {
 
 const cleanName = (name: string, max = NAME_MAX) => [...normalizeCategoryName(name)].slice(0, max).join("").trim();
 
+export interface AuditInput {
+  actor?: string;
+  action: string;
+  subjectType: string;
+  subjectId?: string | number | null;
+  batchId?: string | null;
+  summary?: string | null;
+  changes?: Record<string, [unknown, unknown]> | null;
+  undo?: UndoStep[] | null;
+}
+
 export class LedgerStore {
   constructor(private db: SqlDriver) {}
 
   // ---------------------------------------------------------------------------------------- audit
 
   /** Appends one operation-log event. Values stay on this device (decision Q10). */
-  async audit(event: { actor?: string; action: string; subjectType: string; subjectId?: string | number | null; batchId?: string | null; summary?: string | null; changes?: Record<string, [unknown, unknown]> | null; undo?: UndoStep[] | null }): Promise<void> {
-    await this.db.execute(
-      "INSERT INTO audit_events (uuid, at, actor, action, subject_type, subject_id, batch_id, summary, changes, undo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [randomId(), now(), event.actor ?? "user", event.action, event.subjectType, event.subjectId === undefined || event.subjectId === null ? null : String(event.subjectId),
+  async audit(event: AuditInput): Promise<void> {
+    const statement = this.auditStatement(event);
+    await this.db.execute(statement.sql, statement.params);
+  }
+
+  /** The operation-log INSERT for `event`, to run inside the same transaction as the change it records. */
+  auditStatement(event: AuditInput): SqlStatement {
+    return {
+      sql: "INSERT INTO audit_events (uuid, at, actor, action, subject_type, subject_id, batch_id, summary, changes, undo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      params: [randomId(), now(), event.actor ?? "user", event.action, event.subjectType, event.subjectId === undefined || event.subjectId === null ? null : String(event.subjectId),
         event.batchId ?? null, event.summary ?? null, event.changes ? JSON.stringify(event.changes) : null, event.undo && event.undo.length > 0 ? JSON.stringify(event.undo) : null],
-    );
+    };
   }
 
   async auditEvents(options: { limit?: number; subjectType?: string; subjectId?: string | number; batchId?: string; actor?: string } = {}): Promise<AuditEvent[]> {
@@ -668,17 +685,21 @@ export class LedgerStore {
   }
 
   /** Keeps category settings in step when a custom category is renamed (called by FinanceStore). */
-  async renameCategoryMeta(from: string, to: string): Promise<void> {
-    await this.db.execute("UPDATE category_meta SET name = ?, updated_at = ? WHERE name = ?", [to, now(), from]);
-    await this.db.execute("UPDATE category_meta SET parent = ?, updated_at = ? WHERE parent = ?", [to, now(), from]);
-    await this.db.execute("UPDATE budgets SET category = ?, updated_at = ? WHERE category = ?", [to, now(), from]);
+  renameCategoryMetaStatements(from: string, to: string): SqlStatement[] {
+    return [
+      { sql: "UPDATE category_meta SET name = ?, updated_at = ? WHERE name = ?", params: [to, now(), from] },
+      { sql: "UPDATE category_meta SET parent = ?, updated_at = ? WHERE parent = ?", params: [to, now(), from] },
+      { sql: "UPDATE budgets SET category = ?, updated_at = ? WHERE category = ?", params: [to, now(), from] },
+    ];
   }
 
   /** Removes a deleted category's settings; its children move to the top level. */
-  async deleteCategoryMeta(name: string): Promise<void> {
-    await this.db.execute("UPDATE category_meta SET parent = NULL, updated_at = ? WHERE parent = ?", [now(), name]);
-    await this.db.execute("DELETE FROM category_meta WHERE name = ?", [name]);
-    await this.db.execute("DELETE FROM budgets WHERE category = ?", [name]);
+  deleteCategoryMetaStatements(name: string): SqlStatement[] {
+    return [
+      { sql: "UPDATE category_meta SET parent = NULL, updated_at = ? WHERE parent = ?", params: [now(), name] },
+      { sql: "DELETE FROM category_meta WHERE name = ?", params: [name] },
+      { sql: "DELETE FROM budgets WHERE category = ?", params: [name] },
+    ];
   }
 
   // ---------------------------------------------------------------------------------- entries
@@ -784,24 +805,30 @@ export class LedgerStore {
       rowsCount = 1;
     }
     const perRow = columns.split(",").length;
-    let inserted: { lastInsertId?: number };
+    // One transaction: the entry (both legs of a transfer), the link its insert creates, the
+    // clearing of the insert-time helpers and the container's count apply together or not at all.
+    // The helpers must never outlive the INSERT (migration 0009).
+    let results: Awaited<ReturnType<SqlDriver["transaction"]>>;
     try {
-      inserted = await this.db.execute(`INSERT INTO transactions (${columns}) VALUES ${Array.from({ length: rowsCount }, () => `(${placeholders(perRow)})`).join(", ")}`, params);
+      results = await this.db.transaction([
+        { sql: `INSERT INTO transactions (${columns}) VALUES ${Array.from({ length: rowsCount }, () => `(${placeholders(perRow)})`).join(", ")}`, params },
+        rowsCount === 2
+          ? { sql: "UPDATE transactions SET link_group = NULL, link_hint = NULL, link_target_id = NULL WHERE link_group = ?", params: [group] }
+          : { sql: "UPDATE transactions SET link_group = NULL, link_hint = NULL, link_target_id = NULL WHERE id = last_insert_rowid()" },
+        { sql: "UPDATE statements SET transaction_count = (SELECT COUNT(*) FROM transactions WHERE statement_id = ?) WHERE id = ?", params: [containerId, containerId] },
+      ]);
     } catch (error) {
       const message = String((error as Error)?.message ?? error);
       if (message.includes("refund_too_large")) throw new LedgerError("refund_too_large", "The refunds would be larger than the expense.", ["refund_too_large"]);
       if (message.includes("refund_target_invalid")) throw new LedgerError("invalid_entry", "That expense cannot be refunded.", ["refund_target_required"]);
       throw error;
     }
-    // A pair is found by its unique link group; a single row by the id SQLite just assigned.
-    const ids = rowsCount === 2
-      ? (await this.db.select<Row>("SELECT id FROM transactions WHERE link_group = ? ORDER BY id", [group])).map((row) => Number(row.id))
-      : [Number(inserted.lastInsertId)];
-    if (ids.length !== rowsCount || ids.some((value) => !Number.isFinite(value) || value <= 0)) throw new LedgerError("invalid_entry", "The entry could not be read back.");
-    // Clear the insert-time helpers so later edits never re-trigger links.
-    await this.db.execute(`UPDATE transactions SET link_group = NULL, link_hint = NULL, link_target_id = NULL WHERE id IN (${placeholders(ids.length)})`, ids);
+    // One INSERT statement assigns consecutive ids: a pair is the last id and the one before it.
+    const last = Number(results[0].lastInsertId);
+    const ids = rowsCount === 2 ? [last - 1, last] : [last];
+    const written = await this.db.select<Row>(`SELECT id FROM transactions WHERE id IN (${placeholders(ids.length)}) AND updated_at = ? AND statement_id = ? ORDER BY id`, [...ids, stamp, containerId]);
+    if (written.length !== rowsCount || ids.some((value) => !Number.isFinite(value) || value <= 0)) throw new LedgerError("invalid_entry", "The entry could not be read back.");
     if (input.tags && input.tags.length > 0) await this.setTags(ids, input.tags, actor, false);
-    await this.db.execute("UPDATE statements SET transaction_count = (SELECT COUNT(*) FROM transactions WHERE statement_id = ?) WHERE id = ?", [containerId, containerId]);
     const detail = await this.entry(ids[0]);
     await this.audit({
       actor, action: "create", subjectType: "transaction", subjectId: detail.uuid, summary: `${input.kind} ${detail.description}`,

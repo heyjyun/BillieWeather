@@ -11,13 +11,13 @@
 //
 // Automatic protection before schema migrations is separate: src-tauri/src/snapshot.rs copies the
 // database files byte for byte before a new migration runs.
-import type { SqlDriver } from "./store";
+import type { SqlDriver, SqlStatement } from "./store";
 import { randomId } from "./ids";
 
 export const BACKUP_FORMAT = "billieweather-backup";
 export const BACKUP_VERSION = 1;
 /** The local schema version these backups describe (the highest migration number). */
-export const LOCAL_SCHEMA_VERSION = 8;
+export const LOCAL_SCHEMA_VERSION = 9;
 
 type Row = Record<string, unknown>;
 type Cell = string | number | null;
@@ -127,16 +127,23 @@ export async function manifestOf(db: SqlDriver): Promise<BackupManifest> {
   return { rows, transactionsAmountCents: Number(sums.tx), openingBalancesCents: Number(sums.opening ?? 0) };
 }
 
-/** Reads the whole database into a backup document (in memory). */
+/**
+ * Reads the whole database into a backup document (in memory). Every table is read in ONE read
+ * transaction (`SqlDriver.snapshot`), so the document describes a single instant: an entry, its
+ * links, its tags and its audit events always belong together, even while a background download
+ * or a recurring entry is being written.
+ */
 export async function createBackup(db: SqlDriver): Promise<BackupContent> {
   const existing = await tableNames(db);
+  const names = BACKUP_TABLES.filter((table) => existing.has(table));
+  const columns = await Promise.all(names.map((table) => columnsOf(db, table)));
+  const captured = await db.snapshot<Row>(names.map((table) => ({
+    sql: `SELECT * FROM ${table}${table === "settings" ? ` WHERE key NOT IN (${[...DEVICE_SETTINGS].map((k) => `'${k}'`).join(", ")})` : ""} ORDER BY rowid`,
+  })));
   const tables: BackupContent["tables"] = {};
-  for (const table of BACKUP_TABLES) {
-    if (!existing.has(table)) continue;
-    const columns = await columnsOf(db, table);
-    const rows = await db.select<Row>(`SELECT * FROM ${table}${table === "settings" ? ` WHERE key NOT IN (${[...DEVICE_SETTINGS].map((k) => `'${k}'`).join(", ")})` : ""} ORDER BY rowid`);
-    tables[table] = { columns, rows: rows.map((row) => columns.map((column) => (row[column] === undefined ? null : (row[column] as Cell)))) };
-  }
+  names.forEach((table, index) => {
+    tables[table] = { columns: columns[index], rows: captured[index].map((row) => columns[index].map((column) => (row[column] === undefined ? null : (row[column] as Cell)))) };
+  });
   const setting = (key: string) => {
     const found = tables.settings?.rows.find((row) => row[0] === key);
     return found ? String(found[1]) : null;
@@ -236,49 +243,81 @@ export async function restoreInto(db: SqlDriver, content: BackupContent, options
     const target = new Set(existing.has(table) ? await columnsOf(db, table) : []);
     if (data.columns.some((column) => !target.has(column))) throw new BackupError("damaged", "The backup schema is not supported.");
   }
-  try {
-    for (const table of BACKUP_TABLES) {
-      const data = content.tables[table];
-      if (!data || !existing.has(table) || data.rows.length === 0) continue;
-      const target = new Set(await columnsOf(db, table));
-      const keep = data.columns.map((column, index) => ({ column, index })).filter(({ column }) => target.has(column));
-      let rows = data.rows;
-      if (table === "settings") rows = rows.filter((row) => !DEVICE_SETTINGS.has(String(row[data.columns.indexOf("key")])));
-      // statements_commit_staged fires on statements with an import batch: write it after the row exists.
-      const batchIndex = table === "statements" ? data.columns.indexOf("import_batch_id") : -1;
-      const perBatch = Math.max(1, Math.floor(900 / Math.max(1, keep.length)));
-      for (let start = 0; start < rows.length; start += perBatch) {
-        const batch = rows.slice(start, start + perBatch);
-        const params: unknown[] = [];
-        for (const row of batch) for (const { column, index } of keep) params.push(table === "statements" && column === "import_batch_id" ? null : row[index]);
-        await db.execute(`INSERT INTO ${table} (${keep.map(({ column }) => column).join(", ")}) VALUES ${batch.map(() => `(${keep.map(() => "?").join(", ")})`).join(", ")}`, params);
-      }
-      if (batchIndex >= 0) {
-        const idIndex = data.columns.indexOf("id");
-        for (const row of rows) if (row[batchIndex] !== null) await db.execute("UPDATE statements SET import_batch_id = ? WHERE id = ?", [row[batchIndex], row[idIndex]]);
+  // Everything below is ONE database transaction, including the verification: the new slot ends
+  // up holding exactly the backup, or nothing at all. There is no half-restored state to clean up.
+  const statements: SqlStatement[] = [];
+  for (const table of BACKUP_TABLES) {
+    const data = content.tables[table];
+    if (!data || !existing.has(table) || data.rows.length === 0) continue;
+    const target = new Set(await columnsOf(db, table));
+    const keep = data.columns.map((column, index) => ({ column, index })).filter(({ column }) => target.has(column));
+    let rows = data.rows;
+    if (table === "settings") rows = rows.filter((row) => !DEVICE_SETTINGS.has(String(row[data.columns.indexOf("key")])));
+    const perBatch = Math.max(1, Math.floor(900 / Math.max(1, keep.length)));
+    for (let start = 0; start < rows.length; start += perBatch) {
+      const batch = rows.slice(start, start + perBatch);
+      const params: unknown[] = [];
+      for (const row of batch) for (const { column, index } of keep) params.push(deferred(table, column) ? DEFERRED[table][column] : row[index]);
+      statements.push({ sql: `INSERT INTO ${table} (${keep.map(({ column }) => column).join(", ")}) VALUES ${batch.map(() => `(${keep.map(() => "?").join(", ")})`).join(", ")}`, params });
+    }
+    // A restore copies rows; it must not run the triggers that belong to creating them. The columns
+    // those triggers watch are written neutral above and set to the backed-up value here.
+    const idIndex = data.columns.indexOf("id");
+    for (const column of Object.keys(DEFERRED[table] ?? {})) {
+      const index = data.columns.indexOf(column);
+      if (index < 0 || idIndex < 0 || TRANSIENT[table]?.has(column)) continue;
+      for (const row of rows) {
+        if (row[index] !== DEFERRED[table][column]) statements.push({ sql: `UPDATE ${table} SET ${column} = ? WHERE id = ?`, params: [row[index], row[idIndex]] });
       }
     }
-    const stamp = new Date().toISOString();
-    if (options.owner) await db.execute("INSERT INTO settings (key, value) VALUES ('owner_account_id', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [options.owner]);
-    if (options.name) await db.execute("INSERT INTO settings (key, value) VALUES ('database_name', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [options.name]);
-    const restored = await manifestOf(db);
-    const expected = content.manifest;
-    const sameRows = Object.entries(expected.rows).every(([table, count]) => table === "settings" || restored.rows[table] === count);
-    const foreignKeyErrors = await db.select<Row>("PRAGMA foreign_key_check");
-    if (!sameRows || foreignKeyErrors.length > 0 || restored.transactionsAmountCents !== expected.transactionsAmountCents || restored.openingBalancesCents !== expected.openingBalancesCents) {
-      throw new BackupError("verify_failed", "The restored copy does not match the backup.");
-    }
-    await db.execute("INSERT INTO audit_events (uuid, at, actor, action, subject_type, subject_id, summary) VALUES (?, ?, 'user', 'restore_backup', 'book', ?, ?)",
-      [randomId(), stamp, content.book.uuid, `backup of ${content.createdAt}`]);
-    return restored;
-  } catch (error) {
-    // Leave the new slot empty again; the original database was never touched.
-    await db.execute("INSERT INTO settings (key, value) VALUES ('audit_purge', '1') ON CONFLICT (key) DO UPDATE SET value = '1'").catch(() => undefined);
-    for (const table of [...BACKUP_TABLES].reverse()) if (existing.has(table) && table !== "settings") await db.execute(`DELETE FROM ${table}`).catch(() => undefined);
-    await db.execute("DELETE FROM settings").catch(() => undefined);
-    throw error instanceof BackupError ? error : new BackupError("verify_failed", `The backup could not be restored: ${String((error as Error)?.message ?? error)}`);
   }
+  if (options.owner) statements.push({ sql: "INSERT INTO settings (key, value) VALUES ('owner_account_id', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", params: [options.owner] });
+  if (options.name) statements.push({ sql: "INSERT INTO settings (key, value) VALUES ('database_name', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", params: [options.name] });
+  const expected = content.manifest;
+  for (const [table, count] of Object.entries(expected.rows)) {
+    if (table !== "settings" && existing.has(table)) statements.push(assertion(`(SELECT COUNT(*) FROM ${table}) = ?`, [count]));
+  }
+  statements.push(assertion("(SELECT COALESCE(SUM(amount_cents), 0) FROM transactions) = ?", [expected.transactionsAmountCents]));
+  if (existing.has("accounts")) statements.push(assertion("(SELECT COALESCE(SUM(opening_balance_cents), 0) FROM accounts) = ?", [expected.openingBalancesCents]));
+  statements.push(assertion("NOT EXISTS (SELECT 1 FROM pragma_foreign_key_check)"));
+  statements.push({ sql: "INSERT INTO audit_events (uuid, at, actor, action, subject_type, subject_id, summary) VALUES (?, ?, 'user', 'restore_backup', 'book', ?, ?)",
+    params: [randomId(), new Date().toISOString(), content.book.uuid, `backup of ${content.createdAt}`] });
+  try {
+    await db.transaction(statements);
+  } catch (error) {
+    // Rolled back: the new slot is still empty and the original database was never touched.
+    throw new BackupError("verify_failed", /restore_verification/.test(String((error as Error)?.message ?? error))
+      ? "The restored copy does not match the backup."
+      : `The backup could not be restored: ${String((error as Error)?.message ?? error)}`);
+  }
+  // What was restored: the restore's own log entry (written last, above) is not part of the backup.
+  const restored = await manifestOf(db);
+  return { ...restored, rows: { ...restored.rows, audit_events: restored.rows.audit_events - 1 } };
 }
+
+/**
+ * Columns a restore writes in two steps, with the neutral value used for the INSERT:
+ * - `statements.import_batch_id` fires the import commit trigger (migration 0004), which expects staged rows;
+ * - a confirmed `refund_of` link fires the refund guards (migration 0008), which belong to creating a
+ *   link, not to copying one: a faithful copy of a book must restore whatever it held;
+ * - `transactions.link_group` / `link_hint` / `link_target_id` are insert-time helpers that create
+ *   links (migration 0007). They carry no information at rest, so they are restored empty.
+ */
+const DEFERRED: Record<string, Record<string, Cell>> = {
+  statements: { import_batch_id: null },
+  transaction_links: { status: "suggested" },
+  transactions: { link_group: null, link_hint: null, link_target_id: null },
+};
+const TRANSIENT: Record<string, Set<string>> = { transactions: new Set(["link_group", "link_hint", "link_target_id"]) };
+const deferred = (table: string, column: string) => Object.hasOwn(DEFERRED[table] ?? {}, column);
+
+/**
+ * A statement that fails (and so rolls the whole restore back) unless `condition` holds:
+ * `settings.key` is NOT NULL, so selecting a NULL key into it is refused by SQLite itself.
+ */
+const assertion = (condition: string, params: unknown[] = []): SqlStatement => ({
+  sql: `INSERT INTO settings (key, value) SELECT NULL, 'restore_verification' WHERE NOT (${condition})`, params,
+});
 
 /** A file name for a backup of this book on this date. */
 export function backupFileName(name: string | null, date = new Date()): string {

@@ -1,0 +1,16 @@
+{
+ "insert_60000_rows_ms": 2643,
+ "insert_20000_rows_ms": 846,
+ "list_newest_50_ms": 0.088,
+ "trash_50_ms": 0.043,
+ "entries_of_merchant_ms": 4.534,
+ "month_totals_ms": 0.425,
+ "merchant_reference_lookup_ms": 5.179,
+ "plan_merchant_reference_lookup": "Seq Scan on finance_transactions",
+ "plan_list": "->  Index Scan Backward using index_finance_transactions_on_user_id_and_booked_on on finance_transactions",
+ "plan_merchant": "Index Scan using index_finance_transactions_on_user_id on finance_transactions",
+ "plan_trash": "->  Index Scan Backward using index_finance_transactions_on_user_id_and_deleted_at on finance_transactions",
+ "indexes_on_transactions": 10,
+ "index_bytes_transactions": 12853248,
+ "table_bytes_transactions": 16375808
+}

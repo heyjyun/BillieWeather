@@ -4,7 +4,7 @@
 //   rows are recognized while two genuine identical purchases on the same day are both kept.
 // - Internal transfers and card repayments are only suggested, never recategorized silently.
 // - Balances are reconciled; a running balance that does not follow is flagged for review.
-import { merchantKey } from "../categorizer";
+import { descriptionKey, detectDuplicates } from "../ledger/dedupe";
 import { toStorageCents } from "./currency";
 import { issue, statusFor, type BalanceObservation, type CanonicalTransaction, type Reconciliation } from "./schema";
 
@@ -18,16 +18,6 @@ export interface ExistingTransaction {
   bankReference: string | null;
 }
 
-const descriptionKey = (text: string) => text.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
-
-/**
- * Same account, or both without an account. A row and a stored entry where only ONE side has no
- * account (legacy rows) are never an automatic duplicate: see `weak` below and the manifest rule
- * dedupe.null_account (packages/finance-core/schema/financial-schema.json).
- */
-const compatible = (a: string | null, b: string | null) => a === b;
-const weak = (a: string | null, b: string | null) => a !== b && (a === null || b === null);
-
 function cents(row: CanonicalTransaction): number | null {
   return row.amountMinor === null ? null : toStorageCents(row.amountMinor, row.currencyExponent);
 }
@@ -37,58 +27,36 @@ function addIssue(row: CanonicalTransaction, item: ReturnType<typeof issue>) {
   row.status = statusFor(row.issues);
 }
 
+/**
+ * Marks rows that are already stored. The decision itself is `detectDuplicates` (ledger/dedupe.ts,
+ * the contract shared with Rails and replayed from fixtures/dedupe-cases.json); this function only
+ * turns its verdicts into row issues. A match that exists only because ONE side has no account
+ * (legacy rows) is never an automatic duplicate (manifest rule dedupe.null_account).
+ */
 export function markDuplicates(rows: CanonicalTransaction[], existing: readonly ExistingTransaction[]): void {
-  const byReference = new Map<string, ExistingTransaction[]>();
-  const byKey = new Map<string, ExistingTransaction[]>();
-  const byDateAmount = new Map<string, ExistingTransaction[]>();
-  for (const transaction of existing) {
-    const push = (map: Map<string, ExistingTransaction[]>, key: string) => {
-      const list = map.get(key);
-      if (list) list.push(transaction);
-      else map.set(key, [transaction]);
-    };
-    if (transaction.bankReference) push(byReference, transaction.bankReference);
-    push(byKey, `${transaction.bookedOn}|${transaction.amountCents}|${descriptionKey(transaction.description)}`);
-    push(byDateAmount, `${transaction.bookedOn}|${transaction.amountCents}`);
-  }
+  const comparable = rows.filter((row) => row.status !== "rejected" && cents(row) !== null && row.transactionDate !== null);
+  // A bank transaction id that appears twice in one file is unusual enough for a person to look at.
   const seenReferences = new Set<string>();
-  const occurrences = new Map<string, number>();
-  for (const row of rows) {
-    const amount = cents(row);
-    if (row.status === "rejected" || amount === null || row.transactionDate === null) continue;
-    const accountKey = row.account.key;
-    if (row.bankReference) {
-      const refKey = `${accountKey ?? ""}|${row.bankReference}`;
-      if (seenReferences.has(refKey)) addIssue(row, issue("repeated_bank_reference_in_file", "review", "bankReference"));
-      seenReferences.add(refKey);
-      const match = (byReference.get(row.bankReference) ?? []).find((candidate) => compatible(candidate.accountKey, accountKey));
-      if (match) {
-        addIssue(row, issue("duplicate_bank_reference", "info", "bankReference", { id: match.id }));
-        continue;
-      }
-    }
-    const key = `${row.transactionDate}|${amount}|${descriptionKey(row.originalDescription)}`;
-    const scopedKey = `${accountKey ?? ""}|${key}`;
-    const seen = (occurrences.get(scopedKey) ?? 0) + 1;
-    occurrences.set(scopedKey, seen);
-    const stored = (byKey.get(key) ?? []).filter((candidate) => compatible(candidate.accountKey, accountKey));
-    if (seen <= stored.length) {
-      addIssue(row, issue("duplicate_overlap", "review", undefined, { count: stored.length }));
-      continue;
-    }
-    // Exact match only against a row whose account is unknown: a person decides (suggested: keep).
-    const unknown = (byKey.get(key) ?? []).filter((candidate) => weak(candidate.accountKey, accountKey));
-    if (seen - stored.length <= unknown.length) {
-      addIssue(row, issue("possible_duplicate", "review", undefined, { id: unknown[0].id, unknownAccount: 1 }));
-      continue;
-    }
-    // Same day and amount, same merchant written differently (e.g. a CSV and a PDF of the same account).
-    const merchant = merchantKey(row.originalDescription);
-    const near = (byDateAmount.get(`${row.transactionDate}|${amount}`) ?? []).filter((candidate) =>
-      compatible(candidate.accountKey, accountKey) && descriptionKey(candidate.description) !== descriptionKey(row.originalDescription) &&
-      merchant !== null && merchantKey(candidate.description) === merchant);
-    if (near.length > 0) addIssue(row, issue("possible_duplicate", "review", undefined, { id: near[0].id }));
+  for (const row of comparable) {
+    if (!row.bankReference) continue;
+    const key = `${row.account.key ?? ""}|${row.bankReference}`;
+    if (seenReferences.has(key)) addIssue(row, issue("repeated_bank_reference_in_file", "review", "bankReference"));
+    seenReferences.add(key);
   }
+  const verdicts = detectDuplicates(
+    existing.map((row) => ({ id: row.id, account: row.accountKey, date: row.bookedOn, amountMinor: row.amountCents, description: row.description, reference: row.bankReference })),
+    comparable.map((row) => ({ account: row.account.key, date: row.transactionDate!, amountMinor: cents(row)!, description: row.originalDescription, reference: row.bankReference })),
+  );
+  verdicts.forEach((verdict, index) => {
+    const row = comparable[index];
+    if (verdict.result === "duplicate") {
+      addIssue(row, verdict.reason === "bank_reference"
+        ? issue("duplicate_bank_reference", "info", "bankReference", { id: Number(verdict.of) })
+        : issue("duplicate_overlap", "review", undefined, { count: verdict.matches }));
+    } else if (verdict.result === "review") {
+      addIssue(row, issue("possible_duplicate", "review", undefined, verdict.reason === "unknown_account" ? { id: Number(verdict.of), unknownAccount: 1 } : { id: Number(verdict.of) }));
+    }
+  });
 }
 
 const dayDistance = (a: string, b: string) => Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000;

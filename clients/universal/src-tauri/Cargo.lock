@@ -265,6 +265,7 @@ dependencies = [
  "keyring",
  "serde",
  "serde_json",
+ "sqlx",
  "tauri",
  "tauri-build",
  "tauri-plugin-billie-ocr",

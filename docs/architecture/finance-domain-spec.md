@@ -18,7 +18,7 @@
 | User | A signed-in BillieWeather account | `users` (+ `finance_owner_uid` uuid, immutable, returned to apps as `owner_id`) | — (the owner is recorded inside each file) |
 | Owner binding | Which account a local file belongs to | — | `settings.owner_account_id` (`id:<uuid>`, or `email:<sha256>` before the server sends an id) |
 | Workspace | FinRx organisation | Bullet Train `teams` (FinRx only, not used by BillieWeather) | — |
-| **Book (账本)** | One bookkeeping scenario, the tenant boundary for financial rows | `finance_books` (one default book per user, created lazily; `book_id` on every new finance table) | **One file = one book.** `settings.book_uuid`. A file is never several books. |
+| **Book (账本)** | One bookkeeping scenario, the tenant boundary for financial rows | `finance_books` (one default book per user, created lazily). The tenant boundary enforced by the database today is `user_id`: every reference between finance tables is a composite foreign key that carries the owner (migration `20261116000100`). The never-populated `book_id` columns were removed; a real `book_id` (NOT NULL, same composite pattern) is added when multi-book ships | **One file = one book.** `settings.book_uuid`. A file is never several books. |
 | Account (账户) | Where money is: bank, card, cash, wallet, loan, receivable | `finance_bank_accounts` (extended, see §3) | `accounts` |
 | Statement | Evidence: one imported document per account | `finance_statements` | `statements` (plus one hidden *manual-entries container* row per file, `source_format='manual'`, so `transactions.statement_id` can stay NOT NULL without a table rebuild) |
 | Original record | The row as the bank printed it | `finance_transactions.original_description` (immutable) and, later, `finance_source_records` | `transactions.original_description`, `source_raw`, `source_ref` |
@@ -45,7 +45,10 @@ The numbering follows the review's Appendix 1, plus new ones.
 - **I-13 (owner).** A local file whose `owner_account_id` differs from the signed-in account never downloads, uploads, reports metadata or runs AI. It is not even listed for that account (per-account database lists).
 - **I-15 (refund cap).** Σ `refund_of` link amounts for one expense ≤ |expense amount|.
 - **I-16 (AI precedence).** Automation (rules, AI, re-import, recurring) never changes a field listed in `user_locked_fields`. AI changes are applied only after review (or by an explicitly enabled auto-rule), are grouped by `batch_id` in audit events, and can be undone as a group.
-- **I-17 (backup).** A restore always goes into a new, empty database slot, never over an existing one. After a restore, row counts and amount checksums equal the backup manifest, or the restore is rolled back.
+- **I-7 (ownership, database-enforced on the web).** A finance row can only reference rows of the same `user_id`: statements, accounts, entries, merchants, projects, recurring rules, tags, links and tag joins use composite foreign keys `(x_id, user_id) → x(id, user_id)`. Bulk writes that skip model validations are refused by PostgreSQL itself (`test/models/finance/schema_integrity_test.rb`).
+- **I-17 (backup).** A restore always goes into a new, empty database slot, never over an existing one. Export reads every table from ONE read transaction; restore is ONE write transaction that contains its own verification (row counts, amount sums, foreign keys), so the slot holds exactly the backup or nothing. A restore copies rows faithfully: it does not re-run the triggers that belong to creating them.
+- **I-18 (atomic operations, local).** Every operation that changes more than one row set (import of all accounts of a file, manual entry with its link, merge between databases, statement removal, category rename/delete, delete-all, restore) is sent as one batch through `SqlDriver.transaction` (native: `src-tauri/src/transaction.rs`, `BEGIN IMMEDIATE` on one pooled connection). Insert-time link helpers (`link_group`, `link_hint`, `link_target_id`) never outlive their INSERT (migration `0009`).
+- **I-19 (one duplicate rule).** `detectDuplicates` (`packages/finance-core/src/ledger/dedupe.ts`) is the only TypeScript implementation; CSV/XLSX/OFX/OCR drafts and text PDFs both call it. Rails replays the same fixtures. Text PDFs detect their account from the statement text and never import a matched row without review.
 
 ## 3. Physical schema: PostgreSQL (additive migrations)
 
@@ -59,7 +62,7 @@ finance_books (new)
 
 finance_bank_accounts: + account_type (financial-schema account_types; backfilled from kind via legacy_account_kinds.web),
   currency, opening_balance decimal(15,2) default 0, opening_balance_on, credit_limit decimal(15,2), statement_day, due_day,
-  include_in_net_worth bool default true, note, sort_order int default 0, archived_at, book_id FK NULL, manual bool default false.
+  include_in_net_worth bool default true, note, sort_order int default 0, archived_at, manual bool default false.
   identity_key and last4 become NULLable (manual accounts have neither); unique (user_id, identity_key) stays.
 
 finance_transactions:
@@ -67,13 +70,18 @@ finance_transactions:
   + uuid (default gen_random_uuid()), kind (CHECK in kinds; backfill legacyKind), bank_account_id FK NULL (backfill from statement),
     original_description string(500) (backfill = description; read-only in the model), entry_origin (import|manual|upload|recurring|legacy),
     merchant_id, project_id, note text, occurred_at_time "HH:MM", deleted_at, category_source, category_confidence, category_model,
-    user_locked_fields jsonb default [], recurring_rule_id, recurring_on, book_id NULL, fingerprint (indexed)
+    user_locked_fields jsonb default [], recurring_rule_id, recurring_on
   CHECK (statement_id IS NOT NULL OR entry_origin IN ('manual','recurring'))
   scope included := excluded=false AND deleted_at IS NULL AND kind IN (income, expense, refund)
 
 finance_transaction_links, finance_audit_events, finance_merchants, finance_projects, finance_tags, finance_transaction_tags,
 finance_budgets, finance_recurring_rules, finance_category_settings, finance_organize_runs: same columns as §4, Rails types
-(bigint ids, uuid, decimal(15,2) for money, jsonb for JSON, timestamptz), each with user_id NOT NULL and book_id NULL.
+(bigint ids, uuid, decimal(15,2) for money, jsonb for JSON, timestamptz), each with user_id NOT NULL.
+
+Migration 20261116000100 (integrity): composite owner foreign keys (I-7); `finance_transaction_tags.user_id`; CHECKs on category,
+category_source, amount range, original_description, locked-fields shape, link endpoints/amount, statement row count and sha256;
+dropped `book_id` (11 tables), `finance_transactions.fingerprint`, `finance_statements.status`; partial indexes for the live list,
+the trash, merchant and project lookups; single-column user_id indexes covered by another index removed.
 ```
 
 Every query is scoped by `current_user`. Every cross-row reference is also checked to belong to the same user, both in model validations and in services.
@@ -95,6 +103,14 @@ Migration `0007_ledger.sql` is purely additive: new tables, new nullable or defa
 - `recurring_rules(uuid, name, template JSON, frequency, interval, start_on, end_on, next_on, auto_post, paused, timestamps)`.
 - `audit_events(uuid, at, actor, action, subject_type, subject_id, batch_id, summary, changes JSON, undo JSON)`. These are append-only: UPDATE and DELETE are blocked unless `settings.audit_purge = '1'`, which is set only by "Delete all data".
 - `organize_runs(uuid, created_at, status, engine, proposals JSON, applied_at, undone_at, batch_id)`.
+
+### 4.1 SQLite migration `0009_refund_guard_and_link_hygiene.sql`
+
+Clears leftover insert helpers, makes the refund update guard independent of them (version 8 skipped any refund whose helper was still set), brings pre-version-8 refund link amounts in line with their refund, and adds lookup indexes. No entry value changes.
+
+### 4.2 Transfer contract (device ↔ device, device → website)
+
+A transferred statement carries `account: {institution, last4, kind}` when its import identified one (never a full number). A local merge keeps the account; the website files an upload under the same `finance_bank_accounts` row its own imports of that account use, so duplicates are compared per account. Accounts without a bank or with an unknown kind stay unassigned. Manual entries, links, dimensions, budgets and recurring rules still travel only in a backup file.
 
 ## 5. Shared semantics that both sides must produce identically
 

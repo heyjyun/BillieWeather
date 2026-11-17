@@ -156,3 +156,70 @@ describe("local backup and restore", () => {
   });
 
 });
+
+// Synthetic books. A restore is one database transaction with its verification inside it.
+describe("atomic, faithful restore", () => {
+  const book = async () => {
+    const source = await newStore();
+    const checking = await source.store.ledger.createAccount({ name: "Checking", type: "checking", currency: "USD", openingBalanceCents: 100_000 });
+    const [expense] = await source.store.ledger.createEntry({ kind: "expense", amountCents: 8_000, occurredOn: "2026-10-09", accountId: checking.id, category: "Shopping", description: "Outfitters" });
+    const [refund] = await source.store.ledger.createEntry({ kind: "refund", amountCents: 3_000, occurredOn: "2026-10-15", accountId: checking.id, refundOf: expense, description: "Outfitters return" });
+    return { ...source, checking, expense, refund };
+  };
+  const empty = async () => {
+    const target = await newStore();
+    return { ...target, driver: sqljsDriver(target.db) };
+  };
+  const counts = (db: Awaited<ReturnType<typeof newStore>>["db"]) =>
+    Object.fromEntries(["accounts", "statements", "transactions", "transaction_links", "audit_events", "settings"].map((table) => [table, Number(db.exec(`SELECT COUNT(*) FROM ${table}`)[0].values[0][0])]));
+
+  it("a restore that fails verification leaves the new slot completely empty, without any cleanup step", async () => {
+    const source = await book();
+    const backup = await createBackup(sqljsDriver(source.db));
+    const target = await empty();
+    const before = counts(target.db);
+    // The last INSERT of the batch is replaced by one that cannot succeed: everything before it already ran.
+    const failing = { ...target.driver, transaction: (statements: Parameters<typeof target.driver.transaction>[0]) =>
+      target.driver.transaction([...statements.slice(0, -1), { sql: "INSERT INTO no_such_table VALUES (1)" }]) };
+    await expect(restoreInto(failing, backup, { owner: "id:synthetic" })).rejects.toMatchObject({ code: "verify_failed" });
+    expect(counts(target.db)).toEqual(before);
+    // The same slot accepts the same backup afterwards.
+    await restoreInto(target.driver, backup, { owner: "id:synthetic" });
+    expect(counts(target.db).transactions).toBe(counts(source.db).transactions);
+  });
+
+  it("restores a book whose refund link predates the refund guards (stale link amount) exactly as it was", async () => {
+    const source = await book();
+    // A book written before migration 0008: the link amount was not kept in step with its refund.
+    source.db.run("DROP TRIGGER transactions_refund_sync_link");
+    source.db.run("UPDATE transaction_links SET amount_cents = 2500 WHERE link_type = 'refund_of'");
+    const backup = await createBackup(sqljsDriver(source.db));
+    const target = await empty();
+    await restoreInto(target.driver, backup, { owner: "id:synthetic" });
+    const links = (db: typeof source.db) => db.exec("SELECT link_type, from_transaction_id, to_transaction_id, amount_cents, status, decided_by FROM transaction_links ORDER BY id")[0].values;
+    expect(links(target.db)).toEqual(links(source.db));
+    expect(links(target.db)[0]).toEqual(["refund_of", source.refund, source.expense, 2500, "confirmed", "user"]);
+  });
+
+  it("restores entries whose insert-time link helpers were never cleared, without creating links twice", async () => {
+    const source = await book();
+    // What an app killed between an insert and its cleanup leaves behind.
+    source.db.run("UPDATE transactions SET link_hint = 'refund_of', link_target_id = ? WHERE id = ?", [source.expense, source.refund]);
+    const backup = await createBackup(sqljsDriver(source.db));
+    const target = await empty();
+    await restoreInto(target.driver, backup, { owner: "id:synthetic" });
+    expect(counts(target.db).transaction_links).toBe(1);
+    expect(target.db.exec("SELECT COUNT(*) FROM transactions WHERE link_hint IS NOT NULL OR link_group IS NOT NULL OR link_target_id IS NOT NULL")[0].values[0][0]).toBe(0);
+    expect(await target.store.ledger.netWorth()).toEqual(await source.store.ledger.netWorth());
+  });
+
+  it("captures every table from one snapshot", async () => {
+    const source = await book();
+    const driver = sqljsDriver(source.db);
+    let snapshots = 0;
+    const counting = { ...driver, select: driver.select, snapshot: <T,>(queries: Parameters<typeof driver.snapshot>[0]) => { snapshots += 1; return driver.snapshot<T>(queries); } };
+    const backup = await createBackup(counting);
+    expect(snapshots).toBe(1);
+    expect(Object.keys(backup.tables)).toEqual(expect.arrayContaining(["settings", "accounts", "transactions", "transaction_links", "audit_events"]));
+  });
+});

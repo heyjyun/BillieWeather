@@ -33,7 +33,12 @@ export function PdfReview({ review, busy, error, onConfirm, onCancel }: {
   onCancel: () => void;
 }) {
   const { ui, warning } = usePdfMessages();
-  const [rows, setRows] = useState<ReviewedPdfRow[]>(() => review.draft.rows.map((row) => ({ ...row, include: true })));
+  const { m } = useI18n();
+  const issues = m.universal.issues;
+  // Rows already imported from another file of the same account start unchecked; possible duplicates stay checked.
+  const [rows, setRows] = useState<ReviewedPdfRow[]>(() => review.draft.rows.map((row) => ({ ...row, include: row.duplicate !== "duplicate" })));
+  const duplicates = review.draft.rows.filter((row) => row.duplicate).length;
+  const account = review.draft.account;
   const [confirmed, setConfirmed] = useState(false);
   const flagged = useMemo(() => new Set(review.draft.warnings.flatMap((item) => (typeof item.vars.row === "number" ? [item.vars.row] : []))), [review]);
   const notes = review.draft.warnings;
@@ -53,9 +58,10 @@ export function PdfReview({ review, busy, error, onConfirm, onCancel }: {
       <section className="bw-panel">
         <span className="bw-eyebrow">{ui("eyebrow")}</span>
         <h2 id="pdf-review-title">{ui("title")}</h2>
-        <p className="bw-muted">{review.filename} · {review.currency}</p>
+        <p className="bw-muted">{review.filename} · {review.currency}{account?.key ? ` · ${account.institution} …${account.last4}` : ""}</p>
         <h3>{ui("noticeTitle")}</h3>
         <p>{ui("notice")}</p>
+        {duplicates > 0 && <p className="bw-message bw-message-warn" role="status">{issues.possible_duplicate} ({duplicates})</p>}
         {specific.length > 0 && (
           <ul className="bw-pdf-warnings">
             {specific.map((item, index) => <li key={index}>{warning(item)}</li>)}
@@ -84,10 +90,11 @@ export function PdfReview({ review, busy, error, onConfirm, onCancel }: {
               {rows.map((row, index) => {
                 const number = index + 1;
                 return (
-                  <tr key={index} className={flagged.has(number) || row.amount === "" ? "is-flagged" : undefined}>
+                  <tr key={index} className={flagged.has(number) || row.amount === "" || row.duplicate ? "is-flagged" : undefined}>
                     <td><input type="checkbox" checked={row.include} aria-label={ui("includeRow", { number })} onChange={(e) => update(index, { include: e.target.checked })} /></td>
                     <td><input type="date" value={row.bookedOn} required={row.include} aria-label={ui("rowDate", { number })} onChange={(e) => update(index, { bookedOn: e.target.value })} /></td>
-                    <td><input type="text" value={row.description} maxLength={500} required={row.include} aria-label={ui("rowDescription", { number })} onChange={(e) => update(index, { description: e.target.value })} /></td>
+                    <td><input type="text" value={row.description} maxLength={500} required={row.include} aria-label={ui("rowDescription", { number })} onChange={(e) => update(index, { description: e.target.value })} />
+                      {row.duplicate && <small className="bw-muted" data-duplicate={row.duplicate}>{row.duplicate === "duplicate" ? issues.duplicate_overlap : issues.possible_duplicate}</small>}</td>
                     <td><input type="text" inputMode="decimal" value={row.amount} required={row.include} placeholder={ui("amountPlaceholder")} aria-label={ui("rowAmount", { number })} onChange={(e) => update(index, { amount: e.target.value })} /></td>
                   </tr>
                 );

@@ -51,6 +51,7 @@ async function setup(options: { failAfter?: number } = {}) {
 function wrapFailing(store: FinanceStore, shouldFail: () => boolean): FinanceStore {
   const db = (store as unknown as { db: SqlDriver }).db;
   const failing: SqlDriver = {
+    ...db,
     select: (sql, params) => db.select(sql, params),
     execute: async (sql, params) => {
       if (/^\s*UPDATE transactions SET category = \$1, tax_review/.test(sql) && shouldFail()) throw new Error("disk full");

@@ -71,6 +71,8 @@ module ClientApi
         parsed = rows.map { |row| parse_row(row) }
         return render json: {error: "invalid"}, status: :unprocessable_entity if parsed.any?(&:nil?)
         closing = payload[:closing_balance].presence && BigDecimal(payload[:closing_balance].to_s, exception: false)
+        account = payload[:account].presence && upload_account_details(payload[:account])
+        return render json: {error: "invalid"}, status: :unprocessable_entity if account == :invalid
         result = current_user.with_lock do
           record = Finance::Profile.find_or_create_by!(user_id: current_user.id) { |p| p.currency = currency }
           next {error: "currency_mismatch", currency: record.currency, status: :conflict} if record.currency != currency
@@ -82,10 +84,13 @@ module ClientApi
           parsed.each { |row| row[:category] = (known[row[:category]] ||= Finance::CustomCategory.ensure_for!(current_user, row[:category])) }
           # Same classification and cross-file duplicate check as a website import; the device's
           # categories are kept (they were decided there).
-          plan = Finance::ImportPlan.new(user: current_user, rows: parsed, origin: "upload", category_source: "file")
+          # The account the device identified (bank, last four digits, kind) files the statement under
+          # the same account as the website's own imports of it: duplicates are compared per account.
+          bank_account = upload_account(account)
+          plan = Finance::ImportPlan.new(user: current_user, rows: parsed, bank_account: bank_account, origin: "upload", category_source: "file")
           next {error: "all_duplicates", skipped: plan.skipped, status: :conflict} if plan.empty?
           statement = Finance::Statement.create!(user: current_user, filename: payload[:filename].to_s.first(255), currency: currency,
-            sha256: sha256, status: "imported", transaction_count: plan.rows.length, closing_balance: closing,
+            bank_account: bank_account, sha256: sha256, transaction_count: plan.rows.length, closing_balance: closing,
             closing_balance_on: closing && parse_date(payload[:closing_balance_on]), balance_observed_on: parsed.map { |r| r[:booked_on] }.max)
           plan.insert!(statement)
           {id: statement.id, created: true, skipped_duplicates: plan.skipped, flagged_duplicates: plan.flagged.length, status: :created}
@@ -95,6 +100,31 @@ module ClientApi
         render json: result, status: status
       rescue ActionController::ParameterMissing, ActiveRecord::RecordInvalid
         render json: {error: "invalid"}, status: :unprocessable_entity
+      end
+
+      UPLOAD_ACCOUNT_KINDS = {"checking" => "cash", "savings" => "cash", "credit_card" => "credit", "loan" => "credit"}.freeze
+
+      # {institution:, last4:, kind:} from a device, or :invalid. Only four digits are accepted: a
+      # full account number is refused rather than stored or silently shortened.
+      private def upload_account_details(value)
+        return :invalid unless value.respond_to?(:to_unsafe_h)
+        details = value.to_unsafe_h.slice("institution", "last4", "kind")
+        institution = details["institution"]
+        return :invalid unless details["last4"].is_a?(String) && details["last4"].match?(/\A\d{4}\z/)
+        return :invalid unless institution.nil? || (institution.is_a?(String) && institution.length <= 100 && !institution.match?(/[\x00-\x1f]/))
+        return :invalid unless details["kind"].is_a?(String) && (UPLOAD_ACCOUNT_KINDS.key?(details["kind"]) || details["kind"] == "unknown")
+        details.symbolize_keys
+      end
+
+      # The website account for a device's account identity, or nil when the identity is not
+      # complete enough to name exactly one account (no bank or an unknown kind).
+      private def upload_account(details)
+        return nil unless details && details[:institution].present? && UPLOAD_ACCOUNT_KINDS.key?(details[:kind])
+        identity = Finance::StatementAccountIdentity.from_details(bank_name: details[:institution], account_last4: details[:last4],
+          account_kind: UPLOAD_ACCOUNT_KINDS.fetch(details[:kind]), account_name: details[:kind].tr("_", " "))
+        account = Finance::BankAccount.resolve(user: current_user, identity: identity)
+        account.update!(account_type: details[:kind]) if account&.previously_new_record?
+        account
       end
 
       # Deletes ONE statement (and its transactions) from the cloud, the same way the
