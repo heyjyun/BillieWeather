@@ -54,6 +54,6 @@ describe("account service", () => {
   });
 
   it("builds website links on the same server, in the chosen language", () => {
-    expect(websiteUrl("/users/sign_up", "zh-CN")).toBe(`${API_ORIGIN}/users/sign_up?locale=zh-CN`);
+    expect(websiteUrl("/users/password/new", "zh-CN")).toBe(`${API_ORIGIN}/users/password/new?locale=zh-CN`);
   });
 });

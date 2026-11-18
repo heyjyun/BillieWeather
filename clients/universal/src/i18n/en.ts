@@ -4,6 +4,8 @@ import { ledgerEn } from "./ledger";
 import { universalEn } from "./universal";
 import { commandEn } from "./command";
 import { receiptEn } from "./receipt";
+import { welcomeEn } from "./welcome";
+import { registerEn } from "./register";
 
 export const en = {
   languageName: "English",
@@ -27,7 +29,7 @@ export const en = {
     quick: { heading: "Quick sign-in (development)", example: "Example account", heyjyun: "heyjyun (personal)" },
     errors: {
       invalid_credentials: "That email and password don't match.", locked: "This account is locked after too many attempts. Check your email to unlock it.",
-      otp_required: "Enter your two-factor code.", invalid_otp: "That two-factor code is not valid.", rate_limited: "Too many attempts. Wait a minute and try again.",
+      otp_required: "Enter your two-factor code.", invalid_otp: "That two-factor code is not valid.", rate_limited: "Too many attempts. Wait a minute and try again.", unconfirmed: "Confirm your email address first: open the link in the email we sent you, then sign in again.",
       offline: "Can't reach BillieWeather. Check your internet connection — signing in needs it once.", unknown: "Something went wrong. Please try again.",
     },
   },
@@ -280,6 +282,8 @@ export const en = {
   ledger: ledgerEn,
   command: commandEn,
   receipt: receiptEn,
+  welcome: welcomeEn,
+  register: registerEn,
 };
 
 type Widen<T> = T extends string ? string : T extends readonly string[] ? string[] : { [K in keyof T]: Widen<T[K]> };

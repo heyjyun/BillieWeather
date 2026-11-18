@@ -1,0 +1,36 @@
+"""Database access: one psycopg 3 connection pool, explicit transactions, plain SQL.
+
+`prepare_threshold=None` keeps the connections safe behind Neon's PgBouncer pooler.
+"""
+from __future__ import annotations
+
+from collections.abc import Iterator
+from contextlib import contextmanager
+
+import psycopg
+from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
+
+
+class Database:
+    def __init__(self, url: str, max_size: int = 5):
+        self.pool = ConnectionPool(
+            url,
+            min_size=0,
+            max_size=max_size,
+            kwargs={"autocommit": True, "prepare_threshold": None, "row_factory": dict_row, "application_name": "billieweather-identity-api"},
+            open=False,
+        )
+
+    def open(self) -> None:
+        self.pool.open(wait=False)
+
+    def close(self) -> None:
+        self.pool.close()
+
+    @contextmanager
+    def transaction(self) -> Iterator[psycopg.Connection]:
+        """One transaction: committed when the block succeeds, rolled back on any exception."""
+        with self.pool.connection() as conn:
+            with conn.transaction():
+                yield conn

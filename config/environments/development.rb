@@ -102,7 +102,8 @@ Rails.application.configure do
   config.hosts << /[a-z0-9-]+\.ngrok\.io/
   config.hosts << /[a-z0-9-]+\.ngrok-free\.app/
 
-  config.action_mailer.delivery_method = :letter_opener
+  # 设置 LETTER_OPENER=1 时才在浏览器里弹出邮件预览；默认不弹出（邮件内容仍会写进 log）
+  config.action_mailer.delivery_method = ENV["LETTER_OPENER"].present? ? :letter_opener : :test
   config.active_job.queue_adapter = :inline
 
   # Raises error for missing translations

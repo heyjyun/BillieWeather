@@ -3,6 +3,8 @@ import type { Messages } from "./en";
 import { universalJa } from "./universal";
 import { commandJa } from "./command";
 import { receiptJa } from "./receipt";
+import { welcomeJa } from "./welcome";
+import { registerJa } from "./register";
 
 export const ja: Messages = {
   languageName: "日本語",
@@ -26,7 +28,7 @@ export const ja: Messages = {
     quick: { heading: "クイックサインイン（開発用）", example: "サンプルアカウント", heyjyun: "heyjyun（個人）" },
     errors: {
       invalid_credentials: "メールアドレスまたはパスワードが正しくありません。", locked: "試行回数が多すぎるため、アカウントがロックされました。メールを確認して解除してください。",
-      otp_required: "2 段階認証コードを入力してください。", invalid_otp: "2 段階認証コードが正しくありません。", rate_limited: "試行回数が多すぎます。1 分ほど待ってから再度お試しください。",
+      otp_required: "2 段階認証コードを入力してください。", invalid_otp: "2 段階認証コードが正しくありません。", rate_limited: "試行回数が多すぎます。1 分ほど待ってから再度お試しください。", unconfirmed: "先にメールアドレスを確認してください。お送りしたメールのリンクを開いてから、もう一度サインインしてください。",
       offline: "BillieWeather に接続できません。インターネット接続を確認してください（初回のサインインに必要です）。", unknown: "問題が発生しました。もう一度お試しください。",
     },
   },
@@ -279,4 +281,6 @@ export const ja: Messages = {
   ledger: ledgerJa,
   command: commandJa,
   receipt: receiptJa,
+  welcome: welcomeJa,
+  register: registerJa,
 };

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useI18n } from "../i18n";
 import { deviceName } from "../services/platform";
 import { DATABASE_NAME_MAX, normalizeDatabaseName } from "../services/store";
+import { BrandMark } from "./BrandMark";
 
 export function NameDatabase({ onSave }: { onSave: (name: string) => Promise<void> }) {
   const { m } = useI18n();
@@ -40,7 +41,7 @@ export function NameDatabase({ onSave }: { onSave: (name: string) => Promise<voi
     <main className="bw-login">
       <div className="bw-login-card">
         <div className="bw-login-top">
-          <div className="bw-brand"><span className="bw-brand-mark">b<small>·</small></span><span>BillieWeather</span></div>
+          <div className="bw-brand"><BrandMark /><span>BillieWeather</span></div>
         </div>
         <span className="bw-eyebrow">{n.eyebrow}</span>
         <h1>{n.heading}</h1>

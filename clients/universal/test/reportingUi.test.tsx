@@ -28,7 +28,7 @@ vi.mock("../src/services/platform", async () => {
     saveFile: async () => true,
   };
 });
-const account = { email: "jyun@example.com", nickname: "jyun", locale: "en", timeZone: null, usageRegion: "US", registeredAt: "2026-11-01T12:00:00Z", badges: [] };
+const account = { email: "jyun@example.com", nickname: "jyun", locale: "en", timeZone: null, usageRegion: "US", registeredAt: "2025-11-01T12:00:00Z" /* an established account: not shown the new-account welcome */, badges: [] };
 vi.mock("../src/services/account", async (importOriginal) => ({ ...(await importOriginal<typeof import("../src/services/account")>()), fetchAccount: vi.fn(async () => account) }));
 const { default: App } = await import("../src/App");
 const platform = (await import("../src/services/platform")) as unknown as { resetDatabases: () => void };

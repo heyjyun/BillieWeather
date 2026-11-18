@@ -3,6 +3,8 @@ import type { Messages } from "./en";
 import { universalZhTW } from "./universal";
 import { commandZhTW } from "./command";
 import { receiptZhTW } from "./receipt";
+import { welcomeZhTW } from "./welcome";
+import { registerZhTW } from "./register";
 
 export const zhTW: Messages = {
   languageName: "繁體中文",
@@ -26,7 +28,7 @@ export const zhTW: Messages = {
     quick: { heading: "快速登入（開發用）", example: "範例帳戶", heyjyun: "heyjyun（個人）" },
     errors: {
       invalid_credentials: "電子郵件或密碼不正確。", locked: "嘗試次數過多，帳戶已被鎖定。請查看郵件解鎖。",
-      otp_required: "請輸入兩步驟驗證碼。", invalid_otp: "兩步驟驗證碼不正確。", rate_limited: "嘗試次數過多，請稍候一分鐘再試。",
+      otp_required: "請輸入兩步驟驗證碼。", invalid_otp: "兩步驟驗證碼不正確。", rate_limited: "嘗試次數過多，請稍候一分鐘再試。", unconfirmed: "請先驗證電子郵件：開啟我們寄給你的郵件中的連結，然後重新登入。",
       offline: "無法連線到 BillieWeather。請檢查網路連線，首次登入需要連網。", unknown: "發生錯誤，請重試。",
     },
   },
@@ -279,4 +281,6 @@ export const zhTW: Messages = {
   ledger: ledgerZhTW,
   command: commandZhTW,
   receipt: receiptZhTW,
+  welcome: welcomeZhTW,
+  register: registerZhTW,
 };

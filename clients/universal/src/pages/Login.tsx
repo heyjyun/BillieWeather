@@ -4,11 +4,17 @@ import { useAccount } from "../hooks/useAccount";
 import { AccountError, websiteUrl } from "../services/account";
 import { openExternal } from "../services/session";
 import { QUICK_LOGINS, type QuickLogin } from "../services/quickLogin";
+import { BrandMark } from "../components/BrandMark";
 
-export function Login({ quickLogins = QUICK_LOGINS }: { quickLogins?: QuickLogin[] } = {}) {
+export function Login({ quickLogins = QUICK_LOGINS, onCreateAccount, initialEmail = "" }: {
+  quickLogins?: QuickLogin[];
+  /** Opens the in-app Create Account screen (pages/Register.tsx). */
+  onCreateAccount?: () => void;
+  initialEmail?: string;
+} = {}) {
   const { m, locale } = useI18n();
   const { signIn } = useAccount();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [needsOtp, setNeedsOtp] = useState(false);
@@ -49,7 +55,7 @@ export function Login({ quickLogins = QUICK_LOGINS }: { quickLogins?: QuickLogin
     <main className="bw-login">
       <div className="bw-login-card">
         <div className="bw-login-top">
-          <div className="bw-brand"><span className="bw-brand-mark">b<small>·</small></span><span>BillieWeather</span></div>
+          <div className="bw-brand"><BrandMark /><span>BillieWeather</span></div>
           <label className="bw-login-language"><span className="bw-visually-hidden">{m.login.language}</span><LanguageSelect id="login-language" /></label>
         </div>
         <span className="bw-eyebrow">{m.login.tagline}</span>
@@ -84,7 +90,7 @@ export function Login({ quickLogins = QUICK_LOGINS }: { quickLogins?: QuickLogin
           </div>
         )}
         <div className="bw-login-links">
-          <button type="button" className="bw-link-button" onClick={() => openExternal(websiteUrl("/users/sign_up", locale))}>{m.login.createAccount}</button>
+          {onCreateAccount && <button type="button" className="bw-link-button" onClick={onCreateAccount}>{m.login.createAccount}</button>}
           <button type="button" className="bw-link-button" onClick={() => openExternal(websiteUrl("/users/password/new", locale))}>{m.login.forgot}</button>
         </div>
       </div>

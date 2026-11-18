@@ -1,11 +1,11 @@
 import { icons } from "@billie/design-tokens";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { emailOwnerKey, ownerKeyFor } from "./services/databases";
 import { AccountProvider, useAccount } from "./hooks/useAccount";
 import { FinanceProvider, useFinance } from "./hooks/useFinance";
 import { I18nProvider, useI18n } from "./i18n";
 import { Dashboard } from "./pages/Dashboard";
-import { Login } from "./pages/Login";
+import { SignedOut } from "./pages/SignedOut";
 import { ModeProvider, useMode, type Mode } from "./hooks/useMode";
 import { SyncStatus } from "./components/SyncStatus";
 import { CommandCenter } from "./components/CommandCenter";
@@ -13,6 +13,9 @@ import type { TransactionFilter } from "./commands/handlers";
 import type { TransactionKind } from "@billie/shared-types";
 import { saveSidebarCollapsed, savedSidebarCollapsed } from "./services/theme";
 import { subscribeDeepLinks, type DeepLinkRoute } from "./services/deepLink";
+import { markWelcomeDone, shouldShowWelcome } from "./services/onboarding";
+import { Welcome } from "./pages/Welcome";
+import { BrandMark } from "./components/BrandMark";
 
 // Load secondary workspaces when opened, so startup does not parse the import/report/editor UI.
 const Categories = lazy(() => import("./pages/Categories").then((module) => ({ default: module.Categories })));
@@ -76,11 +79,11 @@ function ModeSwitch({ mode, onChange }: { mode: Mode; onChange: (mode: Mode) => 
   );
 }
 
-function Shell() {
+function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage?: Page; initialRoute?: DeepLinkRoute | null }) {
   const { m } = useI18n();
   const { account } = useAccount();
   const { mode, manual, setMode } = useMode();
-  const [page, setPage] = useState<Page>("dashboard");
+  const [page, setPage] = useState<Page>(initialPage);
   const [transactionIntent, setTransactionIntent] = useState<{ key: number; intent: TransactionIntent } | null>(null);
   // A part of a page to bring into view after navigating (e.g. the sync panel on the Data page).
   const [focus, setFocus] = useState<string | null>(null);
@@ -105,10 +108,15 @@ function Shell() {
   // billieweather:// links and #/capture/… open one screen; they never save or send anything.
   const goRef = useRef(go);
   goRef.current = go;
-  useEffect(() => subscribeDeepLinks((route: DeepLinkRoute) => {
-    if (route === "capture/receipt") goRef.current("receipt");
-    else if (route === "capture/expense") goRef.current("transactions", null, undefined, { entryKind: "expense" });
-  }), []);
+  useEffect(() => {
+    const open = (route: DeepLinkRoute) => {
+      if (route === "capture/receipt") goRef.current("receipt");
+      else if (route === "capture/expense") goRef.current("transactions", null, undefined, { entryKind: "expense" });
+    };
+    // A link that arrived while the Welcome page was showing (see Home).
+    if (initialRoute) open(initialRoute);
+    return subscribeDeepLinks(open);
+  }, []); // the initial route is applied once, on mount
   const navLabel = (target: Page) => (target === "manual" ? m.ledger.manual.nav : target === "receipt" ? m.receipt.nav : target === "accounts" || target === "planning" || target === "lists" ? m.ledger.nav[target] : m.nav[target]);
   const navButton = (item: NavItem) => (
     <li key={item.page}>
@@ -123,7 +131,7 @@ function Shell() {
     <div className={`bw-app${collapsed ? " is-collapsed" : ""}${manual ? " is-manual-mode" : ""}`} data-mode={mode}>
       <nav className="bw-nav" id="bw-nav" aria-label={m.nav.main}>
         <div className="bw-nav-head">
-          <div className="bw-brand"><span className="bw-brand-mark" aria-hidden="true">b<small>·</small></span><span className="bw-brand-name">BillieWeather</span></div>
+          <div className="bw-brand"><BrandMark /><span className="bw-brand-name">BillieWeather</span></div>
           <button type="button" className="bw-nav-toggle" aria-controls="bw-nav" aria-expanded={!collapsed} aria-label={collapsed ? m.nav.expand : m.nav.collapse} title={collapsed ? m.nav.expand : m.nav.collapse} onClick={toggleSidebar}>
             <Icon d={icons.collapse} />
           </button>
@@ -169,6 +177,38 @@ function Shell() {
   );
 }
 
+/**
+ * After sign-in (and naming a new device database): the Welcome page for a newly registered account,
+ * otherwise straight to the app. Remounted per account by Gate, so switching accounts re-decides.
+ */
+function Home() {
+  const { account } = useAccount();
+  const { ownerKey, transactions, statements } = useFinance();
+  // Decided once when the account's book opens; data synced in later does not yank the page away.
+  const [welcome, setWelcome] = useState(() => shouldShowWelcome({
+    ownerKey, registeredAt: account?.registeredAt ?? null, hasData: transactions.length > 0 || statements.length > 0,
+  }));
+  const [next, setNext] = useState<{ page: Page; route: DeepLinkRoute | null }>({ page: "dashboard", route: null });
+  // A billieweather:// link (Siri, Shortcuts) opens its screen even while the welcome shows. The
+  // welcome is not marked finished then, so it can show again next time. Layout effect: a link that
+  // launched the app is handled before the first paint, so the welcome does not flash.
+  useLayoutEffect(() => {
+    if (!welcome) return;
+    return subscribeDeepLinks((route) => {
+      if (route === "open") return;
+      setNext({ page: "dashboard", route });
+      setWelcome(false);
+    });
+  }, [welcome]);
+  if (!welcome) return <Shell initialPage={next.page} initialRoute={next.route} />;
+  const finish = (page: Page) => {
+    if (ownerKey) markWelcomeDone(ownerKey);
+    setNext({ page, route: null });
+    setWelcome(false);
+  };
+  return <Welcome name={account?.nickname} onStart={() => finish("import")} onExplore={() => finish("dashboard")} />;
+}
+
 function Gate() {
   const { status, account } = useAccount();
   const { m } = useI18n();
@@ -188,9 +228,9 @@ function Gate() {
     return () => { cancelled = true; };
   }, [ownerId, email, identity]);
   if (status === "loading") return <div className="bw-boot">{m.boot.opening}</div>;
-  if (status === "signedOut") return <Login />;
+  if (status === "signedOut") return <SignedOut />;
   if (!keys || keys.identity !== identity) return <div className="bw-boot">{m.boot.opening}</div>;
-  return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><ModeProvider><Shell /></ModeProvider></FinanceProvider>;
+  return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><ModeProvider><Home /></ModeProvider></FinanceProvider>;
 }
 
 export default function App() {

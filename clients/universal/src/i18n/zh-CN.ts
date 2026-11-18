@@ -3,6 +3,8 @@ import type { Messages } from "./en";
 import { universalZhCN } from "./universal";
 import { commandZhCN } from "./command";
 import { receiptZhCN } from "./receipt";
+import { welcomeZhCN } from "./welcome";
+import { registerZhCN } from "./register";
 
 export const zhCN: Messages = {
   languageName: "简体中文",
@@ -26,7 +28,7 @@ export const zhCN: Messages = {
     quick: { heading: "快捷登录（开发用）", example: "示例账户", heyjyun: "heyjyun（个人）" },
     errors: {
       invalid_credentials: "邮箱或密码不正确。", locked: "尝试次数过多，账户已被锁定。请查看邮件进行解锁。",
-      otp_required: "请输入两步验证码。", invalid_otp: "两步验证码不正确。", rate_limited: "尝试次数过多，请稍等一分钟再试。",
+      otp_required: "请输入两步验证码。", invalid_otp: "两步验证码不正确。", rate_limited: "尝试次数过多，请稍等一分钟再试。", unconfirmed: "请先验证邮箱：打开我们发给你的邮件中的链接，然后重新登录。",
       offline: "无法连接 BillieWeather。请检查网络连接，首次登录需要联网。", unknown: "出了点问题，请重试。",
     },
   },
@@ -279,4 +281,6 @@ export const zhCN: Messages = {
   ledger: ledgerZhCN,
   command: commandZhCN,
   receipt: receiptZhCN,
+  welcome: welcomeZhCN,
+  register: registerZhCN,
 };

@@ -25,7 +25,7 @@ export interface AccountPreferences {
   time_zone?: string;
 }
 
-export type AccountErrorCode = "invalid_credentials" | "locked" | "otp_required" | "invalid_otp" | "rate_limited" | "unauthorized" | "invalid" | "offline" | "unknown";
+export type AccountErrorCode = "invalid_credentials" | "locked" | "otp_required" | "invalid_otp" | "rate_limited" | "unconfirmed" | "unauthorized" | "invalid" | "offline" | "unknown";
 
 export class AccountError extends Error {
   constructor(public code: AccountErrorCode, message: string = code) {
@@ -65,7 +65,7 @@ async function request<T>(path: string, init: { method: string; token?: string; 
   if (response.status === 204) return undefined as T;
   const json = (await response.json().catch(() => ({}))) as Record<string, unknown>;
   if (!response.ok) {
-    const known: AccountErrorCode[] = ["invalid_credentials", "locked", "otp_required", "invalid_otp", "rate_limited", "unauthorized", "invalid"];
+    const known: AccountErrorCode[] = ["invalid_credentials", "locked", "otp_required", "invalid_otp", "rate_limited", "unconfirmed", "unauthorized", "invalid"];
     const code: AccountErrorCode = known.find((candidate) => candidate === json.error) ?? (response.status === 401 ? "unauthorized" : "unknown");
     throw new AccountError(code, typeof json.message === "string" ? json.message : code);
   }
@@ -93,8 +93,8 @@ export async function signOutRemote(token: string): Promise<void> {
   await request<void>("/session", { method: "DELETE", token }).catch(() => undefined);
 }
 
-/** Pages on the BillieWeather website (sign-up, password reset, account settings). */
-export function websiteUrl(path: "/users/sign_up" | "/users/password/new" | "/app/settings", locale?: string): string {
+/** Pages on the BillieWeather website (password reset, account settings). Sign-up happens in the app (pages/Register.tsx). */
+export function websiteUrl(path: "/users/password/new" | "/app/settings", locale?: string): string {
   const url = new URL(path, API_ORIGIN);
   if (locale) url.searchParams.set("locale", locale);
   return url.toString();

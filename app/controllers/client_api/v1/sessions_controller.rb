@@ -15,6 +15,12 @@ module ClientApi
         unless user&.valid_for_authentication? { user.valid_password?(password) }
           return render json: {error: user&.access_locked? ? "locked" : "invalid_credentials"}, status: :unauthorized
         end
+        # Same rule as the website: an account Devise considers inactive (locked, or an unconfirmed
+        # email if confirmation is ever required) gets no app token. SessionToken.authenticate
+        # enforces this on every later request too; this keeps the first response consistent.
+        unless user.active_for_authentication?
+          return render json: {error: (user.inactive_message == :unconfirmed) ? "unconfirmed" : "locked"}, status: :unauthorized
+        end
         if user.respond_to?(:otp_required_for_login) && user.otp_required_for_login
           code = params[:otp_attempt].to_s.strip
           return render json: {error: "otp_required"}, status: :unauthorized if code.empty?

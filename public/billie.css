@@ -48,8 +48,7 @@ html[lang="ko"] :is(h1, h2, h3, p) { word-break: keep-all; overflow-wrap: anywhe
 
 /* ---------- Brand ---------- */
 .bw-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: var(--bw-font-weight-bold); font-size: var(--bw-font-size-xl); letter-spacing: -.02em; white-space: nowrap; color: var(--bw-color-text); }
-.bw-brand-mark { display: flex; align-items: center; justify-content: center; height: 34px; width: 34px; border-radius: 10px; background: var(--bw-color-accent); color: #fff; font-size: 26px; font-weight: 800; line-height: 1; padding-bottom: 3px; flex-shrink: 0; }
-.bw-brand-mark small { font-size: 22px; line-height: 1; margin: 0 -3px 0 0; }
+.bw-brand-mark { display: flex; align-items: center; justify-content: center; height: 34px; width: 34px; border-radius: 10px; background: #D461A0; color: #fff; flex-shrink: 0; }
 
 /* ---------- Buttons & links ---------- */
 .bw-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; min-height: 40px; border-radius: var(--bw-radius-md); border: 1px solid transparent; font-size: var(--bw-font-size-sm); line-height: 1.3; font-weight: var(--bw-font-weight-semibold); white-space: nowrap; text-align: center; transition: background var(--bw-motion-fast), border-color var(--bw-motion-fast), box-shadow var(--bw-motion-fast), color var(--bw-motion-fast); }

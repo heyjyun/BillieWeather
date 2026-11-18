@@ -1,0 +1,42 @@
+# Separate Render Blueprint for the identity API (NOT the repository's root render.yaml, so syncing
+# the Rails blueprint never creates or changes this service). Create it explicitly in Render:
+#   New > Blueprint > this repo > Blueprint path: services/identity-api/render.yaml
+services:
+  - type: web
+    name: billieweather-identity-api
+    runtime: python
+    plan: free
+    rootDir: services/identity-api
+    buildCommand: "pip install uv && uv sync --frozen --no-dev"
+    # Applies the additive `identity` schema migration (never touches Rails tables), checks Rails
+    # schema compatibility (refuses to start writing if it fails), then serves.
+    startCommand: "uv run python -m identity_api.schema migrate && uv run uvicorn identity_api.main:app --host 0.0.0.0 --port $PORT --no-access-log"
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: IDENTITY_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.13.1"
+      - key: DATABASE_URL          # the same Neon database the Rails service uses
+        sync: false
+      - key: PUBLIC_URL            # https://billieweather-identity-api.onrender.com
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: "tauri://localhost,http://tauri.localhost,https://tauri.localhost"
+      - key: TOKEN_HMAC_KEY
+        generateValue: true
+      - key: MAIL_DELIVERY
+        value: postmark
+      - key: POSTMARK_API_TOKEN
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"
+      - key: DB_POOL_MAX
+        value: "3"

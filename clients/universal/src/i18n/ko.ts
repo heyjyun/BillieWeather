@@ -3,6 +3,8 @@ import type { Messages } from "./en";
 import { universalKo } from "./universal";
 import { commandKo } from "./command";
 import { receiptKo } from "./receipt";
+import { welcomeKo } from "./welcome";
+import { registerKo } from "./register";
 
 export const ko: Messages = {
   languageName: "한국어",
@@ -26,7 +28,7 @@ export const ko: Messages = {
     quick: { heading: "빠른 로그인(개발용)", example: "예시 계정", heyjyun: "heyjyun(개인)" },
     errors: {
       invalid_credentials: "이메일 또는 비밀번호가 올바르지 않습니다.", locked: "시도 횟수가 너무 많아 계정이 잠겼습니다. 이메일을 확인해 잠금을 해제하세요.",
-      otp_required: "2단계 인증 코드를 입력하세요.", invalid_otp: "2단계 인증 코드가 올바르지 않습니다.", rate_limited: "시도 횟수가 너무 많습니다. 1분 후 다시 시도하세요.",
+      otp_required: "2단계 인증 코드를 입력하세요.", invalid_otp: "2단계 인증 코드가 올바르지 않습니다.", rate_limited: "시도 횟수가 너무 많습니다. 1분 후 다시 시도하세요.", unconfirmed: "먼저 이메일 주소를 인증하세요. 보내 드린 이메일의 링크를 연 다음 다시 로그인하세요.",
       offline: "BillieWeather에 연결할 수 없습니다. 인터넷 연결을 확인하세요(처음 로그인할 때 필요합니다).", unknown: "문제가 발생했습니다. 다시 시도하세요.",
     },
   },
@@ -279,4 +281,6 @@ export const ko: Messages = {
   ledger: ledgerKo,
   command: commandKo,
   receipt: receiptKo,
+  welcome: welcomeKo,
+  register: registerKo,
 };

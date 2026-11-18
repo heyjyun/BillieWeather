@@ -114,7 +114,7 @@ vi.mock("../src/services/platform", () => ({
   saveFile: async () => true,
 }));
 
-const account = { email: "detect@example.com", nickname: null, locale: "en", timeZone: null, usageRegion: "CN", registeredAt: "2026-11-01T12:00:00Z", badges: [] };
+const account = { email: "detect@example.com", nickname: null, locale: "en", timeZone: null, usageRegion: "CN", registeredAt: "2025-11-01T12:00:00Z" /* an established account: not shown the new-account welcome */, badges: [] };
 vi.mock("../src/services/account", async (importOriginal) => {
   const real = await importOriginal<typeof import("../src/services/account")>();
   return {

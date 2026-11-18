@@ -48,6 +48,25 @@ class ClientApiTest < ActionDispatch::IntegrationTest
     assert_equal "locked", sign_in_json["error"], "even the right password is refused while locked"
   end
 
+  # Email confirmation is not enabled today (no Devise :confirmable). If it ever is, Devise reports
+  # an unconfirmed account as inactive; the app must then get no token (the welcome screen in the
+  # apps appears only after a successful sign-in, so it can never skip verification).
+  test "an account Devise reports as unconfirmed gets no token" do
+    user = User.find(@user.id)
+    user.define_singleton_method(:active_for_authentication?) { false }
+    user.define_singleton_method(:inactive_message) { :unconfirmed }
+    User.define_singleton_method(:find_by) { |*| user }
+    begin
+      body = sign_in_json
+      assert_response :unauthorized
+      assert_equal "unconfirmed", body["error"]
+      assert_nil body["token"]
+      assert_nil body["account"]
+    ensure
+      User.singleton_class.remove_method(:find_by)
+    end
+  end
+
   # Two-factor sign-in is active only when Active Record encryption is configured (Bullet Train's
   # two_factor_authentication_enabled?), which the test environment is not; the devise-two-factor
   # methods are simulated on this one user with the code "123456".

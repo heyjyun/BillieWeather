@@ -1,0 +1,40 @@
+/* The in-app Create Account screen. Builds on the sign-in card (.bw-login, .bw-login-card, .bw-field). */
+.bw-register .bw-login-card { max-width: 480px; }
+.bw-register h1:focus { outline: none; }
+.bw-register h1:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--bw-radius-sm); }
+.bw-register-back { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding-left: 0; margin: -6px 0 2px; }
+
+.bw-register-google { display: grid; gap: 6px; margin-top: 6px; }
+.bw-google-button { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.bw-register-google > small { font-size: var(--bw-font-size-xs); text-align: center; }
+.bw-register-divider { display: flex; align-items: center; gap: 12px; margin: 8px 0 0; font-size: var(--bw-font-size-xs); color: var(--muted); }
+.bw-register-divider::before, .bw-register-divider::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+
+.bw-password { position: relative; display: flex; }
+.bw-password input { flex: 1; min-width: 0; padding-right: 48px; }
+.bw-password-toggle { position: absolute; inset: 0 0 0 auto; width: 44px; min-height: 44px; display: grid; place-items: center; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: var(--bw-radius-sm); }
+.bw-password-toggle:hover:not(:disabled), .bw-password-toggle[aria-pressed="true"] { color: var(--ink); }
+.bw-password-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+
+.bw-field input[aria-invalid="true"], .bw-field select[aria-invalid="true"] { border-color: var(--negative); }
+.bw-region-field .bw-region-search { margin-bottom: 2px; }
+
+.bw-code-input { font-size: 1.5rem !important; letter-spacing: 0.3em; text-align: center; font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.bw-register-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.bw-register-privacy, .bw-register-note { font-size: var(--bw-font-size-xs); margin: 4px 0 0; }
+.bw-register-switch { margin: 4px 0 0; font-size: var(--bw-font-size-sm); color: var(--muted); text-align: center; }
+.bw-register-progress { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.bw-spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-strong); border-top-color: var(--accent); animation: bw-spin 0.9s linear infinite; flex: none; }
+@keyframes bw-spin { to { transform: rotate(360deg); } }
+
+/* Tablet and desktop: a slightly wider card. */
+@media (min-width: 761px) {
+  .bw-register .bw-login-card { max-width: 520px; }
+}
+/* Phones: full-width actions, comfortable touch targets. */
+@media (max-width: 760px) {
+  .bw-register-actions { flex-direction: column; align-items: stretch; }
+  .bw-register-actions .bw-button, .bw-register-actions .bw-link-button { width: 100%; }
+  .bw-code-input { font-size: 1.3rem !important; letter-spacing: 0.2em; }
+}

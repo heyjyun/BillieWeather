@@ -36,7 +36,9 @@ describe("data isolation", () => {
   const AI = join(ROOT, "src/services/aiCategorize.ts");
   // receiptUpload.ts: "Send to BillieWeather web" for one captured receipt, only when the person presses the button.
   const RECEIPT = join(ROOT, "src/services/receiptUpload.ts");
-  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI, RECEIPT];
+  // registration.ts: creating an account in the app, with the separate identity service (services/identity-api).
+  const REGISTRATION = join(ROOT, "src/services/registration.ts");
+  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI, RECEIPT, REGISTRATION];
 
   it.each([
     ["fetch(", /\bfetch\s*\(/],
@@ -148,6 +150,32 @@ describe("data isolation", () => {
     expect(links).not.toMatch(/\bfetch\s*\(|api\/client|searchParams|URLSearchParams/);
   });
 
+  it("registration sends only sign-up details, to the identity service, and sees no financial code", () => {
+    const source = readFileSync(REGISTRATION, "utf8");
+    expect(source.match(/^import .*$/gm) ?? []).toEqual([]);
+    expect(source).not.toMatch(/@billie\/|\bFinanceStore\b|\bTransaction\b|\bStatement\b|amountCents|merchantKey|sqlite|localStorage|sessionStorage/i);
+    expect(source).toMatch(/const API = `\$\{IDENTITY_ORIGIN\}\/v1`/);
+    expect(source.match(/fetch\(/g)?.length).toBe(1);
+    expect(source).not.toMatch(/api\/client\/v1/);
+    // Every endpoint it can call.
+    const paths = [...source.matchAll(/call<[^(]*\(\s*(`[^`]*`|"[^"]*")/g)].map((match) => match[1]).sort();
+    expect(paths).toEqual([
+      '"/config"', '"/google/flows"', '"/registrations"',
+      "`/google/flows/${segment(flow.id)}/cancel`", "`/google/flows/${segment(flow.id)}/complete`", "`/google/flows/${segment(flow.id)}/link`",
+      "`/google/flows/${segment(flow.id)}/status`", "`/registrations/${segment(pending.id)}/confirmation`", "`/registrations/${segment(pending.id)}/resend`",
+    ].sort());
+    // Every key any request body may carry.
+    const bodies = [...source.matchAll(/"POST",\s*\{([^}]*)\}/g)].map((match) => match[1]);
+    expect(bodies.length).toBe(8);
+    const keys = new Set(bodies.flatMap((body) => body.split(",").map((part) => part.split(":")[0].trim()).filter(Boolean)));
+    expect([...keys].sort()).toEqual(["code", "code_challenge", "code_challenge_method", "code_verifier", "email", "locale", "nickname", "password", "password_confirmation", "registration_secret", "usage_region"].sort());
+    // Only the Create Account screen uses it.
+    const callers = all.filter((file) => file !== REGISTRATION && /services\/registration"/.test(readFileSync(file, "utf8")));
+    expect(callers).toEqual([join(ROOT, "src/pages/Register.tsx")]);
+    // No website sign-up detour remains.
+    expect(all.filter((file) => /users\/sign_up/.test(readFileSync(file, "utf8")))).toEqual([]);
+  });
+
   it("the app never talks to OpenAI directly", () => {
     expect(all.filter((file) => /openai\.com/i.test(readFileSync(file, "utf8")))).toEqual([]);
   });
@@ -186,14 +214,16 @@ describe("data isolation", () => {
     expect(() => tesseractEngine({ workerPath: "", corePath: "", langPath: "", cacheMethod: "none" })).toThrow(/CDN/);
   });
 
-  it("builds add exactly one origin — the BillieWeather server — and only over https", async () => {
+  it("builds add exactly two origins — the BillieWeather server and its identity service — and only over https", async () => {
     // @ts-expect-error plain JS build script
-    const { apiOrigin, cspWithOrigin } = await import("../scripts/tauri.mjs");
+    const { apiOrigin, identityOrigin, cspWithOrigin } = await import("../scripts/tauri.mjs");
     const config = JSON.parse(readFileSync(join(ROOT, "src-tauri/tauri.conf.json"), "utf8"));
-    const csp = cspWithOrigin(config.app.security.csp, apiOrigin("https://billieweather.example.com/some/path"));
-    expect((/connect-src ([^;]+)/.exec(csp)?.[1].trim().split(/\s+/) ?? []).sort()).toEqual(["'self'", "http://ipc.localhost", "https://billieweather.example.com", "ipc:"]);
+    const csp = cspWithOrigin(config.app.security.csp, apiOrigin("https://billieweather.example.com/some/path"), identityOrigin("https://identity.billieweather.example.com/v1"));
+    expect((/connect-src ([^;]+)/.exec(csp)?.[1].trim().split(/\s+/) ?? []).sort()).toEqual(["'self'", "http://ipc.localhost", "https://billieweather.example.com", "https://identity.billieweather.example.com", "ipc:"]);
     expect(apiOrigin(undefined)).toBe("http://localhost:3000");
+    expect(identityOrigin(undefined)).toBe("http://localhost:8100");
     expect(() => apiOrigin("http://billieweather.example.com")).toThrow(/https/);
+    expect(() => identityOrigin("http://identity.example.com")).toThrow(/BILLIE_IDENTITY_URL must be https/);
   });
 
   it("the app requests no network, shell, or broad file-system permissions", () => {

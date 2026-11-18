@@ -8,6 +8,9 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <%= stylesheet_link_tag "/billie-tokens.css" %>
     <%= stylesheet_link_tag "/billie.css" %>
     <script src="/billie-theme.js"></script>
@@ -27,7 +30,7 @@
     <a class="bw-skip-link" href="#main-content"><%= t('billie.layout.skip') %></a>
     <% if public_page %>
       <header class="bw-public-header">
-        <%= link_to root_path, class: "bw-brand", "aria-label": t('billie.layout.home') do %><span class="bw-brand-mark">b<small>·</small></span><span>BillieWeather</span><% end %>
+        <%= link_to root_path, class: "bw-brand", "aria-label": t('billie.layout.home') do %><%= render "shared/billie_brand_mark" %><span>BillieWeather</span><% end %>
         <nav class="bw-public-links" aria-label="<%= t('billie.layout.main_navigation') %>"><%= link_to t('billie.community.nav.features_membership'), billie_features_path, "aria-current": ("page" if current_page?(billie_features_path)) %><%= link_to t('billie.layout.about_us'), billie_about_path, "aria-current": ("page" if current_page?(billie_about_path)) %><%= link_to t('billie.community.nav.support_us'), billie_features_path(anchor: "support"), class: "bw-public-support-link", data: {dialog_open: "support-dialog"}, "aria-haspopup": "dialog", "aria-controls": "support-dialog" %><%= link_to t('billie.downloads.nav'), billie_download_path, "aria-current": ("page" if current_page?(billie_download_path)) %></nav>
         <div class="bw-header-actions">
           <%= render 'shared/billie_theme_switcher' %>
@@ -38,7 +41,7 @@
     <% else %>
       <aside class="bw-sidebar" id="bw-sidebar">
         <div class="bw-sidebar-head">
-          <%= link_to root_path, class: "bw-brand", "aria-label": t('billie.layout.home') do %><span class="bw-brand-mark">b<small>·</small></span><span class="bw-brand-name">BillieWeather</span><% end %>
+          <%= link_to root_path, class: "bw-brand", "aria-label": t('billie.layout.home') do %><%= render "shared/billie_brand_mark" %><span class="bw-brand-name">BillieWeather</span><% end %>
           <button type="button" class="bw-sidebar-toggle" data-sidebar-toggle hidden aria-controls="bw-sidebar" aria-expanded="true" aria-label="<%= t('billie.layout.collapse_sidebar') %>" title="<%= t('billie.layout.collapse_sidebar') %>" data-collapse-label="<%= t('billie.layout.collapse_sidebar') %>" data-expand-label="<%= t('billie.layout.expand_sidebar') %>"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6 M4 4v16"/></svg></button>
         </div>
         <% if admin_area %>

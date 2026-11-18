@@ -3,6 +3,8 @@ import type { Messages } from "./en";
 import { universalEs } from "./universal";
 import { commandEs } from "./command";
 import { receiptEs } from "./receipt";
+import { welcomeEs } from "./welcome";
+import { registerEs } from "./register";
 
 export const es: Messages = {
   languageName: "Español",
@@ -26,7 +28,7 @@ export const es: Messages = {
     quick: { heading: "Inicio rápido (desarrollo)", example: "Cuenta de ejemplo", heyjyun: "heyjyun (personal)" },
     errors: {
       invalid_credentials: "El correo y la contraseña no coinciden.", locked: "La cuenta se bloqueó tras demasiados intentos. Revisa tu correo para desbloquearla.",
-      otp_required: "Escribe tu código de verificación en dos pasos.", invalid_otp: "El código de verificación no es válido.", rate_limited: "Demasiados intentos. Espera un minuto y vuelve a intentarlo.",
+      otp_required: "Escribe tu código de verificación en dos pasos.", invalid_otp: "El código de verificación no es válido.", rate_limited: "Demasiados intentos. Espera un minuto y vuelve a intentarlo.", unconfirmed: "Primero confirma tu correo: abre el enlace del correo que te enviamos y vuelve a iniciar sesión.",
       offline: "No se puede conectar con BillieWeather. Revisa tu conexión a internet: iniciar sesión la necesita una vez.", unknown: "Algo salió mal. Inténtalo de nuevo.",
     },
   },
@@ -279,4 +281,6 @@ export const es: Messages = {
   ledger: ledgerEs,
   command: commandEs,
   receipt: receiptEs,
+  welcome: welcomeEs,
+  register: registerEs,
 };
