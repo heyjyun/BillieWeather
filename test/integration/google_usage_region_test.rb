@@ -40,7 +40,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
   test "verified Google signup creates an account only with a valid selected region and ignores submitted identities" do
     get user_google_oauth2_omniauth_callback_path
     assert_difference ["User.count", "Team.count", "Membership.count"], 1 do
-      post google_region_path, params: {user: {usage_region: "jp", email: "forged@example.com", google_uid: "forged"},
+      post google_region_path, params: {user: {usage_region: "jp", nickname: "Gigi", email: "forged@example.com", google_uid: "forged"},
         uid: "forged", email: "forged@example.com"}
     end
     assert_redirected_to finance_dashboard_path
@@ -55,7 +55,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
 
     delete destroy_user_session_path
     assert_no_difference "User.count" do
-      post google_region_path, params: {user: {usage_region: "KR"}}
+      post google_region_path, params: {user: {usage_region: "KR", nickname: "Gigi"}}
     end
     assert_redirected_to new_user_session_path
   end
@@ -64,14 +64,14 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     get user_google_oauth2_omniauth_callback_path
     ["", "XX", "Atlantis"].each do |region|
       assert_no_difference ["User.count", "Team.count", "Membership.count"] do
-        post google_region_path, params: {user: {usage_region: region}}
+        post google_region_path, params: {user: {usage_region: region, nickname: "Gigi"}}
       end
       assert_response :unprocessable_entity
       assert_select "[role='alert']"
       assert_select "select#user_usage_region"
     end
     assert_difference "User.count", 1 do
-      post google_region_path, params: {user: {usage_region: "HK"}}
+      post google_region_path, params: {user: {usage_region: "HK", nickname: "Gigi"}}
     end
     assert_equal "HK", User.find_by!(google_uid: "region-google-subject").usage_region
   end
@@ -80,7 +80,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     get user_google_oauth2_omniauth_callback_path
     assert_redirected_to new_google_region_path
     assert_difference "User.count", 1 do
-      post google_region_path, params: {user: {usage_region: "XG"}}
+      post google_region_path, params: {user: {usage_region: "XG", nickname: "Gigi"}}
     end
     assert_redirected_to finance_dashboard_path
     assert_equal "XG", User.find_by!(google_uid: "region-google-subject").usage_region
@@ -88,14 +88,14 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
 
   test "expired and missing verified identities cannot complete Google signup" do
     assert_no_difference "User.count" do
-      post google_region_path, params: {user: {usage_region: "US"}, auth: google_auth.to_h}
+      post google_region_path, params: {user: {usage_region: "US", nickname: "Gigi"}, auth: google_auth.to_h}
     end
     assert_redirected_to new_user_session_path
 
     get user_google_oauth2_omniauth_callback_path
     travel 11.minutes do
       assert_no_difference "User.count" do
-        post google_region_path, params: {user: {usage_region: "US"}}
+        post google_region_path, params: {user: {usage_region: "US", nickname: "Gigi"}}
       end
       assert_redirected_to new_user_session_path
       assert_match(/expired/i, flash[:alert])
@@ -106,7 +106,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     get user_google_oauth2_omniauth_callback_path
     password_user = create(:user, email: "region-google@example.com", usage_region: "CA")
     assert_no_difference ["User.count", "Team.count", "Membership.count"] do
-      post google_region_path, params: {user: {usage_region: "TW"}}
+      post google_region_path, params: {user: {usage_region: "TW", nickname: "Gigi"}}
     end
     assert_redirected_to new_user_session_path
     assert_nil password_user.reload.google_uid
@@ -118,7 +118,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     previous_keys = ENV["INVITATION_KEYS"]
     ENV["INVITATION_KEYS"] = "region-private-invitation-key"
     assert_no_difference ["User.count", "Team.count", "Membership.count"] do
-      post google_region_path, params: {user: {usage_region: "US"}}
+      post google_region_path, params: {user: {usage_region: "US", nickname: "Gigi"}}
     end
     assert_redirected_to new_user_session_path
   ensure
@@ -144,7 +144,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
 
     assert_difference "User.count", 1 do
       assert_no_difference ["Team.count", "Membership.count"] do
-        post google_region_path, params: {user: {usage_region: "KR"}}
+        post google_region_path, params: {user: {usage_region: "KR", nickname: "Gigi"}}
       end
     end
     user = User.find_by!(google_uid: "region-google-subject")
@@ -194,7 +194,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     get user_google_oauth2_omniauth_callback_path
     assert_redirected_to new_google_region_path
     assert_difference ["User.count", "Team.count", "Membership.count"], 1 do
-      post google_region_path, params: {user: {usage_region: "JP"}}
+      post google_region_path, params: {user: {usage_region: "JP", nickname: "Gigi"}}
     end
     user = User.find_by!(google_uid: "region-google-subject")
     assert_equal "region-google@example.com", user.email
@@ -217,11 +217,11 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     follow_redirect!
     token = css_select("meta[name='csrf-token']").first["content"]
     assert_no_difference "User.count" do
-      post google_region_path, params: {user: {usage_region: "US"}}
+      post google_region_path, params: {user: {usage_region: "US", nickname: "Gigi"}}
     end
     assert_response :unprocessable_entity
     assert_difference "User.count", 1 do
-      post google_region_path, params: {authenticity_token: token, user: {usage_region: "US"}}
+      post google_region_path, params: {authenticity_token: token, user: {usage_region: "US", nickname: "Gigi"}}
     end
     assert_redirected_to finance_dashboard_path
   ensure

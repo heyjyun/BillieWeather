@@ -1,3 +1,4 @@
+import personal from "./personal.json";
 import { ledgerKo } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalKo } from "./universal";
@@ -9,6 +10,7 @@ import { registerKo } from "./register";
 export const ko: Messages = {
   languageName: "한국어",
   boot: { opening: "로컬 데이터를 여는 중…", dbError: "로컬 데이터베이스를 열 수 없습니다." },
+  connection: { offline: "오프라인 상태입니다. 이 기기에 저장된 모든 데이터를 보고 편집할 수 있습니다. 계정 정보와 클라우드 동기화는 다시 연결되면 재개됩니다.", unreachable: "지금 BillieWeather 서버가 응답하지 않습니다. 이 기기에 저장된 모든 데이터를 보고 편집할 수 있습니다. 계정 정보와 클라우드 동기화는 서버가 돌아오면 재개됩니다.", retry: "다시 시도", checking: "확인 중…" },
   dbName: { eyebrow: "이 기기에서 처음", heading: "이 기기의 데이터베이스 이름 정하기", intro: "금융 데이터는 이 기기의 데이터베이스에 저장됩니다. 기기를 구분할 수 있도록 이름을 정하세요. 나중에 데이터 페이지에서 바꿀 수 있습니다.", label: "데이터베이스 이름", help: "이 기기의 이름이 입력되어 있습니다. 원하는 이름으로 바꿀 수 있습니다.", fallback: "내 기기", create: "데이터베이스 만들기", creating: "만드는 중…", failed: "이름을 저장하지 못했습니다. 다시 시도하세요." },
   nav: { collapse: "사이드바 접기", expand: "사이드바 펼치기", main: "메인", dashboard: "대시보드", transactions: "거래 내역", categories: "카테고리", import: "가져오기", reports: "보고서", data: "데이터", settings: "설정", note: "직접 동기화하지 않는 한 재무 데이터는 이 기기에만 저장됩니다" },
   preview: "브라우저 미리보기: 금융 데이터는 메모리에만 있으며 저장되지 않습니다.",
@@ -29,6 +31,8 @@ export const ko: Messages = {
       invalid_credentials: "이메일 또는 비밀번호가 올바르지 않습니다.", locked: "시도 횟수가 너무 많아 계정이 잠겼습니다. 이메일을 확인해 잠금을 해제하세요.",
       otp_required: "2단계 인증 코드를 입력하세요.", invalid_otp: "2단계 인증 코드가 올바르지 않습니다.", rate_limited: "시도 횟수가 너무 많습니다. 1분 후 다시 시도하세요.", unconfirmed: "먼저 이메일 주소를 인증하세요. 보내 드린 이메일의 링크를 연 다음 다시 로그인하세요.",
       offline: "BillieWeather에 연결할 수 없습니다. 인터넷 연결을 확인하세요(처음 로그인할 때 필요합니다).", unknown: "문제가 발생했습니다. 다시 시도하세요.",
+      unreachable: "인터넷은 연결되어 있지만 BillieWeather 서버({host})가 응답하지 않습니다. 중단되었거나 시작 중일 수 있습니다. 잠시 후 다시 시도하세요.",
+      local_server_down: "이 BillieWeather는 이 컴퓨터의 서버({host})를 통해 로그인하는 개발용 빌드인데, 해당 서버가 실행 중이 아닙니다. 서버를 시작하거나 정식 빌드를 설치하세요.",
     },
   },
   dashboard: {
@@ -67,7 +71,7 @@ export const ko: Messages = {
   settings: {
     appearance: "화면", theme: "테마", themeSystem: "시스템 설정 따르기", themeLight: "라이트", themeDark: "다크", themeHelp: "이 기기에만 저장됩니다.",
     eyebrow: "내 데이터는 내가 관리", title: "설정 및 개인정보",
-    account: "계정", email: "이메일", nickname: "닉네임", nicknamePlaceholder: "이메일 대신 표시됩니다", memberSince: "가입일", region: "지역", globalCitizen: "세계 시민",
+    account: "계정", email: "이메일", memberSince: "가입일", region: "지역", globalCitizen: "세계 시민",
     language: "언어", save: "저장", saved: "BillieWeather 계정에 저장했습니다.", saveFailed: "저장하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
     manageOnline: "웹사이트에서 계정 관리", signOut: "로그아웃", offlineAccount: "오프라인 상태입니다. 저장된 계정 정보를 표시합니다.",
     accountOnline: "계정 정보(이메일, 닉네임, 언어, 지역, 가입일)는 BillieWeather 계정에 저장되어 모든 기기에서 동일하게 유지됩니다.",
@@ -282,4 +286,5 @@ export const ko: Messages = {
   receipt: receiptKo,
   welcome: welcomeKo,
   register: registerKo,
+  personal: personal["ko"],
 };

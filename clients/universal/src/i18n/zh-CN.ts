@@ -1,3 +1,4 @@
+import personal from "./personal.json";
 import { ledgerZhCN } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalZhCN } from "./universal";
@@ -9,6 +10,7 @@ import { registerZhCN } from "./register";
 export const zhCN: Messages = {
   languageName: "简体中文",
   boot: { opening: "正在打开本地数据…", dbError: "无法打开本地数据库。" },
+  connection: { offline: "当前离线。本机保存的所有数据都可以查看和编辑；账户信息和云端同步会在恢复联网后继续。", unreachable: "BillieWeather 服务器暂时没有响应。本机保存的所有数据都可以查看和编辑；账户信息和云端同步会在服务器恢复后继续。", retry: "重试", checking: "正在检查…" },
   dbName: { eyebrow: "首次在此设备上使用", heading: "为此设备的数据库命名", intro: "你的财务数据保存在此设备上的数据库中。起个名字，方便区分你的各台设备。之后可以在“数据”页面修改。", label: "数据库名称", help: "已自动填入此设备的名称，可改成任意名字。", fallback: "我的设备", create: "创建数据库", creating: "正在创建…", failed: "名称未能保存，请重试。" },
   nav: { collapse: "收起侧边栏", expand: "展开侧边栏", main: "主导航", dashboard: "财务总览", transactions: "交易记录", categories: "分类", import: "导入", reports: "报表", data: "数据管理", settings: "设置", note: "除非你主动同步，财务数据只保存在本机" },
   preview: "浏览器预览：财务数据只保存在内存中，不会被保存。",
@@ -29,6 +31,8 @@ export const zhCN: Messages = {
       invalid_credentials: "邮箱或密码不正确。", locked: "尝试次数过多，账户已被锁定。请查看邮件进行解锁。",
       otp_required: "请输入两步验证码。", invalid_otp: "两步验证码不正确。", rate_limited: "尝试次数过多，请稍等一分钟再试。", unconfirmed: "请先验证邮箱：打开我们发给你的邮件中的链接，然后重新登录。",
       offline: "无法连接 BillieWeather。请检查网络连接，首次登录需要联网。", unknown: "出了点问题，请重试。",
+      unreachable: "网络连接正常，但 BillieWeather 服务器（{host}）没有响应。它可能已停机或正在启动，请稍后再试。",
+      local_server_down: "这个 BillieWeather 是开发版本，通过本机上的服务器（{host}）登录，但该服务器没有运行。请启动它，或安装正式版本。",
     },
   },
   dashboard: {
@@ -67,7 +71,7 @@ export const zhCN: Messages = {
   settings: {
     appearance: "外观", theme: "主题", themeSystem: "跟随系统", themeLight: "浅色", themeDark: "深色", themeHelp: "仅保存在这台设备上。",
     eyebrow: "你的数据，你做主", title: "设置与隐私",
-    account: "账户", email: "邮箱", nickname: "昵称", nicknamePlaceholder: "代替邮箱显示", memberSince: "注册时间", region: "地区", globalCitizen: "世界公民",
+    account: "账户", email: "邮箱", memberSince: "注册时间", region: "地区", globalCitizen: "世界公民",
     language: "语言", save: "保存", saved: "已保存到你的 BillieWeather 账户。", saveFailed: "保存失败，请检查网络后重试。",
     manageOnline: "在网站上管理账户", signOut: "退出登录", offlineAccount: "当前离线，显示的是已保存的账户信息。",
     accountOnline: "你的账户信息（邮箱、昵称、语言、地区和注册时间）保存在 BillieWeather 账户中，在每台设备上都保持一致。",
@@ -282,4 +286,5 @@ export const zhCN: Messages = {
   receipt: receiptZhCN,
   welcome: welcomeZhCN,
   register: registerZhCN,
+  personal: personal["zh-CN"],
 };

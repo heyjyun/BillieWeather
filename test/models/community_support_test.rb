@@ -17,7 +17,7 @@ class CommunitySupportModelTest < ActiveSupport::TestCase
   end
 
   test "payment note never falls back to the email address" do
-    @user.update!(nickname: nil)
+    @user.update_column(:nickname, nil) # an older account created before nicknames were required
     assert_nil Community.payment_note_for(@user)
     assert_nil @user.support_payment_note
     assert_nil Community.payment_note_for(nil)

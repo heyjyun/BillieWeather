@@ -44,6 +44,18 @@
   </article>
 </div>
 
+<% outlook = Personalization.forecast_outlook(@forecast) unless @forecast_error.present? %>
+<% if outlook %>
+  <%# Calm, honest framing: a possible gap is stated plainly with what to do next; "stable" never promises more than the estimate. %>
+  <div class="bw-outlook bw-outlook-<%= outlook[:kind].to_s.dasherize %>" id="forecast-outlook" role="status">
+    <span class="bw-outlook-icon" aria-hidden="true"><%= finance_icon(outlook[:kind] == :stable ? "sun" : "cloud-sun", size: 20) %></span>
+    <div>
+      <p class="bw-outlook-message"><%= personal_message("forecast.#{outlook[:kind]}", date: (finance_date(outlook[:date]) if outlook[:date])) %></p>
+      <% if outlook[:kind] == :gap %><p class="bw-outlook-help"><%= t("billie.personalization.forecast.gap_help") %></p><% end %>
+    </div>
+  </div>
+<% end %>
+
 <section class="bw-panel">
   <div class="bw-panel-heading">
     <div>

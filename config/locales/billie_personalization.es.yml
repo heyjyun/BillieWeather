@@ -1,0 +1,57 @@
+# See billie_personalization.en.yml for how these messages are used.
+es:
+  billie:
+    personalization:
+      greeting:
+        morning: {named: "¡Buenos días, %{name}!", plain: "¡Buenos días!"}
+        afternoon: {named: "¡Buenas tardes, %{name}!", plain: "¡Buenas tardes!"}
+        evening: {named: "¡Buenas noches, %{name}!", plain: "¡Buenas noches!"}
+      dashboard:
+        morning: "Veamos cómo van tus finanzas hoy."
+        afternoon: "Aquí tienes tu panorama financiero más reciente."
+        evening: "Echemos un vistazo rápido a tu clima financiero."
+        first_use: {named: "Hola, %{name}. ¿Listo para conocer tu clima financiero?", plain: "¿Listo para conocer tu clima financiero?"}
+        attention: "Hay algunas transacciones esperando una categoría, cuando tengas un momento."
+      welcome:
+        title: {named: "¡Te damos la bienvenida a BillieWeather, %{name}!", plain: "¡Te damos la bienvenida a BillieWeather!"}
+        subtitle: "Hagamos que tu futuro financiero se vea un poco más claro."
+        notice: {named: "¡Te damos la bienvenida a BillieWeather, %{name}! Hagamos que tu futuro financiero se vea un poco más claro.", plain: "¡Te damos la bienvenida a BillieWeather! Hagamos que tu futuro financiero se vea un poco más claro."}
+      import_done: {named: "¡Listo, %{name}! Tu estado de cuenta se ha importado.", plain: "¡Listo! Tu estado de cuenta se ha importado."}
+      reconciled: {named: "¡Todo en orden, %{name}! Tus transacciones están conciliadas.", plain: "¡Todo en orden! Tus transacciones están conciliadas."}
+      insight_intro: {named: "%{name}, hay algo que vale la pena vigilar.", plain: "Hay algo que vale la pena vigilar."}
+      forecast:
+        stable: {named: "Tu pronóstico actual se ve estable, %{name}. Te avisaremos de cualquier cambio que valga la pena revisar.", plain: "Tu pronóstico actual se ve estable. Te avisaremos de cualquier cambio que valga la pena revisar."}
+        range_dips: {named: "Tu saldo proyectado se mantiene por encima de cero, %{name}, aunque el rango ilustrativo baja más. Quizá convenga dejar un pequeño margen.", plain: "Tu saldo proyectado se mantiene por encima de cero, aunque el rango ilustrativo baja más. Quizá convenga dejar un pequeño margen."}
+        gap: {named: "%{name}, podría haber un déficit de efectivo alrededor del %{date}. Veamos tus opciones.", plain: "Podría haber un déficit de efectivo alrededor del %{date}. Veamos tus opciones."}
+        gap_help: "Prueba los ajustes de ingresos y gastos para ver qué podría ayudar. Es una estimación basada en tu historial, no una certeza."
+      nickname:
+        label: "Apodo"
+        required: "obligatorio"
+        placeholder: "¿Cómo quieres que te llamemos?"
+        help: "Usaremos tu apodo para que BillieWeather se sienta un poco más personal. Hasta 40 caracteres, en cualquier idioma."
+        errors:
+          blank: "Elige un apodo. Cualquier nombre que te guste está bien."
+          too_long: "Usa como máximo 40 caracteres."
+          invalid: "Elimina los caracteres no admitidos."
+      nickname_prompt:
+        title: "¿Cómo quieres que te llamemos?"
+        body: "Añade un apodo y BillieWeather se sentirá un poco más tuyo. Solo tú lo verás."
+        save: "Guardar apodo"
+        saving: "Guardando…"
+        later: "Quizá más tarde"
+        saved: "¡Encantados de conocerte, %{name}!"
+        failed: "No se pudo guardar ahora. Revisa tu conexión e inténtalo de nuevo."
+      email:
+        subject: "¡Te damos la bienvenida a BillieWeather!"
+        preview: "Tu clima financiero, un poco más claro cada día."
+        heading: {named: "¡Te damos la bienvenida a BillieWeather, %{name}!", plain: "¡Te damos la bienvenida a BillieWeather!"}
+        body: "Hagamos que tu futuro financiero se vea un poco más claro. Importa un estado de cuenta (CSV o PDF) para ver tus ingresos, gastos y el panorama de tu flujo de efectivo en un solo lugar tranquilo. BillieWeather nunca te pide el acceso a tu banco."
+        cta: "Abrir tu panel"
+        signoff: "Con cariño, el equipo de BillieWeather"
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            nickname:
+              blank: "no puede estar vacío. Elige cómo quieres que te llamemos"

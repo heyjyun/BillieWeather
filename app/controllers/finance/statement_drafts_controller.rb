@@ -25,7 +25,7 @@ module Finance
 
       statement = DraftImport.new(user: current_user, draft: @draft, rows: rows).call
       @profile.touch
-      redirect_to finance_transactions_path, notice: I18n.t("billie.backend.pdf_review_imported", count: statement.transaction_count)
+      redirect_to finance_transactions_path, notice: imported_notice(I18n.t("billie.backend.pdf_review_imported", count: statement.transaction_count))
     rescue StatementImporter::ImportError => error
       review_error(error.message)
     end

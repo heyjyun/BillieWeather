@@ -12,11 +12,7 @@
     <h2 id="settings-profile-heading"><%= t("billie.account.profile_heading") %></h2>
     <%= errors_for.call(:nickname) %>
     <%= form_with model: @user, scope: :user, url: nickname_finance_settings_path, method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
-      <div class="bw-field">
-        <%= form.label :nickname, t("billie.account.nickname") %>
-        <%= form.text_field :nickname, maxlength: 40, autocomplete: "nickname", "aria-describedby": "user_nickname_help" %>
-        <small id="user_nickname_help"><%= t("billie.account.nickname_help") %></small>
-      </div>
+      <%= render "shared/nickname_field", form: form %>
       <div class="bw-field">
         <label for="settings_email"><%= t("billie.auth.email") %></label>
         <input id="settings_email" type="email" value="<%= @user.email %>" readonly aria-describedby="settings_email_help">

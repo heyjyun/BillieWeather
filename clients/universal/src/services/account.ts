@@ -25,7 +25,23 @@ export interface AccountPreferences {
   time_zone?: string;
 }
 
-export type AccountErrorCode = "invalid_credentials" | "locked" | "otp_required" | "invalid_otp" | "rate_limited" | "unconfirmed" | "unauthorized" | "invalid" | "offline" | "unknown";
+export type AccountErrorCode = "invalid_credentials" | "locked" | "otp_required" | "invalid_otp" | "rate_limited" | "unconfirmed" | "unauthorized" | "invalid"
+  | "offline" | "unreachable" | "local_server_down" | "unknown";
+
+/** True when this build talks to a development server on this computer (never a release build; see scripts/tauri.mjs). */
+export const USES_LOCAL_SERVER = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(API_ORIGIN);
+
+/**
+ * Why a request never got an answer. "offline": this device has no network. "local_server_down": a
+ * development build whose server on this computer is not running. "unreachable": the network is up
+ * but the BillieWeather server did not answer (down, starting up, or blocked).
+ */
+export function networkFailure(local: boolean = USES_LOCAL_SERVER): "offline" | "unreachable" | "local_server_down" {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return "offline";
+  return local ? "local_server_down" : "unreachable";
+}
+
+export const isNetworkFailure = (code: string): boolean => code === "offline" || code === "unreachable" || code === "local_server_down";
 
 export class AccountError extends Error {
   constructor(public code: AccountErrorCode, message: string = code) {
@@ -60,7 +76,7 @@ async function request<T>(path: string, init: { method: string; token?: string; 
       cache: "no-store",
     });
   } catch {
-    throw new AccountError("offline");
+    throw new AccountError(networkFailure());
   }
   if (response.status === 204) return undefined as T;
   const json = (await response.json().catch(() => ({}))) as Record<string, unknown>;

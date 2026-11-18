@@ -136,7 +136,7 @@ class CommunitySupportTest < ActionDispatch::IntegrationTest
   end
 
   test "invited friends without a nickname are sent to set one instead of falling back to their email" do
-    @friend.update!(nickname: nil)
+    @friend.update_column(:nickname, nil) # an older account created before nicknames were required
     invite(@friend, by: @admin)
     with_support_payments do
       sign_in @friend

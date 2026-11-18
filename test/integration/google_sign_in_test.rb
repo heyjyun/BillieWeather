@@ -101,7 +101,7 @@ class GoogleSignInTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to new_google_region_path
     assert_difference ["User.count", "Team.count", "Membership.count"], 1 do
-      post google_region_path, params: {user: {usage_region: "US"}}
+      post google_region_path, params: {user: {usage_region: "US", nickname: "Gigi"}}
     end
     assert_redirected_to finance_dashboard_path
     user = User.find_by!(google_uid: "google-subject-123")
@@ -109,7 +109,7 @@ class GoogleSignInTest < ActionDispatch::IntegrationTest
     # Names from the Google profile are never stored.
     assert_nil user.first_name
     assert_nil user.last_name
-    assert_nil user.nickname
+    assert_equal "Gigi", user.nickname # the one typed on the completion step, never Google's profile name
     assert_equal "US", user.usage_region
     assert user.current_team
     assert_equal 1, user.teams.count

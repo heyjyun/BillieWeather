@@ -1,3 +1,4 @@
+import personal from "./personal.json";
 import { ledgerEn } from "./ledger";
 // English is the reference dictionary: every other language must have exactly these keys
 // (checked by TypeScript and by test/i18n.test.ts). Use {name} for interpolation.
@@ -10,6 +11,7 @@ import { registerEn } from "./register";
 export const en = {
   languageName: "English",
   boot: { opening: "Opening your local data…", dbError: "The local database could not be opened." },
+  connection: { offline: "You're offline. Everything stored on this device is open and editable; account details and cloud sync resume when you're back online.", unreachable: "BillieWeather's server isn't answering right now. Everything stored on this device is open and editable; account details and cloud sync resume when it's back.", retry: "Try again", checking: "Checking…" },
   dbName: { eyebrow: "NEW ON THIS DEVICE", heading: "Name this device's database", intro: "Your financial data is stored in a database on this device. Give it a name so you can tell your devices apart. You can change it later on the Data page.", label: "Database name", help: "Filled in with this device's name. Use any name you like.", fallback: "My device", create: "Create database", creating: "Creating…", failed: "The name couldn't be saved. Try again." },
   nav: { collapse: "Collapse sidebar", expand: "Expand sidebar", main: "Main", dashboard: "Dashboard", transactions: "Transactions", categories: "Categories", import: "Import", reports: "Reports", data: "Data", settings: "Settings", note: "Financial data stays here unless you sync it" },
   preview: "Browser preview — financial data is kept in memory and is not saved.",
@@ -30,6 +32,8 @@ export const en = {
       invalid_credentials: "That email and password don't match.", locked: "This account is locked after too many attempts. Check your email to unlock it.",
       otp_required: "Enter your two-factor code.", invalid_otp: "That two-factor code is not valid.", rate_limited: "Too many attempts. Wait a minute and try again.", unconfirmed: "Confirm your email address first: open the link in the email we sent you, then sign in again.",
       offline: "Can't reach BillieWeather. Check your internet connection — signing in needs it once.", unknown: "Something went wrong. Please try again.",
+      unreachable: "Your internet connection is working, but the BillieWeather server ({host}) isn't answering. It may be down or starting up — try again in a minute.",
+      local_server_down: "This copy of BillieWeather is a development build that signs in through a server on this computer ({host}), and that server isn't running. Start it, or install a release build.",
     },
   },
   dashboard: {
@@ -68,7 +72,7 @@ export const en = {
   settings: {
     appearance: "Appearance", theme: "Theme", themeSystem: "Match system", themeLight: "Light", themeDark: "Dark", themeHelp: "Saved on this device only.",
     eyebrow: "YOUR DATA, YOUR RULES", title: "Settings & privacy",
-    account: "Account", email: "Email", nickname: "Nickname", nicknamePlaceholder: "Shown instead of your email", memberSince: "Member since", region: "Region", globalCitizen: "Global Citizen",
+    account: "Account", email: "Email", memberSince: "Member since", region: "Region", globalCitizen: "Global Citizen",
     language: "Language", save: "Save", saved: "Saved to your BillieWeather account.", saveFailed: "Couldn't save. Check your connection and try again.",
     manageOnline: "Manage your account on the website", signOut: "Sign out", offlineAccount: "Offline — showing your saved account details.",
     accountOnline: "Your account details (email, nickname, language, region, and sign-up date) are stored with your BillieWeather account so they are the same on every device.",
@@ -283,6 +287,8 @@ export const en = {
   receipt: receiptEn,
   welcome: welcomeEn,
   register: registerEn,
+  // Greetings and nickname copy, synced from the website (scripts/sync-rails-translations.rb).
+  personal: personal.en,
 };
 
 type Widen<T> = T extends string ? string : T extends readonly string[] ? string[] : { [K in keyof T]: Widen<T[K]> };

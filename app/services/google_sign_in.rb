@@ -27,12 +27,13 @@ class GoogleSignIn
     ENV["GOOGLE_CLIENT_ID"].to_s.strip.present? && ENV["GOOGLE_CLIENT_SECRET"].to_s.strip.present?
   end
 
-  def initialize(auth:, current_user: nil, allow_signup: true, create_team: true, usage_region: nil)
+  def initialize(auth:, current_user: nil, allow_signup: true, create_team: true, usage_region: nil, nickname: nil)
     @auth = auth
     @current_user = current_user
     @allow_signup = allow_signup
     @create_team = create_team
     @usage_region = usage_region.to_s.strip.upcase.presence
+    @nickname = nickname.to_s.squish.presence
     @created = false
   end
 
@@ -56,16 +57,18 @@ class GoogleSignIn
     raise Error, I18n.t("billie.auth.google_sign_out_before_signup") if @current_user
     raise Error, I18n.t("billie.auth.registration_unavailable") unless @allow_signup
 
-    unless @usage_region
+    # A new account first chooses its usage region and nickname (GoogleRegionsController).
+    unless @usage_region && @nickname
       raise RegionRequired.new(uid: @uid, email: @email)
     end
     raise Error, I18n.t("billie.google_region.invalid") unless UsageRegion::CODES.include?(@usage_region)
 
     user = User.transaction do
       password = Devise.friendly_token(48)
-      # Names from the Google profile are deliberately not stored.
+      # Names from the Google profile are deliberately not stored: the nickname is the one the
+      # person typed on the completion step, never one guessed from their Google account.
       user = User.create!(email: @email, google_uid: @uid, password: password, password_confirmation: password,
-        usage_region: @usage_region)
+        usage_region: @usage_region, nickname: @nickname)
       user.create_default_team if @create_team
       user
     end

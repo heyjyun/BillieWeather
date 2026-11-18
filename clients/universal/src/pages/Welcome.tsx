@@ -7,6 +7,8 @@ import { icons } from "@billie/design-tokens";
 import { useEffect, useRef } from "react";
 import { useI18n } from "../i18n";
 import { BrandMark } from "../components/BrandMark";
+import { personalize } from "../services/greeting";
+import { normalizeNickname } from "../services/profile";
 
 const STEPS = [
   { id: "import", icon: icons.upload },
@@ -26,7 +28,8 @@ export function Welcome({ name, onStart, onExplore }: { name?: string | null; on
   const heading = useRef<HTMLHeadingElement>(null);
   // Screen readers and keyboard users start at the headline, as on a newly opened screen.
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
-  const display = name?.trim();
+  const display = normalizeNickname(name);
+  const welcome = m.personal.welcome;
 
   return (
     <main className="bw-welcome" aria-labelledby="bw-welcome-title">
@@ -34,9 +37,9 @@ export function Welcome({ name, onStart, onExplore }: { name?: string | null; on
         <section className="bw-welcome-hero">
           <span className="bw-welcome-glow" aria-hidden="true" />
           <div className="bw-welcome-brand"><BrandMark /><span>BillieWeather</span></div>
-          <p className="bw-welcome-greeting">{display ? t("welcome.greeting", { name: display }) : w.ready}</p>
-          <h1 id="bw-welcome-title" ref={heading} tabIndex={-1}>{w.title}</h1>
-          <p className="bw-welcome-subtitle">{w.subtitle}</p>
+          <p className="bw-welcome-greeting">{w.ready}</p>
+          <h1 id="bw-welcome-title" ref={heading} tabIndex={-1}>{personalize(welcome.title, display)}</h1>
+          <p className="bw-welcome-subtitle">{welcome.subtitle}</p>
         </section>
 
         <ol className="bw-welcome-steps" aria-label={w.stepsLabel}>

@@ -36,7 +36,7 @@ vi.mock("../src/services/platform", async () => {
   };
 });
 
-const BOB = { email: "bob@example.org", nickname: null, locale: "en", time_zone: null, usage_region: "XG", registered_at: new Date().toISOString(), badges: ["member"], owner_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" };
+const BOB = { email: "bob@example.org", nickname: "Bob", locale: "en", time_zone: null, usage_region: "XG", registered_at: new Date().toISOString(), badges: ["member"], owner_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" };
 const identityBodies: string[] = [];
 const railsRequests: string[] = [];
 
@@ -86,6 +86,7 @@ it("a new account registered after signing out gets its own database and never s
   fireEvent.click(await screen.findByRole("button", { name: en.login.createAccount }));
   await screen.findByRole("heading", { name: en.register.heading });
 
+  fireEvent.change(screen.getByLabelText(/^Nickname/), { target: { value: "Bob" } }); // required for every new account
   fireEvent.change(screen.getByLabelText(en.register.email), { target: { value: "bob@example.org" } });
   fireEvent.change(screen.getByLabelText(en.register.password), { target: { value: "bob's passphrase" } });
   fireEvent.change(screen.getByLabelText(en.register.confirmPassword), { target: { value: "bob's passphrase" } });

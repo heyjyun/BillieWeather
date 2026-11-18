@@ -11,6 +11,7 @@ FactoryBot.define do
     time_zone { ActiveSupport::TimeZone.all.first.name }
     locale { nil }
     usage_region { "US" }
+    nickname { "Billie" }
     factory :onboarded_user do
       first_name { "First Name" }
       last_name { "Last Name" }

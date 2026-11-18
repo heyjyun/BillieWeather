@@ -226,6 +226,17 @@ describe("data isolation", () => {
     expect(() => identityOrigin("http://identity.example.com")).toThrow(/BILLIE_IDENTITY_URL must be https/);
   });
 
+  it("release builds never silently depend on development servers on this computer", async () => {
+    // @ts-expect-error plain JS build script
+    const { assertReleaseOrigins } = await import("../scripts/tauri.mjs");
+    const local = { BILLIE_API_URL: "http://localhost:3000", BILLIE_IDENTITY_URL: "http://localhost:8100" };
+    expect(() => assertReleaseOrigins("build", local)).toThrow(/BILLIE_API_URL → http:\/\/localhost:3000[\s\S]*BILLIE_IDENTITY_URL → http:\/\/localhost:8100/);
+    expect(() => assertReleaseOrigins("build", { ...local, BILLIE_API_URL: "https://billieweather.example.com" })).toThrow(/BILLIE_IDENTITY_URL/);
+    expect(() => assertReleaseOrigins("build", { BILLIE_API_URL: "https://a.example.com", BILLIE_IDENTITY_URL: "https://b.example.com" })).not.toThrow();
+    expect(() => assertReleaseOrigins("build", local, true)).not.toThrow(); // BILLIE_ALLOW_LOCAL_SERVERS=1
+    expect(() => assertReleaseOrigins("dev", local)).not.toThrow();
+  });
+
   it("the app requests no network, shell, or broad file-system permissions", () => {
     const capability = JSON.parse(readFileSync(join(ROOT, "src-tauri/capabilities/default.json"), "utf8"));
     const permissions: string[] = capability.permissions.map((p: string | { identifier: string }) => (typeof p === "string" ? p : p.identifier));

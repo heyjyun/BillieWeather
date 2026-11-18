@@ -10,12 +10,12 @@ class AccountSettingsTest < ActionDispatch::IntegrationTest
     @user = create(:onboarded_user, password: PASSWORD, password_confirmation: PASSWORD, usage_region: "US", first_name: nil, last_name: nil)
   end
 
-  test "sign up asks for an optional nickname instead of a legal name" do
+  test "sign up asks for a required nickname instead of a legal name" do
     get new_user_registration_path
     assert_response :success
     assert_select "input[name='user[first_name]']", count: 0
     assert_select "input[name='user[last_name]']", count: 0
-    assert_select "input[name='user[nickname]']:not([required])"
+    assert_select "input[name='user[nickname]'][required]"
 
     assert_difference "User.count", 1 do
       post user_registration_path, params: {user: {email: "nickname-signup@example.com", nickname: "Rainy", usage_region: "US",
@@ -74,10 +74,13 @@ class AccountSettingsTest < ActionDispatch::IntegrationTest
     assert_select "#settings-profile [role='alert']"
     assert_equal "Billie Fan", @user.reload.nickname
 
+    # A nickname can't be cleared, and only the nickname is ever read from this form.
     patch nickname_finance_settings_path, params: {user: {nickname: "", email: "hijack@example.com", usage_region: "DE"}}
+    assert_response :unprocessable_entity
+    patch nickname_finance_settings_path, params: {user: {nickname: "Sky", email: "hijack@example.com", usage_region: "DE"}}
     assert_redirected_to finance_settings_path
     @user.reload
-    assert_nil @user.nickname
+    assert_equal "Sky", @user.nickname
     assert_equal "US", @user.usage_region
     refute_equal "hijack@example.com", @user.email
   end

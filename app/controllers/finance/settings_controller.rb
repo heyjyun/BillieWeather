@@ -16,13 +16,28 @@ module Finance
       end
     end
 
+    # Saves the nickname from account settings or from the dashboard suggestion (return_to=dashboard).
+    # A nickname can be changed at any time but not cleared: blank, whitespace-only or invisible input is refused.
     def nickname
+      first_nickname = @user.nickname.blank?
+      @user.editing_nickname = true
+      from_dashboard = params[:return_to] == "dashboard"
       if @user.update(params.require(:user).permit(:nickname))
-        redirect_to finance_settings_path, status: :see_other, notice: t("billie.account.nickname_saved")
+        session.delete(:nickname_prompt_dismissed)
+        notice = first_nickname ? t("billie.personalization.nickname_prompt.saved", name: @user.nickname) : t("billie.account.nickname_saved")
+        redirect_to (from_dashboard ? finance_dashboard_path : finance_settings_path), status: :see_other, notice: notice
+      elsif from_dashboard
+        redirect_to finance_dashboard_path, status: :see_other, alert: @user.errors.full_messages.to_sentence
       else
         @failed_section = :nickname
         render :show, status: :unprocessable_entity
       end
+    end
+
+    # "Maybe later" on the dashboard nickname suggestion: hidden for the rest of this browser session.
+    def dismiss_nickname_prompt
+      session[:nickname_prompt_dismissed] = true
+      redirect_to finance_dashboard_path, status: :see_other
     end
 
     # Names the cloud database (the one the website and every app share).

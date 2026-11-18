@@ -1,3 +1,4 @@
+import personal from "./personal.json";
 import { ledgerJa } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalJa } from "./universal";
@@ -9,6 +10,7 @@ import { registerJa } from "./register";
 export const ja: Messages = {
   languageName: "日本語",
   boot: { opening: "ローカルデータを開いています…", dbError: "ローカルデータベースを開けませんでした。" },
+  connection: { offline: "オフラインです。この端末に保存したデータはすべて表示・編集できます。アカウント情報とクラウド同期はオンラインに戻ると再開します。", unreachable: "BillieWeather のサーバーが現在応答していません。この端末に保存したデータはすべて表示・編集できます。アカウント情報とクラウド同期はサーバーが戻ると再開します。", retry: "再試行", checking: "確認中…" },
   dbName: { eyebrow: "このデバイスで初めて", heading: "このデバイスのデータベースに名前を付ける", intro: "家計データはこのデバイス上のデータベースに保存されます。デバイスを見分けられるよう名前を付けてください。あとで「データ」ページから変更できます。", label: "データベース名", help: "このデバイスの名前を入れてあります。好きな名前に変えられます。", fallback: "マイデバイス", create: "データベースを作成", creating: "作成しています…", failed: "名前を保存できませんでした。もう一度お試しください。" },
   nav: { collapse: "サイドバーを折りたたむ", expand: "サイドバーを展開", main: "メイン", dashboard: "ダッシュボード", transactions: "取引", categories: "カテゴリ", import: "取り込み", reports: "レポート", data: "データ", settings: "設定", note: "同期しない限り、財務データはこの端末にだけ保存されます" },
   preview: "ブラウザプレビュー：お金のデータはメモリ上にのみあり、保存されません。",
@@ -29,6 +31,8 @@ export const ja: Messages = {
       invalid_credentials: "メールアドレスまたはパスワードが正しくありません。", locked: "試行回数が多すぎるため、アカウントがロックされました。メールを確認して解除してください。",
       otp_required: "2 段階認証コードを入力してください。", invalid_otp: "2 段階認証コードが正しくありません。", rate_limited: "試行回数が多すぎます。1 分ほど待ってから再度お試しください。", unconfirmed: "先にメールアドレスを確認してください。お送りしたメールのリンクを開いてから、もう一度サインインしてください。",
       offline: "BillieWeather に接続できません。インターネット接続を確認してください（初回のサインインに必要です）。", unknown: "問題が発生しました。もう一度お試しください。",
+      unreachable: "インターネットには接続されていますが、BillieWeather のサーバー（{host}）が応答しません。停止中か起動中の可能性があります。少し待ってからもう一度お試しください。",
+      local_server_down: "この BillieWeather は開発用ビルドで、このコンピューター上のサーバー（{host}）経由でサインインしますが、そのサーバーが起動していません。サーバーを起動するか、リリース版をインストールしてください。",
     },
   },
   dashboard: {
@@ -67,7 +71,7 @@ export const ja: Messages = {
   settings: {
     appearance: "表示", theme: "テーマ", themeSystem: "システムに合わせる", themeLight: "ライト", themeDark: "ダーク", themeHelp: "この端末にのみ保存されます。",
     eyebrow: "あなたのデータはあなたのもの", title: "設定とプライバシー",
-    account: "アカウント", email: "メールアドレス", nickname: "ニックネーム", nicknamePlaceholder: "メールアドレスの代わりに表示", memberSince: "登録日", region: "地域", globalCitizen: "地球市民",
+    account: "アカウント", email: "メールアドレス", memberSince: "登録日", region: "地域", globalCitizen: "地球市民",
     language: "言語", save: "保存", saved: "BillieWeather アカウントに保存しました。", saveFailed: "保存できませんでした。接続を確認してもう一度お試しください。",
     manageOnline: "ウェブサイトでアカウントを管理", signOut: "サインアウト", offlineAccount: "オフラインです。保存済みのアカウント情報を表示しています。",
     accountOnline: "アカウント情報（メールアドレス、ニックネーム、言語、地域、登録日）は BillieWeather アカウントに保存され、どの端末でも同じになります。",
@@ -282,4 +286,5 @@ export const ja: Messages = {
   receipt: receiptJa,
   welcome: welcomeJa,
   register: registerJa,
+  personal: personal["ja"],
 };

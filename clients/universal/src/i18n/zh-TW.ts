@@ -1,3 +1,4 @@
+import personal from "./personal.json";
 import { ledgerZhTW } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalZhTW } from "./universal";
@@ -9,6 +10,7 @@ import { registerZhTW } from "./register";
 export const zhTW: Messages = {
   languageName: "繁體中文",
   boot: { opening: "正在開啟本機資料…", dbError: "無法開啟本機資料庫。" },
+  connection: { offline: "目前離線。本機儲存的所有資料都可以檢視和編輯；帳戶資訊和雲端同步會在恢復連線後繼續。", unreachable: "BillieWeather 伺服器暫時沒有回應。本機儲存的所有資料都可以檢視和編輯；帳戶資訊和雲端同步會在伺服器恢復後繼續。", retry: "重試", checking: "正在檢查…" },
   dbName: { eyebrow: "首次在此裝置上使用", heading: "為此裝置的資料庫命名", intro: "你的財務資料儲存在此裝置上的資料庫中。取個名字，方便區分你的各台裝置。之後可以在「資料」頁面修改。", label: "資料庫名稱", help: "已自動填入此裝置的名稱，可改成任意名字。", fallback: "我的裝置", create: "建立資料庫", creating: "正在建立…", failed: "名稱未能儲存，請重試。" },
   nav: { collapse: "收合側邊欄", expand: "展開側邊欄", main: "主要導覽", dashboard: "財務總覽", transactions: "交易紀錄", categories: "分類", import: "匯入", reports: "報表", data: "資料管理", settings: "設定", note: "除非你主動同步，財務資料只保存在本機" },
   preview: "瀏覽器預覽：財務資料只保存在記憶體中，不會被儲存。",
@@ -29,6 +31,8 @@ export const zhTW: Messages = {
       invalid_credentials: "電子郵件或密碼不正確。", locked: "嘗試次數過多，帳戶已被鎖定。請查看郵件解鎖。",
       otp_required: "請輸入兩步驟驗證碼。", invalid_otp: "兩步驟驗證碼不正確。", rate_limited: "嘗試次數過多，請稍候一分鐘再試。", unconfirmed: "請先驗證電子郵件：開啟我們寄給你的郵件中的連結，然後重新登入。",
       offline: "無法連線到 BillieWeather。請檢查網路連線，首次登入需要連網。", unknown: "發生錯誤，請重試。",
+      unreachable: "網路連線正常，但 BillieWeather 伺服器（{host}）沒有回應。它可能已停機或正在啟動，請稍後再試。",
+      local_server_down: "這個 BillieWeather 是開發版本，透過本機上的伺服器（{host}）登入，但該伺服器沒有執行。請啟動它，或安裝正式版本。",
     },
   },
   dashboard: {
@@ -67,7 +71,7 @@ export const zhTW: Messages = {
   settings: {
     appearance: "外觀", theme: "主題", themeSystem: "跟隨系統", themeLight: "淺色", themeDark: "深色", themeHelp: "僅儲存在這台裝置上。",
     eyebrow: "你的資料，你做主", title: "設定與隱私",
-    account: "帳戶", email: "電子郵件", nickname: "暱稱", nicknamePlaceholder: "取代電子郵件顯示", memberSince: "註冊時間", region: "地區", globalCitizen: "世界公民",
+    account: "帳戶", email: "電子郵件", memberSince: "註冊時間", region: "地區", globalCitizen: "世界公民",
     language: "語言", save: "儲存", saved: "已儲存到你的 BillieWeather 帳戶。", saveFailed: "儲存失敗，請檢查網路後重試。",
     manageOnline: "在網站上管理帳戶", signOut: "登出", offlineAccount: "目前離線，顯示的是已儲存的帳戶資訊。",
     accountOnline: "你的帳戶資訊（電子郵件、暱稱、語言、地區和註冊時間）保存在 BillieWeather 帳戶中，在每台裝置上都保持一致。",
@@ -282,4 +286,5 @@ export const zhTW: Messages = {
   receipt: receiptZhTW,
   welcome: welcomeZhTW,
   register: registerZhTW,
+  personal: personal["zh-TW"],
 };

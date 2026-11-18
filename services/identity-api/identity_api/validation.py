@@ -3,7 +3,10 @@
 Rails rules reproduced here:
 - Devise: email stripped + downcased, regex /\\A[^@\\s]+@[^@\\s]+\\z/, unique; password 6..128 chars,
   confirmation must match.
-- User: nickname squished, at most 40 chars; usage_region required and in UsageRegion::CODES.
+- User: nickname squished, required, at most 40 chars, at least one visible character (letter, mark,
+  number, punctuation or symbol; any script), no control characters; usage_region required and in
+  UsageRegion::CODES. Same rules as User::NICKNAME_* in app/models/user.rb and
+  clients/universal/src/services/profile.ts.
 Stricter here: emails are at most 254 chars and may not contain control characters.
 """
 from __future__ import annotations
@@ -77,11 +80,33 @@ def normalize_locale(value: object) -> str | None:
     return text if text in LOCALES else None
 
 
+def normalize_nickname(value: object) -> str | None:
+    """Squished like Rails; None when nothing visible is left (blank, whitespace or invisible format characters only)."""
+    nick = squish(value)
+    if nick is None or not any(unicodedata.category(ch)[0] in "LMNPS" for ch in nick):
+        return None
+    return nick
+
+
+def nickname_errors(nick: str | None) -> list[str]:
+    if nick is None:
+        return ["blank"]
+    if len(nick) > NICKNAME_MAX:
+        return ["too_long"]
+    if any(unicodedata.category(ch) == "Cc" for ch in nick):
+        return ["invalid"]
+    return []
+
+
 def validate_profile(nickname: object, usage_region: object) -> tuple[str | None, str, dict[str, list[str]]]:
     errors: dict[str, list[str]] = {}
-    nick = squish(nickname)
-    if nick is not None and (len(nick) > NICKNAME_MAX or any(unicodedata.category(ch) == "Cc" for ch in nick)):
-        errors["nickname"] = ["too_long" if len(nick) > NICKNAME_MAX else "invalid"]
+    if nickname is not None and not isinstance(nickname, str):
+        nick, problems = None, ["invalid"]
+    else:
+        nick = normalize_nickname(nickname)
+        problems = nickname_errors(nick)
+    if problems:
+        errors["nickname"] = problems
     region = normalize_region(usage_region)
     if problems := region_errors(region):
         errors["usage_region"] = problems

@@ -2,6 +2,7 @@
 // (config/locales/billie_auth.*.yml). Placeholders: {min} {max} {email} {length} {seconds} {remaining}.
 export const registerEn = {
   back: "Back to sign in",
+  retry: "Try again",
   eyebrow: "A CLEARER FINANCIAL FORECAST",
   heading: "Create your account",
   intro: "Bring your finances into focus, one statement at a time.",
@@ -9,7 +10,6 @@ export const registerEn = {
   googleButton: "Continue with Google",
   googleHelp: "Opens Google in your browser.",
   or: "or sign up with email",
-  nickname: "Nickname (optional)", nicknameHelp: "Up to 40 characters. Shown only to you in BillieWeather.",
   region: "Country / Region", regionHelp: "Select the region where you mainly use this app. A selection is required.",
   regionSearch: "Search countries and regions", regionSearchPlaceholder: "Type to search, e.g. Japan or JP", regionNoMatch: "No region matches that search.",
   globalCitizen: "Global Citizen",
@@ -24,7 +24,7 @@ export const registerEn = {
     password_pwned: "This password has appeared in a data breach. Choose a different one.",
     password_confirmation_mismatch: "The passwords don't match.",
     usage_region_blank: "Select a country or region.", usage_region_inclusion: "Select a country or region from the list.",
-    nickname_too_long: "Use at most 40 characters.", nickname_invalid: "Remove unsupported characters.",
+   
   },
   verify: {
     heading: "Check your email",
@@ -62,6 +62,8 @@ export const registerEn = {
     google_taken: "This Google account is already connected to another BillieWeather account.",
     service_not_ready: "Account creation is temporarily unavailable. Try again later.",
     offline: "Can't reach BillieWeather. Check your internet connection.", unknown: "Something went wrong. Please try again.",
+    unreachable: "Your internet connection is working, but the BillieWeather account service ({host}) isn't answering. Try again in a minute.",
+    local_server_down: "This development build creates accounts through a service on this computer ({host}), and it isn't running. Start services/identity-api, or install a release build.",
   },
 };
 
@@ -70,6 +72,7 @@ export type RegisterMessages = Widen<typeof registerEn>;
 
 export const registerZhCN: RegisterMessages = {
   back: "返回登录",
+  retry: "重试",
   eyebrow: "更清晰的财务展望",
   heading: "创建你的账户",
   intro: "从每一份账单开始，让财务逐渐清晰。",
@@ -77,7 +80,6 @@ export const registerZhCN: RegisterMessages = {
   googleButton: "使用 Google 继续",
   googleHelp: "将在浏览器中打开 Google。",
   or: "或使用邮箱注册",
-  nickname: "昵称（可选）", nicknameHelp: "最多 40 个字符，只在 BillieWeather 中显示给您自己。",
   region: "国家 / 地区", regionHelp: "请选择你主要使用本应用的地区，此项为必填。",
   regionSearch: "搜索国家和地区", regionSearchPlaceholder: "输入搜索，例如 日本 或 JP", regionNoMatch: "没有找到匹配的地区。",
   globalCitizen: "世界公民",
@@ -92,7 +94,7 @@ export const registerZhCN: RegisterMessages = {
     password_pwned: "此密码曾出现在数据泄露中，请换一个。",
     password_confirmation_mismatch: "两次输入的密码不一致。",
     usage_region_blank: "请选择国家或地区。", usage_region_inclusion: "请从列表中选择国家或地区。",
-    nickname_too_long: "最多使用 40 个字符。", nickname_invalid: "请删除不支持的字符。",
+   
   },
   verify: {
     heading: "查收你的邮件",
@@ -130,11 +132,14 @@ export const registerZhCN: RegisterMessages = {
     google_taken: "此 Google 账户已关联到另一个 BillieWeather 账户。",
     service_not_ready: "暂时无法创建账户，请稍后再试。",
     offline: "无法连接 BillieWeather，请检查网络连接。", unknown: "出了点问题，请重试。",
+    unreachable: "网络连接正常，但 BillieWeather 账户服务（{host}）没有响应。请稍后再试。",
+    local_server_down: "这个开发版本通过本机上的服务（{host}）创建账户，但它没有运行。请启动 services/identity-api，或安装正式版本。",
   },
 };
 
 export const registerZhTW: RegisterMessages = {
   back: "返回登入",
+  retry: "重試",
   eyebrow: "更清晰的財務展望",
   heading: "建立你的帳戶",
   intro: "從每一份帳單開始，讓財務逐漸清晰。",
@@ -142,7 +147,6 @@ export const registerZhTW: RegisterMessages = {
   googleButton: "使用 Google 繼續",
   googleHelp: "將在瀏覽器中開啟 Google。",
   or: "或使用電子信箱註冊",
-  nickname: "暱稱（選填）", nicknameHelp: "最多 40 個字元，只在 BillieWeather 中顯示給您自己。",
   region: "國家 / 地區", regionHelp: "請選擇你主要使用本應用的地區，此項為必填。",
   regionSearch: "搜尋國家和地區", regionSearchPlaceholder: "輸入搜尋，例如 日本 或 JP", regionNoMatch: "找不到符合的地區。",
   globalCitizen: "世界公民",
@@ -157,7 +161,7 @@ export const registerZhTW: RegisterMessages = {
     password_pwned: "此密碼曾出現在資料外洩中，請換一個。",
     password_confirmation_mismatch: "兩次輸入的密碼不一致。",
     usage_region_blank: "請選擇國家或地區。", usage_region_inclusion: "請從清單中選擇國家或地區。",
-    nickname_too_long: "最多使用 40 個字元。", nickname_invalid: "請刪除不支援的字元。",
+   
   },
   verify: {
     heading: "查收你的郵件",
@@ -195,11 +199,14 @@ export const registerZhTW: RegisterMessages = {
     google_taken: "此 Google 帳戶已連結到另一個 BillieWeather 帳戶。",
     service_not_ready: "暫時無法建立帳戶，請稍後再試。",
     offline: "無法連線到 BillieWeather，請檢查網路連線。", unknown: "發生問題，請重試。",
+    unreachable: "網路連線正常，但 BillieWeather 帳戶服務（{host}）沒有回應。請稍後再試。",
+    local_server_down: "這個開發版本透過本機上的服務（{host}）建立帳戶，但它沒有執行。請啟動 services/identity-api，或安裝正式版本。",
   },
 };
 
 export const registerJa: RegisterMessages = {
   back: "ログインに戻る",
+  retry: "再試行",
   eyebrow: "お金の見通しを、もっと明確に",
   heading: "アカウントを作成",
   intro: "一枚の明細から、お金の流れを見える形に。",
@@ -207,7 +214,6 @@ export const registerJa: RegisterMessages = {
   googleButton: "Google で続ける",
   googleHelp: "ブラウザで Google を開きます。",
   or: "またはメールアドレスで登録",
-  nickname: "ニックネーム（任意）", nicknameHelp: "40文字まで。BillieWeather 内であなたにだけ表示されます。",
   region: "国 / 地域", regionHelp: "主にこのアプリを利用する地域を選択してください。選択は必須です。",
   regionSearch: "国と地域を検索", regionSearchPlaceholder: "入力して検索（例：日本、JP）", regionNoMatch: "一致する地域がありません。",
   globalCitizen: "地球市民",
@@ -222,7 +228,7 @@ export const registerJa: RegisterMessages = {
     password_pwned: "このパスワードは過去のデータ漏えいで見つかっています。別のパスワードを選んでください。",
     password_confirmation_mismatch: "パスワードが一致しません。",
     usage_region_blank: "国または地域を選択してください。", usage_region_inclusion: "一覧から国または地域を選択してください。",
-    nickname_too_long: "40 文字以内にしてください。", nickname_invalid: "使用できない文字を削除してください。",
+   
   },
   verify: {
     heading: "メールを確認してください",
@@ -260,11 +266,14 @@ export const registerJa: RegisterMessages = {
     google_taken: "この Google アカウントは別の BillieWeather アカウントに連携されています。",
     service_not_ready: "現在アカウントを作成できません。しばらくしてからお試しください。",
     offline: "BillieWeather に接続できません。インターネット接続を確認してください。", unknown: "問題が発生しました。もう一度お試しください。",
+    unreachable: "インターネットには接続されていますが、BillieWeather のアカウントサービス（{host}）が応答しません。少し待ってからもう一度お試しください。",
+    local_server_down: "この開発用ビルドは、このコンピューター上のサービス（{host}）でアカウントを作成しますが、起動していません。services/identity-api を起動するか、リリース版をインストールしてください。",
   },
 };
 
 export const registerKo: RegisterMessages = {
   back: "로그인으로 돌아가기",
+  retry: "다시 시도",
   eyebrow: "더 명확한 재정 전망",
   heading: "내 계정 만들기",
   intro: "명세서 한 장부터 내 재정을 명확하게 파악하세요.",
@@ -272,7 +281,6 @@ export const registerKo: RegisterMessages = {
   googleButton: "Google로 계속하기",
   googleHelp: "브라우저에서 Google을 엽니다.",
   or: "또는 이메일로 가입",
-  nickname: "닉네임(선택)", nicknameHelp: "최대 40자. BillieWeather에서 본인에게만 표시됩니다.",
   region: "국가 / 지역", regionHelp: "주로 이 앱을 사용하는 지역을 선택하세요. 필수 항목입니다.",
   regionSearch: "국가 및 지역 검색", regionSearchPlaceholder: "입력해서 검색 (예: 일본, JP)", regionNoMatch: "검색과 일치하는 지역이 없습니다.",
   globalCitizen: "세계 시민",
@@ -287,7 +295,7 @@ export const registerKo: RegisterMessages = {
     password_pwned: "이 비밀번호는 데이터 유출에서 발견되었습니다. 다른 비밀번호를 선택하세요.",
     password_confirmation_mismatch: "비밀번호가 일치하지 않습니다.",
     usage_region_blank: "국가 또는 지역을 선택하세요.", usage_region_inclusion: "목록에서 국가 또는 지역을 선택하세요.",
-    nickname_too_long: "40자 이하로 입력하세요.", nickname_invalid: "지원되지 않는 문자를 삭제하세요.",
+   
   },
   verify: {
     heading: "이메일을 확인하세요",
@@ -325,11 +333,14 @@ export const registerKo: RegisterMessages = {
     google_taken: "이 Google 계정은 다른 BillieWeather 계정에 연결되어 있습니다.",
     service_not_ready: "일시적으로 계정을 만들 수 없습니다. 나중에 다시 시도하세요.",
     offline: "BillieWeather에 연결할 수 없습니다. 인터넷 연결을 확인하세요.", unknown: "문제가 발생했습니다. 다시 시도하세요.",
+    unreachable: "인터넷은 연결되어 있지만 BillieWeather 계정 서비스({host})가 응답하지 않습니다. 잠시 후 다시 시도하세요.",
+    local_server_down: "이 개발용 빌드는 이 컴퓨터의 서비스({host})로 계정을 만드는데, 실행 중이 아닙니다. services/identity-api를 시작하거나 정식 빌드를 설치하세요.",
   },
 };
 
 export const registerEs: RegisterMessages = {
   back: "Volver a iniciar sesión",
+  retry: "Reintentar",
   eyebrow: "UNA PREVISIÓN FINANCIERA MÁS CLARA",
   heading: "Crea tu cuenta",
   intro: "Da claridad a tus finanzas, extracto a extracto.",
@@ -337,7 +348,6 @@ export const registerEs: RegisterMessages = {
   googleButton: "Continuar con Google",
   googleHelp: "Abre Google en tu navegador.",
   or: "o regístrate con tu correo",
-  nickname: "Apodo (opcional)", nicknameHelp: "Hasta 40 caracteres. Solo tú lo verás en BillieWeather.",
   region: "País / Región", regionHelp: "Selecciona la región donde usas principalmente esta aplicación. La selección es obligatoria.",
   regionSearch: "Buscar países y regiones", regionSearchPlaceholder: "Escribe para buscar, p. ej. Japón o JP", regionNoMatch: "Ninguna región coincide con la búsqueda.",
   globalCitizen: "Ciudadano global",
@@ -352,7 +362,7 @@ export const registerEs: RegisterMessages = {
     password_pwned: "Esta contraseña ha aparecido en una filtración de datos. Elige otra.",
     password_confirmation_mismatch: "Las contraseñas no coinciden.",
     usage_region_blank: "Selecciona un país o una región.", usage_region_inclusion: "Selecciona un país o una región de la lista.",
-    nickname_too_long: "Usa como máximo 40 caracteres.", nickname_invalid: "Elimina los caracteres no admitidos.",
+   
   },
   verify: {
     heading: "Revisa tu correo",
@@ -390,5 +400,7 @@ export const registerEs: RegisterMessages = {
     google_taken: "Esta cuenta de Google ya está conectada a otra cuenta de BillieWeather.",
     service_not_ready: "La creación de cuentas no está disponible temporalmente. Inténtalo más tarde.",
     offline: "No se puede conectar con BillieWeather. Revisa tu conexión a internet.", unknown: "Algo salió mal. Inténtalo de nuevo.",
+    unreachable: "Tu conexión a internet funciona, pero el servicio de cuentas de BillieWeather ({host}) no responde. Inténtalo de nuevo en un minuto.",
+    local_server_down: "Esta versión de desarrollo crea cuentas mediante un servicio en este ordenador ({host}), y no está en marcha. Inicia services/identity-api o instala una versión publicada.",
   },
 };

@@ -1,0 +1,18 @@
+<%# A gentle, dismissible suggestion for accounts created before nicknames were required.
+    Never blocks the dashboard; "Maybe later" hides it for this browser session. %>
+<section class="bw-nickname-prompt" id="nickname-prompt" aria-labelledby="nickname-prompt-heading">
+  <span class="bw-nickname-prompt-icon" aria-hidden="true"><%= finance_icon "sun", size: 22 %></span>
+  <div class="bw-nickname-prompt-body">
+    <h2 id="nickname-prompt-heading"><%= t("billie.personalization.nickname_prompt.title") %></h2>
+    <p><%= t("billie.personalization.nickname_prompt.body") %></p>
+    <%= form_with model: current_user, scope: :user, url: nickname_finance_settings_path, method: :patch, data: {turbo: false}, class: "bw-nickname-prompt-form" do |form| %>
+      <%= hidden_field_tag :return_to, "dashboard", id: nil %>
+      <%= render "shared/nickname_field", form: form, id_prefix: "prompt" %>
+      <div class="bw-nickname-prompt-actions">
+        <%= form.submit t("billie.personalization.nickname_prompt.save"), class: "bw-button bw-button-dark" %>
+      </div>
+    <% end %>
+    <%= button_to t("billie.personalization.nickname_prompt.later"), dismiss_nickname_prompt_finance_settings_path, method: :post,
+          class: "bw-nickname-prompt-later", form: {class: "bw-nickname-prompt-dismiss", data: {turbo: false}} %>
+  </div>
+</section>

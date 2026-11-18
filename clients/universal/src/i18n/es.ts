@@ -1,3 +1,4 @@
+import personal from "./personal.json";
 import { ledgerEs } from "./ledgerLocales";
 import type { Messages } from "./en";
 import { universalEs } from "./universal";
@@ -9,6 +10,7 @@ import { registerEs } from "./register";
 export const es: Messages = {
   languageName: "Español",
   boot: { opening: "Abriendo tus datos locales…", dbError: "No se pudo abrir la base de datos local." },
+  connection: { offline: "Estás sin conexión. Todo lo guardado en este dispositivo está disponible y se puede editar; los datos de la cuenta y la sincronización vuelven cuando recuperes la conexión.", unreachable: "El servidor de BillieWeather no responde ahora mismo. Todo lo guardado en este dispositivo está disponible y se puede editar; los datos de la cuenta y la sincronización vuelven cuando responda.", retry: "Reintentar", checking: "Comprobando…" },
   dbName: { eyebrow: "NUEVO EN ESTE DISPOSITIVO", heading: "Pon nombre a la base de datos de este dispositivo", intro: "Tus datos financieros se guardan en una base de datos en este dispositivo. Ponle un nombre para distinguir tus dispositivos. Puedes cambiarlo después en la página Datos.", label: "Nombre de la base de datos", help: "Se rellena con el nombre de este dispositivo. Usa el nombre que quieras.", fallback: "Mi dispositivo", create: "Crear base de datos", creating: "Creando…", failed: "No se pudo guardar el nombre. Inténtalo de nuevo." },
   nav: { collapse: "Contraer barra lateral", expand: "Expandir barra lateral", main: "Principal", dashboard: "Panel", transactions: "Movimientos", categories: "Categorías", import: "Importar", reports: "Informes", data: "Datos", settings: "Ajustes", note: "Tus datos financieros se quedan aquí salvo que los sincronices" },
   preview: "Vista previa en navegador: los datos financieros solo están en memoria y no se guardan.",
@@ -29,6 +31,8 @@ export const es: Messages = {
       invalid_credentials: "El correo y la contraseña no coinciden.", locked: "La cuenta se bloqueó tras demasiados intentos. Revisa tu correo para desbloquearla.",
       otp_required: "Escribe tu código de verificación en dos pasos.", invalid_otp: "El código de verificación no es válido.", rate_limited: "Demasiados intentos. Espera un minuto y vuelve a intentarlo.", unconfirmed: "Primero confirma tu correo: abre el enlace del correo que te enviamos y vuelve a iniciar sesión.",
       offline: "No se puede conectar con BillieWeather. Revisa tu conexión a internet: iniciar sesión la necesita una vez.", unknown: "Algo salió mal. Inténtalo de nuevo.",
+      unreachable: "Tu conexión a internet funciona, pero el servidor de BillieWeather ({host}) no responde. Puede estar caído o iniciándose: inténtalo de nuevo en un minuto.",
+      local_server_down: "Esta copia de BillieWeather es una versión de desarrollo que inicia sesión mediante un servidor en este ordenador ({host}), y ese servidor no está en marcha. Inícialo o instala una versión publicada.",
     },
   },
   dashboard: {
@@ -67,7 +71,7 @@ export const es: Messages = {
   settings: {
     appearance: "Apariencia", theme: "Tema", themeSystem: "Igual que el sistema", themeLight: "Claro", themeDark: "Oscuro", themeHelp: "Se guarda solo en este dispositivo.",
     eyebrow: "TUS DATOS, TUS REGLAS", title: "Ajustes y privacidad",
-    account: "Cuenta", email: "Correo", nickname: "Apodo", nicknamePlaceholder: "Se muestra en lugar de tu correo", memberSince: "Miembro desde", region: "Región", globalCitizen: "Ciudadanía global",
+    account: "Cuenta", email: "Correo", memberSince: "Miembro desde", region: "Región", globalCitizen: "Ciudadanía global",
     language: "Idioma", save: "Guardar", saved: "Guardado en tu cuenta de BillieWeather.", saveFailed: "No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.",
     manageOnline: "Gestionar tu cuenta en el sitio web", signOut: "Cerrar sesión", offlineAccount: "Sin conexión: se muestran los datos de cuenta guardados.",
     accountOnline: "Los datos de tu cuenta (correo, apodo, idioma, región y fecha de registro) se guardan en tu cuenta de BillieWeather para que sean iguales en todos tus dispositivos.",
@@ -282,4 +286,5 @@ export const es: Messages = {
   receipt: receiptEs,
   welcome: welcomeEs,
   register: registerEs,
+  personal: personal["es"],
 };

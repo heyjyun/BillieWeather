@@ -7,15 +7,19 @@ class GoogleRegionsController < ApplicationController
     @user = User.new
   end
 
+  # The last step of a Google sign-up: the person chooses their usage region and nickname.
+  # Only these two fields are read from the form; the identity comes from the verified session.
   def create
-    region = params.require(:user).permit(:usage_region)[:usage_region].to_s.strip.upcase.presence
-    @user = User.new(usage_region: region)
-    unless UsageRegion::CODES.include?(region)
-      @user.errors.add(:usage_region, region.nil? ? :blank : :inclusion)
-      return render :new, status: :unprocessable_entity
-    end
+    attributes = params.require(:user).permit(:usage_region, :nickname)
+    region = attributes[:usage_region].to_s.strip.upcase.presence
+    @user = User.new(usage_region: region, nickname: attributes[:nickname])
+    @user.validate
+    # Only the two fields on this form; email and password come from the verified Google identity.
+    (@user.errors.attribute_names - [:usage_region, :nickname]).each { |attribute| @user.errors.delete(attribute) }
+    @user.errors.add(:usage_region, region.nil? ? :blank : :inclusion) unless UsageRegion::CODES.include?(region) || @user.errors[:usage_region].any?
+    return render :new, status: :unprocessable_entity if @user.errors.any?
 
-    service = GoogleSignIn.new(auth: @pending_auth, usage_region: region,
+    service = GoogleSignIn.new(auth: @pending_auth, usage_region: region, nickname: @user.nickname,
       allow_signup: show_sign_up_options?, create_team: session[:invitation_uuid].blank?)
     user = service.call
     session.delete(:pending_google_signup)
@@ -24,7 +28,8 @@ class GoogleRegionsController < ApplicationController
     user.create_default_team unless user.teams.exists?
     user.send_welcome_email if service.created
     destination = after_sign_in_path_for(user)
-    redirect_to invitation_confirmation_path || destination, status: :see_other, notice: t("billie.auth.google_signed_in")
+    notice = service.created ? helpers.personal_message("welcome.notice", user) : t("billie.auth.google_signed_in")
+    redirect_to invitation_confirmation_path || destination, status: :see_other, notice: notice
   rescue GoogleSignIn::LinkRequired => error
     session.delete(:pending_google_signup)
     session[:pending_google_identity] = error.identity

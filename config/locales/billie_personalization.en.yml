@@ -1,0 +1,65 @@
+# Personalized messages: the single source of truth for the website and the apps.
+# clients/universal/scripts/sync-rails-translations.rb copies billie.personalization into
+# clients/universal/src/i18n/personal.json, so every platform says the same thing.
+#
+# Messages that can include the person's nickname come in two forms:
+#   named — used when the account has a nickname (%{name}; place it where it reads naturally)
+#   plain — used when it doesn't; never filled with an email address or a guessed name
+# Keep the tone calm and kind: acknowledge good news without exaggerating, and describe things that
+# need attention without judgment. Forecasts are estimates, never certainties.
+en:
+  billie:
+    personalization:
+      greeting:
+        morning: {named: "Good morning, %{name}!", plain: "Good morning!"}
+        afternoon: {named: "Good afternoon, %{name}!", plain: "Good afternoon!"}
+        evening: {named: "Good evening, %{name}!", plain: "Good evening!"}
+      dashboard:
+        morning: "Let's see how your finances are looking today."
+        afternoon: "Here's your latest financial outlook."
+        evening: "Let's take a quick look at your financial weather."
+        first_use: {named: "Hi %{name}, ready to understand your financial weather?", plain: "Ready to understand your financial weather?"}
+        attention: "A few transactions are waiting for a category whenever you're ready."
+      welcome:
+        title: {named: "Welcome to BillieWeather, %{name}!", plain: "Welcome to BillieWeather!"}
+        subtitle: "Let's make your financial future a little clearer."
+        notice: {named: "Welcome to BillieWeather, %{name}! Let's make your financial future a little clearer.", plain: "Welcome to BillieWeather! Let's make your financial future a little clearer."}
+      import_done: {named: "All set, %{name}! Your statement has been imported.", plain: "All set! Your statement has been imported."}
+      reconciled: {named: "Looking good, %{name}! Your transactions are reconciled.", plain: "Looking good! Your transactions are reconciled."}
+      insight_intro: {named: "%{name}, here's something worth keeping an eye on.", plain: "Here's something worth keeping an eye on."}
+      forecast:
+        stable: {named: "Your current forecast looks stable, %{name}. We'll highlight any changes worth reviewing.", plain: "Your current forecast looks stable. We'll highlight any changes worth reviewing."}
+        range_dips: {named: "Your projected balance stays above zero, %{name}, though the illustrative range dips lower. It may be worth keeping a little room.", plain: "Your projected balance stays above zero, though the illustrative range dips lower. It may be worth keeping a little room."}
+        gap: {named: "%{name}, there may be a cash flow gap ahead around %{date}. Let's explore your options.", plain: "There may be a cash flow gap ahead around %{date}. Let's explore your options."}
+        gap_help: "Try the income and spending adjustments to see what could help. This is an estimate based on your history, not a certainty."
+      nickname:
+        label: "Nickname"
+        required: "required"
+        placeholder: "What should we call you?"
+        help: "We'll use your nickname to make BillieWeather feel a little more personal. Up to 40 characters, in any language."
+        errors:
+          blank: "Please choose a nickname. Any name you like is fine."
+          too_long: "Use at most 40 characters."
+          invalid: "Remove unsupported characters."
+      nickname_prompt:
+        title: "What should we call you?"
+        body: "Add a nickname and BillieWeather will feel a little more like yours. Only you see it."
+        save: "Save nickname"
+        saving: "Saving…"
+        later: "Maybe later"
+        saved: "Nice to meet you, %{name}!"
+        failed: "Couldn't save just now. Check your connection and try again."
+      email:
+        subject: "Welcome to BillieWeather!"
+        preview: "Your financial weather, a little clearer every day."
+        heading: {named: "Welcome to BillieWeather, %{name}!", plain: "Welcome to BillieWeather!"}
+        body: "Let's make your financial future a little clearer. Import a bank statement (CSV or PDF) to see your income, spending, and cash-flow outlook in one calm place. BillieWeather never asks for your bank login."
+        cta: "Open your dashboard"
+        signoff: "Warmly, the BillieWeather team"
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            nickname:
+              blank: "can't be blank. Choose any name you'd like us to call you"

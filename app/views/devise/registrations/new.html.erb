@@ -7,7 +7,7 @@
     <%= render "devise/shared/google_sign_in" %>
     <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: {data: {turbo: false}}) do |form| %>
       <% if resource.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= resource.errors.full_messages.to_sentence %></div><% end %>
-      <div class="bw-form-field bw-field"><%= form.label :nickname, t("billie.account.nickname_optional") %><%= form.text_field :nickname, autocomplete: "nickname", maxlength: 40, "aria-describedby": "user_nickname_help" %><small id="user_nickname_help"><%= t("billie.account.nickname_help") %></small></div>
+      <%= render "shared/nickname_field", form: form %>
       <div class="bw-form-field bw-field">
         <%= form.label :usage_region, t("billie.region.label") %>
         <%= usage_region_select(form) %>

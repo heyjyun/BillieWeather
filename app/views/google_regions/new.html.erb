@@ -6,6 +6,7 @@
     <p class="bw-muted"><%= t("billie.google_region.intro") %></p>
     <% if @user.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= @user.errors.full_messages.to_sentence %></div><% end %>
     <%= form_with model: @user, scope: :user, url: google_region_path, method: :post, data: {turbo: false}, class: "bw-form" do |form| %>
+      <%= render "shared/nickname_field", form: form %>
       <div class="bw-form-field bw-field">
         <%= form.label :usage_region, t("billie.region.label") %>
         <%= usage_region_select(form) %>

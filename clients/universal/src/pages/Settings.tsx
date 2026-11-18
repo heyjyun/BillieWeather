@@ -4,6 +4,7 @@ import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, LanguageSelect, useI18n } from "../i18n";
 import { websiteUrl } from "../services/account";
+import { NICKNAME_MAX, normalizeNickname, validateNickname, type NicknameProblem } from "../services/profile";
 import { openExternal } from "../services/session";
 import { savedTheme, setTheme, type ThemeChoice } from "../services/theme";
 
@@ -25,6 +26,18 @@ export function Settings() {
   const [accountStatus, setAccountStatus] = useState("");
   const [theme, setThemeState] = useState<ThemeChoice>(savedTheme);
   const x = m.settings;
+  const n = m.personal.nickname;
+  const [nicknameProblem, setNicknameProblem] = useState<NicknameProblem | null>(null);
+
+  // Any language, not unique; it can be changed but not cleared (the server enforces the same rule).
+  function saveNickname() {
+    const problem = validateNickname(nickname);
+    setNicknameProblem(problem);
+    if (problem) return setAccountStatus("");
+    const next = normalizeNickname(nickname)!;
+    setNickname(next);
+    void save({ nickname: next });
+  }
 
   async function save(preferences: Parameters<typeof savePreferences>[0]) {
     try {
@@ -50,10 +63,14 @@ export function Settings() {
           <div><dt>{x.region}</dt><dd>{regionName(account?.usageRegion, locale, x.globalCitizen)}</dd></div>
         </dl>
         <div className="bw-account-form">
-          <label className="bw-field"><span>{x.nickname}</span>
-            <input value={nickname} maxLength={40} placeholder={x.nicknamePlaceholder} onChange={(e) => setNickname(e.target.value)} />
+          <label className="bw-field"><span>{n.label}<span className="bw-required-mark" aria-hidden="true">*</span><span className="bw-visually-hidden"> ({n.required})</span></span>
+            <input value={nickname} maxLength={NICKNAME_MAX} placeholder={n.placeholder} autoComplete="nickname" autoCapitalize="words" spellCheck={false} required
+              aria-invalid={nicknameProblem ? true : undefined} aria-describedby={nicknameProblem ? "settings-nickname-help settings-nickname-error" : "settings-nickname-help"}
+              onChange={(e) => { setNickname(e.target.value); setNicknameProblem(null); }} />
+            <small id="settings-nickname-help">{n.help}</small>
+            {nicknameProblem && <small id="settings-nickname-error" className="bw-field-error">{n.errors[nicknameProblem]}</small>}
           </label>
-          <button type="button" className="bw-button bw-button-outline" disabled={nickname.trim() === (account?.nickname ?? "")} onClick={() => save({ nickname: nickname.trim() })}>{x.save}</button>
+          <button type="button" className="bw-button bw-button-outline" disabled={normalizeNickname(nickname) === normalizeNickname(account?.nickname) && nickname.trim() !== ""} onClick={saveNickname}>{x.save}</button>
           <label className="bw-field"><span>{x.language}</span>
             <LanguageSelect id="settings-language" onChange={(next) => save({ locale: next })} />
           </label>

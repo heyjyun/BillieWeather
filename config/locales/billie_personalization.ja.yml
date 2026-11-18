@@ -1,0 +1,57 @@
+# See billie_personalization.en.yml for how these messages are used.
+ja:
+  billie:
+    personalization:
+      greeting:
+        morning: {named: "%{name}さん、おはようございます！", plain: "おはようございます！"}
+        afternoon: {named: "%{name}さん、こんにちは！", plain: "こんにちは！"}
+        evening: {named: "%{name}さん、こんばんは！", plain: "こんばんは！"}
+      dashboard:
+        morning: "今日のお金の様子を見てみましょう。"
+        afternoon: "最新の家計の見通しはこちらです。"
+        evening: "お金の天気を少しだけ確認しておきましょう。"
+        first_use: {named: "%{name}さん、お金の天気をのぞいてみませんか？", plain: "お金の天気をのぞいてみませんか？"}
+        attention: "カテゴリを待っている取引がいくつかあります。お手すきのときにどうぞ。"
+      welcome:
+        title: {named: "%{name}さん、BillieWeather へようこそ！", plain: "BillieWeather へようこそ！"}
+        subtitle: "これからのお金の流れを、少しずつはっきりさせていきましょう。"
+        notice: {named: "%{name}さん、BillieWeather へようこそ！これからのお金の流れを、少しずつはっきりさせていきましょう。", plain: "BillieWeather へようこそ！これからのお金の流れを、少しずつはっきりさせていきましょう。"}
+      import_done: {named: "%{name}さん、完了です！明細を取り込みました。", plain: "完了です！明細を取り込みました。"}
+      reconciled: {named: "%{name}さん、順調です！取引の照合が完了しました。", plain: "順調です！取引の照合が完了しました。"}
+      insight_intro: {named: "%{name}さん、気に留めておきたいポイントがあります。", plain: "気に留めておきたいポイントがあります。"}
+      forecast:
+        stable: {named: "%{name}さん、現在の予測は安定しているようです。確認したほうがよい変化があればお知らせします。", plain: "現在の予測は安定しているようです。確認したほうがよい変化があればお知らせします。"}
+        range_dips: {named: "%{name}さん、予測残高はゼロを上回っていますが、参考範囲の下限はそれより低くなっています。少し余裕を持っておくと安心かもしれません。", plain: "予測残高はゼロを上回っていますが、参考範囲の下限はそれより低くなっています。少し余裕を持っておくと安心かもしれません。"}
+        gap: {named: "%{name}さん、%{date}ごろに資金が不足する可能性があります。一緒に選択肢を見てみましょう。", plain: "%{date}ごろに資金が不足する可能性があります。一緒に選択肢を見てみましょう。"}
+        gap_help: "収入や支出の調整を試して、どんな対策が役立ちそうか確かめてみてください。これは過去の記録にもとづく見積もりで、確実なものではありません。"
+      nickname:
+        label: "ニックネーム"
+        required: "必須"
+        placeholder: "何とお呼びしましょうか？"
+        help: "ニックネームを使って、BillieWeather をもっと身近に感じられるようにします。40文字まで、どの言語でも使えます。"
+        errors:
+          blank: "ニックネームを入力してください。お好きな呼び名で大丈夫です。"
+          too_long: "40 文字以内にしてください。"
+          invalid: "使用できない文字を削除してください。"
+      nickname_prompt:
+        title: "何とお呼びしましょうか？"
+        body: "ニックネームを設定すると、BillieWeather がもう少しあなたらしくなります。表示されるのはあなただけです。"
+        save: "ニックネームを保存"
+        saving: "保存しています…"
+        later: "あとで"
+        saved: "%{name}さん、よろしくお願いします！"
+        failed: "今は保存できませんでした。接続を確認して、もう一度お試しください。"
+      email:
+        subject: "BillieWeather へようこそ！"
+        preview: "お金の天気を、毎日少しずつはっきりと。"
+        heading: {named: "%{name}さん、BillieWeather へようこそ！", plain: "BillieWeather へようこそ！"}
+        body: "これからのお金の流れを、少しずつはっきりさせていきましょう。銀行の明細（CSV または PDF）を取り込むと、収入・支出・資金繰りの見通しをひとつの落ち着いた画面で確認できます。BillieWeather が銀行のログイン情報を求めることはありません。"
+        cta: "ダッシュボードを開く"
+        signoff: "BillieWeather チームより"
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            nickname:
+              blank: "を入力してください（お好きな呼び名で大丈夫です）"

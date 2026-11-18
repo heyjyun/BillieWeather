@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { LanguageSelect, useI18n } from "../i18n";
+import { interpolate, LanguageSelect, useI18n } from "../i18n";
 import { useAccount } from "../hooks/useAccount";
-import { AccountError, websiteUrl } from "../services/account";
+import { API_ORIGIN, AccountError, websiteUrl } from "../services/account";
 import { openExternal } from "../services/session";
 import { BrandMark } from "../components/BrandMark";
 
@@ -33,7 +33,7 @@ export function Login({ onCreateAccount, initialEmail = "" }: {
       const code = caught instanceof AccountError ? caught.code : "unknown";
       if (code === "otp_required") setNeedsOtp(true);
       const messages = m.login.errors as Record<string, string>;
-      setError(messages[code] ?? m.login.errors.unknown);
+      setError(interpolate(messages[code] ?? m.login.errors.unknown, { host: new URL(API_ORIGIN).host }));
       setPassword(code === "otp_required" || code === "invalid_otp" ? password : "");
     } finally {
       setBusy(false);

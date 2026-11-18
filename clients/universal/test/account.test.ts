@@ -1,4 +1,4 @@
-import { AccountError, API_ORIGIN, fetchAccount, signIn, updateAccount, websiteUrl } from "../src/services/account";
+import { AccountError, API_ORIGIN, fetchAccount, isNetworkFailure, networkFailure, signIn, updateAccount, USES_LOCAL_SERVER, websiteUrl } from "../src/services/account";
 
 function mockFetch(status: number, body: unknown) {
   return vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(status === 204 ? null : JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } }));
@@ -46,11 +46,22 @@ describe("account service", () => {
     await expect(fetchAccount("tok")).rejects.toMatchObject({ code });
   });
 
-  it("reports offline when the server cannot be reached", async () => {
+  it("says WHY the server cannot be reached instead of always blaming the internet", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
-    const error = await signIn("a@example.com", "x").catch((e) => e);
-    expect(error).toBeInstanceOf(AccountError);
-    expect(error.code).toBe("offline");
+    // Tests build without VITE_BILLIE_API_URL, i.e. like a development build on localhost.
+    expect(USES_LOCAL_SERVER).toBe(true);
+    const local = await signIn("a@example.com", "x").catch((e) => e);
+    expect(local).toBeInstanceOf(AccountError);
+    expect(local.code).toBe("local_server_down");
+    // A release build whose server does not answer while the network is up.
+    expect(networkFailure(false)).toBe("unreachable");
+    // No network on this device at all.
+    vi.stubGlobal("navigator", { onLine: false });
+    expect((await signIn("a@example.com", "x").catch((e) => e)).code).toBe("offline");
+    expect(networkFailure(false)).toBe("offline");
+    vi.unstubAllGlobals();
+    expect(["offline", "unreachable", "local_server_down"].every(isNetworkFailure)).toBe(true);
+    expect(isNetworkFailure("invalid_credentials")).toBe(false);
   });
 
   it("builds website links on the same server, in the chosen language", () => {

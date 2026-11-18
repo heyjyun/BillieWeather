@@ -1,8 +1,15 @@
 <% content_for :title, t("billie.finance.ui.dashboard") %>
-<div class="bw-page-heading">
+<% greeting_time = personal_time %>
+<% day_part = Personalization.day_part(greeting_time) %>
+<div class="bw-page-heading bw-greeting-heading">
   <div>
     <span class="bw-eyebrow"><%= t("billie.finance.ui.your_money_in_focus") %></span>
-    <h1><%= t("billie.finance.ui.a_clearer_financial_picture") %></h1>
+    <h1 class="bw-greeting" id="dashboard-greeting" data-day-part="<%= day_part %>">
+      <span class="bw-greeting-glyph bw-greeting-<%= day_part %>" aria-hidden="true"><%= finance_icon({morning: "sun", afternoon: "cloud-sun", evening: "moon"}.fetch(day_part), size: 22) %></span>
+      <span><%= personal_greeting(time: greeting_time) %></span>
+    </h1>
+    <p class="bw-greeting-subtitle" id="dashboard-greeting-subtitle"><%= Personalization.dashboard_subtitle(time: greeting_time,
+          has_transactions: @has_transactions, needs_attention: @snapshot.present? && @snapshot[:uncategorized_count].to_i.positive?) %></p>
     <p>
       <% if @date_filter_error %>
         <%= t("billie.finance.ui.date_range_not_applied") %>
@@ -24,6 +31,8 @@
     <% end %>
   </div>
 </div>
+
+<%= render "finance/dashboard/nickname_prompt" if show_nickname_prompt? %>
 
 <section class="bw-dashboard-period" aria-labelledby="dashboard-period-heading">
   <div class="bw-dashboard-period-heading">

@@ -9,15 +9,15 @@ import { useAccount } from "../hooks/useAccount";
 import { interpolate, LanguageSelect, useI18n } from "../i18n";
 import { GLOBAL_CITIZEN, matchesRegion, regionOptions, REGION_CODES } from "../services/regions";
 import {
-  cancelGoogle, completeGoogle, confirmRegistration, fetchIdentityConfig, googleStatus, linkGoogle, RegistrationError, resendCode,
+  cancelGoogle, completeGoogle, confirmRegistration, fetchIdentityConfig, googleStatus, IDENTITY_ORIGIN, linkGoogle, RegistrationError, resendCode,
   startGoogle, startRegistration, type GoogleFlow, type GoogleStatus, type PendingRegistration,
 } from "../services/registration";
 import { openExternal } from "../services/session";
+import { NICKNAME_MAX, normalizeNickname, validateNickname } from "../services/profile";
 import "./Register.css";
 
 export const PASSWORD_MIN = 6;
 export const PASSWORD_MAX = 128;
-const NICKNAME_MAX = 40;
 const RESEND_SECONDS = 60;
 const POLL_MS = 2000;
 // The same rule as Devise (config.email_regexp); the server re-checks everything.
@@ -41,7 +41,9 @@ export function validateSignUp(values: SignUpValues, { email = true }: { email?:
   if (values.confirmation !== values.password) errors.password_confirmation = ["mismatch"];
   if (!values.region) errors.usage_region = ["blank"];
   else if (values.region !== GLOBAL_CITIZEN && !REGION_CODES.includes(values.region)) errors.usage_region = ["inclusion"];
-  if (values.nickname.trim().split(/\s+/).join(" ").length > NICKNAME_MAX) errors.nickname = ["too_long"];
+  // Required for every new account (email and Google alike); any language, not unique.
+  const nickname = validateNickname(values.nickname);
+  if (nickname) errors.nickname = [nickname];
   return errors;
 }
 
@@ -78,15 +80,23 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
 
   const set = (name: keyof SignUpValues) => (value: string) => setValues((current) => ({ ...current, [name]: value }));
 
-  useEffect(() => {
+  // Whether the account service answers. When it doesn't, say why (and offer a retry) before the
+  // person fills in the form; the form still works and re-checks on submit.
+  const [service, setService] = useState<"checking" | "ready" | RegistrationError>("checking");
+  const checkService = useCallback(() => {
     let cancelled = false;
+    setService("checking");
     fetchIdentityConfig().then((config) => {
       if (cancelled) return;
       setGoogle(config.googleAvailable);
       setClosed(!config.registrationOpen);
-    }).catch(() => undefined); // offline: the form still works and reports the problem on submit
+      setService("ready");
+    }).catch((caught: unknown) => {
+      if (!cancelled) setService(caught instanceof RegistrationError ? caught : new RegistrationError("unknown"));
+    });
     return () => { cancelled = true; };
   }, []);
+  useEffect(() => checkService(), [checkService]);
 
   // Move focus to the new screen's heading, so keyboard and screen-reader users land on it.
   useEffect(() => {
@@ -105,10 +115,11 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
     const failure = caught instanceof RegistrationError ? caught : new RegistrationError("unknown");
     const table = r.errors as Record<string, string>;
     const text = table[failure.code] ?? r.errors.unknown;
-    return interpolate(text, { remaining: failure.attemptsRemaining ?? 0, seconds: failure.retryAfter ?? RESEND_SECONDS });
+    return interpolate(text, { remaining: failure.attemptsRemaining ?? 0, seconds: failure.retryAfter ?? RESEND_SECONDS, host: new URL(IDENTITY_ORIGIN).host });
   }, [r]);
 
   const fieldText = (field: string, problem: string) => {
+    if (field === "nickname") return (m.personal.nickname.errors as Record<string, string>)[problem] ?? r.fix;
     const table = r.fields as Record<string, string>;
     return interpolate(table[`${field}_${problem}`] ?? r.fix, { min: PASSWORD_MIN, max: PASSWORD_MAX });
   };
@@ -156,7 +167,7 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
     try {
       const pending = await startRegistration({
         email: values.email.trim(), password: values.password, passwordConfirmation: values.confirmation,
-        usageRegion: values.region, nickname: values.nickname.trim(), locale,
+        usageRegion: values.region, nickname: normalizeNickname(values.nickname) ?? "", locale,
       });
       setCode("");
       setResendAt(Date.now() + RESEND_SECONDS * 1000);
@@ -279,7 +290,7 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
     if (Object.keys(errors).length) return showFields(errors);
     setBusy(true);
     try {
-      await completeGoogle(flow, { password: values.password, passwordConfirmation: values.confirmation, usageRegion: values.region, nickname: values.nickname.trim() });
+      await completeGoogle(flow, { password: values.password, passwordConfirmation: values.confirmation, usageRegion: values.region, nickname: normalizeNickname(values.nickname) ?? "" });
       await finish(email, values.password);
     } catch (caught) {
       handleFailure(caught);
@@ -341,7 +352,13 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
         <form ref={formRef} onSubmit={submitForm} className="bw-login-form" noValidate aria-describedby="register-privacy">
           {messages}
           {closed && <p className="bw-message bw-message-warn" role="status">{r.errors.registration_closed}</p>}
-          <TextField label={r.nickname} help={r.nicknameHelp} value={values.nickname} onChange={set("nickname")} autoComplete="nickname" maxLength={NICKNAME_MAX} disabled={busy} {...fieldProps("nickname")} />
+          {service instanceof RegistrationError && !error && (
+            <p className="bw-message bw-message-warn" role="status">
+              {errorText(service)}{" "}
+              <button type="button" className="bw-link-button" onClick={() => { checkService(); }}>{r.retry}</button>
+            </p>
+          )}
+          <NicknameField value={values.nickname} onChange={set("nickname")} disabled={busy} {...fieldProps("nickname")} />
           <RegionField value={values.region} onChange={set("region")} disabled={busy} {...fieldProps("usage_region")} />
           <TextField label={r.email} type="email" value={values.email} onChange={set("email")} autoComplete="email" inputMode="email" required disabled={busy} {...fieldProps("email")} />
           <PasswordField label={r.password} help={interpolate(r.passwordHelp, { min: PASSWORD_MIN })} value={values.password} onChange={set("password")} autoComplete="new-password" disabled={busy} {...fieldProps("password")} />
@@ -396,7 +413,7 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
         <p className="bw-muted">{interpolate(r.googleFlow.newIntro, { email })}</p>
         <form ref={formRef} onSubmit={(event) => void submitGoogleNew(event, flow, email)} className="bw-login-form" noValidate>
           {messages}
-          <TextField label={r.nickname} help={r.nicknameHelp} value={values.nickname} onChange={set("nickname")} autoComplete="nickname" maxLength={NICKNAME_MAX} disabled={busy} {...fieldProps("nickname")} />
+          <NicknameField value={values.nickname} onChange={set("nickname")} disabled={busy} {...fieldProps("nickname")} />
           <RegionField value={values.region} onChange={set("region")} disabled={busy} {...fieldProps("usage_region")} />
           <input type="email" value={email} autoComplete="username" readOnly hidden />
           <PasswordField label={r.password} help={interpolate(r.passwordHelp, { min: PASSWORD_MIN })} value={values.password} onChange={set("password")} autoComplete="new-password" disabled={busy} {...fieldProps("password")} />
@@ -477,18 +494,30 @@ function FieldMessages({ id, help, errors }: { id: string; help?: string; errors
   );
 }
 
-function TextField({ label, value, onChange, field, errors, help, disabled, type = "text", autoComplete, inputMode, maxLength, required, className, autoFocus }: FieldBase & {
+function TextField({ label, value, onChange, field, errors, help, disabled, type = "text", autoComplete, inputMode, maxLength, required, requiredLabel, placeholder, autoCapitalize = "none", className, autoFocus }: FieldBase & {
   type?: string; autoComplete?: string; inputMode?: "email" | "numeric" | "text"; maxLength?: number; required?: boolean; className?: string; autoFocus?: boolean;
+  /** Shows a visual required marker, announced to screen readers as this text. */
+  requiredLabel?: string; placeholder?: string; autoCapitalize?: "none" | "words";
 }) {
   const id = useId();
   return (
     <div className="bw-field">
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>{label}{requiredLabel && <><span className="bw-required-mark" aria-hidden="true">*</span><span className="bw-visually-hidden"> ({requiredLabel})</span></>}</label>
       <input id={id} data-field={field} type={type} value={value} onChange={(event) => onChange(event.target.value)} autoComplete={autoComplete} inputMode={inputMode}
-        maxLength={maxLength} required={required} disabled={disabled} className={className} autoFocus={autoFocus} spellCheck={false} autoCapitalize="none"
+        maxLength={maxLength} required={required} disabled={disabled} className={className} autoFocus={autoFocus} spellCheck={false} autoCapitalize={autoCapitalize} placeholder={placeholder}
         aria-invalid={errors.length > 0 || undefined} aria-describedby={describedBy(id, help, errors)} />
       <FieldMessages id={id} help={help} errors={errors} />
     </div>
+  );
+}
+
+/** The required nickname, with the same copy on every sign-up path. */
+function NicknameField({ value, onChange, field, errors, disabled }: Omit<FieldBase, "label" | "help">) {
+  const { m } = useI18n();
+  const n = m.personal.nickname;
+  return (
+    <TextField label={n.label} requiredLabel={n.required} help={n.help} placeholder={n.placeholder} value={value} onChange={onChange} autoComplete="nickname"
+      autoCapitalize="words" maxLength={NICKNAME_MAX} required disabled={disabled} field={field} errors={errors} />
   );
 }
 

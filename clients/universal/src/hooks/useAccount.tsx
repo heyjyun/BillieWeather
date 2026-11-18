@@ -1,7 +1,7 @@
 // Who is signed in. Signing in needs the internet once; afterwards the app opens with
 // the saved session and cached account details, and refreshes them when online.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AccountError, fetchAccount, signIn as apiSignIn, signOutRemote, updateAccount, type Account, type AccountPreferences } from "../services/account";
+import { AccountError, fetchAccount, isNetworkFailure, signIn as apiSignIn, signOutRemote, updateAccount, type Account, type AccountPreferences } from "../services/account";
 import { cacheAccount, clearSession, loadCachedAccount, loadToken, saveToken } from "../services/session";
 import { isLocale, useI18n, type Locale } from "../i18n";
 
@@ -11,6 +11,12 @@ interface AccountContextValue {
   status: Status;
   account: Account | null;
   offline: boolean;
+  /** Why the server can't be reached while signed in from the cached session: no network, or the server isn't answering. */
+  offlineReason: "offline" | "unreachable" | null;
+  /** True while reconnect() is checking the server. */
+  reconnecting: boolean;
+  /** Checks the server again now (the Retry button); local data stays open whatever the outcome. */
+  reconnect: () => Promise<void>;
   signIn: (email: string, password: string, otp?: string) => Promise<void>;
   signOut: () => Promise<void>;
   savePreferences: (preferences: AccountPreferences) => Promise<void>;
@@ -27,7 +33,13 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const { locale, setLocale } = useI18n();
   const [status, setStatus] = useState<Status>("loading");
   const [account, setAccount] = useState<Account | null>(null);
-  const [offline, setOffline] = useState(false);
+  const [offlineReason, setOfflineReason] = useState<"offline" | "unreachable" | null>(null);
+  const offline = offlineReason !== null;
+  const setOffline = useCallback((value: boolean | "offline" | "unreachable") => {
+    setOfflineReason(value === false ? null : value === "offline" ? "offline" : "unreachable");
+  }, []);
+  const [reconnecting, setReconnecting] = useState(false);
+  const verifyRef = useRef<((saved: string, cached: Account | null) => Promise<void>) | null>(null);
   const token = useRef<string | null>(null);
   // Keychain and cached account writes can be interrupted independently. Until the server binds
   // this token to an identity, cached local data may be opened offline but must not sync or upload.
@@ -61,7 +73,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         if (cancelled || token.current !== saved) return;
         if (error instanceof AccountError && error.code === "unauthorized") return forget();
         // Offline (or server trouble): keep working with the cached account if we have one.
-        setOffline(true);
+        setOffline(error instanceof AccountError && error.code === "offline" ? "offline" : "unreachable");
         if (!cached) setStatus("signedOut");
       }
     };
@@ -78,10 +90,22 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       }
       await verify(saved, cached);
     })();
+    verifyRef.current = verify;
     const reconnect = () => { if (token.current) void verify(token.current, loadCachedAccount()); };
     window.addEventListener("online", reconnect);
-    return () => { cancelled = true; window.removeEventListener("online", reconnect); };
-  }, [adopt, forget]);
+    return () => { cancelled = true; verifyRef.current = null; window.removeEventListener("online", reconnect); };
+  }, [adopt, forget, setOffline]);
+
+  const reconnect = useCallback(async () => {
+    const saved = token.current;
+    if (!saved || !verifyRef.current) return;
+    setReconnecting(true);
+    try {
+      await verifyRef.current(saved, loadCachedAccount());
+    } finally {
+      setReconnecting(false);
+    }
+  }, []);
 
   const signIn = useCallback(async (email: string, password: string, otp?: string) => {
     const result = await apiSignIn(email, password, otp);
@@ -111,14 +135,14 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       setOffline(false);
     } catch (error) {
       if (error instanceof AccountError && error.code === "unauthorized") await forget();
-      if (error instanceof AccountError && error.code === "offline") setOffline(true);
+      if (error instanceof AccountError && isNetworkFailure(error.code)) setOffline(error.code === "offline" ? "offline" : "unreachable");
       throw error;
     }
-  }, [adopt, forget, account]);
+  }, [adopt, forget, account, setOffline]);
 
   const getToken = useCallback(() => tokenOwner.current !== null && tokenOwner.current === identityOf(account) ? token.current : null, [account]);
-  const value = useMemo(() => ({ status, account, offline, signIn, signOut, savePreferences, getToken, expire: forget }),
-    [status, account, offline, signIn, signOut, savePreferences, getToken, forget]);
+  const value = useMemo(() => ({ status, account, offline, offlineReason, reconnecting, reconnect, signIn, signOut, savePreferences, getToken, expire: forget }),
+    [status, account, offline, offlineReason, reconnecting, reconnect, signIn, signOut, savePreferences, getToken, forget]);
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }
 

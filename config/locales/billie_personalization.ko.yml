@@ -1,0 +1,57 @@
+# See billie_personalization.en.yml for how these messages are used.
+ko:
+  billie:
+    personalization:
+      greeting:
+        morning: {named: "%{name}님, 좋은 아침이에요!", plain: "좋은 아침이에요!"}
+        afternoon: {named: "%{name}님, 좋은 오후예요!", plain: "좋은 오후예요!"}
+        evening: {named: "%{name}님, 좋은 저녁이에요!", plain: "좋은 저녁이에요!"}
+      dashboard:
+        morning: "오늘의 재무 상황을 함께 살펴볼까요?"
+        afternoon: "최신 재무 전망을 확인해 보세요."
+        evening: "잠깐 재무 날씨를 확인해 볼까요?"
+        first_use: {named: "%{name}님, 재무 날씨를 알아볼 준비가 되셨나요?", plain: "재무 날씨를 알아볼 준비가 되셨나요?"}
+        attention: "분류를 기다리는 거래가 몇 건 있어요. 편하실 때 확인해 주세요."
+      welcome:
+        title: {named: "%{name}님, BillieWeather에 오신 것을 환영해요!", plain: "BillieWeather에 오신 것을 환영해요!"}
+        subtitle: "앞으로의 재무 흐름을 조금 더 선명하게 만들어 봐요."
+        notice: {named: "%{name}님, BillieWeather에 오신 것을 환영해요! 앞으로의 재무 흐름을 조금 더 선명하게 만들어 봐요.", plain: "BillieWeather에 오신 것을 환영해요! 앞으로의 재무 흐름을 조금 더 선명하게 만들어 봐요."}
+      import_done: {named: "%{name}님, 완료됐어요! 명세서를 가져왔어요.", plain: "완료됐어요! 명세서를 가져왔어요."}
+      reconciled: {named: "%{name}님, 좋아요! 거래 대사가 완료됐어요.", plain: "좋아요! 거래 대사가 완료됐어요."}
+      insight_intro: {named: "%{name}님, 눈여겨볼 만한 점이 있어요.", plain: "눈여겨볼 만한 점이 있어요."}
+      forecast:
+        stable: {named: "%{name}님, 현재 예측은 안정적으로 보여요. 확인할 만한 변화가 생기면 알려 드릴게요.", plain: "현재 예측은 안정적으로 보여요. 확인할 만한 변화가 생기면 알려 드릴게요."}
+        range_dips: {named: "%{name}님, 예상 잔액은 0원 이상을 유지하지만 참고 범위의 하단은 더 낮아요. 여유를 조금 남겨 두면 좋을 수 있어요.", plain: "예상 잔액은 0원 이상을 유지하지만 참고 범위의 하단은 더 낮아요. 여유를 조금 남겨 두면 좋을 수 있어요."}
+        gap: {named: "%{name}님, %{date} 무렵 현금 흐름이 부족해질 수 있어요. 함께 방법을 찾아봐요.", plain: "%{date} 무렵 현금 흐름이 부족해질 수 있어요. 함께 방법을 찾아봐요."}
+        gap_help: "수입과 지출 조정을 바꿔 보며 어떤 방법이 도움이 될지 확인해 보세요. 이 예측은 과거 기록을 바탕으로 한 추정이며 확실한 것은 아니에요."
+      nickname:
+        label: "닉네임"
+        required: "필수"
+        placeholder: "어떻게 불러 드릴까요?"
+        help: "닉네임을 사용해 BillieWeather를 조금 더 친근하게 만들어 드릴게요. 최대 40자, 어떤 언어든 괜찮아요."
+        errors:
+          blank: "닉네임을 입력해 주세요. 불리고 싶은 이름이면 무엇이든 괜찮아요."
+          too_long: "40자 이하로 입력하세요."
+          invalid: "지원되지 않는 문자를 삭제하세요."
+      nickname_prompt:
+        title: "어떻게 불러 드릴까요?"
+        body: "닉네임을 추가하면 BillieWeather가 조금 더 나만의 공간처럼 느껴질 거예요. 닉네임은 본인에게만 보여요."
+        save: "닉네임 저장"
+        saving: "저장 중…"
+        later: "나중에"
+        saved: "반가워요, %{name}님!"
+        failed: "지금은 저장할 수 없어요. 연결을 확인한 뒤 다시 시도해 주세요."
+      email:
+        subject: "BillieWeather에 오신 것을 환영해요!"
+        preview: "재무 날씨를 매일 조금 더 선명하게."
+        heading: {named: "%{name}님, BillieWeather에 오신 것을 환영해요!", plain: "BillieWeather에 오신 것을 환영해요!"}
+        body: "앞으로의 재무 흐름을 조금 더 선명하게 만들어 봐요. 은행 명세서(CSV 또는 PDF)를 가져오면 수입, 지출, 현금 흐름 전망을 차분한 한 화면에서 볼 수 있어요. BillieWeather는 은행 로그인 정보를 절대 요구하지 않아요."
+        cta: "대시보드 열기"
+        signoff: "BillieWeather 팀 드림"
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            nickname:
+              blank: "입력해 주세요. 불리고 싶은 이름이면 무엇이든 괜찮아요"

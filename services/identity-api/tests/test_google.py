@@ -102,11 +102,14 @@ def test_new_google_account_is_created_with_a_password_for_the_app(gclient, goog
     status = flow.post("status").json()
     assert status["status"] == "verified" and status["outcome"] == "new_account" and status["email"] == "person@gmail.com"
 
-    created = flow.post("complete", password="app passphrase", password_confirmation="app passphrase", usage_region="XG", nickname="")
+    # A nickname is required here too: Google's profile name is never used in its place.
+    missing = flow.post("complete", password="app passphrase", password_confirmation="app passphrase", usage_region="XG", nickname="  ")
+    assert missing.status_code == 422 and missing.json()["fields"] == {"nickname": ["blank"]}
+    created = flow.post("complete", password="app passphrase", password_confirmation="app passphrase", usage_region="XG", nickname=" 小雨 ")
     assert created.status_code == 201, created.text
     assert created.json() == {"status": "created", "email": "person@gmail.com"}
     [user] = sql.execute("SELECT * FROM public.users").fetchall()
-    assert user["google_uid"] == "1098765" and user["usage_region"] == "XG" and user["locale"] == "zh-CN"
+    assert user["google_uid"] == "1098765" and user["usage_region"] == "XG" and user["locale"] == "zh-CN" and user["nickname"] == "小雨"
     assert verify_password("app passphrase", user["encrypted_password"])
     assert sql.execute("SELECT count(*) AS n FROM public.memberships").fetchone()["n"] == 1
     # Single use.
@@ -121,7 +124,7 @@ def test_complete_validates_region_and_password(gclient, google):
     signed_in_to_google(google, flow)
     response = flow.post("complete", password="abc", password_confirmation="abd", usage_region="ZZ")
     assert response.status_code == 422
-    assert response.json()["fields"] == {"password": ["too_short"], "password_confirmation": ["mismatch"], "usage_region": ["inclusion"]}
+    assert response.json()["fields"] == {"password": ["too_short"], "password_confirmation": ["mismatch"], "usage_region": ["inclusion"], "nickname": ["blank"]}
 
 
 def test_already_linked_google_identity(gclient, google, sql):

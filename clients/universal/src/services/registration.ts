@@ -7,12 +7,15 @@ const configured = (import.meta.env.VITE_BILLIE_IDENTITY_URL as string | undefin
 /** Origin of the identity service, set at build time by scripts/tauri.mjs (BILLIE_IDENTITY_URL). */
 export const IDENTITY_ORIGIN = new URL(configured || "http://localhost:8100").origin;
 const API = `${IDENTITY_ORIGIN}/v1`;
+/** A development build pointing at the identity service on this computer (scripts/tauri.mjs refuses this for release builds). */
+export const IDENTITY_IS_LOCAL = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(IDENTITY_ORIGIN);
 
 export type RegistrationErrorCode =
   | "invalid" | "invalid_code" | "code_expired" | "registration_expired" | "too_many_attempts" | "email_taken"
   | "resend_too_soon" | "resend_limit" | "already_confirmed" | "rate_limited" | "registration_closed" | "mail_unavailable"
   | "google_unavailable" | "flow_not_ready" | "invalid_password" | "google_taken" | "otp_required" | "locked"
-  | "google_other_account" | "account_unavailable" | "not_found" | "service_not_ready" | "offline" | "unknown";
+  | "google_other_account" | "account_unavailable" | "not_found" | "service_not_ready"
+  | "offline" | "unreachable" | "local_server_down" | "unknown";
 
 const KNOWN: readonly RegistrationErrorCode[] = [
   "invalid", "invalid_code", "code_expired", "registration_expired", "too_many_attempts", "email_taken",
@@ -44,7 +47,10 @@ async function call<T>(path: string, method: "GET" | "POST", body?: Record<strin
       cache: "no-store",
     });
   } catch {
-    throw new RegistrationError("offline");
+    // No answer at all. Say which: no network on this device, a local dev service that is not
+    // running, or a server that is down — not always "check your internet".
+    const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+    throw new RegistrationError(offline ? "offline" : IDENTITY_IS_LOCAL ? "local_server_down" : "unreachable");
   }
   if (response.status === 204) return undefined as T;
   const json = (await response.json().catch(() => ({}))) as Record<string, unknown>;

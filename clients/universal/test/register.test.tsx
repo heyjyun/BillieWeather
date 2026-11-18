@@ -18,6 +18,8 @@ const { SignedOut } = await import("../src/pages/SignedOut");
 const { Register, validateSignUp } = await import("../src/pages/Register");
 
 const en = MESSAGES.en.register;
+// The nickname label also carries a visual "*" and a screen-reader "(required)".
+const nicknameLabel = (locale: Locale = "en") => new RegExp(`^${MESSAGES[locale].personal.nickname.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
 type Handler = (path: string, body: Record<string, unknown>) => { status: number; body?: unknown; headers?: Record<string, string> };
 let routes: Record<string, Handler>;
 const requests: Array<{ path: string; body: Record<string, unknown> }> = [];
@@ -49,7 +51,8 @@ function show(locale: Locale = "en", onBack = vi.fn()) {
 
 const type = (label: string | RegExp, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
-function fillForm({ email = "New@Example.org", password = "a unique passphrase", confirmation }: { email?: string; password?: string; confirmation?: string } = {}) {
+function fillForm({ email = "New@Example.org", password = "a unique passphrase", confirmation, nickname = "Billie" }: { email?: string; password?: string; confirmation?: string; nickname?: string | null } = {}) {
+  if (nickname !== null) type(nicknameLabel(), nickname);
   type(en.email, email);
   type(en.password, password);
   type(en.confirmPassword, confirmation ?? password);
@@ -92,7 +95,11 @@ describe("validation", () => {
     expect(email.getAttribute("aria-invalid")).toBe("true");
     expect(screen.getByText(en.fields.email_blank)).toBeTruthy();
     expect(screen.getByText(en.fields.password_blank)).toBeTruthy();
-    await waitFor(() => expect(document.activeElement).toBe(email)); // focus moves to the first problem
+    // The nickname is required and comes first, so focus moves there.
+    const nickname = screen.getByLabelText(nicknameLabel());
+    expect(nickname.getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByText(MESSAGES.en.personal.nickname.errors.blank)).toBeTruthy();
+    await waitFor(() => expect(document.activeElement).toBe(nickname)); // focus moves to the first problem
     expect(requests.filter((r) => r.path.startsWith("POST"))).toEqual([]);
   });
 
@@ -108,8 +115,14 @@ describe("validation", () => {
   });
 
   it("mirrors the server rules", () => {
-    const base = { nickname: "", region: "JP", email: "a@b.c", password: "123456", confirmation: "123456" };
+    const base = { nickname: "Billie", region: "JP", email: "a@b.c", password: "123456", confirmation: "123456" };
     expect(validateSignUp(base)).toEqual({});
+    // Required, trimmed, any script, at most 40 characters (code points, like the server).
+    expect(validateSignUp({ ...base, nickname: "" })).toEqual({ nickname: ["blank"] });
+    expect(validateSignUp({ ...base, nickname: " \t\u3000 " })).toEqual({ nickname: ["blank"] });
+    expect(validateSignUp({ ...base, nickname: "\u200b" })).toEqual({ nickname: ["blank"] });
+    expect(validateSignUp({ ...base, nickname: "Bil\u0007lie" })).toEqual({ nickname: ["invalid"] });
+    for (const nickname of ["小雨", "ジュン", "윤", "José", "🌤".repeat(40)]) expect(validateSignUp({ ...base, nickname })).toEqual({});
     expect(validateSignUp({ ...base, region: "" })).toEqual({ usage_region: ["blank"] });
     expect(validateSignUp({ ...base, region: "ZZ" })).toEqual({ usage_region: ["inclusion"] });
     expect(validateSignUp({ ...base, region: "XG" })).toEqual({});
@@ -149,9 +162,8 @@ describe("validation", () => {
 describe("email registration", () => {
   it("sends only sign-up details, asks for the emailed code, then signs in through the existing account flow", async () => {
     show("en");
-    type(en.nickname, "Billie");
     fireEvent.change(screen.getByLabelText(en.region), { target: { value: "JP" } });
-    fillForm();
+    fillForm({ nickname: "  Billie  " });
     fireEvent.click(screen.getByRole("button", { name: en.submit }));
     expect(await screen.findByRole("heading", { name: en.verify.heading })).toBeTruthy();
     expect(screen.getByText(/new@example.org/)).toBeTruthy();
@@ -225,13 +237,34 @@ describe("email registration", () => {
     expect(onBack).toHaveBeenCalledWith("new@example.org");
   });
 
-  it.each([["offline", en.errors.offline], ["rate_limited", en.errors.rate_limited], ["registration_closed", en.errors.registration_closed]])("reports %s", async (code, message) => {
-    if (code === "offline") vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
+  it.each([
+    ["local_server_down", en.errors.local_server_down.replace("{host}", "localhost:8100")],
+    ["offline", en.errors.offline],
+    ["rate_limited", en.errors.rate_limited],
+    ["registration_closed", en.errors.registration_closed],
+  ])("reports %s", async (code, message) => {
+    if (code === "offline") vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    if (code === "offline" || code === "local_server_down") vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
     else fakeIdentity({ "POST /v1/registrations": () => ({ status: code === "rate_limited" ? 429 : 403, body: { error: code } }) });
     show();
     fillForm();
     fireEvent.click(screen.getByRole("button", { name: en.submit }));
     expect((await screen.findByRole("alert")).textContent).toBe(message);
+  });
+});
+
+describe("account service status", () => {
+  it("reproduces the installed-app failure: the identity service is not running → says so up front, and Retry recovers", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
+    show();
+    const banner = await screen.findByRole("status");
+    expect(banner.textContent).toContain(en.errors.local_server_down.replace("{host}", "localhost:8100"));
+    expect(banner.textContent).not.toContain(en.errors.offline);
+    fetchSpy.mockRestore();
+    fakeIdentity(); // the service is started
+    fireEvent.click(within(banner).getByRole("button", { name: en.retry }));
+    await waitFor(() => expect(screen.queryByText(/isn't running/)).toBeNull());
+    expect(requests.map((r) => r.path)).toContain("GET /v1/config");
   });
 });
 
@@ -266,6 +299,9 @@ describe("Google", () => {
     status = { status: "verified", outcome: "new_account", email: "g@example.org" };
     expect(await screen.findByRole("heading", { name: en.googleFlow.newHeading }, { timeout: 4000 })).toBeTruthy();
     fireEvent.change(screen.getByLabelText(en.region), { target: { value: "KR" } });
+    // Required here too; nothing from the Google profile is filled in.
+    expect((screen.getByLabelText(nicknameLabel()) as HTMLInputElement).value).toBe("");
+    type(nicknameLabel(), "윤");
     type(en.password, "google app pass");
     type(en.confirmPassword, "google app pass");
     fireEvent.click(screen.getByRole("button", { name: en.googleFlow.create }));
@@ -273,6 +309,7 @@ describe("Google", () => {
     const complete = requests.find((r) => r.path.endsWith("/complete"))!;
     expect(Object.keys(complete.body).sort()).toEqual(["code_verifier", "nickname", "password", "password_confirmation", "usage_region"]);
     expect(complete.body.usage_region).toBe("KR");
+    expect(complete.body.nickname).toBe("윤");
   });
 
   it("existing account: linking needs that account's password", async () => {
@@ -331,7 +368,11 @@ describe("localization and accessibility", () => {
   it.each(LOCALES)("%s: every control is labelled in the interface language", (locale) => {
     const r = MESSAGES[locale].register;
     show(locale);
-    for (const label of [r.nickname, r.region, r.regionSearch, r.email, r.password, r.confirmPassword]) expect(screen.getByLabelText(label)).toBeTruthy();
+    for (const label of [nicknameLabel(locale), r.region, r.regionSearch, r.email, r.password, r.confirmPassword]) expect(screen.getByLabelText(label)).toBeTruthy();
+    const nickname = screen.getByLabelText(nicknameLabel(locale)) as HTMLInputElement;
+    expect(nickname.required).toBe(true);
+    expect(nickname.placeholder).toBe(MESSAGES[locale].personal.nickname.placeholder);
+    expect(document.getElementById(nickname.getAttribute("aria-describedby")!)!.textContent).toBe(MESSAGES[locale].personal.nickname.help);
     expect(screen.getByRole("heading", { level: 1, name: r.heading })).toBeTruthy();
     expect(screen.getByRole("button", { name: r.submit })).toBeTruthy();
     expect((screen.getByLabelText(r.region) as HTMLSelectElement).options[0].textContent).toBe(r.globalCitizen);

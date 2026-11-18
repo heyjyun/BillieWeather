@@ -1,0 +1,15 @@
+<% content_for :preheader do %><%= t("billie.personalization.email.preview") %><% end %>
+<h1><%= @heading %></h1>
+<p><%= t("billie.personalization.email.body") %></p>
+<table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+  <tr>
+    <td align="center">
+      <table border="0" cellspacing="0" cellpadding="0" role="presentation">
+        <tr>
+          <td><a href="<%= @cta_url %>" class="button button--" target="_blank"><%= t("billie.personalization.email.cta") %></a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<p><%= t("billie.personalization.email.signoff") %></p>

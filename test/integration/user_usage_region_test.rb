@@ -196,7 +196,7 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
   private
 
   def registration_params(email, **attributes)
-    {user: {email: email,
+    {user: {email: email, nickname: "Maple",
       password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}.merge(attributes)}
   end
 end

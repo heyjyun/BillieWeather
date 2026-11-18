@@ -14,6 +14,7 @@ import importErrors from "../i18n/importErrors.json";
 import { randomId } from "../services/ids";
 import { importFile, importPdfReview, type ImportedFile, type PdfReview as Review } from "../services/importFile";
 import { StoreError, type FinanceStore } from "../services/store";
+import { usePersonal } from "../hooks/usePersonal";
 import { commitDraft, detectDraftRegion, ImportBlockedError, importContext, importDraftFile, importScannedPdf, UNIVERSAL_ACCEPT } from "../services/universalImport";
 
 type History = Awaited<ReturnType<FinanceStore["importHistory"]>>;
@@ -43,7 +44,9 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
   const regionName = useRegionName();
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [message, setMessage] = useState<{ tone: "ok" | "warn" | "error"; text: string } | null>(null);
+  // `imported`: a statement was just added, so the message opens with "All set, Jyun!".
+  const [message, setMessage] = useState<{ tone: "ok" | "warn" | "error"; text: string; imported?: boolean } | null>(null);
+  const { p: personal, say } = usePersonal();
   // Files waiting for review, first one shown. Kept in memory only; nothing is written until confirmed.
   const [drafts, setDrafts] = useState<Waiting[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -92,6 +95,7 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
       draft, context: await importContext(store, normalizeRegion(region)), region: { source: chosenSource, detection: detectDraftRegion(draft) },
     });
     let failed = false;
+    let imported = 0;
     const cur = deviceCurrency ?? currency;
     const chosenRegion = normalizeRegion(region);
     for (const file of Array.from(files)) {
@@ -116,6 +120,7 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
             lines.push(`${file.name}: ${pdf.backend("pdf_needs_review")}`);
           } else {
             lines.push(successText(file.name, result, cur));
+            imported += 1;
           }
           continue;
         }
@@ -137,7 +142,8 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
     setBusy(false);
     setReviews((current) => [...current, ...waitingPdf]);
     setDrafts((current) => [...current, ...waiting]);
-    if (lines.length > 0) setMessage({ tone: failed ? "error" : waitingPdf.length > 0 ? "warn" : "ok", text: lines.join(" ") });
+    const tone = failed ? "error" : waitingPdf.length > 0 ? "warn" : "ok";
+    if (lines.length > 0) setMessage({ tone, text: lines.join(" "), imported: tone === "ok" && imported > 0 });
     else setMessage(null);
   }
 
@@ -162,7 +168,7 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
       const result = await commitDraft(store, draft, context, { source: regionInfo.source, detection: regionInfo.detection });
       await refresh();
       const skipped = draft.rows.filter((row) => row.status !== "rejected").length - result.transactions;
-      setMessage({ tone: "ok", text: interpolate(u.result, { file: draft.filename, count: result.transactions, skipped, rejected: draft.summary.rejected }) });
+      setMessage({ tone: "ok", text: interpolate(u.result, { file: draft.filename, count: result.transactions, skipped, rejected: draft.summary.rejected }), imported: result.transactions > 0 });
       await advance(drafts.slice(1));
     } catch (error) {
       setReviewError(errorText(error));
@@ -227,7 +233,7 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
       const result = await importPdfReview(store, review, rows);
       await refresh();
       setReviews((current) => current.filter((item) => item !== review));
-      setMessage({ tone: "ok", text: `${review.filename}: ${pdf.backend("pdf_review_imported", { count: result.count })}` });
+      setMessage({ tone: "ok", text: `${review.filename}: ${pdf.backend("pdf_review_imported", { count: result.count })}`, imported: result.count > 0 });
     } catch (error) {
       setReviewError(errorText(error));
     } finally {
@@ -335,7 +341,12 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
           )}
         </section>
       )}
-      {message && <p className={`bw-message bw-message-${message.tone}`} role={message.tone === "error" ? "alert" : "status"}>{message.text}</p>}
+      {message && (
+        <p className={`bw-message bw-message-${message.tone}${message.imported ? " bw-message-celebrate" : ""}`} role={message.tone === "error" ? "alert" : "status"}>
+          {message.imported && <strong className="bw-message-headline">{say(personal.import_done)}</strong>}
+          {message.text}
+        </p>
+      )}
       {history.length > 0 && (
         <section className="bw-panel">
           <h2>{u.history.title}</h2>

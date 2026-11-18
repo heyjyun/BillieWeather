@@ -23,7 +23,7 @@ module Finance
       if importer.duplicates_skipped.positive? || importer.duplicates_flagged.positive?
         notice += " " + I18n.t("billie.backend.import_duplicates_notice", skipped: importer.duplicates_skipped, flagged: importer.duplicates_flagged)
       end
-      redirect_to finance_transactions_path, notice: notice
+      redirect_to finance_transactions_path, notice: imported_notice(notice)
     rescue StatementImporter::ImportError => error
       load_statement_lists
       @date_columns = error.date_columns if error.is_a?(StatementImporter::DateColumnRequired)
@@ -107,7 +107,7 @@ module Finance
     def import_pdf_automatically(draft)
       statement = DraftImport.new(user: current_user, draft: draft).call
       @profile.touch
-      redirect_to finance_transactions_path, notice: I18n.t("billie.backend.pdf_imported_automatically", count: statement.transaction_count, filename: statement.filename)
+      redirect_to finance_transactions_path, notice: imported_notice(I18n.t("billie.backend.pdf_imported_automatically", count: statement.transaction_count, filename: statement.filename))
     rescue StatementImporter::ImportError => error
       redirect_to finance_statement_draft_path(draft), alert: error.message
     end

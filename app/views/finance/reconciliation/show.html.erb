@@ -9,6 +9,11 @@
   <div class="bw-metric" id="metric-discrepancies"><span><%= t("billie.reconciliation.metrics.discrepancies") %></span><strong><%= @report.discrepancy_count %></strong><small><%= t("billie.reconciliation.metrics.discrepancies_help") %></small></div>
 </div>
 
+<%# Acknowledge a fully reconciled book only when something was actually matched and nothing is waiting. %>
+<% if @report.matched.any? && @report.awaiting_review.empty? && @report.awaiting_bank.empty? && @report.discrepancy_count.zero? && @duplicate_rows.to_i.zero? %>
+  <p class="bw-success-line" id="reconciliation-all-clear" role="status"><%= finance_icon "check", size: 18 %> <span><%= personal_message(:reconciled) %></span></p>
+<% end %>
+
 <section class="bw-panel" id="awaiting-review" aria-labelledby="review-heading">
   <h2 id="review-heading"><%= t("billie.reconciliation.review.heading") %></h2>
   <% if @report.awaiting_review.any? %>

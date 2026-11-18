@@ -2,8 +2,8 @@
   "zh-TW": {
     "billie": {
       "google_region": {
-        "heading": "選擇使用地區",
-        "intro": "你的 Google 身分已驗證。請選擇使用地區以完成帳戶註冊。",
+        "heading": "完成帳戶設定",
+        "intro": "你的 Google 身分已驗證。告訴我們該怎麼稱呼你，並選擇使用地區，即可完成帳戶註冊。",
         "continue": "建立帳戶",
         "expired": "Google 註冊工作階段已過期，請重新使用 Google 登入。",
         "invalid": "請從清單中選擇地區。"

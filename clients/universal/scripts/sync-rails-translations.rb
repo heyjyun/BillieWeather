@@ -2,6 +2,7 @@
 # exactly the same thing in every language:
 #   importErrors.json — billie.backend.* (CSV and PDF errors, PDF review warnings)
 #   pdfReview.json    — billie.finance.ui.* text of the website's PDF review page
+#   personal.json     — billie.personalization.* (greetings, nickname copy, gentle acknowledgments)
 # Run from the repository root:  ruby clients/universal/scripts/sync-rails-translations.rb
 require "yaml"
 require "json"
@@ -35,6 +36,10 @@ def message(value)
   value.gsub(/%\{(\w+)\}/, '{\1}')
 end
 
+def deep_message(value)
+  value.is_a?(Hash) ? value.transform_values { |item| deep_message(item) } : message(value)
+end
+
 def write(name, data)
   path = "clients/universal/src/i18n/#{name}"
   File.write(path, JSON.pretty_generate(data) + "\n")
@@ -48,4 +53,9 @@ end)
 write("pdfReview.json", LOCALES.to_h do |locale|
   ui = YAML.load_file("config/locales/billie_finance_views.#{locale}.yml").dig(locale, "billie", "finance", "ui")
   [locale, REVIEW.transform_values { |key| message(ui.fetch(key)) }]
+end)
+write("personal.json", LOCALES.to_h do |locale|
+  personal = YAML.load_file("config/locales/billie_personalization.#{locale}.yml").dig(locale, "billie", "personalization")
+  # The welcome email is website-only.
+  [locale, deep_message(personal.except("email"))]
 end)

@@ -20,6 +20,11 @@ module Finance
       @ledger ||= Ledger.new(current_user)
     end
 
+    # "All set, Jyun! Your statement has been imported." followed by the import's own details.
+    def imported_notice(details)
+      "#{helpers.personal_message(:import_done, current_user)} #{details}"
+    end
+
     # Human messages for Finance::Ledger / Finance::Domain validation codes (shared with the apps).
     def ledger_errors(codes)
       Array(codes).map { |code| I18n.t("billie.ledger.errors.#{code}", default: I18n.t("billie.ledger.errors.generic")) }.uniq.to_sentence

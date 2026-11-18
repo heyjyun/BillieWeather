@@ -1000,6 +1000,48 @@ body.billie-public { min-height: 100vh; min-height: 100dvh; display: flex; flex-
   .bw-hero h1 { font-size: 38px; }
   .bw-hero-actions { flex-direction: column; align-items: flex-start; }
 }
+/* ---------- Personalization (greetings, nickname, gentle acknowledgments) ---------- */
+@keyframes bw-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.bw-required-mark { color: var(--bw-color-negative-text); margin-left: 2px; font-weight: var(--bw-font-weight-semibold); }
+.bw-greeting { display: flex; align-items: center; gap: 12px; overflow-wrap: anywhere; }
+.bw-greeting-glyph { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--bw-radius-pill); flex-shrink: 0;
+  background: var(--bw-color-accent-soft); color: var(--bw-color-accent-soft-text); animation: bw-rise var(--bw-motion-normal) var(--bw-motion-easing) both; }
+.bw-greeting-morning { background: var(--bw-color-warning-soft); color: var(--bw-color-warning-text); }
+.bw-greeting-evening { background: var(--bw-color-info-soft); color: var(--bw-color-info-text); }
+.bw-page-heading p.bw-greeting-subtitle { color: var(--bw-color-text); font-size: var(--bw-font-size-md); margin-bottom: 6px; }
+.bw-nickname-prompt { display: flex; gap: 16px; align-items: flex-start; margin: 0 0 var(--bw-space-5); padding: 18px 20px; border-radius: var(--bw-radius-lg);
+  background: var(--bw-color-surface); border: 1px solid var(--bw-color-border); box-shadow: var(--bw-shadow-sm); animation: bw-rise var(--bw-motion-normal) var(--bw-motion-easing) both; }
+.bw-nickname-prompt-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--bw-radius-pill); background: var(--bw-color-warning-soft); color: var(--bw-color-warning-text); }
+.bw-nickname-prompt-body { flex: 1; min-width: 0; }
+.bw-nickname-prompt h2 { font-size: var(--bw-font-size-lg); margin-bottom: 4px; }
+.bw-nickname-prompt p { margin-bottom: 12px; font-size: var(--bw-font-size-sm); }
+.bw-nickname-prompt-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.bw-nickname-prompt-form .bw-field { flex: 1 1 260px; margin: 0; }
+.bw-nickname-prompt-dismiss { margin-top: 8px; }
+.bw-nickname-prompt-later { background: none; border: 0; padding: 4px 0; min-height: 32px; color: var(--bw-color-accent-strong); font-weight: var(--bw-font-weight-semibold); font-size: var(--bw-font-size-sm); }
+.bw-nickname-prompt-later:hover { text-decoration: underline; }
+.bw-success-line { display: flex; align-items: center; gap: 8px; margin: 0 0 var(--bw-space-4); padding: 10px 14px; border-radius: var(--bw-radius-md);
+  background: var(--bw-color-positive-soft); border: 1px solid var(--bw-color-positive-border); color: var(--bw-color-positive-text); font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-semibold);
+  animation: bw-rise var(--bw-motion-normal) var(--bw-motion-easing) both; }
+.bw-insight-lead { color: var(--bw-color-text); font-weight: var(--bw-font-weight-semibold); margin-bottom: 12px; }
+.bw-outlook { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 var(--bw-space-5); padding: 14px 16px; border-radius: var(--bw-radius-md); border: 1px solid var(--bw-color-border);
+  background: var(--bw-color-surface); transition: background-color var(--bw-motion-normal) var(--bw-motion-easing), border-color var(--bw-motion-normal) var(--bw-motion-easing); }
+.bw-outlook p { margin: 0; font-size: var(--bw-font-size-sm); line-height: var(--bw-line-height-relaxed); }
+.bw-outlook .bw-outlook-message { color: var(--bw-color-text); font-weight: var(--bw-font-weight-semibold); }
+.bw-outlook-help { margin-top: 4px !important; }
+.bw-outlook-icon { display: inline-flex; color: var(--bw-color-accent-strong); padding-top: 1px; }
+.bw-outlook-stable { background: var(--bw-color-positive-soft); border-color: var(--bw-color-positive-border); }
+.bw-outlook-stable .bw-outlook-icon { color: var(--bw-color-positive-text); }
+.bw-outlook-range-dips, .bw-outlook-gap { background: var(--bw-color-warning-soft); border-color: var(--bw-color-warning-border); }
+.bw-outlook-range-dips .bw-outlook-icon, .bw-outlook-gap .bw-outlook-icon { color: var(--bw-color-warning-text); }
+@media (max-width: 600px) {
+  .bw-greeting { gap: 10px; }
+  .bw-greeting-glyph { width: 34px; height: 34px; }
+  .bw-nickname-prompt { padding: 16px; gap: 12px; }
+  .bw-nickname-prompt-icon { display: none; }
+  .bw-nickname-prompt-form .bw-button { width: 100%; }
+}
+
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
 @media print { .bw-sidebar, .bw-topbar, .bw-app-footer { display: none !important; } .bw-main-shell { margin: 0 !important; } .bw-panel, .bw-metric { box-shadow: none; break-inside: avoid; } }
 .bw-dropzone-files { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }

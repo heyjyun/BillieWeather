@@ -1,0 +1,57 @@
+# See billie_personalization.en.yml for how these messages are used.
+zh-TW:
+  billie:
+    personalization:
+      greeting:
+        morning: {named: "早安，%{name}！", plain: "早安！"}
+        afternoon: {named: "午安，%{name}！", plain: "午安！"}
+        evening: {named: "晚安，%{name}！", plain: "晚安！"}
+      dashboard:
+        morning: "來看看今天的財務狀況吧。"
+        afternoon: "這是你最新的財務概況。"
+        evening: "花一點時間，看看你的財務天氣吧。"
+        first_use: {named: "嗨，%{name}！準備好了解你的財務天氣了嗎？", plain: "準備好了解你的財務天氣了嗎？"}
+        attention: "有幾筆交易還在等待分類，方便時處理即可。"
+      welcome:
+        title: {named: "歡迎使用 BillieWeather，%{name}！", plain: "歡迎使用 BillieWeather！"}
+        subtitle: "讓我們一起把財務的未來看得更清楚一點。"
+        notice: {named: "歡迎使用 BillieWeather，%{name}！讓我們一起把財務的未來看得更清楚一點。", plain: "歡迎使用 BillieWeather！讓我們一起把財務的未來看得更清楚一點。"}
+      import_done: {named: "完成了，%{name}！你的帳單已匯入。", plain: "完成了！你的帳單已匯入。"}
+      reconciled: {named: "一切順利，%{name}！你的交易已完成對帳。", plain: "一切順利！你的交易已完成對帳。"}
+      insight_intro: {named: "%{name}，這裡有一些值得留意的地方。", plain: "這裡有一些值得留意的地方。"}
+      forecast:
+        stable: {named: "%{name}，你目前的預測看起來很平穩。如有值得關注的變化，我們會提醒你。", plain: "你目前的預測看起來很平穩。如有值得關注的變化，我們會提醒你。"}
+        range_dips: {named: "%{name}，預測餘額維持在零以上，但示意區間的下限更低，保留一些餘裕可能更穩當。", plain: "預測餘額維持在零以上，但示意區間的下限更低，保留一些餘裕可能更穩當。"}
+        gap: {named: "%{name}，%{date} 前後可能會出現現金流缺口。我們一起看看有哪些選擇。", plain: "%{date} 前後可能會出現現金流缺口。我們一起看看有哪些選擇。"}
+        gap_help: "試著調整收入和支出，看看哪些做法可能有幫助。這是根據歷史紀錄做出的估算，並不確定。"
+      nickname:
+        label: "暱稱"
+        required: "必填"
+        placeholder: "我們該怎麼稱呼你？"
+        help: "我們會用你的暱稱，讓 BillieWeather 更有親切感。最多 40 個字元，任何語言都可以。"
+        errors:
+          blank: "請填寫一個暱稱，叫什麼都可以。"
+          too_long: "最多使用 40 個字元。"
+          invalid: "請刪除不支援的字元。"
+      nickname_prompt:
+        title: "我們該怎麼稱呼你？"
+        body: "加上一個暱稱，讓 BillieWeather 更像是你自己的。暱稱只有你看得到。"
+        save: "儲存暱稱"
+        saving: "正在儲存…"
+        later: "以後再說"
+        saved: "很高興認識你，%{name}！"
+        failed: "暫時無法儲存。請檢查網路連線後再試一次。"
+      email:
+        subject: "歡迎使用 BillieWeather！"
+        preview: "讓你的財務天氣，每天都更清晰一點。"
+        heading: {named: "歡迎使用 BillieWeather，%{name}！", plain: "歡迎使用 BillieWeather！"}
+        body: "讓我們一起把財務的未來看得更清楚一點。匯入一份銀行帳單（CSV 或 PDF），就能在一個清爽的地方看到收入、支出和現金流展望。BillieWeather 從不索取你的網銀登入資訊。"
+        cta: "開啟財務總覽"
+        signoff: "BillieWeather 團隊敬上"
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            nickname:
+              blank: "不能為空，請填寫你希望我們怎麼稱呼你"

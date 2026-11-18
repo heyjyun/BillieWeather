@@ -1,7 +1,9 @@
 import type { PeriodPreset } from "@billie/shared-types";
 import { buildSnapshot, localToday, resolvePeriod, spendingMix, spendingPalette } from "@billie/finance-core";
 import { useMemo, useState } from "react";
-import { CategoryBadge, Empty, Money, PageHeading, PeriodPicker } from "../components/common";
+import { CategoryBadge, Empty, Money, PeriodPicker } from "../components/common";
+import { GreetingHeader } from "../components/Greeting";
+import { NicknamePrompt } from "../components/NicknamePrompt";
 import { SpendingMixChart } from "../components/SpendingCharts";
 import { useFinance } from "../hooks/useFinance";
 import { useI18n } from "../i18n";
@@ -9,7 +11,7 @@ import type { Page } from "../App";
 
 export function Dashboard({ go }: { go: (page: Page, part?: string | null) => void }) {
   const { m, t } = useI18n();
-  const { transactions, statements, currency } = useFinance();
+  const { transactions, statements, currency, ownerKey } = useFinance();
   const [preset, setPreset] = useState<PeriodPreset>("all_time");
   const cur = currency ?? "USD";
   const period = useMemo(() => resolvePeriod(preset, { today: localToday() }), [preset]);
@@ -21,7 +23,8 @@ export function Dashboard({ go }: { go: (page: Page, part?: string | null) => vo
   if (transactions.length === 0) {
     return (
       <>
-        <PageHeading eyebrow={d.eyebrow} title={d.title} />
+        <GreetingHeader eyebrow={d.eyebrow} hasData={false} needsAttention={false} />
+        <NicknamePrompt ownerKey={ownerKey} />
         <Empty title={d.emptyTitle} body={d.emptyBody} action={<button className="bw-button bw-button-dark" onClick={() => go("import")}>{d.emptyAction}</button>} />
       </>
     );
@@ -29,7 +32,8 @@ export function Dashboard({ go }: { go: (page: Page, part?: string | null) => vo
   const maxMonth = Math.max(1, ...snap.monthly.map((month) => Math.max(month.incomeCents, month.expensesCents)));
   return (
     <>
-      <PageHeading eyebrow={d.eyebrow} title={d.title}><PeriodPicker value={preset} onChange={setPreset} /></PageHeading>
+      <GreetingHeader eyebrow={d.eyebrow} hasData needsAttention={snap.uncategorizedCount > 0}><PeriodPicker value={preset} onChange={setPreset} /></GreetingHeader>
+      <NicknamePrompt ownerKey={ownerKey} />
       <section className="bw-metrics" aria-label={d.totals}>
         <article className="bw-metric"><span>{d.income}</span><strong><Money cents={snap.incomeCents} currency={cur} /></strong></article>
         <article className="bw-metric"><span>{d.spending}</span><strong><Money cents={snap.expensesCents} currency={cur} /></strong></article>

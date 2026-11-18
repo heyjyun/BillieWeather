@@ -111,6 +111,7 @@ Rails.application.routes.draw do
     resource :profile, only: :update
     resource :settings, only: [:show, :update], controller: :settings do
       patch :nickname
+      post :dismiss_nickname_prompt
       patch :database_name
       patch :password
       patch :supporter_recognition

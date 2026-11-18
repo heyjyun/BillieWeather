@@ -112,6 +112,12 @@ def test_account_created_elsewhere_while_pending_is_reported_after_the_code(clie
     ({"usage_region": "ZZ"}, {"usage_region": ["inclusion"]}),
     ({"usage_region": "Japan"}, {"usage_region": ["inclusion"]}),
     ({"nickname": "n" * 41}, {"nickname": ["too_long"]}),
+    ({"nickname": None}, {"nickname": ["blank"]}),
+    ({"nickname": ""}, {"nickname": ["blank"]}),
+    ({"nickname": " \t\n\u3000 "}, {"nickname": ["blank"]}),  # ASCII and ideographic spaces only
+    ({"nickname": "\u200b\u200d"}, {"nickname": ["blank"]}),  # zero-width characters only
+    ({"nickname": "Bil\x07lie"}, {"nickname": ["invalid"]}),
+    ({"nickname": ["Billie"]}, {"nickname": ["invalid"]}),
 ])
 def test_invalid_input_is_rejected_with_field_codes(client, mail, sql, changes, fields):
     response = register(client, **changes)
@@ -128,10 +134,26 @@ def test_errors_never_echo_submitted_values(client):
 
 
 def test_global_citizen_and_lowercase_regions_are_accepted(client, mail, sql):
-    started = register(client, usage_region="xg", nickname="").json()
+    started = register(client, usage_region="xg").json()
     assert confirm(client, started, code_from(mail)).status_code == 201
     [user] = users(sql)
-    assert user["usage_region"] == "XG" and user["nickname"] is None
+    assert user["usage_region"] == "XG" and user["nickname"] == "Billie Fan"
+
+
+@pytest.mark.parametrize("nickname", ["小雨", "ジュン", "윤", "José María", "Ana 🌤", "n" * 40])
+def test_unicode_nicknames_are_kept_as_typed(client, mail, sql, nickname):
+    started = register(client, nickname=f"  {nickname} ")
+    assert started.status_code == 202, started.text
+    assert confirm(client, started.json(), code_from(mail)).status_code == 201
+    [user] = users(sql)
+    assert user["nickname"] == nickname
+
+
+def test_nicknames_need_not_be_unique(client, mail, sql):
+    for email in ("first@example.org", "second@example.org"):
+        started = register(client, email=email, nickname="Sunny").json()
+        assert confirm(client, started, code_from(mail)).status_code == 201
+    assert [user["nickname"] for user in users(sql)] == ["Sunny", "Sunny"]
 
 
 def test_unknown_locale_falls_back_to_english_mail_and_no_saved_locale(client, mail, sql):

@@ -442,6 +442,36 @@ html[lang="ko"] :is(h1, h2, p) { word-break: keep-all; overflow-wrap: anywhere; 
   .bw-filter-bar > * { flex: 1 1 100%; }
 }
 @media (max-width: 380px) { .bw-metrics { grid-template-columns: 1fr; } }
+/* ---------- Personalization: greeting, nickname suggestion, gentle acknowledgments ----------
+   Same look as the website (public/billie.css); tokens only, so light and dark themes both work. */
+@keyframes bw-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.bw-required-mark { color: var(--bw-color-negative-text); margin-left: 2px; font-weight: var(--bw-font-weight-semibold); }
+.bw-greeting { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; overflow-wrap: anywhere; }
+.bw-greeting-glyph { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--bw-radius-pill);
+  background: var(--bw-color-accent-soft); color: var(--bw-color-accent-soft-text); animation: bw-rise var(--bw-motion-normal) var(--bw-motion-easing) both; }
+.bw-greeting-morning { background: var(--bw-color-warning-soft); color: var(--bw-color-warning-text); }
+.bw-greeting-evening { background: var(--bw-color-info-soft); color: var(--bw-color-info-text); }
+.bw-greeting-subtitle { margin: 0; color: var(--muted); font-size: var(--bw-font-size-md); max-width: 680px; }
+.bw-nickname-prompt { display: flex; gap: 16px; align-items: flex-start; padding: 18px 20px; border-radius: var(--bw-radius-lg); background: var(--card); border: 1px solid var(--line);
+  box-shadow: var(--bw-shadow-sm); animation: bw-rise var(--bw-motion-normal) var(--bw-motion-easing) both; }
+.bw-nickname-prompt-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--bw-radius-pill); background: var(--bw-color-warning-soft); color: var(--bw-color-warning-text); }
+.bw-nickname-prompt-body { flex: 1; min-width: 0; }
+.bw-nickname-prompt h2 { font-size: var(--bw-font-size-lg); margin: 0 0 4px; }
+.bw-nickname-prompt p { margin: 0 0 12px; color: var(--muted); font-size: var(--bw-font-size-sm); }
+.bw-nickname-prompt-form { display: grid; gap: 10px; }
+.bw-nickname-prompt-form .bw-field { max-width: 420px; }
+.bw-nickname-prompt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bw-success-line { margin: 0; padding: 10px 14px; border-radius: var(--bw-radius-md); background: var(--bw-color-positive-soft); border: 1px solid var(--bw-color-positive-border); color: var(--positive);
+  font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-semibold); animation: bw-rise var(--bw-motion-normal) var(--bw-motion-easing) both; }
+.bw-message-celebrate { animation: bw-rise var(--bw-motion-normal) var(--bw-motion-easing) both; }
+.bw-message-headline { display: block; margin-bottom: 2px; }
+@media (max-width: 600px) {
+  .bw-greeting { gap: 10px; }
+  .bw-greeting-glyph { width: 34px; height: 34px; }
+  .bw-nickname-prompt { padding: 16px; }
+  .bw-nickname-prompt-icon { display: none; }
+  .bw-nickname-prompt-actions .bw-button { flex: 1 1 auto; }
+}
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 
 /* QA fixes (final audit) */

@@ -1,0 +1,15 @@
+<%# The nickname input used on sign-up, Google sign-up, account settings and the dashboard suggestion.
+    Locals: form (a form builder for a User), id_prefix (optional, keeps ids unique on one page). %>
+<% help_id = "#{local_assigns.fetch(:id_prefix, "user")}_nickname_help" %>
+<% field_id = "#{local_assigns.fetch(:id_prefix, "user")}_nickname" %>
+<% invalid = form.object&.errors&.include?(:nickname) %>
+<div class="bw-form-field bw-field">
+  <%= form.label :nickname, for: field_id, class: "bw-label-required" do %>
+    <%= t("billie.personalization.nickname.label") %>
+    <span class="bw-required-mark" aria-hidden="true">*</span><span class="bw-sr-only">(<%= t("billie.personalization.nickname.required") %>)</span>
+  <% end %>
+  <%= form.text_field :nickname, id: field_id, required: true, maxlength: User::NICKNAME_MAX, autocomplete: "nickname",
+        placeholder: t("billie.personalization.nickname.placeholder"), spellcheck: false, autocapitalize: "words",
+        "aria-describedby": help_id, "aria-invalid": (invalid ? "true" : nil) %>
+  <small id="<%= help_id %>"><%= t("billie.personalization.nickname.help") %></small>
+</div>

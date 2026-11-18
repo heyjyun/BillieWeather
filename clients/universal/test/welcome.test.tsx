@@ -76,9 +76,12 @@ function launchAs(account: Partial<typeof who>) {
   render(<App />);
 }
 
-const welcomeHeading = () => screen.findByRole("heading", { level: 1, name: MESSAGES.en.welcome.title });
-const noWelcome = () => expect(screen.queryByRole("heading", { name: MESSAGES.en.welcome.title })).toBeNull();
-const dashboard = () => screen.findByRole("heading", { level: 1, name: MESSAGES.en.dashboard.title });
+// "Welcome to BillieWeather!" or, with a nickname, "Welcome to BillieWeather, Billie!".
+const WELCOME_TITLE = /^Welcome to BillieWeather/;
+const welcomeHeading = () => screen.findByRole("heading", { level: 1, name: WELCOME_TITLE });
+const noWelcome = () => expect(screen.queryByRole("heading", { name: WELCOME_TITLE })).toBeNull();
+// The dashboard opens with a time-of-day greeting ("Good morning!", "Good evening, Billie!").
+const dashboard = () => screen.findByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening)/ });
 const welcomeKey = (ownerId: string) => `billie.welcome.id:${ownerId}`;
 let openSpy: ReturnType<typeof vi.spyOn>;
 
@@ -102,7 +105,8 @@ describe("new account", () => {
     fireEvent.click(screen.getByRole("button", { name: MESSAGES.en.login.submit }));
 
     expect(await welcomeHeading()).toBeTruthy();
-    expect(screen.getByText(MESSAGES.en.welcome.subtitle)).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(MESSAGES.en.personal.welcome.title.plain);
+    expect(screen.getByText(MESSAGES.en.personal.welcome.subtitle)).toBeTruthy();
     const steps = screen.getByRole("list", { name: MESSAGES.en.welcome.stepsLabel });
     expect([...steps.querySelectorAll("h2")].map((h) => h.textContent)).toEqual([
       "Bring your finances together", "Let AI organize the details", "See what's coming",
@@ -136,7 +140,9 @@ describe("new account", () => {
   it("greets by nickname when the account has one (and never shows the email)", async () => {
     launchAs({ nickname: "Billie" });
     expect(await welcomeHeading()).toBeTruthy();
-    expect(screen.getByText("Hi, Billie")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Welcome to BillieWeather, Billie!");
+    // The name appears once, in the headline, not in every line.
+    expect(document.querySelector(".bw-welcome")!.textContent!.split("Billie!").length - 1).toBe(1);
     expect(document.querySelector(".bw-welcome")!.textContent).not.toContain(ALICE.email);
   });
 
@@ -229,7 +235,7 @@ describe("accounts and devices", () => {
     launchAs({});
     expect(await welcomeHeading()).toBeTruthy();
     await act(async () => { window.location.hash = "#/open"; window.dispatchEvent(new HashChangeEvent("hashchange")); });
-    expect(screen.getByRole("heading", { name: MESSAGES.en.welcome.title })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: WELCOME_TITLE })).toBeTruthy();
 
     await act(async () => { window.location.hash = "#/capture/receipt"; window.dispatchEvent(new HashChangeEvent("hashchange")); });
     expect(await screen.findByRole("heading", { name: MESSAGES.en.receipt.title })).toBeTruthy();
@@ -266,7 +272,13 @@ describe("privacy and side effects", () => {
   it("the page cannot read or change financial data, call the network, AI, sync, or open URLs", () => {
     const source = readFileSync(join(__dirname, "../src/pages/Welcome.tsx"), "utf8");
     const imports = [...source.matchAll(/from "([^"]+)"/g)].map((m) => m[1]).sort();
-    expect(imports).toEqual(["../components/BrandMark", "../i18n", "@billie/design-tokens", "react"]);
+    expect(imports).toEqual(["../components/BrandMark", "../i18n", "../services/greeting", "../services/profile", "@billie/design-tokens", "react"]);
+    // The personalization helpers it uses are pure: no imports at all (no network, storage or data).
+    for (const helper of ["greeting.ts", "profile.ts"]) {
+      const code = readFileSync(join(__dirname, "../src/services", helper), "utf8");
+      expect(code, helper).not.toMatch(/^import /m);
+      expect(code, helper).not.toMatch(/fetch\(|localStorage|invoke\(/);
+    }
     expect(source).not.toMatch(/useFinance|store|fetch\(|openExternal|window\.open|invoke\(|localStorage/);
     const onboarding = readFileSync(join(__dirname, "../src/services/onboarding.ts"), "utf8");
     expect(onboarding).not.toMatch(/^import /m);
@@ -276,13 +288,17 @@ describe("privacy and side effects", () => {
 describe("Welcome page", () => {
   it.each(LOCALES)("is fully translated in %s", (locale) => {
     const w = MESSAGES[locale].welcome;
+    const title = MESSAGES[locale].personal.welcome.title;
     render(<I18nProvider initial={locale}><Welcome onStart={() => undefined} onExplore={() => undefined} /></I18nProvider>);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(w.title);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(title.plain);
+    cleanup();
+    render(<I18nProvider initial={locale}><Welcome name=" 小雨 " onStart={() => undefined} onExplore={() => undefined} /></I18nProvider>);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(title.named.replace("{name}", "小雨"));
     expect(screen.getByRole("button", { name: w.start })).toBeTruthy();
     expect(screen.getByRole("button", { name: w.explore })).toBeTruthy();
     expect(screen.getByText(w.ready)).toBeTruthy();
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([w.steps.import.title, w.steps.organize.title, w.steps.forecast.title]);
-    if (locale !== "en") expect(w.title).not.toBe(MESSAGES.en.welcome.title);
+    if (locale !== "en") expect(title.plain).not.toBe(MESSAGES.en.personal.welcome.title.plain);
   });
 
   it("is keyboard friendly: focus starts on the headline, buttons are real buttons in reading order", () => {

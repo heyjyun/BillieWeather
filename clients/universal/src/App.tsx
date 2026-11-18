@@ -8,6 +8,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { SignedOut } from "./pages/SignedOut";
 import { ModeProvider, useMode, type Mode } from "./hooks/useMode";
 import { SyncStatus } from "./components/SyncStatus";
+import { ConnectionStatus } from "./components/ConnectionStatus";
 import { CommandCenter } from "./components/CommandCenter";
 import type { TransactionFilter } from "./commands/handlers";
 import type { TransactionKind } from "@billie/shared-types";
@@ -156,6 +157,7 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
         {!persistent && <p className="bw-preview-banner">{m.preview}</p>}
         <div className="bw-topline"><ModeSwitch mode={mode} onChange={switchMode} /></div>
         <CommandCenter go={go} />
+        <ConnectionStatus />
         <SyncStatus />
         <Suspense fallback={<div className="bw-boot" role="status">{m.boot.opening}</div>}>
         {page === "dashboard" && <Dashboard go={go} />}

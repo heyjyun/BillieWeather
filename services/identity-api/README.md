@@ -39,7 +39,7 @@ What the Rails sign-up does, and what this service reproduces in **one transacti
 | `database_authenticatable`: `BCrypt::Password.create(pw, cost: 11)`, no pepper, `$2a$` | `bcrypt` with `prefix=2a`, cost 11, explicit 72-byte truncation (same as Ruby's bcrypt) |
 | `validatable`: email stripped + downcased, `/\A[^@\s]+@[^@\s]+\z/` (ASCII `\s`), unique; password 6..128 | Same rules (emails also limited to 254 chars, no control chars: stricter, never looser) |
 | `pwned_password` (on outside development): reject if seen ≥1 time; fail open | Same, k-anonymity range API |
-| `User`: nickname squished ≤ 40; `usage_region` required, in `UsageRegion::CODES` (incl. `XG` Global Citizen) | Same; region list tested against `app/models/usage_region.rb` and the DB check constraint |
+| `User`: nickname squished, required (≥ 1 visible character, no control characters) ≤ 40; `usage_region` required, in `UsageRegion::CODES` (incl. `XG` Global Citizen) | Same; region list tested against `app/models/usage_region.rb` and the DB check constraint |
 | `create_default_team`: team "Your Team", membership `role_ids ["admin"]` + `user_email`, `current_team_id` | Same rows; `ability_cache = {}`; timestamps UTC without zone |
 | `finance_owner_uid` | Left to the database default `gen_random_uuid()` |
 | `lockable` (20 attempts) | Google linking counts failures in `users.failed_attempts`; refuses at the limit (Rails then locks and emails the unlock link) |
@@ -97,13 +97,13 @@ service (asymmetric key; Rails holds only the public key) and issues the normal 
 | Method & path | Body | Success |
 | --- | --- | --- |
 | `GET /v1/config` | – | `registration_open`, `google_available`, password limits |
-| `POST /v1/registrations` | `email, password, password_confirmation, usage_region, nickname?, locale?` | 202 `registration_id, registration_secret, code_expires_at, resend_available_at` |
+| `POST /v1/registrations` | `email, password, password_confirmation, usage_region, nickname, locale?` | 202 `registration_id, registration_secret, code_expires_at, resend_available_at` |
 | `POST /v1/registrations/{id}/confirmation` | `registration_secret, code` | 201 `{status: confirmed, email}` (idempotent) |
 | `POST /v1/registrations/{id}/resend` | `registration_secret` | 202 |
 | `POST /v1/google/flows` | `code_challenge, code_challenge_method: S256, locale?` | 201 `flow_id, authorization_url` |
 | `GET /v1/google/callback` | (from Google) | HTML page |
 | `POST /v1/google/flows/{id}/status` | `code_verifier` | `status, outcome?, email?, failure?` |
-| `POST /v1/google/flows/{id}/complete` | `code_verifier, password, password_confirmation, usage_region, nickname?` | 201 |
+| `POST /v1/google/flows/{id}/complete` | `code_verifier, password, password_confirmation, usage_region, nickname` | 201 |
 | `POST /v1/google/flows/{id}/link` | `code_verifier, password` | 200 |
 | `POST /v1/google/flows/{id}/cancel` | `code_verifier` | 204 |
 | `GET /health` | – | 200 when the DB, Rails schema and identity schema are ready |

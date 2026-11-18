@@ -1,0 +1,506 @@
+{
+  "en": {
+    "greeting": {
+      "morning": {
+        "named": "Good morning, {name}!",
+        "plain": "Good morning!"
+      },
+      "afternoon": {
+        "named": "Good afternoon, {name}!",
+        "plain": "Good afternoon!"
+      },
+      "evening": {
+        "named": "Good evening, {name}!",
+        "plain": "Good evening!"
+      }
+    },
+    "dashboard": {
+      "morning": "Let's see how your finances are looking today.",
+      "afternoon": "Here's your latest financial outlook.",
+      "evening": "Let's take a quick look at your financial weather.",
+      "first_use": {
+        "named": "Hi {name}, ready to understand your financial weather?",
+        "plain": "Ready to understand your financial weather?"
+      },
+      "attention": "A few transactions are waiting for a category whenever you're ready."
+    },
+    "welcome": {
+      "title": {
+        "named": "Welcome to BillieWeather, {name}!",
+        "plain": "Welcome to BillieWeather!"
+      },
+      "subtitle": "Let's make your financial future a little clearer.",
+      "notice": {
+        "named": "Welcome to BillieWeather, {name}! Let's make your financial future a little clearer.",
+        "plain": "Welcome to BillieWeather! Let's make your financial future a little clearer."
+      }
+    },
+    "import_done": {
+      "named": "All set, {name}! Your statement has been imported.",
+      "plain": "All set! Your statement has been imported."
+    },
+    "reconciled": {
+      "named": "Looking good, {name}! Your transactions are reconciled.",
+      "plain": "Looking good! Your transactions are reconciled."
+    },
+    "insight_intro": {
+      "named": "{name}, here's something worth keeping an eye on.",
+      "plain": "Here's something worth keeping an eye on."
+    },
+    "forecast": {
+      "stable": {
+        "named": "Your current forecast looks stable, {name}. We'll highlight any changes worth reviewing.",
+        "plain": "Your current forecast looks stable. We'll highlight any changes worth reviewing."
+      },
+      "range_dips": {
+        "named": "Your projected balance stays above zero, {name}, though the illustrative range dips lower. It may be worth keeping a little room.",
+        "plain": "Your projected balance stays above zero, though the illustrative range dips lower. It may be worth keeping a little room."
+      },
+      "gap": {
+        "named": "{name}, there may be a cash flow gap ahead around {date}. Let's explore your options.",
+        "plain": "There may be a cash flow gap ahead around {date}. Let's explore your options."
+      },
+      "gap_help": "Try the income and spending adjustments to see what could help. This is an estimate based on your history, not a certainty."
+    },
+    "nickname": {
+      "label": "Nickname",
+      "required": "required",
+      "placeholder": "What should we call you?",
+      "help": "We'll use your nickname to make BillieWeather feel a little more personal. Up to 40 characters, in any language.",
+      "errors": {
+        "blank": "Please choose a nickname. Any name you like is fine.",
+        "too_long": "Use at most 40 characters.",
+        "invalid": "Remove unsupported characters."
+      }
+    },
+    "nickname_prompt": {
+      "title": "What should we call you?",
+      "body": "Add a nickname and BillieWeather will feel a little more like yours. Only you see it.",
+      "save": "Save nickname",
+      "saving": "Saving…",
+      "later": "Maybe later",
+      "saved": "Nice to meet you, {name}!",
+      "failed": "Couldn't save just now. Check your connection and try again."
+    }
+  },
+  "zh-CN": {
+    "greeting": {
+      "morning": {
+        "named": "早上好，{name}！",
+        "plain": "早上好！"
+      },
+      "afternoon": {
+        "named": "下午好，{name}！",
+        "plain": "下午好！"
+      },
+      "evening": {
+        "named": "晚上好，{name}！",
+        "plain": "晚上好！"
+      }
+    },
+    "dashboard": {
+      "morning": "来看看今天的财务状况吧。",
+      "afternoon": "这是你最新的财务概况。",
+      "evening": "花一点时间，看看你的财务天气吧。",
+      "first_use": {
+        "named": "你好，{name}！准备好了解你的财务天气了吗？",
+        "plain": "准备好了解你的财务天气了吗？"
+      },
+      "attention": "有几笔交易还在等待分类，方便时处理即可。"
+    },
+    "welcome": {
+      "title": {
+        "named": "欢迎使用 BillieWeather，{name}！",
+        "plain": "欢迎使用 BillieWeather！"
+      },
+      "subtitle": "让我们一起把财务的未来看得更清楚一点。",
+      "notice": {
+        "named": "欢迎使用 BillieWeather，{name}！让我们一起把财务的未来看得更清楚一点。",
+        "plain": "欢迎使用 BillieWeather！让我们一起把财务的未来看得更清楚一点。"
+      }
+    },
+    "import_done": {
+      "named": "搞定了，{name}！你的账单已导入。",
+      "plain": "搞定了！你的账单已导入。"
+    },
+    "reconciled": {
+      "named": "一切顺利，{name}！你的交易已完成对账。",
+      "plain": "一切顺利！你的交易已完成对账。"
+    },
+    "insight_intro": {
+      "named": "{name}，这里有一些值得留意的地方。",
+      "plain": "这里有一些值得留意的地方。"
+    },
+    "forecast": {
+      "stable": {
+        "named": "{name}，你目前的预测看起来很平稳。如有值得关注的变化，我们会提醒你。",
+        "plain": "你目前的预测看起来很平稳。如有值得关注的变化，我们会提醒你。"
+      },
+      "range_dips": {
+        "named": "{name}，预测余额保持在零以上，但示意区间的下限更低，留一些余地可能更稳妥。",
+        "plain": "预测余额保持在零以上，但示意区间的下限更低，留一些余地可能更稳妥。"
+      },
+      "gap": {
+        "named": "{name}，{date} 前后可能会出现现金流缺口。我们一起看看有哪些选择。",
+        "plain": "{date} 前后可能会出现现金流缺口。我们一起看看有哪些选择。"
+      },
+      "gap_help": "试着调整收入和支出，看看哪些做法可能有帮助。这是根据历史记录做出的估算，并不确定。"
+    },
+    "nickname": {
+      "label": "昵称",
+      "required": "必填",
+      "placeholder": "我们该怎么称呼你？",
+      "help": "我们会用你的昵称，让 BillieWeather 更有亲切感。最多 40 个字符，任何语言都可以。",
+      "errors": {
+        "blank": "请填写一个昵称，叫什么都可以。",
+        "too_long": "最多使用 40 个字符。",
+        "invalid": "请删除不支持的字符。"
+      }
+    },
+    "nickname_prompt": {
+      "title": "我们该怎么称呼你？",
+      "body": "添加一个昵称，让 BillieWeather 更像是你自己的。昵称只有你能看到。",
+      "save": "保存昵称",
+      "saving": "正在保存…",
+      "later": "以后再说",
+      "saved": "很高兴认识你，{name}！",
+      "failed": "暂时无法保存。请检查网络连接后重试。"
+    }
+  },
+  "zh-TW": {
+    "greeting": {
+      "morning": {
+        "named": "早安，{name}！",
+        "plain": "早安！"
+      },
+      "afternoon": {
+        "named": "午安，{name}！",
+        "plain": "午安！"
+      },
+      "evening": {
+        "named": "晚安，{name}！",
+        "plain": "晚安！"
+      }
+    },
+    "dashboard": {
+      "morning": "來看看今天的財務狀況吧。",
+      "afternoon": "這是你最新的財務概況。",
+      "evening": "花一點時間，看看你的財務天氣吧。",
+      "first_use": {
+        "named": "嗨，{name}！準備好了解你的財務天氣了嗎？",
+        "plain": "準備好了解你的財務天氣了嗎？"
+      },
+      "attention": "有幾筆交易還在等待分類，方便時處理即可。"
+    },
+    "welcome": {
+      "title": {
+        "named": "歡迎使用 BillieWeather，{name}！",
+        "plain": "歡迎使用 BillieWeather！"
+      },
+      "subtitle": "讓我們一起把財務的未來看得更清楚一點。",
+      "notice": {
+        "named": "歡迎使用 BillieWeather，{name}！讓我們一起把財務的未來看得更清楚一點。",
+        "plain": "歡迎使用 BillieWeather！讓我們一起把財務的未來看得更清楚一點。"
+      }
+    },
+    "import_done": {
+      "named": "完成了，{name}！你的帳單已匯入。",
+      "plain": "完成了！你的帳單已匯入。"
+    },
+    "reconciled": {
+      "named": "一切順利，{name}！你的交易已完成對帳。",
+      "plain": "一切順利！你的交易已完成對帳。"
+    },
+    "insight_intro": {
+      "named": "{name}，這裡有一些值得留意的地方。",
+      "plain": "這裡有一些值得留意的地方。"
+    },
+    "forecast": {
+      "stable": {
+        "named": "{name}，你目前的預測看起來很平穩。如有值得關注的變化，我們會提醒你。",
+        "plain": "你目前的預測看起來很平穩。如有值得關注的變化，我們會提醒你。"
+      },
+      "range_dips": {
+        "named": "{name}，預測餘額維持在零以上，但示意區間的下限更低，保留一些餘裕可能更穩當。",
+        "plain": "預測餘額維持在零以上，但示意區間的下限更低，保留一些餘裕可能更穩當。"
+      },
+      "gap": {
+        "named": "{name}，{date} 前後可能會出現現金流缺口。我們一起看看有哪些選擇。",
+        "plain": "{date} 前後可能會出現現金流缺口。我們一起看看有哪些選擇。"
+      },
+      "gap_help": "試著調整收入和支出，看看哪些做法可能有幫助。這是根據歷史紀錄做出的估算，並不確定。"
+    },
+    "nickname": {
+      "label": "暱稱",
+      "required": "必填",
+      "placeholder": "我們該怎麼稱呼你？",
+      "help": "我們會用你的暱稱，讓 BillieWeather 更有親切感。最多 40 個字元，任何語言都可以。",
+      "errors": {
+        "blank": "請填寫一個暱稱，叫什麼都可以。",
+        "too_long": "最多使用 40 個字元。",
+        "invalid": "請刪除不支援的字元。"
+      }
+    },
+    "nickname_prompt": {
+      "title": "我們該怎麼稱呼你？",
+      "body": "加上一個暱稱，讓 BillieWeather 更像是你自己的。暱稱只有你看得到。",
+      "save": "儲存暱稱",
+      "saving": "正在儲存…",
+      "later": "以後再說",
+      "saved": "很高興認識你，{name}！",
+      "failed": "暫時無法儲存。請檢查網路連線後再試一次。"
+    }
+  },
+  "ja": {
+    "greeting": {
+      "morning": {
+        "named": "{name}さん、おはようございます！",
+        "plain": "おはようございます！"
+      },
+      "afternoon": {
+        "named": "{name}さん、こんにちは！",
+        "plain": "こんにちは！"
+      },
+      "evening": {
+        "named": "{name}さん、こんばんは！",
+        "plain": "こんばんは！"
+      }
+    },
+    "dashboard": {
+      "morning": "今日のお金の様子を見てみましょう。",
+      "afternoon": "最新の家計の見通しはこちらです。",
+      "evening": "お金の天気を少しだけ確認しておきましょう。",
+      "first_use": {
+        "named": "{name}さん、お金の天気をのぞいてみませんか？",
+        "plain": "お金の天気をのぞいてみませんか？"
+      },
+      "attention": "カテゴリを待っている取引がいくつかあります。お手すきのときにどうぞ。"
+    },
+    "welcome": {
+      "title": {
+        "named": "{name}さん、BillieWeather へようこそ！",
+        "plain": "BillieWeather へようこそ！"
+      },
+      "subtitle": "これからのお金の流れを、少しずつはっきりさせていきましょう。",
+      "notice": {
+        "named": "{name}さん、BillieWeather へようこそ！これからのお金の流れを、少しずつはっきりさせていきましょう。",
+        "plain": "BillieWeather へようこそ！これからのお金の流れを、少しずつはっきりさせていきましょう。"
+      }
+    },
+    "import_done": {
+      "named": "{name}さん、完了です！明細を取り込みました。",
+      "plain": "完了です！明細を取り込みました。"
+    },
+    "reconciled": {
+      "named": "{name}さん、順調です！取引の照合が完了しました。",
+      "plain": "順調です！取引の照合が完了しました。"
+    },
+    "insight_intro": {
+      "named": "{name}さん、気に留めておきたいポイントがあります。",
+      "plain": "気に留めておきたいポイントがあります。"
+    },
+    "forecast": {
+      "stable": {
+        "named": "{name}さん、現在の予測は安定しているようです。確認したほうがよい変化があればお知らせします。",
+        "plain": "現在の予測は安定しているようです。確認したほうがよい変化があればお知らせします。"
+      },
+      "range_dips": {
+        "named": "{name}さん、予測残高はゼロを上回っていますが、参考範囲の下限はそれより低くなっています。少し余裕を持っておくと安心かもしれません。",
+        "plain": "予測残高はゼロを上回っていますが、参考範囲の下限はそれより低くなっています。少し余裕を持っておくと安心かもしれません。"
+      },
+      "gap": {
+        "named": "{name}さん、{date}ごろに資金が不足する可能性があります。一緒に選択肢を見てみましょう。",
+        "plain": "{date}ごろに資金が不足する可能性があります。一緒に選択肢を見てみましょう。"
+      },
+      "gap_help": "収入や支出の調整を試して、どんな対策が役立ちそうか確かめてみてください。これは過去の記録にもとづく見積もりで、確実なものではありません。"
+    },
+    "nickname": {
+      "label": "ニックネーム",
+      "required": "必須",
+      "placeholder": "何とお呼びしましょうか？",
+      "help": "ニックネームを使って、BillieWeather をもっと身近に感じられるようにします。40文字まで、どの言語でも使えます。",
+      "errors": {
+        "blank": "ニックネームを入力してください。お好きな呼び名で大丈夫です。",
+        "too_long": "40 文字以内にしてください。",
+        "invalid": "使用できない文字を削除してください。"
+      }
+    },
+    "nickname_prompt": {
+      "title": "何とお呼びしましょうか？",
+      "body": "ニックネームを設定すると、BillieWeather がもう少しあなたらしくなります。表示されるのはあなただけです。",
+      "save": "ニックネームを保存",
+      "saving": "保存しています…",
+      "later": "あとで",
+      "saved": "{name}さん、よろしくお願いします！",
+      "failed": "今は保存できませんでした。接続を確認して、もう一度お試しください。"
+    }
+  },
+  "ko": {
+    "greeting": {
+      "morning": {
+        "named": "{name}님, 좋은 아침이에요!",
+        "plain": "좋은 아침이에요!"
+      },
+      "afternoon": {
+        "named": "{name}님, 좋은 오후예요!",
+        "plain": "좋은 오후예요!"
+      },
+      "evening": {
+        "named": "{name}님, 좋은 저녁이에요!",
+        "plain": "좋은 저녁이에요!"
+      }
+    },
+    "dashboard": {
+      "morning": "오늘의 재무 상황을 함께 살펴볼까요?",
+      "afternoon": "최신 재무 전망을 확인해 보세요.",
+      "evening": "잠깐 재무 날씨를 확인해 볼까요?",
+      "first_use": {
+        "named": "{name}님, 재무 날씨를 알아볼 준비가 되셨나요?",
+        "plain": "재무 날씨를 알아볼 준비가 되셨나요?"
+      },
+      "attention": "분류를 기다리는 거래가 몇 건 있어요. 편하실 때 확인해 주세요."
+    },
+    "welcome": {
+      "title": {
+        "named": "{name}님, BillieWeather에 오신 것을 환영해요!",
+        "plain": "BillieWeather에 오신 것을 환영해요!"
+      },
+      "subtitle": "앞으로의 재무 흐름을 조금 더 선명하게 만들어 봐요.",
+      "notice": {
+        "named": "{name}님, BillieWeather에 오신 것을 환영해요! 앞으로의 재무 흐름을 조금 더 선명하게 만들어 봐요.",
+        "plain": "BillieWeather에 오신 것을 환영해요! 앞으로의 재무 흐름을 조금 더 선명하게 만들어 봐요."
+      }
+    },
+    "import_done": {
+      "named": "{name}님, 완료됐어요! 명세서를 가져왔어요.",
+      "plain": "완료됐어요! 명세서를 가져왔어요."
+    },
+    "reconciled": {
+      "named": "{name}님, 좋아요! 거래 대사가 완료됐어요.",
+      "plain": "좋아요! 거래 대사가 완료됐어요."
+    },
+    "insight_intro": {
+      "named": "{name}님, 눈여겨볼 만한 점이 있어요.",
+      "plain": "눈여겨볼 만한 점이 있어요."
+    },
+    "forecast": {
+      "stable": {
+        "named": "{name}님, 현재 예측은 안정적으로 보여요. 확인할 만한 변화가 생기면 알려 드릴게요.",
+        "plain": "현재 예측은 안정적으로 보여요. 확인할 만한 변화가 생기면 알려 드릴게요."
+      },
+      "range_dips": {
+        "named": "{name}님, 예상 잔액은 0원 이상을 유지하지만 참고 범위의 하단은 더 낮아요. 여유를 조금 남겨 두면 좋을 수 있어요.",
+        "plain": "예상 잔액은 0원 이상을 유지하지만 참고 범위의 하단은 더 낮아요. 여유를 조금 남겨 두면 좋을 수 있어요."
+      },
+      "gap": {
+        "named": "{name}님, {date} 무렵 현금 흐름이 부족해질 수 있어요. 함께 방법을 찾아봐요.",
+        "plain": "{date} 무렵 현금 흐름이 부족해질 수 있어요. 함께 방법을 찾아봐요."
+      },
+      "gap_help": "수입과 지출 조정을 바꿔 보며 어떤 방법이 도움이 될지 확인해 보세요. 이 예측은 과거 기록을 바탕으로 한 추정이며 확실한 것은 아니에요."
+    },
+    "nickname": {
+      "label": "닉네임",
+      "required": "필수",
+      "placeholder": "어떻게 불러 드릴까요?",
+      "help": "닉네임을 사용해 BillieWeather를 조금 더 친근하게 만들어 드릴게요. 최대 40자, 어떤 언어든 괜찮아요.",
+      "errors": {
+        "blank": "닉네임을 입력해 주세요. 불리고 싶은 이름이면 무엇이든 괜찮아요.",
+        "too_long": "40자 이하로 입력하세요.",
+        "invalid": "지원되지 않는 문자를 삭제하세요."
+      }
+    },
+    "nickname_prompt": {
+      "title": "어떻게 불러 드릴까요?",
+      "body": "닉네임을 추가하면 BillieWeather가 조금 더 나만의 공간처럼 느껴질 거예요. 닉네임은 본인에게만 보여요.",
+      "save": "닉네임 저장",
+      "saving": "저장 중…",
+      "later": "나중에",
+      "saved": "반가워요, {name}님!",
+      "failed": "지금은 저장할 수 없어요. 연결을 확인한 뒤 다시 시도해 주세요."
+    }
+  },
+  "es": {
+    "greeting": {
+      "morning": {
+        "named": "¡Buenos días, {name}!",
+        "plain": "¡Buenos días!"
+      },
+      "afternoon": {
+        "named": "¡Buenas tardes, {name}!",
+        "plain": "¡Buenas tardes!"
+      },
+      "evening": {
+        "named": "¡Buenas noches, {name}!",
+        "plain": "¡Buenas noches!"
+      }
+    },
+    "dashboard": {
+      "morning": "Veamos cómo van tus finanzas hoy.",
+      "afternoon": "Aquí tienes tu panorama financiero más reciente.",
+      "evening": "Echemos un vistazo rápido a tu clima financiero.",
+      "first_use": {
+        "named": "Hola, {name}. ¿Listo para conocer tu clima financiero?",
+        "plain": "¿Listo para conocer tu clima financiero?"
+      },
+      "attention": "Hay algunas transacciones esperando una categoría, cuando tengas un momento."
+    },
+    "welcome": {
+      "title": {
+        "named": "¡Te damos la bienvenida a BillieWeather, {name}!",
+        "plain": "¡Te damos la bienvenida a BillieWeather!"
+      },
+      "subtitle": "Hagamos que tu futuro financiero se vea un poco más claro.",
+      "notice": {
+        "named": "¡Te damos la bienvenida a BillieWeather, {name}! Hagamos que tu futuro financiero se vea un poco más claro.",
+        "plain": "¡Te damos la bienvenida a BillieWeather! Hagamos que tu futuro financiero se vea un poco más claro."
+      }
+    },
+    "import_done": {
+      "named": "¡Listo, {name}! Tu estado de cuenta se ha importado.",
+      "plain": "¡Listo! Tu estado de cuenta se ha importado."
+    },
+    "reconciled": {
+      "named": "¡Todo en orden, {name}! Tus transacciones están conciliadas.",
+      "plain": "¡Todo en orden! Tus transacciones están conciliadas."
+    },
+    "insight_intro": {
+      "named": "{name}, hay algo que vale la pena vigilar.",
+      "plain": "Hay algo que vale la pena vigilar."
+    },
+    "forecast": {
+      "stable": {
+        "named": "Tu pronóstico actual se ve estable, {name}. Te avisaremos de cualquier cambio que valga la pena revisar.",
+        "plain": "Tu pronóstico actual se ve estable. Te avisaremos de cualquier cambio que valga la pena revisar."
+      },
+      "range_dips": {
+        "named": "Tu saldo proyectado se mantiene por encima de cero, {name}, aunque el rango ilustrativo baja más. Quizá convenga dejar un pequeño margen.",
+        "plain": "Tu saldo proyectado se mantiene por encima de cero, aunque el rango ilustrativo baja más. Quizá convenga dejar un pequeño margen."
+      },
+      "gap": {
+        "named": "{name}, podría haber un déficit de efectivo alrededor del {date}. Veamos tus opciones.",
+        "plain": "Podría haber un déficit de efectivo alrededor del {date}. Veamos tus opciones."
+      },
+      "gap_help": "Prueba los ajustes de ingresos y gastos para ver qué podría ayudar. Es una estimación basada en tu historial, no una certeza."
+    },
+    "nickname": {
+      "label": "Apodo",
+      "required": "obligatorio",
+      "placeholder": "¿Cómo quieres que te llamemos?",
+      "help": "Usaremos tu apodo para que BillieWeather se sienta un poco más personal. Hasta 40 caracteres, en cualquier idioma.",
+      "errors": {
+        "blank": "Elige un apodo. Cualquier nombre que te guste está bien.",
+        "too_long": "Usa como máximo 40 caracteres.",
+        "invalid": "Elimina los caracteres no admitidos."
+      }
+    },
+    "nickname_prompt": {
+      "title": "¿Cómo quieres que te llamemos?",
+      "body": "Añade un apodo y BillieWeather se sentirá un poco más tuyo. Solo tú lo verás.",
+      "save": "Guardar apodo",
+      "saving": "Guardando…",
+      "later": "Quizá más tarde",
+      "saved": "¡Encantados de conocerte, {name}!",
+      "failed": "No se pudo guardar ahora. Revisa tu conexión e inténtalo de nuevo."
+    }
+  }
+}

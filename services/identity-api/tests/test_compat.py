@@ -110,7 +110,7 @@ def test_rails_accepts_and_signs_in_python_created_accounts(client, make_client,
     gclient = make_client(google_client=GoogleClient(CLIENT_ID, "s", "http://identity.test/v1/google/callback", http=httpx.Client(transport=httpx.MockTransport(google.handler))))
     flow = AppFlow(gclient)
     signed_in_to_google(google, flow, email="compat-google@example.org")
-    assert flow.post("complete", password="google app pass", password_confirmation="google app pass", usage_region="US").status_code == 201
+    assert flow.post("complete", password="google app pass", password_confirmation="google app pass", usage_region="US", nickname="Gigi").status_code == 201
     accounts.append({"email": "compat-google@example.org", "password": "google app pass"})
 
     payload = tmp_path / "input.json"

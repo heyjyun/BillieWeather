@@ -2,6 +2,17 @@ class User < ApplicationRecord
   include Users::Base
   include Roles::User
 
+  # The one place the nickname rules live on the server. services/identity-api/identity_api/validation.py
+  # and clients/universal/src/services/profile.ts mirror them (same limit, same normalization).
+  NICKNAME_MAX = 40
+  # At least one letter, mark, number, punctuation or symbol: whitespace and invisible format
+  # characters alone (e.g. a zero-width space) are not a nickname. Any script is welcome.
+  NICKNAME_VISIBLE = /[\p{L}\p{M}\p{N}\p{P}\p{S}]/
+
+  # Set by the screens where a person edits their nickname, so clearing it there is refused
+  # even for an older account that never had one.
+  attr_accessor :editing_nickname
+
   has_one :finance_profile, class_name: "Finance::Profile", dependent: :destroy
   has_many :finance_statements, class_name: "Finance::Statement", dependent: :destroy
   has_many :finance_transactions, class_name: "Finance::Transaction", dependent: :destroy
@@ -37,7 +48,9 @@ class User < ApplicationRecord
   after_save { @usage_region_selection_attempted = false }
   validates :usage_region, presence: true, if: :usage_region_selection_required?
   validates :usage_region, inclusion: {in: UsageRegion::CODES}, allow_nil: true
-  validates :nickname, length: {maximum: 40}
+  validates :nickname, length: {maximum: NICKNAME_MAX}
+  validates :nickname, presence: true, if: :nickname_required?
+  validate :nickname_has_no_control_characters
   validates :cloud_database_name, length: {maximum: 60}
 
   def usage_region=(value)
@@ -45,9 +58,20 @@ class User < ApplicationRecord
     super
   end
 
-  # BillieWeather does not ask for a legal name; people choose an optional nickname instead.
+  # BillieWeather does not ask for a legal name; people choose a nickname instead.
   def name
     nickname.presence || email
+  end
+
+  # The name to greet someone by, or nil. Never falls back to the email address: a greeting
+  # without a name reads better than "Good morning, jyun@example.com!".
+  def preferred_name
+    nickname.presence
+  end
+
+  # Older accounts (created while the nickname was optional) are asked, gently, to add one.
+  def needs_nickname?
+    platform_agent_of_id.nil? && nickname.blank?
   end
 
   def full_name
@@ -89,9 +113,10 @@ class User < ApplicationRecord
   end
 
   # Welcome mail is optional; account creation does not depend on paid email delivery.
+  # The locale is captured now because the mail is delivered later, outside this request.
   def send_welcome_email
     return if Rails.env.production? && (ENV["POSTMARK_API_TOKEN"].blank? || ENV["MAIL_FROM"].blank?)
-    super
+    WelcomeMailer.with(locale: I18n.locale.to_s).welcome(self).deliver_later
   rescue BilliePostmarkDelivery::Error
     Rails.logger.warn("Optional welcome email could not be delivered.")
   end
@@ -131,7 +156,18 @@ class User < ApplicationRecord
   end
 
   def normalize_nickname
-    self.nickname = nickname.to_s.squish.presence
+    squished = nickname.to_s.squish
+    self.nickname = squished.match?(NICKNAME_VISIBLE) ? squished : nil
+  end
+
+  # New accounts must choose a nickname; existing accounts without one keep working, but once a
+  # nickname is set (or someone edits it in settings) it cannot be cleared back to blank.
+  def nickname_required?
+    platform_agent_of_id.nil? && (new_record? || editing_nickname || will_save_change_to_nickname?)
+  end
+
+  def nickname_has_no_control_characters
+    errors.add(:nickname, :invalid) if nickname&.match?(/\p{Cc}/)
   end
 
   def usage_region_selection_required?

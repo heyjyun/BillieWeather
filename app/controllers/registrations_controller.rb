@@ -3,6 +3,17 @@ class RegistrationsController < Devise::RegistrationsController
 
   layout "billie"
 
+  # A new account is welcomed by the nickname it just chose, in its own language. Prepended because
+  # Bullet Train defines #create on this class (Registrations::ControllerBase `included` block: default
+  # team, welcome email); `super` here runs all of that first.
+  module WelcomeByNickname
+    def create
+      super
+      flash[:notice] = helpers.personal_message("welcome.notice", current_user) if current_user && flash[:notice].present?
+    end
+  end
+  prepend WelcomeByNickname
+
   # Devise's stock DELETE /users destroys the account immediately. BillieWeather requires
   # explicit confirmation and refuses when team data is shared; see AccountDeletion.
   def destroy
