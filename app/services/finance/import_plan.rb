@@ -1,6 +1,6 @@
 module Finance
   # How a batch of parsed statement rows becomes entries (every import path uses it: CSV, reviewed PDF,
-  # a statement sent from a device, the demo account):
+  # a statement sent from a device):
   #   1. classify each row's kind with the account type (EntryClassifier): a refund or a card
   #      repayment on a credit card is never income;
   #   2. compare with what is already stored for the same account (DuplicateDetector): automatic

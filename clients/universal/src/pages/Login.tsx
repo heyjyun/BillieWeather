@@ -3,11 +3,9 @@ import { LanguageSelect, useI18n } from "../i18n";
 import { useAccount } from "../hooks/useAccount";
 import { AccountError, websiteUrl } from "../services/account";
 import { openExternal } from "../services/session";
-import { QUICK_LOGINS, type QuickLogin } from "../services/quickLogin";
 import { BrandMark } from "../components/BrandMark";
 
-export function Login({ quickLogins = QUICK_LOGINS, onCreateAccount, initialEmail = "" }: {
-  quickLogins?: QuickLogin[];
+export function Login({ onCreateAccount, initialEmail = "" }: {
   /** Opens the in-app Create Account screen (pages/Register.tsx). */
   onCreateAccount?: () => void;
   initialEmail?: string;
@@ -24,15 +22,6 @@ export function Login({ quickLogins = QUICK_LOGINS, onCreateAccount, initialEmai
   async function submit(event: FormEvent) {
     event.preventDefault();
     await attempt(email.trim(), password, needsOtp ? otp.trim() : undefined);
-  }
-
-  async function quickSignIn(shortcut: QuickLogin) {
-    setEmail(shortcut.email);
-    setPassword(shortcut.password);
-    setOtp("");
-    setNeedsOtp(false);
-    setError(null);
-    if (shortcut.password) await attempt(shortcut.email, shortcut.password);
   }
 
   async function attempt(email: string, password: string, otpAttempt?: string) {
@@ -77,18 +66,6 @@ export function Login({ quickLogins = QUICK_LOGINS, onCreateAccount, initialEmai
           {error && <p className="bw-message bw-message-error" role="alert">{error}</p>}
           <button type="submit" className="bw-button bw-button-dark" disabled={busy || !email || !password}>{busy ? m.login.submitting : m.login.submit}</button>
         </form>
-        {quickLogins.length > 0 && (
-          <div className="bw-login-quick" role="group" aria-label={m.login.quick.heading}>
-            <span className="bw-login-quick-label">{m.login.quick.heading}</span>
-            <div className="bw-login-quick-buttons">
-              {quickLogins.map((shortcut) => (
-                <button key={shortcut.id} type="button" className="bw-button bw-button-outline" disabled={busy} title={shortcut.email} onClick={() => quickSignIn(shortcut)}>
-                  {m.login.quick[shortcut.id]}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
         <div className="bw-login-links">
           {onCreateAccount && <button type="button" className="bw-link-button" onClick={onCreateAccount}>{m.login.createAccount}</button>}
           <button type="button" className="bw-link-button" onClick={() => openExternal(websiteUrl("/users/password/new", locale))}>{m.login.forgot}</button>

@@ -22,7 +22,6 @@ module Finance
 
     # Returns [record, plaintext token]. The plaintext is not stored anywhere.
     def self.issue!(user:, name:)
-      raise ArgumentError, "the Example Account cannot create capture tokens" if user.demo_account?
       token = "#{PREFIX}#{SecureRandom.urlsafe_base64(32)}"
       record = create!(user: user, name: name.to_s.strip.first(60), token_digest: digest(token), token_prefix: token.first(12), expires_at: LIFETIME.from_now)
       [record, token]
@@ -34,7 +33,7 @@ module Finance
       record = active.find_by(token_digest: digest(token))
       return nil unless record
       user = record.user
-      return nil if user.demo_account? || !user.active_for_authentication?
+      return nil unless user.active_for_authentication?
       record.update_column(:last_used_at, Time.current) if record.last_used_at.nil? || record.last_used_at < 1.minute.ago
       user
     end

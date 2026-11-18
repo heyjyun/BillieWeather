@@ -276,13 +276,13 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
     assert_equal "active", other_report.reload.status
   end
 
-  test "the Example Account never sees another account's local database inventory" do
-    example = create(:onboarded_user, email: "example-visitor@example.com", usage_region: "US")
-    report_local(@user, name: "heyjyun MacBook Air", device_name: "Jyun’s MacBook Air")
-    sign_in example
+  test "a different account never sees this account's local database inventory" do
+    other_visitor = create(:onboarded_user, email: "other-visitor@example.com", usage_region: "US")
+    report_local(@user, name: "Owner MacBook Air", device_name: "Owner’s MacBook Air")
+    sign_in other_visitor
     get finance_settings_path, params: {locale: "en"}
     assert_empty css_select("[data-local-device]")
-    assert_not_includes response.body, "heyjyun MacBook Air"
+    assert_not_includes response.body, "Owner MacBook Air"
     assert_not_includes response.body, DEVICE_ID
   end
 

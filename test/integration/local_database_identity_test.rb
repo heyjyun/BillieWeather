@@ -11,9 +11,9 @@ class LocalDatabaseIdentityTest < ActionDispatch::IntegrationTest
   OTHER_DB = "55e25646-f82e-4f9d-8f59-69a5800b969b"
 
   setup do
-    @jyun = create(:onboarded_user, email: "heyjyun-test@example.com", password: PASSWORD, password_confirmation: PASSWORD, usage_region: "US")
+    @owner = create(:onboarded_user, email: "owner-test@example.com", password: PASSWORD, password_confirmation: PASSWORD, usage_region: "US")
     @other = create(:onboarded_user, email: "someone-else@example.com", password: PASSWORD, password_confirmation: PASSWORD, usage_region: "US")
-    @auth = sign_in_client(@jyun)
+    @auth = sign_in_client(@owner)
     @other_auth = sign_in_client(@other)
     @sequence = 0
   end
@@ -25,13 +25,13 @@ class LocalDatabaseIdentityTest < ActionDispatch::IntegrationTest
 
   def report(device: MAC, database: MAIN_DB, headers: @auth, **fields)
     @sequence += 1
-    body = {name: "MacBook Air", device_name: "Jyun’s MacBook Air", platform: "macos", size_bytes: 856_064, statement_count: 72,
+    body = {name: "MacBook Air", device_name: "Owner’s MacBook Air", platform: "macos", size_bytes: 856_064, statement_count: 72,
             transaction_count: 2687, rule_count: 0, period_start: "2024-10-01", period_end: "2026-09-30",
             modified_at: "2026-11-09T06:35:29Z", opened_at: Time.current.utc.iso8601, synced_at: nil, sequence: @sequence}.merge(fields)
     put "/api/client/v1/devices/#{device}/databases/#{database}", params: {database: body}, headers: headers, as: :json
   end
 
-  def rows(user = @jyun) = Finance::LocalDatabaseReport.where(user_id: user.id)
+  def rows(user = @owner) = Finance::LocalDatabaseReport.where(user_id: user.id)
 
   test "reopening the same app 20 times keeps exactly one record, updated in place" do
     20.times do |launch|
@@ -41,7 +41,7 @@ class LocalDatabaseIdentityTest < ActionDispatch::IntegrationTest
       assert_equal "applied", response.parsed_body["status"]
     end
     assert_equal 1, rows.count
-    assert_equal 1, Finance::LocalDevice.where(user_id: @jyun.id).count
+    assert_equal 1, Finance::LocalDevice.where(user_id: @owner.id).count
     row = rows.sole
     assert_equal 856_064 + 19, row.size_bytes, "the latest launch's numbers are shown"
     assert_equal "active", row.status
@@ -51,10 +51,10 @@ class LocalDatabaseIdentityTest < ActionDispatch::IntegrationTest
 
   test "a device name change updates the same card instead of creating a new one" do
     report(device_name: "MacBook Air")
-    report(device_name: "Jyun’s MacBook Air")
+    report(device_name: "Owner’s MacBook Air")
     report(name: "Renamed database")
     assert_equal 1, rows.count
-    assert_equal "Jyun’s MacBook Air", Finance::LocalDevice.find_by!(user_id: @jyun.id, device_id: MAC).name
+    assert_equal "Owner’s MacBook Air", Finance::LocalDevice.find_by!(user_id: @owner.id, device_id: MAC).name
     assert_equal "Renamed database", rows.sole.name
   end
 
@@ -62,19 +62,19 @@ class LocalDatabaseIdentityTest < ActionDispatch::IntegrationTest
     report(device: MAC)
     report(device: PHONE, database: OTHER_DB, device_name: "iPhone", platform: "ios")
     report(device: MAC)
-    assert_equal 2, Finance::LocalDevice.where(user_id: @jyun.id).count
+    assert_equal 2, Finance::LocalDevice.where(user_id: @owner.id).count
     assert_equal 2, rows.active.count
-    assert_equal %w[ios macos], Finance::LocalDevice.where(user_id: @jyun.id).pluck(:platform).sort
+    assert_equal %w[ios macos], Finance::LocalDevice.where(user_id: @owner.id).pluck(:platform).sort
   end
 
   test "two accounts on one device stay isolated" do
     report(headers: @auth)
     report(headers: @other_auth, name: "Someone else’s", statement_count: 1)
-    assert_equal ["MacBook Air"], rows(@jyun).pluck(:name)
+    assert_equal ["MacBook Air"], rows(@owner).pluck(:name)
     assert_equal ["Someone else’s"], rows(@other).pluck(:name)
-    assert_equal 72, rows(@jyun).sole.statement_count, "the other account's report never overwrote this one"
+    assert_equal 72, rows(@owner).sole.statement_count, "the other account's report never overwrote this one"
     delete "/api/client/v1/devices/#{MAC}", params: {sequence: 10_000}, headers: @other_auth, as: :json
-    assert_equal 1, rows(@jyun).live.count
+    assert_equal 1, rows(@owner).live.count
   end
 
   test "an incomplete identity (no platform: browser preview or old build) is refused and stores nothing" do
@@ -84,7 +84,7 @@ class LocalDatabaseIdentityTest < ActionDispatch::IntegrationTest
     report(platform: "browser")
     assert_response :unprocessable_entity
     assert_equal 0, rows.count
-    assert_equal 0, Finance::LocalDevice.where(user_id: @jyun.id).count
+    assert_equal 0, Finance::LocalDevice.where(user_id: @owner.id).count
   end
 
   test "different non-empty databases on one device are kept apart, with an audit entry" do
@@ -92,19 +92,19 @@ class LocalDatabaseIdentityTest < ActionDispatch::IntegrationTest
     report(database: OTHER_DB, name: "Work", statement_count: 3, transaction_count: 40)
     assert_equal 2, rows.active.count
     assert_equal [40, 2687], rows.order(:transaction_count).pluck(:transaction_count)
-    audit = Finance::LocalDatabaseAudit.where(user_id: @jyun.id, event: "database_added").sole
+    audit = Finance::LocalDatabaseAudit.where(user_id: @owner.id, event: "database_added").sole
     assert_equal OTHER_DB, audit.database_id
     assert_equal [MAIN_DB], audit.details["other_databases_on_device"]
   end
 
   test "the same database seen from a new device id moves the card and keeps the old association in the audit" do
     report(device: MAC)
-    report(device: PHONE, device_name: "Jyun’s MacBook Air")
+    report(device: PHONE, device_name: "Owner’s MacBook Air")
     assert_equal [PHONE], rows.active.pluck(:device_id)
     old = rows.find_by!(device_id: MAC)
     assert_equal ["archived", "superseded_by_other_device"], [old.status, old.status_reason]
     assert_equal 2687, old.transaction_count, "the previous snapshot is kept, not deleted"
-    audit = Finance::LocalDatabaseAudit.where(user_id: @jyun.id, event: "database_superseded").sole
+    audit = Finance::LocalDatabaseAudit.where(user_id: @owner.id, event: "database_superseded").sole
     assert_equal [MAC, PHONE], [audit.device_id, audit.details["to_device_id"]]
     assert_equal 2687, audit.details.dig("previous_snapshot", "transaction_count")
   end
@@ -116,7 +116,7 @@ class LocalDatabaseIdentityTest < ActionDispatch::IntegrationTest
     assert_equal 0, rows.active.count
     assert_equal %w[review review], rows.pluck(:status)
     assert_equal [2687, 2700], rows.order(:transaction_count).pluck(:transaction_count)
-    assert Finance::LocalDatabaseAudit.exists?(user_id: @jyun.id, event: "database_on_multiple_devices")
+    assert Finance::LocalDatabaseAudit.exists?(user_id: @owner.id, event: "database_on_multiple_devices")
     report(device: PHONE)
     assert_equal 0, rows.active.count, "further reports keep them in review until the person decides"
   end
@@ -140,12 +140,12 @@ class LocalDatabaseIdentityTest < ActionDispatch::IntegrationTest
   end
 
   test "reporting leaves the web database untouched" do
-    statement = Finance::Statement.create!(user: @jyun, filename: "web.csv", currency: "USD", sha256: "a" * 64, transaction_count: 1)
-    Finance::Transaction.create!(user: @jyun, statement: statement, booked_on: Date.new(2026, 3, 1), description: "Payroll", amount: "100.00", category: "Income")
-    before = [Finance::Statement.where(user: @jyun).pluck(:id, :updated_at), Finance::Transaction.where(user: @jyun).pluck(:id, :updated_at), Finance::MerchantRule.count]
+    statement = Finance::Statement.create!(user: @owner, filename: "web.csv", currency: "USD", sha256: "a" * 64, transaction_count: 1)
+    Finance::Transaction.create!(user: @owner, statement: statement, booked_on: Date.new(2026, 3, 1), description: "Payroll", amount: "100.00", category: "Income")
+    before = [Finance::Statement.where(user: @owner).pluck(:id, :updated_at), Finance::Transaction.where(user: @owner).pluck(:id, :updated_at), Finance::MerchantRule.count]
     3.times { report }
     report(device: PHONE, database: OTHER_DB)
-    assert_equal before, [Finance::Statement.where(user: @jyun).pluck(:id, :updated_at), Finance::Transaction.where(user: @jyun).pluck(:id, :updated_at), Finance::MerchantRule.count]
+    assert_equal before, [Finance::Statement.where(user: @owner).pluck(:id, :updated_at), Finance::Transaction.where(user: @owner).pluck(:id, :updated_at), Finance::MerchantRule.count]
   end
 end
 

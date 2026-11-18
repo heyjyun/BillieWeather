@@ -1,49 +1,9 @@
 <% content_for :title, t("billie.auth.log_in") %>
 <section class="bw-auth-wrap">
-  <div class="bw-panel bw-auth-card bw-auth-card-choices">
+  <div class="bw-panel bw-auth-card">
     <p class="bw-eyebrow"><%= t("billie.auth.welcome_back") %></p>
-    <h1><%= t("billie.quick_access.welcome") %></h1>
+    <h1><%= t("billie.account_access.welcome") %></h1>
     <p class="bw-muted"><%= t("billie.auth.login_description") %></p>
-
-    <div class="bw-account-choices">
-      <% if @demo_available %>
-        <section class="bw-account-choice bw-account-choice-example" aria-labelledby="example-account-heading">
-          <div class="bw-account-choice-head">
-            <span class="bw-account-choice-avatar" aria-hidden="true"><%= finance_icon "insights", size: 18 %></span>
-            <div>
-              <h2 id="example-account-heading"><%= t("billie.quick_access.demo.heading") %> <span class="bw-pill bw-pill-demo"><%= t("billie.quick_access.demo.badge") %></span></h2>
-              <p id="example-account-hint"><%= t("billie.quick_access.demo.hint") %></p>
-            </div>
-          </div>
-          <%= button_to users_demo_session_path, class: "bw-button bw-button-example", id: "quick-login-example", form: {data: {turbo: false, single_submit: true}}, "aria-describedby": "example-account-hint" do %>
-            <span><%= t("billie.quick_access.demo.quick_login") %></span>
-          <% end %>
-        </section>
-      <% end %>
-
-      <% if @personal_user %>
-        <section class="bw-account-choice bw-account-choice-personal" aria-labelledby="personal-account-heading">
-          <div class="bw-account-choice-head">
-            <span class="bw-account-choice-avatar" aria-hidden="true"><%= PersonalAccount.label(@personal_user).first.upcase %></span>
-            <div>
-              <h2 id="personal-account-heading"><%= t("billie.quick_access.personal.heading") %></h2>
-              <p id="personal-account-hint"><%= @personal_passwordless ? t("billie.quick_access.personal.dev_hint") : t("billie.quick_access.personal.password_hint") %></p>
-            </div>
-          </div>
-          <%= form_with url: users_personal_session_path, method: :post, id: "quick-login-personal-form", class: "bw-quick-login-form", data: {turbo: false, single_submit: true} do |form| %>
-            <% unless @personal_passwordless %>
-              <div class="bw-form-field"><%= form.label :password, t("billie.auth.password"), for: "quick-login-personal-password" %><%= form.password_field :password, id: "quick-login-personal-password", required: true, autocomplete: "current-password" %></div>
-              <% if @personal_user.otp_required_for_login? %><div class="bw-form-field"><%= form.label :otp_attempt, t("billie.auth.authentication_code"), for: "quick-login-personal-otp" %><%= form.text_field :otp_attempt, id: "quick-login-personal-otp", autocomplete: "one-time-code", inputmode: "numeric" %></div><% end %>
-            <% end %>
-            <%= form.button type: "submit", class: "bw-button bw-button-personal", id: "quick-login-personal", "aria-describedby": "personal-account-hint" do %>
-              <span><%= t("billie.quick_access.personal.quick_login", name: PersonalAccount.label(@personal_user)) %></span>
-            <% end %>
-          <% end %>
-        </section>
-      <% end %>
-    </div>
-
-    <div class="bw-auth-divider bw-auth-divider-strong" id="sign-in-form"><span><%= t("billie.quick_access.other_account") %></span></div>
     <%= render "devise/shared/google_sign_in" %>
     <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: {data: {turbo: false}}) do |form| %>
       <div class="bw-form-field"><%= form.label :email, t("billie.auth.email") %><%= form.email_field :email, required: true, autocomplete: "email", value: resource.email %></div>

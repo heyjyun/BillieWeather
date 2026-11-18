@@ -39,11 +39,11 @@ What the Rails sign-up does, and what this service reproduces in **one transacti
 | `database_authenticatable`: `BCrypt::Password.create(pw, cost: 11)`, no pepper, `$2a$` | `bcrypt` with `prefix=2a`, cost 11, explicit 72-byte truncation (same as Ruby's bcrypt) |
 | `validatable`: email stripped + downcased, `/\A[^@\s]+@[^@\s]+\z/` (ASCII `\s`), unique; password 6..128 | Same rules (emails also limited to 254 chars, no control chars: stricter, never looser) |
 | `pwned_password` (on outside development): reject if seen ≥1 time; fail open | Same, k-anonymity range API |
-| `User`: nickname squished ≤ 40; `usage_region` required, in `UsageRegion::CODES` (incl. `XG` Global Citizen); `example@example.com` reserved | Same; region list tested against `app/models/usage_region.rb` and the DB check constraint |
+| `User`: nickname squished ≤ 40; `usage_region` required, in `UsageRegion::CODES` (incl. `XG` Global Citizen) | Same; region list tested against `app/models/usage_region.rb` and the DB check constraint |
 | `create_default_team`: team "Your Team", membership `role_ids ["admin"]` + `user_email`, `current_team_id` | Same rows; `ability_cache = {}`; timestamps UTC without zone |
 | `finance_owner_uid` | Left to the database default `gen_random_uuid()` |
 | `lockable` (20 attempts) | Google linking counts failures in `users.failed_attempts`; refuses at the limit (Rails then locks and emails the unlock link) |
-| `GoogleSignIn` rules | Same: verified email only, `sub` is the identity, linking needs the password, refused for 2FA / locked / differently linked / demo accounts |
+| `GoogleSignIn` rules | Same: verified email only, `sub` is the identity, linking needs the password, refused for 2FA / locked / differently linked / agent accounts |
 
 Verified by `tests/test_compat.py` (with `IDENTITY_RAILS_COMPAT=1`): accounts created here are
 loaded by the real Rails app, which confirms `valid?`, `valid_password?`, `active_for_authentication?`,

@@ -11,7 +11,7 @@ Account rules are the website's (app/services/google_sign_in.rb):
 - Only a verified Google email is accepted; the Google `sub` is the identity, never the email alone.
 - A Google identity already linked -> the account exists; sign in normally.
 - An existing account with that email -> linking requires that account's password (and is refused
-  for two-factor, locked, demo or differently linked accounts, as on the website).
+  for two-factor, locked, agent or differently linked accounts, as on the website).
 - Otherwise a new account is created (region required). Google profile names are not stored.
 
 Interim limitation (see README "Compatibility blockers"): the apps' session tokens are issued only
@@ -38,7 +38,7 @@ from .db import Database
 from .errors import ApiError, invalid
 from .passwords import PwnedChecker, hash_password, verify_password
 from .registration import utcnow
-from .validation import RESERVED_EMAILS, email_errors, normalize_email, normalize_locale, password_errors, validate_profile
+from .validation import email_errors, normalize_email, normalize_locale, password_errors, validate_profile
 
 log = logging.getLogger("identity_api.google")
 
@@ -123,8 +123,7 @@ class GoogleClient:
         if claims.get("email_verified") not in (True, "true"):
             raise ProviderError("unverified_email")
         email = normalize_email(claims.get("email"))
-        # A reserved address is let through so the flow reports it as unavailable.
-        if [problem for problem in email_errors(email) if problem != "reserved"]:
+        if email_errors(email):
             raise ProviderError("unverified_email")
         return GoogleIdentity(uid=uid, email=email)
 
@@ -228,8 +227,6 @@ class GoogleFlows:
         linked = accounts.find_by_google_uid(conn, identity.uid)
         if linked:
             return "already_linked", None, linked["email"]
-        if identity.email in RESERVED_EMAILS:
-            return "unavailable", "account_unavailable", identity.email
         existing = accounts.find_by_email(conn, identity.email)
         if existing is None:
             return "new_account", None, identity.email
@@ -237,7 +234,7 @@ class GoogleFlows:
 
     @staticmethod
     def _link_blocker(user: dict) -> tuple[str, str] | None:
-        if user["platform_agent_of_id"] is not None or user["email"] in RESERVED_EMAILS:
+        if user["platform_agent_of_id"] is not None:
             return "unavailable", "account_unavailable"
         if user["otp_required_for_login"]:
             return "unavailable", "otp_required"

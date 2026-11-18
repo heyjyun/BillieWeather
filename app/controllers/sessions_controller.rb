@@ -8,15 +8,6 @@ class SessionsController < Devise::SessionsController
   after_action :prevent_sign_in_caching, only: [:new, :create]
   rescue_from ActionController::InvalidAuthenticityToken, with: :restart_sign_in
 
-  # The quick login buttons: the read-only Example Account (when seeded) and the configured
-  # personal account (see PersonalAccount).
-  def new
-    @demo_available = DemoAccount.available?
-    @personal_user = PersonalAccount.user
-    @personal_passwordless = @personal_user.present? && PersonalAccount.passwordless?(request)
-    super
-  end
-
   def create
     super do |user|
       identity = session.delete(:pending_google_identity)
@@ -28,7 +19,7 @@ class SessionsController < Devise::SessionsController
 
   private
 
-  # "Switch account" and "Exit example account" sign out and return to the account choice.
+  # "Switch account" signs out and returns to the sign-in page.
   def after_sign_out_path_for(resource_or_scope)
     params[:switch_account].present? ? new_user_session_path : super
   end

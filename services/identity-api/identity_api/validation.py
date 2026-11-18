@@ -3,8 +3,7 @@
 Rails rules reproduced here:
 - Devise: email stripped + downcased, regex /\\A[^@\\s]+@[^@\\s]+\\z/, unique; password 6..128 chars,
   confirmation must match.
-- User: nickname squished, at most 40 chars; usage_region required and in UsageRegion::CODES;
-  the Example Account address (example@example.com) is reserved.
+- User: nickname squished, at most 40 chars; usage_region required and in UsageRegion::CODES.
 Stricter here: emails are at most 254 chars and may not contain control characters.
 """
 from __future__ import annotations
@@ -19,7 +18,6 @@ PASSWORD_MAX = 128
 NICKNAME_MAX = 40
 EMAIL_MAX = 254
 LOCALES = ("en", "zh-CN", "zh-TW", "ja", "ko", "es")
-RESERVED_EMAILS = frozenset({"example@example.com"})
 
 # Ruby's \s is ASCII-only: [ \t\r\n\f\v]. Python's \s is Unicode-aware, so spell it out.
 _RUBY_SPACE = " \t\r\n\f\v"
@@ -42,8 +40,6 @@ def email_errors(email: str) -> list[str]:
         return ["blank"]
     if len(email) > EMAIL_MAX or any(unicodedata.category(ch) == "Cc" for ch in email) or not _EMAIL.match(email):
         return ["invalid"]
-    if email in RESERVED_EMAILS:
-        return ["reserved"]
     return []
 
 

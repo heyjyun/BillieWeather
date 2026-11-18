@@ -128,7 +128,6 @@ class GoogleSignIn
   end
 
   def verify_login_allowed!(user)
-    raise Error, I18n.t("billie.auth.account_unavailable") if user.demo_account?
     raise Error, I18n.t("billie.auth.account_unavailable") unless user.active_for_authentication?
     if user.otp_required_for_login?
       raise Error, I18n.t("billie.auth.authentication_code_required")

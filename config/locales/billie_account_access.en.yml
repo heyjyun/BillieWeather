@@ -1,0 +1,7 @@
+en:
+  billie:
+    account_access:
+      welcome: Welcome to BillieWeather
+      signed_in_as: Signed in as %{name}
+      switch_account: Switch account
+      account_kind: Personal Account

@@ -1,0 +1,7 @@
+ja:
+  billie:
+    account_access:
+      welcome: BillieWeather へようこそ
+      signed_in_as: "%{name} としてログイン中"
+      switch_account: アカウントを切り替える
+      account_kind: 個人アカウント

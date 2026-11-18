@@ -1,0 +1,7 @@
+zh-TW:
+  billie:
+    account_access:
+      welcome: 歡迎使用 BillieWeather
+      signed_in_as: 目前登入：%{name}
+      switch_account: 切換帳戶
+      account_kind: 個人帳戶

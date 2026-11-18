@@ -104,7 +104,6 @@ def test_account_created_elsewhere_while_pending_is_reported_after_the_code(clie
     ({"email": "two@@example.org"}, {"email": ["invalid"]}),
     ({"email": "space in@example.org"}, {"email": ["invalid"]}),
     ({"email": "a" * 250 + "@x.org"}, {"email": ["invalid"]}),
-    ({"email": "example@example.com"}, {"email": ["reserved"]}),
     ({"password": "short", "password_confirmation": "short"}, {"password": ["too_short"]}),
     ({"password": "x" * 129, "password_confirmation": "x" * 129}, {"password": ["too_long"]}),
     ({"password_confirmation": "different"}, {"password_confirmation": ["mismatch"]}),

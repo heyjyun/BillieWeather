@@ -1,0 +1,7 @@
+es:
+  billie:
+    account_access:
+      welcome: Te damos la bienvenida a BillieWeather
+      signed_in_as: Sesión iniciada como %{name}
+      switch_account: Cambiar de cuenta
+      account_kind: Cuenta personal
