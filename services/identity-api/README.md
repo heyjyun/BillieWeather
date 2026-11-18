@@ -72,6 +72,24 @@ Rails row is created **only after** the emailed code is confirmed. Until then th
 - Only HMAC-SHA256 digests of secrets and codes are stored; the password hash is erased when the
   registration ends; `purge()` deletes old rows.
 
+### Temporary bypass: `EMAIL_VERIFICATION_REQUIRED`
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `EMAIL_VERIFICATION_REQUIRED` | `true` | `false` = eligible sign-ups get the account at once (`201 {status: created, email_verified: false}`), no email, no pending registration |
+| `EMAIL_VERIFICATION_BYPASS_EMAILS` | empty | With `false`: only these addresses (`@domain` = whole domain) skip verification, in every environment. Empty = every address in development/test; **production refuses to start** |
+| `DEVELOPER_EMAILS` | empty | Never eligible (Rails grants these addresses admin), always verified by email |
+
+- Authenticated account ≠ verified address: `identity.email_verifications` records `unverified` for
+  bypass accounts; `verified` only after the emailed code (`email_code`) or Google `email_verified`
+  (`google`, including linking, which also needs the account password). Nothing marks an address verified otherwise.
+- Ownership-sensitive actions stay proof-based: password reset and unlock are emailed links (Rails),
+  Google linking needs the password, and a taken address is refused (`409 email_taken`).
+- The code flow (`202`, confirm, resend) is unchanged and returns for everyone when the flag is `true`.
+  A pending code sign-up for an address that the bypass then creates is marked `superseded` (`410` on confirm).
+- `GET /v1/config` reports `email_verification: required | allowlist | disabled` (never the list). The app
+  decides its next screen from the register response only.
+
 ## Google design
 
 The app generates a verifier, sends only its S256 challenge, and opens Google in the **system
@@ -97,7 +115,7 @@ service (asymmetric key; Rails holds only the public key) and issues the normal 
 | Method & path | Body | Success |
 | --- | --- | --- |
 | `GET /v1/config` | – | `registration_open`, `google_available`, password limits |
-| `POST /v1/registrations` | `email, password, password_confirmation, usage_region, nickname, locale?` | 202 `registration_id, registration_secret, code_expires_at, resend_available_at` |
+| `POST /v1/registrations` | `email, password, password_confirmation, usage_region, nickname, locale?` | 202 `registration_id, registration_secret, code_expires_at, resend_available_at`; with the bypass: 201 `status: created, email, nickname, email_verified: false` |
 | `POST /v1/registrations/{id}/confirmation` | `registration_secret, code` | 201 `{status: confirmed, email}` (idempotent) |
 | `POST /v1/registrations/{id}/resend` | `registration_secret` | 202 |
 | `POST /v1/google/flows` | `code_challenge, code_challenge_method: S256, locale?` | 201 `flow_id, authorization_url` |
@@ -113,7 +131,7 @@ Errors are `{"error": code, "fields"?: {field: [code]}, ...}`; submitted values 
 ## Database changes
 
 Only additive, in a separate schema (Rails' schema dumper ignores it, so `db/schema.rb` is unchanged):
-`identity.schema_migrations`, `identity.pending_registrations`, `identity.oauth_flows`.
+`identity.schema_migrations`, `identity.pending_registrations`, `identity.oauth_flows`, `identity.email_verifications`.
 No Rails table is altered. The service only INSERTs users/teams/memberships and UPDATEs
 `users.current_team_id`, `users.google_uid`, `users.failed_attempts` (linking).
 
@@ -128,6 +146,19 @@ GRANT USAGE ON SEQUENCE public.users_id_seq, public.teams_id_seq, public.members
 GRANT CREATE ON DATABASE <db> TO identity_api;  -- once, for CREATE SCHEMA identity (or create it as owner)
 ```
 
+### Delivery guarantees
+
+- Sending is **synchronous**: `POST /v1/registrations` and `/resend` return 202 only after Postmark
+  answered `ErrorCode: 0` with a `MessageID` (logged as `mail_accepted message_id=...`). That is
+  Postmark accepting the message, not the inbox receiving it; check Postmark › Activity for the
+  final status.
+- Network errors, 429 and 5xx are retried (3 attempts, short backoff), then `503 mail_unavailable`.
+- Permanent recipient rejections (Postmark 300 invalid address, 406 inactive/bounced/suppressed)
+  are not retried: `422 mail_rejected`. Bad token / unverified sender (401, 422 other codes) fail
+  without retry as `503 mail_unavailable` and are logged with the Postmark error code.
+- A failed first send marks the pending registration `failed`; no usable sign-up is left behind.
+- Message bodies, codes and the token are never logged.
+
 ## Local development
 
 ```bash
@@ -139,8 +170,12 @@ createdb billieweather_identity_compat
 export DATABASE_URL=postgresql://localhost/billieweather_identity_compat
 uv run python -m identity_api.schema migrate
 uv run uvicorn identity_api.main:app --port 8100 --no-access-log
-# Codes are written to tmp/outbox/*.json (MAIL_DELIVERY=outbox).
+# Codes are written to tmp/outbox/*.json (MAIL_DELIVERY=outbox). NOTHING is emailed; the log line
+# mail_not_sent_written_to_outbox shows the file, and the app shows a "not emailed" notice.
 ```
+
+Email modes (`MAIL_DELIVERY`): `outbox` (default; JSON files), `memory` (tests), `postmark`
+(real email for end-to-end testing; refuses to start without `POSTMARK_API_TOKEN` and `MAIL_FROM`).
 
 Client: `VITE_BILLIE_IDENTITY_URL=http://localhost:8100 npm run dev` in `clients/universal`
 (desktop builds: `BILLIE_IDENTITY_URL=... npm run desktop:build`, which adds the origin to the CSP).
@@ -162,6 +197,23 @@ The harness refuses any database that is not local and named `*_test` / `*_compa
    `{PUBLIC_URL}/v1/google/callback` to the Google client).
 4. Build the apps with `BILLIE_IDENTITY_URL=https://<service>.onrender.com` (and `BILLIE_API_URL`).
 5. If the website uses `INVITATION_KEYS`, set `REGISTRATION_ENABLED=false`.
+
+### Postmark setup (required before anyone can register)
+
+1. Postmark › Servers › create a server (e.g. "BillieWeather"); copy its **Server API token**
+   (not the Account token) into `POSTMARK_API_TOKEN` here and on the Rails `web` service.
+2. Postmark › Sender Signatures › add your domain (e.g. `billieweather.app`). Add the DNS records
+   it shows at your DNS host: the **DKIM** TXT record and the **Return-Path** CNAME
+   (`pm-bounces.<domain>` → `pm.mtasv.net`). Wait until both show "Verified".
+3. SPF: Postmark's Return-Path makes SPF align automatically; no `include:` is needed in your root SPF.
+   DMARC: add `_dmarc.<domain>` TXT `v=DMARC1; p=none; rua=mailto:dmarc@<domain>` (tighten later).
+4. Set `MAIL_FROM` to an address on that verified domain, e.g. `BillieWeather <no-reply@billieweather.app>`.
+   A free-mail sender (gmail.com, 163.com, ...) cannot be verified with DKIM and will be refused.
+5. A new Postmark account is in **test approval mode**: it only delivers to addresses on your own
+   verified domain until you request approval (Account › "Request approval"). Until then, sign-ups
+   with other addresses fail with `mail_unavailable` (Postmark error 412).
+6. Check: `curl https://<service>.onrender.com/health` is `ok`, register once, then look for
+   `mail_accepted message_id=...` in the Render log and the same message in Postmark › Activity.
 
 ### Scaling
 

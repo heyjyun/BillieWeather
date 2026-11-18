@@ -9,6 +9,11 @@ Lifecycle:
                   /api/client/v1/session endpoint.
   3. resend    -> a new code (spaced and capped).
 
+Temporary testing bypass (EMAIL_VERIFICATION_REQUIRED=false, see config.py): for eligible
+addresses, register creates the account immediately (201, no email, no pending registration) and
+records its address as `unverified` in identity.email_verifications. Steps 1-3 stay unchanged for
+everyone else and come back for everyone when the flag is true again.
+
 Security properties:
 - Confirming needs BOTH the emailed code and the secret held by the app that registered, so a
   third party who starts a sign-up for someone else's address cannot finish it with a link
@@ -20,6 +25,7 @@ Security properties:
 """
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -29,6 +35,8 @@ from .db import Database
 from .errors import ApiError, invalid
 from .passwords import PwnedChecker, hash_password
 from .validation import email_errors, normalize_email, normalize_locale, password_errors, validate_profile
+
+log = logging.getLogger("identity_api")
 
 CODE_TTL = timedelta(minutes=30)
 REGISTRATION_TTL = timedelta(hours=24)
@@ -87,6 +95,8 @@ class RegistrationService:
     def _deliver(self, row: dict, code: str) -> None:
         try:
             self.mail.send(self._message(row, code))
+        except mailer.MailRejected:
+            raise ApiError(422, "mail_rejected") from None
         except mailer.MailError:
             raise ApiError(503, "mail_unavailable") from None
 
@@ -114,6 +124,8 @@ class RegistrationService:
             raise invalid({"password": ["pwned"]})
         # Hash before looking at the database: the work is the same whether or not the address is taken.
         encrypted = hash_password(password, self.settings.bcrypt_cost)
+        if self.settings.skips_email_verification(email):
+            return self._create_unverified(email, encrypted, nickname, region, locale)
         now = self.clock()
         registration_id = str(uuid.uuid4())
         secret, code = tokens.new_secret(), tokens.new_code()
@@ -151,6 +163,30 @@ class RegistrationService:
             "resend_available_at": (now + RESEND_INTERVAL).isoformat(),
             "expires_at": (now + REGISTRATION_TTL).isoformat(),
         }
+
+    def _create_unverified(self, email: str, encrypted: str, nickname: str | None, region: str, locale: str | None) -> dict:
+        """EMAIL_VERIFICATION_REQUIRED=false (testing bypass, see config.py): the account is created
+        now, in the same transaction as the record saying its address is NOT verified. No email is
+        sent and no pending registration is left behind. A taken address is reported (409): this
+        mode is limited to development or allowlisted test addresses, where enumeration-safe
+        responses matter less than telling the tester what happened."""
+        now = self.clock()
+        with self.db.transaction() as conn:
+            conn.execute("SELECT pg_advisory_xact_lock(hashtext('identity-signup:' || %s))", (email,))
+            try:
+                created = accounts.create_account(conn, email=email, encrypted_password=encrypted, usage_region=region,
+                                                  nickname=nickname, locale=locale)
+            except accounts.EmailTaken:
+                raise ApiError(409, "email_taken") from None
+            accounts.record_email_unverified(conn, created.user_id, email)
+            # An older code-based sign-up for this address can never complete now; end it cleanly.
+            conn.execute(
+                "UPDATE identity.pending_registrations SET status = 'superseded', encrypted_password = '', updated_at = %s "
+                "WHERE email = %s AND status = 'pending'",
+                (now, email),
+            )
+        log.warning("signup_unverified_email user_id=%s", created.user_id)
+        return {"status": "created", "email": email, "nickname": nickname, "email_verified": False}
 
     # -- 2. confirm --------------------------------------------------------------------------
 
@@ -196,6 +232,7 @@ class RegistrationService:
                     conn.execute("UPDATE identity.pending_registrations SET status = 'failed', encrypted_password = '', updated_at = %s WHERE id = %s", (now, row["id"]))
                     failure = ApiError(409, "email_taken")
                 else:
+                    accounts.record_email_verified(conn, created.user_id, created.email, "email_code")
                     conn.execute(
                         "UPDATE identity.pending_registrations SET status = 'confirmed', user_id = %s, encrypted_password = '', updated_at = %s WHERE id = %s",
                         (created.user_id, now, row["id"]),

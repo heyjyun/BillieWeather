@@ -12,14 +12,14 @@ export const IDENTITY_IS_LOCAL = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.te
 
 export type RegistrationErrorCode =
   | "invalid" | "invalid_code" | "code_expired" | "registration_expired" | "too_many_attempts" | "email_taken"
-  | "resend_too_soon" | "resend_limit" | "already_confirmed" | "rate_limited" | "registration_closed" | "mail_unavailable"
+  | "resend_too_soon" | "resend_limit" | "already_confirmed" | "rate_limited" | "registration_closed" | "mail_unavailable" | "mail_rejected"
   | "google_unavailable" | "flow_not_ready" | "invalid_password" | "google_taken" | "otp_required" | "locked"
   | "google_other_account" | "account_unavailable" | "not_found" | "service_not_ready"
   | "offline" | "unreachable" | "local_server_down" | "unknown";
 
 const KNOWN: readonly RegistrationErrorCode[] = [
   "invalid", "invalid_code", "code_expired", "registration_expired", "too_many_attempts", "email_taken",
-  "resend_too_soon", "resend_limit", "already_confirmed", "rate_limited", "registration_closed", "mail_unavailable",
+  "resend_too_soon", "resend_limit", "already_confirmed", "rate_limited", "registration_closed", "mail_unavailable", "mail_rejected",
   "google_unavailable", "flow_not_ready", "invalid_password", "google_taken", "otp_required", "locked",
   "google_other_account", "account_unavailable", "not_found", "service_not_ready",
 ];
@@ -64,11 +64,14 @@ async function call<T>(path: string, method: "GET" | "POST", body?: Record<strin
   return json as T;
 }
 
-export interface IdentityConfig { registrationOpen: boolean; googleAvailable: boolean; passwordMin: number; passwordMax: number }
+/** How the identity service delivers codes: "postmark" really emails; "outbox"/"memory" (development) never do. */
+export type MailDelivery = "postmark" | "outbox" | "memory";
+export interface IdentityConfig { registrationOpen: boolean; googleAvailable: boolean; passwordMin: number; passwordMax: number; mailDelivery: MailDelivery }
 
 export async function fetchIdentityConfig(): Promise<IdentityConfig> {
-  const json = await call<{ registration_open: boolean; google_available: boolean; password: { min: number; max: number } }>("/config", "GET");
-  return { registrationOpen: json.registration_open, googleAvailable: json.google_available, passwordMin: json.password.min, passwordMax: json.password.max };
+  const json = await call<{ registration_open: boolean; google_available: boolean; password: { min: number; max: number }; mail_delivery?: MailDelivery }>("/config", "GET");
+  return { registrationOpen: json.registration_open, googleAvailable: json.google_available, passwordMin: json.password.min, passwordMax: json.password.max,
+    mailDelivery: json.mail_delivery ?? "postmark" };
 }
 
 // --- email + password ------------------------------------------------------------------------
@@ -78,13 +81,24 @@ export interface SignUpDetails { email: string; password: string; passwordConfir
 /** Kept in memory only. The secret is useless without the emailed code, and the code without it. */
 export interface PendingRegistration { id: string; secret: string; email: string; codeLength: number; codeExpiresAt: string; resendAvailableAt: string }
 
-export async function startRegistration(details: SignUpDetails): Promise<PendingRegistration> {
-  const json = await call<{ registration_id: string; registration_secret: string; email: string; code_length: number; code_expires_at: string; resend_available_at: string }>(
+/** The identity service created the account at once (EMAIL_VERIFICATION_REQUIRED=false there): sign in next. Its address is NOT verified. */
+export interface CreatedAccount { email: string; nickname: string | null; emailVerified: boolean }
+
+/** Either the account exists now (`created`) or an emailed code must confirm it (`pending`). The server decides, never the app. */
+export type RegistrationStart = { kind: "created"; account: CreatedAccount } | { kind: "pending"; pending: PendingRegistration };
+
+type StartResponse =
+  | { status: "created"; email: string; nickname: string | null; email_verified: boolean }
+  | { status?: undefined; registration_id: string; registration_secret: string; email: string; code_length: number; code_expires_at: string; resend_available_at: string };
+
+export async function startRegistration(details: SignUpDetails): Promise<RegistrationStart> {
+  const json = await call<StartResponse>(
     "/registrations", "POST", {
       email: details.email, password: details.password, password_confirmation: details.passwordConfirmation,
       usage_region: details.usageRegion, nickname: details.nickname, locale: details.locale,
     });
-  return { id: json.registration_id, secret: json.registration_secret, email: json.email, codeLength: json.code_length, codeExpiresAt: json.code_expires_at, resendAvailableAt: json.resend_available_at };
+  if (json.status === "created") return { kind: "created", account: { email: json.email, nickname: json.nickname, emailVerified: json.email_verified === true } };
+  return { kind: "pending", pending: { id: json.registration_id, secret: json.registration_secret, email: json.email, codeLength: json.code_length, codeExpiresAt: json.code_expires_at, resendAvailableAt: json.resend_available_at } };
 }
 
 const segment = (id: string) => encodeURIComponent(id);

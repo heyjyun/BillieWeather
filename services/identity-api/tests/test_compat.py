@@ -112,6 +112,11 @@ def test_rails_accepts_and_signs_in_python_created_accounts(client, make_client,
     signed_in_to_google(google, flow, email="compat-google@example.org")
     assert flow.post("complete", password="google app pass", password_confirmation="google app pass", usage_region="US", nickname="Gigi").status_code == 201
     accounts.append({"email": "compat-google@example.org", "password": "google app pass"})
+    # 4. EMAIL_VERIFICATION_REQUIRED=false: created at once (unverified address), must sign in like the others.
+    bypass = make_client(email_verification_required=False)
+    created = bypass.post("/v1/registrations", json={**VALID, "email": "compat-jyun@example.org", "nickname": "Jyun", "usage_region": "XG"})
+    assert created.status_code == 201 and created.json()["email_verified"] is False
+    accounts.append({"email": "compat-jyun@example.org", "password": VALID["password"]})
 
     payload = tmp_path / "input.json"
     payload.write_text(json.dumps({"accounts": accounts, "rails_reference_email": "rails-made@example.org", "rails_reference_password": "rails password 1"}))
@@ -129,7 +134,9 @@ def test_rails_accepts_and_signs_in_python_created_accounts(client, make_client,
         # 10. Login after registration through the EXISTING client endpoint (email is upper-cased in the request).
         assert result["login_status"] == 201 and result["token_authenticates"], result
         assert result["login_owner_id"] == result["db_owner_id"] and result["account_endpoint_email"] == result["email"]
+        assert (result["logout_status"], result["relogin_status"]) == (204, 201), result  # sign out, then back in
     assert report["results"][2]["google_uid"] == "1098765"
+    assert report["results"][3]["account_endpoint_nickname"] == "Jyun"
 
     # 9. Existing Rails accounts: duplicates are recognized and their Devise password links Google.
     mail.sent.clear()

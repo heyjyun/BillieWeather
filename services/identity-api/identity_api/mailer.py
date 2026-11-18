@@ -32,27 +32,64 @@ class Mailer(Protocol):
 
 
 class MailError(Exception):
-    pass
+    """Delivery failed for a reason that may pass (provider down, network, rate limit)."""
+
+
+class MailRejected(MailError):
+    """The provider permanently refused this recipient (invalid address, inactive/bounced)."""
+
+
+# Postmark API error codes that will not change on retry for this recipient:
+# 300 invalid email request, 406 inactive recipient (hard bounce, spam complaint, suppression).
+# https://postmarkapp.com/developer/api/overview#error-codes
+_RECIPIENT_REJECTED = {300, 406}
 
 
 class PostmarkMailer:
-    def __init__(self, token: str, sender: str, client: httpx.Client | None = None):
+    """Synchronous send through Postmark's HTTPS API. A call returns only after Postmark has
+    accepted the message (ErrorCode 0 and a MessageID), so the client never says "we emailed"
+    for a message that was not handed to the provider. Transient failures are retried briefly."""
+
+    ENDPOINT = "https://api.postmarkapp.com/email"
+    ATTEMPTS = 3
+
+    def __init__(self, token: str, sender: str, client: httpx.Client | None = None, sleep=time.sleep):  # noqa: ANN001
         self.token = token
         self.sender = sender
         self.client = client or httpx.Client(timeout=10.0)
+        self.sleep = sleep
 
     def send(self, message: Message) -> None:
-        try:
-            response = self.client.post(
-                "https://api.postmarkapp.com/email",
-                headers={"X-Postmark-Server-Token": self.token, "Accept": "application/json"},
-                json={"From": self.sender, "To": message.to, "Subject": message.subject, "TextBody": message.text,
-                      "MessageStream": "outbound", "Tag": f"identity-{message.kind}"},
-            )
-            response.raise_for_status()
-        except httpx.HTTPError as error:
-            log.error("mail_delivery_failed kind=%s status=%s", message.kind, getattr(getattr(error, "response", None), "status_code", None))
-            raise MailError(message.kind) from None
+        payload = {"From": self.sender, "To": message.to, "Subject": message.subject, "TextBody": message.text,
+                   "MessageStream": "outbound", "Tag": f"identity-{message.kind}", "TrackOpens": False, "TrackLinks": "None"}
+        for attempt in range(1, self.ATTEMPTS + 1):
+            status: int | None = None
+            error_code: int | None = None
+            try:
+                response = self.client.post(self.ENDPOINT, json=payload,
+                                            headers={"X-Postmark-Server-Token": self.token, "Accept": "application/json"})
+                status = response.status_code
+                try:
+                    result = response.json()
+                except ValueError:
+                    result = {}
+                error_code = result.get("ErrorCode") if isinstance(result, dict) else None
+                message_id = result.get("MessageID") if isinstance(result, dict) else None
+                if status == 200 and error_code == 0 and isinstance(message_id, str) and message_id:
+                    log.info("mail_accepted kind=%s message_id=%s attempt=%s", message.kind, message_id, attempt)
+                    return
+                if status == 422 and error_code in _RECIPIENT_REJECTED:
+                    log.warning("mail_rejected kind=%s status=%s error_code=%s", message.kind, status, error_code)
+                    raise MailRejected(message.kind)
+                transient = status == 429 or status >= 500
+            except httpx.HTTPError:
+                transient = True
+            # 401/422 (bad token, unverified sender signature, ...) are configuration errors: no retry.
+            log.error("mail_delivery_failed kind=%s status=%s error_code=%s attempt=%s", message.kind, status, error_code, attempt)
+            if not transient or attempt == self.ATTEMPTS:
+                raise MailError(message.kind)
+            self.sleep(0.5 * attempt)
+        raise MailError(message.kind)  # pragma: no cover
 
 
 class OutboxMailer:
@@ -63,15 +100,19 @@ class OutboxMailer:
         self.directory.mkdir(parents=True, exist_ok=True)
         path = self.directory / f"{int(time.time() * 1000)}-{message.kind}-{uuid.uuid4().hex[:8]}.json"
         path.write_text(json.dumps(message.__dict__, ensure_ascii=False, indent=2))
-        log.info("mail_written_to_outbox kind=%s", message.kind)
+        # Development only: nothing is emailed. The path (never the code) is logged so the developer can find it.
+        log.warning("mail_not_sent_written_to_outbox kind=%s path=%s", message.kind, path.resolve())
 
 
 @dataclass
 class MemoryMailer:
     sent: list[Message] = field(default_factory=list)
     fail: bool = False
+    reject: bool = False
 
     def send(self, message: Message) -> None:
+        if self.reject:
+            raise MailRejected(message.kind)
         if self.fail:
             raise MailError(message.kind)
         self.sent.append(message)

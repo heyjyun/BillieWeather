@@ -33,3 +33,10 @@ def test_secrets_are_not_in_reprs_or_source():
     for path in Path(__file__).parents[1].joinpath("identity_api").rglob("*.py"):
         source = path.read_text()
         assert "neon.tech" not in source and "onrender.com" not in source and "sk-" not in source, path
+
+
+def test_development_real_email_must_be_fully_configured():
+    dev = dict(identity_env="development", database_url="postgresql://x/y", mail_delivery="postmark")
+    with pytest.raises(RuntimeError, match="MAIL_DELIVERY=postmark needs"):
+        Settings(**dev).validate_for_runtime()
+    Settings(**dev, postmark_api_token="token", mail_from="BillieWeather <hi@example.com>").validate_for_runtime()

@@ -126,6 +126,9 @@ def create_app(settings: Settings | None = None, services: Services | None = Non
     settings = settings or (services.settings if services else get_settings())
     settings.validate_for_runtime()
     logs.configure(settings.log_level)
+    if not settings.email_verification_required:
+        log.warning("verification_bypass_on mode=%s env=%s allowlisted=%d (accounts are created with UNVERIFIED email)",
+                    settings.email_verification_mode, settings.identity_env, len(settings.bypass_allowlist))
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -213,15 +216,23 @@ def create_app(settings: Settings | None = None, services: Services | None = Non
     @app.get("/v1/config")
     def config():
         return {"registration_open": settings.registration_enabled, "google_available": svc().google.client is not None,
-                "password": {"min": PASSWORD_MIN, "max": PASSWORD_MAX}, "code_length": 8}
+                "password": {"min": PASSWORD_MIN, "max": PASSWORD_MAX}, "code_length": 8,
+                # Lets a development client say "not emailed, see the outbox" instead of "we emailed".
+                "mail_delivery": "postmark" if settings.production else settings.mail_delivery,
+                # required | allowlist | disabled. The allowlist itself is never published; the
+                # register response (201 created vs 202 pending) is what decides the client's next screen.
+                "email_verification": settings.email_verification_mode}
 
     @app.post("/v1/registrations", status_code=202)
-    def register(body: RegisterBody, request: Request):
+    def register(body: RegisterBody, request: Request, response: Response):
         require_ready()
         limit(request, "register_ip")
         if body.email:
             limit(request, "register_email", body.email.strip().lower())
-        return svc().registrations.register(RegistrationInput(**body.model_dump()))
+        result = svc().registrations.register(RegistrationInput(**body.model_dump()))
+        if result.get("status") == "created":  # verification bypass: the account exists now
+            response.status_code = 201
+        return result
 
     @app.post("/v1/registrations/{registration_id}/confirmation", status_code=201)
     def confirm(registration_id: str, body: ConfirmBody, request: Request):

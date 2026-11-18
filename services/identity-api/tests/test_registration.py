@@ -182,6 +182,13 @@ def test_mail_outage_is_reported_and_leaves_nothing_usable(client, mail, sql):
     assert sql.execute("SELECT status, encrypted_password FROM identity.pending_registrations").fetchone() == {"status": "failed", "encrypted_password": ""}
 
 
+def test_permanently_rejected_address_is_reported_distinctly(client, mail, sql):
+    mail.reject = True
+    response = register(client)
+    assert response.status_code == 422 and response.json() == {"error": "mail_rejected"}
+    assert sql.execute("SELECT status FROM identity.pending_registrations").fetchone() == {"status": "failed"}
+
+
 # 6. Confirmation, attempts and expiration -----------------------------------------------------
 
 def test_wrong_codes_are_limited_then_the_registration_ends(client, mail, sql):
@@ -312,7 +319,7 @@ def test_security_headers_and_cors(client):
     assert "access-control-allow-origin" not in evil.headers
     response = client.get("/v1/config")
     assert response.headers["cache-control"] == "no-store" and response.headers["x-content-type-options"] == "nosniff"
-    assert response.json() == {"registration_open": True, "google_available": True, "password": {"min": 6, "max": 128}, "code_length": 8}
+    assert response.json() == {"registration_open": True, "google_available": True, "password": {"min": 6, "max": 128}, "code_length": 8, "mail_delivery": "memory", "email_verification": "required"}
 
 
 def test_oversized_bodies_are_refused(client):

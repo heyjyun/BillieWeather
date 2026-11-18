@@ -38,3 +38,14 @@
   .bw-register-actions .bw-button, .bw-register-actions .bw-link-button { width: 100%; }
   .bw-code-input { font-size: 1.3rem !important; letter-spacing: 0.2em; }
 }
+
+/* Development identity service only: the code was written to a local outbox, not emailed. */
+.bw-register-dev-notice {
+  margin: 0.5rem 0 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed #b45309;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #78350f;
+  font-size: 0.875rem;
+}

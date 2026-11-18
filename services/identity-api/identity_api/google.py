@@ -294,6 +294,8 @@ class GoogleFlows:
                 conn.execute("UPDATE identity.oauth_flows SET status = 'failed', failure = %s, updated_at = %s WHERE id = %s", (code, now, row["id"]))
                 failure = ApiError(409, code)
             else:
+                # Google asserted email_verified for this exact address (checked in the callback).
+                accounts.record_email_verified(conn, created.user_id, created.email, "google")
                 conn.execute("UPDATE identity.oauth_flows SET status = 'completed', user_id = %s, updated_at = %s WHERE id = %s", (created.user_id, now, row["id"]))
         if failure:
             raise failure
@@ -324,6 +326,9 @@ class GoogleFlows:
                 conn.execute("UPDATE identity.oauth_flows SET status = 'failed', failure = 'google_other_account', updated_at = %s WHERE id = %s", (now, row["id"]))
                 failure = ApiError(409, "google_other_account")
             else:
+                # Password (account) + Google email_verified for the same address (mailbox): an
+                # account created unverified during the testing bypass becomes verified only here.
+                accounts.record_email_verified(conn, user["id"], row["email"], "google")
                 conn.execute("UPDATE identity.oauth_flows SET status = 'completed', user_id = %s, updated_at = %s WHERE id = %s", (user["id"], now, row["id"]))
         if failure:
             raise failure

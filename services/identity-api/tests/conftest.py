@@ -25,6 +25,10 @@ from identity_api.mailer import MemoryMailer
 from identity_api.passwords import PwnedChecker
 from identity_api.schema import migrate
 
+# Tests never read the developer's services/identity-api/.env (it may point at Neon or switch
+# EMAIL_VERIFICATION_REQUIRED off); every test states the settings it needs.
+Settings.model_config["env_file"] = None
+
 TEST_URL = os.environ.get("IDENTITY_TEST_DATABASE_URL", "postgresql://localhost/billieweather_identity_test")
 FIXTURE = Path(__file__).parent / "fixtures" / "rails_accounts_schema.sql"
 
@@ -66,7 +70,7 @@ def rails_full_schema(database_url: str) -> bool:
 def db(database_url: str):
     with psycopg.connect(database_url, autocommit=True) as conn:
         conn.execute("TRUNCATE public.users, public.teams, public.memberships RESTART IDENTITY CASCADE")
-        conn.execute("TRUNCATE identity.pending_registrations, identity.oauth_flows")
+        conn.execute("TRUNCATE identity.pending_registrations, identity.oauth_flows, identity.email_verifications")
     database = Database(database_url, max_size=4)
     database.open()
     yield database

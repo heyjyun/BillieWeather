@@ -20,6 +20,11 @@ results = input.fetch("accounts").map do |account|
     session.get "/api/client/v1/account", headers: {"Authorization" => "Bearer #{token}"}
     me = JSON.parse(session.response.body)["account"] rescue nil
   end
+  # Sign out (the app forgets its token; the endpoint answers 204), then sign in again.
+  session.delete "/api/client/v1/session", headers: token ? {"Authorization" => "Bearer #{token}"} : {}
+  logout_status = session.response.status
+  session.post "/api/client/v1/session", params: {email: account["email"], password: account["password"]}, as: :json
+  relogin_status = session.response.status
   membership = user.memberships.first
   {
     "email" => user.email,
@@ -40,6 +45,9 @@ results = input.fetch("accounts").map do |account|
     "login_owner_id" => body.dig("account", "owner_id"),
     "db_owner_id" => user.finance_owner_uid,
     "account_endpoint_email" => me && me["email"],
+    "account_endpoint_nickname" => me && me["nickname"],
+    "logout_status" => logout_status,
+    "relogin_status" => relogin_status,
     "token_authenticates" => token ? ClientApi::SessionToken.authenticate(token)&.id == user.id : false
   }
 end
@@ -47,7 +55,7 @@ end
 # A Rails-created account for the Python service to recognize (duplicate + link checks).
 reference = User.find_by(email: input.fetch("rails_reference_email")) || User.create!(
   email: input["rails_reference_email"], password: input["rails_reference_password"],
-  password_confirmation: input["rails_reference_password"], usage_region: "US"
+  password_confirmation: input["rails_reference_password"], usage_region: "US", nickname: "Rails Ref"
 ).tap(&:create_default_team)
 
 puts "COMPAT_JSON:" + JSON.dump({"results" => results, "reference_id" => reference.id})

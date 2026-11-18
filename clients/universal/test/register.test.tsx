@@ -160,6 +160,35 @@ describe("validation", () => {
 });
 
 describe("email registration", () => {
+  it("says plainly that the code was not emailed when the identity service writes to a local outbox", async () => {
+    fakeIdentity({ "GET /v1/config": () => ({ status: 200, body: { registration_open: true, google_available: true, password: { min: 6, max: 128 }, code_length: 8, mail_delivery: "outbox" } }) });
+    show("en");
+    await waitFor(() => expect(requests.some((r) => r.path === "GET /v1/config")).toBe(true));
+    fireEvent.change(screen.getByLabelText(en.region), { target: { value: "JP" } });
+    fillForm();
+    fireEvent.click(screen.getByRole("button", { name: en.submit }));
+    expect(await screen.findByRole("heading", { name: en.verify.heading })).toBeTruthy();
+    expect(screen.getByRole("note").textContent).toBe(en.verify.devOutbox);
+  });
+
+  it("shows no development notice when the service really emails", async () => {
+    show("en");
+    fireEvent.change(screen.getByLabelText(en.region), { target: { value: "JP" } });
+    fillForm();
+    fireEvent.click(screen.getByRole("button", { name: en.submit }));
+    expect(await screen.findByRole("heading", { name: en.verify.heading })).toBeTruthy();
+    expect(screen.queryByText(en.verify.devOutbox)).toBeNull();
+  });
+
+  it("explains a permanently rejected address", async () => {
+    fakeIdentity({ "POST /v1/registrations": () => ({ status: 422, body: { error: "mail_rejected" } }) });
+    show("en");
+    fireEvent.change(screen.getByLabelText(en.region), { target: { value: "JP" } });
+    fillForm();
+    fireEvent.click(screen.getByRole("button", { name: en.submit }));
+    expect(await screen.findByText(en.errors.mail_rejected)).toBeTruthy();
+  });
+
   it("sends only sign-up details, asks for the emailed code, then signs in through the existing account flow", async () => {
     show("en");
     fireEvent.change(screen.getByLabelText(en.region), { target: { value: "JP" } });
@@ -250,6 +279,77 @@ describe("email registration", () => {
     fillForm();
     fireEvent.click(screen.getByRole("button", { name: en.submit }));
     expect((await screen.findByRole("alert")).textContent).toBe(message);
+  });
+});
+
+describe("email verification switched off on the identity service", () => {
+  const created = () => fakeIdentity({
+    "GET /v1/config": () => ({ status: 200, body: { registration_open: true, google_available: false, password: { min: 6, max: 128 }, code_length: 8, email_verification: "disabled" } }),
+    "POST /v1/registrations": (_p, body) => ({ status: 201, body: { status: "created", email: String(body.email).trim().toLowerCase(), nickname: body.nickname, email_verified: false } }),
+  });
+
+  it("Create Account → account created → signed in: no code screen, no countdown, no confirmation call", async () => {
+    created();
+    let finishSignIn: () => void = () => undefined;
+    signIn.mockImplementation(() => new Promise<void>((resolve) => { finishSignIn = resolve; }));
+    show("en");
+    fillForm({ email: "iamlu@163.com", nickname: " Jyun " });
+    fireEvent.click(screen.getByRole("button", { name: en.submit }));
+    expect(await screen.findByRole("heading", { name: en.done.heading })).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toContain(en.done.signingIn);
+    expect(signIn).toHaveBeenCalledWith("iamlu@163.com", "a unique passphrase");
+    expect(screen.queryByRole("heading", { name: en.verify.heading })).toBeNull();
+    expect(screen.queryByLabelText(en.verify.code)).toBeNull();
+    expect(screen.queryByText(/Send a new code/)).toBeNull();
+    expect(requests.map((r) => r.path)).toEqual(["GET /v1/config", "POST /v1/registrations"]);
+    expect(requests[1].body).toMatchObject({ nickname: "Jyun" });
+    await act(async () => finishSignIn());
+    expect(JSON.stringify({ ...localStorage, ...sessionStorage })).not.toMatch(/passphrase/);
+  });
+
+  it("a duplicate address stays on the form with a clear message", async () => {
+    created();
+    routes["POST /v1/registrations"] = () => ({ status: 409, body: { error: "email_taken" } });
+    show("en");
+    fillForm();
+    fireEvent.click(screen.getByRole("button", { name: en.submit }));
+    expect((await screen.findByRole("alert")).textContent).toBe(en.errors.email_taken);
+    expect(screen.getByRole("heading", { name: en.heading })).toBeTruthy();
+    expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it("the nickname is still required before anything is sent", async () => {
+    created();
+    show("en");
+    fillForm({ nickname: "   " });
+    fireEvent.click(screen.getByRole("button", { name: en.submit }));
+    expect(screen.getByText(MESSAGES.en.personal.nickname.errors.blank)).toBeTruthy();
+    expect(requests.filter((r) => r.path.startsWith("POST"))).toEqual([]);
+  });
+
+  it("if signing in fails, the created account is reported with a way to sign in", async () => {
+    created();
+    signIn.mockRejectedValue(new Error("offline"));
+    const onBack = show("en");
+    fillForm({ email: "jyun@example.org", nickname: "Jyun" });
+    fireEvent.click(screen.getByRole("button", { name: en.submit }));
+    expect(await screen.findByText(en.done.signInFailed)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: en.done.signIn }));
+    expect(onBack).toHaveBeenCalledWith("jyun@example.org");
+  });
+
+  it.each(LOCALES.map((locale) => [locale]))("works the same in %s", async (locale) => {
+    created();
+    show(locale as Locale);
+    const r = MESSAGES[locale as Locale].register;
+    fireEvent.change(screen.getByLabelText(nicknameLabel(locale as Locale)), { target: { value: "Jyun" } });
+    fireEvent.change(screen.getByLabelText(r.email), { target: { value: "jyun@example.org" } });
+    fireEvent.change(screen.getByLabelText(r.password), { target: { value: "a unique passphrase" } });
+    fireEvent.change(screen.getByLabelText(r.confirmPassword), { target: { value: "a unique passphrase" } });
+    fireEvent.click(screen.getByRole("button", { name: r.submit }));
+    expect(await screen.findByRole("heading", { name: r.done.heading })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: r.verify.heading })).toBeNull();
+    expect(requests.at(-1)!.body).toMatchObject({ locale });
   });
 });
 

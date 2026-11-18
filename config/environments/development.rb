@@ -102,8 +102,24 @@ Rails.application.configure do
   config.hosts << /[a-z0-9-]+\.ngrok\.io/
   config.hosts << /[a-z0-9-]+\.ngrok-free\.app/
 
-  # 设置 LETTER_OPENER=1 时才在浏览器里弹出邮件预览；默认不弹出（邮件内容仍会写进 log）
-  config.action_mailer.delivery_method = ENV["LETTER_OPENER"].present? ? :letter_opener : :test
+  # Development email is an explicit choice (MAIL_DELIVERY), never silently discarded:
+  #   file          (default) each message is saved under tmp/mails/<recipient>; nothing leaves the computer
+  #   letter_opener opens each message in the browser (LETTER_OPENER=1 still selects this)
+  #   test          kept in memory only (ActionMailer::Base.deliveries); nothing is saved or sent
+  #   postmark      REAL delivery for end-to-end testing; needs POSTMARK_API_TOKEN and a verified MAIL_FROM
+  # (identity-api's names are accepted too, so one exported MAIL_DELIVERY works for both services.)
+  dev_mail = ENV["MAIL_DELIVERY"].presence || (ENV["LETTER_OPENER"].present? ? "letter_opener" : "file")
+  dev_mail = {"outbox" => "file", "memory" => "test"}.fetch(dev_mail, dev_mail)
+  unless %w[file letter_opener test postmark].include?(dev_mail)
+    raise "MAIL_DELIVERY must be file, letter_opener, test or postmark (got #{dev_mail.inspect})"
+  end
+  if dev_mail == "postmark" && (ENV["POSTMARK_API_TOKEN"].blank? || ENV["MAIL_FROM"].blank?)
+    raise "MAIL_DELIVERY=postmark needs POSTMARK_API_TOKEN and MAIL_FROM"
+  end
+  config.action_mailer.delivery_method = dev_mail.to_sym
+  config.action_mailer.file_settings = {location: Rails.root.join("tmp/mails")}
+  config.action_mailer.raise_delivery_errors = true if dev_mail == "postmark"
+  config.after_initialize { Rails.logger.info("[mail] development delivery: #{dev_mail}#{" (REAL email)" if dev_mail == "postmark"}") }
   config.active_job.queue_adapter = :inline
 
   # Raises error for missing translations

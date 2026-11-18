@@ -90,6 +90,31 @@ def create_account(
     return CreatedAccount(user_id=user["id"], owner_id=str(user["finance_owner_uid"]), email=email)
 
 
+def record_email_unverified(conn: psycopg.Connection, user_id: int, email: str) -> None:
+    """The account exists but nobody proved the address belongs to its owner (testing bypass)."""
+    conn.execute(
+        "INSERT INTO identity.email_verifications (user_id, email, status) VALUES (%s, %s, 'unverified') "
+        "ON CONFLICT (user_id) DO NOTHING",
+        (user_id, email),
+    )
+
+
+def record_email_verified(conn: psycopg.Connection, user_id: int, email: str, method: str) -> None:
+    """Ownership of `email` was proven (`email_code` or `google`). Upgrades an unverified record
+    only when the proven address is still the account's address."""
+    conn.execute(
+        "INSERT INTO identity.email_verifications (user_id, email, status, method, verified_at) VALUES (%s, %s, 'verified', %s, now()) "
+        "ON CONFLICT (user_id) DO UPDATE SET status = 'verified', method = EXCLUDED.method, verified_at = EXCLUDED.verified_at, updated_at = now() "
+        "WHERE identity.email_verifications.status = 'unverified' AND identity.email_verifications.email = EXCLUDED.email",
+        (user_id, email, method),
+    )
+
+
+def email_verification_status(conn: psycopg.Connection, user_id: int) -> str | None:
+    row = conn.execute("SELECT status FROM identity.email_verifications WHERE user_id = %s", (user_id,)).fetchone()
+    return row["status"] if row else None
+
+
 def record_failed_password(conn: psycopg.Connection, user_id: int) -> int:
     """Counts toward Devise's lockout like a failed website sign-in. Python never sets locked_at
     itself (it cannot mint Devise's unlock email token); at the limit it refuses further tries and
