@@ -12,15 +12,15 @@ module ApplicationHelper
   # Common short names people type that are not part of the region's display name.
   USAGE_REGION_SEARCH_ALIASES = {
     "US" => "usa america", "GB" => "uk britain england scotland wales", "AE" => "uae emirates",
-    "KR" => "korea", "KP" => "korea", "CN" => "prc", "NL" => "holland", "CZ" => "czechia",
-    "RU" => "russia", "VN" => "vietnam", "IR" => "iran", "SY" => "syria", "LA" => "laos",
-    "BO" => "bolivia", "VE" => "venezuela", "TZ" => "tanzania", "MD" => "moldova", "TR" => "turkiye"
+    "KR" => "korea south", "CN" => "prc", "NL" => "holland", "CZ" => "czechia",
+    "RU" => "russia", "VN" => "vietnam", "TR" => "turkiye"
   }.freeze
 
   def usage_region_options
     standard = UsageRegion::STANDARD_CODES.map { |code| usage_region_option(code) }
       .sort_by { |label, _code, _data| label.downcase }
-    [usage_region_option(UsageRegion::GLOBAL_CITIZEN_CODE)] + standard
+    # Global Citizen first and Other second (easy to reach when a country is missing), then the countries by name.
+    [usage_region_option(UsageRegion::GLOBAL_CITIZEN_CODE), usage_region_option(UsageRegion::OTHER_CODE)] + standard
   end
 
   # A searchable region picker. Without JavaScript it is the plain required select;

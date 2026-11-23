@@ -7,7 +7,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEven
 import { BrandMark } from "../components/BrandMark";
 import { useAccount } from "../hooks/useAccount";
 import { interpolate, LanguageSelect, useI18n } from "../i18n";
-import { GLOBAL_CITIZEN, matchesRegion, regionOptions, REGION_CODES } from "../services/regions";
+import { GLOBAL_CITIZEN, matchesRegion, OTHER, regionOptions, REGION_CODES } from "../services/regions";
 import {
   cancelGoogle, completeGoogle, confirmRegistration, fetchIdentityConfig, googleStatus, IDENTITY_ORIGIN, linkGoogle, type MailDelivery, RegistrationError, resendCode,
   startGoogle, startRegistration, type GoogleFlow, type GoogleStatus, type PendingRegistration,
@@ -40,7 +40,7 @@ export function validateSignUp(values: SignUpValues, { email = true }: { email?:
   else if (values.password.length > PASSWORD_MAX) errors.password = ["too_long"];
   if (values.confirmation !== values.password) errors.password_confirmation = ["mismatch"];
   if (!values.region) errors.usage_region = ["blank"];
-  else if (values.region !== GLOBAL_CITIZEN && !REGION_CODES.includes(values.region)) errors.usage_region = ["inclusion"];
+  else if (values.region !== GLOBAL_CITIZEN && values.region !== OTHER && !REGION_CODES.includes(values.region)) errors.usage_region = ["inclusion"];
   // Required for every new account (email and Google alike); any language, not unique.
   const nickname = validateNickname(values.nickname);
   if (nickname) errors.nickname = [nickname];

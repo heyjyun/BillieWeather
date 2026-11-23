@@ -178,6 +178,7 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
       assert_select "select#user_usage_region option[value='JP']", text: japan
       assert_select "select#user_usage_region option[value='CN']", text: mainland
       assert_select "select#user_usage_region option[value='XG']", text: global
+      assert_select "select#user_usage_region option:nth-child(2)[value='XO']"
       # The English names stay searchable in every language.
       assert_select "select#user_usage_region option[value='CN'][data-search*='Mainland China']"
       assert_select "select#user_usage_region option[value='XG'][data-search*='Global Citizen']"

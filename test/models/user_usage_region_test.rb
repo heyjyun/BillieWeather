@@ -36,16 +36,19 @@ class UserUsageRegionTest < ActiveSupport::TestCase
   end
 
   test "region list includes major regions and excludes arbitrary values" do
-    %w[US CN JP KR GB CA AU DE FR IN SG HK TW BR MX ZA AE].each do |code|
+    %w[US CN JP KR GB CA AU DE FR IN SG HK TW BR MX ZA AE RU].each do |code|
       assert_includes UsageRegion::CODES, code
     end
-    user = create(:user, usage_region: "US")
-    %w[XX ZZ Atlantis USA 12].each do |value|
+    assert_includes UsageRegion::CODES, UsageRegion::OTHER_CODE
+    user = create(:user, usage_region: "XO")
+    assert user.valid?
+    # Only mainstream countries are offered; everyone else picks Other.
+    %w[XX ZZ Atlantis USA 12 KP IR CU SY BY AQ VA].each do |value|
       user.usage_region = value
       assert_not user.valid?, "Accepted unsupported usage region #{value.inspect}"
       assert user.errors.of_kind?(:usage_region, :inclusion)
     end
-    assert_equal "US", user.reload.usage_region
+    assert_equal "XO", user.reload.usage_region
   end
 
   test "legacy users can save unrelated details while waiting to choose their region" do

@@ -1,19 +1,32 @@
 // Country / Region choices for a new account. Must equal Rails' UsageRegion::CODES
 // (app/models/usage_region.rb) and the identity service's list; test/register.test.tsx compares them.
 export const GLOBAL_CITIZEN = "XG";
+/** For people outside the supported countries. */
+export const OTHER = "XO";
 export const REGION_CODES: readonly string[] = `
-AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY
-BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK
-FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR
-IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK
-ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM
-PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF
-TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW
+AE AR AT AU BD BE BG BR CA CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU ID IE IL IN IT JP KE KR KW
+LK LT LU LV MA MO MT MX MY NG NL NO NZ PE PH PK PL PR PT QA RO RU SA SE SG SI SK TH TR TW UA US VN ZA
 `.trim().split(/\s+/);
 
 export interface RegionOption { code: string; label: string }
 
-/** Global Citizen first, then every region by its name in the interface language (as on the website). */
+// Only one Korea is offered, so it is shown without "South" (Intl would say "South Korea").
+const KOREA: Record<string, string> = { en: "Korea", es: "Corea", ko: "한국" };
+const OTHER_NAMES: Record<string, string> = { en: "Other", es: "Otro", ja: "その他", ko: "기타", zh: "其他" };
+
+/** A supported code's name in the interface language (Korea and Other are the app's own names). */
+export function regionLabel(code: string, locale: string, names?: Intl.DisplayNames | null): string {
+  const language = locale.split("-")[0];
+  if (code === OTHER) return OTHER_NAMES[language] ?? OTHER_NAMES.en;
+  if (code === "KR" && KOREA[language]) return KOREA[language];
+  try {
+    return (names ?? new Intl.DisplayNames([locale], { type: "region" })).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/** Global Citizen first, Other second, then every region by its name in the interface language (as on the website). */
 export function regionOptions(locale: string, globalCitizen: string): RegionOption[] {
   let names: Intl.DisplayNames | null = null;
   try {
@@ -21,16 +34,9 @@ export function regionOptions(locale: string, globalCitizen: string): RegionOpti
   } catch {
     names = null;
   }
-  const label = (code: string) => {
-    try {
-      return names?.of(code) ?? code;
-    } catch {
-      return code;
-    }
-  };
-  const standard = REGION_CODES.map((code) => ({ code, label: label(code) }))
+  const standard = REGION_CODES.map((code) => ({ code, label: regionLabel(code, locale, names) }))
     .sort((a, b) => a.label.localeCompare(b.label, locale));
-  return [{ code: GLOBAL_CITIZEN, label: globalCitizen }, ...standard];
+  return [{ code: GLOBAL_CITIZEN, label: globalCitizen }, { code: OTHER, label: regionLabel(OTHER, locale) }, ...standard];
 }
 
 /** Matches the name or the two-letter code, ignoring case and accents. */

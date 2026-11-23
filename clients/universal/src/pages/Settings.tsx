@@ -5,17 +5,14 @@ import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, LanguageSelect, useI18n } from "../i18n";
 import { websiteUrl } from "../services/account";
 import { NICKNAME_MAX, normalizeNickname, validateNickname, type NicknameProblem } from "../services/profile";
+import { regionLabel } from "../services/regions";
 import { openExternal } from "../services/session";
 import { savedTheme, setTheme, type ThemeChoice } from "../services/theme";
 
 function regionName(code: string | null | undefined, locale: string, globalCitizen: string): string {
   if (!code) return "—";
   if (code === "XG") return globalCitizen;
-  try {
-    return new Intl.DisplayNames([locale], { type: "region" }).of(code) ?? code;
-  } catch {
-    return code;
-  }
+  return regionLabel(code, locale);
 }
 
 export function Settings() {

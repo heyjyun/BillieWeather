@@ -149,6 +149,8 @@ describe("validation", () => {
     const ja = regionOptions("ja", "地球市民");
     expect(ja[0]).toEqual({ code: "XG", label: "地球市民" });
     expect(ja.find((option) => option.code === "JP")?.label).toBe("日本");
+    expect(ja[1]).toEqual({ code: "XO", label: "その他" });
+    expect(regionOptions("en", "Global Citizen").find((option) => option.code === "KR")?.label).toBe("Korea");
     show();
     const search = screen.getByLabelText(en.regionSearch);
     fireEvent.change(search, { target: { value: "japan" } });
