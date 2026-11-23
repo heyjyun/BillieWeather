@@ -109,6 +109,12 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
   }, []);
   const [data, setData] = useState<FinanceData>({ transactions: [], accounts: [], customCategories: [], statements: [], rules: [], currency: null });
   const [error, setError] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  // Shows why the local database could not be opened (the plugin's or SQLite's own message).
+  const failOpen = useCallback((reason: unknown) => {
+    setErrorDetail(reason instanceof Error ? reason.message : String(reason));
+    setError("dbError");
+  }, []);
   const [sync, setSync] = useState<SyncState>({ status: "idle" });
   const [syncEnabled, setSyncEnabledState] = useState(true);
   const [lastChecked, setLastChecked] = useState<string | null>(null);
@@ -208,9 +214,17 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     const current = registryRef.current;
     const ordered = [...current.entries].sort((a, b) => (a.id === current.active ? -1 : b.id === current.active ? 1 : 0));
     const declined = ownerKey ? declinedSlots(ownerKey) : new Set<string>();
+    // A database that cannot be OPENED is not another account's: it stays listed, and the
+    // error is reported instead of "no free database" (which would hide the real cause).
+    let openError: unknown = null;
+    const check = (id: string) => decide(id).catch((error: unknown) => {
+      openError ??= error;
+      return "error" as const;
+    });
     for (const entry of ordered) {
       if (declined.has(entry.id)) continue;
-      const verdict = await decide(entry.id).catch(() => "skip" as const);
+      const verdict = await check(entry.id);
+      if (verdict === "error") continue;
       if (verdict === "use") return entry.id;
       if (verdict === "ask") {
         setClaim({ id: entry.id });
@@ -219,11 +233,14 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
       commitRegistry({ entries: registryRef.current.entries.filter((e) => e.id !== entry.id), active: registryRef.current.active === entry.id ? "" : registryRef.current.active });
       handles.current.delete(entry.id);
     }
+    // One of this account's own databases could not be opened: report it rather than starting an
+    // empty database in its place (the person would think their data was gone).
+    if (openError) throw openError;
     // Nothing usable in this account's list: a free slot that no other account lists.
     const exclude = new Set([...slotsOfOthers(ownerKey, aliases), ...declined]);
     for (const slot of freeSlots(registryRef.current, exclude)) {
       commitRegistry({ entries: [...registryRef.current.entries, slot].sort((a, b) => Number(a.id) - Number(b.id)), active: slot.id });
-      const verdict = await decide(slot.id).catch(() => "skip" as const);
+      const verdict = await check(slot.id);
       if (verdict === "use") return slot.id;
       if (verdict === "ask") {
         setClaim({ id: slot.id });
@@ -232,6 +249,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
       commitRegistry({ entries: registryRef.current.entries.filter((e) => e.id !== slot.id), active: registryRef.current.active });
       handles.current.delete(slot.id);
     }
+    if (openError) throw openError;
     return "none";
   }, [ownerKey, aliases, decide, commitRegistry]);
 
@@ -253,7 +271,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     // Open once per sign-in. If React mounts this twice (development StrictMode), both mounts
     // share the same handle for the database in use, so every page reads the store the sync writes to.
     let cancelled = false;
-    start(() => cancelled).catch(() => { if (!cancelled) setError("dbError"); });
+    start(() => cancelled).catch((reason: unknown) => { if (!cancelled) failOpen(reason); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -271,8 +289,8 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
       commitRegistry({ entries: registryRef.current.entries.filter((e) => e.id !== id), active: registryRef.current.active === id ? "" : registryRef.current.active });
       handles.current.delete(id);
     }
-    await start(() => false).catch(() => setError("dbError"));
-  }, [claim, ownerKey, openById, commitRegistry, start]);
+    await start(() => false).catch(failOpen);
+  }, [claim, ownerKey, openById, commitRegistry, start, failOpen]);
 
   const value = useMemo<FinanceContextValue | null>(
     () => state ? {
@@ -421,7 +439,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     );
   }
   if (error === "noRoom") return <div className="bw-boot" role="alert">{m.ledger.owner.noRoom}</div>;
-  if (error) return <div className="bw-boot" role="alert">{m.boot.dbError}</div>;
+  if (error) return <div className="bw-boot" role="alert">{m.boot.dbError}{errorDetail ? <><br /><small>{errorDetail}</small></> : null}</div>;
   if (!value) return <div className="bw-boot">{m.boot.opening}</div>;
   if (value.persistent && !databaseName) {
     return (

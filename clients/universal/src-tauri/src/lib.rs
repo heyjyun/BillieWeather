@@ -191,4 +191,34 @@ mod tests {
             assert_eq!(slot_file(1), slot_file(1));
         }
     }
+
+    /// Every slot is created from nothing with the full migration chain, the way the SQL plugin
+    /// does it (sqlx, each migration in its own transaction, `create_if_missing`), in a temp folder.
+    #[test]
+    fn fresh_slot_files_are_created_and_fully_migrated() {
+        use sqlx::migrate::{Migration as SqlxMigration, MigrationType, Migrator};
+        use sqlx::sqlite::SqliteConnectOptions;
+        let dir = std::env::temp_dir().join(format!("bw-fresh-slots-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        tauri::async_runtime::block_on(async {
+            for slot in 1..=super::MAX_DATABASES {
+                let path = dir.join(super::slot_name(slot));
+                assert!(!path.exists());
+                let options = SqliteConnectOptions::new().filename(&path).create_if_missing(true);
+                let pool = sqlx::SqlitePool::connect_with(options).await.unwrap();
+                let list: Vec<SqlxMigration> = super::migrations()
+                    .into_iter()
+                    .map(|m| SqlxMigration::new(m.version, m.description.into(), MigrationType::ReversibleUp, m.sql.into(), false))
+                    .collect();
+                let migrator = Migrator { migrations: list.into(), ..Migrator::DEFAULT };
+                migrator.run(&pool).await.unwrap_or_else(|e| panic!("slot {slot}: {e}"));
+                let (applied,): (i64,) = sqlx::query_as("SELECT count(*) FROM _sqlx_migrations WHERE success").fetch_one(&pool).await.unwrap();
+                assert_eq!(applied as usize, super::migrations().len(), "slot {slot}");
+                pool.close().await;
+                assert!(path.is_file());
+            }
+        });
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }
