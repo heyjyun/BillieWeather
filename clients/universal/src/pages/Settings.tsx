@@ -21,7 +21,7 @@ export function Settings({ openLibrary, openData }: { openLibrary?: () => void; 
   const { account, offline, signOut, savePreferences } = useAccount();
   const { store, refresh, rules } = useFinance();
   const [nickname, setNickname] = useState(account?.nickname ?? "");
-  const [accountStatus, setAccountStatus] = useState("");
+  const [accountStatus, setAccountStatus] = useState<"saved" | "saveFailed" | null>(null);
   const [theme, setThemeState] = useState<ThemeChoice>(savedTheme);
   const x = m.settings;
   const n = m.personal.nickname;
@@ -32,7 +32,7 @@ export function Settings({ openLibrary, openData }: { openLibrary?: () => void; 
   function saveNickname() {
     const problem = validateNickname(nickname);
     setNicknameProblem(problem);
-    if (problem) return setAccountStatus("");
+    if (problem) return setAccountStatus(null);
     const next = normalizeNickname(nickname)!;
     setNickname(next);
     void save({ nickname: next });
@@ -41,9 +41,9 @@ export function Settings({ openLibrary, openData }: { openLibrary?: () => void; 
   async function save(preferences: Parameters<typeof savePreferences>[0]) {
     try {
       await savePreferences(preferences);
-      setAccountStatus(x.saved);
+      setAccountStatus("saved");
     } catch {
-      setAccountStatus(x.saveFailed);
+      setAccountStatus("saveFailed");
     }
   }
 
@@ -85,7 +85,7 @@ export function Settings({ openLibrary, openData }: { openLibrary?: () => void; 
             <LanguageSelect id="settings-language" onChange={(next) => save({ locale: next })} />
           </label>
         </div>
-        <p role="status" aria-live="polite" className="bw-sr-status">{accountStatus}</p>
+        <p role="status" aria-live="polite" className="bw-sr-status">{accountStatus && x[accountStatus]}</p>
         <p className="bw-caption">{x.accountOnline}</p>
         <div className="bw-account-actions">
           <button type="button" className="bw-link-button" onClick={() => openExternal(websiteUrl("/app/settings", locale))}>{x.manageOnline} ↗</button>

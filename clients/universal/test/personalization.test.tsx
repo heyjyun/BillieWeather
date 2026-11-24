@@ -189,3 +189,15 @@ describe("editing the nickname in Settings", () => {
     expect(savePreferences).toHaveBeenCalledExactlyOnceWith({ nickname: "김윤" });
   });
 });
+
+it.each(["saved", "saveFailed"] as const)("Settings shows %s in the newly selected language", async (result) => {
+  if (result === "saveFailed") savePreferences.mockRejectedValueOnce(new Error("offline"));
+  view(<Settings />);
+
+  await act(async () => {
+    fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "zh-CN" } });
+  });
+
+  expect(savePreferences).toHaveBeenCalledExactlyOnceWith({ locale: "zh-CN" });
+  expect(screen.getByRole("status").textContent).toBe(MESSAGES["zh-CN"].settings[result]);
+});
