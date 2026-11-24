@@ -1,5 +1,4 @@
-"""Test harness. Uses a LOCAL Postgres database only (refuses anything that is not localhost and
-named *_test / *_compat), so the suite can never touch Neon or real accounts.
+"""Test harness. Uses a loopback connection or Unix socket and a *_test / *_compat database.
 
     IDENTITY_TEST_DATABASE_URL=postgresql://localhost/billieweather_identity_compat uv run pytest
 
@@ -10,12 +9,12 @@ from __future__ import annotations
 import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from urllib.parse import urlparse
 
 import httpx
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
+from psycopg.conninfo import conninfo_to_dict
 from psycopg.rows import dict_row
 
 from identity_api.config import Settings
@@ -34,19 +33,23 @@ FIXTURE = Path(__file__).parent / "fixtures" / "rails_accounts_schema.sql"
 
 
 def _assert_local(url: str) -> None:
-    parsed = urlparse(url)
-    name = parsed.path.lstrip("/")
-    if parsed.hostname not in (None, "", "localhost", "127.0.0.1") or not (name.endswith("_test") or name.endswith("_compat")):
-        raise RuntimeError(f"refusing to run tests against {parsed.hostname}/{name}: use a local *_test or *_compat database")
+    options = conninfo_to_dict(url)
+    name = options.get("dbname", "")
+    host = options.get("host") or os.getenv("PGHOST", "")
+    address = options.get("hostaddr") or os.getenv("PGHOSTADDR", "")
+    loopback = {"127.0.0.1", "::1"}
+    local_host = host in loopback | {"localhost"} or (Path(host).is_absolute() and "," not in host)
+    local_address = not address or address in loopback
+    uses_service = options.get("service") or os.getenv("PGSERVICE")
+    if uses_service or not (local_host and local_address and name.endswith(("_test", "_compat"))):
+        raise RuntimeError("refusing to run tests outside a local *_test or *_compat database")
 
 
 def _ensure_database(url: str) -> None:
-    parsed = urlparse(url)
-    name = parsed.path.lstrip("/")
-    admin = parsed._replace(path="/postgres").geturl()
-    with psycopg.connect(admin, autocommit=True) as conn:
+    name = conninfo_to_dict(url)["dbname"]
+    with psycopg.connect(url, dbname="postgres", autocommit=True) as conn:
         if conn.execute("SELECT 1 FROM pg_database WHERE datname = %s", (name,)).fetchone() is None:
-            conn.execute(f'CREATE DATABASE "{name}"')
+            conn.execute(psycopg.sql.SQL("CREATE DATABASE {}").format(psycopg.sql.Identifier(name)))
 
 
 @pytest.fixture(scope="session")

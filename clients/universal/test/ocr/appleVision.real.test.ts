@@ -9,9 +9,10 @@ import { mergeOcrResults, parseOcrResult, type OcrResult } from "@billie/finance
 import { draftFor, FIXTURES, IMAGE_CASES, score, table, TRUTH, type Score } from "./realEngine";
 
 const SWIFT = join(__dirname, "../../src-tauri/ocr-apple");
+const OCR_PROCESS_OPTIONS = { encoding: "utf8", timeout: 25_000, killSignal: "SIGKILL" } as const;
 const available = process.platform === "darwin" && (() => {
   try {
-    execFileSync("xcrun", ["--find", "swiftc"], { stdio: "ignore" });
+    execFileSync("xcrun", ["--find", "swiftc"], { stdio: "ignore", timeout: 5_000, killSignal: "SIGKILL" });
     return true;
   } catch {
     return false;
@@ -25,15 +26,17 @@ describe.skipIf(!available)("Apple Vision (real engine)", () => {
   beforeAll(() => {
     const dir = mkdtempSync(join(tmpdir(), "billie-vision-"));
     cli = join(dir, "billie-vision-cli");
-    execFileSync("xcrun", ["swiftc", "-O", join(SWIFT, "BillieVisionOCR.swift"), join(SWIFT, "cli/main.swift"), "-o", cli], { stdio: "pipe" });
+    execFileSync("xcrun", ["swiftc", "-O", join(SWIFT, "BillieVisionOCR.swift"), join(SWIFT, "cli/main.swift"), "-o", cli], {
+      stdio: "pipe", timeout: 170_000, killSignal: "SIGKILL",
+    });
   }, 180_000);
 
   /** Runs the CLI with networking denied by the macOS sandbox: recognition must not need the network. */
   function recognize(files: string[], offline = true): OcrResult {
     const args = ["en-US,zh-Hans,zh-Hant", ...files.map((file) => join(FIXTURES, file))];
     const output = offline
-      ? execFileSync("/usr/bin/sandbox-exec", ["-p", "(version 1)(allow default)(deny network*)", cli, ...args], { encoding: "utf8" })
-      : execFileSync(cli, args, { encoding: "utf8" });
+      ? execFileSync("/usr/bin/sandbox-exec", ["-p", "(version 1)(allow default)(deny network*)", cli, ...args], OCR_PROCESS_OPTIONS)
+      : execFileSync(cli, args, OCR_PROCESS_OPTIONS);
     return mergeOcrResults(output.trim().split("\n").map((line) => parseOcrResult(JSON.parse(line))));
   }
 
@@ -67,7 +70,7 @@ describe.skipIf(!available)("Apple Vision (real engine)", () => {
   it("reports undecodable input as an error instead of text", () => {
     const dir = mkdtempSync(join(tmpdir(), "billie-vision-bad-"));
     writeFileSync(join(dir, "bad.png"), "not an image");
-    const output = execFileSync(cli, ["en-US", join(dir, "bad.png")], { encoding: "utf8" });
+    const output = execFileSync(cli, ["en-US", join(dir, "bad.png")], OCR_PROCESS_OPTIONS);
     expect(parseOcrResult(JSON.parse(output))).toMatchObject({ pages: [], errors: [{ code: "decode_failed" }] });
   }, 60_000);
 

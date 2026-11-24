@@ -121,7 +121,8 @@ def test_rails_accepts_and_signs_in_python_created_accounts(client, make_client,
     payload = tmp_path / "input.json"
     payload.write_text(json.dumps({"accounts": accounts, "rails_reference_email": "rails-made@example.org", "rails_reference_password": "rails password 1"}))
     env = {**os.environ, "RAILS_ENV": "test", "DATABASE_URL": database_url}
-    run = subprocess.run(["mise", "exec", "--", "bin/rails", "runner", str(Path(__file__).parent / "rails/compat_check.rb"), str(payload)],
+    ruby = subprocess.check_output(["mise", "which", "ruby"], cwd=REPO, env=env, text=True, timeout=15).strip()
+    run = subprocess.run([ruby, "bin/rails", "runner", str(Path(__file__).parent / "rails/compat_check.rb"), str(payload)],
                          cwd=REPO, env=env, capture_output=True, text=True, timeout=300)
     marker = [line for line in run.stdout.splitlines() if line.startswith("COMPAT_JSON:")]
     assert marker, run.stdout[-2000:] + run.stderr[-2000:]
