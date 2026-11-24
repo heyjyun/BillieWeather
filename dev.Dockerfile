@@ -34,7 +34,7 @@ FROM $FROM_IMAGE AS dev
 # Run as the rails user that we create in the bullet_train/dev image
 USER 1000:1000
 
-# Entrypoint prepares the database.
+# Prepare the local database separately with ./bin/rails db:prepare.
 ENTRYPOINT ["./bin/docker-dev/entrypoint"]
 
 # Start the dev server by default, this can be overwritten at runtime

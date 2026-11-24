@@ -9,9 +9,12 @@ fi
 bundle install
 yarn install
 
-# If running the dev server then create or migrate existing database
+# Check the local schema before starting the development processes.
 if [ "${@: -1:1}" == "./bin/dev" ]; then
-  ./bin/rails db:prepare
+  if ! ./bin/rails db:abort_if_pending_migrations; then
+    printf '%s\n' 'Prepare the local database explicitly with ./bin/rails db:prepare.' >&2
+    exit 1
+  fi
 fi
 
 exec "${@}"
