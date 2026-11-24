@@ -55,3 +55,16 @@ it("honors the native deadline without dispatching the remaining pages", async (
   expect(await engine.recognize(batch)).toBe(fallbackResult);
   expect(invoke.mock.calls.map(([command]) => command)).toEqual(["ocr_recognize_image"]);
 });
+
+it("reads this batch with the fallback while the models are still being prepared, then uses Vision", async () => {
+  const page = { page: 1, width: 1, height: 1, rotation: 0, lines: [] };
+  const vision = { engine: { id: "apple-vision", version: "v" }, languages: [], pages: [page], errors: [], unsupported: [] };
+  invoke.mockRejectedValueOnce("ocr_preparing").mockResolvedValueOnce(vision);
+  const fallbackResult = { engine: { id: "tesseract-js", version: "test" }, pages: [], languages: [], errors: [], unsupported: [] };
+  const recognize = vi.fn(async () => fallbackResult);
+  const engine = appleVisionDesktopEngine(async () => ({ info: { id: "tesseract-js", location: "device", languages: [] }, recognize }));
+  expect(await engine.recognize(options)).toBe(fallbackResult);
+  expect(await engine.recognize(options)).toMatchObject({ engine: { id: "apple-vision" }, pages: [{ page: 1 }] });
+  expect(recognize).toHaveBeenCalledOnce();
+  expect(invoke.mock.calls.map(([command]) => command)).toEqual(["ocr_recognize_image", "ocr_recognize_image"]);
+});

@@ -7,9 +7,11 @@ use serde_json::{json, Value};
 use tauri::ipc::{InvokeBody, Request};
 
 #[cfg(target_os = "macos")]
+mod preparation;
+#[cfg(target_os = "macos")]
 mod vision_process;
 #[cfg(target_os = "macos")]
-pub use vision_process::{run_worker, VisionJobs};
+pub use vision_process::{run_prepare, run_worker, VisionJobs};
 #[cfg(not(target_os = "macos"))]
 #[derive(Default)]
 pub struct VisionJobs;
@@ -51,6 +53,16 @@ pub async fn ocr_recognize_image(request: Request<'_>, jobs: tauri::State<'_, Vi
         let _ = jobs;
         Err("engine_unavailable".into())
     }
+}
+
+/// Starts the one-time model preparation (src/ocr/preparation.rs) and returns without waiting.
+/// Called when a screen that can read documents opens, so the models are usually ready in time.
+#[tauri::command]
+pub fn ocr_prepare(jobs: tauri::State<'_, VisionJobs>) {
+    #[cfg(target_os = "macos")]
+    let _ = jobs.prepare();
+    #[cfg(not(target_os = "macos"))]
+    let _ = jobs;
 }
 
 #[tauri::command]

@@ -1,5 +1,6 @@
 import { browseDocuments, usesDesktopDocumentPicker, webDocuments, type LocalDocument } from "../services/documentInput";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { prepareOcr } from "../services/ocrEngine";
 
 export function DocumentPicker({ extensions, accept, multiple = false, label, help, busy, onChoose, onError }: {
   extensions: readonly string[]; accept: string; multiple?: boolean; label: string; help: string; busy: boolean;
@@ -9,6 +10,8 @@ export function DocumentPicker({ extensions, accept, multiple = false, label, he
   const picking = useRef(false);
   const [dragOver, setDragOver] = useState(false);
   const classes = "bw-dropzone" + (busy ? " is-busy" : "") + (dragOver ? " is-dragover" : "");
+
+  useEffect(() => { if (desktop) void prepareOcr(); }, [desktop]);
 
   async function browse() {
     if (picking.current || busy) return;

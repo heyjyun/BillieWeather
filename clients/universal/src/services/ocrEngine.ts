@@ -66,6 +66,22 @@ export async function tesseractForThisApp(): Promise<OcrEngine> {
   });
 }
 
+/**
+ * Desktop Vision only: starts the one-time model preparation in the background, so the first
+ * document does not have to wait for it. Best effort; recognition starts it too when needed.
+ */
+export async function prepareOcr(): Promise<void> {
+  if (!isTauri()) return;
+  try {
+    const current = engine ?? (await initOcrEngine());
+    if (current?.info.id !== "apple-vision" || /iPhone|iPad|iPod/.test(navigator.userAgent) || navigator.maxTouchPoints > 1) return;
+    const { invoke } = await import("@tauri-apps/api/core");
+    await invoke("ocr_prepare");
+  } catch {
+    // Reading a document reports its own errors.
+  }
+}
+
 /** Picks and registers this platform's engine. Never throws: without an engine, OCR imports are refused clearly. */
 export async function initOcrEngine(): Promise<OcrEngine | null> {
   try {

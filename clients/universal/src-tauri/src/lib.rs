@@ -6,7 +6,7 @@ mod snapshot;
 mod transaction;
 
 #[cfg(target_os = "macos")]
-pub use ocr::run_worker as run_vision_worker;
+pub use ocr::{run_prepare as run_vision_prepare, run_worker as run_vision_worker};
 
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -132,6 +132,7 @@ pub fn run() {
             device::device_name,
             identity::device_identity,
             ocr::ocr_capabilities,
+            ocr::ocr_prepare,
             ocr::ocr_recognize_image,
             ocr::ocr_cancel_image,
             session::session_load,

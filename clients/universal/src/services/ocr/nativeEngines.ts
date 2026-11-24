@@ -63,7 +63,9 @@ export function appleVisionDesktopEngine(fallback?: () => Promise<OcrEngine>): O
           });
           return parseOcrResult(await waitForDesktopOcr(response, cancel, signal));
         } catch (error) {
-          timedOut = error === "ocr_timeout" || error instanceof DesktopOcrTimeout;
+          // "ocr_preparing": the models are still being prepared on this Mac (first use). That
+          // goes on in the background; this batch is read by the fallback engine instead.
+          timedOut = error === "ocr_timeout" || error === "ocr_preparing" || error instanceof DesktopOcrTimeout;
           throw error;
         }
       }, { id: "apple-vision", version: "unknown" });

@@ -19,12 +19,12 @@ export const OCR_ASSETS: Record<string, string> = {
 };
 
 /**
- * Tauri builds for Apple platforms and Android always use the native engine (Apple Vision, ML Kit;
- * see src/services/ocrEngine.ts and src-tauri/src/ocr.rs), so Tesseract is never loaded there and
- * its ~10 MB is left out. Browsers, Windows and Linux keep it.
+ * iOS and Android always use the native engine (Apple Vision, ML Kit; see src/services/ocrEngine.ts),
+ * so Tesseract is never loaded there and its ~10 MB is left out. macOS keeps it: it reads the
+ * document when Apple Vision is not ready or stops responding (src/services/ocr/nativeEngines.ts).
  */
 export function needsTesseract(tauriPlatform: string | undefined): boolean {
-  return !["darwin", "macos", "ios", "android"].includes(tauriPlatform ?? "");
+  return !["ios", "android"].includes(tauriPlatform ?? "");
 }
 
 function ocrAssets(): Plugin {
