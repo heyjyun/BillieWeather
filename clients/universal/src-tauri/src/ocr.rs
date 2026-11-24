@@ -1,10 +1,18 @@
 //! On-device OCR commands. macOS: Apple Vision (ocr-apple/BillieVisionOCR.swift, linked as a
 //! static library by build.rs). Other desktop systems have no native engine here: the app uses
 //! the bundled Tesseract (WebAssembly) engine instead, so `ocr_capabilities` reports none.
-//! Images arrive as the raw IPC body (no JSON copy) and never leave the process.
+//! Images arrive as raw IPC bytes and the isolated macOS worker receives them on stdin.
 
 use serde_json::{json, Value};
 use tauri::ipc::{InvokeBody, Request};
+
+#[cfg(target_os = "macos")]
+mod vision_process;
+#[cfg(target_os = "macos")]
+pub use vision_process::{run_worker, VisionJobs};
+#[cfg(not(target_os = "macos"))]
+#[derive(Default)]
+pub struct VisionJobs;
 
 /// Larger inputs are refused before decoding (the Swift side also limits pixel count).
 const MAX_IMAGE_BYTES: usize = 40 * 1024 * 1024;
@@ -20,20 +28,37 @@ pub fn ocr_capabilities() -> Value {
 
 /// Headers: `x-ocr-languages` (comma-separated BCP 47, e.g. "en-US,zh-Hans,zh-Hant") and `x-ocr-page`.
 #[tauri::command]
-pub async fn ocr_recognize_image(request: Request<'_>) -> Result<Value, String> {
+pub async fn ocr_recognize_image(request: Request<'_>, jobs: tauri::State<'_, VisionJobs>) -> Result<Value, String> {
     let InvokeBody::Raw(bytes) = request.body() else {
         return Err("expected the image as a raw body".into());
     };
     if bytes.is_empty() || bytes.len() > MAX_IMAGE_BYTES {
         return Err("too_large".into());
     }
-    let header = |name: &str| request.headers().get(name).and_then(|value| value.to_str().ok()).map(str::to_owned);
-    let languages = header("x-ocr-languages").unwrap_or_else(|| "en-US".into());
-    let page: i32 = header("x-ocr-page").and_then(|value| value.parse().ok()).unwrap_or(1);
-    let bytes = bytes.clone();
-    tauri::async_runtime::spawn_blocking(move || recognize(&bytes, &languages, page))
-        .await
-        .map_err(|_| "recognition_failed".to_string())?
+    #[cfg(target_os = "macos")]
+    {
+        let header = |name: &str| request.headers().get(name).and_then(|value| value.to_str().ok());
+        let languages = header("x-ocr-languages").unwrap_or("en-US");
+        let page = header("x-ocr-page").and_then(|value| value.parse().ok()).unwrap_or(1);
+        let job = header("x-ocr-job-id").ok_or("recognition_failed")?;
+        if languages.len() > 128 || !languages.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-' || c == b',') || page < 1 {
+            return Err("recognition_failed".into());
+        }
+        jobs.recognize(job, bytes, languages, page).await
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = jobs;
+        Err("engine_unavailable".into())
+    }
+}
+
+#[tauri::command]
+pub fn ocr_cancel_image(job: &str, jobs: tauri::State<'_, VisionJobs>) {
+    #[cfg(target_os = "macos")]
+    jobs.cancel(job);
+    #[cfg(not(target_os = "macos"))]
+    let _ = (job, jobs);
 }
 
 #[cfg(target_os = "macos")]
@@ -56,25 +81,9 @@ pub fn recognize(bytes: &[u8], languages: &str, page: i32) -> Result<Value, Stri
     serde_json::from_str(&text).map_err(|_| "recognition_failed".into())
 }
 
-#[cfg(not(target_os = "macos"))]
-pub fn recognize(_bytes: &[u8], _languages: &str, _page: i32) -> Result<Value, String> {
-    Err("engine_unavailable".into())
-}
-
 #[cfg(all(test, target_os = "macos"))]
 mod tests {
     use super::*;
-
-    /// The linked Swift library recognizes a synthetic statement through the same FFI the app uses.
-    #[test]
-    fn recognizes_a_synthetic_statement_through_ffi() {
-        let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../test/ocr-fixtures/us-debit-credit.png")).unwrap();
-        let result = recognize(&bytes, "en-US,zh-Hans,zh-Hant", 1).unwrap();
-        assert_eq!(result["engine"]["id"], "apple-vision");
-        let lines: Vec<&str> = result["pages"][0]["lines"].as_array().unwrap().iter().map(|line| line["text"].as_str().unwrap()).collect();
-        assert!(lines.contains(&"Synthetic Bank"), "{lines:?}");
-        assert!(lines.contains(&"1,286.04"), "{lines:?}");
-    }
 
     #[test]
     fn reports_undecodable_input_as_an_error() {

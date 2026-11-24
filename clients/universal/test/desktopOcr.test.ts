@@ -23,6 +23,8 @@ it("returns cancellation immediately while a Vision request is still pending", a
   controller.abort();
   expect(await result).toMatchObject({ pages: [], errors: [{ page: 1, code: "cancelled" }] });
   expect(fallback).not.toHaveBeenCalled();
+  const job = invoke.mock.calls[0][2].headers["x-ocr-job-id"];
+  expect(invoke).toHaveBeenCalledWith("ocr_cancel_image", { job });
 });
 
 it("uses the on-device fallback once for all pages after a Vision timeout", async () => {
@@ -36,6 +38,20 @@ it("uses the on-device fallback once for all pages after a Vision timeout", asyn
   const result = engine.recognize(batch);
   await vi.advanceTimersByTimeAsync(20_000);
   expect(await result).toBe(fallbackResult);
-  expect(invoke).toHaveBeenCalledTimes(1);
+  const job = invoke.mock.calls[0][2].headers["x-ocr-job-id"];
+  expect(invoke.mock.calls.map(([command]) => command)).toEqual(["ocr_recognize_image", "ocr_cancel_image"]);
+  expect(invoke).toHaveBeenCalledWith("ocr_cancel_image", { job });
   expect(recognize).toHaveBeenCalledExactlyOnceWith(batch);
+});
+
+it("honors the native deadline without dispatching the remaining pages", async () => {
+  invoke.mockRejectedValue("ocr_timeout");
+  const fallbackResult = { engine: { id: "tesseract-js", version: "test" }, pages: [], languages: [], errors: [], unsupported: [] };
+  const recognize = vi.fn(async () => fallbackResult);
+  const engine = appleVisionDesktopEngine(async () => ({
+    info: { id: "tesseract-js", location: "device", languages: [] }, recognize,
+  }));
+  const batch = { ...options, images: [...options.images, { ...options.images[0], page: 2 }] };
+  expect(await engine.recognize(batch)).toBe(fallbackResult);
+  expect(invoke.mock.calls.map(([command]) => command)).toEqual(["ocr_recognize_image"]);
 });

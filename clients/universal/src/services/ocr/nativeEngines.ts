@@ -5,6 +5,8 @@
 // Both return the shared OcrResult contract; nothing is sent over the network.
 import { mergeOcrResults, OCR_LANGUAGES, parseOcrResult, type OcrEngine, type OcrImage, type OcrResult } from "@billie/finance-core";
 
+import { randomId } from "../ids";
+
 const VISION_LANGUAGES: Record<string, string> = { en: "en-US", "zh-Hans": "zh-Hans", "zh-Hant": "zh-Hant" };
 
 async function each(images: OcrImage[], signal: AbortSignal | undefined, read: (image: OcrImage) => Promise<OcrResult>, engine: OcrResult["engine"]): Promise<OcrResult> {
@@ -29,14 +31,14 @@ async function each(images: OcrImage[], signal: AbortSignal | undefined, read: (
 // review UI on cancellation/deadline and ignore an IPC response that arrives afterward.
 class DesktopOcrTimeout extends Error {}
 
-function waitForDesktopOcr<T>(response: Promise<T>, signal?: AbortSignal): Promise<T> {
+function waitForDesktopOcr<T>(response: Promise<T>, cancel: () => void, signal?: AbortSignal): Promise<T> {
   return new Promise((resolve, reject) => {
     const finish = () => {
       clearTimeout(timer);
       signal?.removeEventListener("abort", abort);
     };
-    const abort = () => { finish(); reject(new Error("OCR cancelled")); };
-    const timer = setTimeout(() => { finish(); reject(new DesktopOcrTimeout("OCR timed out")); }, 20_000);
+    const abort = () => { finish(); cancel(); reject(new Error("OCR cancelled")); };
+    const timer = setTimeout(() => { finish(); cancel(); reject(new DesktopOcrTimeout("OCR timed out")); }, 20_000);
     signal?.addEventListener("abort", abort, { once: true });
     response.then((result) => { finish(); resolve(result); }, (error: unknown) => { finish(); reject(error); });
     if (signal?.aborted) abort();
@@ -53,16 +55,20 @@ export function appleVisionDesktopEngine(fallback?: () => Promise<OcrEngine>): O
       let timedOut = false;
       const result = await each(images, signal, async (image) => {
         if (timedOut) throw new DesktopOcrTimeout("OCR timed out");
+        const job = randomId();
+        const cancel = () => { void invoke("ocr_cancel_image", { job }).catch(() => {}); };
         try {
-          return parseOcrResult(await waitForDesktopOcr(invoke("ocr_recognize_image", image.bytes, {
-            headers: { "x-ocr-languages": codes, "x-ocr-page": String(image.page) },
-          }), signal));
+          const response = invoke("ocr_recognize_image", image.bytes, {
+            headers: { "x-ocr-languages": codes, "x-ocr-page": String(image.page), "x-ocr-job-id": job },
+          });
+          return parseOcrResult(await waitForDesktopOcr(response, cancel, signal));
         } catch (error) {
-          timedOut = error instanceof DesktopOcrTimeout;
+          timedOut = error === "ocr_timeout" || error instanceof DesktopOcrTimeout;
           throw error;
         }
       }, { id: "apple-vision", version: "unknown" });
-      if (!fallback || signal?.aborted || result.pages.length || !result.errors.some((error) => error.code === "recognition_failed")) return result;
+      if (!fallback || signal?.aborted ||
+          (!timedOut && (result.pages.length || !result.errors.some((error) => error.code === "recognition_failed")))) return result;
       const engine = await fallback();
       if (engine.info.location !== "device") return result;
       return engine.recognize(input);

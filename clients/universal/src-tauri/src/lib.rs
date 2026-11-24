@@ -5,6 +5,9 @@ mod session;
 mod snapshot;
 mod transaction;
 
+#[cfg(target_os = "macos")]
+pub use ocr::run_worker as run_vision_worker;
+
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 /// Local databases live in the app's private data directory on every platform. A device can
@@ -118,6 +121,7 @@ pub fn run() {
             }
             Ok(())
         })
+        .manage(ocr::VisionJobs::default())
         .plugin(sql.build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -129,6 +133,7 @@ pub fn run() {
             identity::device_identity,
             ocr::ocr_capabilities,
             ocr::ocr_recognize_image,
+            ocr::ocr_cancel_image,
             session::session_load,
             session::session_save,
             session::session_clear,

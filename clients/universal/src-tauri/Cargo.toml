@@ -32,6 +32,9 @@ serde = { version = "1", features = ["derive"] }
 # On-device OCR on Android (ML Kit) and iOS (Apple Vision); desktop builds use src/ocr.rs instead.
 tauri-plugin-billie-ocr = { path = "plugins/billie-ocr" }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+tokio = { version = "1", features = ["process", "io-util", "macros", "sync", "time"] }
+
 # Sign-in token storage: the system keychain where available.
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 keyring = { version = "3", features = ["apple-native"] }
