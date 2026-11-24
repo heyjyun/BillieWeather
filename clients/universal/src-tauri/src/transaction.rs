@@ -37,8 +37,9 @@ pub struct Outcome {
 
 /// Binds JSON parameters with their natural SQLite type. Whole numbers are bound as integers
 /// (money is integer cents), never as floating point.
-fn bind(statement: &Statement) -> sqlx::query::Query<'_, Sqlite, SqliteArguments<'_>> {
-    let mut query = sqlx::query(&statement.sql);
+fn bind(statement: &Statement) -> sqlx::query::Query<'_, Sqlite, SqliteArguments> {
+    // As with the SQL plugin IPC, the app provides the statement and binds data separately.
+    let mut query = sqlx::query(sqlx::AssertSqlSafe(statement.sql.as_str()));
     for value in &statement.params {
         query = match value {
             JsonValue::Null => query.bind(None::<String>),
@@ -136,7 +137,7 @@ mod tests {
     }
 
     async fn count(pool: &SqlitePool, table: &str) -> i64 {
-        sqlx::query_scalar(&format!("SELECT COUNT(*) FROM {table}")).fetch_one(pool).await.unwrap()
+        sqlx::query_scalar(sqlx::AssertSqlSafe(format!("SELECT COUNT(*) FROM {table}"))).fetch_one(pool).await.unwrap()
     }
 
     fn run<F: std::future::Future>(future: F) -> F::Output {

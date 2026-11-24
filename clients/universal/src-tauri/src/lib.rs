@@ -84,8 +84,22 @@ fn migrations() -> Vec<Migration> {
     ]
 }
 
+// SQLx and this probe link to the same SQLite library (unique Cargo `links = "sqlite3"`).
+pub fn sqlite_version() -> String {
+    // The SQLite library owns these static NUL-terminated strings for the process lifetime.
+    unsafe {
+        let version = std::ffi::CStr::from_ptr(libsqlite3_sys::sqlite3_libversion());
+        let source = std::ffi::CStr::from_ptr(libsqlite3_sys::sqlite3_sourceid());
+        format!("{} {}", version.to_string_lossy(), source.to_string_lossy())
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    assert!(
+        unsafe { libsqlite3_sys::sqlite3_libversion_number() } >= 3_054_000,
+        "The runtime SQLite requires version 3.54.0 or newer"
+    );
     let mut sql = tauri_plugin_sql::Builder::default();
     for slot in 1..=MAX_DATABASES {
         sql = sql.add_migrations(&slot_file(slot), migrations());
@@ -180,6 +194,20 @@ async fn db_snapshot(instances: tauri::State<'_, tauri_plugin_sql::DbInstances>,
 #[cfg(test)]
 mod tests {
     use super::slot_file;
+    use sqlx::migrate::{Migration as SqlxMigration, MigrationType, Migrator};
+    use sqlx::sqlite::SqliteConnectOptions;
+    use sqlx::SqlSafeStr;
+
+    fn migrator() -> Migrator {
+        let list: Vec<SqlxMigration> = super::migrations()
+            .into_iter()
+            .map(|migration| SqlxMigration::new(
+                migration.version, migration.description.into(), MigrationType::ReversibleUp,
+                migration.sql.into_sql_str(), false,
+            ))
+            .collect();
+        Migrator { migrations: list.into(), ..Migrator::DEFAULT }
+    }
 
     /// The SQLite file names never depend on the build, the launch or the session; the plugin
     /// resolves them against the app's fixed config directory (one per identifier).
@@ -196,8 +224,6 @@ mod tests {
     /// does it (sqlx, each migration in its own transaction, `create_if_missing`), in a temp folder.
     #[test]
     fn fresh_slot_files_are_created_and_fully_migrated() {
-        use sqlx::migrate::{Migration as SqlxMigration, MigrationType, Migrator};
-        use sqlx::sqlite::SqliteConnectOptions;
         let dir = std::env::temp_dir().join(format!("bw-fresh-slots-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
@@ -207,12 +233,10 @@ mod tests {
                 assert!(!path.exists());
                 let options = SqliteConnectOptions::new().filename(&path).create_if_missing(true);
                 let pool = sqlx::SqlitePool::connect_with(options).await.unwrap();
-                let list: Vec<SqlxMigration> = super::migrations()
-                    .into_iter()
-                    .map(|m| SqlxMigration::new(m.version, m.description.into(), MigrationType::ReversibleUp, m.sql.into(), false))
-                    .collect();
-                let migrator = Migrator { migrations: list.into(), ..Migrator::DEFAULT };
-                migrator.run(&pool).await.unwrap_or_else(|e| panic!("slot {slot}: {e}"));
+                migrator().run(&pool).await.unwrap_or_else(|e| panic!("slot {slot}: {e}"));
+                let runtime: String = sqlx::query_scalar("SELECT sqlite_version()").fetch_one(&pool).await.unwrap();
+                assert_eq!(super::sqlite_version().split_whitespace().next(), Some(runtime.as_str()));
+                assert!(unsafe { libsqlite3_sys::sqlite3_libversion_number() } >= 3_054_000);
                 let (applied,): (i64,) = sqlx::query_as("SELECT count(*) FROM _sqlx_migrations WHERE success").fetch_one(&pool).await.unwrap();
                 assert_eq!(applied as usize, super::migrations().len(), "slot {slot}");
                 pool.close().await;
@@ -221,4 +245,51 @@ mod tests {
         });
         let _ = std::fs::remove_dir_all(&dir);
     }
+    #[test]
+    fn preserves_prior_sqlx_migration_history_and_financial_rows() {
+        let path = std::env::temp_dir().join(format!("bw-prior-slot-{}.db", std::process::id()));
+        tauri::async_runtime::block_on(async {
+            let options = SqliteConnectOptions::new().filename(&path).create_if_missing(true);
+            let pool = sqlx::SqlitePool::connect_with(options).await.unwrap();
+            sqlx::raw_sql(include_str!("../migrations/0001_initial.sql")).execute(&pool).await.unwrap();
+            sqlx::raw_sql("
+                CREATE TABLE _sqlx_migrations (
+                    version BIGINT PRIMARY KEY, description TEXT NOT NULL,
+                    installed_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    success BOOLEAN NOT NULL, checksum BLOB NOT NULL, execution_time BIGINT NOT NULL
+                );
+                INSERT INTO _sqlx_migrations (version, description, success, checksum, execution_time)
+                VALUES (1, 'initial local schema', 1,
+                    X'AFA78FAD11642B7404627C1F79EEBF98BCF424717DB5EAF45C411A071F15C347D0073152587E7926292CC1A892AF0163', 123);
+                INSERT INTO statements (id, filename, currency, sha256, transaction_count, imported_at)
+                VALUES (1, 'synthetic.csv', 'USD', 'synthetic-fixture', 1, '2026-11-20');
+                INSERT INTO transactions (id, statement_id, booked_on, description, amount_cents, category, updated_at)
+                VALUES (12, 1, '2026-11-20', 'Synthetic transfer input', -1025, 'Transfers', '2026-11-20');
+            ").execute(&pool).await.unwrap();
+            pool.close().await;
+
+            let options = SqliteConnectOptions::new().filename(&path);
+            let pool = sqlx::SqlitePool::connect_with(options).await.unwrap();
+            let migrator = migrator();
+            migrator.run(&pool).await.unwrap();
+            migrator.run(&pool).await.unwrap();
+            let count: i64 = sqlx::query_scalar("SELECT count(*) FROM _sqlx_migrations WHERE success")
+                .fetch_one(&pool).await.unwrap();
+            assert_eq!(count as usize, super::migrations().len());
+            let first_time: i64 = sqlx::query_scalar("SELECT execution_time FROM _sqlx_migrations WHERE version = 1")
+                .fetch_one(&pool).await.unwrap();
+            assert_eq!(first_time, 123);
+            let entry: (i64, String, String, String) = sqlx::query_as(
+                "SELECT t.amount_cents, t.booked_on, s.filename, s.currency FROM transactions t
+                 JOIN statements s ON s.id = t.statement_id WHERE t.id = 12"
+            ).fetch_one(&pool).await.unwrap();
+            assert_eq!(entry, (-1025, "2026-11-20".into(), "synthetic.csv".into(), "USD".into()));
+            assert!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().is_empty());
+            let integrity: String = sqlx::query_scalar("PRAGMA integrity_check").fetch_one(&pool).await.unwrap();
+            assert_eq!(integrity, "ok");
+            pool.close().await;
+        });
+        std::fs::remove_file(path).unwrap();
+    }
+
 }
