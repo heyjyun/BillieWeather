@@ -8,6 +8,11 @@
   </div>
 </div>
 <div class="bw-settings-stack">
+  <section class="bw-panel bw-settings-library" id="settings-feature-library" aria-labelledby="settings-feature-library-heading">
+    <div class="bw-panel-heading"><div><h2 id="settings-feature-library-heading"><%= t("billie.modules.library.title") %></h2><p><%= t("billie.modules.library.intro") %></p></div><span class="bw-library-icon"><%= finance_icon "library", size: 22 %></span></div>
+    <p class="bw-muted"><%= safe_join(enabled_modules.map { |definition| t("billie.modules.names.#{definition.id}") }, " · ") %></p>
+    <%= link_to t("billie.modules.library.open_library"), finance_feature_library_path, class: "bw-button bw-button-dark", id: "open-feature-library" %>
+  </section>
   <section class="bw-panel" id="settings-profile" aria-labelledby="settings-profile-heading">
     <h2 id="settings-profile-heading"><%= t("billie.account.profile_heading") %></h2>
     <%= errors_for.call(:nickname) %>

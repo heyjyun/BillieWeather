@@ -1,0 +1,11 @@
+<%# Tabs for a module with several website pages (Finance::ModuleCatalog::WEB_TABS), so none is a dead end. %>
+<% tabs = Finance::ModuleCatalog::WEB_TABS.fetch(current_module_id) %>
+<div class="bw-section-tabs" id="module-tabs" data-module="<%= current_module_id %>">
+  <nav class="bw-tabs" aria-label="<%= t("billie.modules.names.#{current_module_id}") %>">
+    <% tabs.each do |label, route, controllers| %>
+      <% active = controllers.include?(controller_name) %>
+      <% path = route == "finance_dimension_index" ? finance_dimension_index_path("merchants") : public_send("#{route}_path") %>
+      <%= link_to t(label), path, class: "bw-tab#{' is-active' if active}", "aria-current": ("page" if active) %>
+    <% end %>
+  </nav>
+</div>

@@ -4,6 +4,8 @@ require "tempfile"
 
 class FinanceAccountsOverviewTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
+  include BillieModules::SignInWithAllModules
 
   setup do
     @user = create(:user)

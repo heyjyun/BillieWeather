@@ -4,6 +4,7 @@ import type { Messages } from "./en";
 import { universalJa } from "./universal";
 import { commandJa } from "./command";
 import { receiptJa } from "./receipt";
+import { modulesJa } from "./modules";
 import { welcomeJa } from "./welcome";
 import { registerJa } from "./register";
 
@@ -284,6 +285,7 @@ export const ja: Messages = {
   ledger: ledgerJa,
   command: commandJa,
   receipt: receiptJa,
+  modules: modulesJa,
   welcome: welcomeJa,
   register: registerJa,
   personal: personal["ja"],

@@ -49,6 +49,7 @@ zh-CN:
       deleted:
         one: 已删除分类“%{name}”；%{count} 笔交易现为未分类。
         other: 已删除分类“%{name}”；%{count} 笔交易现为未分类。
+      ai_undo: "撤销本次 AI 分类"
       ai_done:
         one: AI 分析了 %{sent} 个商户，为 %{count} 笔交易完成分类。
         other: AI 分析了 %{sent} 个商户，为 %{count} 笔交易完成分类。

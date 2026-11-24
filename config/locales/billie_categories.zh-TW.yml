@@ -49,6 +49,7 @@ zh-TW:
       deleted:
         one: 已刪除分類「%{name}」；%{count} 筆交易現為未分類。
         other: 已刪除分類「%{name}」；%{count} 筆交易現為未分類。
+      ai_undo: "復原本次 AI 分類"
       ai_done:
         one: AI 分析了 %{sent} 個商家，為 %{count} 筆交易完成分類。
         other: AI 分析了 %{sent} 個商家，為 %{count} 筆交易完成分類。

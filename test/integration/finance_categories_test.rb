@@ -6,6 +6,8 @@ require_relative "../support/billie_method_stub"
 # (website and the apps' API).
 class FinanceCategoriesTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
+  include BillieModules::SignInWithAllModules
   include BillieMethodStub
 
   PASSWORD = "a-long-test-password-1"
@@ -81,7 +83,7 @@ class FinanceCategoriesTest < ActionDispatch::IntegrationTest
     @user.finance_custom_categories.create!(name: "Gifts")
     get finance_categories_path
     assert_response :success
-    assert_select "a.bw-nav-link.is-active", text: "Categories"
+    assert_select "a.bw-nav-link.is-active", text: "Categories & Tags"
     assert_select ".bw-table tbody tr", count: Finance::Transaction::CATEGORIES.length + 1
     assert_select ".bw-table tbody tr", text: /Gifts/
     # Where the money goes: the coffee shop was recognized, the rest still needs a category.
@@ -129,6 +131,12 @@ class FinanceCategoriesTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to finance_categories_path
     assert_match(/categorized 2 transactions/, flash[:notice])
+    # The run is one audited batch and the page offers to undo it (Phase 0.5, audit R3).
+    batch_id = flash[:ai_batch_id]
+    assert_equal 2, Finance::AuditEvent.where(user_id: @user.id, batch_id: batch_id, actor: "ai", action: "ai_apply").count
+    follow_redirect!
+    assert_select "form#ai-undo[action='#{finance_undo_activity_path(batch_id)}']"
+    assert_select ".bw-flash", text: /#{batch_id}/, count: 0
 
     payload = sent.dig("input", 0, "content")
     refute_match(/\d/, JSON.parse(payload)["items"].map { |item| item["text"] }.join)

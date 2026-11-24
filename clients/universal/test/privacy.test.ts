@@ -119,11 +119,14 @@ describe("data isolation", () => {
     const body = /body: JSON\.stringify\(\{([\s\S]*?)\}\),\n\s*credentials/.exec(source)![1];
     expect([...body.matchAll(/(\w+):/g)].map((match) => match[1])).toEqual(["consent", "categories", "items", "key", "description", "direction"]);
     expect(body).toMatch(/description: item\.text/);
-    // Only the Categories page and the "Organize with AI" panel call it, with text already cleaned on the device
-    // (aiGroups/cleanForAi: no digits, no email addresses), and only after the person chose the AI option.
+    // Only the "Categorize with AI" panel (shown on the Categories page and in AI Assistant) and the "Organize
+    // with AI" panel call it, with text already cleaned on the device (aiGroups/cleanForAi: no digits, no email
+    // addresses), and only after the person chose the AI option.
     const callers = all.filter((file) => file !== AI && /\brequestAiCategories\b/.test(readFileSync(file, "utf8"))).sort();
-    expect(callers).toEqual([join(ROOT, "src/components/OrganizePanel.tsx"), join(ROOT, "src/pages/Categories.tsx")]);
-    expect(readFileSync(join(ROOT, "src/pages/Categories.tsx"), "utf8")).toMatch(/store\.aiCandidates\(\)/);
+    expect(callers).toEqual([join(ROOT, "src/components/AiCategorizePanel.tsx"), join(ROOT, "src/components/OrganizePanel.tsx")]);
+    expect(readFileSync(join(ROOT, "src/components/AiCategorizePanel.tsx"), "utf8")).toMatch(/store\.aiCandidates\(\)/);
+    const panelUsers = all.filter((file) => /<AiCategorizePanel\b/.test(readFileSync(file, "utf8"))).sort();
+    expect(panelUsers).toEqual([join(ROOT, "src/pages/Assistant.tsx"), join(ROOT, "src/pages/Categories.tsx")]);
     expect(readFileSync(join(ROOT, "src/components/OrganizePanel.tsx"), "utf8")).toMatch(/cloud && token \? \{ cloud: \(items, custom\) => requestAiCategories\(token, items, custom\) \}/);
     expect(readFileSync(join(ROOT, "src/services/organize.ts"), "utf8")).toMatch(/aiGroups\(leftover/);
   });

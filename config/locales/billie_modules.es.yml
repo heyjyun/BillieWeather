@@ -1,0 +1,104 @@
+es:
+  billie:
+    modules:
+      nav:
+        main: Navegación principal
+        modules: Tus módulos
+        settings: Ajustes
+        transactions_sections: Secciones de movimientos
+      sections:
+        overview: Resumen
+        all_transactions: Todos los movimientos
+        add_sync: Añadir y sincronizar
+        statements: Extractos
+        receipts: Recibos
+        reconciliation: Conciliación
+        review_history: Revisión e historial
+      names:
+        transactions: Movimientos
+        ai_assistant: Asistente de IA
+        ledgers: Libros
+        accounts: Cuentas y activos
+        categories: Categorías y etiquetas
+        budgets: Presupuestos
+        reports: Informes
+        recurring: Recurrentes y facturas
+        goals: Metas y planificación
+        household: Hogar
+        forecast: Previsión de flujo de caja
+        multi_currency: Varias monedas
+      descriptions:
+        transactions: Tu resumen, todos tus movimientos y cómo añadir o importar nuevos.
+        ai_assistant: Análisis, preguntas sobre tu dinero, preparación de impuestos y ayuda para ordenar tus registros.
+        ledgers: Libros separados para gastos personales, de negocio o compartidos.
+        accounts: Cuentas, saldos, activos, deudas y patrimonio neto.
+        categories: Tu árbol de categorías, comercios, proyectos y etiquetas.
+        budgets: Presupuestos mensuales y anuales con avisos.
+        reports: Informes por categoría, cuenta y mes, patrimonio neto y exportaciones.
+        recurring: Ingresos, facturas y suscripciones que se repiten, registrados según lo programado.
+        goals: Metas de ahorro y planes para gastos grandes.
+        household: Comparte un libro con tu familia.
+        forecast: Tu saldo previsto para los próximos 30, 60 o 90 días.
+        multi_currency: Cuentas en varias monedas, convertidas para los informes.
+      status:
+        available: Disponible
+        coming_soon: Próximamente
+        enabled: Activado
+        disabled: Desactivado
+        core: Básico
+      library:
+        nav: Biblioteca de funciones
+        eyebrow: Ajustes
+        title: Biblioteca de funciones
+        intro: Elige qué aparece en tu barra lateral. Empieza con lo sencillo y añade herramientas cuando las necesites.
+        filters_label: Mostrar módulos
+        filters:
+          all: Todos
+          enabled: Activados
+          available: Disponibles
+          coming_soon: Próximamente
+        toggle_label: Mostrar %{name} en la barra lateral
+        turn_on: Activar
+        turn_off: Desactivar
+        open: Abrir
+        saved_on: "%{name} está activado y en tu barra lateral."
+        saved_off: "%{name} está desactivado. Sus datos se conservan; puedes activarlo cuando quieras."
+        coming_soon_note: Aún no está disponible. No se puede activar hasta que funcione.
+        settings_note: Ajustes siempre está en la barra lateral y no se puede desactivar.
+        data_note: Desactivar un módulo solo lo oculta. No se borra nada, y lo que funciona de forma automática (como los movimientos recurrentes y la conciliación de recibos) sigue funcionando.
+        sync_note: Estas opciones se guardan en tu cuenta de este sitio web. Las aplicaciones de BillieWeather guardan sus propias opciones por ahora.
+        empty: Ningún módulo coincide con este filtro.
+        open_library: Abrir la biblioteca de funciones
+        errors:
+          coming_soon: "%{name} aún no está disponible."
+          unknown: Ese módulo no existe.
+      disabled:
+        eyebrow: Biblioteca de funciones
+        title: "%{name} está desactivado"
+        body: Este módulo está oculto en tu barra lateral. Tus datos siguen aquí y no se ha cambiado nada. Actívalo para volver a usar esta página.
+        turn_on: Activar %{name}
+      add_sync:
+        title: Añadir y sincronizar
+        intro: Todas las formas de incorporar movimientos. Todo pasa por las mismas comprobaciones, así que nada se cuenta dos veces.
+        available: Disponible
+        coming_soon: Próximamente
+        connect:
+          title: Conectar cuentas financieras
+          body: Conexiones de solo lectura con bancos y tarjetas a través de un proveedor de datos financieros autorizado, con tu consentimiento.
+          note: Aún no está disponible. BillieWeather no se conecta hoy a ningún banco y nunca te pide la contraseña del banco.
+        import:
+          title: Importar extractos
+          body: Sube extractos de bancos y tarjetas. Revisas las filas antes de guardar nada, y los archivos ya importados se reconocen.
+          formats: "En el sitio web: extractos CSV y PDF con texto. En la aplicación de BillieWeather también Excel (XLSX), OFX/QFX y PDF escaneados."
+          open: Importar extractos
+        scan:
+          title: Escanear y capturar
+          body: Fotos de recibos, capturas de pantalla y PDF. El texto se lee en tu dispositivo o del PDF, y los campos se reconocen con reglas.
+          rules: Una coincidencia exacta e inequívoca con un movimiento bancario existente se vincula automáticamente. Un recibo nunca crea un movimiento nuevo hasta que lo confirmas.
+          open: Abrir recibos
+        quick_add:
+          title: Añadir rápido
+          body: Escribe a mano un gasto, ingreso, transferencia o reembolso.
+          open: Añadir un movimiento
+          manual: Contabilidad manual
+          later: La entrada por voz, en lenguaje natural y los Atajos de Siri llegarán más adelante.

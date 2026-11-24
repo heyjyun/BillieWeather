@@ -4,6 +4,7 @@ import type { Messages } from "./en";
 import { universalZhCN } from "./universal";
 import { commandZhCN } from "./command";
 import { receiptZhCN } from "./receipt";
+import { modulesZhCN } from "./modules";
 import { welcomeZhCN } from "./welcome";
 import { registerZhCN } from "./register";
 
@@ -284,6 +285,7 @@ export const zhCN: Messages = {
   ledger: ledgerZhCN,
   command: commandZhCN,
   receipt: receiptZhCN,
+  modules: modulesZhCN,
   welcome: welcomeZhCN,
   register: registerZhCN,
   personal: personal["zh-CN"],

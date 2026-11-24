@@ -8,6 +8,7 @@ import { NICKNAME_MAX, normalizeNickname, validateNickname, type NicknameProblem
 import { regionLabel } from "../services/regions";
 import { openExternal } from "../services/session";
 import { savedTheme, setTheme, type ThemeChoice } from "../services/theme";
+import { useModules } from "../hooks/useModules";
 
 function regionName(code: string | null | undefined, locale: string, globalCitizen: string): string {
   if (!code) return "—";
@@ -15,7 +16,7 @@ function regionName(code: string | null | undefined, locale: string, globalCitiz
   return regionLabel(code, locale);
 }
 
-export function Settings() {
+export function Settings({ openLibrary, openData }: { openLibrary?: () => void; openData?: () => void } = {}) {
   const { m, locale } = useI18n();
   const { account, offline, signOut, savePreferences } = useAccount();
   const { store, refresh, rules } = useFinance();
@@ -25,6 +26,7 @@ export function Settings() {
   const x = m.settings;
   const n = m.personal.nickname;
   const [nicknameProblem, setNicknameProblem] = useState<NicknameProblem | null>(null);
+  const { enabledList } = useModules();
 
   // Any language, not unique; it can be changed but not cleared (the server enforces the same rule).
   function saveNickname() {
@@ -51,6 +53,17 @@ export function Settings() {
   return (
     <>
       <PageHeading eyebrow={x.eyebrow} title={x.title} />
+      {(openLibrary || openData) && (
+        <section className="bw-panel" id="settings-feature-library" aria-labelledby="settings-library-heading">
+          <h2 id="settings-library-heading">{m.modules.library.title}</h2>
+          <p className="bw-muted">{m.modules.library.intro}</p>
+          <p className="bw-caption">{enabledList.map((module) => m.modules.names[module.id]).join(" · ")}</p>
+          <div className="bw-db-actions">
+            {openLibrary && <button type="button" className="bw-button bw-button-dark" onClick={openLibrary}>{m.modules.library.open}</button>}
+            {openData && <button type="button" className="bw-button bw-button-outline" onClick={openData}>{m.modules.library.dataLink}</button>}
+          </div>
+        </section>
+      )}
       <section className="bw-panel bw-account" aria-labelledby="account-heading">
         <h2 id="account-heading">{x.account}</h2>
         {offline && <p className="bw-message bw-message-warn">{x.offlineAccount}</p>}

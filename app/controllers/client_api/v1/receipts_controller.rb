@@ -64,8 +64,10 @@ module ClientApi
       def lines_from(payload)
         lines = payload[:lines]
         return nil if lines.blank?
-        Array(lines).first(Finance::ReceiptIngestion::MAX_LINES).map do |line|
-          line = line.respond_to?(:permit) ? line.permit(:text, :confidence).to_h : line.to_h
+        raise Finance::Ledger::Invalid, "lines_invalid" unless lines.is_a?(Array)
+        lines.first(Finance::ReceiptIngestion::MAX_LINES).map do |line|
+          raise Finance::Ledger::Invalid, "lines_invalid" unless line.respond_to?(:permit)
+          line = line.permit(:text, :confidence).to_h
           {text: line["text"] || line[:text], confidence: line["confidence"] || line[:confidence]}
         end
       end
@@ -73,6 +75,7 @@ module ClientApi
       # Values the person confirmed in the app. A Shortcut sends text only: nothing is "confirmed".
       def fields_from(payload)
         return {} if @via_shortcut || payload[:fields].blank?
+        raise Finance::Ledger::Invalid, "fields_invalid" unless payload[:fields].respond_to?(:permit)
         raw = payload[:fields].respond_to?(:permit) ? payload[:fields].permit(:merchant, :date, :time, :total, :subtotal, :tax, :tip, :discount, :currency,
           :direction, :payment_method, :card_last4, :receipt_number, :category).to_h : payload[:fields].to_h
         raw = raw.stringify_keys

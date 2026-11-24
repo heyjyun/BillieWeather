@@ -5,7 +5,7 @@ import { findFileInput } from "./uiHelpers";
 // until the person confirms. (PDF text reading itself is covered in pdfImport.test.ts.)
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { migrate } from "./helpers";
+import { migrate, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
 
@@ -44,7 +44,7 @@ vi.mock("../src/services/pdfText", () => ({
 }));
 
 const { default: App } = await import("../src/App");
-const nav = (label: string) => fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: label }));
+const nav = (label: string) => openInShell(label);
 
 beforeEach(() => { localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
@@ -78,7 +78,7 @@ it("imports a clear PDF directly and reviews an unclear one before importing", a
   await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>("Database name").value).toBe("Test Mac"));
   await act(async () => fireEvent.click(create));
   await screen.findByRole("navigation");
-  nav("Import");
+  await nav("Import");
 
   await upload("october.pdf", "%PDF-clear");
   await screen.findByText(/Imported 2 transactions from october\.pdf automatically/);
@@ -97,7 +97,7 @@ it("imports a clear PDF directly and reviews an unclear one before importing", a
   await act(async () => fireEvent.click(submit));
   await screen.findByText(/november\.pdf: Imported 2 reviewed PDF transactions/);
 
-  nav("Transactions");
+  await nav("All Transactions");
   await screen.findByText("Bookstore");
   expect(screen.queryByText("Running total")).toBeNull();
 });

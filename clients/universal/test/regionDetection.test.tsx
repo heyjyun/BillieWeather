@@ -3,10 +3,10 @@ import { findFileInput } from "./uiHelpers";
 // Automatic region detection on import and the region validator, through the store (real SQLite
 // migrations, sql.js) and the real Import page. Detection is a suggestion: it never changes the
 // region a person selected. Synthetic data only.
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import initSqlJs from "sql.js";
 import { checkRegion } from "@billie/finance-core";
-import { migrate, newStore } from "./helpers";
+import { migrate, newStore, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { FinanceStore } from "../src/services/store";
 import { commitDraft, detectDraftRegion, importContext, importDraftFile } from "../src/services/universalImport";
@@ -127,7 +127,7 @@ vi.mock("../src/services/account", async (importOriginal) => {
 });
 
 const { default: App } = await import("../src/App");
-const nav = (label: string) => fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: label }));
+const nav = (label: string) => openInShell(label);
 
 beforeEach(() => { localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
@@ -150,7 +150,7 @@ async function openImport() {
   await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>("Database name").value).toBe("Test Mac"));
   await act(async () => fireEvent.click(create));
   await screen.findByRole("navigation");
-  nav("Import");
+  await nav("Import");
   return screen.findByRole<HTMLSelectElement>("combobox", { name: "Country / Region (Optional)" });
 }
 

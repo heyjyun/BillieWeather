@@ -4,6 +4,7 @@ import type { Messages } from "./en";
 import { universalEs } from "./universal";
 import { commandEs } from "./command";
 import { receiptEs } from "./receipt";
+import { modulesEs } from "./modules";
 import { welcomeEs } from "./welcome";
 import { registerEs } from "./register";
 
@@ -284,6 +285,7 @@ export const es: Messages = {
   ledger: ledgerEs,
   command: commandEs,
   receipt: receiptEs,
+  modules: modulesEs,
   welcome: welcomeEs,
   register: registerEs,
   personal: personal["es"],

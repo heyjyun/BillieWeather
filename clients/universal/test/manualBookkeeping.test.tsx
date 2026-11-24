@@ -3,7 +3,7 @@
 // accounts -> new expense -> edit -> trash -> restore -> transfer -> budget -> backup button. Synthetic data only.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { migrate } from "./helpers";
+import { migrate, openInShell, enableAllModulesByDefault } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 
 const files = new Map<string, ReturnType<typeof sqljsDriver>>();
@@ -30,7 +30,7 @@ vi.mock("../src/services/platform", async () => {
 
 const { default: App } = await import("../src/App");
 
-beforeEach(() => {
+beforeEach(() => { enableAllModulesByDefault();
   localStorage.clear(); sessionStorage.clear(); files.clear();
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => String(input).endsWith("/account")
     ? new Response(JSON.stringify({ account: { email: "m@example.com", nickname: null, locale: "en", time_zone: null, usage_region: "US", registered_at: null, badges: [], owner_id: "12345678-1234-4123-8123-123456789abc" } }), { status: 200 })
@@ -38,7 +38,7 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
-const nav = (name: string) => fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name }));
+const nav = (name: string) => openInShell(name);
 const click = async (element: HTMLElement) => act(async () => { fireEvent.click(element); });
 const type = (label: string | RegExp, value: string, root: HTMLElement = document.body) => fireEvent.change(within(root).getByLabelText(label), { target: { value } });
 
@@ -50,7 +50,7 @@ it("keeps a complete book by hand: accounts, an expense, edit, trash and restore
   await click(screen.getByRole("button", { name: "Manual" }));
 
   // Accounts: choose the book currency, add checking and a card.
-  nav("Accounts");
+  await nav("Accounts");
   await screen.findByRole("heading", { name: "Accounts" });
   fireEvent.change(screen.getByLabelText(/^Book currency/), { target: { value: "USD" } });
   for (const [name, type0, opening] of [["ZXQ Checking", "checking", "1000"], ["ZXQ Card", "credit_card", "0"]]) {
@@ -65,7 +65,7 @@ it("keeps a complete book by hand: accounts, an expense, edit, trash and restore
   expect(screen.getByText("Net worth").parentElement!.textContent).toContain("$1,000.00");
 
   // A card purchase.
-  nav("Transactions");
+  await nav("All Transactions");
   await click(await screen.findByRole("button", { name: "New entry" }));
   let form = screen.getByRole("form", { name: "New entry" });
   type("Amount", "12.34", form);
@@ -112,13 +112,13 @@ it("keeps a complete book by hand: accounts, an expense, edit, trash and restore
   await click(within(form).getByRole("button", { name: "Save" }));
   await waitFor(async () => expect((await files.get("billieweather.db")!.select("SELECT * FROM transaction_links WHERE link_type = 'card_payment'")).length).toBe(1));
 
-  nav("Accounts");
+  await nav("Accounts");
   await screen.findByRole("heading", { name: "Accounts" });
   // Checking 1000 - 15; card owes 0 after the repayment; net worth 985.
   expect(screen.getByText("Net worth").parentElement!.textContent).toContain("$985.00");
 
   // A monthly food budget shows the spending.
-  nav("Budgets & schedules");
+  await nav("Budgets & schedules");
   const budgets = (await screen.findByRole("heading", { name: "Budgets" })).closest("section")! as HTMLElement;
   fireEvent.change(within(budgets).getByLabelText("For"), { target: { value: "c:Food & dining" } });
   type("Amount", "100", budgets);
@@ -126,7 +126,7 @@ it("keeps a complete book by hand: accounts, an expense, edit, trash and restore
   await waitFor(() => expect(within(budgets).getByText(/\$15\.00 of \$100\.00/)).toBeTruthy());
 
   // Every step is in the activity log.
-  nav("Data");
+  await nav("Data");
   const log = (await screen.findByRole("heading", { name: "Activity log" })).closest("section")! as HTMLElement;
   await waitFor(() => expect(within(log).getAllByText(/Created/).length).toBeGreaterThanOrEqual(3));
   expect(within(log).getByText(/Restored/)).toBeTruthy();

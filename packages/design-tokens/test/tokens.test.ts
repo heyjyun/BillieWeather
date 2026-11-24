@@ -41,6 +41,18 @@ describe("shared icons", () => {
       expect(helper, name).toContain(`"${name}" => "${icons[name]}"`);
     }
   });
+
+  it("every Feature Library icon exists in both icon sets with the same path", async () => {
+    const { icons } = await import("../src/tokens");
+    const helper = read("../../../app/helpers/finance_helper.rb");
+    const catalog = JSON.parse(read("../../shared-types/schema/module-catalog.json")) as { modules: Array<{ icon: string }>; system_entries: Array<{ icon: string }> };
+    const names = [...catalog.modules, ...catalog.system_entries].map((entry) => entry.icon).concat(["library", "link", "camera", "plus", "upload"]);
+    for (const name of names) {
+      const path = (icons as Record<string, string>)[name];
+      expect(path, name).toBeTruthy();
+      expect(helper, name).toContain(`"${name}" => "${path}"`);
+    }
+  });
 });
 
 describe("engine compatibility", () => {

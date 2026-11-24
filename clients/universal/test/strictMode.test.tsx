@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 // Regression: React StrictMode mounts effects twice; the app must end up with ONE local
 // database that both the website download and every page use.
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import { StrictMode } from "react";
 import initSqlJs from "sql.js";
-import { migrate } from "./helpers";
+import { migrate, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
 
@@ -42,7 +42,7 @@ it("downloads into the same database the Data page reads", async () => {
   });
   render(<StrictMode><App /></StrictMode>);
   await screen.findByText(/Downloaded from your website account/);
-  fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: "Data" }));
+  await openInShell("Data");
   const device = (await screen.findByRole("heading", { name: "Unnamed database" })).closest("section")! as HTMLElement;
   await waitFor(() => expect(within(device).getByText("Statements").nextElementSibling!.textContent).toBe("1"));
   expect(within(device).getByText("Dates").nextElementSibling!.textContent).toBe("2026-01-05");

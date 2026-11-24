@@ -5,6 +5,7 @@ import { ledgerEn } from "./ledger";
 import { universalEn } from "./universal";
 import { commandEn } from "./command";
 import { receiptEn } from "./receipt";
+import { modulesEn } from "./modules";
 import { welcomeEn } from "./welcome";
 import { registerEn } from "./register";
 
@@ -285,6 +286,7 @@ export const en = {
   ledger: ledgerEn,
   command: commandEn,
   receipt: receiptEn,
+  modules: modulesEn,
   welcome: welcomeEn,
   register: registerEn,
   // Greetings and nickname copy, synced from the website (scripts/sync-rails-translations.rb).

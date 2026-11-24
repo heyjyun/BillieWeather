@@ -49,6 +49,7 @@ en:
       deleted:
         one: Category “%{name}” deleted; %{count} transaction is now Uncategorized.
         other: Category “%{name}” deleted; %{count} transactions are now Uncategorized.
+      ai_undo: "Undo this AI run"
       ai_done:
         one: AI looked at %{sent} merchant(s) and categorized %{count} transaction.
         other: AI looked at %{sent} merchant(s) and categorized %{count} transactions.

@@ -635,6 +635,88 @@
     refresh();
   }
 
+  // Settings › Feature Library: switches save without a page reload and swap in the new sidebar the
+  // server rendered; filters show and hide cards in place. Without JavaScript the forms and filter
+  // links work as ordinary requests.
+  function setupFeatureLibrary(root) {
+    if (root.dataset.libraryReady) return;
+    root.dataset.libraryReady = "1";
+    var status = root.querySelector("[data-library-status]");
+    var empty = root.querySelector("[data-library-empty]");
+    var cards = Array.prototype.slice.call(root.querySelectorAll("[data-module]"));
+    var filter = root.dataset.filter || "all";
+    function visible(card) {
+      if (filter === "enabled") return card.dataset.enabled === "true";
+      if (filter === "available") return card.dataset.available === "true";
+      if (filter === "coming_soon") return card.dataset.available !== "true";
+      return true;
+    }
+    function applyFilter() {
+      var shown = 0;
+      cards.forEach(function (card) { var show = visible(card); card.hidden = !show; if (show) shown += 1; });
+      if (empty) empty.hidden = shown > 0;
+      root.querySelectorAll("[data-library-filter]").forEach(function (link) {
+        var active = link.dataset.libraryFilter === filter;
+        link.classList.toggle("is-active", active);
+        if (active) link.setAttribute("aria-current", "true"); else link.removeAttribute("aria-current");
+      });
+      root.querySelectorAll("input[name=filter]").forEach(function (input) { input.value = filter; });
+    }
+    root.querySelectorAll("[data-library-filter]").forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        event.preventDefault();
+        filter = link.dataset.libraryFilter;
+        root.dataset.filter = filter;
+        if (window.history && window.history.replaceState) window.history.replaceState(null, "", link.href);
+        applyFilter();
+      });
+    });
+    root.querySelectorAll("form[data-library-toggle]").forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        if (!window.fetch) return;
+        event.preventDefault();
+        var button = form.querySelector(".bw-switch");
+        var card = form.closest("[data-module]");
+        var input = form.querySelector("input[name=enabled]");
+        var token = document.querySelector('meta[name="csrf-token"]');
+        button.setAttribute("aria-busy", "true");
+        fetch(form.action, {
+          method: "PATCH",
+          headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded", "X-CSRF-Token": token ? token.content : "" },
+          body: new URLSearchParams({ enabled: input.value }).toString(),
+          credentials: "same-origin"
+        }).then(function (response) {
+          return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+        }).then(function (result) {
+          button.removeAttribute("aria-busy");
+          if (!result.ok) { if (status) status.textContent = result.data.message || ""; return; }
+          var on = result.data.enabled === true;
+          card.dataset.enabled = on ? "true" : "false";
+          card.classList.toggle("is-on", on);
+          button.setAttribute("aria-checked", on ? "true" : "false");
+          var text = button.querySelector(".bw-switch-text");
+          if (text) text.textContent = on ? text.dataset.on : text.dataset.off;
+          input.value = on ? "0" : "1";
+          var open = card.querySelector("[data-library-open]");
+          if (open) open.hidden = !on;
+          var nav = document.getElementById("module-nav");
+          if (nav && result.data.nav) {
+            var holder = document.createElement("div");
+            holder.innerHTML = result.data.nav;
+            var fresh = holder.querySelector("#module-nav");
+            if (fresh) nav.replaceWith(fresh);
+          }
+          if (status) status.textContent = result.data.message || "";
+          applyFilter();
+        }).catch(function () {
+          button.removeAttribute("aria-busy");
+          form.submit(); // fall back to an ordinary request
+        });
+      });
+    });
+    applyFilter();
+  }
+
   function init() {
     document.querySelectorAll("form[data-draft-key]").forEach(setupDraft);
     document.querySelectorAll("form[data-mode-switch]").forEach(setupModeSwitch);
@@ -651,6 +733,7 @@
     document.querySelectorAll("[data-qr-input]").forEach(setupQrPreview);
     document.querySelectorAll("[data-insight-chat]").forEach(setupInsightChat);
     document.querySelectorAll("[data-local-manage]").forEach(setupLocalManage);
+    document.querySelectorAll("[data-feature-library]").forEach(setupFeatureLibrary);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

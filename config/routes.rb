@@ -109,6 +109,11 @@ Rails.application.routes.draw do
     end
     resource :financial_data, only: :destroy, controller: :financial_data
     resource :profile, only: :update
+    # Feature Library (Settings › Feature Library): which modules the sidebar shows. View preferences only.
+    get "settings/features", to: "feature_library#show", as: :feature_library
+    patch "settings/features/:id", to: "feature_library#update", as: :feature_library_module, constraints: {id: /[a-z_]{2,40}/}
+    # Transactions › Add & Sync: every way to bring transactions in (links to the existing tools).
+    get "add", to: "add_sync#show", as: :add_sync
     resource :settings, only: [:show, :update], controller: :settings do
       patch :nickname
       post :dismiss_nickname_prompt

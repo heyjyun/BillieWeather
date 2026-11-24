@@ -11,7 +11,8 @@ import { LedgerError, type Budget, type Dimension, type RecurringRule } from "..
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export function Planning() {
+/** `focus: "schedules"` opens on the recurring section (Recurring & Bills in the Feature Library). */
+export function Planning({ focus = null }: { focus?: string | null } = {}) {
   const { m, t } = useI18n();
   const x = m.ledger.planning;
   const { store, accounts, customCategories, currency, refresh, transactions } = useFinance();
@@ -36,6 +37,9 @@ export function Planning() {
     setMonthStart(await store.ledger.monthStartDay());
   };
   useEffect(() => { void reload(); }, [store, transactions]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (focus === "schedules") document.getElementById("schedules-heading")?.scrollIntoView?.({ block: "start" });
+  }, [focus]);
 
   async function act(action: () => Promise<unknown>, message = m.ledger.common.saved) {
     try {

@@ -3,7 +3,8 @@ import { join } from "node:path";
 import initSqlJs, { type Database } from "sql.js";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { FinanceStore } from "../src/services/store";
-import type { Transaction } from "@billie/shared-types";
+import { isAvailable, MODULES, type Transaction } from "@billie/shared-types";
+import { vi } from "vitest";
 
 export const MIGRATIONS_DIR = join(__dirname, "../src-tauri/migrations");
 export const FIXTURES = join(__dirname, "../../../packages/finance-core/fixtures");
@@ -64,4 +65,56 @@ export function makePdf(pages: Array<Array<string | Array<[number, string]>>>): 
   out += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.map((o) => `${String(o).padStart(10, "0")} 00000 n \n`).join("")}`;
   out += `trailer\n<< /Size ${objects.length + 1} /Root ${catalog} 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
   return new TextEncoder().encode(out); // ASCII only, so string offsets are byte offsets
+}
+
+/**
+ * Opens a page from the app shell the way a person would since the Feature Library (Phase 1a):
+ * a sidebar module when it is there, otherwise through Transactions › Add & Sync or Settings.
+ * Labels are the English (or Simplified Chinese) names tests used before the change.
+ */
+const SHELL_ROUTES: Record<string, string[]> = {
+  Import: ["Transactions", "Add & Sync", "Import statements"],
+  Receipts: ["Transactions", "Add & Sync", "Scan & Capture"],
+  Dashboard: ["Transactions", "Overview"],
+  "All Transactions": ["Transactions", "All Transactions"],
+  // Sidebar items renamed to their Feature Library module names.
+  Categories: ["Categories & Tags"],
+  Accounts: ["Accounts & Assets"],
+  "Budgets & schedules": ["Budgets"],
+  "Merchants & tags": ["Categories & Tags", "Merchants & tags"],
+  "Manual home": ["Transactions", "Add & Sync", "Manual bookkeeping"],
+  Data: ["Settings", "Data, sync & backups"],
+  数据管理: ["设置", "数据、同步与备份"],
+  导入: ["交易", "添加与同步", "导入账单"],
+};
+
+export async function openInShell(label: string): Promise<void> {
+  const { fireEvent, screen, within } = await import("@testing-library/react");
+  const sidebar = within(await screen.findByRole("navigation"));
+  const direct = sidebar.queryByRole("button", { name: label });
+  if (direct) {
+    fireEvent.click(direct);
+    return;
+  }
+  const route = SHELL_ROUTES[label];
+  if (!route) throw new Error(`openInShell: no route to "${label}"`);
+  const [first, ...rest] = route;
+  fireEvent.click(sidebar.getByRole("button", { name: first }));
+  // The shell's tabs come before the page in the document, so the first match is the tab.
+  for (const step of rest) fireEvent.click((await screen.findAllByRole("button", { name: step }))[0]);
+}
+
+/**
+ * Optional modules are off by default in the app. Tests that exercise them (Accounts, Categories,
+ * Planning, Reports…) call this in beforeEach: an account with no stored choice gets every available
+ * module on, as if the person had turned them on in Settings › Feature Library. Stored choices win.
+ */
+const realGetItem = typeof Storage === "undefined" ? null : Storage.prototype.getItem;
+
+export function enableAllModulesByDefault(): void {
+  const allOn = JSON.stringify({ format: 1, modules: Object.fromEntries(MODULES.filter((module) => isAvailable(module, "app")).map((module) => [module.id, { enabled: true, changedAt: "2026-11-23T00:00:00.000Z" }])) });
+  vi.spyOn(Storage.prototype, "getItem").mockImplementation(function (this: Storage, key: string) {
+    const value = realGetItem!.call(this, key);
+    return value === null && key.startsWith("billie.modules.v1:") ? allOn : value;
+  });
 }

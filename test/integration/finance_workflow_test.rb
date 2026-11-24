@@ -5,6 +5,8 @@ require_relative "../support/billie_method_stub"
 
 class FinanceWorkflowTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
+  include BillieModules::SignInWithAllModules
   include FinancePdfFixture
   include BillieMethodStub
 

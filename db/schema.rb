@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_23_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -103,8 +103,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["user_id", "kind"], name: "index_community_honors_one_active_per_kind", unique: true, where: "(revoked_at IS NULL)"
     t.index ["user_id"], name: "index_community_honors_on_user_id"
     t.check_constraint "kind::text <> 'founding_patron'::text OR confirmed_at IS NOT NULL AND payment_method IS NOT NULL", name: "community_honors_patron_confirmed"
-    t.check_constraint "kind::text = ANY (ARRAY['founding_member'::character varying, 'founding_patron'::character varying]::text[])", name: "community_honors_kind_allowed"
-    t.check_constraint "payment_method IS NULL OR (payment_method::text = ANY (ARRAY['alipay'::character varying, 'wechat_pay'::character varying, 'zelle'::character varying, 'venmo'::character varying, 'other'::character varying]::text[]))", name: "community_honors_payment_method_allowed"
+    t.check_constraint "kind::text = ANY (ARRAY['founding_member'::character varying::text, 'founding_patron'::character varying::text])", name: "community_honors_kind_allowed"
+    t.check_constraint "payment_method IS NULL OR (payment_method::text = ANY (ARRAY['alipay'::character varying::text, 'wechat_pay'::character varying::text, 'zelle'::character varying::text, 'venmo'::character varying::text, 'other'::character varying::text]))", name: "community_honors_payment_method_allowed"
   end
 
   create_table "community_payment_methods", force: :cascade do |t|
@@ -116,7 +116,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.boolean "enabled", default: false, null: false
     t.index ["key"], name: "index_community_payment_methods_on_key", unique: true
     t.index ["updated_by_id"], name: "index_community_payment_methods_on_updated_by_id"
-    t.check_constraint "key::text = ANY (ARRAY['alipay'::character varying, 'wechat_pay'::character varying, 'zelle'::character varying, 'venmo'::character varying]::text[])", name: "community_payment_methods_key_allowed"
+    t.check_constraint "key::text = ANY (ARRAY['alipay'::character varying::text, 'wechat_pay'::character varying::text, 'zelle'::character varying::text, 'venmo'::character varying::text])", name: "community_payment_methods_key_allowed"
   end
 
   create_table "community_support_accesses", force: :cascade do |t|
@@ -175,7 +175,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["id", "user_id"], name: "index_finance_bank_accounts_on_id_and_owner", unique: true
     t.index ["user_id", "identity_key"], name: "index_finance_bank_accounts_on_user_id_and_identity_key", unique: true
     t.index ["uuid"], name: "index_finance_bank_accounts_on_uuid", unique: true
-    t.check_constraint "account_type::text = ANY (ARRAY['checking'::character varying, 'savings'::character varying, 'cash'::character varying, 'payment_app'::character varying, 'investment'::character varying, 'receivable'::character varying, 'credit_card'::character varying, 'loan'::character varying, 'other'::character varying]::text[])", name: "finance_bank_accounts_type"
+    t.check_constraint "account_type::text = ANY (ARRAY['checking'::character varying::text, 'savings'::character varying::text, 'cash'::character varying::text, 'payment_app'::character varying::text, 'investment'::character varying::text, 'receivable'::character varying::text, 'credit_card'::character varying::text, 'loan'::character varying::text, 'other'::character varying::text])", name: "finance_bank_accounts_type"
     t.check_constraint "due_day IS NULL OR due_day >= 1 AND due_day <= 31", name: "finance_bank_accounts_due_day"
     t.check_constraint "manual OR identity_key IS NOT NULL", name: "finance_bank_accounts_identity_or_manual"
     t.check_constraint "statement_day IS NULL OR statement_day >= 1 AND statement_day <= 31", name: "finance_bank_accounts_statement_day"
@@ -195,7 +195,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["user_id"], name: "index_finance_books_on_user_id"
     t.index ["user_id"], name: "index_finance_books_one_default", unique: true, where: "default_book"
     t.index ["uuid"], name: "index_finance_books_on_uuid", unique: true
-    t.check_constraint "book_type::text = ANY (ARRAY['personal'::character varying, 'business'::character varying]::text[])", name: "finance_books_type"
+    t.check_constraint "book_type::text = ANY (ARRAY['personal'::character varying::text, 'business'::character varying::text])", name: "finance_books_type"
     t.check_constraint "month_start_day >= 1 AND month_start_day <= 28", name: "finance_books_month_start"
   end
 
@@ -214,7 +214,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["uuid"], name: "index_finance_budgets_on_uuid", unique: true
     t.check_constraint "alert_percent >= 1 AND alert_percent <= 100", name: "finance_budgets_alert"
     t.check_constraint "amount > 0::numeric", name: "finance_budgets_amount"
-    t.check_constraint "period::text = ANY (ARRAY['month'::character varying, 'year'::character varying]::text[])", name: "finance_budgets_period"
+    t.check_constraint "period::text = ANY (ARRAY['month'::character varying::text, 'year'::character varying::text])", name: "finance_budgets_period"
   end
 
   create_table "finance_capture_tokens", force: :cascade do |t|
@@ -242,7 +242,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index "user_id, lower((name)::text)", name: "index_finance_category_settings_on_user_and_lower_name", unique: true
-    t.check_constraint "category_kind::text = ANY (ARRAY['expense'::character varying, 'income'::character varying]::text[])", name: "finance_category_settings_kind"
+    t.check_constraint "category_kind::text = ANY (ARRAY['expense'::character varying::text, 'income'::character varying::text])", name: "finance_category_settings_kind"
   end
 
   create_table "finance_command_executions", force: :cascade do |t|
@@ -355,6 +355,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["uuid"], name: "index_finance_merchants_on_uuid", unique: true
   end
 
+  create_table "finance_module_preferences", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "module_key", limit: 40, null: false
+    t.boolean "enabled", null: false
+    t.bigint "revision", default: 1, null: false
+    t.datetime "changed_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "module_key"], name: "index_finance_module_preferences_one_per_module", unique: true
+    t.check_constraint "module_key::text ~ '^[a-z_]{2,40}$'::text", name: "finance_module_preferences_key_format"
+    t.check_constraint "revision > 0", name: "finance_module_preferences_revision"
+  end
+
   create_table "finance_organize_runs", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
@@ -368,7 +381,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_finance_organize_runs_on_user_id"
     t.index ["uuid"], name: "index_finance_organize_runs_on_uuid", unique: true
-    t.check_constraint "status::text = ANY (ARRAY['preview'::character varying, 'applied'::character varying, 'undone'::character varying, 'discarded'::character varying]::text[])", name: "finance_organize_runs_status"
+    t.check_constraint "status::text = ANY (ARRAY['preview'::character varying::text, 'applied'::character varying::text, 'undone'::character varying::text, 'discarded'::character varying::text])", name: "finance_organize_runs_status"
   end
 
   create_table "finance_profiles", force: :cascade do |t|
@@ -419,12 +432,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["user_id", "status"], name: "index_finance_receipt_matches_on_owner_status"
     t.index ["uuid"], name: "index_finance_receipt_matches_on_uuid", unique: true
     t.check_constraint "NOT (status::text = 'confirmed'::text AND decided_by::text = 'auto'::text AND level::text <> 'exact'::text)", name: "finance_receipt_matches_auto_exact"
-    t.check_constraint "decided_by::text = ANY (ARRAY['user'::character varying, 'auto'::character varying]::text[])", name: "finance_receipt_matches_decided_by"
+    t.check_constraint "decided_by::text = ANY (ARRAY['user'::character varying::text, 'auto'::character varying::text])", name: "finance_receipt_matches_decided_by"
     t.check_constraint "jsonb_typeof(reasons) = 'array'::text", name: "finance_receipt_matches_reasons"
-    t.check_constraint "level::text = ANY (ARRAY['exact'::character varying, 'probable'::character varying, 'ambiguous'::character varying, 'manual'::character varying]::text[])", name: "finance_receipt_matches_level"
+    t.check_constraint "level::text = ANY (ARRAY['exact'::character varying::text, 'probable'::character varying::text, 'ambiguous'::character varying::text, 'manual'::character varying::text])", name: "finance_receipt_matches_level"
     t.check_constraint "score >= 0 AND score <= 100", name: "finance_receipt_matches_score"
     t.check_constraint "status::text = 'suggested'::text OR decided_at IS NOT NULL", name: "finance_receipt_matches_decided"
-    t.check_constraint "status::text = ANY (ARRAY['suggested'::character varying, 'confirmed'::character varying, 'rejected'::character varying]::text[])", name: "finance_receipt_matches_status"
+    t.check_constraint "status::text = ANY (ARRAY['suggested'::character varying::text, 'confirmed'::character varying::text, 'rejected'::character varying::text])", name: "finance_receipt_matches_status"
   end
 
   create_table "finance_receipts", force: :cascade do |t|
@@ -470,19 +483,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["user_id", "sha256"], name: "index_finance_receipts_one_file", unique: true, where: "(sha256 IS NOT NULL)"
     t.index ["user_id", "status", "purchased_on"], name: "index_finance_receipts_on_owner_status_date"
     t.index ["uuid"], name: "index_finance_receipts_on_uuid", unique: true
-    t.check_constraint "(status::text = ANY (ARRAY['duplicate'::character varying, 'possible_duplicate'::character varying]::text[])) = (duplicate_of_id IS NOT NULL)", name: "finance_receipts_duplicate_status"
+    t.check_constraint "(status::text = ANY (ARRAY['duplicate'::character varying::text, 'possible_duplicate'::character varying::text])) = (duplicate_of_id IS NOT NULL)", name: "finance_receipts_duplicate_status"
     t.check_constraint "(total IS NULL OR total >= 0::numeric AND total < '10000000000000'::bigint::numeric) AND (subtotal IS NULL OR abs(subtotal) < '10000000000000'::bigint::numeric) AND (tax IS NULL OR abs(tax) < '10000000000000'::bigint::numeric) AND (tip IS NULL OR tip >= 0::numeric AND tip < '10000000000000'::bigint::numeric) AND (discount IS NULL OR discount >= 0::numeric AND discount < '10000000000000'::bigint::numeric)", name: "finance_receipts_money"
     t.check_constraint "byte_size IS NULL OR byte_size > 0 AND byte_size <= 10485760", name: "finance_receipts_byte_size"
     t.check_constraint "card_last4 IS NULL OR card_last4::text ~ '^[0-9]{4}$'::text", name: "finance_receipts_card_last4"
     t.check_constraint "currency IS NULL OR currency::text ~ '^[A-Z]{3}$'::text", name: "finance_receipts_currency"
-    t.check_constraint "direction::text = ANY (ARRAY['purchase'::character varying, 'refund'::character varying]::text[])", name: "finance_receipts_direction"
+    t.check_constraint "direction::text = ANY (ARRAY['purchase'::character varying::text, 'refund'::character varying::text])", name: "finance_receipts_direction"
     t.check_constraint "duplicate_of_id IS NULL OR duplicate_of_id <> id", name: "finance_receipts_not_own_duplicate"
     t.check_constraint "jsonb_typeof(extraction) = 'object'::text AND jsonb_typeof(issues) = 'array'::text AND jsonb_typeof(line_items) = 'array'::text AND jsonb_typeof(confirmed_fields) = 'array'::text", name: "finance_receipts_json_shapes"
-    t.check_constraint "payment_method IS NULL OR (payment_method::text = ANY (ARRAY['card'::character varying, 'cash'::character varying, 'mobile'::character varying, 'other'::character varying]::text[]))", name: "finance_receipts_payment_method"
+    t.check_constraint "payment_method IS NULL OR (payment_method::text = ANY (ARRAY['card'::character varying::text, 'cash'::character varying::text, 'mobile'::character varying::text, 'other'::character varying::text]))", name: "finance_receipts_payment_method"
     t.check_constraint "purchased_at_time IS NULL OR purchased_at_time::text ~ '^[0-2][0-9]:[0-5][0-9]$'::text", name: "finance_receipts_time"
     t.check_constraint "sha256 IS NULL OR sha256::text ~ '^[0-9a-f]{64}$'::text", name: "finance_receipts_sha256"
-    t.check_constraint "source::text = ANY (ARRAY['camera'::character varying, 'upload'::character varying, 'shortcut'::character varying, 'app'::character varying, 'email'::character varying, 'manual'::character varying]::text[])", name: "finance_receipts_source"
-    t.check_constraint "status::text = ANY (ARRAY['needs_review'::character varying, 'possible_duplicate'::character varying, 'duplicate'::character varying, 'pending_bank_match'::character varying, 'cash'::character varying, 'matched'::character varying, 'dismissed'::character varying]::text[])", name: "finance_receipts_status"
+    t.check_constraint "source::text = ANY (ARRAY['camera'::character varying::text, 'upload'::character varying::text, 'shortcut'::character varying::text, 'app'::character varying::text, 'email'::character varying::text, 'manual'::character varying::text])", name: "finance_receipts_source"
+    t.check_constraint "status::text = ANY (ARRAY['needs_review'::character varying::text, 'possible_duplicate'::character varying::text, 'duplicate'::character varying::text, 'pending_bank_match'::character varying::text, 'cash'::character varying::text, 'matched'::character varying::text, 'dismissed'::character varying::text])", name: "finance_receipts_status"
   end
 
   create_table "finance_recurring_rules", force: :cascade do |t|
@@ -503,7 +516,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["user_id"], name: "index_finance_recurring_rules_on_user_id"
     t.index ["uuid"], name: "index_finance_recurring_rules_on_uuid", unique: true
     t.check_constraint "\"interval\" >= 1 AND \"interval\" <= 365", name: "finance_recurring_interval"
-    t.check_constraint "frequency::text = ANY (ARRAY['daily'::character varying, 'weekly'::character varying, 'monthly'::character varying, 'yearly'::character varying]::text[])", name: "finance_recurring_frequency"
+    t.check_constraint "frequency::text = ANY (ARRAY['daily'::character varying::text, 'weekly'::character varying::text, 'monthly'::character varying::text, 'yearly'::character varying::text])", name: "finance_recurring_frequency"
   end
 
   create_table "finance_statement_drafts", force: :cascade do |t|
@@ -575,9 +588,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["user_id"], name: "index_finance_transaction_links_on_user_id"
     t.index ["uuid"], name: "index_finance_transaction_links_on_uuid", unique: true
     t.check_constraint "amount IS NULL OR amount >= 0::numeric", name: "finance_links_amount"
-    t.check_constraint "decided_by::text = ANY (ARRAY['user'::character varying, 'rule'::character varying, 'auto'::character varying, 'ai'::character varying]::text[])", name: "finance_links_decided_by"
-    t.check_constraint "link_type::text = ANY (ARRAY['transfer'::character varying, 'card_payment'::character varying, 'refund_of'::character varying, 'duplicate_of'::character varying, 'pending_to_posted'::character varying]::text[])", name: "finance_links_type"
-    t.check_constraint "status::text = ANY (ARRAY['suggested'::character varying, 'confirmed'::character varying, 'rejected'::character varying]::text[])", name: "finance_links_status"
+    t.check_constraint "decided_by::text = ANY (ARRAY['user'::character varying::text, 'rule'::character varying::text, 'auto'::character varying::text, 'ai'::character varying::text])", name: "finance_links_decided_by"
+    t.check_constraint "link_type::text = ANY (ARRAY['transfer'::character varying::text, 'card_payment'::character varying::text, 'refund_of'::character varying::text, 'duplicate_of'::character varying::text, 'pending_to_posted'::character varying::text])", name: "finance_links_type"
+    t.check_constraint "status::text = ANY (ARRAY['suggested'::character varying::text, 'confirmed'::character varying::text, 'rejected'::character varying::text])", name: "finance_links_status"
     t.check_constraint "to_transaction_id IS NULL OR to_transaction_id <> from_transaction_id", name: "finance_links_two_entries"
   end
 
@@ -630,13 +643,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["uuid"], name: "index_finance_transactions_on_uuid", unique: true
     t.check_constraint "amount > '-10000000000000'::bigint::numeric AND amount < '10000000000000'::bigint::numeric", name: "finance_transactions_amount_range"
     t.check_constraint "category::text <> ''::text", name: "finance_transactions_category_present"
-    t.check_constraint "category_source::text = ANY (ARRAY['user'::character varying, 'rule'::character varying, 'file'::character varying, 'auto'::character varying, 'region'::character varying, 'ai'::character varying, 'legacy'::character varying]::text[])", name: "finance_transactions_category_source"
-    t.check_constraint "entry_origin::text = ANY (ARRAY['import'::character varying, 'manual'::character varying, 'web_copy'::character varying, 'upload'::character varying, 'recurring'::character varying, 'legacy'::character varying, 'receipt'::character varying]::text[])", name: "finance_transactions_entry_origin"
+    t.check_constraint "category_source::text = ANY (ARRAY['user'::character varying::text, 'rule'::character varying::text, 'file'::character varying::text, 'auto'::character varying::text, 'region'::character varying::text, 'ai'::character varying::text, 'legacy'::character varying::text])", name: "finance_transactions_category_source"
+    t.check_constraint "entry_origin::text = ANY (ARRAY['import'::character varying::text, 'manual'::character varying::text, 'web_copy'::character varying::text, 'upload'::character varying::text, 'recurring'::character varying::text, 'legacy'::character varying::text, 'receipt'::character varying::text])", name: "finance_transactions_entry_origin"
     t.check_constraint "jsonb_typeof(user_locked_fields) = 'array'::text", name: "finance_transactions_locked_fields_array"
-    t.check_constraint "kind::text = ANY (ARRAY['expense'::character varying, 'income'::character varying, 'refund'::character varying, 'transfer'::character varying, 'card_payment'::character varying, 'opening_balance'::character varying, 'adjustment'::character varying, 'ignored'::character varying]::text[])", name: "finance_transactions_kind"
+    t.check_constraint "kind::text = ANY (ARRAY['expense'::character varying::text, 'income'::character varying::text, 'refund'::character varying::text, 'transfer'::character varying::text, 'card_payment'::character varying::text, 'opening_balance'::character varying::text, 'adjustment'::character varying::text, 'ignored'::character varying::text])", name: "finance_transactions_kind"
     t.check_constraint "occurred_at_time IS NULL OR occurred_at_time::text ~ '^[0-2][0-9]:[0-5][0-9]$'::text", name: "finance_transactions_time"
     t.check_constraint "original_description::text <> ''::text", name: "finance_transactions_original_present"
-    t.check_constraint "statement_id IS NOT NULL OR (entry_origin::text = ANY (ARRAY['manual'::character varying, 'recurring'::character varying, 'receipt'::character varying]::text[]))", name: "finance_transactions_statement_or_manual"
+    t.check_constraint "statement_id IS NOT NULL OR (entry_origin::text = ANY (ARRAY['manual'::character varying::text, 'recurring'::character varying::text, 'receipt'::character varying::text]))", name: "finance_transactions_statement_or_manual"
     t.check_constraint "superseded_by_id IS NULL OR superseded_by_id <> id AND entry_origin::text = 'receipt'::text", name: "finance_transactions_superseded_receipt_only"
   end
 
@@ -851,7 +864,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
     t.check_constraint "usage_region IS NOT NULL OR usage_region_pending OR platform_agent_of_id IS NOT NULL", name: "users_usage_region_required"
-    t.check_constraint "usage_region IS NULL OR (usage_region::text = ANY (ARRAY['AE'::character varying, 'AR'::character varying, 'AT'::character varying, 'AU'::character varying, 'BD'::character varying, 'BE'::character varying, 'BG'::character varying, 'BR'::character varying, 'CA'::character varying, 'CH'::character varying, 'CL'::character varying, 'CN'::character varying, 'CO'::character varying, 'CY'::character varying, 'CZ'::character varying, 'DE'::character varying, 'DK'::character varying, 'EE'::character varying, 'EG'::character varying, 'ES'::character varying, 'FI'::character varying, 'FR'::character varying, 'GB'::character varying, 'GR'::character varying, 'HK'::character varying, 'HR'::character varying, 'HU'::character varying, 'ID'::character varying, 'IE'::character varying, 'IL'::character varying, 'IN'::character varying, 'IT'::character varying, 'JP'::character varying, 'KE'::character varying, 'KR'::character varying, 'KW'::character varying, 'LK'::character varying, 'LT'::character varying, 'LU'::character varying, 'LV'::character varying, 'MA'::character varying, 'MO'::character varying, 'MT'::character varying, 'MX'::character varying, 'MY'::character varying, 'NG'::character varying, 'NL'::character varying, 'NO'::character varying, 'NZ'::character varying, 'PE'::character varying, 'PH'::character varying, 'PK'::character varying, 'PL'::character varying, 'PR'::character varying, 'PT'::character varying, 'QA'::character varying, 'RO'::character varying, 'RU'::character varying, 'SA'::character varying, 'SE'::character varying, 'SG'::character varying, 'SI'::character varying, 'SK'::character varying, 'TH'::character varying, 'TR'::character varying, 'TW'::character varying, 'UA'::character varying, 'US'::character varying, 'VN'::character varying, 'ZA'::character varying, 'XG'::character varying, 'XO'::character varying]::text[]))", name: "users_usage_region_allowed"
+    t.check_constraint "usage_region IS NULL OR (usage_region::text = ANY (ARRAY['AE'::character varying::text, 'AR'::character varying::text, 'AT'::character varying::text, 'AU'::character varying::text, 'BD'::character varying::text, 'BE'::character varying::text, 'BG'::character varying::text, 'BR'::character varying::text, 'CA'::character varying::text, 'CH'::character varying::text, 'CL'::character varying::text, 'CN'::character varying::text, 'CO'::character varying::text, 'CY'::character varying::text, 'CZ'::character varying::text, 'DE'::character varying::text, 'DK'::character varying::text, 'EE'::character varying::text, 'EG'::character varying::text, 'ES'::character varying::text, 'FI'::character varying::text, 'FR'::character varying::text, 'GB'::character varying::text, 'GR'::character varying::text, 'HK'::character varying::text, 'HR'::character varying::text, 'HU'::character varying::text, 'ID'::character varying::text, 'IE'::character varying::text, 'IL'::character varying::text, 'IN'::character varying::text, 'IT'::character varying::text, 'JP'::character varying::text, 'KE'::character varying::text, 'KR'::character varying::text, 'KW'::character varying::text, 'LK'::character varying::text, 'LT'::character varying::text, 'LU'::character varying::text, 'LV'::character varying::text, 'MA'::character varying::text, 'MO'::character varying::text, 'MT'::character varying::text, 'MX'::character varying::text, 'MY'::character varying::text, 'NG'::character varying::text, 'NL'::character varying::text, 'NO'::character varying::text, 'NZ'::character varying::text, 'PE'::character varying::text, 'PH'::character varying::text, 'PK'::character varying::text, 'PL'::character varying::text, 'PR'::character varying::text, 'PT'::character varying::text, 'QA'::character varying::text, 'RO'::character varying::text, 'RU'::character varying::text, 'SA'::character varying::text, 'SE'::character varying::text, 'SG'::character varying::text, 'SI'::character varying::text, 'SK'::character varying::text, 'TH'::character varying::text, 'TR'::character varying::text, 'TW'::character varying::text, 'UA'::character varying::text, 'US'::character varying::text, 'VN'::character varying::text, 'ZA'::character varying::text, 'XG'::character varying::text, 'XO'::character varying::text]))", name: "users_usage_region_allowed"
   end
 
   create_table "webhooks_incoming_bullet_train_webhooks", force: :cascade do |t|
@@ -951,6 +964,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
   add_foreign_key "finance_local_devices", "users", on_delete: :cascade
   add_foreign_key "finance_merchant_rules", "users"
   add_foreign_key "finance_merchants", "users"
+  add_foreign_key "finance_module_preferences", "users", on_delete: :cascade
   add_foreign_key "finance_organize_runs", "users"
   add_foreign_key "finance_profiles", "users"
   add_foreign_key "finance_projects", "users"

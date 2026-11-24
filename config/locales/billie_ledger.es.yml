@@ -157,6 +157,7 @@ es:
         unarchived: "Cuenta %{name} restaurada."
         deleted: "Cuenta %{name} eliminada."
         in_use: "%{name} tiene movimientos o extractos, así que no se puede eliminar. Archívala para ocultarla."
+        in_use_receipts: "%{name} tiene recibos asociados, así que no se puede eliminar. Archívala para ocultarla; los recibos se conservan."
         adjusted: "Saldo de %{name} ajustado en %{amount}."
       entries:
         eyebrow: A MANO

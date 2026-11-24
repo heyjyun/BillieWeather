@@ -5,7 +5,7 @@ import { findFileInput } from "./uiHelpers";
 // open the category's details, rename it and delete it.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { fixtureBytes, migrate } from "./helpers";
+import { fixtureBytes, migrate, openInShell, enableAllModulesByDefault } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
 
@@ -36,9 +36,9 @@ vi.mock("../src/services/account", async (importOriginal) => {
 
 const { default: App } = await import("../src/App");
 
-const nav = (label: string) => fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: label }));
+const nav = (label: string) => openInShell(label);
 
-beforeEach(() => { localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
+beforeEach(() => { enableAllModulesByDefault(); localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 it("adds a category, categorizes with AI after consent, and manages the category", async () => {
@@ -69,7 +69,7 @@ it("adds a category, categorizes with AI after consent, and manages the category
   await act(async () => fireEvent.click(create));
   await screen.findByRole("navigation");
 
-  nav("Import");
+  await nav("Import");
   const input = await findFileInput();
   const bytes = fixtureBytes("basic-amount.csv");
   const file = new File([bytes as BlobPart], "basic-amount.csv", { type: "text/csv" });
@@ -82,7 +82,7 @@ it("adds a category, categorizes with AI after consent, and manages the category
   await screen.findByText(/9 transactions imported/);
 
   // Where the money goes: the dashboard splits spending by category and links to each one's details.
-  nav("Dashboard");
+  await nav("Dashboard");
   const mix = within(await screen.findByRole("list", { name: /^Spending split by category/ }));
   const housing = mix.getByRole("listitem", { name: /^Housing: \$1,650\.00, \d+% of spending$/ });
   expect(housing.className).toContain("bw-viz-0");
@@ -91,7 +91,7 @@ it("adds a category, categorizes with AI after consent, and manages the category
   expect(screen.getByRole("heading", { name: "Biggest merchants" })).toBeTruthy();
   expect(screen.getByRole("list", { name: "Monthly spending in this category" }).children).toHaveLength(12);
 
-  nav("Categories");
+  await nav("Categories");
   await screen.findByRole("heading", { name: "All categories" });
   expect(screen.getByRole("heading", { name: "Spending month by month" })).toBeTruthy();
   expect(screen.getByRole("list", { name: "Monthly spending by category" }).children).toHaveLength(6);
@@ -138,7 +138,7 @@ it("adds a category, categorizes with AI after consent, and manages the category
   // The Transactions page offers the person's categories too.
   fireEvent.change(screen.getByLabelText("New category"), { target: { value: "Pets" } });
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Add category" })));
-  nav("Transactions");
+  await nav("All Transactions");
   const select = (await screen.findByLabelText("Category for AMAZON WEB SERVICES AWS.AMAZON.CO")) as HTMLSelectElement;
   expect([...select.options].map((option) => option.value)).toContain("Pets");
 });
@@ -166,7 +166,7 @@ it("explains a server without AI and an offline device, and changes nothing", as
   await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>("Database name").value).toBe("Test Mac"));
   await act(async () => fireEvent.click(create));
   await screen.findByRole("navigation");
-  nav("Import");
+  await nav("Import");
   const input = await findFileInput();
   const bytes = fixtureBytes("basic-amount.csv");
   const file = new File([bytes as BlobPart], "basic-amount.csv", { type: "text/csv" });
@@ -178,7 +178,7 @@ it("explains a server without AI and an offline device, and changes nothing", as
   await act(async () => fireEvent.click(await screen.findByRole("button", { name: "Import 9 transactions" }, { timeout: 8000 })));
   await screen.findByText(/9 transactions imported/);
 
-  nav("Categories");
+  await nav("Categories");
   for (const [next, message] of [["not_configured", "AI categorization isn't connected on the BillieWeather server yet."], ["offline", "Can't reach BillieWeather. AI categorization needs an internet connection; nothing was changed."]] as const) {
     mode = next;
     const start = await screen.findByRole("button", { name: "Categorize with AI" });

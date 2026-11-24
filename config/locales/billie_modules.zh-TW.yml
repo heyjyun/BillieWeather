@@ -1,0 +1,104 @@
+zh-TW:
+  billie:
+    modules:
+      nav:
+        main: 主導覽
+        modules: 你的模組
+        settings: 設定
+        transactions_sections: 交易分區
+      sections:
+        overview: 總覽
+        all_transactions: 全部交易
+        add_sync: 新增與同步
+        statements: 對帳單
+        receipts: 收據
+        reconciliation: 對帳
+        review_history: 複核與歷史
+      names:
+        transactions: 交易
+        ai_assistant: AI 助理
+        ledgers: 帳本
+        accounts: 帳戶與資產
+        categories: 類別與標籤
+        budgets: 預算
+        reports: 報表
+        recurring: 週期記帳與帳單
+        goals: 目標與規劃
+        household: 家庭共享
+        forecast: 現金流預測
+        multi_currency: 多幣種
+      descriptions:
+        transactions: 總覽、每一筆交易，以及新增或匯入新交易。
+        ai_assistant: 洞察分析、關於你財務的提問、報稅準備，以及整理紀錄的協助。
+        ledgers: 為個人、生意或共同開支分開記帳。
+        accounts: 帳戶、餘額、資產、負債和淨資產。
+        categories: 你的類別樹、商家、專案和標籤。
+        budgets: 附提醒的月度和年度預算。
+        reports: 依類別、帳戶和月份的報表、淨資產和匯出。
+        recurring: 依排程記錄的週期性收入、帳單和訂閱。
+        goals: 儲蓄目標和大額支出計畫。
+        household: 與家人共享一個帳本。
+        forecast: 未來 30、60 或 90 天的預估餘額。
+        multi_currency: 多種貨幣的帳戶，在報表中換算。
+      status:
+        available: 可用
+        coming_soon: 即將推出
+        enabled: 已開啟
+        disabled: 已關閉
+        core: 核心
+      library:
+        nav: 功能庫
+        eyebrow: 設定
+        title: 功能庫
+        intro: 選擇側邊欄中顯示的內容。從簡單開始，需要時再加入工具。
+        filters_label: 顯示模組
+        filters:
+          all: 全部
+          enabled: 已開啟
+          available: 可用
+          coming_soon: 即將推出
+        toggle_label: 在側邊欄顯示%{name}
+        turn_on: 開啟
+        turn_off: 關閉
+        open: 開啟頁面
+        saved_on: "%{name}已開啟，並顯示在側邊欄。"
+        saved_off: "%{name}已關閉。資料會保留，隨時可以重新開啟。"
+        coming_soon_note: 尚未推出。在功能可用之前無法開啟。
+        settings_note: 設定始終顯示在側邊欄，無法關閉。
+        data_note: 關閉模組只會隱藏它。不會刪除任何資料，自動執行的功能（如週期記帳和收據比對）也會照常執行。
+        sync_note: 這些選擇儲存在你在本網站的帳號中。BillieWeather 應用程式暫時各自保存自己的選擇。
+        empty: 沒有符合此篩選的模組。
+        open_library: 開啟功能庫
+        errors:
+          coming_soon: "%{name}尚未推出。"
+          unknown: 該模組不存在。
+      disabled:
+        eyebrow: 功能庫
+        title: "%{name}已關閉"
+        body: 此模組已從側邊欄隱藏。你的資料仍在，沒有任何變動。開啟後即可再次使用此頁面。
+        turn_on: 開啟%{name}
+      add_sync:
+        title: 新增與同步
+        intro: 匯入交易的所有方式。所有來源都經過同樣的檢查，不會重複計算。
+        available: 可用
+        coming_soon: 即將推出
+        connect:
+          title: 連結金融帳戶
+          body: 經你同意，透過獲授權的金融資料服務以唯讀方式連結銀行和信用卡。
+          note: 尚未推出。BillieWeather 目前不連結銀行，也永遠不會索取你的銀行密碼。
+        import:
+          title: 匯入帳單
+          body: 上傳銀行和信用卡帳單。儲存前你可以先檢查每一列，已匯入過的檔案會被辨識。
+          formats: 網站支援 CSV 和文字版 PDF 帳單。BillieWeather 應用程式還支援 Excel（XLSX）、OFX/QFX 和掃描版 PDF。
+          open: 匯入帳單
+        scan:
+          title: 掃描與擷取
+          body: 收據照片、截圖和 PDF。文字在你的裝置上或從 PDF 中讀取，再依規則辨識欄位。
+          rules: 與既有銀行交易完全且唯一相符時會自動關聯。在你確認之前，收據絕不會建立新的交易。
+          open: 開啟收據
+        quick_add:
+          title: 快速記帳
+          body: 手動輸入一筆支出、收入、轉帳或退款。
+          open: 新增一筆
+          manual: 手動記帳
+          later: 語音記帳、自然語言記帳和 Siri 捷徑即將推出。

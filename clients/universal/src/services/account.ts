@@ -110,7 +110,7 @@ export async function signOutRemote(token: string): Promise<void> {
 }
 
 /** Pages on the BillieWeather website (password reset, account settings). Sign-up happens in the app (pages/Register.tsx). */
-export function websiteUrl(path: "/users/password/new" | "/app/settings", locale?: string): string {
+export function websiteUrl(path: "/users/password/new" | "/app/settings" | "/app/insights", locale?: string): string {
   const url = new URL(path, API_ORIGIN);
   if (locale) url.searchParams.set("locale", locale);
   return url.toString();

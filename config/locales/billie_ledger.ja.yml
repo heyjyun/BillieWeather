@@ -157,6 +157,7 @@ ja:
         unarchived: "口座 %{name} を元に戻しました。"
         deleted: "口座 %{name} を削除しました。"
         in_use: "%{name} には取引や明細があるため削除できません。代わりにアーカイブして非表示にできます。"
+        in_use_receipts: "%{name} にはレシートが紐づいているため削除できません。代わりにアーカイブして非表示にできます（レシートは残ります）。"
         adjusted: "%{name} の残高を %{amount} 調整しました。"
       entries:
         eyebrow: 手で記録

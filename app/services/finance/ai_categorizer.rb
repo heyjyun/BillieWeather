@@ -148,7 +148,7 @@ module Finance
       raise Error, :wait if claimed.zero?
     end
 
-    Result = Struct.new(:updated, :sent, :remaining, keyword_init: true)
+    Result = Struct.new(:updated, :sent, :remaining, :batch_id, keyword_init: true)
 
     def initialize(user:, consent: false)
       @user = user
@@ -169,20 +169,15 @@ module Finance
       custom = CustomCategory.where(user_id: @user.id).pluck(:name)
       suggestions = self.class.suggest(items: items, categories: custom)
 
-      updated = 0
-      now = Time.current
-      batch.each_with_index do |group, index|
+      assignments = batch.each_with_index.filter_map do |group, index|
         category = suggestions[(index + 1).to_s]
-        next unless category
-        attributes = {category: category, category_source: "ai", category_model: "openai", updated_at: now}
-        attributes[:tax_review] = true if category == "Business"
-        # Never overwrite a category a person chose or locked (invariant I-16).
-        scope = Categorizer.automatic(@user).where(id: group[:ids])
-        Transaction.sync_kinds_for_category!(scope, category, @user.id)
-        updated += scope.update_all(attributes)
+        {ids: group[:ids], category: category} if category
       end
-      Profile.where(user_id: @user.id).touch_all if updated.positive?
-      Result.new(updated: updated, sent: items.length, remaining: [groups.length - batch.length, 0].max)
+      # One audited batch (actor "ai", action "ai_apply"), all or nothing, undoable from the
+      # operation log or the Categories page. Never overwrites a category a person chose or
+      # locked (invariant I-16): Ledger#apply_ai_categories only touches automatic rows.
+      applied = Ledger.new(@user).apply_ai_categories(assignments, model: "openai")
+      Result.new(updated: applied[:updated], sent: items.length, remaining: [groups.length - batch.length, 0].max, batch_id: applied[:batch_id])
     end
 
     private

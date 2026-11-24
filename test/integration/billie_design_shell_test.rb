@@ -18,12 +18,15 @@ class BillieDesignShellTest < ActionDispatch::IntegrationTest
     assert File.exist?(Rails.root.join("public/billie-tokens.css"))
   end
 
-  test "the sidebar lists Statements and marks the current page" do
+  # Since the Feature Library (Phase 1a) the sidebar lists modules; Statements is a tab of Transactions › Add & Sync.
+  test "the sidebar marks the current module and Statements is marked in the Transactions tabs" do
     sign_in @user
     get finance_statements_path
     assert_response :success
-    assert_select ".bw-sidebar .bw-nav a.bw-nav-link.is-active[aria-current='page'][href='#{finance_statements_path}']", text: "Statements"
-    assert_select ".bw-nav a.bw-nav-link[title='Transactions'][href='#{finance_transactions_path}']"
+    assert_select ".bw-sidebar .bw-nav a.bw-nav-link.is-active[aria-current='page'][href='#{finance_dashboard_path}']", text: "Transactions"
+    assert_select "#transactions-tabs a.bw-tab.is-active[aria-current='page'][href='#{finance_add_sync_path}']", text: "Add & Sync"
+    assert_select "#transactions-tabs a.bw-subtab.is-active[aria-current='page'][href='#{finance_statements_path}']", text: "Statements"
+    assert_select "#transactions-tabs a.bw-tab[href='#{finance_transactions_path}']", text: "All Transactions"
     assert_select "button.bw-sidebar-toggle[data-sidebar-toggle][hidden][aria-controls='bw-sidebar'][aria-expanded='true']"
   end
 
@@ -38,9 +41,10 @@ class BillieDesignShellTest < ActionDispatch::IntegrationTest
 
   test "shell controls are translated" do
     sign_in @user
-    {"zh-CN" => ["对账单", "收起侧边栏", "深色"], "zh-TW" => ["對帳單", "收合側邊欄", "深色"], "en" => ["Statements", "Collapse sidebar", "Dark"]}.each do |locale, (statements, collapse, dark)|
-      get finance_dashboard_path(locale: locale)
-      assert_select ".bw-nav a[href='#{finance_statements_path}']", text: statements
+    {"zh-CN" => ["对账单", "收起侧边栏", "深色", "交易"], "zh-TW" => ["對帳單", "收合側邊欄", "深色", "交易"], "en" => ["Statements", "Collapse sidebar", "Dark", "Transactions"]}.each do |locale, (statements, collapse, dark, transactions)|
+      get finance_statements_path(locale: locale)
+      assert_select "#transactions-tabs a[href='#{finance_statements_path}']", text: statements
+      assert_select ".bw-nav a[href='#{finance_dashboard_path}']", text: transactions
       assert_select "button.bw-sidebar-toggle[aria-label='#{collapse}']"
       assert_select "button[data-theme-choice='dark']", text: dark
     end

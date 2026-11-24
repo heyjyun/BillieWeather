@@ -4,6 +4,7 @@ import type { Messages } from "./en";
 import { universalKo } from "./universal";
 import { commandKo } from "./command";
 import { receiptKo } from "./receipt";
+import { modulesKo } from "./modules";
 import { welcomeKo } from "./welcome";
 import { registerKo } from "./register";
 
@@ -284,6 +285,7 @@ export const ko: Messages = {
   ledger: ledgerKo,
   command: commandKo,
   receipt: receiptKo,
+  modules: modulesKo,
   welcome: welcomeKo,
   register: registerKo,
   personal: personal["ko"],

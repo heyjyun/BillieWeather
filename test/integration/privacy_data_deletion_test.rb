@@ -39,6 +39,11 @@ class PrivacyDataDeletionTest < ActionDispatch::IntegrationTest
     Finance::Tag.create!(user: user, name: "work")
     Finance::CategorySetting.create!(user: user, name: "Pets", category_kind: "expense")
     Finance::Book.default_for(user)
+    # Receipt capture (migration 20261117000100) is financial data too: a receipt, its suggested
+    # match to the purchase and a Shortcut capture token.
+    receipt = Finance::Receipt.create!(user: user, bank_account: account, source: "manual", merchant_name: "Coffee bar", total: "4.00", currency: "USD")
+    Finance::ReceiptMatch.create!(user: user, receipt: receipt, finance_transaction: entry, level: "probable", score: 70, status: "suggested", decided_by: "auto")
+    Finance::CaptureToken.issue!(user: user, name: "Synthetic Shortcut")
     project && entry
   end
 

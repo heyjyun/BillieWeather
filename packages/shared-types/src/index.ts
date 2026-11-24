@@ -141,3 +141,6 @@ export interface Period {
   startDate: IsoDate | null;
   endDate: IsoDate | null;
 }
+
+// The Feature Library catalog and preference rules (see ./modules.ts).
+export * from "./modules";

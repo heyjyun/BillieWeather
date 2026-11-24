@@ -64,13 +64,19 @@ module ClientApi
       # database. The same file (SHA-256) is never stored twice, and the cloud keeps one currency.
       def create_statement
         payload = params.require(:statement)
-        rows = Array(payload[:transactions])
+        # Every value comes from a device: check shapes before use, so bad input is a 422 and never a 500.
+        return render json: {error: "invalid"}, status: :unprocessable_entity unless payload.is_a?(ActionController::Parameters)
+        sha256 = payload[:sha256]
+        return render json: {error: "invalid_sha256"}, status: :unprocessable_entity unless sha256.is_a?(String) && sha256.match?(SHA256_FORMAT)
+        return render json: {error: "invalid"}, status: :unprocessable_entity unless payload[:transactions].is_a?(Array)
+        return render json: {error: "invalid"}, status: :unprocessable_entity unless payload[:currency].is_a?(String) && payload[:filename].is_a?(String)
+        rows = payload[:transactions]
         return render json: {error: "empty"}, status: :unprocessable_entity if rows.empty? || rows.length > MAX_UPLOAD_ROWS
-        currency = payload[:currency].to_s.upcase
-        sha256 = payload[:sha256].to_s
+        currency = payload[:currency].upcase
         parsed = rows.map { |row| parse_row(row) }
         return render json: {error: "invalid"}, status: :unprocessable_entity if parsed.any?(&:nil?)
-        closing = payload[:closing_balance].presence && BigDecimal(payload[:closing_balance].to_s, exception: false)
+        closing = upload_closing_balance(payload)
+        return render json: {error: "invalid"}, status: :unprocessable_entity if closing == :invalid
         account = payload[:account].presence && upload_account_details(payload[:account])
         return render json: {error: "invalid"}, status: :unprocessable_entity if account == :invalid
         result = current_user.with_lock do
@@ -103,6 +109,20 @@ module ClientApi
       end
 
       UPLOAD_ACCOUNT_KINDS = {"checking" => "cash", "savings" => "cash", "credit_card" => "credit", "loan" => "credit"}.freeze
+      # Lower-case hex, exactly 64 characters: the same rule as Finance::Statement and the database CHECK.
+      SHA256_FORMAT = /\A[0-9a-f]{64}\z/
+
+      # The closing balance a device reported: nil when absent, :invalid when it is not an exact amount
+      # (at most 2 decimals, within the column's range) or when its date is not an ISO date.
+      private def upload_closing_balance(payload)
+        raw = payload[:closing_balance]
+        return nil if raw.blank?
+        return :invalid unless raw.is_a?(String) || raw.is_a?(Numeric)
+        amount = BigDecimal(raw.to_s, exception: false)
+        return :invalid if amount.nil? || !amount.finite? || amount != amount.round(2) || amount.abs >= 10**13
+        return :invalid if payload[:closing_balance_on].present? && parse_date(payload[:closing_balance_on]).nil?
+        amount
+      end
 
       # {institution:, last4:, kind:} from a device, or :invalid. Only four digits are accepted: a
       # full account number is refused rather than stored or silently shortened.

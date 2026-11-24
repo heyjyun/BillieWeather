@@ -157,6 +157,7 @@ zh-TW:
         unarchived: "已恢復帳戶 %{name}。"
         deleted: "已刪除帳戶 %{name}。"
         in_use: "%{name} 有交易或帳單，不能刪除。可以改為歸檔隱藏。"
+        in_use_receipts: "%{name} 關聯了收據，不能刪除。可以改為歸檔隱藏，收據會保留。"
         adjusted: "%{name} 的餘額已調整 %{amount}。"
       entries:
         eyebrow: 手動記帳

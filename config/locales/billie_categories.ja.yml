@@ -49,6 +49,7 @@ ja:
       deleted:
         one: カテゴリ「%{name}」を削除しました。%{count} 件の取引が未分類になりました。
         other: カテゴリ「%{name}」を削除しました。%{count} 件の取引が未分類になりました。
+      ai_undo: "今回の AI 分類を取り消す"
       ai_done:
         one: AI が %{sent} 件の加盟店を確認し、%{count} 件の取引を分類しました。
         other: AI が %{sent} 件の加盟店を確認し、%{count} 件の取引を分類しました。

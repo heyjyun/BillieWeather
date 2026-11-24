@@ -49,6 +49,7 @@ es:
       deleted:
         one: Categoría «%{name}» eliminada; %{count} transacción quedó sin categoría.
         other: Categoría «%{name}» eliminada; %{count} transacciones quedaron sin categoría.
+      ai_undo: "Deshacer esta clasificación con IA"
       ai_done:
         one: La IA revisó %{sent} comercio(s) y categorizó %{count} transacción.
         other: La IA revisó %{sent} comercio(s) y categorizó %{count} transacciones.

@@ -1,0 +1,85 @@
+{
+  "$comment": "The Feature Library's single source of truth, read by the website (app/models/finance/module_catalog.rb) and the apps (packages/shared-types/src/modules.ts). Names and descriptions are translation keys (config/locales/billie_modules.*.yml, clients/universal/src/i18n/modules.ts). Availability is per surface: 'web' is the Rails website; 'app' is the universal client (clients/universal) on macOS, Windows, iOS and Android. A module is 'available' on a surface only when its essential journey works there; otherwise 'coming_soon' (shown, never enabled). Hiding a module never changes or deletes data, and never stops processing (e.g. recurring entries still post). Settings is a system entry, not a module, and cannot be hidden.",
+  "version": 1,
+  "preference_format": 1,
+  "surfaces": ["web", "app"],
+  "availability_states": ["available", "coming_soon"],
+  "system_entries": [
+    { "id": "settings", "icon": "settings", "destination": { "web": "finance_settings", "app": "settings" } }
+  ],
+  "modules": [
+    {
+      "id": "transactions", "core": true, "default_enabled": true, "order": 10, "icon": "transactions",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_dashboard", "app": "dashboard" },
+      "sections": ["overview", "all_transactions", "add_sync"],
+      "depends_on": []
+    },
+    {
+      "id": "ai_assistant", "core": true, "default_enabled": true, "order": 20, "icon": "insights",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_insights", "app": "assistant" },
+      "depends_on": []
+    },
+    {
+      "id": "ledgers", "core": false, "default_enabled": false, "order": 30, "icon": "layers",
+      "availability": { "web": "coming_soon", "app": "coming_soon" },
+      "destination": { "web": null, "app": null },
+      "depends_on": []
+    },
+    {
+      "id": "accounts", "core": false, "default_enabled": false, "order": 40, "icon": "wallet",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_accounts", "app": "accounts" },
+      "depends_on": []
+    },
+    {
+      "id": "categories", "core": false, "default_enabled": false, "order": 50, "icon": "tag",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_categories", "app": "categories" },
+      "depends_on": []
+    },
+    {
+      "id": "budgets", "core": false, "default_enabled": false, "order": 60, "icon": "check",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_budgets", "app": "planning" },
+      "depends_on": []
+    },
+    {
+      "id": "reports", "core": false, "default_enabled": false, "order": 70, "icon": "chart",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_ledger_report", "app": "reports" },
+      "depends_on": []
+    },
+    {
+      "id": "recurring", "core": false, "default_enabled": false, "order": 80, "icon": "repeat",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_recurring_rules", "app": "planning" },
+      "depends_on": []
+    },
+    {
+      "id": "goals", "core": false, "default_enabled": false, "order": 90, "icon": "target",
+      "availability": { "web": "coming_soon", "app": "coming_soon" },
+      "destination": { "web": null, "app": null },
+      "depends_on": []
+    },
+    {
+      "id": "household", "core": false, "default_enabled": false, "order": 100, "icon": "home",
+      "availability": { "web": "coming_soon", "app": "coming_soon" },
+      "destination": { "web": null, "app": null },
+      "depends_on": []
+    },
+    {
+      "id": "forecast", "core": false, "default_enabled": false, "order": 110, "icon": "forecast",
+      "availability": { "web": "available", "app": "coming_soon" },
+      "destination": { "web": "finance_forecast", "app": null },
+      "depends_on": []
+    },
+    {
+      "id": "multi_currency", "core": false, "default_enabled": false, "order": 120, "icon": "globe",
+      "availability": { "web": "coming_soon", "app": "coming_soon" },
+      "destination": { "web": null, "app": null },
+      "depends_on": []
+    }
+  ]
+}

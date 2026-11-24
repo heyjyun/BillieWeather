@@ -157,6 +157,7 @@ zh-CN:
         unarchived: "已恢复账户 %{name}。"
         deleted: "已删除账户 %{name}。"
         in_use: "%{name} 有流水或账单，不能删除。可以改为归档隐藏。"
+        in_use_receipts: "%{name} 关联了小票，不能删除。可以改为归档隐藏，小票会保留。"
         adjusted: "%{name} 的余额已调整 %{amount}。"
       entries:
         eyebrow: 手动记账

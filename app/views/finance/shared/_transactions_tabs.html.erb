@@ -1,0 +1,26 @@
+<%# Transactions has three sections: Overview, All Transactions and Add & Sync. Each existing page sits
+    under one of them; the related pages are linked as secondary tabs. %>
+<% section = if controller_name == "dashboard" then "overview"
+   elsif %w[add_sync statements statement_drafts receipts reconciliation manual].include?(controller_name) || (controller_name == "entries" && %w[new create].include?(action_name)) then "add_sync"
+   else "all_transactions" end %>
+<% tabs = {"overview" => finance_dashboard_path, "all_transactions" => finance_transactions_path, "add_sync" => finance_add_sync_path} %>
+<% secondary = if section == "add_sync"
+     [["statements", finance_statements_path, %w[statements statement_drafts]], ["receipts", finance_receipts_path, %w[receipts]], ["reconciliation", finance_reconciliation_path, %w[reconciliation]]]
+   elsif section == "all_transactions"
+     [["review_history", finance_activity_path, %w[audit_events reviews]]]
+   else [] end %>
+<div class="bw-section-tabs" id="transactions-tabs">
+  <nav class="bw-tabs" aria-label="<%= t('billie.modules.nav.transactions_sections') %>">
+    <% tabs.each do |key, path| %>
+      <%= link_to t("billie.modules.sections.#{key}"), path, class: "bw-tab#{' is-active' if section == key}", "aria-current": ("page" if section == key) %>
+    <% end %>
+  </nav>
+  <% if secondary.any? %>
+    <nav class="bw-subtabs" aria-label="<%= t("billie.modules.sections.#{section}") %>">
+      <% secondary.each do |key, path, controllers| %>
+        <% active = controllers.include?(controller_name) || (key == "review_history" && controller_name == "entries" && action_name == "trash") %>
+        <%= link_to t("billie.modules.sections.#{key}"), path, class: "bw-subtab#{' is-active' if active}", "aria-current": ("page" if active) %>
+      <% end %>
+    </nav>
+  <% end %>
+</div>

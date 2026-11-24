@@ -1,0 +1,104 @@
+ja:
+  billie:
+    modules:
+      nav:
+        main: メインナビゲーション
+        modules: モジュール
+        settings: 設定
+        transactions_sections: 取引のセクション
+      sections:
+        overview: 概要
+        all_transactions: すべての取引
+        add_sync: 追加と同期
+        statements: 明細
+        receipts: レシート
+        reconciliation: 照合
+        review_history: 確認と履歴
+      names:
+        transactions: 取引
+        ai_assistant: AI アシスタント
+        ledgers: 帳簿
+        accounts: 口座と資産
+        categories: カテゴリとタグ
+        budgets: 予算
+        reports: レポート
+        recurring: 定期取引と請求
+        goals: 目標と計画
+        household: 家族で共有
+        forecast: キャッシュフロー予測
+        multi_currency: 複数通貨
+      descriptions:
+        transactions: 概要、すべての取引、新しい取引の追加と取り込み。
+        ai_assistant: 分析、お金についての質問、確定申告の準備、記録の整理のお手伝い。
+        ledgers: 個人・事業・共有の支出を別々の帳簿で管理。
+        accounts: 口座、残高、資産、負債、純資産。
+        categories: カテゴリツリー、取引先、プロジェクト、タグ。
+        budgets: 通知付きの月次・年次予算。
+        reports: カテゴリ・口座・月別のレポート、純資産、エクスポート。
+        recurring: 繰り返しの収入、請求、サブスクリプションを予定どおり記録。
+        goals: 貯蓄目標と大きな出費の計画。
+        household: 家族と帳簿を共有。
+        forecast: 今後 30・60・90 日の予想残高。
+        multi_currency: 複数通貨の口座をレポート用に換算。
+      status:
+        available: 利用可能
+        coming_soon: 近日公開
+        enabled: オン
+        disabled: オフ
+        core: 基本
+      library:
+        nav: 機能ライブラリ
+        eyebrow: 設定
+        title: 機能ライブラリ
+        intro: サイドバーに表示するものを選べます。シンプルに始めて、必要なときにツールを追加しましょう。
+        filters_label: 表示するモジュール
+        filters:
+          all: すべて
+          enabled: オン
+          available: 利用可能
+          coming_soon: 近日公開
+        toggle_label: "%{name}をサイドバーに表示"
+        turn_on: オンにする
+        turn_off: オフにする
+        open: 開く
+        saved_on: "%{name}をオンにし、サイドバーに表示しました。"
+        saved_off: "%{name}をオフにしました。データは残り、いつでもオンに戻せます。"
+        coming_soon_note: まだ利用できません。使えるようになるまでオンにできません。
+        settings_note: 設定は常にサイドバーに表示され、オフにできません。
+        data_note: モジュールをオフにしても非表示になるだけです。データは削除されず、自動で動く処理（定期取引の記録やレシートの照合など）も続きます。
+        sync_note: この選択はこのウェブサイトのアカウントに保存されます。BillieWeather アプリでは当面それぞれの選択が保存されます。
+        empty: この条件に合うモジュールはありません。
+        open_library: 機能ライブラリを開く
+        errors:
+          coming_soon: "%{name}はまだ利用できません。"
+          unknown: そのモジュールはありません。
+      disabled:
+        eyebrow: 機能ライブラリ
+        title: "%{name}はオフになっています"
+        body: このモジュールはサイドバーで非表示になっています。データはそのままで、何も変更されていません。オンにするとこのページを再び使えます。
+        turn_on: "%{name}をオンにする"
+      add_sync:
+        title: 追加と同期
+        intro: 取引を取り込むすべての方法。どの方法でも同じチェックを通るので、二重に計上されることはありません。
+        available: 利用可能
+        coming_soon: 近日公開
+        connect:
+          title: 金融口座の連携
+          body: あなたの同意のもと、認可された金融データサービスを通じて銀行やクレジットカードと読み取り専用で連携します。
+          note: まだ利用できません。BillieWeather は現在銀行と連携しておらず、銀行のパスワードを求めることもありません。
+        import:
+          title: 明細の取り込み
+          body: 銀行やカードの明細をアップロードします。保存前に各行を確認でき、取り込み済みのファイルは認識されます。
+          formats: ウェブサイトでは CSV とテキスト PDF の明細に対応。BillieWeather アプリではさらに Excel（XLSX）、OFX/QFX、スキャンした PDF に対応しています。
+          open: 明細を取り込む
+        scan:
+          title: スキャンと取り込み
+          body: レシートの写真、スクリーンショット、PDF。文字は端末上または PDF から読み取り、ルールで項目を認識します。
+          rules: 既存の銀行取引と完全かつ一意に一致する場合は自動で関連付けます。確認するまで、レシートから新しい取引が作られることはありません。
+          open: レシートを開く
+        quick_add:
+          title: クイック追加
+          body: 支出、収入、振替、返金を手で入力します。
+          open: 取引を追加
+          manual: 手動記帳
+          later: 音声入力、自然な文章での入力、Siri ショートカットは近日公開です。

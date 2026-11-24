@@ -343,9 +343,22 @@ export class FinanceStore {
    * category here are ignored. No merchant rules are saved. Returns how many transactions changed.
    */
   async applyAiCategories(groups: readonly AiGroup[], assignments: ReadonlyArray<{ key: string; category: string }>): Promise<number> {
+    return (await this.applyAiCategoriesBatch(groups, assignments)).changed;
+  }
+
+  /**
+   * Applies AI category suggestions as ONE audited, undoable batch (actor "ai", action "ai_apply"):
+   * every changed row gets an operation-log event with its previous values, all in one database
+   * transaction (all or nothing). Only rows still Uncategorized and not locked by a person change.
+   * Undo (Activity › Undo) skips a row a person changed since (the step carries `expect`).
+   * Returns how many rows changed and the batch id (null when nothing changed).
+   */
+  async applyAiCategoriesBatch(groups: readonly AiGroup[], assignments: ReadonlyArray<{ key: string; category: string }>): Promise<{ changed: number; batchId: string | null }> {
     const custom = new Set(await this.customCategories());
     const byKey = new Map(groups.map((group) => [group.key, group]));
     const stamp = now();
+    const batchId = randomId();
+    const statements: SqlStatement[] = [];
     let changed = 0;
     for (const { key, category } of assignments) {
       const group = byKey.get(key);
@@ -354,16 +367,36 @@ export class FinanceStore {
       byKey.delete(key);
       for (let start = 0; start < group.ids.length; start += 100) {
         const ids = group.ids.slice(start, start + 100);
-        const placeholders = ids.map((_, i) => `$${i + 4}`).join(", ");
-        const result = await this.db.execute(
-          `UPDATE transactions SET category = $1, tax_review = CASE WHEN $2 = 'Business' THEN 1 ELSE tax_review END, category_source = 'ai', updated_at = $3
-            WHERE category = 'Uncategorized' AND deleted_at IS NULL AND COALESCE(user_locked_fields, '') NOT LIKE '%"category"%' AND id IN (${placeholders})`,
-          [category, category, stamp, ...ids],
+        const rows = await this.db.select<Record<string, unknown>>(
+          `SELECT id, uuid, category, category_source, category_confidence, category_model, tax_review FROM transactions
+            WHERE category = 'Uncategorized' AND deleted_at IS NULL AND COALESCE(user_locked_fields, '') NOT LIKE '%"category"%' AND id IN (${ids.map(() => "?").join(", ")})`,
+          [...ids],
         );
-        changed += result.rowsAffected;
+        for (const row of rows) {
+          const id = Number(row.id);
+          const taxReview = category === "Business" ? 1 : Number(row.tax_review ?? 0);
+          // Same eligibility in the UPDATE: a row that changed after the SELECT is left alone.
+          statements.push({
+            sql: `UPDATE transactions SET category = ?, tax_review = ?, category_source = 'ai', updated_at = ?
+              WHERE id = ? AND category = 'Uncategorized' AND deleted_at IS NULL AND COALESCE(user_locked_fields, '') NOT LIKE '%"category"%'`,
+            params: [category, taxReview, stamp, id],
+          });
+          statements.push(this.ledger.auditStatement({
+            actor: "ai", action: "ai_apply", subjectType: "transaction", subjectId: String(row.uuid), batchId,
+            // Only the classification fields: no amounts, dates or descriptions in the log.
+            changes: { category: [row.category, category], category_source: [row.category_source, "ai"] },
+            undo: [{ op: "set", table: "transactions", id,
+              fields: { category: row.category, category_source: row.category_source, category_confidence: row.category_confidence, category_model: row.category_model, tax_review: row.tax_review },
+              expect: { category, category_source: "ai" } }],
+          }));
+          changed += 1;
+        }
       }
     }
-    return changed;
+    if (changed === 0) return { changed: 0, batchId: null };
+    statements.push(this.ledger.auditStatement({ actor: "ai", action: "ai_apply", subjectType: "batch", subjectId: batchId, batchId: null, summary: `${changed} categorized` }));
+    await this.db.transaction(statements);
+    return { changed, batchId };
   }
 
   /** The rule-based categorizer: remembered rules first, then built-in lists, then the optional region. */

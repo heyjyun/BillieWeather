@@ -1,9 +1,12 @@
 module Finance
   # Applies receipt matching decisions to the ledger (docs/architecture/receipt-capture-and-reconciliation.md §5–6).
   #
-  #   process(receipt)        Match → Verify → Persist for one receipt: an exact match is linked
-  #                           automatically; probable/ambiguous candidates become suggestions for a
-  #                           person; with no candidate a confident receipt is recorded as its own entry.
+  #   process(receipt)        Match → Verify for one receipt: an exact, unambiguous match to an existing
+  #                           entry is linked automatically when the receipt is confident and in the book
+  #                           currency; everything else (probable/ambiguous candidates, uncertain or
+  #                           incomplete extraction, no candidate) waits for a person. A receipt is never
+  #                           turned into a new entry automatically (product decision 3, 2026-11-23):
+  #                           a person reviews the suggested entry and confirms it with record!.
   #   after_import(ids)       Re-runs open receipts against bank rows that just arrived (ImportPlan).
   #   confirm / reject / undo The person's decisions: "Confirm match", "Keep separate", "Undo".
   #   record!(receipt)        Records the receipt as an entry (entry_origin "receipt").
@@ -22,7 +25,7 @@ module Finance
       @actor = actor
     end
 
-    def process(receipt, auto_record: true)
+    def process(receipt)
       locked do
         receipt = own_receipt(receipt)
         next receipt if %w[duplicate possible_duplicate dismissed].include?(receipt.status)
@@ -32,11 +35,11 @@ module Finance
           next refresh(receipt)
         end
         result = ReceiptMatcher.match(matcher_receipt(receipt), candidates_for(receipt))
-        if result.level == "exact" && result.best.ids.length == 1
+        if result.level == "exact" && result.best.ids.length == 1 && auto_link_allowed?(receipt)
           link!(receipt, [Transaction.where(user_id: @user.id).find(result.best.ids.first)], result.best, decided_by: "auto")
         else
+          # Not linked without a person: the candidates (an exact one included) become suggestions.
           suggest!(receipt, result.proposals)
-          record!(receipt, inside_lock: true) if auto_record && receipt.matches.suggested.none? && receipt.entry.nil? && recordable?(receipt)
         end
         refresh(receipt)
       end
@@ -50,7 +53,7 @@ module Finance
       window = (dates.first - ReceiptMatcher::POSTING_AFTER)..(dates.last + ReceiptMatcher::POSTING_BEFORE)
       receipts = Receipt.where(user_id: @user.id, status: Receipt::OPEN_STATUSES, purchased_on: window).where.not(total: nil)
         .where.not(id: ReceiptMatch.confirmed.where(user_id: @user.id).select(:receipt_id)).order(:id).to_a
-      receipts.each { |receipt| process(receipt, auto_record: false) }
+      receipts.each { |receipt| process(receipt) }
       receipts.length
     end
 
@@ -74,7 +77,7 @@ module Finance
     end
 
     # "Keep separate": these are different purchases. Remembered, so the pair is never suggested again.
-    # When nothing else is suggested and the receipt is not recorded yet, it is recorded as its own entry.
+    # The receipt then waits for the person to record it as its own entry (record!); nothing is created here.
     def reject(match)
       locked do
         match = own_match(match)
@@ -83,8 +86,6 @@ module Finance
         group = match.group_key ? receipt.matches.suggested.where(group_key: match.group_key).to_a : [match]
         group.each { |item| item.update!(status: "rejected", decided_by: "user", decided_at: Time.current) }
         audit("update", receipt, {"match" => "suggested"}, {"match" => "rejected", "transaction_ids" => group.map(&:transaction_id)})
-        receipt.reload
-        record!(receipt, inside_lock: true) if receipt.matches.suggested.none? && receipt.entry.nil? && receipt.complete? && book_currency?(receipt)
         refresh(receipt)
       end
     end
@@ -202,7 +203,7 @@ module Finance
         raise Invalid, "not_dismissed" unless receipt.status == "dismissed"
         receipt.update!(status: "needs_review")
         audit("update", receipt, {"status" => "dismissed"}, {"status" => "needs_review"})
-        process(receipt, auto_record: false)
+        process(receipt)
       end
     end
 
@@ -269,7 +270,10 @@ module Finance
       receipt.currency.nil? || profile.nil? || receipt.currency == profile.currency
     end
 
-    def recordable?(receipt) = receipt.complete? && receipt.confident? && book_currency?(receipt)
+    # Deterministic gate for linking without a person, on top of the matcher's "exact" level: merchant,
+    # date and total are trusted (OCR confidence or a person's confirmation, no blocking issues), the
+    # receipt is in the book's currency, and it is not already linked. No model score decides this.
+    def auto_link_allowed?(receipt) = receipt.complete? && receipt.confident? && book_currency?(receipt) && !receipt.matches.confirmed.exists?
 
     def matcher_receipt(receipt)
       {amount_minor: receipt.total_minor, direction: receipt.direction, currency: receipt.currency, date: receipt.purchased_on, merchant: receipt.merchant_name,

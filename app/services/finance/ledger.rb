@@ -154,6 +154,48 @@ module Finance
       entries.length
     end
 
+    # Fields an AI categorization may change, recorded so the batch can be undone exactly.
+    AI_AUDITED = (AUDITED + %w[category_model]).freeze
+
+    # Applies AI category suggestions as one audited, undoable batch (actor "ai", action "ai_apply").
+    # assignments: [{ids: [...], category: "..."}]. Only rows that are still automatic (Uncategorized,
+    # category not locked by a person) are touched, so a person's choice is never overwritten.
+    # All or nothing: on any error no row and no audit event is written.
+    # Returns {updated:, batch_id:} (batch_id is nil when nothing changed).
+    def apply_ai_categories(assignments, model: "openai")
+      batch_id = SecureRandom.uuid
+      updated = 0
+      locked do
+        rows = []
+        now = Time.current
+        assignments.each do |assignment|
+          category = assignment[:category]
+          scope = Categorizer.automatic(@user).where(id: Array(assignment[:ids]))
+          entries = scope.lock.order(:id).to_a
+          next if entries.empty?
+          before = entries.to_h { |entry| [entry.id, ai_snapshot(entry)] }
+          attributes = {category: category, category_source: "ai", category_model: model, updated_at: now}
+          attributes[:tax_review] = true if category == "Business"
+          ids = entries.map(&:id)
+          locked_scope = Transaction.where(user_id: @user.id, id: ids)
+          Transaction.sync_kinds_for_category!(locked_scope, category, @user.id)
+          updated += locked_scope.update_all(attributes)
+          Transaction.where(user_id: @user.id, id: ids).order(:id).each do |entry|
+            after = ai_snapshot(entry)
+            changed = (before[entry.id].keys | after.keys).reject { |key| before[entry.id][key] == after[key] }
+            next if changed.empty?
+            # Only the changed classification fields are stored: no amounts, dates or descriptions.
+            rows << {user_id: @user.id, actor: "ai", action: "ai_apply", subject_type: "Transaction", subject_id: entry.id.to_s,
+                     batch_id: batch_id, summary: nil, created_at: now,
+                     changes_data: {"before" => before[entry.id].slice(*changed), "after" => after.slice(*changed)}, undo_data: nil}
+          end
+        end
+        AuditEvent.insert_all!(rows) if rows.any?
+        touch if updated.positive?
+      end
+      {updated: updated, batch_id: updated.positive? ? batch_id : nil}
+    end
+
     # Undoes every audited change of one batch (AI apply, batch edit) that has not changed since.
     def undo_batch(batch_id, actor: "user")
       events = AuditEvent.where(user_id: @user.id, batch_id: batch_id).where(subject_type: "Transaction").where.not(action: "ai_undo").order(id: :desc).to_a
@@ -453,6 +495,10 @@ module Finance
       values = entry.attributes.slice(*AUDITED).transform_values { |value| comparable(value) }
       values["tag_ids"] = entry.tag_ids.sort if entry.is_a?(Transaction)
       values
+    end
+
+    def ai_snapshot(entry)
+      entry.attributes.slice(*AI_AUDITED).transform_values { |value| comparable(value) }
     end
 
     def current_value(entry, field)

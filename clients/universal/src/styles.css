@@ -593,3 +593,61 @@ html:is([lang="zh-CN"], [lang="zh-TW"], [lang="ja"], [lang="ko"]) .bw-welcome h1
   .bw-welcome-actions { flex-direction: column; align-items: stretch; }
   .bw-welcome-actions .bw-button { width: 100%; }
 }
+
+/* ---------------------------------------------------------------- Feature Library (Phase 1a) */
+.bw-nav-divider { display: block; height: 1px; margin: 8px 12px; background: var(--bw-color-sidebar-border); }
+.bw-section-tabs { display: grid; gap: 8px; margin: 0 0 20px; }
+.bw-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: none; }
+.bw-tabs::-webkit-scrollbar { display: none; }
+button.bw-tab { position: relative; min-height: 44px; padding: 0 14px; border: 0; background: none; cursor: pointer; white-space: nowrap; font: inherit; font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-medium); color: var(--muted); border-radius: var(--bw-radius-md) var(--bw-radius-md) 0 0; }
+button.bw-tab:hover { color: var(--ink); background: var(--soft); }
+button.bw-tab.is-active { color: var(--ink); font-weight: var(--bw-font-weight-semibold); }
+button.bw-tab.is-active::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--bw-color-accent); }
+.bw-subtabs { display: flex; flex-wrap: wrap; gap: 6px; }
+button.bw-subtab { min-height: 32px; padding: 0 12px; border-radius: var(--bw-radius-pill); border: 1px solid var(--line); background: var(--card); cursor: pointer; font: inherit; font-size: var(--bw-font-size-xs); font-weight: var(--bw-font-weight-medium); color: var(--muted); }
+button.bw-subtab:hover { color: var(--ink); border-color: var(--line-strong); }
+button.bw-subtab.is-active { color: var(--accent); border-color: var(--bw-color-accent); background: var(--accent-soft); }
+
+.bw-library-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 16px 0; }
+.bw-library-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.bw-library-card, .bw-capability { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--bw-radius-lg); background: var(--card); box-shadow: var(--bw-shadow-sm); }
+.bw-library-card.is-on { border-color: var(--bw-color-accent); }
+.bw-library-card.is-coming-soon, .bw-capability.is-coming-soon { background: var(--soft); box-shadow: none; }
+.bw-library-card-head, .bw-capability-head { display: flex; align-items: flex-start; gap: 12px; }
+.bw-capability-head { align-items: center; }
+.bw-capability-head h2, .bw-library-title h2 { flex: 1; font-size: var(--bw-font-size-md); margin: 0; }
+.bw-library-icon { flex-shrink: 0; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--bw-radius-md); background: var(--accent-soft); color: var(--accent); }
+.is-coming-soon .bw-library-icon { background: var(--card); color: var(--muted); }
+.bw-library-title { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.bw-library-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.bw-badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: var(--bw-radius-pill); font-size: var(--bw-font-size-xs); font-weight: var(--bw-font-weight-medium); white-space: nowrap; }
+.bw-badge-available { color: var(--positive); background: var(--bw-color-positive-soft); }
+.bw-badge-soon { color: var(--muted); background: var(--card); border: 1px solid var(--line); }
+.bw-badge-quiet { color: var(--accent); background: var(--accent-soft); }
+.bw-library-desc, .bw-capability p { margin: 0; font-size: var(--bw-font-size-sm); color: var(--muted); line-height: var(--bw-line-height-relaxed); }
+.bw-library-note { display: block; margin-top: 6px; font-size: var(--bw-font-size-xs); }
+.bw-library-open { margin: 0; }
+.bw-library-notes { display: grid; gap: 6px; margin-top: 20px; }
+.bw-switch { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: var(--muted); font-size: var(--bw-font-size-xs); font-weight: var(--bw-font-weight-medium); }
+.bw-switch-track { position: relative; width: 40px; height: 24px; border-radius: 12px; background: var(--line-strong); transition: background var(--bw-motion-fast); }
+.bw-switch-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--bw-color-surface-raised); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform var(--bw-motion-normal) var(--bw-motion-easing); }
+.bw-switch[aria-checked="true"] { color: var(--accent); }
+.bw-switch[aria-checked="true"] .bw-switch-track { background: var(--bw-color-accent); }
+.bw-switch[aria-checked="true"] .bw-switch-thumb { transform: translateX(16px); }
+.bw-switch:disabled { cursor: not-allowed; opacity: .5; }
+@media (forced-colors: active) { .bw-switch-track { border: 1px solid CanvasText; } .bw-switch[aria-checked="true"] .bw-switch-track { background: Highlight; } }
+@media (prefers-reduced-motion: reduce) { .bw-switch-thumb, .bw-switch-track { transition: none; } }
+.bw-capability-grid { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.bw-capability-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: auto; padding-top: 6px; }
+.bw-module-disabled { display: grid; justify-items: center; gap: 10px; padding: 40px 24px; text-align: center; }
+.bw-module-disabled h1 { font-size: var(--bw-font-size-xl); margin: 0; }
+.bw-module-disabled p { max-width: 460px; }
+@media (max-width: 760px) { .bw-library-toolbar { flex-direction: column; align-items: stretch; } }
+/* Phone bottom bar: the enabled modules share the bar, Settings stays at the end; scrolls when many modules are on. */
+@media (max-width: 760px) {
+  .bw-nav { overflow-x: auto; scrollbar-width: none; }
+  .bw-nav::-webkit-scrollbar { display: none; }
+  .bw-nav-divider { display: none; }
+  .bw-nav #module-nav { flex: 1 1 auto; width: auto; grid-auto-columns: minmax(72px, 1fr); }
+  .bw-nav #module-nav + .bw-nav-divider + ul { flex: 0 0 auto; width: auto; grid-auto-columns: minmax(72px, 1fr); }
+}

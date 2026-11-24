@@ -1,0 +1,34 @@
+<% content_for :title, t("billie.modules.add_sync.title") %>
+<% a = "billie.modules.add_sync" %>
+<div class="bw-page-heading">
+  <div>
+    <span class="bw-eyebrow"><%= t("billie.modules.names.transactions") %></span>
+    <h1><%= t("#{a}.title") %></h1>
+    <p><%= t("#{a}.intro") %></p>
+  </div>
+</div>
+<ul class="bw-capability-grid" role="list" id="add-sync">
+  <li class="bw-capability is-coming-soon" id="capability-connect">
+    <div class="bw-capability-head"><span class="bw-library-icon"><%= finance_icon "link", size: 22 %></span><h2><%= t("#{a}.connect.title") %></h2><span class="bw-badge bw-badge-soon"><%= t("#{a}.coming_soon") %></span></div>
+    <p><%= t("#{a}.connect.body") %></p>
+    <p class="bw-caption"><%= t("#{a}.connect.note") %></p>
+  </li>
+  <li class="bw-capability" id="capability-import">
+    <div class="bw-capability-head"><span class="bw-library-icon"><%= finance_icon "upload", size: 22 %></span><h2><%= t("#{a}.import.title") %></h2><span class="bw-badge bw-badge-available"><%= t("#{a}.available") %></span></div>
+    <p><%= t("#{a}.import.body") %></p>
+    <p class="bw-caption"><%= t("#{a}.import.formats") %></p>
+    <div class="bw-capability-actions"><%= link_to t("#{a}.import.open"), finance_statements_path, class: "bw-button bw-button-dark" %><% if @statement_count.positive? %><span class="bw-muted"><%= t("billie.modules.sections.statements") %> · <%= @statement_count %></span><% end %></div>
+  </li>
+  <li class="bw-capability" id="capability-scan">
+    <div class="bw-capability-head"><span class="bw-library-icon"><%= finance_icon "camera", size: 22 %></span><h2><%= t("#{a}.scan.title") %></h2><span class="bw-badge bw-badge-available"><%= t("#{a}.available") %></span></div>
+    <p><%= t("#{a}.scan.body") %></p>
+    <p class="bw-caption"><%= t("#{a}.scan.rules") %></p>
+    <div class="bw-capability-actions"><%= link_to t("#{a}.scan.open"), finance_receipts_path, class: "bw-button bw-button-dark" %><%= link_to t("billie.modules.sections.reconciliation"), finance_reconciliation_path, class: "bw-text-link" %><% if @open_receipts.positive? %><span class="bw-muted"><%= t("billie.modules.sections.receipts") %> · <%= @open_receipts %></span><% end %></div>
+  </li>
+  <li class="bw-capability" id="capability-quick-add">
+    <div class="bw-capability-head"><span class="bw-library-icon"><%= finance_icon "plus", size: 22 %></span><h2><%= t("#{a}.quick_add.title") %></h2><span class="bw-badge bw-badge-available"><%= t("#{a}.available") %></span></div>
+    <p><%= t("#{a}.quick_add.body") %></p>
+    <p class="bw-caption"><%= t("#{a}.quick_add.later") %></p>
+    <div class="bw-capability-actions"><%= link_to t("#{a}.quick_add.open"), new_finance_entry_path, class: "bw-button bw-button-dark" %><%= link_to t("#{a}.quick_add.manual"), finance_manual_path, class: "bw-text-link" %></div>
+  </li>
+</ul>

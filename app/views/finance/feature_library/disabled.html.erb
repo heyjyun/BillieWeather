@@ -1,0 +1,20 @@
+<% name = t("billie.modules.names.#{@disabled_module.id}") %>
+<% content_for :title, name %>
+<section class="bw-panel bw-module-disabled" id="module-disabled" data-module="<%= @disabled_module.id %>">
+  <div class="bw-empty-state">
+    <span class="bw-empty-icon"><%= finance_icon @disabled_module.icon, size: 32 %></span>
+    <span class="bw-eyebrow"><%= t("billie.modules.disabled.eyebrow") %></span>
+    <h1><%= t("billie.modules.disabled.title", name: name) %></h1>
+    <p><%= t("billie.modules.disabled.body") %></p>
+    <div class="bw-empty-actions">
+      <% if @disabled_module.available? %>
+        <%= form_with url: finance_feature_library_module_path(@disabled_module.id), method: :patch, data: {turbo: false} do %>
+          <%= hidden_field_tag :enabled, "1", id: nil %>
+          <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+          <button type="submit" class="bw-button bw-button-dark"><%= t("billie.modules.disabled.turn_on", name: name) %></button>
+        <% end %>
+      <% end %>
+      <%= link_to t("billie.modules.library.open_library"), finance_feature_library_path, class: "bw-button bw-button-outline" %>
+    </div>
+  </div>
+</section>

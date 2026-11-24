@@ -5,7 +5,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
 import { emailOwnerKey } from "../src/services/databases";
-import { migrate } from "./helpers";
+import { migrate, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
 
@@ -105,7 +105,7 @@ async function openData() {
   localStorage.setItem("billie.locale", "en");
   render(<App />);
   await screen.findByText(/Downloaded from your website account/);
-  fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: "Data" }));
+  await openInShell("Data");
   await screen.findByRole("heading", { name: "Data", level: 1 });
 }
 const card = (name: string) => screen.getByRole("heading", { name, level: 2 }).closest("section")! as HTMLElement;
@@ -458,7 +458,7 @@ it("if website download was switched off before, Download to this device still w
   localStorage.setItem("billie.account", JSON.stringify(account));
   localStorage.setItem("billie.locale", "en");
   render(<App />);
-  fireEvent.click(within(await screen.findByRole("navigation")).getByRole("button", { name: "Data" }));
+  await openInShell("Data");
   const inCloud = () => list("Statements in “BillieWeather cloud”");
   await waitFor(() => expect(within(rowFor(inCloud(), "web.csv")).getByText("Not on this device")).toBeTruthy());
   expect(screen.queryByText(/Turn on website download in Settings/)).toBeNull();

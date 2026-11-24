@@ -32,8 +32,23 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
 
   def reconciler = Finance::ReceiptReconciler.new(@user)
 
+  # Product decision 3 (2026-11-23): a receipt never becomes a new entry by itself. The person reviews
+  # the suggested entry and confirms it ("Record as entry" → ReceiptReconciler#record!).
+  def capture_and_record(*args, **options)
+    receipt = capture(*args, **options).receipt
+    assert_nil receipt.entry, "nothing is recorded before the person confirms"
+    reconciler.record!(receipt)
+    receipt.reload
+  end
+
   test "I-R1 the Whole Foods example: receipt first, bank row later → one $48.60 expense, one receipt, one bank row" do
     receipt = capture.receipt
+    # Confident and complete, but with no bank row yet: it waits for the person, nothing is counted.
+    assert_equal ["needs_review", "needs_review"], [receipt.status, receipt.verification]
+    assert_nil receipt.entry
+    assert_equal BigDecimal("0"), spending
+    reconciler.record!(receipt)
+    receipt.reload
     assert_equal "pending_bank_match", receipt.status
     assert_equal BigDecimal("48.60"), spending
     receipt_entry = receipt.entry
@@ -81,21 +96,28 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
     assert_equal "duplicate", cropped.status
     assert_equal first.receipt.id, cropped.duplicate_of_id
     assert_nil cropped.entry
+    assert_equal BigDecimal("0"), spending, "nothing counts until a person confirms an entry"
+    reconciler.record!(first.receipt)
+    reconciler.record!(a.receipt)
+    assert_raises(Finance::Ledger::Invalid) { reconciler.record!(retry_result.receipt) }
     assert_equal BigDecimal("60.60"), spending
   end
 
   test "a copy without a receipt number is a possible duplicate until a person decides" do
-    capture(["STARBUCKS", "2026-11-16", "LATTE 4.50", "TOTAL 4.50"])
+    capture_and_record(["STARBUCKS", "2026-11-16", "LATTE 4.50", "TOTAL 4.50"])
     copy = capture(["Starbucks Store", "11/16/2026", "TOTAL 4.50"]).receipt
     assert_equal "possible_duplicate", copy.status
     assert_equal BigDecimal("4.50"), spending, "the possible copy is not counted"
     reconciler.not_duplicate(copy)
+    assert_equal "needs_review", copy.reload.status, "not a copy, but still waits for the person"
+    assert_equal BigDecimal("4.50"), spending
+    reconciler.record!(copy)
     assert_equal "pending_bank_match", copy.reload.status
     assert_equal BigDecimal("9.00"), spending, "two real coffees"
   end
 
   test "identical amounts at different merchants are two purchases" do
-    capture
+    capture_and_record
     import_csv([["2026-11-16", "SHELL OIL 5744", "-48.60"]])
     assert_equal BigDecimal("97.20"), spending
     assert_equal "pending_bank_match", Finance::Receipt.sole.status
@@ -117,7 +139,7 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
   end
 
   test "delayed posting: a probable match waits for a person, then counts once" do
-    receipt = capture.receipt
+    receipt = capture_and_record
     import_csv([["2026-11-21", "WHOLEFDS MKT", "-48.60"]])
     receipt.reload
     match = receipt.matches.sole
@@ -133,6 +155,10 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
     receipt = capture.receipt
     match = receipt.matches.sole
     reconciler.reject(match)
+    receipt.reload
+    assert_nil receipt.entry, "Keep separate does not create an entry by itself"
+    assert_equal ["needs_review", BigDecimal("48.60")], [receipt.status, spending]
+    reconciler.record!(receipt)
     receipt.reload
     assert_equal "pending_bank_match", receipt.status
     assert_equal BigDecimal("97.20"), spending, "the person said these are two purchases"
@@ -178,7 +204,7 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
   end
 
   test "cash purchases stay counted without a bank row and are not reconciliation errors" do
-    receipt = capture(["DOWNTOWN DELI", "2026-11-12", "Turkey sandwich 9.50", "TOTAL 11.50", "CASH 20.00", "CHANGE 8.50"]).receipt
+    receipt = capture_and_record(["DOWNTOWN DELI", "2026-11-12", "Turkey sandwich 9.50", "TOTAL 11.50", "CASH 20.00", "CHANGE 8.50"])
     assert_equal ["cash", "cash"], [receipt.status, receipt.verification]
     assert_equal BigDecimal("11.50"), spending
     report = Finance::ReconciliationReport.new(@user, today: Date.new(2026, 12, 30))
@@ -237,7 +263,7 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
   end
 
   test "removing or trashing the bank row makes the receipt's purchase count again; restoring sets it aside again" do
-    receipt = capture.receipt
+    receipt = capture_and_record
     import_csv([["2026-11-16", "WHOLEFDS MKT", "-48.60"]], name: "nov.csv")
     bank = @user.finance_transactions.find_by!(entry_origin: "import")
     Finance::Ledger.new(@user).delete(bank)
@@ -253,13 +279,40 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
     assert_equal BigDecimal("48.60"), spending
   end
 
+  test "decision 3: an exact match to an existing bank row is linked automatically and creates nothing" do
+    import_csv([["2026-11-16", "WHOLEFDS MKT #10234", "-48.60"]])
+    before = Finance::Transaction.where(user_id: @user.id).count
+    receipt = capture.receipt
+    assert_equal ["matched", "auto_matched"], [receipt.status, receipt.verification]
+    assert_equal before, Finance::Transaction.where(user_id: @user.id).count
+    assert_equal ["exact", "auto"], receipt.confirmed_matches.first.values_at(:level, :decided_by)
+  end
+
+  test "decision 3: an exact candidate with a person-unconfirmed, low-confidence total is only suggested" do
+    import_csv([["2026-11-16", "WHOLEFDS MKT #10234", "-48.60"]])
+    lines = WHOLE_FOODS.map { |text| {text: text, confidence: text.start_with?("TOTAL") ? 0.3 : 0.95} }
+    receipt = Finance::ReceiptIngestion.call(user: @user, source: "app", lines: lines).receipt
+    refute receipt.confident?
+    assert(receipt.matches.none? { |match| match.status == "confirmed" })
+    assert_equal "needs_review", receipt.verification
+    assert_nil receipt.entry
+  end
+
+  test "decision 3: re-running reconciliation on an open receipt never records it" do
+    receipt = capture.receipt
+    3.times { reconciler.process(receipt) }
+    reconciler.after_import([])
+    assert_nil receipt.reload.entry
+    assert_equal 0, Finance::Transaction.where(user_id: @user.id, entry_origin: "receipt").count
+  end
+
   test "cross-user isolation: another person's bank row is never a candidate" do
     other = create(:onboarded_user, usage_region: "US")
     Finance::Profile.find_or_create_by!(user_id: other.id) { |profile| profile.currency = "USD" }
     import_csv([["2026-11-16", "WHOLEFDS MKT", "-48.60"]], user: other)
     receipt = capture.receipt
     assert_empty receipt.matches
-    assert_equal "pending_bank_match", receipt.status
+    assert_equal "needs_review", receipt.status
     assert_equal BigDecimal("48.60"), spending(other)
     other_bank = other.finance_transactions.sole
     assert_raises(Finance::Ledger::Invalid) { reconciler.link_manually(receipt, other_bank) }

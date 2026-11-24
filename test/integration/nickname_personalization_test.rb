@@ -5,6 +5,8 @@ require_relative "../support/billie_method_stub"
 # website greets people by name. The nickname is private: it is never shown to anyone else.
 class NicknamePersonalizationTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
+  include BillieModules::SignInWithAllModules
   include ActionMailer::TestHelper
   include BillieMethodStub
 

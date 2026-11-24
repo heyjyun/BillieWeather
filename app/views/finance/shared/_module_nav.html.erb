@@ -1,0 +1,11 @@
+<%# The sidebar: enabled modules from the Feature Library (Finance::ModuleCatalog), then Settings, which is
+    always shown. The same in Default and Manual Mode; the mode only changes what pages offer. Returned as
+    JSON by FeatureLibraryController#update so a switch updates the sidebar without a reload. %>
+<% settings_active = %w[settings feature_library].include?(controller_name) %>
+<nav class="bw-nav bw-module-nav" id="module-nav" aria-label="<%= t('billie.modules.nav.main') %>">
+  <% enabled_modules.each do |definition| %>
+    <%= finance_nav t("billie.modules.names.#{definition.id}"), public_send("#{definition.route}_path"), definition.icon, active: current_module_id == definition.id && !settings_active %>
+  <% end %>
+  <span class="bw-nav-divider" role="separator"></span>
+  <%= finance_nav t('billie.modules.nav.settings'), finance_settings_path, "settings", active: settings_active %>
+</nav>

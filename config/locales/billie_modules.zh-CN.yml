@@ -1,0 +1,104 @@
+zh-CN:
+  billie:
+    modules:
+      nav:
+        main: 主导航
+        modules: 你的模块
+        settings: 设置
+        transactions_sections: 交易分区
+      sections:
+        overview: 总览
+        all_transactions: 全部交易
+        add_sync: 添加与同步
+        statements: 对账单
+        receipts: 小票
+        reconciliation: 对账
+        review_history: 复核与历史
+      names:
+        transactions: 交易
+        ai_assistant: AI 助手
+        ledgers: 账本
+        accounts: 账户与资产
+        categories: 类别与标签
+        budgets: 预算
+        reports: 报表
+        recurring: 周期记账与账单
+        goals: 目标与规划
+        household: 家庭共享
+        forecast: 现金流预测
+        multi_currency: 多币种
+      descriptions:
+        transactions: 总览、每一笔交易，以及添加或导入新交易。
+        ai_assistant: 洞察分析、关于你财务的提问、报税准备，以及整理记录的帮助。
+        ledgers: 为个人、生意或共同开支分开记账。
+        accounts: 账户、余额、资产、负债和净资产。
+        categories: 你的类别树、商家、项目和标签。
+        budgets: 带提醒的月度和年度预算。
+        reports: 按类别、账户和月份的报表、净资产和导出。
+        recurring: 按计划记录的周期性收入、账单和订阅。
+        goals: 储蓄目标和大额支出计划。
+        household: 与家人共享一个账本。
+        forecast: 未来 30、60 或 90 天的预计余额。
+        multi_currency: 多种货币的账户，在报表中换算。
+      status:
+        available: 可用
+        coming_soon: 即将推出
+        enabled: 已开启
+        disabled: 已关闭
+        core: 核心
+      library:
+        nav: 功能库
+        eyebrow: 设置
+        title: 功能库
+        intro: 选择侧边栏中显示的内容。从简单开始，需要时再添加工具。
+        filters_label: 显示模块
+        filters:
+          all: 全部
+          enabled: 已开启
+          available: 可用
+          coming_soon: 即将推出
+        toggle_label: 在侧边栏显示%{name}
+        turn_on: 开启
+        turn_off: 关闭
+        open: 打开
+        saved_on: "%{name}已开启，并显示在侧边栏。"
+        saved_off: "%{name}已关闭。数据会保留，随时可以重新开启。"
+        coming_soon_note: 尚未推出。在功能可用之前无法开启。
+        settings_note: 设置始终显示在侧边栏，无法关闭。
+        data_note: 关闭模块只会隐藏它。不会删除任何数据，自动运行的功能（如周期记账和小票匹配）也会照常运行。
+        sync_note: 这些选择保存在你在本网站的账户中。BillieWeather 应用暂时各自保存自己的选择。
+        empty: 没有符合此筛选的模块。
+        open_library: 打开功能库
+        errors:
+          coming_soon: "%{name}尚未推出。"
+          unknown: 该模块不存在。
+      disabled:
+        eyebrow: 功能库
+        title: "%{name}已关闭"
+        body: 此模块已从侧边栏隐藏。你的数据仍在，没有任何改动。开启后即可再次使用此页面。
+        turn_on: 开启%{name}
+      add_sync:
+        title: 添加与同步
+        intro: 导入交易的所有方式。所有来源都经过同样的检查，不会重复计算。
+        available: 可用
+        coming_soon: 即将推出
+        connect:
+          title: 连接金融账户
+          body: 经你同意，通过获授权的金融数据服务以只读方式连接银行和信用卡。
+          note: 尚未推出。BillieWeather 目前不连接银行，也永远不会索要你的银行密码。
+        import:
+          title: 导入账单
+          body: 上传银行和信用卡账单。保存前你可以先检查每一行，已导入过的文件会被识别。
+          formats: 网站支持 CSV 和文字版 PDF 账单。BillieWeather 应用还支持 Excel（XLSX）、OFX/QFX 和扫描版 PDF。
+          open: 导入账单
+        scan:
+          title: 扫描与采集
+          body: 小票照片、截图和 PDF。文字在你的设备上或从 PDF 中读取，再按规则识别字段。
+          rules: 与已有银行交易完全且唯一匹配时会自动关联。在你确认之前，小票绝不会创建新的交易。
+          open: 打开小票
+        quick_add:
+          title: 快速记账
+          body: 手动输入一笔支出、收入、转账或退款。
+          open: 添加一笔
+          manual: 手动记账
+          later: 语音记账、自然语言记账和 Siri 快捷指令即将推出。

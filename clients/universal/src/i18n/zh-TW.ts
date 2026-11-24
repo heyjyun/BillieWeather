@@ -4,6 +4,7 @@ import type { Messages } from "./en";
 import { universalZhTW } from "./universal";
 import { commandZhTW } from "./command";
 import { receiptZhTW } from "./receipt";
+import { modulesZhTW } from "./modules";
 import { welcomeZhTW } from "./welcome";
 import { registerZhTW } from "./register";
 
@@ -284,6 +285,7 @@ export const zhTW: Messages = {
   ledger: ledgerZhTW,
   command: commandZhTW,
   receipt: receiptZhTW,
+  modules: modulesZhTW,
   welcome: welcomeZhTW,
   register: registerZhTW,
   personal: personal["zh-TW"],

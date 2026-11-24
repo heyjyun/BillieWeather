@@ -97,10 +97,20 @@ module Finance
       if current_user.finance_transactions.where(bank_account_id: @account.id).exists? || @account.statements.exists?
         return redirect_to finance_accounts_path, alert: I18n.t("billie.ledger.accounts.in_use", name: @account.display_name)
       end
+      # Receipts are evidence a person keeps; deleting the account must never delete or orphan them.
+      if current_user.finance_receipts.where(bank_account_id: @account.id).exists?
+        return redirect_to finance_accounts_path, alert: I18n.t("billie.ledger.accounts.in_use_receipts", name: @account.display_name)
+      end
       before = audit_values(@account, FIELDS)
-      @account.destroy!
-      audit!("delete", @account, before, {})
+      ActiveRecord::Base.transaction do
+        @account.destroy!
+        audit!("delete", @account, before, {})
+      end
       redirect_to finance_accounts_path, notice: I18n.t("billie.ledger.accounts.deleted", name: @account.display_name)
+    rescue ActiveRecord::InvalidForeignKey
+      # Something else started referencing the account between the checks and the delete
+      # (or a table added later): refuse instead of failing with a 500. Nothing was deleted.
+      redirect_to finance_accounts_path, alert: I18n.t("billie.ledger.accounts.in_use", name: @account.display_name)
     end
 
     private

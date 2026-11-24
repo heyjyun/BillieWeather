@@ -3,7 +3,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
 import { emailOwnerKey } from "../src/services/databases";
-import { migrate } from "./helpers";
+import { migrate, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
 
@@ -61,7 +61,7 @@ async function openApp() {
   await screen.findByRole("heading", { name: "Dashboard" }).catch(() => undefined);
   await waitFor(() => expect(screen.getAllByRole("navigation").length).toBeGreaterThan(0));
 }
-const go = (name: string) => fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name }));
+const go = (name: string) => openInShell(name);
 
 beforeEach(() => { localStorage.clear(); sessionStorage.clear(); platform.resetDatabases(); reports = []; online = true; mockServer(); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
@@ -71,7 +71,7 @@ it("there is no switch and no separate section: opening the app reports each dat
   await waitFor(() => expect(reports.map((r) => r.method)).toEqual(["PUT"]));
   expect((reports[0].body!.database as { name: string }).name).toBe("Home Mac");
   expect((reports[0].body!.database as { device_name: string }).device_name).toBe("Jyun's MacBook");
-  go("Settings");
+  await go("Settings");
   await screen.findByRole("heading", { name: "Settings & privacy", level: 1 });
   expect(screen.queryByRole("heading", { name: /Local databases on the website/ })).toBeNull();
   expect(screen.queryByText(/Metadata Last Updated/)).toBeNull();
@@ -84,7 +84,7 @@ it("there is no switch and no separate section: opening the app reports each dat
 it("offline, the app works and a deleted database's removal is shown as pending", async () => {
   online = false;
   await openApp();
-  go("Data");
+  await go("Data");
   await screen.findByRole("heading", { name: "Data", level: 1 });
   fireEvent.click(await screen.findByRole("button", { name: "New database" }));
   fireEvent.change(screen.getByLabelText("Name of the new database"), { target: { value: "Work" } });
@@ -99,7 +99,7 @@ it("opening the app reports; creating, renaming and deleting a database report t
   await openApp();
   await waitFor(() => expect(reports.length).toBe(1)); // after the app opened and sign-in succeeded
   const homeId = reports[0].path.split("/")[3];
-  go("Data");
+  await go("Data");
   await screen.findByRole("heading", { name: "Data", level: 1 });
 
   fireEvent.click(await screen.findByRole("button", { name: "New database" }));
@@ -128,7 +128,7 @@ it("opening the app reports; creating, renaming and deleting a database report t
 it("reporting sets only Metadata Last Updated: Last Synced and Last Backed Up stay as they were, and no sync or upload request is made", async () => {
   await openApp();
   await waitFor(() => expect(reports.length).toBe(1));
-  go("Data");
+  await go("Data");
   await screen.findByRole("heading", { name: "Data", level: 1 });
   const home = (await screen.findByRole("heading", { name: "Home Mac", level: 2 })).closest("section")! as HTMLElement;
   const fact = (label: string) => within(home).getByText(label).nextElementSibling!.textContent;
@@ -142,7 +142,7 @@ it("reporting sets only Metadata Last Updated: Last Synced and Last Backed Up st
 
 it("a database card's Sync Now to… picks it as the source and moves to the destination; nothing is copied until confirmed", async () => {
   await openApp();
-  go("Data");
+  await go("Data");
   const home = (await screen.findByRole("heading", { name: "Home Mac", level: 2 })).closest("section")! as HTMLElement;
   expect(within(home).getByRole("button", { name: "Rename" })).toBeTruthy();
   expect(within(home).getByRole("button", { name: "Delete database" })).toBeTruthy();
@@ -171,7 +171,7 @@ it("in Chinese, the disclosure, the three states and the sync buttons are all in
   await screen.findByRole("heading", { name: "设置与隐私", level: 1 });
   expect(screen.queryByText(/并在网站上显示本地数据库的基本信息/)).toBeNull();
   expect(screen.queryByText(/Local databases on the website|Metadata Last Updated|Sync Now/)).toBeNull();
-  fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: "数据管理" }));
+  await openInShell("数据管理");
   const home = (await screen.findByRole("heading", { name: "Home Mac", level: 2 })).closest("section")! as HTMLElement;
   expect(within(home).getByText("元数据最近更新")).toBeTruthy();
   expect(within(home).getByText("最近同步")).toBeTruthy();

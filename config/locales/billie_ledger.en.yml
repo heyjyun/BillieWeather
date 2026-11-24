@@ -157,6 +157,7 @@ en:
         unarchived: "Account %{name} restored."
         deleted: "Account %{name} deleted."
         in_use: "%{name} has entries or statements, so it can't be deleted. Archive it to hide it instead."
+        in_use_receipts: "%{name} has receipts attached to it, so it can't be deleted. Archive it to hide it instead; the receipts stay."
         adjusted: "Balance of %{name} adjusted by %{amount}."
       entries:
         eyebrow: ADD BY HAND

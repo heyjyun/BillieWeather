@@ -55,46 +55,15 @@
         </nav>
         <% else %>
         <div class="bw-workspace"><span class="bw-workspace-avatar" aria-hidden="true"><%= current_user.email.to_s.first.upcase %></span><div><strong><%= t('billie.layout.my_workspace') %></strong><small><%= t('billie.layout.personal_finances') %></small></div></div>
-        <% if manual_workspace %>
-        <%# Manual Mode: the manual bookkeeping workspace, grouped by task, then the automatic tools. %>
-        <div class="bw-mode-badge" id="manual-mode-badge"><%= finance_icon "transactions", size: 16 %><span><%= t('billie.ledger.mode.manual_on') %></span></div>
-        <span class="bw-nav-label"><%= t('billie.ledger.mode.groups.record') %></span>
-        <nav class="bw-nav bw-nav-manual" aria-label="<%= t('billie.ledger.mode.navigation') %>" id="manual-nav">
-          <%= finance_nav t('billie.ledger.manual.nav'), finance_manual_path, "dashboard", active: controller_name == "manual" %>
-          <%= finance_nav t('billie.ledger.entries.add'), new_finance_entry_path, "transactions", active: controller_name == "entries" && %w[new create].include?(action_name) %>
-          <%= finance_nav t('billie.layout.transactions'), finance_transactions_path, "transactions", active: controller_name == "transactions" || (controller_name == "entries" && !%w[new create].include?(action_name)) %>
-          <%= finance_nav t('billie.ledger.recurring.title'), finance_recurring_rules_path, "forecast", active: controller_name == "recurring_rules" %>
-          <span class="bw-nav-label"><%= t('billie.ledger.mode.groups.organize') %></span>
-          <%= finance_nav t('billie.ledger.nav.accounts'), finance_accounts_path, "wallet", active: controller_name == "accounts" %>
-          <%= finance_nav t('billie.categories.nav'), finance_categories_path, "tag", active: controller_name == "categories" %>
-          <%= finance_nav t('billie.ledger.nav.lists'), finance_dimension_index_path("merchants"), "users", active: controller_name == "dimensions" %>
-          <span class="bw-nav-label"><%= t('billie.ledger.mode.groups.plan') %></span>
-          <%= finance_nav t('billie.ledger.nav.budgets'), finance_budgets_path, "check", active: controller_name == "budgets" %>
-          <%= finance_nav t('billie.ledger.nav.reports'), finance_ledger_report_path, "file", active: controller_name == "ledger_reports" %>
-          <%= finance_nav t('billie.ledger.mode.review_history'), finance_activity_path, "insights", active: %w[audit_events reviews].include?(controller_name) || (controller_name == "entries" && action_name == "trash") %>
-          <span class="bw-nav-label"><%= t('billie.ledger.mode.groups.automatic') %></span>
-          <%= finance_nav t('billie.layout.dashboard'), finance_dashboard_path, "dashboard", active: controller_name == "dashboard" %>
-          <%= finance_nav t('billie.layout.statements'), finance_statements_path, "upload", active: controller_name == "statements" %>
-          <%= finance_nav t('billie.receipts.nav'), finance_receipts_path, "file", active: controller_name == "receipts" %>
-          <%= finance_nav t('billie.reconciliation.nav'), finance_reconciliation_path, "check", active: controller_name == "reconciliation" %>
-          <%= finance_nav t('billie.layout.forecast'), finance_forecast_path, "forecast", active: controller_name == "forecast" %>
-          <%= finance_nav t('billie.layout.insights'), finance_insights_path, "insights", active: controller_name == "insights" %>
-          <%= finance_nav t('billie.layout.tax_preparation'), finance_tax_preparation_path, "file", active: controller_name == "tax_preparation" %>
-          <%= finance_nav t('billie.region.nav'), finance_settings_path, "settings", active: controller_name == "settings" %>
-        </nav>
+        <% if manual_workspace %><div class="bw-mode-badge" id="manual-mode-badge"><%= finance_icon "transactions", size: 16 %><span><%= t('billie.ledger.mode.manual_on') %></span></div><% end %>
+        <% if controller.is_a?(Finance::BaseController) %>
+        <%# Feature Library navigation (Finance::ModuleCatalog): Transactions, AI Assistant, enabled modules, Settings. %>
+        <%= render "finance/shared/module_nav" %>
         <% else %>
-        <span class="bw-nav-label"><%= t('billie.layout.workspace_label') %></span>
-        <nav class="bw-nav" aria-label="<%= t('billie.layout.workspace_navigation') %>">
-          <%= finance_nav t('billie.layout.dashboard'), finance_dashboard_path, "dashboard", active: controller_name == "dashboard" %>
-          <%= finance_nav t('billie.layout.statements'), finance_statements_path, "upload", active: controller_name == "statements" %>
-          <%= finance_nav t('billie.receipts.nav'), finance_receipts_path, "file", active: controller_name == "receipts" %>
-          <%= finance_nav t('billie.reconciliation.nav'), finance_reconciliation_path, "check", active: controller_name == "reconciliation" %>
-          <%= finance_nav t('billie.layout.transactions'), finance_transactions_path, "transactions", active: controller_name == "transactions" %>
-          <%= finance_nav t('billie.categories.nav'), finance_categories_path, "tag", active: controller_name == "categories" %>
-          <%= finance_nav t('billie.layout.forecast'), finance_forecast_path, "forecast", active: controller_name == "forecast" %>
-          <%= finance_nav t('billie.layout.insights'), finance_insights_path, "insights", active: controller_name == "insights" %>
-          <%= finance_nav t('billie.layout.tax_preparation'), finance_tax_preparation_path, "file", active: controller_name == "tax_preparation" %>
-          <%= finance_nav t('billie.region.nav'), finance_settings_path, "settings", active: controller_name == "settings" %>
+        <nav class="bw-nav bw-module-nav" aria-label="<%= t('billie.modules.nav.main') %>">
+          <%= finance_nav t('billie.modules.names.transactions'), finance_dashboard_path, "transactions", active: false %>
+          <span class="bw-nav-divider" role="separator"></span>
+          <%= finance_nav t('billie.modules.nav.settings'), finance_settings_path, "settings", active: false %>
         </nav>
         <% end %>
         <% end %>
@@ -108,7 +77,8 @@
     <div class="<%= public_page ? 'bw-public-shell' : 'bw-main-shell' %>">
       <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb"><%= admin_area ? t('billie.community.nav.support_admin') : t('billie.layout.workspace') %> <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : t('billie.layout.overview') %></strong></div><% if command_bar %><div class="bw-command" data-smart-command data-locale="<%= I18n.locale %>" data-context-url="<%= finance_command_context_path %>" data-preview-url="<%= finance_command_preview_path %>" data-execute-url="<%= finance_command_execute_path %>" data-undo-url="<%= finance_command_undo_path %>"></div><% end %><div class="bw-topbar-actions"><%= render 'shared/billie_mode_switch', manual: manual_workspace if mode_switch %><%= render 'shared/billie_theme_switcher' %><%= render 'shared/billie_language_switcher' %></div></header><% end %>
       <main id="main-content" class="<%= 'bw-main' unless public_page %>">
-        <% flash.each do |type, message| %><div class="bw-flash <%= 'bw-flash-error' if type.to_s == 'alert' %>" role="<%= type.to_s == 'alert' ? 'alert' : 'status' %>"><%= message %></div><% end %>
+        <%# Only messages are shown; other flash keys (e.g. ai_batch_id) carry data for the page. %><% flash.to_hash.slice("notice", "alert").each do |type, message| %><div class="bw-flash <%= 'bw-flash-error' if type.to_s == 'alert' %>" role="<%= type.to_s == 'alert' ? 'alert' : 'status' %>"><%= message %></div><% end %>
+        <% if controller.is_a?(Finance::BaseController) && @disabled_module.nil? %><% module_id = controller.send(:current_module_id) %><% if module_id == "transactions" %><%= render "finance/shared/transactions_tabs" %><% elsif Finance::ModuleCatalog::WEB_TABS.key?(module_id) %><%= render "finance/shared/module_tabs" %><% end %><% end %>
         <%= yield %>
       </main>
       <% if public_page %><%= render "community/support_dialog", **support_dialog_locals %><% end %>

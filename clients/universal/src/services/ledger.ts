@@ -210,7 +210,8 @@ export interface AuditEvent {
 
 /** Instructions stored with an audit event to reverse it. */
 export type UndoStep =
-  | { op: "set"; table: "transactions"; id: number; fields: Record<string, unknown> }
+  // `expect`: values the row must still have for the step to run (a later edit by a person wins).
+  | { op: "set"; table: "transactions"; id: number; fields: Record<string, unknown>; expect?: Record<string, unknown> }
   | { op: "soft_delete"; ids: number[] }
   | { op: "restore"; ids: number[] }
   | { op: "delete_link"; id: number }
@@ -296,37 +297,43 @@ export class LedgerStore {
     let steps = 0;
     for (const row of rows) {
       for (const step of JSON.parse(String(row.undo)) as UndoStep[]) {
-        await this.runUndo(step);
-        steps += 1;
+        if (await this.runUndo(step)) steps += 1;
       }
     }
     if (steps > 0) await this.audit({ actor, action: "ai_undo", subjectType: "batch", subjectId: batchId, summary: `${steps} change(s) reversed` });
     return steps;
   }
 
-  private async runUndo(step: UndoStep): Promise<void> {
+  /** Runs one undo step; false when it was skipped because the row changed since. */
+  private async runUndo(step: UndoStep): Promise<boolean> {
     switch (step.op) {
       case "set": {
+        if (step.expect && Object.keys(step.expect).length > 0) {
+          const columns = Object.keys(step.expect).filter((key) => /^[a-z_]+$/.test(key));
+          const [current] = await this.db.select<Row>(`SELECT ${columns.join(", ")} FROM transactions WHERE id = ?`, [step.id]);
+          if (!current || columns.some((key) => current[key] !== step.expect![key])) return false;
+        }
         const allowed = ["category", "category_source", "category_confidence", "category_model", "kind", "description", "excluded", "merchant_id", "project_id", "user_locked_fields", "locally_modified", "tax_review", "note", "account_id", "link_hint", "link_target_id"];
         const fields = Object.entries(step.fields).filter(([key]) => allowed.includes(key));
-        if (fields.length === 0) return;
+        if (fields.length === 0) return false;
         await this.db.execute(`UPDATE transactions SET ${fields.map(([key]) => `${key} = ?`).join(", ")}, updated_at = ? WHERE id = ?`, [...fields.map(([, value]) => value), now(), step.id]);
-        return;
+        return true;
       }
       case "soft_delete":
         if (step.ids.length) await this.db.execute(`UPDATE transactions SET deleted_at = ?, updated_at = ? WHERE id IN (${placeholders(step.ids.length)})`, [now(), now(), ...step.ids]);
-        return;
+        return true;
       case "restore":
         if (step.ids.length) await this.db.execute(`UPDATE transactions SET deleted_at = NULL, updated_at = ? WHERE id IN (${placeholders(step.ids.length)})`, [now(), ...step.ids]);
-        return;
+        return true;
       case "delete_link":
         await this.db.execute("DELETE FROM transaction_links WHERE id = ?", [step.id]);
-        return;
+        return true;
       case "insert_link":
         await this.db.execute(
           "INSERT OR IGNORE INTO transaction_links (uuid, link_type, from_transaction_id, to_transaction_id, amount_cents, status, decided_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
           [randomId(), step.link.link_type, step.link.from_transaction_id, step.link.to_transaction_id, step.link.amount_cents, step.link.status, step.link.decided_by, now()],
         );
+        return true;
     }
   }
 

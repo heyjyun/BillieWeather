@@ -163,4 +163,46 @@ describe("Categorize with AI (local side)", () => {
     expect(await store.applyAiCategories(groups, [{ key: "1", category: "Business" }])).toBe(1);
     expect((await byDescription(store, "AMAZON WEB SERVICES AWS.AMAZON.CO")).taxReview).toBe(true); // like Rails
   });
+
+  // Phase 0.5 (audit R3, local side): an AI run is one audited, undoable batch.
+  it("records an AI run as one ai_apply batch that can be undone", async () => {
+    const { store } = await imported();
+    const groups = await store.aiCandidates();
+    const { changed, batchId } = await store.applyAiCategoriesBatch(groups, [{ key: "1", category: "Shopping" }]);
+    expect(changed).toBe(1);
+    expect(batchId).toBeTruthy();
+    const events = await store.ledger.auditEvents({ batchId: batchId! });
+    expect(events.map((event) => [event.actor, event.action, event.subjectType])).toEqual([["ai", "ai_apply", "transaction"]]);
+    expect(events[0].changes).toEqual({ category: ["Uncategorized", "Shopping"], category_source: [expect.anything(), "ai"] });
+    expect(JSON.stringify(events)).not.toMatch(/AMAZON/i); // no merchant text in the log
+    expect(events[0].summary).toBeNull();
+    const summary = (await store.ledger.auditEvents({ subjectType: "batch" })).find((event) => event.subjectId === batchId);
+    expect(summary?.action).toBe("ai_apply"); // the Activity list offers Undo for it
+
+    expect(await store.ledger.undoBatch(batchId!)).toBe(1);
+    expect((await byDescription(store, "AMAZON WEB SERVICES AWS.AMAZON.CO")).category).toBe("Uncategorized");
+  });
+
+  it("undo never overwrites a category a person chose after the AI run", async () => {
+    const { store } = await imported();
+    const groups = await store.aiCandidates();
+    const { batchId } = await store.applyAiCategoriesBatch(groups, [{ key: "1", category: "Shopping" }]);
+    const aws = await byDescription(store, "AMAZON WEB SERVICES AWS.AMAZON.CO");
+    await store.setCategory(aws.id, "Health", false);
+    expect(await store.ledger.undoBatch(batchId!)).toBe(0);
+    expect((await byDescription(store, aws.description)).category).toBe("Health");
+  });
+
+  it("writes nothing when the batch fails part-way", async () => {
+    const { db } = await imported();
+    const driver = sqljsDriver(db);
+    // The last statement of the batch fails: the whole batch must roll back.
+    const failing = { ...driver, transaction: (statements: Parameters<typeof driver.transaction>[0]) => driver.transaction([...statements, { sql: "INSERT INTO no_such_table VALUES (1)" }]) };
+    const store = new FinanceStore(failing);
+    const groups = await store.aiCandidates();
+    const before = JSON.stringify(await store.transactions());
+    await expect(store.applyAiCategoriesBatch(groups, [{ key: "1", category: "Shopping" }, { key: "2", category: "Health" }])).rejects.toThrow();
+    expect(JSON.stringify(await store.transactions())).toBe(before);
+    expect(await store.ledger.auditEvents({ actor: "ai" })).toEqual([]);
+  });
 });

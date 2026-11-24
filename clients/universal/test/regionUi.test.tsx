@@ -6,7 +6,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import initSqlJs from "sql.js";
-import { migrate } from "./helpers";
+import { migrate, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
 
@@ -40,7 +40,7 @@ vi.mock("../src/services/pdfText", () => ({
 }));
 
 const { default: App } = await import("../src/App");
-const nav = (label: string) => fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: label }));
+const nav = (label: string) => openInShell(label);
 
 beforeEach(() => { localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
@@ -76,7 +76,7 @@ it("imports with an optional region, then changes it and reclassifies on request
   await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>("Database name").value).toBe("Test Mac"));
   await act(async () => fireEvent.click(create));
   await screen.findByRole("navigation");
-  nav("Import");
+  await nav("Import");
 
   // Optional, starts as Not specified (the account's usage region is not used as a guess).
   const select = await screen.findByRole<HTMLSelectElement>("combobox", { name: "Country / Region (Optional)" });

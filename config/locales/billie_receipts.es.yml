@@ -1,0 +1,322 @@
+es:
+  billie:
+    ledger:
+      origins:
+        receipt: Registrado desde un recibo
+      errors:
+        match_not_open: Esta sugerencia ya se resolvió.
+        already_matched: Este recibo ya está vinculado a un movimiento. Deshaz primero ese vínculo.
+        match_not_confirmed: Solo se puede deshacer un vínculo confirmado.
+        match_not_rejected: Solo se puede reconsiderar una sugerencia rechazada.
+        entry_has_receipt: Ese movimiento ya tiene un recibo.
+        entry_is_receipt: Elige un movimiento bancario o introducido a mano, no otro movimiento de recibo.
+        already_recorded: Este recibo ya está registrado como gasto.
+        receipt_incomplete: Introduce primero la fecha y el total del recibo.
+        currency_mismatch: Este recibo está en una moneda distinta a la de tu cuenta, así que no se puede registrar como gasto. Vincúlalo al cargo del banco.
+        receipt_in_use: Este recibo respalda un movimiento. Deshaz primero el vínculo (o elimina el movimiento).
+        not_a_duplicate: Este recibo no está marcado como duplicado.
+        not_dismissed: Este recibo no está descartado.
+        source_invalid: Origen de recibo desconocido.
+        receipt_empty: Elige una foto, una imagen o un PDF, o escribe los datos del recibo.
+        file_empty: El archivo está vacío.
+        file_invalid: No se pudo leer el archivo.
+        file_too_large: Cada archivo de recibo puede pesar hasta 10 MB.
+        file_type: Usa una imagen JPEG, PNG, HEIC o WebP, o un PDF.
+        account_not_found: No se encontró esa cuenta.
+        purchased_on_invalid: Introduce una fecha válida.
+        purchased_at_time_invalid: "Introduce una hora válida (HH:MM)."
+        total_invalid: Introduce el total como un número con un máximo de dos decimales.
+        subtotal_invalid: Introduce el subtotal como un número con un máximo de dos decimales.
+        tax_invalid: Introduce los impuestos como un número con un máximo de dos decimales.
+        tip_invalid: Introduce la propina como un número con un máximo de dos decimales.
+        discount_invalid: Introduce el descuento como un número con un máximo de dos decimales.
+        currency_invalid: Introduce un código de moneda de tres letras, como USD.
+        direction_invalid: Elige compra o reembolso.
+        payment_method_invalid: Elige una forma de pago.
+        card_last4_invalid: Introduce los últimos cuatro dígitos de la tarjeta.
+        category_invalid: Elige una de tus categorías.
+    receipts:
+      nav: Recibos
+      title: Recibos
+      eyebrow: Captura
+      intro: Escanea recibos en papel, sube recibos electrónicos, capturas de pantalla y PDF. BillieWeather los lee, los compara con tus registros bancarios y nunca cuenta dos veces una misma compra.
+      untitled: Recibo
+      entry_note: Desde un recibo
+      back: Volver a recibos
+      unknown: Desconocido
+      reopen: Reabrir
+      dismiss: Descartar recibo
+      dismiss_confirm: "¿Descartar este recibo? Se conserva en tus registros y se puede reabrir."
+      capture:
+        heading: Añadir recibos
+        scan: Escanear recibo
+        scan_help: En el teléfono se abre la cámara. Sujeta el recibo plano y con buena luz.
+        scan_input: Foto del recibo
+        scan_submit: Usar foto
+        upload: Subir recibos
+        upload_help: Suelta aquí imágenes, capturas de pantalla o recibos en PDF, o elige archivos.
+        upload_input: Archivos de recibo
+        limits: "Hasta %{count} archivos, 10 MB cada uno. JPEG, PNG, HEIC, WebP o PDF."
+        upload_submit: Subir
+        statement: Importar extracto
+        statement_help: Los extractos del banco y de la tarjeta (CSV o PDF) se comparan automáticamente con tus recibos.
+        statement_link: Ir a extractos
+        manual: Escribir un recibo a mano
+        manual_submit: Añadir recibo
+      privacy:
+        local_ocr: Los archivos de recibo se guardan de forma privada en tus registros de BillieWeather. El texto se reconoce en este servidor con un motor local; los recibos nunca se envían a otro servicio.
+        no_server_ocr: Los archivos de recibo se guardan de forma privada en tus registros de BillieWeather y nunca se envían a otro servicio. El sitio web lee recibos en PDF; para fotos, escribe los datos o escanea con la app de BillieWeather o con un atajo de iOS (Shortcuts), que reconocen el texto en tu teléfono.
+      recent:
+        heading: Importaciones recientes
+        source: Origen
+        status: Estado
+        empty: Aún no hay recibos
+        empty_help: Escanea o sube un recibo para empezar.
+        statements: Extractos recientes
+        statement_rows:
+          one: "%{count} movimiento · importado el %{date}"
+          other: "%{count} movimientos · importados el %{date}"
+      sources:
+        camera: Cámara
+        upload: Subida
+        shortcut: Siri / Shortcuts
+        app: App de BillieWeather
+        email: Correo
+        manual: Escrito
+      fields:
+        merchant_name: Comercio
+        purchased_on: Fecha
+        purchased_at_time: Hora
+        total: Total
+        subtotal: Subtotal
+        tax: Impuestos
+        tip: Propina
+        discount: Descuento
+        receipt_number: Número de recibo o factura
+        card_last4: Tarjeta (últimos 4 dígitos)
+        currency: Moneda
+        payment_method: Forma de pago
+        direction: Tipo
+        bank_account_id: Pagado desde la cuenta
+      payment_methods:
+        card: Tarjeta
+        cash: Efectivo
+        mobile: Pago móvil
+        other: Otra
+      directions:
+        purchase: Compra
+        refund: Reembolso o devolución
+      verification:
+        verified: Verificado
+        auto_matched: Emparejado automáticamente
+        matched: Emparejado
+        bank_record: Registro bancario
+        cash: Efectivo · no se espera registro bancario
+        pending_bank_match: Esperando al banco
+        needs_review: Requiere revisión
+        possible_duplicate: Posible duplicado
+        duplicate: Copia duplicada
+        amount_mismatch: El importe difiere
+        foreign_currency: Otra moneda
+        entry_in_trash: Movimiento en la papelera
+        dismissed: Descartado
+        missing_receipt: Falta el recibo
+        superseded: Sustituido por el registro del banco
+        unverified_manual: Introducido a mano
+      field_state:
+        confirmed: Confirmado
+        read: Leído
+        uncertain: Dudoso
+        missing: Falta
+      levels:
+        exact: Coincidencia exacta
+        probable: Coincidencia probable
+        ambiguous: Posible coincidencia
+        manual: Vinculado por ti
+      reasons:
+        amount_equal: mismo importe
+        amount_differs_tip: el banco cobró más (quizá una propina)
+        split_payment: dos cargos suman el total
+        currency_differs: moneda distinta, no se comparan los importes
+        merchant_same: mismo comercio
+        merchant_similar: nombre del comercio escrito de otra forma
+        merchant_weak: nombre del comercio solo parcialmente parecido
+        merchant_unknown: comercio ilegible
+        same_day: mismo día
+        posted_later: contabilizado más tarde por el banco
+        posted_earlier: contabilizado un día antes
+        card_last4_match: misma tarjeta
+        receipt_number_match: el número de recibo coincide con la referencia del banco
+        multiple_candidates: encajan varios movimientos
+        similar_candidates: hay otro movimiento parecido
+        low_confidence: algunos datos del recibo son dudosos
+      issues:
+        merchant_missing: No se pudo leer el comercio.
+        date_missing: No se pudo leer la fecha.
+        total_missing: No se encontró ningún total.
+        total_inferred: "Ninguna línea decía «total»; se usó el importe más grande. Compruébalo."
+        totals_inconsistent: El subtotal, los impuestos y la propina no suman el total.
+        multiple_totals: El recibo muestra totales distintos.
+        date_ambiguous: La fecha se podría leer como día-mes o como mes-día.
+        future_date: La fecha está en el futuro.
+        currency_assumed: El recibo no indica la moneda; se supone la moneda de tu cuenta.
+        low_confidence: Algunos datos eran difíciles de leer.
+        text_unavailable: No se pudo leer texto de este archivo. Escribe los datos abajo.
+      detail:
+        captured: "%{source} · añadido el %{date}"
+        details: Datos del recibo
+        details_help: Los valores leídos del recibo se marcan como Leído o Dudoso hasta que los confirmes. Al guardar se confirman todos los campos mostrados.
+        issues: Revisa esto
+        suggest_category: Sugerir automáticamente
+        save: Guardar y comprobar de nuevo
+        line_items: Artículos
+        item: Artículo
+        quantity: Cant.
+        unit_price: Precio unitario
+        line_items_note: Los artículos se leen del recibo y se conservan como referencia; los totales usan el total del recibo.
+        evidence: Original y coincidencias
+        original_alt: Recibo original de %{name}
+        open_original: Abrir original
+        download_original: Descargar
+        no_file: "No hay archivo: este recibo se escribió o se envió como texto."
+      duplicate:
+        is_copy: Esta es una copia de un recibo que ya añadiste. No se cuenta.
+        possible: Parece un recibo que ya añadiste. No se cuenta hasta que lo decidas.
+        confirm: "Sí, es una copia"
+        different: Es una compra distinta
+      matching:
+        heading: Registro bancario
+        auto_linked: Emparejado automáticamente
+        linked: Vinculado
+        bank_record: Registro bancario
+        why: Motivo
+        chosen_by_you: elegido por ti
+        confirm_auto: Confirmar coincidencia
+        undo: Deshacer vínculo
+        superseded_note: El gasto registrado desde este recibo se deja aparte, así que esta compra cuenta una sola vez, como movimiento del banco.
+        question: "Encontramos un posible movimiento bancario coincidente. ¿Estos registros son de la misma compra?"
+        score: "puntuación %{score}"
+        confirm: Confirmar coincidencia
+        keep_separate: Mantener separados
+        review_details: Revisar detalles
+        none: Todavía no hay un movimiento bancario coincidente. Cuando llegue tu extracto, se comprobará automáticamente.
+        none_cash: Pagado en efectivo; no se espera registro bancario.
+        rejected:
+          one: "%{count} sugerencia que mantuviste separada"
+          other: "%{count} sugerencias que mantuviste separadas"
+        reconsider: Reconsiderar
+      entry:
+        heading: En tus movimientos
+        superseded: dejado aparte; cuenta el movimiento del banco
+        trashed: en la papelera
+        counted: contado en tus totales
+        not_recorded: Aún no está registrado como gasto.
+        record: Registrar como gasto
+      link:
+        heading: Vincular a un movimiento tú mismo
+        choose: Movimiento
+        submit: Vincular
+      shortcuts:
+        heading: Siri y Shortcuts
+        intro: "Di «Oye Siri, escanea un recibo con BillieWeather» con un atajo de iOS que fotografía el recibo, lee su texto en tu iPhone y lo envía aquí. Un token de captura permite al atajo añadir solo recibos: no puede leer ni cambiar nada más."
+        copy_now: Copia este token ahora. No se volverá a mostrar.
+        step_token: Crea abajo un token de captura y cópialo.
+        step_actions: En la app Shortcuts, añade Take Photo y luego Extract Text from Image.
+        step_request: "Añade Get Contents of URL: POST a %{url}, cabecera Authorization: Bearer <tu token>, cuerpo de la solicitud Form con text = el texto extraído y file = la foto."
+        step_name: "Llama al atajo «Escanear un recibo con BillieWeather» para que Siri reconozca la frase."
+        native_note: Las acciones de Siri propias de la app de BillieWeather para iPhone requieren la versión nativa de iOS; hasta entonces, Shortcuts es la forma compatible.
+        name: Nombre del token
+        default_name: Atajo del iPhone
+        create: Crear token de captura
+        active: activo hasta el %{date}
+        inactive: revocado o caducado
+        last_used: usado por última vez el %{date}
+        revoke: Revocar
+        revoked: Token de captura revocado.
+        too_many: Puedes tener hasta %{count} tokens de captura activos. Revoca uno primero.
+      flash:
+        too_many: Elige hasta %{count} archivos a la vez.
+        added: Recibo añadido.
+        already_added: Este recibo ya estaba añadido; no se creó nada nuevo.
+        batch: "%{added} añadidos, %{existing} ya existentes, %{failed} no añadidos."
+        saved: Recibo guardado y comprobado de nuevo.
+        recorded: Registrado como gasto.
+        dismissed: Recibo descartado.
+        reopened: Recibo reabierto.
+        not_duplicate: Se mantiene como una compra aparte.
+        marked_duplicate: Marcado como copia; no se cuenta.
+        linked: Recibo vinculado al movimiento.
+        decision:
+          confirm: Coincidencia confirmada.
+          reject: Se mantiene separado. Este par no se volverá a sugerir.
+          undo: Vínculo deshecho. El recibo vuelve a contar por sí solo.
+          reconsider: La sugerencia vuelve a estar abierta.
+      transaction:
+        heading: Origen y verificación
+        source: Origen
+        statement: Extracto %{name}
+        receipt: Recibo
+        no_receipt: Sin recibo adjunto.
+        attach: Añadir un recibo
+        set_aside:
+          one: "%{count} movimiento de recibo dejado aparte para este movimiento"
+          other: "%{count} movimientos de recibo dejados aparte para este movimiento"
+    reconciliation:
+      nav: Conciliación
+      title: Conciliación
+      eyebrow: Verificar
+      intro: Recibos, registros bancarios y tu libro contable, comparados entre sí. Nada cambia hasta que lo decidas.
+      metrics:
+        review: Pendientes de revisión
+        review_help: Recibos que necesitan tu decisión
+        matched: Emparejados
+        matched_help: Recibos vinculados a un movimiento bancario
+        unmatched: Sin emparejar
+        unmatched_help: "%{bank} esperando al banco · %{cash} en efectivo"
+        discrepancies: Discrepancias
+        discrepancies_help: Registros que no coinciden
+      review:
+        heading: Movimientos pendientes de revisión
+        empty: Nada que revisar.
+        check_details: Comprueba los datos leídos de este recibo.
+      discrepancies:
+        heading: Discrepancias de conciliación
+        intro: Se muestran para que les eches un vistazo; ninguna se cambia automáticamente. Un segundo cargo puede ser una compra real.
+        none: No se encontraron discrepancias.
+        amount_mismatch:
+          one: "%{count} recibo difiere de su cargo bancario"
+          other: "%{count} recibos difieren de sus cargos bancarios"
+        receipt_vs_bank: "recibo %{receipt}, banco %{bank}"
+        duplicate_charges:
+          one: "%{count} posible cargo bancario duplicado"
+          other: "%{count} posibles cargos bancarios duplicados"
+        missing_receipts:
+          one: "%{count} gasto en revisión fiscal sin recibo"
+          other: "%{count} gastos en revisión fiscal sin recibo"
+        refunds_without_purchase:
+          one: "%{count} reembolso no vinculado a una compra"
+          other: "%{count} reembolsos no vinculados a una compra"
+        transfers_as_spending:
+          one: "%{count} posible transferencia contada como gasto"
+          other: "%{count} posibles transferencias contadas como gasto"
+      balances:
+        heading: Saldos de los extractos
+        consistent: Coherente
+        differs: Difiere en %{amount}
+        scope: Los saldos solo se comparan entre dos extractos de una misma cuenta que muestren un saldo final. Es una comprobación de continuidad, no una conciliación bancaria completa, y no puede ver los movimientos que falten en ambos extractos.
+      matched:
+        heading: Movimientos emparejados
+        empty: Aún no hay recibos emparejados.
+      unmatched:
+        heading: Movimientos sin emparejar
+        intro: Recibos sin registro bancario. Una compra con tarjeta puede tardar varios días en contabilizarse; el efectivo nunca aparece.
+        awaiting_bank:
+          one: "%{count} esperando al banco"
+          other: "%{count} esperando al banco"
+        stale: no aparece tras %{days} días; revisa el extracto de tu tarjeta
+        cash:
+          one: "%{count} compra en efectivo"
+          other: "%{count} compras en efectivo"
+      verified:
+        heading: Verificados recientemente
+        empty: Las coincidencias que confirmes aparecen aquí.

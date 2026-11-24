@@ -4,6 +4,9 @@ require "test_helper"
 # workspace appears only after the person chooses it; both modes use the same records.
 class FinanceManualModeTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
+  # Manual Mode itself is unchanged (product decision 2); its marker in the shell is #manual-mode-badge.
+  include BillieModules::SignInWithAllModules
 
   setup do
     @user = create(:onboarded_user, usage_region: "US")
@@ -24,10 +27,12 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#mode-switch button[value=manual][aria-pressed=false]", /Manual/
     assert_select "#mode-switch button[value=default][aria-pressed=true]"
-    assert_select "#manual-nav", 0
-    assert_select ".bw-nav a[href='#{finance_accounts_path}']", 0
-    assert_select ".bw-nav a[href='#{finance_budgets_path}']", 0
-    assert_select ".bw-nav a[href='#{finance_statements_path}']"
+    assert_select "#manual-mode-badge", 0
+    # Since the Feature Library (Phase 1a) the sidebar follows the person's modules, not the mode
+    # (this class turns every module on); Statements sits under Transactions › Add & Sync.
+    assert_select "#module-nav a[href='#{finance_accounts_path}']"
+    assert_select "#module-nav a[href='#{finance_budgets_path}']"
+    assert_select "#transactions-tabs a[href='#{finance_add_sync_path}']"
 
     get finance_transactions_path
     assert_select "#add-entry", 0
@@ -47,10 +52,11 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Manual bookkeeping"
     assert_select "#mode-switch button[value=manual][aria-pressed=true]"
-    assert_select "#manual-nav a[href='#{finance_accounts_path}']"
-    assert_select "#manual-nav a[href='#{finance_budgets_path}']"
-    assert_select "#manual-nav a[href='#{finance_ledger_report_path}']"
-    assert_select "#manual-nav a[href='#{finance_statements_path}']" # automatic tools stay reachable
+    assert_select "#manual-mode-badge"
+    assert_select "main a[href='#{finance_accounts_path}']"
+    assert_select "main a[href='#{finance_budgets_path}']"
+    assert_select "main a[href='#{finance_ledger_report_path}']"
+    assert_select "#transactions-tabs a[href='#{finance_add_sync_path}']" # automatic tools stay reachable
     %w[record organize plan review].each { |group| assert_select "#manual-group-#{group} .bw-tool-card" }
     assert_select "#quick-add a", Finance::Ledger::MANUAL_KINDS.size
 
@@ -74,7 +80,7 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     switch_to("default", return_to: finance_transactions_path)
     assert_redirected_to finance_transactions_path
     follow_redirect!
-    assert_select "#manual-nav", 0
+    assert_select "#manual-mode-badge", 0
     assert_select "#add-entry", 0
     assert_select "#batch-form", 0
     # The same entry, now reviewed through the simple form.
@@ -105,13 +111,13 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_redirected_to finance_forecast_path
     switch_to("anything-else")
     get finance_dashboard_path
-    assert_select "#manual-nav", 0
+    assert_select "#manual-mode-badge", 0
   end
 
   test "opening a manual page directly turns Manual Mode on" do
     get finance_accounts_path
     assert_response :success
-    assert_select "#manual-nav"
+    assert_select "#manual-mode-badge"
     get finance_dashboard_path
     assert_select "#mode-switch button[value=manual][aria-pressed=true]"
   end
@@ -122,7 +128,7 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     switch_to("manual")
     get finance_manual_path, params: {locale: "zh-CN"}
     assert_select "h1", "手动记账"
-    assert_select "#manual-nav"
+    assert_select "#manual-mode-badge"
     get finance_manual_path, params: {locale: "zh-TW"}
     assert_select "h1", "手動記帳"
     assert_select "#mode-switch button[value=default]", /預設/

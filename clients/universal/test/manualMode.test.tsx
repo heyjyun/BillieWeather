@@ -4,7 +4,7 @@
 // it without changing records; unfinished input survives a switch; Chinese labels are present.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { migrate } from "./helpers";
+import { migrate, enableAllModulesByDefault, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 
 const files = new Map<string, ReturnType<typeof sqljsDriver>>();
@@ -37,11 +37,12 @@ function mockAccount(locale = "en") {
     : new Response(JSON.stringify({ currency: null, version: "0", statement_count: 0, transaction_count: 0, statements: [], transactions: [], next_after_id: null, rules: [], categories: [] }), { status: 200 }));
 }
 
-beforeEach(() => { localStorage.clear(); sessionStorage.clear(); files.clear(); sessionStorage.setItem("billie.token", "tok"); });
+beforeEach(() => { enableAllModulesByDefault(); localStorage.clear(); sessionStorage.clear(); files.clear(); sessionStorage.setItem("billie.token", "tok"); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 const navigation = () => within(screen.getByRole("navigation"));
-const nav = (name: string) => fireEvent.click(navigation().getByRole("button", { name }));
+const nav = (name: string) => openInShell(name);
+const badge = () => document.getElementById("manual-mode-badge");
 const click = async (element: HTMLElement) => act(async () => { fireEvent.click(element); });
 const type = (label: string | RegExp, value: string, root: HTMLElement) => fireEvent.change(within(root).getByLabelText(label), { target: { value } });
 const db = () => files.get("billieweather.db")!;
@@ -57,8 +58,12 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
   const manualButton = screen.getByRole("button", { name: "Manual" });
   expect(manualButton.getAttribute("aria-pressed")).toBe("false");
   expect(screen.getByRole("button", { name: "Default" }).getAttribute("aria-pressed")).toBe("true");
-  for (const hidden of ["Accounts", "Budgets & schedules", "Merchants & tags", "Manual home"]) expect(navigation().queryByRole("button", { name: hidden })).toBeNull();
-  nav("Transactions");
+  // Since the Feature Library (Phase 1a) the sidebar follows the person's modules (all on in this test),
+  // not the mode; the mode decides the tools on each page, and its marker is the "Manual Mode" badge.
+  expect(badge()).toBeNull();
+  expect(navigation().getByRole("button", { name: "Accounts & Assets" })).toBeTruthy();
+  expect(navigation().queryByRole("button", { name: "Manual home" })).toBeNull();
+  await nav("All Transactions");
   await screen.findByRole("heading", { level: 1 });
   expect(screen.queryByRole("button", { name: "New entry" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Trash" })).toBeNull();
@@ -67,11 +72,12 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
   await click(manualButton);
   await screen.findByRole("heading", { name: "Manual bookkeeping" });
   expect(screen.getByRole("button", { name: "Manual" }).getAttribute("aria-pressed")).toBe("true");
-  for (const shown of ["Manual home", "Accounts", "Budgets & schedules", "Merchants & tags", "Dashboard", "Import"]) expect(navigation().getByRole("button", { name: shown })).toBeTruthy();
-  expect(navigation().getByText("Accounts & lists")).toBeTruthy();
+  expect(badge()).toBeTruthy();
+  for (const shown of ["Transactions", "AI Assistant", "Accounts & Assets", "Categories & Tags", "Budgets", "Recurring & Bills", "Reports", "Settings"]) expect(navigation().getByRole("button", { name: shown })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Manual bookkeeping" }).getAttribute("aria-current")).toBe("page"); // Transactions › Add & Sync › Manual bookkeeping
 
   // 4. Create an account and an expense through the workspace.
-  nav("Accounts");
+  await nav("Accounts & Assets");
   await screen.findByRole("heading", { name: "Accounts" });
   fireEvent.change(screen.getByLabelText(/^Book currency/), { target: { value: "USD" } });
   await click(screen.getByRole("button", { name: "Add account" }));
@@ -82,7 +88,7 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
   await click(within(form).getByRole("button", { name: "Save" }));
   await screen.findByText("ZXQ Wallet");
 
-  nav("Manual home");
+  await nav("Manual home");
   await click(await screen.findByRole("button", { name: "Expense" }));
   form = await screen.findByRole("form", { name: "New entry" });
   type("Amount", "12.50", form);
@@ -94,7 +100,7 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
   // 5. Back to Default Mode on the same page: the entry is there, the manual controls are not.
   const before = await counts();
   await click(screen.getByRole("button", { name: "Default" }));
-  await waitFor(() => expect(navigation().queryByRole("button", { name: "Accounts" })).toBeNull());
+  await waitFor(() => expect(badge()).toBeNull());
   expect(screen.getByText("ZXQ Cafe")).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
   expect(screen.queryByRole("button", { name: "New entry" })).toBeNull();
@@ -102,14 +108,14 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
 
   // 6. Both modes report the same balance.
   await click(screen.getByRole("button", { name: "Manual" }));
-  nav("Accounts");
+  await nav("Accounts & Assets");
   await screen.findByText("ZXQ Wallet");
   expect(screen.getAllByText("$87.50").length).toBeGreaterThan(0);
   expect(await counts()).toEqual(before);
 
   // Leaving Manual Mode from a manual-only page returns to the dashboard.
   await click(screen.getByRole("button", { name: "Default" }));
-  await waitFor(() => expect(navigation().getByRole("button", { name: "Dashboard" }).getAttribute("aria-current")).toBe("page"));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Overview" }).getAttribute("aria-current")).toBe("page"));
 });
 
 it("keeps unfinished input when switching modes, and can discard it", async () => {
@@ -117,7 +123,7 @@ it("keeps unfinished input when switching modes, and can discard it", async () =
   render(<App />);
   await screen.findByRole("navigation");
   await click(screen.getByRole("button", { name: "Manual" }));
-  nav("Accounts");
+  await nav("Accounts & Assets");
   await screen.findByRole("heading", { name: "Accounts" });
   fireEvent.change(screen.getByLabelText(/^Book currency/), { target: { value: "USD" } });
   await click(screen.getByRole("button", { name: "Add account" }));
@@ -130,7 +136,7 @@ it("keeps unfinished input when switching modes, and can discard it", async () =
   expect(await counts()).toEqual(before); // nothing was saved by switching
 
   await click(screen.getByRole("button", { name: "Manual" }));
-  nav("Accounts");
+  await nav("Accounts & Assets");
   form = await screen.findByRole("form", { name: "New account" });
   expect((within(form).getByLabelText("Name") as HTMLInputElement).value).toBe("ZXQ Half-typed");
   await click(screen.getByRole("button", { name: "Discard draft" }));

@@ -17,6 +17,10 @@ import { subscribeDeepLinks, type DeepLinkRoute } from "./services/deepLink";
 import { markWelcomeDone, shouldShowWelcome } from "./services/onboarding";
 import { Welcome } from "./pages/Welcome";
 import { BrandMark } from "./components/BrandMark";
+import { ModuleDisabled } from "./components/ModuleDisabled";
+import { ModuleIcon } from "./components/ModuleIcon";
+import { ModulesProvider, useModules } from "./hooks/useModules";
+import { moduleById, type ModuleDefinition, type ModuleId } from "@billie/shared-types";
 
 // Load secondary workspaces when opened, so startup does not parse the import/report/editor UI.
 const Categories = lazy(() => import("./pages/Categories").then((module) => ({ default: module.Categories })));
@@ -30,39 +34,36 @@ const Planning = lazy(() => import("./pages/Planning").then((module) => ({ defau
 const Lists = lazy(() => import("./pages/Lists").then((module) => ({ default: module.Lists })));
 const Manual = lazy(() => import("./pages/Manual").then((module) => ({ default: module.Manual })));
 const Receipt = lazy(() => import("./pages/Receipt").then((module) => ({ default: module.Receipt })));
+const FeatureLibrary = lazy(() => import("./pages/FeatureLibrary").then((module) => ({ default: module.FeatureLibrary })));
+const AddSync = lazy(() => import("./pages/AddSync").then((module) => ({ default: module.AddSync })));
+const Assistant = lazy(() => import("./pages/Assistant").then((module) => ({ default: module.Assistant })));
 
-export type Page = "dashboard" | "manual" | "transactions" | "accounts" | "categories" | "planning" | "lists" | "import" | "receipt" | "reports" | "data" | "settings";
+export type Page = "dashboard" | "manual" | "transactions" | "accounts" | "categories" | "planning" | "lists" | "import" | "receipt" | "reports" | "data" | "settings" | "features" | "addSync" | "assistant";
+
+/**
+ * Which Feature Library module each page belongs to (packages/shared-types/schema/module-catalog.json).
+ * A page opens when one of its modules is on; otherwise the "turned off" state shows instead (nothing is
+ * changed). Settings, Data and the Feature Library itself are system pages and always open.
+ */
+export const PAGE_MODULES: Record<Page, readonly ModuleId[]> = {
+  dashboard: ["transactions"], transactions: ["transactions"], manual: ["transactions"], import: ["transactions"], receipt: ["transactions"], addSync: ["transactions"],
+  assistant: ["ai_assistant"], accounts: ["accounts"], categories: ["categories"], lists: ["categories"], planning: ["budgets", "recurring"], reports: ["reports"],
+  data: [], settings: [], features: [],
+};
+
+/** Transactions › Overview / All Transactions / Add & Sync, and the pages under each. */
+const TRANSACTION_SECTIONS: Array<{ key: "overview" | "allTransactions" | "addSync"; page: Page; pages: Page[] }> = [
+  { key: "overview", page: "dashboard", pages: ["dashboard"] },
+  { key: "allTransactions", page: "transactions", pages: ["transactions"] },
+  { key: "addSync", page: "addSync", pages: ["addSync", "import", "receipt", "manual"] },
+];
+const ADD_SYNC_TABS: Array<{ key: "import" | "receipt" | "manual"; page: Page }> = [{ key: "import", page: "import" }, { key: "receipt", page: "receipt" }, { key: "manual", page: "manual" }];
 
 /** Pages that exist only in Manual Mode; opening one (e.g. from a typed command) turns Manual Mode on. */
 export const MANUAL_PAGES: ReadonlySet<Page> = new Set<Page>(["manual", "accounts", "planning", "lists"]);
 
 /** What to open on the Transactions page: a new entry of a kind, or the trash / review list. */
 export interface TransactionIntent { entryKind?: TransactionKind; view?: "trash" | "review" | "organize" }
-
-type NavItem = { page: Page; icon: string };
-
-// A receipt (not in the shared icon set yet).
-const RECEIPT_ICON = "M6 2h12v20l-3-2-3 2-3-2-3 2z M9 7h6 M9 11h6 M9 15h4";
-
-// Default Mode: the simple, automation-first navigation.
-const NAV: NavItem[] = [
-  { page: "dashboard", icon: icons.dashboard },
-  { page: "transactions", icon: icons.transactions },
-  { page: "categories", icon: icons.tag },
-  { page: "import", icon: icons.upload },
-  { page: "receipt", icon: RECEIPT_ICON },
-  { page: "reports", icon: icons.file },
-  { page: "data", icon: icons.data },
-  { page: "settings", icon: icons.settings },
-];
-
-// Manual Mode: the manual bookkeeping workspace grouped by task, then the automatic tools.
-const MANUAL_NAV: Array<{ group: "record" | "organize" | "plan" | "automatic"; items: NavItem[] }> = [
-  { group: "record", items: [{ page: "manual", icon: icons.dashboard }, { page: "transactions", icon: icons.transactions }, { page: "receipt", icon: RECEIPT_ICON }] },
-  { group: "organize", items: [{ page: "accounts", icon: icons.insights }, { page: "categories", icon: icons.tag }, { page: "lists", icon: icons.file }] },
-  { group: "plan", items: [{ page: "planning", icon: icons.forecast }, { page: "reports", icon: icons.file }] },
-  { group: "automatic", items: [{ page: "dashboard", icon: icons.dashboard }, { page: "import", icon: icons.upload }, { page: "data", icon: icons.data }, { page: "settings", icon: icons.settings }] },
-];
 
 function Icon({ d }: { d: string }) {
   return <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
@@ -84,6 +85,7 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   const { m } = useI18n();
   const { account } = useAccount();
   const { mode, manual, setMode } = useMode();
+  const modules = useModules();
   const [page, setPage] = useState<Page>(initialPage);
   const [transactionIntent, setTransactionIntent] = useState<{ key: number; intent: TransactionIntent } | null>(null);
   // A part of a page to bring into view after navigating (e.g. the sync panel on the Data page).
@@ -94,9 +96,26 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
     setFocus(part);
     setTransactionFilter(filter ? { key: Date.now(), filter } : null);
     setTransactionIntent(intent ? { key: Date.now(), intent } : null);
-    if (MANUAL_PAGES.has(next) || intent) setMode("manual");
+    // A hidden module's page does not switch Manual Mode on (it shows "turned off" instead).
+    if ((MANUAL_PAGES.has(next) || intent) && pageOpen(next)) setMode("manual");
     setPage(next);
   };
+  const pageOpen = (target: Page) => PAGE_MODULES[target].length === 0 || PAGE_MODULES[target].some((id) => modules.enabled(id));
+  // The module whose page this is, when every module that shows it is off.
+  const blocked: ModuleDefinition | null = pageOpen(page) ? null : moduleById(PAGE_MODULES[page][0]) ?? null;
+  const openModule = (module: ModuleDefinition) => {
+    const target = module.destination.app as Page | null;
+    if (target) go(target, module.id === "recurring" ? "schedules" : null);
+  };
+  // Budgets and Recurring & Bills both live on the Planning page; the highlighted one follows the section opened.
+  const moduleActive = (module: ModuleDefinition) => {
+    if (!PAGE_MODULES[page].includes(module.id)) return false;
+    if (page !== "planning") return true;
+    const both = modules.enabled("budgets") && modules.enabled("recurring");
+    return !both || (module.id === "recurring") === (focus === "schedules");
+  };
+  const settingsActive = page === "settings" || page === "data" || page === "features";
+  const section = PAGE_MODULES[page][0] === "transactions" && !blocked ? TRANSACTION_SECTIONS.find((item) => item.pages.includes(page)) ?? null : null;
   // Manual opens the manual workspace; Default stays on the page when it exists in Default Mode.
   const switchMode = (next: Mode) => {
     if (next === mode) return;
@@ -118,14 +137,17 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
     if (initialRoute) open(initialRoute);
     return subscribeDeepLinks(open);
   }, []); // the initial route is applied once, on mount
-  const navLabel = (target: Page) => (target === "manual" ? m.ledger.manual.nav : target === "receipt" ? m.receipt.nav : target === "accounts" || target === "planning" || target === "lists" ? m.ledger.nav[target] : m.nav[target]);
-  const navButton = (item: NavItem) => (
-    <li key={item.page}>
-      <button type="button" className={page === item.page ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? navLabel(item.page) : undefined} aria-current={page === item.page ? "page" : undefined} onClick={() => go(item.page)}>
-        <Icon d={item.icon} /><span>{navLabel(item.page)}</span>
-      </button>
-    </li>
-  );
+  const moduleButton = (module: ModuleDefinition) => {
+    const label = m.modules.names[module.id];
+    const active = moduleActive(module) && !settingsActive;
+    return (
+      <li key={module.id}>
+        <button type="button" className={active ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? label : undefined} aria-current={active ? "page" : undefined} data-module={module.id} onClick={() => openModule(module)}>
+          <ModuleIcon name={module.icon} /><span>{label}</span>
+        </button>
+      </li>
+    );
+  };
   const [collapsed, setCollapsed] = useState(savedSidebarCollapsed);
   const toggleSidebar = () => setCollapsed((was) => { saveSidebarCollapsed(!was); return !was; });
   return (
@@ -137,17 +159,17 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
             <Icon d={icons.collapse} />
           </button>
         </div>
-        {manual ? (
-          <>
-            <p className="bw-mode-badge"><Icon d={icons.transactions} /><span>{m.ledger.mode.manualOn}</span></p>
-            {MANUAL_NAV.map(({ group, items }) => (
-              <div key={group} className="bw-nav-group">
-                <p className="bw-nav-group-label" id={`nav-group-${group}`}>{m.ledger.mode.groups[group]}</p>
-                <ul aria-labelledby={`nav-group-${group}`}>{items.map(navButton)}</ul>
-              </div>
-            ))}
-          </>
-        ) : <ul>{NAV.map(navButton)}</ul>}
+        {manual && <p className="bw-mode-badge" id="manual-mode-badge"><Icon d={icons.transactions} /><span>{m.ledger.mode.manualOn}</span></p>}
+        {/* Feature Library navigation: enabled modules, then Settings (always). The same in both modes. */}
+        <ul id="module-nav">{modules.enabledList.map(moduleButton)}</ul>
+        <span className="bw-nav-divider" role="separator" />
+        <ul>
+          <li>
+            <button type="button" className={settingsActive ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? m.modules.nav.settings : undefined} aria-current={settingsActive ? "page" : undefined} onClick={() => go("settings")}>
+              <Icon d={icons.settings} /><span>{m.modules.nav.settings}</span>
+            </button>
+          </li>
+        </ul>
         <div className="bw-nav-bottom">
           <p className="bw-nav-note"><Icon d={icons.lock} /><span>{m.nav.note}</span></p>
           {account && <p className="bw-nav-user"><strong>{account.nickname || account.email}</strong>{account.nickname && <small>{account.email}</small>}</p>}
@@ -160,18 +182,50 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
         <ConnectionStatus />
         <SyncStatus />
         <Suspense fallback={<div className="bw-boot" role="status">{m.boot.opening}</div>}>
+        {section && (
+          <div className="bw-section-tabs" id="transactions-tabs">
+            <div className="bw-tabs" role="group" aria-label={m.modules.nav.sections}>
+              {TRANSACTION_SECTIONS.map((item) => (
+                <button key={item.key} type="button" className={section.key === item.key ? "bw-tab is-active" : "bw-tab"} aria-current={section.key === item.key ? "page" : undefined} onClick={() => go(item.page)}>{m.modules.sections[item.key]}</button>
+              ))}
+            </div>
+            {section.key === "addSync" && (
+              <div className="bw-subtabs" role="group" aria-label={m.modules.sections.addSync}>
+                {ADD_SYNC_TABS.map((item) => (
+                  <button key={item.key} type="button" className={page === item.page ? "bw-subtab is-active" : "bw-subtab"} aria-current={page === item.page ? "page" : undefined} onClick={() => go(item.page)}>{m.modules.sections[item.key]}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {!blocked && PAGE_MODULES[page][0] === "categories" && (
+          <div className="bw-section-tabs" id="module-tabs">
+            <div className="bw-tabs" role="group" aria-label={m.modules.names.categories}>
+              {(["categories", "lists"] as const).map((target) => (
+                <button key={target} type="button" className={page === target ? "bw-tab is-active" : "bw-tab"} aria-current={page === target ? "page" : undefined} onClick={() => go(target)}>{target === "categories" ? m.nav.categories : m.ledger.nav.lists}</button>
+              ))}
+            </div>
+          </div>
+        )}
+        {blocked ? <ModuleDisabled module={blocked} openLibrary={() => go("features")} /> : (
+        <>
         {page === "dashboard" && <Dashboard go={go} />}
         {page === "manual" && <Manual go={go} />}
         {page === "transactions" && <Transactions key={`${transactionFilter?.key ?? 0}-${transactionIntent?.key ?? 0}`} preset={transactionFilter?.filter} intent={transactionIntent?.intent} />}
         {page === "accounts" && <Accounts />}
         {page === "categories" && <Categories key={focus ?? ""} focus={focus} />}
-        {page === "planning" && <Planning />}
+        {page === "planning" && <Planning key={focus ?? ""} focus={focus} />}
         {page === "lists" && <Lists />}
         {page === "import" && <Import onReceipt={() => go("receipt")} />}
         {page === "receipt" && <Receipt />}
         {page === "reports" && <Reports />}
         {page === "data" && <Data focus={focus} />}
-        {page === "settings" && <Settings />}
+        {page === "settings" && <Settings openLibrary={() => go("features")} openData={() => go("data")} />}
+        {page === "features" && <FeatureLibrary open={openModule} />}
+        {page === "addSync" && <AddSync openImport={() => go("import")} openReceipt={() => go("receipt")} openEntry={() => go("transactions", null, undefined, { entryKind: "expense" })} openManual={() => go("manual")} />}
+        {page === "assistant" && <Assistant />}
+        </>
+        )}
         </Suspense>
         <footer className="bw-footer">{m.footer}</footer>
       </main>
@@ -232,7 +286,7 @@ function Gate() {
   if (status === "loading") return <div className="bw-boot">{m.boot.opening}</div>;
   if (status === "signedOut") return <SignedOut />;
   if (!keys || keys.identity !== identity) return <div className="bw-boot">{m.boot.opening}</div>;
-  return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><ModeProvider><Home /></ModeProvider></FinanceProvider>;
+  return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><ModulesProvider key={keys.owner} ownerKey={keys.owner}><ModeProvider><Home /></ModeProvider></ModulesProvider></FinanceProvider>;
 }
 
 export default function App() {

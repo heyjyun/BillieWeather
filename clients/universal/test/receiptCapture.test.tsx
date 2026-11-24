@@ -6,7 +6,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { OcrLine, OcrResult } from "@billie/finance-core";
 import initSqlJs from "sql.js";
-import { migrate } from "./helpers";
+import { migrate, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { FinanceStore } from "../src/services/store";
 import { registerOcrEngine } from "../src/services/ocrEngine";
@@ -62,7 +62,7 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); registerOcrEngine(null); });
 
 const click = async (element: HTMLElement) => act(async () => { fireEvent.click(element); });
-const nav = (name: string) => fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name }));
+const nav = (name: string) => openInShell(name);
 
 /** Engine-style observations: the label and the amount of one printed row come as two lines (Apple Vision does). */
 const line = (text: string, x: number, y: number, confidence: number | null = 0.95): OcrLine => ({ text, x, y, width: text.length * 10, height: 20, confidence, words: [] });
@@ -109,7 +109,7 @@ const entries = async (driver: Awaited<ReturnType<typeof seed>>["driver"]) =>
 async function openReceipts() {
   render(<App />);
   await screen.findByRole("navigation");
-  nav("Receipts");
+  await nav("Receipts");
   await screen.findByRole("heading", { name: "Capture a receipt" });
 }
 
@@ -293,7 +293,7 @@ describe("deep links", () => {
     expect(screen.getByLabelText("Upload receipt")).toBeTruthy();
     expect(window.location.hash).toBe(""); // consumed, so it can be opened again
     // A link that arrives while the app is open.
-    nav("Dashboard");
+    await nav("Dashboard");
     await waitFor(() => expect(screen.queryByRole("heading", { name: "Capture a receipt" })).toBeNull());
     await act(async () => { window.location.hash = "#/capture/receipt"; window.dispatchEvent(new HashChangeEvent("hashchange")); });
     expect(await screen.findByRole("heading", { name: "Capture a receipt" })).toBeTruthy();
@@ -310,7 +310,7 @@ describe("deep links", () => {
     await seed();
     render(<App />);
     await screen.findByRole("navigation");
-    nav("Import");
+    await nav("Import");
     await click(await screen.findByRole("button", { name: "Scan or upload a receipt" }));
     expect(await screen.findByRole("heading", { name: "Capture a receipt" })).toBeTruthy();
   });

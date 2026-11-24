@@ -157,6 +157,7 @@ ko:
         unarchived: "계좌 %{name}을(를) 복원했습니다."
         deleted: "계좌 %{name}을(를) 삭제했습니다."
         in_use: "%{name}에는 거래나 명세서가 있어 삭제할 수 없습니다. 대신 보관해 숨길 수 있습니다."
+        in_use_receipts: "%{name}에는 연결된 영수증이 있어 삭제할 수 없습니다. 대신 보관해 숨길 수 있으며 영수증은 그대로 남습니다."
         adjusted: "%{name}의 잔액을 %{amount} 조정했습니다."
       entries:
         eyebrow: 직접 기록

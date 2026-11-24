@@ -49,6 +49,7 @@ ko:
       deleted:
         one: "카테고리 ‘%{name}’을(를) 삭제했습니다. 거래 %{count}건이 미분류가 되었습니다."
         other: "카테고리 ‘%{name}’을(를) 삭제했습니다. 거래 %{count}건이 미분류가 되었습니다."
+      ai_undo: "이번 AI 분류 되돌리기"
       ai_done:
         one: AI가 가맹점 %{sent}곳을 확인하고 거래 %{count}건을 분류했습니다.
         other: AI가 가맹점 %{sent}곳을 확인하고 거래 %{count}건을 분류했습니다.

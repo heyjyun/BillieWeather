@@ -6,7 +6,7 @@ import { findFileInput } from "./uiHelpers";
 // The account API is mocked and a fake server answers the read-only website-data download.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { fixtureBytes, migrate } from "./helpers";
+import { fixtureBytes, migrate, openInShell, enableAllModulesByDefault } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { unzipStored } from "@billie/reporting";
 import { REPORT_FIELDS } from "../src/services/localReport";
@@ -57,9 +57,9 @@ function upload(input: HTMLInputElement, name: string, bytes: Uint8Array) {
   fireEvent.change(input, { target: { files: [file] } });
 }
 
-const nav = (label: string) => fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: label }));
+const nav = (label: string) => openInShell(label);
 
-beforeEach(() => { localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
+beforeEach(() => { enableAllModulesByDefault(); localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
 afterEach(cleanup);
 
 it("signs in, works with local data, switches language, and signs out", async () => {
@@ -105,7 +105,7 @@ it("signs in, works with local data, switches language, and signs out", async ()
   await waitFor(() => expect(api.calls).toContainEqual(["updateAccount", { locale: "en" }]));
   expect(sessionStorage.getItem("billie.token")).toBe("tok");
 
-  nav("Import");
+  await nav("Import");
   const input = await findFileInput();
   await act(async () => upload(input, "basic-amount.csv", fixtureBytes("basic-amount.csv")));
   // Reading a file crosses real async boundaries (hashing, decoding); let React apply the result.
@@ -120,16 +120,16 @@ it("signs in, works with local data, switches language, and signs out", async ()
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
   await screen.findByText(/basic-amount\.csv: This statement has already been imported|basic-amount\.csv: .*already/i);
 
-  nav("Dashboard");
+  await nav("Dashboard");
   await screen.findByText("Monthly cash flow");
   expect(screen.getByText("$6,000.00")).toBeTruthy(); // 2 payrolls from the local file + 1,000 from the website
 
-  nav("Transactions");
+  await nav("All Transactions");
   const select = await screen.findByLabelText("Category for AMAZON WEB SERVICES AWS.AMAZON.CO");
   await act(async () => fireEvent.change(select, { target: { value: "Business" } }));
   await screen.findByText(/"amazon services" will be Business from now on/);
 
-  nav("Reports");
+  await nav("Reports");
   const exportCsv = await screen.findByRole("button", { name: "Export CSV" });
   await act(async () => fireEvent.click(exportCsv));
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Export Excel" })));
@@ -138,15 +138,15 @@ it("signs in, works with local data, switches language, and signs out", async ()
   expect(unzipStored(saved[1].bytes).has("xl/worksheets/sheet3.xml")).toBe(true);
 
   // Switch to Simplified Chinese: the whole UI follows and the choice is saved to the account.
-  nav("Settings");
+  await nav("Settings");
   expect(await screen.findByText("jyun@example.com", { selector: "dd" })).toBeTruthy();
   await act(async () => fireEvent.change(screen.getByLabelText("Language"), { target: { value: "zh-CN" } }));
   await waitFor(() => expect(api.calls).toContainEqual(["updateAccount", { locale: "zh-CN" }]));
   expect(await screen.findByRole("heading", { name: "设置与隐私" })).toBeTruthy();
-  expect(within(screen.getByRole("navigation")).getByRole("button", { name: "财务总览" })).toBeTruthy();
+  expect(within(screen.getByRole("navigation")).getByRole("button", { name: "交易" })).toBeTruthy(); // the sidebar lists modules (Feature Library)
 
   // Excel follows the language too.
-  nav("报表");
+  await nav("报表");
   await act(async () => fireEvent.click(await screen.findByRole("button", { name: "导出 Excel" })));
   await waitFor(() => expect(saved.length).toBe(3));
   const workbook = new TextDecoder().decode(unzipStored(saved[2].bytes).get("xl/workbook.xml")!);
@@ -154,13 +154,13 @@ it("signs in, works with local data, switches language, and signs out", async ()
 
   // Delete local financial data (account untouched).
   // Manage data one statement at a time (no "delete everything" button anywhere).
-  nav("数据管理");
+  await nav("数据管理");
   const row = (await screen.findAllByText("basic-amount.csv"))[0].closest("li")! as HTMLElement;
   fireEvent.click(within(row).getByRole("button", { name: "从本机移除" }));
   expect(within(row).getByText(/只存在于这台设备上/)).toBeTruthy();
   await act(async () => fireEvent.click(within(row).getByRole("button", { name: "移除" })));
   await screen.findByText("已从本机移除「basic-amount.csv」。");
-  nav("设置");
+  await nav("设置");
 
   // Sign out → back to the sign-in screen, token gone.
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "退出登录" })));

@@ -70,6 +70,8 @@ module Finance
       result = AiCategorizer.new(user: current_user, consent: params[:consent] == "1").call
       notice = I18n.t("billie.categories.ai_done", count: result.updated, sent: result.sent)
       notice += " " + I18n.t("billie.categories.ai_remaining", count: result.remaining) if result.remaining.positive?
+      # The run is one audited batch; the page offers to undo it right away (operation log has it too).
+      flash[:ai_batch_id] = result.batch_id if result.batch_id
       redirect_to finance_categories_path(name: params[:name].presence), notice: notice
     rescue AiCategorizer::Error => error
       load_page

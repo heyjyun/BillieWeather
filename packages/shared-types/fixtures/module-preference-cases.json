@@ -1,0 +1,33 @@
+{
+  "$comment": "Replayed by clients/universal/test/modules.test.ts and test/models/finance/module_catalog_test.rb. 'enabled' is the expected list of enabled module ids, in catalog order.",
+  "cases": [
+    { "name": "new person on the website: defaults only", "surface": "web", "preferences": null,
+      "enabled": ["transactions", "ai_assistant"] },
+    { "name": "new person in the app: defaults only", "surface": "app", "preferences": { "format": 1, "modules": {} },
+      "enabled": ["transactions", "ai_assistant"] },
+    { "name": "optional modules turned on", "surface": "web",
+      "preferences": { "format": 1, "modules": { "budgets": { "enabled": true, "changedAt": "2026-11-23T10:00:00Z" }, "accounts": { "enabled": true, "changedAt": "2026-11-23T10:00:01Z" } } },
+      "enabled": ["transactions", "ai_assistant", "accounts", "budgets"] },
+    { "name": "a core module turned off", "surface": "app",
+      "preferences": { "format": 1, "modules": { "ai_assistant": { "enabled": false, "changedAt": "2026-11-23T10:00:00Z" } } },
+      "enabled": ["transactions"] },
+    { "name": "coming-soon modules never turn on, whatever was stored", "surface": "web",
+      "preferences": { "format": 1, "modules": { "goals": { "enabled": true, "changedAt": "x" }, "household": { "enabled": true, "changedAt": "x" }, "ledgers": { "enabled": true, "changedAt": "x" }, "multi_currency": { "enabled": true, "changedAt": "x" } } },
+      "enabled": ["transactions", "ai_assistant"] },
+    { "name": "forecast is available on the website", "surface": "web",
+      "preferences": { "format": 1, "modules": { "forecast": { "enabled": true, "changedAt": "2026-11-23T10:00:00Z" } } },
+      "enabled": ["transactions", "ai_assistant", "forecast"] },
+    { "name": "forecast is coming soon in the app", "surface": "app",
+      "preferences": { "format": 1, "modules": { "forecast": { "enabled": true, "changedAt": "2026-11-23T10:00:00Z" } } },
+      "enabled": ["transactions", "ai_assistant"] },
+    { "name": "unknown ids and malformed choices are ignored", "surface": "web",
+      "preferences": { "format": 1, "modules": { "crypto_wallets": { "enabled": true, "changedAt": "x" }, "budgets": { "enabled": "yes" }, "reports": "on", "BAD ID": { "enabled": true } } },
+      "enabled": ["transactions", "ai_assistant"] },
+    { "name": "an unknown format falls back to the defaults", "surface": "web",
+      "preferences": { "format": 99, "modules": { "budgets": { "enabled": true, "changedAt": "x" } } },
+      "enabled": ["transactions", "ai_assistant"] },
+    { "name": "settings is not a module and cannot be stored", "surface": "web",
+      "preferences": { "format": 1, "modules": { "settings": { "enabled": false, "changedAt": "x" } } },
+      "enabled": ["transactions", "ai_assistant"] }
+  ]
+}

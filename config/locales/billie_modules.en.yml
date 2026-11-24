@@ -1,0 +1,104 @@
+en:
+  billie:
+    modules:
+      nav:
+        main: Main navigation
+        modules: Your modules
+        settings: Settings
+        transactions_sections: Transactions sections
+      sections:
+        overview: Overview
+        all_transactions: All Transactions
+        add_sync: Add & Sync
+        statements: Statements
+        receipts: Receipts
+        reconciliation: Reconciliation
+        review_history: Review & history
+      names:
+        transactions: Transactions
+        ai_assistant: AI Assistant
+        ledgers: Ledgers
+        accounts: Accounts & Assets
+        categories: Categories & Tags
+        budgets: Budgets
+        reports: Reports
+        recurring: Recurring & Bills
+        goals: Goals & Planning
+        household: Household
+        forecast: Cash Flow Forecast
+        multi_currency: Multi-Currency
+      descriptions:
+        transactions: Your overview, every transaction, and adding or importing new ones.
+        ai_assistant: Insights, questions about your money, tax preparation and help organizing your records.
+        ledgers: Separate books for personal, business or shared spending.
+        accounts: Accounts, balances, assets, liabilities and net worth.
+        categories: Your category tree, merchants, projects and tags.
+        budgets: Monthly and yearly budgets with alerts.
+        reports: Reports by category, account and month, net worth and exports.
+        recurring: Repeating income, bills and subscriptions, recorded on schedule.
+        goals: Savings goals and plans for big expenses.
+        household: Share a ledger with family members.
+        forecast: Your expected balance over the next 30, 60 or 90 days.
+        multi_currency: Accounts in several currencies, converted for reports.
+      status:
+        available: Available
+        coming_soon: Coming soon
+        enabled: "On"
+        disabled: "Off"
+        core: Core
+      library:
+        nav: Feature Library
+        eyebrow: Settings
+        title: Feature Library
+        intro: Choose what appears in your sidebar. Start simple and add tools when you need them.
+        filters_label: Show modules
+        filters:
+          all: All
+          enabled: Enabled
+          available: Available
+          coming_soon: Coming soon
+        toggle_label: Show %{name} in the sidebar
+        turn_on: Turn on
+        turn_off: Turn off
+        open: Open
+        saved_on: "%{name} is on and in your sidebar."
+        saved_off: "%{name} is off. Its data is kept; turn it on again any time."
+        coming_soon_note: Not available yet. It can't be turned on until it works.
+        settings_note: Settings is always in the sidebar and can't be turned off.
+        data_note: Turning a module off only hides it. Nothing is deleted, and everything that runs automatically (such as recurring entries and receipt matching) keeps running.
+        sync_note: These choices are saved for your account on this website. The BillieWeather apps keep their own choices for now.
+        empty: No modules match this filter.
+        open_library: Open Feature Library
+        errors:
+          coming_soon: "%{name} is not available yet."
+          unknown: That module doesn't exist.
+      disabled:
+        eyebrow: Feature Library
+        title: "%{name} is turned off"
+        body: This module is hidden from your sidebar. Your data is still here and nothing was changed. Turn it on to use this page again.
+        turn_on: Turn on %{name}
+      add_sync:
+        title: Add & Sync
+        intro: Every way to bring transactions in. Everything goes through the same checks, so nothing is counted twice.
+        available: Available
+        coming_soon: Coming soon
+        connect:
+          title: Connect Financial Accounts
+          body: Read-only connections to banks and credit cards through an authorized financial-data provider, with your consent.
+          note: Not available yet. BillieWeather does not connect to banks today and never asks for your bank password.
+        import:
+          title: Import Statements
+          body: Upload bank and card statements. You review the rows before anything is saved, and files already imported are recognized.
+          formats: "On the website: CSV and text PDF statements. In the BillieWeather app: also Excel (XLSX), OFX/QFX and scanned PDFs."
+          open: Import statements
+        scan:
+          title: Scan & Capture
+          body: Receipt photos, screenshots and PDFs. Text is read on your device or from the PDF, then fields are recognized by rules.
+          rules: An exact, unambiguous match to an existing bank transaction is linked automatically. A receipt never creates a new transaction until you confirm it.
+          open: Open receipts
+        quick_add:
+          title: Quick Add
+          body: Type in an expense, income, transfer or refund by hand.
+          open: Add an entry
+          manual: Manual bookkeeping
+          later: Voice entry, natural-language entry and Siri Shortcuts are coming later.
