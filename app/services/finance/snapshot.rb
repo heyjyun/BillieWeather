@@ -2,10 +2,11 @@ require "bigdecimal"
 
 module Finance
   class Snapshot
-    def initialize(user:, start_date: nil, end_date: nil)
+    def initialize(user:, start_date: nil, end_date: nil, account_id: nil)
       @user = user
       @start_date = start_date
       @end_date = end_date
+      @account_id = account_id
       unless [start_date, end_date].compact.all? { |date| date.is_a?(Date) }
         raise ArgumentError, "Snapshot date bounds must be Date values."
       end
@@ -19,9 +20,11 @@ module Finance
       all_transactions = Transaction.live.where(user_id: @user.id)
       all_transactions = all_transactions.where("booked_on >= ?", @start_date) if @start_date
       all_transactions = all_transactions.where("booked_on <= ?", @end_date) if @end_date
+      all_transactions = all_transactions.where(bank_account_id: @account_id) if @account_id
       included = all_transactions.included
       profile = Profile.find_by(user_id: @user.id)
-      income = included.income_kind.sum(:amount)
+      income_by_category = included.income_kind.group(:category).sum(:amount)
+      income = income_by_category.values.sum(BigDecimal(0))
       # A refund (positive, kind refund) reduces spending; a card repayment or transfer never counts.
       expenses = -included.expense_kind.sum(:amount)
       monthly = included.order(:booked_on).pluck(:booked_on, :amount, :kind)
@@ -43,7 +46,7 @@ module Finance
         expenses: expenses,
         net: income - expenses,
         transaction_count: all_transactions.count,
-        statement_count: (@start_date || @end_date) ? all_transactions.distinct.count(:statement_id) : Statement.where(user_id: @user.id).count,
+        statement_count: (@start_date || @end_date || @account_id) ? all_transactions.distinct.count(:statement_id) : Statement.where(user_id: @user.id).count,
         uncategorized_count: included.where(category: "Uncategorized").count,
         tax_review_count: all_transactions.where(tax_review: true, excluded: false).count,
         excluded_count: all_transactions.where(excluded: true).count,
@@ -51,6 +54,8 @@ module Finance
         period_start: included.minimum(:booked_on),
         period_end: included.maximum(:booked_on),
         categories: categories,
+        income_categories: income_by_category.filter_map { |name, amount| {name: name, amount: amount} if amount.positive? }
+          .sort_by { |category| [-category[:amount], category[:name]] },
         monthly: monthly,
         recent_transactions: all_transactions.recent_first.limit(8).to_a
       }

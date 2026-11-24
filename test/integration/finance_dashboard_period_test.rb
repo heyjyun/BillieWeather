@@ -199,6 +199,47 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "account and date scope control all figures and drill-down without counting a card payment" do
+    checking = Finance::BankAccount.create!(user: @user, manual: true, name: "Synthetic checking", account_type: "checking", currency: "USD")
+    card = Finance::BankAccount.create!(user: @user, manual: true, name: "Synthetic card", account_type: "credit_card", currency: "USD")
+    ledger = Finance::Ledger.new(@user)
+    ledger.create(kind: "income", account_id: checking.id, booked_on: "2026-10-05", amount: "1000", category: "Income", description: "Scoped salary")
+    purchase = ledger.create(kind: "expense", account_id: card.id, booked_on: "2026-10-06", amount: "80", category: "Shopping", description: "Scoped purchase")
+    ledger.create(kind: "refund", account_id: card.id, booked_on: "2026-10-07", amount: "30", refund_of_id: purchase.id)
+    ledger.create(kind: "transfer", account_id: checking.id, to_account_id: card.id, booked_on: "2026-10-08", amount: "50")
+    dates = {preset: "custom", start_date: "2026-10-01", end_date: "2026-10-31"}
+
+    get finance_dashboard_path, params: dates.merge(account_id: card.id)
+    assert_response :success
+    assert_metric "income", "$0.00"
+    assert_metric "expenses", "$50.00"
+    assert_metric "net", "-$50.00"
+    assert_select "#dashboard-balance", count: 0
+    assert_select "#dashboard-month-2026-10 summary", text: /Oct 2026.*-\$50\.00/m
+    assert_select "#dashboard-income-mix", text: /No income/
+    assert_select "form#dashboard-period-filter input[name=account_id][value=?]", card.id.to_s
+    assert_not_includes response.body, "Scoped salary"
+
+    get finance_dashboard_path, params: dates.merge(account_id: checking.id)
+    assert_response :success
+    assert_metric "income", "$1,000.00"
+    assert_metric "expenses", "$0.00"
+    assert_select "#dashboard-income-mix a[href=?]", finance_transactions_path(kind: "income", category: "Income",
+      account_id: checking.id, start_date: dates[:start_date], end_date: dates[:end_date])
+  end
+
+  test "invalid account scopes never expose a broader overview" do
+    get finance_dashboard_path
+    owner = create(:user)
+    foreign = Finance::BankAccount.create!(user: owner, manual: true, name: "Private", account_type: "cash", currency: "USD")
+    [foreign.id, "missing", ["untrusted"]].each do |id|
+      get finance_dashboard_path, params: {account_id: id}
+      assert_response :unprocessable_entity
+      assert_select "#dashboard-income", count: 0
+      assert_select "#dashboard-period-error", text: "Choose an account from this ledger."
+    end
+  end
+
   private
 
   def transaction(booked_on, description, amount, category, excluded: false)

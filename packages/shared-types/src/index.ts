@@ -128,6 +128,7 @@ export interface Snapshot {
   periodStart: IsoDate | null;
   periodEnd: IsoDate | null;
   categories: CategoryTotal[];
+  incomeCategories: CategoryTotal[];
   monthly: MonthlyTotal[];
   recentTransactions: Transaction[];
   balanceCents: number | null;

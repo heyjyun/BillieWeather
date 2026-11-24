@@ -1,0 +1,60 @@
+<div class="bw-overview-analysis">
+  <section class="bw-panel bw-overview-trend" aria-labelledby="overview-trend-heading">
+    <div class="bw-panel-heading">
+      <h2 id="overview-trend-heading"><%= t("billie.overview.monthly") %></h2>
+      <div class="bw-legend"><span><i class="bw-legend-income"></i><%= t("billie.finance.ui.income") %></span><span><i class="bw-legend-expense"></i><%= t("billie.finance.ui.expenses") %></span></div>
+    </div>
+    <% monthly = @snapshot[:monthly].last(6) %>
+    <% maximum = [monthly.flat_map { |month| [month[:income].abs, month[:expenses].abs] }.max.to_d, 1].max %>
+    <% if monthly.empty? %><p class="bw-muted"><%= t("billie.overview.no_totals") %></p><% end %>
+    <div class="bw-overview-months">
+      <% monthly.each do |month| %>
+        <details class="bw-overview-month" id="dashboard-month-<%= month[:month].strftime("%Y-%m") %>">
+          <summary>
+            <span><%= finance_date(month[:month], "%b %Y") %></span>
+            <span class="bw-overview-bar-pair" aria-hidden="true">
+              <i class="bw-overview-bar-in" style="--portion:<%= (month[:income].abs / maximum * 100).round(2) %>%"></i>
+              <i class="bw-overview-bar-out" style="--portion:<%= (month[:expenses].abs / maximum * 100).round(2) %>%"></i>
+            </span>
+            <strong><%= finance_money(month[:net], @profile.currency) %></strong>
+          </summary>
+          <dl class="bw-overview-month-figures">
+            <div><dt><%= t("billie.finance.ui.income") %></dt><dd><%= finance_money(month[:income], @profile.currency) %></dd></div>
+            <div><dt><%= t("billie.finance.ui.expenses") %></dt><dd><%= finance_money(month[:expenses], @profile.currency) %></dd></div>
+          </dl>
+        </details>
+      <% end %>
+    </div>
+    <details class="bw-chart-details">
+      <summary><%= t("billie.finance.ui.view_monthly_figures") %></summary>
+      <% @snapshot[:monthly].each do |month| %>
+        <p><%= finance_date(month[:month], "%b %Y") %><%= t("billie.finance.ui.income_2") %> <%= finance_money(month[:income], @profile.currency) %> <%= t("billie.finance.ui.expenses_2") %> <%= finance_money(month[:expenses], @profile.currency) %></p>
+      <% end %>
+    </details>
+  </section>
+  <section class="bw-panel bw-mix-panel" id="dashboard-spending-mix" aria-labelledby="dashboard-mix-heading">
+    <div class="bw-panel-heading">
+      <h2 id="dashboard-mix-heading"><%= t("billie.overview.spending_by_category") %></h2>
+      <%= link_to t("billie.spending.all_categories"), finance_categories_path, class: "bw-text-link" %>
+    </div>
+    <%= render "finance/shared/spending_mix", mix: @spending_mix, currency: @profile.currency, empty_text: t("billie.finance.ui.no_categorized_expenses_yet"), link: true %>
+  </section>
+  <section class="bw-panel" id="dashboard-income-mix" aria-labelledby="dashboard-income-mix-heading">
+    <h2 id="dashboard-income-mix-heading"><%= t("billie.overview.income_by_category") %></h2>
+    <% if @snapshot[:income_categories].empty? %>
+      <p class="bw-muted"><%= t("billie.overview.no_income") %></p>
+    <% else %>
+      <ul class="bw-overview-income-list">
+        <% @snapshot[:income_categories].each do |category| %>
+          <% share = category[:amount] / @snapshot[:income] %>
+          <li>
+            <%= link_to finance_label(category[:name]), finance_transactions_path(category: category[:name], kind: "income",
+              account_id: @selected_account&.id, start_date: @period.start_date&.iso8601, end_date: @period.end_date&.iso8601), class: "bw-text-link" %>
+            <strong><%= finance_money(category[:amount], @profile.currency) %></strong>
+            <i class="bw-overview-bar-in" aria-hidden="true" style="--portion:<%= (share * 100).round(2) %>%"></i>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+</div>

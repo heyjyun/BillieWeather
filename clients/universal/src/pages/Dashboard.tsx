@@ -1,91 +1,168 @@
 import type { PeriodPreset } from "@billie/shared-types";
 import { buildSnapshot, localToday, resolvePeriod, spendingMix, spendingPalette } from "@billie/finance-core";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CategoryBadge, Empty, Money, PeriodPicker } from "../components/common";
 import { GreetingHeader } from "../components/Greeting";
+import { IncomeMix, MonthlyCashFlow } from "../components/OverviewCharts";
 import { NicknamePrompt } from "../components/NicknamePrompt";
 import { SpendingMixChart } from "../components/SpendingCharts";
 import { useFinance } from "../hooks/useFinance";
+import { useModules } from "../hooks/useModules";
 import { useI18n } from "../i18n";
+import { overviewCopy } from "../i18n/overview";
 import type { Page } from "../App";
 
 export function Dashboard({ go }: { go: (page: Page, part?: string | null) => void }) {
-  const { m, t } = useI18n();
-  const { transactions, statements, currency, ownerKey } = useFinance();
-  const [preset, setPreset] = useState<PeriodPreset>("all_time");
+  const { m, locale, t } = useI18n();
+  const finance = useFinance();
+  const { transactions, statements, currency, ownerKey, accounts, activeDatabaseId, databaseIds, databaseName, openStore, switchDatabase } = finance;
+  const { enabled } = useModules();
+  const [period, setPeriod] = useState(() => resolvePeriod("all_time", { today: localToday() }));
+  const [dates, setDates] = useState({ startDate: "", endDate: "" });
+  const [dateError, setDateError] = useState(false);
+  const [bookChoice, setBookChoice] = useState<{ id: string; account: string } | null>(null);
+  const [names, setNames] = useState<Record<string, string | null>>({});
+  const [switching, setSwitching] = useState(false);
+  const [bookError, setBookError] = useState(false);
   const cur = currency ?? "USD";
-  const period = useMemo(() => resolvePeriod(preset, { today: localToday() }), [preset]);
-  const snap = useMemo(() => buildSnapshot({ transactions, statements, period, currency: cur }), [transactions, statements, period, cur]);
+  const selected = bookChoice?.id === activeDatabaseId ? bookChoice.account : "";
+  const accountId = accounts.find((account) => String(account.id) === selected)?.id;
+  const scoped = useMemo(() => accountId === undefined ? transactions : transactions.filter((tx) => tx.accountId === accountId), [accountId, transactions]);
+  const snap = useMemo(() => buildSnapshot({ transactions: scoped, statements, period, currency: cur }), [scoped, statements, period, cur]);
   const palette = useMemo(() => spendingPalette(transactions), [transactions]);
-  const mix = useMemo(() => spendingMix(transactions, palette, period), [transactions, palette, period]);
+  const mix = useMemo(() => spendingMix(scoped, palette, period), [scoped, palette, period]);
   const d = m.dashboard;
+  const copy = overviewCopy[locale];
+  const databaseList = databaseIds.join("|");
 
-  if (transactions.length === 0) {
-    return (
-      <>
-        <GreetingHeader eyebrow={d.eyebrow} hasData={false} needsAttention={false} />
-        <NicknamePrompt ownerKey={ownerKey} />
-        <Empty title={d.emptyTitle} body={d.emptyBody} action={<button className="bw-button bw-button-dark" onClick={() => go("import")}>{d.emptyAction}</button>} />
-      </>
-    );
+  useEffect(() => {
+    let active = true;
+    const ids = databaseList.split("|").filter((id) => id && id !== activeDatabaseId);
+    void Promise.all(ids.map(async (id) => {
+      try { return [id, await (await openStore(id)).databaseName()] as const; }
+      catch { return [id, null] as const; }
+    })).then((entries) => { if (active) setNames(Object.fromEntries(entries)); });
+    return () => { active = false; };
+  }, [activeDatabaseId, databaseList, openStore]);
+
+  async function changeLedger(id: string) {
+    setSwitching(true);
+    setBookError(false);
+    try {
+      await switchDatabase(id);
+      setBookChoice(null);
+    } catch {
+      setBookError(true);
+    } finally {
+      setSwitching(false);
+    }
   }
-  const maxMonth = Math.max(1, ...snap.monthly.map((month) => Math.max(month.incomeCents, month.expensesCents)));
+
+  function changePeriod(preset: PeriodPreset) {
+    setPeriod(resolvePeriod(preset, { today: localToday() }));
+    setDateError(false);
+  }
+
+  function applyDates(event: FormEvent) {
+    event.preventDefault();
+    try {
+      setPeriod(resolvePeriod("custom", { today: localToday(), ...dates }));
+      setDateError(false);
+    } catch {
+      setDateError(true);
+    }
+  }
+
+  const reset = () => {
+    setBookChoice(null);
+    setDates({ startDate: "", endDate: "" });
+    changePeriod("all_time");
+  };
+  const hasData = transactions.length > 0;
+
   return (
     <>
-      <GreetingHeader eyebrow={d.eyebrow} hasData needsAttention={snap.uncategorizedCount > 0}><PeriodPicker value={preset} onChange={setPreset} /></GreetingHeader>
+      <GreetingHeader eyebrow={d.eyebrow} hasData={hasData} needsAttention={snap.uncategorizedCount > 0} />
       <NicknamePrompt ownerKey={ownerKey} />
-      <section className="bw-metrics" aria-label={d.totals}>
-        <article className="bw-metric"><span>{d.income}</span><strong><Money cents={snap.incomeCents} currency={cur} /></strong></article>
-        <article className="bw-metric"><span>{d.spending}</span><strong><Money cents={snap.expensesCents} currency={cur} /></strong></article>
-        <article className="bw-metric"><span>{d.net}</span><strong><Money cents={snap.netCents} currency={cur} signed /></strong></article>
-        <article className="bw-metric bw-metric-accent">
-          <span>{d.balance}</span>
-          <strong>{snap.balanceCents === null ? "—" : <Money cents={snap.balanceCents} currency={cur} />}</strong>
-          <small>{snap.balanceOn ? t("dashboard.asOf", { date: snap.balanceOn }) : d.noBalance}</small>
-        </article>
+      <section className="bw-panel bw-overview-filters" aria-label={m.periods.label}>
+        <div className="bw-overview-scope">
+          <label className="bw-field">
+            <span>{copy.ledger}</span>
+            <select value={activeDatabaseId} disabled={switching || databaseIds.length < 2} onChange={(event) => void changeLedger(event.target.value)}>
+              {databaseIds.map((id, index) => <option key={id} value={id}>
+                {(id === activeDatabaseId ? databaseName : names[id]) || copy.deviceLedger + (databaseIds.length > 1 ? " " + (index + 1) : "")}
+              </option>)}
+            </select>
+          </label>
+          <label className="bw-field">
+            <span>{copy.account}</span>
+            <select value={accountId === undefined ? "" : String(accountId)} disabled={switching} onChange={(event) =>
+              setBookChoice({ id: activeDatabaseId, account: event.target.value })}>
+              <option value="">{copy.allAccounts}</option>
+              {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
+            </select>
+          </label>
+        </div>
+        <PeriodPicker value={period.preset} onChange={changePeriod} />
+        <form className="bw-overview-dates" onSubmit={applyDates}>
+          <label className="bw-field"><span>{copy.startDate}</span><input type="date" value={dates.startDate} onChange={(event) => setDates({ ...dates, startDate: event.target.value })} /></label>
+          <label className="bw-field"><span>{copy.endDate}</span><input type="date" value={dates.endDate} onChange={(event) => setDates({ ...dates, endDate: event.target.value })} /></label>
+          <button className="bw-button bw-button-outline" type="submit">{copy.applyDates}</button>
+        </form>
+        {dateError && <p role="alert" className="bw-message bw-message-error">{copy.invalidDates}</p>}
+        {bookError && <p role="alert" className="bw-message bw-message-error">{copy.ledgerError}</p>}
       </section>
-      {snap.uncategorizedCount > 0 && <button className="bw-notice" onClick={() => go("transactions")}>{t("dashboard.needCategory", { count: snap.uncategorizedCount })}</button>}
-      <div className="bw-two-column">
-        <section className="bw-panel" aria-labelledby="monthly-heading">
-          <h2 id="monthly-heading">{d.monthly}</h2>
-          {snap.monthly.length === 0 ? <p className="bw-muted">{d.noCounted}</p> : (
-            <ul className="bw-bars">
-              {snap.monthly.map((month) => (
-                <li key={month.month}>
-                  <span className="bw-bar-label">{month.month.slice(0, 7)}</span>
-                  <span className="bw-bar-track" aria-hidden="true">
-                    <span className="bw-bar bw-bar-in" style={{ width: `${(month.incomeCents / maxMonth) * 100}%` }} />
-                    <span className="bw-bar bw-bar-out" style={{ width: `${(month.expensesCents / maxMonth) * 100}%` }} />
-                  </span>
-                  <Money cents={month.netCents} currency={cur} signed />
-                </li>
-              ))}
-            </ul>
+      {switching ? <p role="status">{copy.switching}</p> : !hasData ? (
+        <Empty title={d.emptyTitle} body={d.emptyBody} action={<button className="bw-button bw-button-dark" onClick={() => go("import")}>{d.emptyAction}</button>} />
+      ) : dateError ? null : (
+        <>
+          <section className={"bw-metrics bw-overview-metrics" + (accountId === undefined ? "" : " bw-overview-scoped")} aria-label={d.totals}>
+            <article className="bw-metric" id="dashboard-income"><span>{d.income}</span><strong><Money cents={snap.incomeCents} currency={cur} /></strong></article>
+            <article className="bw-metric" id="dashboard-expenses"><span>{d.spending}</span><strong><Money cents={snap.expensesCents} currency={cur} /></strong></article>
+            <article className="bw-metric bw-overview-net" id="dashboard-net"><span>{d.net}</span><strong><Money cents={snap.netCents} currency={cur} signed /></strong></article>
+            {accountId === undefined && <article className="bw-metric bw-metric-accent">
+              <span>{d.balance}</span>
+              <strong>{snap.balanceCents === null ? "—" : <Money cents={snap.balanceCents} currency={cur} />}</strong>
+              <small>{snap.balanceOn ? t("dashboard.asOf", { date: snap.balanceOn }) : d.noBalance}</small>
+            </article>}
+          </section>
+          {snap.transactionCount === 0 ? (
+            <Empty title={copy.noMatches} body="" action={<button className="bw-button bw-button-outline" onClick={reset}>{copy.reset}</button>} />
+          ) : (
+            <>
+              {snap.uncategorizedCount > 0 && <button className="bw-notice" onClick={() => go("transactions")}>{t("dashboard.needCategory", { count: snap.uncategorizedCount })}</button>}
+              <div className="bw-overview-analysis">
+                <MonthlyCashFlow months={snap.monthly} currency={cur} />
+                <section className="bw-panel" aria-labelledby="categories-heading" id="dashboard-spending-mix">
+                  <div className="bw-panel-top">
+                    <h2 id="categories-heading">{copy.spendingByCategory}</h2>
+                    {enabled("categories") && <button type="button" className="bw-link-button" onClick={() => go("categories")}>{m.spending.allCategories}</button>}
+                  </div>
+                  <SpendingMixChart mix={mix} currency={cur} emptyText={d.noSpending}
+                    onOpen={enabled("categories") ? (category) => go("categories", category) : undefined} />
+                </section>
+                <IncomeMix categories={snap.incomeCategories} currency={cur} />
+              </div>
+              <section className="bw-panel" aria-labelledby="recent-heading">
+                <div className="bw-panel-top">
+                  <h2 id="recent-heading">{d.recent}</h2>
+                  <button type="button" className="bw-link-button" onClick={() => go("transactions")}>{copy.viewAll}</button>
+                </div>
+                <ul className="bw-tx-list">
+                  {snap.recentTransactions.map((tx) => (
+                    <li key={tx.id} className={tx.excluded ? "is-excluded" : ""}>
+                      <div><strong>{tx.description}</strong><small>{tx.bookedOn}</small></div>
+                      <CategoryBadge category={tx.category} />
+                      <Money cents={tx.amountCents} currency={cur} signed />
+                    </li>
+                  ))}
+                </ul>
+                <p className="bw-caption">{t("dashboard.notCounted", { transfers: snap.transferCount, excluded: snap.excludedCount })}</p>
+              </section>
+            </>
           )}
-          <p className="bw-legend"><span className="bw-dot bw-dot-in" /> {d.legendIncome} <span className="bw-dot bw-dot-out" /> {d.legendSpending}</p>
-        </section>
-        <section className="bw-panel" aria-labelledby="categories-heading" id="dashboard-spending-mix">
-          <div className="bw-panel-top">
-            <h2 id="categories-heading">{m.spending.mixTitle}</h2>
-            <button type="button" className="bw-link-button" onClick={() => go("categories")}>{m.spending.allCategories}</button>
-          </div>
-          <p className="bw-caption bw-viz-intro">{m.spending.mixBody}</p>
-          <SpendingMixChart mix={mix} currency={cur} emptyText={d.noSpending} onOpen={(category) => go("categories", category)} />
-        </section>
-      </div>
-      <section className="bw-panel" aria-labelledby="recent-heading">
-        <h2 id="recent-heading">{d.recent}</h2>
-        <ul className="bw-tx-list">
-          {snap.recentTransactions.map((transaction) => (
-            <li key={transaction.id} className={transaction.excluded ? "is-excluded" : ""}>
-              <div><strong>{transaction.description}</strong><small>{transaction.bookedOn}</small></div>
-              <CategoryBadge category={transaction.category} />
-              <Money cents={transaction.amountCents} currency={cur} signed />
-            </li>
-          ))}
-        </ul>
-        <p className="bw-caption">{t("dashboard.notCounted", { transfers: snap.transferCount, excluded: snap.excludedCount })}</p>
-      </section>
+        </>
+      )}
     </>
   );
 }

@@ -35,8 +35,9 @@ module Finance
 
     # The split of spending in a date range: colored categories biggest first, then Other
     # (with the categories it holds), then Uncategorized.
-    def mix(start_date: nil, end_date: nil)
-      totals = totals_by_category(within(spending, start_date, end_date))
+    def mix(start_date: nil, end_date: nil, account_id: nil)
+      scope = account_id ? spending.where(bank_account_id: account_id) : spending
+      totals = totals_by_category(within(scope, start_date, end_date))
       total = totals.values.sum(BigDecimal(0))
       named = totals.select { |name, _amount| palette.include?(name) }
         .sort_by { |name, amount| [-amount, name] }

@@ -1,0 +1,84 @@
+en:
+  billie:
+    overview:
+      ledger: Ledger
+      web_ledger: BillieWeather Web
+      account: Account
+      all_accounts: All accounts
+      apply: Apply
+      invalid_account: Choose an account from this ledger.
+      monthly: Monthly cash flow
+      spending_by_category: Spending by category
+      income_by_category: Income by category
+      no_totals: No counted income or spending in this period.
+      no_income: No income in this period.
+zh-CN:
+  billie:
+    overview:
+      ledger: 账本
+      web_ledger: BillieWeather 网页账本
+      account: 账户
+      all_accounts: 所有账户
+      apply: 应用
+      invalid_account: 请选择此账本中的账户。
+      monthly: 每月现金流
+      spending_by_category: 按类别划分的支出
+      income_by_category: 按类别划分的收入
+      no_totals: 这一期间没有可计入的收入或支出。
+      no_income: 这一期间没有收入。
+zh-TW:
+  billie:
+    overview:
+      ledger: 帳本
+      web_ledger: BillieWeather 網頁帳本
+      account: 帳戶
+      all_accounts: 所有帳戶
+      apply: 套用
+      invalid_account: 請選擇此帳本中的帳戶。
+      monthly: 每月現金流
+      spending_by_category: 依類別劃分的支出
+      income_by_category: 依類別劃分的收入
+      no_totals: 這一期間沒有可計入的收入或支出。
+      no_income: 這一期間沒有收入。
+ja:
+  billie:
+    overview:
+      ledger: 帳簿
+      web_ledger: BillieWeather ウェブ帳簿
+      account: 口座
+      all_accounts: すべての口座
+      apply: 適用
+      invalid_account: この帳簿の口座を選択してください。
+      monthly: 月ごとのキャッシュフロー
+      spending_by_category: カテゴリ別支出
+      income_by_category: カテゴリ別収入
+      no_totals: この期間に集計できる収入や支出はありません。
+      no_income: この期間に収入はありません。
+ko:
+  billie:
+    overview:
+      ledger: 장부
+      web_ledger: BillieWeather 웹 장부
+      account: 계좌
+      all_accounts: 모든 계좌
+      apply: 적용
+      invalid_account: 이 장부에 있는 계좌를 선택하세요.
+      monthly: 월별 현금 흐름
+      spending_by_category: 카테고리별 지출
+      income_by_category: 카테고리별 수입
+      no_totals: 이 기간에 집계할 수입이나 지출이 없습니다.
+      no_income: 이 기간에 수입이 없습니다.
+es:
+  billie:
+    overview:
+      ledger: Libro
+      web_ledger: Libro web de BillieWeather
+      account: Cuenta
+      all_accounts: Todas las cuentas
+      apply: Aplicar
+      invalid_account: Elige una cuenta de este libro.
+      monthly: Flujo de efectivo mensual
+      spending_by_category: Gastos por categoría
+      income_by_category: Ingresos por categoría
+      no_totals: No hay ingresos ni gastos contabilizados en este periodo.
+      no_income: No hay ingresos en este periodo.

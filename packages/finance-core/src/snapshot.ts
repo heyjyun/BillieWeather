@@ -29,6 +29,7 @@ export function buildSnapshot(input: {
   let expensesCents = 0;
   const months = new Map<IsoDate, MonthlyTotal>();
   const categories = new Map<Category, number>();
+  const incomeCategories = new Map<Category, number>();
   for (const transaction of [...counted].sort((a, b) => (a.bookedOn < b.bookedOn ? -1 : a.bookedOn > b.bookedOn ? 1 : 0))) {
     const month = `${transaction.bookedOn.slice(0, 7)}-01`;
     const entry = months.get(month) ?? { month, incomeCents: 0, expensesCents: 0, netCents: 0 };
@@ -36,6 +37,7 @@ export function buildSnapshot(input: {
     if (kindOf(transaction) === "income") {
       incomeCents += transaction.amountCents;
       entry.incomeCents += transaction.amountCents;
+      incomeCategories.set(transaction.category, (incomeCategories.get(transaction.category) ?? 0) + transaction.amountCents);
     } else if (transaction.amountCents !== 0) {
       expensesCents -= transaction.amountCents;
       entry.expensesCents -= transaction.amountCents;
@@ -69,6 +71,9 @@ export function buildSnapshot(input: {
     periodStart: dates[0] ?? null,
     periodEnd: dates[dates.length - 1] ?? null,
     categories: categoryTotals,
+    incomeCategories: [...incomeCategories.entries()].filter(([, amountCents]) => amountCents > 0)
+      .map(([name, amountCents]) => ({ name, amountCents, share: incomeCents > 0 ? amountCents / incomeCents : null }))
+      .sort((a, b) => b.amountCents - a.amountCents || a.name.localeCompare(b.name)),
     monthly: [...months.values()],
     recentTransactions: [...all].sort(newestFirst).slice(0, 8),
     balanceCents: latestBalance?.closingBalanceCents ?? null,
