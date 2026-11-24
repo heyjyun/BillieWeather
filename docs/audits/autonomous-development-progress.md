@@ -46,7 +46,7 @@
 - 总览的公用样式移至 `public/billie-overview.css`，Rails 与 Universal 直接引用。复核 Chromium 桌面浅色与 390px 简中深色总览，金额一致、可键盘展开月份、无横向溢出及页面异常。
 - 主要文件包括 `app/services/finance/snapshot.rb`、`packages/finance-core/src/snapshot.ts`、`clients/universal/src/hooks/useFinance.tsx`、共享总览样式、账本切换测试和 Chromium OCR 回归。Phase 2–4 没有新增数据库迁移。专用 PostgreSQL 仍通过身份检查，无无效索引或未验证约束。新增 OCR 回归在浏览器断网后识别合成收据，并校验商家、USD 和精确总额 $10.25。
 - Apple Silicon macOS 的本地 Tauri debug 打包成功，Bundle ID 为 `com.billieweather.roadmap.phase4`。桌面自动化服务列不出应用窗口，原生收据、扫描 PDF 和最终 GUI 回归因此待复验。此 Mac 仅有 Xcode 命令行工具，缺少 iOS SDK 和 Android 工具链。Windows、Linux、Intel macOS 及移动端未构建、未验收。Chromium 验证覆盖 Rails Web 与浏览器中的本机 OCR。
-- 回退时撤销 Phase 4 提交。由于结构未变，无 Phase 4 数据库回滚。下一步仅在单独授权后进行发布准备。
+- Phase 4 本地里程碑为 `8015c9f`。回退时撤销该提交。由于结构未变，无 Phase 4 数据库回滚。下一步仅在单独授权后进行发布准备。
 
 ### 最终回归与发布条件
 
@@ -54,4 +54,4 @@
 - Universal 类型检查通过。Vitest 72 个测试文件全部通过，共 914 项、0 失败。其中共享财务域、报告、类型、命令和模块同步的单独验证为 18 个文件、372 项、0 失败。最终 Vitest 包含实际 Chromium 扫描件与收据 OCR，Apple Vision 实引擎文件的 12 项单独排除。它在早期 Phase 3 全量通过，本机随后出现系统调用阻塞。
 - macOS Rust 目标 19 项通过、0 失败。第 20 项真实 Apple Vision FFI 的独立复试在 25 秒终止，未计为通过。IPC 超时、取消和设备上回退均有自动化覆盖。原生回退在 WKWebView 的完整流程仍待验证。
 - 发布前需要复验 macOS 收据和扫描 PDF、核准的平台构建和签名，以及在经批准的隔离 Neon 环境验证迁移与回滚。核对 Render 实际数据库目标和迁移时机。先保留模块偏好及其历史，并在隔离环境验证开关回退，再决定是否启用跨设备同步。
-- 本轮使用专用 PostgreSQL、回环服务、独立应用标识和合成交易。原工作树和开发服务保留，未操作 Neon 生产库、真实财务记录或已安装的应用。提交只存在本地。发布状态保留为待验收。
+- 本轮使用专用 PostgreSQL、回环服务、独立应用标识和合成交易。原工作树和开发服务保留，未操作 Neon 生产库、真实财务记录或已安装的应用。已关闭本轮专用 Rails、identity-api 和 PostgreSQL，核对原 :3000 和 :8100 进程仍在原 PID。提交只存在本地。发布状态保留为待验收。
