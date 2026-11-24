@@ -47,6 +47,8 @@ ja:
         disabled: オフ
         core: 基本
       library:
+        stale: 別の端末でこの設定が変更されました。現在の設定を表示しています。ここで変更し直せます。
+        synced_note: モジュールの設定は BillieWeather にログインしている端末と同期されます。
         nav: 機能ライブラリ
         eyebrow: 設定
         title: 機能ライブラリ

@@ -677,19 +677,22 @@
         event.preventDefault();
         var button = form.querySelector(".bw-switch");
         var card = form.closest("[data-module]");
+        if (button.getAttribute("aria-busy") === "true") return;
         var input = form.querySelector("input[name=enabled]");
+        var revision = form.querySelector("input[name=expected_revision]");
         var token = document.querySelector('meta[name="csrf-token"]');
         button.setAttribute("aria-busy", "true");
         fetch(form.action, {
           method: "PATCH",
           headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded", "X-CSRF-Token": token ? token.content : "" },
-          body: new URLSearchParams({ enabled: input.value }).toString(),
+          body: new URLSearchParams({ enabled: input.value, expected_revision: revision.value }).toString(),
           credentials: "same-origin"
         }).then(function (response) {
-          return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+          return response.json().then(function (data) { return { ok: response.ok || response.status === 409, data: data }; });
         }).then(function (result) {
           button.removeAttribute("aria-busy");
           if (!result.ok) { if (status) status.textContent = result.data.message || ""; return; }
+          revision.value = String(result.data.revision);
           var on = result.data.enabled === true;
           card.dataset.enabled = on ? "true" : "false";
           card.classList.toggle("is-on", on);

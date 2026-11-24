@@ -35,6 +35,7 @@
             <%= form_with url: finance_feature_library_module_path(definition.id), method: :patch, class: "bw-library-toggle", data: {turbo: false, library_toggle: definition.id} do |form| %>
               <%= hidden_field_tag :filter, @filter, id: nil %>
               <%= hidden_field_tag :enabled, on ? "0" : "1", id: nil %>
+              <%= hidden_field_tag :expected_revision, module_revision(definition.id), id: nil %>
               <button type="submit" class="bw-switch" role="switch" aria-checked="<%= on %>" aria-labelledby="module-<%= definition.id %>-name" aria-describedby="module-<%= definition.id %>-desc" title="<%= t("billie.modules.library.toggle_label", name: name) %>">
                 <span class="bw-switch-track" aria-hidden="true"><span class="bw-switch-thumb"></span></span>
                 <span class="bw-switch-text" data-on="<%= t("billie.modules.status.enabled") %>" data-off="<%= t("billie.modules.status.disabled") %>"><%= t("billie.modules.status.#{on ? 'enabled' : 'disabled'}") %></span>
@@ -55,6 +56,6 @@
   <div class="bw-library-notes">
     <p class="bw-info-line"><%= finance_icon "settings", size: 18 %><span><%= t("billie.modules.library.settings_note") %></span></p>
     <p class="bw-info-line"><%= finance_icon "lock", size: 18 %><span><%= t("billie.modules.library.data_note") %></span></p>
-    <p class="bw-info-line"><%= finance_icon "laptop", size: 18 %><span><%= t("billie.modules.library.sync_note") %></span></p>
+    <p class="bw-info-line"><%= finance_icon "laptop", size: 18 %><span><%= t(Finance::ModulePreferenceSync.enabled? ? "billie.modules.library.synced_note" : "billie.modules.library.sync_note") %></span></p>
   </div>
 </section>

@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# Isolated development and test commands. No caller database or service configuration is inherited.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+umask 077
+port=35531
+role=billie_isolated
+pg_bin="${BILLIE_PG_BIN:-$(dirname "$(command -v pg_ctl)")}"
+export PATH="$pg_bin:$PATH"
+
+fail() { printf '%s\n' "$*" >&2; exit 1; }
+
+valid_root() {
+  [[ ! -L "$1" && -d "$1" ]] || return 1
+  local physical
+  physical="$(cd "$1" && pwd -P)"
+  [[ "$physical" =~ ^(/private)?/tmp/billie-roadmap\.[[:alnum:]]+$ && -O "$physical" ]]
+}
+
+local_psql() {
+  env -i PATH="$PATH" LC_ALL=C psql -X -w -v ON_ERROR_STOP=1 \
+    -h "$root/socket" -p "$port" -U "$role" "$@"
+}
+
+verify() {
+  local actual
+  actual="$(local_psql -d "$1" -At -c \
+    "select current_database() || '|' || current_setting('data_directory') || '|' || (inet_server_addr() is null)::text || '|' || current_setting('listen_addresses') || '|' || current_user")"
+  [[ "$actual" == "$1|$root/data|true||$role" ]] || fail "The database is outside this isolated cluster."
+}
+
+operation="${1:-}"
+case "$operation" in
+  init)
+    root="$(mktemp -d /tmp/billie-roadmap.XXXXXXXX)"
+    root="$(cd "$root" && pwd -P)"
+    valid_root "$root" || fail "Invalid isolated directory."
+    mkdir "$root/socket"
+    initdb -D "$root/data" --auth-local=trust --auth-host=reject --username="$role" >"$root/init.log"
+    {
+      printf "listen_addresses = ''\nport = %s\n" "$port"
+      printf "unix_socket_directories = '%s/socket'\n" "$root"
+    } >>"$root/data/postgresql.conf"
+    pg_ctl -D "$root/data" -l "$root/postgres.log" -w start >&2
+    verify postgres
+    local_psql -d postgres -c "CREATE DATABASE billie_isolated_development" >&2
+    local_psql -d postgres -c "CREATE DATABASE billie_isolated_test" >&2
+    verify billie_isolated_development
+    verify billie_isolated_test
+    printf '%s\n' "$root"
+    ;;
+  start|stop|verify|rails|test|test-db|identity)
+    root="${BILLIE_LOCAL_ROOT:-}"
+    valid_root "$root" || fail "BILLIE_LOCAL_ROOT must name a directory made by bin/billie-local init."
+    root="$(cd "$root" && pwd -P)"
+    shift
+    case "$operation" in
+      start) pg_ctl -D "$root/data" -l "$root/postgres.log" -w start; verify postgres; exit ;;
+      stop) verify postgres; exec pg_ctl -D "$root/data" -m fast -w stop ;;
+      verify) verify billie_isolated_development; verify billie_isolated_test; printf '%s\n' "Both local databases verified."; exit ;;
+    esac
+
+    rails_env=development
+    if [[ "$operation" == test || "$operation" == test-db ]]; then rails_env=test; fi
+    db="billie_isolated_$rails_env"
+    verify "$db"
+    # Specify both URLs so even the Neon direct-URL hook cannot change the target. Refuse local
+    # dotenv overrides too: they can carry other live integrations besides the two database URLs.
+    for f in .env .env.local ".env.$rails_env" ".env.$rails_env.local"; do
+      [[ ! -e "$f" && ! -L "$f" ]] || fail "Run this command from a worktree without live dotenv files."
+    done
+    url="postgresql:///$db?host=$root/socket&port=$port&user=$role"
+    isolated=(
+      "HOME=$HOME" "PATH=$PATH" "LANG=en_US.UTF-8" "USER=$(id -un)"
+      "DATABASE_URL=$url" "DATABASE_URL_UNPOOLED=$url"
+      "BILLIE_MODULE_SYNC=${BILLIE_MODULE_SYNC:-0}"
+      "MAIL_DELIVERY=memory" "SECRET_KEY_BASE_DUMMY=1"
+    )
+    if [[ "$operation" == identity ]]; then
+      python="${BILLIE_IDENTITY_PYTHON:-$PWD/services/identity-api/.venv/bin/python}"
+      source="$PWD/services/identity-api"
+      mkdir -p "$root/identity"
+      cd "$root/identity"
+      exec env -i "${isolated[@]}" "PYTHONPATH=$source" IDENTITY_ENV=development \
+        PUBLIC_URL=http://127.0.0.1:38531 MAIL_DELIVERY=outbox "MAIL_OUTBOX_DIR=$root/identity/outbox" "$python" "$@"
+    fi
+    if [[ "$operation" == test ]]; then
+      isolated+=(SKIP_JS_BUILD=1 SKIP_CSS_BUILD=1)
+      set -- test "$@"
+    fi
+    ruby_executable="$(mise which ruby)"
+    [[ -x "$ruby_executable" ]] || fail "The project Ruby runtime is unavailable."
+    exec env -i "${isolated[@]}" "PATH=$(dirname "$ruby_executable"):$PATH" "RAILS_ENV=$rails_env" "$ruby_executable" bin/rails "$@"
+    ;;
+  *) fail "Usage: bin/billie-local init|start|stop|verify|rails|test|test-db|identity [arguments]" ;;
+esac

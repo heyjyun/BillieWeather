@@ -68,7 +68,7 @@ module Finance
 
     # Stored choices for a person: {"budgets" => {"enabled" => true, "changedAt" => "..."}}.
     def choices_for(user)
-      ModulePreference.where(user_id: user.id).to_h { |row| [row.module_key, {"enabled" => row.enabled, "changedAt" => row.changed_at&.utc&.iso8601(3).to_s}] }
+      ModulePreference.where(user_id: user.id).to_h { |row| [row.module_key, {"enabled" => row.enabled, "changedAt" => row.changed_at&.utc&.iso8601(3).to_s, "revision" => row.revision}] }
     end
 
     # Same contract as normalizePreferences in modules.ts: bad data means "no choice", never an error.

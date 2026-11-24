@@ -47,6 +47,8 @@ es:
         disabled: Desactivado
         core: Básico
       library:
+        stale: Este ajuste cambió en otro dispositivo. Se muestra la opción actual. Puedes volver a cambiarla aquí.
+        synced_note: Las opciones de módulos se sincronizan con tus dispositivos que tienen la sesión iniciada en BillieWeather.
         nav: Biblioteca de funciones
         eyebrow: Ajustes
         title: Biblioteca de funciones

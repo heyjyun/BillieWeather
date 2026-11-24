@@ -61,7 +61,9 @@ class FinanceSmartCommandTest < ActionDispatch::IntegrationTest
     assert_includes body["builtInCategories"].find { |c| c["id"] == "Food & dining" }["names"], "食費・外食"
     refute_includes response.body, "UBER"
     refute_includes response.body, "Secret"
-    refute_includes response.body, "2000"
+    assert_equal %w[builtInCategories currency customCategories pages product tenant today], body.keys.sort
+    # The verified opaque scope is a hex identifier. Its digits may coincide with an amount.
+    refute_includes body.except("tenant").to_json, "2000"
     assert_includes response.headers["Cache-Control"], "no-store"
   end
 

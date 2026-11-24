@@ -266,7 +266,7 @@ function Home() {
 }
 
 function Gate() {
-  const { status, account } = useAccount();
+  const { status, account, getToken, offline } = useAccount();
   const { m } = useI18n();
   // Which account owns the databases this session may open (review P0-1). A new key remounts the
   // provider, so switching accounts never keeps another account's database open.
@@ -286,7 +286,7 @@ function Gate() {
   if (status === "loading") return <div className="bw-boot">{m.boot.opening}</div>;
   if (status === "signedOut") return <SignedOut />;
   if (!keys || keys.identity !== identity) return <div className="bw-boot">{m.boot.opening}</div>;
-  return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><ModulesProvider key={keys.owner} ownerKey={keys.owner}><ModeProvider><Home /></ModeProvider></ModulesProvider></FinanceProvider>;
+  return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><ModulesProvider key={keys.owner} ownerKey={keys.owner} accountId={ownerId} getToken={getToken} offline={offline}><ModeProvider><Home /></ModeProvider></ModulesProvider></FinanceProvider>;
 }
 
 export default function App() {

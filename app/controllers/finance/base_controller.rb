@@ -5,7 +5,7 @@ module Finance
     before_action :require_usage_region, unless: -> { controller_name == "settings" }
     before_action :load_finance_profile
     before_action :require_enabled_module
-    helper_method :finance_today, :manual_mode?, :module_enabled?, :enabled_modules, :current_module_id
+    helper_method :finance_today, :manual_mode?, :module_enabled?, :enabled_modules, :current_module_id, :module_revision
     after_action :prevent_financial_page_caching
     after_action :preserve_flash_for_turbo_reload
 
@@ -24,6 +24,8 @@ module Finance
     end
 
     def module_enabled?(id) = ModuleCatalog.enabled?(id, module_choices)
+
+    def module_revision(id) = module_choices.dig(id, "revision") || 0
 
     def enabled_modules = ModuleCatalog.enabled_modules(module_choices)
 

@@ -10,6 +10,7 @@
       <% if @disabled_module.available? %>
         <%= form_with url: finance_feature_library_module_path(@disabled_module.id), method: :patch, data: {turbo: false} do %>
           <%= hidden_field_tag :enabled, "1", id: nil %>
+          <%= hidden_field_tag :expected_revision, module_revision(@disabled_module.id), id: nil %>
           <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
           <button type="submit" class="bw-button bw-button-dark"><%= t("billie.modules.disabled.turn_on", name: name) %></button>
         <% end %>

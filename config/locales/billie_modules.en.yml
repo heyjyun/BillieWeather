@@ -47,6 +47,8 @@ en:
         disabled: "Off"
         core: Core
       library:
+        stale: This choice changed on another device. The current choice is shown. You can change it again here.
+        synced_note: Module choices are shared with your signed-in BillieWeather devices.
         nav: Feature Library
         eyebrow: Settings
         title: Feature Library

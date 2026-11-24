@@ -38,7 +38,8 @@ describe("data isolation", () => {
   const RECEIPT = join(ROOT, "src/services/receiptUpload.ts");
   // registration.ts: creating an account in the app, with the separate identity service (services/identity-api).
   const REGISTRATION = join(ROOT, "src/services/registration.ts");
-  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI, RECEIPT, REGISTRATION];
+  const MODULE_PREFS = join(ROOT, "src/services/modulePreferenceApi.ts");
+  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI, RECEIPT, REGISTRATION, MODULE_PREFS];
 
   it.each([
     ["fetch(", /\bfetch\s*\(/],
@@ -66,6 +67,17 @@ describe("data isolation", () => {
     expect(source).not.toMatch(/@billie\/|\bFinanceStore\b|\bTransaction\b|\bStatement\b|amountCents|merchantKey/);
     // Only the account endpoints are ever called.
     expect([...source.matchAll(/request<[^>]*>\("([^"]+)"/g)].map((match) => match[1]).sort()).toEqual(["/account", "/account", "/session", "/session"]);
+  });
+
+  it("visibility sync has one account-scoped endpoint and never reads financial data", () => {
+    const source = readFileSync(MODULE_PREFS, "utf8");
+    expect(source.match(/^import .*$/gm)).toEqual([
+      'import { AccountError, API_ORIGIN, networkFailure } from "./account";',
+      'import type { ModuleMutation, ModuleSnapshot, MutationResult } from "./moduleSync";',
+    ]);
+    expect(source).toContain('API_ORIGIN + "/api/client/v1/module_preferences"');
+    expect([...source.matchAll(/request<[^>]*>\("(\w+)"/g)].map((match) => match[1])).toEqual(["GET", "PUT"]);
+    expect(source).not.toMatch(/FinanceStore|Transaction|Statement|amountCents|merchantKey|\/finance\//);
   });
 
   it("the cloud-data service sends no request body, sees no financial code, and deletes only one statement", () => {

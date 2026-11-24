@@ -13,7 +13,7 @@ const FILTERS: Filter[] = ["all", "enabled", "available", "comingSoon"];
 
 export function FeatureLibrary({ open }: { open: (module: ModuleDefinition) => void }) {
   const { m, t } = useI18n();
-  const { enabled, setEnabled } = useModules();
+  const { enabled, setEnabled, status: syncStatus, conflicts, resolve, serverEnabled } = useModules();
   const [filter, setFilter] = useState<Filter>("all");
   const [status, setStatus] = useState("");
   const x = m.modules;
@@ -35,6 +35,25 @@ export function FeatureLibrary({ open }: { open: (module: ModuleDefinition) => v
     <>
       <PageHeading eyebrow={x.library.eyebrow} title={x.library.title} />
       <p className="bw-muted">{x.library.intro}</p>
+      {Object.entries(conflicts).map(([id, conflict]) => {
+        const definition = MODULES.find((module) => module.id === id);
+        if (!definition) return null;
+        const label = x.names[definition.id];
+        return (
+          <section key={id} className="bw-panel bw-module-conflict" aria-label={label}>
+            <h2>{label}</h2>
+            <p>{conflict.kind === "local_only" ? x.sync.localOnly : x.sync.different}</p>
+            <dl>
+              <div><dt>{x.sync.device}</dt><dd>{conflict.enabled ? x.status.on : x.status.off}</dd></div>
+              <div><dt>{x.sync.account}</dt><dd>{serverEnabled(id) ? x.status.on : x.status.off}</dd></div>
+            </dl>
+            <div className="bw-db-actions">
+              <button type="button" className="bw-button bw-button-dark" onClick={() => resolve(id, true)}>{x.sync.keepLocal}</button>
+              <button type="button" className="bw-button bw-button-outline" onClick={() => resolve(id, false)}>{x.sync.useAccount}</button>
+            </div>
+          </section>
+        );
+      })}
       <div className="bw-library-toolbar">
         <div className="bw-segmented" role="group" aria-label={x.library.filtersLabel}>
           {FILTERS.map((key) => (
@@ -60,7 +79,7 @@ export function FeatureLibrary({ open }: { open: (module: ModuleDefinition) => v
                       <span className={`bw-badge ${available ? "bw-badge-available" : "bw-badge-soon"}`}>{available ? x.status.available : x.status.comingSoon}</span>
                     </span>
                   </div>
-                  <button type="button" className="bw-switch" role="switch" aria-checked={on} disabled={!available}
+                  <button type="button" className="bw-switch" role="switch" aria-checked={on} disabled={!available || !!conflicts[module.id]}
                     aria-labelledby={`module-${module.id}-name`} aria-describedby={`module-${module.id}-desc`} title={t("modules.library.toggleLabel", { name })}
                     onClick={() => toggle(module)}>
                     <span className="bw-switch-track" aria-hidden="true"><span className="bw-switch-thumb" /></span>
@@ -80,7 +99,7 @@ export function FeatureLibrary({ open }: { open: (module: ModuleDefinition) => v
       <div className="bw-library-notes">
         <p className="bw-caption">{x.library.settingsNote}</p>
         <p className="bw-caption">{x.library.dataNote}</p>
-        <p className="bw-caption">{x.library.syncNote}</p>
+        <p className="bw-caption" role="status">{syncStatus === "local" ? x.library.syncNote : x.sync[syncStatus]}</p>
       </div>
     </>
   );

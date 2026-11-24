@@ -47,6 +47,8 @@ zh-CN:
         disabled: 已关闭
         core: 核心
       library:
+        stale: 其他设备已更改此偏好。这里显示最新选择，你可以再次更改。
+        synced_note: 模块选择将在已登录的 BillieWeather 设备之间同步。
         nav: 功能库
         eyebrow: 设置
         title: 功能库

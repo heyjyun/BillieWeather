@@ -26,6 +26,8 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
 
   allow do
     origins "*"
-    resource "/api/*", headers: :any
+    resource "/api/*", headers: :any, if: ->(env) {
+      !env.fetch("PATH_INFO", "").match?(%r{\A/api/client/v1/module_preferences(?:[./]|\z)})
+    }
   end
 end

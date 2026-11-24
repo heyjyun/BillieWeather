@@ -118,22 +118,29 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     } else {
       // No language saved on the account yet: keep the one chosen on this screen.
       adopt({ ...result.account, locale });
-      updateAccount(result.token, { locale }).then(adopt).catch(() => undefined);
+      updateAccount(result.token, { locale }).then((next) => {
+        if (token.current === result.token && tokenOwner.current === identityOf(next)) adopt(next);
+      }).catch(() => undefined);
     }
     setStatus("signedIn");
   }, [adopt, locale]);
 
   const signOut = useCallback(async () => {
-    if (token.current) await signOutRemote(token.current);
+    const saved = token.current;
     await forget();
+    if (saved) await signOutRemote(saved);
   }, [forget]);
 
   const savePreferences = useCallback(async (preferences: AccountPreferences) => {
-    if (!token.current || tokenOwner.current !== identityOf(account)) throw new AccountError("unauthorized");
+    const saved = token.current;
+    if (!saved || tokenOwner.current !== identityOf(account)) throw new AccountError("unauthorized");
     try {
-      adopt(await updateAccount(token.current, preferences));
+      const next = await updateAccount(saved, preferences);
+      if (token.current !== saved || tokenOwner.current !== identityOf(next)) return;
+      adopt(next);
       setOffline(false);
     } catch (error) {
+      if (token.current !== saved) return;
       if (error instanceof AccountError && error.code === "unauthorized") await forget();
       if (error instanceof AccountError && isNetworkFailure(error.code)) setOffline(error.code === "offline" ? "offline" : "unreachable");
       throw error;

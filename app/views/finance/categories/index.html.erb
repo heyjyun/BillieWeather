@@ -18,12 +18,12 @@
         <label class="bw-checkbox-inline"><%= form.check_box :consent, {required: true}, "1", "0" %><span><%= t("billie.categories.ai_consent", service: ai_service_name, max: Finance::AiCategorizer::MAX_ITEMS) %></span></label>
         <%= form.submit t("billie.categories.ai_button"), class: "bw-button bw-button-dark bw-full-width", disabled: @uncategorized_count.zero? %>
       <% end %>
-      <% if flash[:ai_batch_id].present? %>
-        <%= button_to t("billie.categories.ai_undo"), finance_undo_activity_path(flash[:ai_batch_id]), class: "bw-button bw-button-small bw-button-outline", form: {id: "ai-undo", data: {turbo: false, confirm: t("billie.ledger.activity.undo_confirm")}} %>
-      <% end %>
       <p class="bw-caption"><%= t("billie.categories.ai_note") %></p>
     <% else %>
       <p class="bw-caption bw-ai-unavailable"><%= t("billie.categories.ai_unavailable") %></p>
+    <% end %>
+    <% if flash[:ai_batch_id].present? %>
+      <%= button_to t("billie.categories.ai_undo"), finance_undo_activity_path(flash[:ai_batch_id]), class: "bw-button bw-button-small bw-button-outline", form: {id: "ai-undo", data: {turbo: false, confirm: t("billie.ledger.activity.undo_confirm")}} %>
     <% end %>
   </section>
 

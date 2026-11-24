@@ -180,6 +180,7 @@ Rails.application.routes.draw do
   scope "api/client/v1", module: "client_api/v1", as: "client_api_v1", defaults: {format: :json} do
     resource :session, only: [:create, :destroy]
     resource :account, only: [:show, :update]
+    resource :module_preferences, only: [:show, :update], controller: :module_preferences
     # Read-only copy of the person's web financial data for the app's local database.
     # One-way metadata from the app about its local databases (names, sizes, counts; never financial
     # content). The website only displays it. There is deliberately no route that commands a device.

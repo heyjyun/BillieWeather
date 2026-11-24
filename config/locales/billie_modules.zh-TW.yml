@@ -47,6 +47,8 @@ zh-TW:
         disabled: 已關閉
         core: 核心
       library:
+        stale: 其他裝置已更改此偏好。這裡顯示最新選擇，你可以再次更改。
+        synced_note: 模組選擇會在已登入的 BillieWeather 裝置之間同步。
         nav: 功能庫
         eyebrow: 設定
         title: 功能庫

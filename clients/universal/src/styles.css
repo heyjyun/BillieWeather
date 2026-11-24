@@ -651,3 +651,20 @@ button.bw-subtab.is-active { color: var(--accent); border-color: var(--bw-color-
   .bw-nav #module-nav { flex: 1 1 auto; width: auto; grid-auto-columns: minmax(72px, 1fr); }
   .bw-nav #module-nav + .bw-nav-divider + ul { flex: 0 0 auto; width: auto; grid-auto-columns: minmax(72px, 1fr); }
 }
+
+.bw-module-conflict {
+  margin-block: 1rem;
+}
+.bw-module-conflict dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 2rem;
+}
+.bw-module-conflict dl > div {
+  display: flex;
+  gap: .5rem;
+}
+.bw-module-conflict dd {
+  margin: 0;
+  font-weight: 600;
+}

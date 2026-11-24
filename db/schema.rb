@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_23_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -355,6 +355,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_000100) do
     t.index ["uuid"], name: "index_finance_merchants_on_uuid", unique: true
   end
 
+  create_table "finance_module_preference_mutations", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.uuid "mutation_id", null: false
+    t.uuid "device_id", null: false
+    t.string "request_hash", limit: 64, null: false
+    t.jsonb "result", null: false
+    t.datetime "created_at", null: false
+    t.index ["user_id", "mutation_id"], name: "index_finance_module_preference_mutations_on_user_and_id", unique: true
+  end
+
   create_table "finance_module_preferences", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "module_key", limit: 40, null: false
@@ -363,6 +373,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_000100) do
     t.datetime "changed_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "updated_by_device_id"
     t.index ["user_id", "module_key"], name: "index_finance_module_preferences_one_per_module", unique: true
     t.check_constraint "module_key::text ~ '^[a-z_]{2,40}$'::text", name: "finance_module_preferences_key_format"
     t.check_constraint "revision > 0", name: "finance_module_preferences_revision"
@@ -964,6 +975,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_23_000100) do
   add_foreign_key "finance_local_devices", "users", on_delete: :cascade
   add_foreign_key "finance_merchant_rules", "users"
   add_foreign_key "finance_merchants", "users"
+  add_foreign_key "finance_module_preference_mutations", "users", on_delete: :cascade
   add_foreign_key "finance_module_preferences", "users", on_delete: :cascade
   add_foreign_key "finance_organize_runs", "users"
   add_foreign_key "finance_profiles", "users"
