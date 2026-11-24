@@ -13,6 +13,9 @@ import { useDraftState, useMode } from "../hooks/useMode";
 import { randomId } from "../services/ids";
 import type { TransactionIntent } from "../App";
 
+/** Rows added to the page at a time: every row has its own category menu, so thousands at once are slow to open. */
+const PAGE_ROWS = 200;
+
 type View = "list" | "trash" | "review" | "organize";
 const KIND_FILTERS: TransactionKind[] = ["expense", "income", "refund", "transfer", "card_payment", "adjustment"];
 
@@ -64,6 +67,11 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
       && (!manual || accountFilter === "all" || transaction.accountId === accountFilter)
       && (!manual || !d || [transaction.merchant, transaction.project, ...(transaction.tags ?? [])].some((value) => (value ?? "").toLowerCase().includes(d))));
   }, [transactions, query, filter, commandFilter, kind, accountFilter, dimension, manual]);
+  // Back to the first rows whenever the filters change (not after editing a row).
+  const filterKey = JSON.stringify([query, filter, kind, accountFilter, dimension, commandFilter, manual]);
+  const [shown, setShown] = useState({ key: filterKey, rows: PAGE_ROWS });
+  const rowLimit = shown.key === filterKey ? shown.rows : PAGE_ROWS;
+  const hidden = visible.length - rowLimit;
   const commandSummary = commandFilter && [
     commandFilter.query ? `“${commandFilter.query}”` : null,
     commandFilter.period ? formatRange(commandFilter.period) : null,
@@ -239,7 +247,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
         {t("transactions.count", { shown: visible.length, total: transactions.length })}
       </p>
       <ul className="bw-tx-table">
-        {visible.map((transaction) => (
+        {visible.slice(0, rowLimit).map((transaction) => (
           <li key={transaction.id} className={transaction.excluded ? "is-excluded" : ""}>
             {manual && <input type="checkbox" aria-label={t("ledger.list.select", { description: transaction.description })} checked={selected.has(transaction.id)} onChange={() => toggle(transaction.id)} />}
             <div className="bw-tx-main">
@@ -268,6 +276,13 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
           </li>
         ))}
       </ul>
+      {hidden > 0 && (
+        <div className="bw-actions">
+          <button type="button" className="bw-button bw-button-outline" onClick={() => setShown({ key: filterKey, rows: rowLimit + PAGE_ROWS })}>
+            {t("transactions.showMore", { count: Math.min(PAGE_ROWS, hidden) })}
+          </button>
+        </div>
+      )}
     </>
   );
 }

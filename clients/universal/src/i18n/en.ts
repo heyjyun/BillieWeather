@@ -49,7 +49,7 @@ export const en = {
   transactions: {
     eyebrow: "EVERY LINE ITEM", title: "Transactions", emptyTitle: "Nothing here yet", emptyBody: "Imported transactions appear here.",
     search: "Search", searchPlaceholder: "Merchant or description", category: "Category", allCategories: "All categories",
-    remember: "Remember my category changes for this merchant", count: "{shown} of {total} transactions",
+    remember: "Remember my category changes for this merchant", count: "{shown} of {total} transactions", showMore: "Show {count} more",
     categoryFor: "Category for {description}", taxReview: "tax review", excluded: "excluded", include: "Include", exclude: "Exclude",
     saved: "Saved.", savedRule: "Saved. \"{merchant}\" will be {category} from now on.", savedRuleOthers: "Saved. \"{merchant}\" will be {category} from now on; {count} other transaction(s) updated.",
     included: "Counted in totals again.", excludedStatus: "Excluded from totals.",

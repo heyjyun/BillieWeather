@@ -48,7 +48,7 @@ export const zhCN: Messages = {
   transactions: {
     eyebrow: "每一笔明细", title: "交易记录", emptyTitle: "暂无交易", emptyBody: "导入的交易会显示在这里。",
     search: "搜索", searchPlaceholder: "商户或描述", category: "分类", allCategories: "全部分类",
-    remember: "记住我对该商户的分类修改", count: "显示 {shown} / 共 {total} 笔交易",
+    remember: "记住我对该商户的分类修改", count: "显示 {shown} / 共 {total} 笔交易", showMore: "再显示 {count} 笔",
     categoryFor: "{description} 的分类", taxReview: "待报税复核", excluded: "已排除", include: "计入", exclude: "排除",
     saved: "已保存。", savedRule: "已保存。以后「{merchant}」都会归为{category}。", savedRuleOthers: "已保存。以后「{merchant}」都会归为{category}；另有 {count} 笔交易已更新。",
     included: "已重新计入统计。", excludedStatus: "已从统计中排除。",

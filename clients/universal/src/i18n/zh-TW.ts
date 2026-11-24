@@ -48,7 +48,7 @@ export const zhTW: Messages = {
   transactions: {
     eyebrow: "每一筆明細", title: "交易紀錄", emptyTitle: "暫無交易", emptyBody: "匯入的交易會顯示在這裡。",
     search: "搜尋", searchPlaceholder: "商家或描述", category: "分類", allCategories: "全部分類",
-    remember: "記住我對此商家的分類修改", count: "顯示 {shown} / 共 {total} 筆交易",
+    remember: "記住我對此商家的分類修改", count: "顯示 {shown} / 共 {total} 筆交易", showMore: "再顯示 {count} 筆",
     categoryFor: "{description} 的分類", taxReview: "待報稅複核", excluded: "已排除", include: "計入", exclude: "排除",
     saved: "已儲存。", savedRule: "已儲存。以後「{merchant}」都會歸為{category}。", savedRuleOthers: "已儲存。以後「{merchant}」都會歸為{category}；另有 {count} 筆交易已更新。",
     included: "已重新計入統計。", excludedStatus: "已從統計中排除。",

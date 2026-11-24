@@ -48,7 +48,7 @@ export const es: Messages = {
   transactions: {
     eyebrow: "CADA PARTIDA", title: "Movimientos", emptyTitle: "Aún no hay nada", emptyBody: "Los movimientos importados aparecen aquí.",
     search: "Buscar", searchPlaceholder: "Comercio o descripción", category: "Categoría", allCategories: "Todas las categorías",
-    remember: "Recordar mis cambios de categoría para este comercio", count: "{shown} de {total} movimientos",
+    remember: "Recordar mis cambios de categoría para este comercio", count: "{shown} de {total} movimientos", showMore: "Mostrar {count} más",
     categoryFor: "Categoría de {description}", taxReview: "revisión fiscal", excluded: "excluido", include: "Incluir", exclude: "Excluir",
     saved: "Guardado.", savedRule: "Guardado. \"{merchant}\" será {category} a partir de ahora.", savedRuleOthers: "Guardado. \"{merchant}\" será {category} a partir de ahora; se actualizaron {count} movimiento(s) más.",
     included: "Vuelve a contar en los totales.", excludedStatus: "Excluido de los totales.",

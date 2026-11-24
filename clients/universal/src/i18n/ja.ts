@@ -48,7 +48,7 @@ export const ja: Messages = {
   transactions: {
     eyebrow: "すべての明細", title: "取引", emptyTitle: "まだ何もありません", emptyBody: "取り込んだ取引がここに表示されます。",
     search: "検索", searchPlaceholder: "店名または内容", category: "カテゴリ", allCategories: "すべてのカテゴリ",
-    remember: "このお店のカテゴリ変更を記憶する", count: "{total} 件中 {shown} 件を表示",
+    remember: "このお店のカテゴリ変更を記憶する", count: "{total} 件中 {shown} 件を表示", showMore: "さらに {count} 件を表示",
     categoryFor: "{description} のカテゴリ", taxReview: "税務確認", excluded: "除外", include: "含める", exclude: "除外する",
     saved: "保存しました。", savedRule: "保存しました。今後「{merchant}」は{category}になります。", savedRuleOthers: "保存しました。今後「{merchant}」は{category}になります。ほかに {count} 件の取引を更新しました。",
     included: "再び集計に含めました。", excludedStatus: "集計から除外しました。",

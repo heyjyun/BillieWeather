@@ -48,7 +48,7 @@ export const ko: Messages = {
   transactions: {
     eyebrow: "모든 항목", title: "거래 내역", emptyTitle: "아직 아무것도 없습니다", emptyBody: "가져온 거래가 여기에 표시됩니다.",
     search: "검색", searchPlaceholder: "가맹점 또는 내용", category: "분류", allCategories: "모든 분류",
-    remember: "이 가맹점의 분류 변경 기억하기", count: "전체 {total}건 중 {shown}건",
+    remember: "이 가맹점의 분류 변경 기억하기", count: "전체 {total}건 중 {shown}건", showMore: "{count}건 더 보기",
     categoryFor: "{description}의 분류", taxReview: "세무 검토", excluded: "제외됨", include: "포함", exclude: "제외",
     saved: "저장했습니다.", savedRule: "저장했습니다. 앞으로 \"{merchant}\"은(는) {category}(으)로 분류됩니다.", savedRuleOthers: "저장했습니다. 앞으로 \"{merchant}\"은(는) {category}(으)로 분류됩니다. 다른 거래 {count}건도 업데이트했습니다.",
     included: "다시 합계에 포함했습니다.", excludedStatus: "합계에서 제외했습니다.",
