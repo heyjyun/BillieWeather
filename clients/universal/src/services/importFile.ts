@@ -48,8 +48,8 @@ async function checkCurrency(store: FinanceStore, currency: Currency) {
 
 /** Imports a CSV or a clear PDF, or returns a PDF draft that needs review. */
 export async function importFile(store: FinanceStore, bytes: Uint8Array, filename: string, currency: Currency, region: string | null = null, regionMeta?: RegionMeta): Promise<ImportedFile | PdfReview> {
-  await checkCurrency(store, currency);
   if (isPdf(bytes, filename)) return importPdf(store, bytes, filename, currency, region, regionMeta?.source ?? null);
+  await checkCurrency(store, currency);
   const text = decodeStatementBytes(bytes, filename);
   const parsed = parseStatement(text, { filename, currency, categorizer: await store.categorizer(region) });
   const sha256 = await sha256Hex(bytes);
@@ -59,6 +59,21 @@ export async function importFile(store: FinanceStore, bytes: Uint8Array, filenam
 }
 
 async function importPdf(store: FinanceStore, bytes: Uint8Array, filename: string, currency: Currency, region: string | null, regionSource: RegionSource | null): Promise<ImportedFile | PdfReview> {
+  const review = await previewPdfFile(store, bytes, filename, currency, region, regionSource);
+  if (!review.draft.autoImportable) return review;
+  try {
+    return await importPdfReview(store, review, review.draft.rows.map((row) => ({ ...row, include: true })));
+  } catch (error) {
+    // Keep the draft for review if the import itself is refused (for example, a duplicate).
+    if (error instanceof ImportError) return review;
+    throw error;
+  }
+}
+
+/** Same extraction and duplicate checks as the established importer, with no write. */
+export async function previewPdfFile(store: FinanceStore, bytes: Uint8Array, filename: string, currency: Currency,
+  region: string | null = null, regionSource: RegionSource | null = null): Promise<PdfReview> {
+  await checkCurrency(store, currency);
   const base = filename.replace(/\\/g, "/").split("/").pop() ?? filename;
   checkPdfBytes(bytes, base);
   const sha256 = await sha256Hex(bytes);
@@ -69,15 +84,7 @@ async function importPdf(store: FinanceStore, bytes: Uint8Array, filename: strin
   const pages = await readPdfPages(bytes);
   const draft = markPdfDuplicates(extractPdfStatement(pages, { currency }), await store.dedupeIndex());
   const detection = detectRegion({ text: pages.join("\n"), currency });
-  const review: PdfReview = { kind: "review", filename: base, currency, sha256, draft, region, regionSource: region ? regionSource ?? "user" : null, detection };
-  if (!draft.autoImportable) return review;
-  try {
-    return await importPdfReview(store, review, draft.rows.map((row) => ({ ...row, include: true })));
-  } catch (error) {
-    // Keep the draft for review if the import itself is refused (for example, a duplicate).
-    if (error instanceof ImportError) return review;
-    throw error;
-  }
+  return { kind: "review", filename: base, currency, sha256, draft, region, regionSource: region ? regionSource ?? "user" : null, detection };
 }
 
 /** Imports the rows a person reviewed (included rows only). */

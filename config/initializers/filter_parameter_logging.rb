@@ -10,7 +10,7 @@ Rails.application.config.filter_parameters += [
   # Transaction search words ("pharmacy", a payee name) describe someone's spending.
   :search,
   # Typed commands (Finance::CommandsController): the text, merchant phrases and amounts in a plan.
-  :plan, :confirmation,
+  :plan, :confirmation, :quick_entry,
   # Feature Library preference changes are private account information.
   :mutation_id, :expected_revision, "changes.module_key", "changes.enabled",
   # Manual ledger fields and automation payloads contain private financial context too.

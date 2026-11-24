@@ -26,3 +26,15 @@
 - Universal 类型检查与打包通过，Vitest 907 通过、12 跳过、0 失败。旧工作流测试原先按全页金额查找，在新增收入分类后同时命中两处，已精确定位原有收入总计行为。回滚只需撤销本阶段界面和查询提交。
 
 - Rails 全量回归 `818 tests, 31021 assertions, 0 failures, 0 errors, 2 skips`。下一阶段为 Phase 3 Add & Sync。
+
+## Phase 3 · Add & Sync
+
+- Connect Financial Accounts 保留 Coming Soon。Universal 桌面原生文件选择器只读取明确选中的文件，先验大小。CSV、TSV、XLSX、OFX、QFX、文本 PDF 与扫描件沿用已有解析、字段映射、去重和错误报告。文本 PDF 也须先检查并确认。Web 继续支持原有的 CSV 和 PDF 导入流程，并拒绝超限或参数格式错误的上传。
+- 收据在设备上识别，并显示商家、总额、币种、日期及可能的重复项。原有政策保持生效。只有精确、唯一、有效的匹配可自动关联，新建交易须明确确认。Universal 在 Apple Vision 无响应时有 20 秒等候上限，且可取消。无可用原生识别页时可改用随包附带的本机 Tesseract。
+- Quick Add 支持英、简中、繁中的常见收支短句，预填既有交易表单，手动检查后才写入。桌面快捷键 Control 或 Command + Shift + E 打开空白支出表单。语音和银行连接没有启用。Web 支持网页手动入口，键盘快捷键在 Universal。
+- 主要文件包括 `app/services/finance/quick_entry.rb`、Rails entries、receipts、statements 控制器及 Add & Sync 视图、Universal `DocumentPicker.tsx`、`documentInput.ts`、AddSync、Import、Receipt、`ocr/nativeEngines.ts`、`quickEntry.ts` 和本地化文件。无数据库迁移。
+- 原生 macOS 隔离包用系统选择器打开合成 CSV。两行先显示在预览，点击确认后导入 2 笔、跳过 0 笔、失败 0 笔。验收 SQLite 含 2 个账单、8 笔交易，完整性检查为 `ok`，外键违规 0。真实收据 GUI 触发 Apple Vision 后，进程采样显示操作系统 TextRecognition 的 Neural Engine 队列等待。指定 CPU 阶段后仍能复现。后续桌面工具无法取得窗口，收据与扫描 PDF 的最终原生 GUI 验收仍待补验。
+- Chromium Web 验证了简中 `支出 12.34 合成午餐` 预填方向、金额和描述，以及银行连接没有操作入口。服务端集成测试验证预览零写入、显式保存写入一笔。见 [简体中文预览](evidence/2026-11-24-autonomous/phase3-web-quick-zh.png)。
+- Rails 全量通过，820 项、31,048 断言、0 失败、0 错误、2 跳过，行覆盖率 92.43%。Universal 在加入 OCR 超时回退前已回归 909 通过、12 跳过。新入口让三处旧测试读到了不再适用的行为，已更新为验证明确 PDF 确认、可用文字入口和仅限动态文件授权。最终 OCR 和平台验证见下文。
+- 回退时撤销 Phase 3 提交即可恢复原入口和导入流程。保留已经确认的交易和导入历史。
+- OCR 回退、收据工作流和实际 Chromium 离线引擎的组合用例全部通过，28 项、0 失败。合成扫描 PDF 的 8 行金额和日期均匹配，7 行可直接确认，1 行待复核，没有错误金额被标为可直接确认。真实 Apple Vision 运行在本机陷入操作系统调用的等待，未将该次运行计为通过。继续独立的 Phase 4 加固与本地回归。

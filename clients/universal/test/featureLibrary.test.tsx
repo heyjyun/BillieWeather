@@ -140,7 +140,8 @@ it("Add & Sync lists four capabilities, marks bank connections as Coming soon an
   const card = connect.closest("li")!;
   expect(within(card).getByText("Coming soon")).toBeTruthy();
   expect(within(card).queryAllByRole("button")).toHaveLength(0); // no fake connection flow
-  expect(screen.getByText(/Voice entry, natural-language entry and Siri Shortcuts are coming later/)).toBeTruthy();
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: "Review typed entry" }).disabled).toBe(false);
+  expect(screen.getByRole("textbox", { name: "Describe an expense or income" })).toBeTruthy();
   await click(screen.getAllByRole("button", { name: "Import statements" })[1]);
   await waitFor(() => expect(screen.getAllByRole("button", { name: "Import statements" })[0].getAttribute("aria-current")).toBe("page"));
 });

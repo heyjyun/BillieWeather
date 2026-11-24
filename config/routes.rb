@@ -73,6 +73,7 @@ Rails.application.routes.draw do
       end
     end
     resources :entries, only: [:new, :create, :edit, :update, :destroy] do
+      post :preview_quick, on: :collection
       member do
         patch :restore
         delete :purge

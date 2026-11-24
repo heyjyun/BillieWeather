@@ -183,7 +183,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     assert_select "#capability-import a[href='#{finance_statements_path}']"
     assert_select "#capability-scan a[href='#{finance_receipts_path}']"
     assert_select "#capability-quick-add a[href='#{new_finance_entry_path}']"
-    assert_select "#capability-quick-add", /coming later/i
+    assert_select "#capability-quick-add form[action=?]", preview_quick_finance_entries_path
     get finance_statements_path
     assert_select "#transactions-tabs .bw-tab.is-active", text: "Add & Sync"
     assert_select "#transactions-tabs .bw-subtab.is-active", text: "Statements"

@@ -1,8 +1,6 @@
 // @vitest-environment jsdom
 import { findFileInput } from "./uiHelpers";
-// Importing a PDF through the real UI: a clear statement imports straight away; an unclear
-// one opens the review, where a row is corrected, another left out, and nothing is saved
-// until the person confirms. (PDF text reading itself is covered in pdfImport.test.ts.)
+// Both clear and ambiguous PDFs open review. No statement is written before confirmation. (PDF text reading itself is covered in pdfImport.test.ts.)
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
 import { migrate, openInShell } from "./helpers";
@@ -58,7 +56,7 @@ async function upload(name: string, content: string) {
   await act(async () => fireEvent.change(input, { target: { files: [file] } }));
 }
 
-it("imports a clear PDF directly and reviews an unclear one before importing", async () => {
+it("requires review for both clear and ambiguous text PDFs", async () => {
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
     const path = String(input).replace(`${API_ORIGIN}/api/client/v1/finance`, "");
     if (path === "") return new Response(JSON.stringify({ currency: null, version: "v0", statement_count: 0, transaction_count: 0 }), { status: 200 });
@@ -81,7 +79,15 @@ it("imports a clear PDF directly and reviews an unclear one before importing", a
   await nav("Import");
 
   await upload("october.pdf", "%PDF-clear");
-  await screen.findByText(/Imported 2 transactions from october\.pdf automatically/);
+  await screen.findByRole("heading", { name: "Review your extracted transactions." });
+  expect(screen.getByRole<HTMLButtonElement>("button", { name: "Confirm and import transactions" }).disabled).toBe(true);
+  await nav("All Transactions");
+  expect(screen.queryByText("Payroll ACME Corp")).toBeNull();
+  await nav("Import");
+  await upload("october.pdf", "%PDF-clear");
+  fireEvent.click(await screen.findByLabelText(/I reviewed the included rows/));
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Confirm and import transactions" })));
+  await screen.findByText(/october\.pdf: Imported 2 reviewed PDF transactions/);
 
   await upload("november.pdf", "%PDF-unclear");
   await screen.findByRole("heading", { name: "Review your extracted transactions." });

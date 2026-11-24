@@ -8,7 +8,7 @@ module Finance
     PERMITTED = %i[kind amount booked_on occurred_at_time account_id to_account_id category merchant_id merchant_name project_id
       tag_names note description refund_of_id excluded tax_review].freeze
 
-    before_action :load_form_data, only: [:new, :create, :edit, :update]
+    before_action :load_form_data, only: [:new, :preview_quick, :create, :edit, :update]
 
     def new
       source = params[:copy_from].present? ? current_user.finance_transactions.find(params[:copy_from]) : nil
@@ -18,6 +18,15 @@ module Finance
         original = current_user.finance_transactions.live.find(@form[:refund_of_id])
         @form = @form.merge(kind: "refund", account_id: original.bank_account_id, category: original.category)
       end
+    end
+
+    def preview_quick
+      @form = QuickEntry.parse(params[:quick_entry])
+      return redirect_to finance_add_sync_path, status: :see_other, alert: t("billie.quick_entry.invalid") unless @form
+
+      @quick_entry_draft_id = SecureRandom.uuid
+      @form[:booked_on] = finance_today.iso8601
+      render :new
     end
 
     def create

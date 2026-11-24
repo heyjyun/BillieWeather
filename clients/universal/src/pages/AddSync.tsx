@@ -3,10 +3,24 @@
 // BillieWeather has no bank connection, and nothing here pretends otherwise.
 import { PageHeading } from "../components/common";
 import { ModuleIcon } from "../components/ModuleIcon";
+import { useState, type FormEvent } from "react";
 import { useI18n } from "../i18n";
+import { quickEntryCopy } from "../i18n/quickEntry";
+import { parseQuickEntry, type QuickEntry } from "../services/quickEntry";
 
-export function AddSync({ openImport, openReceipt, openEntry, openManual }: { openImport: () => void; openReceipt: () => void; openEntry: () => void; openManual: () => void }) {
-  const { m } = useI18n();
+export function AddSync({ openImport, openReceipt, openEntry, openManual }: { openImport: () => void; openReceipt: () => void; openEntry: (draft?: QuickEntry) => void; openManual: () => void }) {
+  const { m, locale } = useI18n();
+  const [description, setDescription] = useState("");
+  const [invalid, setInvalid] = useState(false);
+  const copy = quickEntryCopy[locale];
+  const supportsTypedEntry = locale === "en" || locale === "zh-CN" || locale === "zh-TW";
+  function review(event: FormEvent) {
+    event.preventDefault();
+    const draft = parseQuickEntry(description);
+    if (draft) openEntry(draft);
+    else setInvalid(true);
+  }
+
   const x = m.modules.addSync;
   const badge = (available: boolean) => <span className={`bw-badge ${available ? "bw-badge-available" : "bw-badge-soon"}`}>{available ? x.available : x.comingSoon}</span>;
   return (
@@ -33,9 +47,19 @@ export function AddSync({ openImport, openReceipt, openEntry, openManual }: { op
         <li className="bw-capability" id="capability-quick-add">
           <div className="bw-capability-head"><span className="bw-library-icon"><ModuleIcon name="plus" size={22} /></span><h2>{x.quickAdd.title}</h2>{badge(true)}</div>
           <p>{x.quickAdd.body}</p>
-          <p className="bw-caption">{x.quickAdd.later}</p>
+          {supportsTypedEntry && <form className="bw-quick-entry" onSubmit={review}>
+            <div className="bw-field">
+              <label htmlFor="quick-entry-text">{copy.label}</label>
+              <input id="quick-entry-text" type="text" value={description} maxLength={195} placeholder={copy.example} autoComplete="off"
+                aria-describedby="quick-entry-help" aria-invalid={invalid || undefined}
+                onChange={(event) => { setDescription(event.target.value); setInvalid(false); }} />
+              <small id="quick-entry-help">{copy.help}</small>
+            </div>
+            {invalid && <p className="bw-field-error" role="alert">{copy.invalid}</p>}
+            <button type="submit" className="bw-button bw-button-outline">{copy.review}</button>
+          </form>}
           <div className="bw-capability-actions">
-            <button type="button" className="bw-button bw-button-dark" onClick={openEntry}>{x.quickAdd.open}</button>
+            <button type="button" className="bw-button bw-button-dark" onClick={() => openEntry()} aria-keyshortcuts="Control+Shift+E Meta+Shift+E">{x.quickAdd.open}</button>
             <button type="button" className="bw-link-button" onClick={openManual}>{x.quickAdd.manual}</button>
           </div>
         </li>

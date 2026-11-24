@@ -82,7 +82,7 @@ export async function initOcrEngine(): Promise<OcrEngine | null> {
         const capabilities = await invoke<{ engine: string | null }>("ocr_capabilities");
         if (capabilities.engine === "apple-vision") {
           const { appleVisionDesktopEngine } = await import("./ocr/nativeEngines");
-          registerOcrEngine(appleVisionDesktopEngine());
+          registerOcrEngine(appleVisionDesktopEngine(tesseractForThisApp));
         } else {
           registerOcrEngine(await tesseractForThisApp());
         }

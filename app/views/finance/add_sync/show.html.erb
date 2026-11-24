@@ -28,7 +28,16 @@
   <li class="bw-capability" id="capability-quick-add">
     <div class="bw-capability-head"><span class="bw-library-icon"><%= finance_icon "plus", size: 22 %></span><h2><%= t("#{a}.quick_add.title") %></h2><span class="bw-badge bw-badge-available"><%= t("#{a}.available") %></span></div>
     <p><%= t("#{a}.quick_add.body") %></p>
-    <p class="bw-caption"><%= t("#{a}.quick_add.later") %></p>
+    <% if I18n.locale.in?([:en, :"zh-CN", :"zh-TW"]) %>
+      <%= form_with url: preview_quick_finance_entries_path, method: :post, local: true, class: "bw-quick-entry", data: {turbo: false} do %>
+        <div class="bw-field">
+          <%= label_tag :quick_entry, t("billie.quick_entry.label") %>
+          <%= text_field_tag :quick_entry, nil, maxlength: 195, autocomplete: "off", placeholder: t("billie.quick_entry.example"), aria: {describedby: "quick-entry-help"} %>
+          <small id="quick-entry-help"><%= t("billie.quick_entry.help") %></small>
+        </div>
+        <%= submit_tag t("billie.quick_entry.review"), class: "bw-button bw-button-outline", name: nil %>
+      <% end %>
+    <% end %>
     <div class="bw-capability-actions"><%= link_to t("#{a}.quick_add.open"), new_finance_entry_path, class: "bw-button bw-button-dark" %><%= link_to t("#{a}.quick_add.manual"), finance_manual_path, class: "bw-text-link" %></div>
   </li>
 </ul>

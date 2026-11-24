@@ -6,15 +6,17 @@
 import { allCategories, formatMoney, type MatchResult, type ReceiptExtraction, type ReceiptIssue } from "@billie/finance-core";
 import { CURRENCIES } from "@billie/shared-types";
 import { useMemo, useRef, useState, type ReactNode } from "react";
+import { DocumentPicker } from "../components/DocumentPicker";
 import { PageHeading } from "../components/common";
 import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, interpolate, useI18n } from "../i18n";
 import { AccountError } from "../services/account";
+import { DocumentTooLarge, receiptExtensions, webDocuments, type LocalDocument } from "../services/documentInput";
 import { randomId } from "../services/ids";
 import { LedgerError } from "../services/ledger";
 import {
-  amountCents, certaintyOf, checkDuplicates, entryFromReceipt, extractReceipt, initialValues, localToday, matchCandidates, ReceiptError, recognizeReceipt, webFields,
+  MAX_RECEIPT_BYTES, amountCents, certaintyOf, checkDuplicates, entryFromReceipt, extractReceipt, initialValues, localToday, matchCandidates, ReceiptError, recognizeReceipt, webFields,
   type Certainty, type ReceiptFieldKey, type ReceiptValues, type RecognizedReceipt,
 } from "../services/receipt";
 import { sendReceipt, type WebReceiptResult } from "../services/receiptUpload";
@@ -35,7 +37,7 @@ type Done = { kind: "saved" | "savedRefund" | "kept"; description: string; amoun
 const KEY_FIELDS: ReceiptFieldKey[] = ["merchant", "date", "total", "currency"];
 const PURCHASE_HIDDEN = new Set(["Income", "Transfers"]);
 
-const contentTypeOf = (file: File, recognized: RecognizedReceipt) => file.type || (recognized.source === "image" ? "image/jpeg" : "application/pdf");
+const contentTypeOf = (file: LocalDocument, recognized: RecognizedReceipt) => file.type || (recognized.source === "image" ? "image/jpeg" : "application/pdf");
 
 export function Receipt() {
   const { m } = useI18n();
@@ -55,7 +57,6 @@ export function Receipt() {
   const [error, setError] = useState("");
   const [reading, setReading] = useState<AbortController | null>(null);
   const [busy, setBusy] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
   const [web, setWeb] = useState<{ tone: "ok" | "error"; text: string; result?: WebReceiptResult } | null>(null);
   const [sending, setSending] = useState(false);
   // Captures already written to the ledger: a second press (double click, retry) never adds a second entry.
@@ -71,14 +72,14 @@ export function Receipt() {
     setCapture(null); setValues(null); setEdited(new Set()); setChecked(false); setProblems([]); setGuard(null); setDone(null); setError(""); setWeb(null);
   }
 
-  async function onFile(files: FileList | null) {
-    const file = files?.[0];
+  async function onFile(files: LocalDocument[]) {
+    const file = files[0];
     if (!file) return;
     reset();
     const controller = new AbortController();
     setReading(controller);
     try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
+      const bytes = await file.read(MAX_RECEIPT_BYTES);
       const recognized = await recognizeReceipt(bytes, file.name, controller.signal);
       const extraction = extractReceipt(recognized.lines, { currency: bookCurrency ?? liveAccounts[0]?.currency ?? null, today: localToday() });
       const next = initialValues(extraction);
@@ -100,7 +101,7 @@ export function Receipt() {
         setCategorySuggested(false);
       }
     } catch (caught) {
-      const code = caught instanceof ReceiptError ? caught.code : "ocr_failed";
+      const code = caught instanceof ReceiptError ? caught.code : caught instanceof DocumentTooLarge ? "too_large" : "ocr_failed";
       setError(x.errors[code]);
     } finally {
       setReading(null);
@@ -232,14 +233,12 @@ export function Receipt() {
           <div className="bw-actions">
             <label className={`bw-button bw-button-dark bw-file-button${reading ? " is-busy" : ""}`}>
               {x.scan}
-              <input type="file" accept="image/*" capture="environment" aria-label={x.scan} disabled={Boolean(reading)} onChange={(e) => { void onFile(e.target.files); e.target.value = ""; }} />
+              <input type="file" accept="image/*" capture="environment" aria-label={x.scan} disabled={Boolean(reading)} onChange={(e) => { void onFile(webDocuments(e.target.files)); e.target.value = ""; }} />
             </label>
           </div>
-          <label className={`bw-dropzone ${reading ? "is-busy" : ""} ${dragOver ? "is-dragover" : ""}`} onDragEnter={() => setDragOver(true)} onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false); }} onDrop={() => setDragOver(false)}>
-            <input type="file" accept="image/*,.heic,.heif,.pdf,application/pdf" aria-label={x.upload} disabled={Boolean(reading)} onChange={(e) => { void onFile(e.target.files); e.target.value = ""; }} />
-            <strong>{reading ? x.reading : x.upload}</strong>
-            <small>{x.drop}</small>
-          </label>
+          <DocumentPicker extensions={receiptExtensions} accept="image/*,.heic,.heif,.pdf,application/pdf"
+            label={reading ? x.reading : x.upload} help={x.drop} busy={Boolean(reading)} onChoose={onFile}
+            onError={() => setError(x.errors.ocr_failed)} />
           {reading && <button type="button" className="bw-button bw-button-outline bw-button-small" onClick={() => reading.abort()}>{x.stop}</button>}
           <p className="bw-caption">{x.privacy}</p>
         </section>

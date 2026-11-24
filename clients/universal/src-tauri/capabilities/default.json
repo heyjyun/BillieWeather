@@ -22,6 +22,7 @@
     "dialog:allow-open",
     "fs:allow-write-file",
     "fs:allow-read-file",
+    "fs:allow-stat",
     "billie-ocr:default",
     "deep-link:default",
     {

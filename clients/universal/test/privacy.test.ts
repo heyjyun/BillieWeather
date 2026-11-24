@@ -255,9 +255,10 @@ describe("data isolation", () => {
   it("the app requests no network, shell, or broad file-system permissions", () => {
     const capability = JSON.parse(readFileSync(join(ROOT, "src-tauri/capabilities/default.json"), "utf8"));
     const permissions: string[] = capability.permissions.map((p: string | { identifier: string }) => (typeof p === "string" ? p : p.identifier));
-    // Reading is allowed only for the single file picked in the open dialog (backup restore): no fs scope is granted.
+    // The dialogs grant access to explicitly selected files; neither metadata nor data may use a static scope.
     expect(permissions.filter((p) => /^(http|shell|fs:allow-read|fs:scope|fs:default|opener:default)/.test(p))).toEqual(["fs:allow-read-file"]);
-    expect(permissions.filter((p) => /^fs:/.test(p)).sort()).toEqual(["fs:allow-read-file", "fs:allow-write-file"]);
+    expect(permissions.filter((p) => /^fs:/.test(p)).sort()).toEqual(["fs:allow-read-file", "fs:allow-stat", "fs:allow-write-file"]);
+    expect(capability.permissions.filter((p: unknown) => typeof p === "object" && p !== null && "identifier" in p && typeof p.identifier === "string" && p.identifier.startsWith("fs:"))).toEqual([]);
   });
 
   it("the local database file and build output are git-ignored", () => {

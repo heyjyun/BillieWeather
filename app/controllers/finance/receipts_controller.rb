@@ -13,13 +13,20 @@ module Finance
     end
 
     def create
-      files = Array(params.dig(:receipt, :files)).select { |file| file.respond_to?(:read) }
+      receipt = params[:receipt]
+      unless receipt.is_a?(ActionController::Parameters)
+        return redirect_to finance_receipts_path, alert: t("billie.backend.unreadable_files")
+      end
+      files = Array(receipt[:files]).reject(&:blank?)
       return redirect_to finance_receipts_path, alert: t("billie.receipts.flash.too_many", count: MAX_FILES) if files.length > MAX_FILES
-      source = params.dig(:receipt, :source).presence_in(%w[camera upload]) || "upload"
+      unless files.all? { |file| file.is_a?(ActionDispatch::Http::UploadedFile) }
+        return redirect_to finance_receipts_path, alert: t("billie.backend.unreadable_files")
+      end
+      source = receipt[:source].presence_in(%w[camera upload]) || "upload"
       results = if files.any?
         files.map { |file| ingest(file: file, source: source) }
       else
-        [ingest(source: "manual", fields: params.fetch(:receipt, {}).permit(*Receipt::EDITABLE).to_h)]
+        [ingest(source: "manual", fields: receipt.permit(*Receipt::EDITABLE).to_h)]
       end
       added = results.compact
       failed = results.length - added.length

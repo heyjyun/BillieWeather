@@ -1304,3 +1304,6 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-overview-ledger strong { color: var(--bw-color-text); }
 .bw-overview-account { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; align-items: center; gap: 8px; }
 .bw-overview-account select { min-width: 0; }
+
+.bw-quick-entry { display: grid; gap: .6rem; margin: 0 0 .85rem; }
+.bw-quick-entry > .bw-button { justify-self: start; }

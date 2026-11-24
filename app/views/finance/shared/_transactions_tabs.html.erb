@@ -1,7 +1,7 @@
 <%# Transactions has three sections: Overview, All Transactions and Add & Sync. Each existing page sits
     under one of them; the related pages are linked as secondary tabs. %>
 <% section = if controller_name == "dashboard" then "overview"
-   elsif %w[add_sync statements statement_drafts receipts reconciliation manual].include?(controller_name) || (controller_name == "entries" && %w[new create].include?(action_name)) then "add_sync"
+   elsif %w[add_sync statements statement_drafts receipts reconciliation manual].include?(controller_name) || (controller_name == "entries" && %w[new preview_quick create].include?(action_name)) then "add_sync"
    else "all_transactions" end %>
 <% tabs = {"overview" => finance_dashboard_path, "all_transactions" => finance_transactions_path, "add_sync" => finance_add_sync_path} %>
 <% secondary = if section == "add_sync"

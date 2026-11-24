@@ -713,3 +713,7 @@ button.bw-subtab.is-active { color: var(--accent); border-color: var(--bw-color-
 .bw-overview-dates > .bw-field { flex: 1 1 8rem; min-width: 0; max-width: 14rem; }
 .bw-overview-dates input { min-width: 0; }
 @media (min-width: 1101px) { .bw-overview-scoped { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.bw-quick-entry { display: grid; gap: .6rem; margin: 0 0 .85rem; }
+.bw-quick-entry > .bw-button { justify-self: start; }
+button.bw-dropzone { width: 100%; font: inherit; }

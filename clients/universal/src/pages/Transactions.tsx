@@ -10,6 +10,7 @@ import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, useI18n } from "../i18n";
 import { LedgerError, type EntryDetail } from "../services/ledger";
 import { useDraftState, useMode } from "../hooks/useMode";
+import { randomId } from "../services/ids";
 import type { TransactionIntent } from "../App";
 
 type View = "list" | "trash" | "review" | "organize";
@@ -35,10 +36,10 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   const [remember, setRemember] = useState(true);
   const [status, setStatus] = useState("");
   // The open entry form is part of the draft, so it is still open (and filled in) after a mode switch.
-  const [form, setForm] = useDraftState<{ entry: EntryDetail | null; kind?: TransactionKind } | null>("transactions-page", "form", null);
+  const [form, setForm] = useDraftState<{ entry: EntryDetail | null; kind?: TransactionKind; prefill?: TransactionIntent["entryDraft"]; draftId?: string } | null>("transactions-page", "form", null);
   const [requestedView, setView] = useState<View>(intent?.view ?? "list");
   const view: View = manual || requestedView === "organize" ? requestedView : "list";
-  useEffect(() => { if (intent?.entryKind) setForm({ entry: null, kind: intent.entryKind }); }, [intent, setForm]);
+  useEffect(() => { if (intent?.entryKind) setForm({ entry: null, kind: intent.entryKind, prefill: intent.entryDraft, draftId: intent.entryDraft ? randomId() : undefined }); }, [intent, setForm]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [batchCategory, setBatchCategory] = useState("");
   const [batchText, setBatchText] = useState({ merchant: "", project: "", tag: "" });
@@ -112,7 +113,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   );
   const statusLine = <p className="bw-sr-status" role="status" aria-live="polite">{status}</p>;
   const formPanel = manual && form && (
-    <EntryForm key={form.entry?.id ?? "new"} entry={form.entry} initialKind={form.kind} onCancel={() => setForm(null)} onDone={(message) => { setForm(null); setStatus(message); }} />
+    <EntryForm key={form.draftId ?? form.entry?.id ?? "new"} entry={form.entry} initialKind={form.kind} prefill={form.prefill} draftId={form.draftId} onCancel={() => setForm(null)} onDone={(message) => { setForm(null); setStatus(message); }} />
   );
 
   if (view === "organize") return <>{heading}{statusLine}<OrganizePanel onClose={() => setView("list")} /></>;

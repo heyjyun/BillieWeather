@@ -1,15 +1,15 @@
 // Create or edit one manual entry (记一笔): expense, income, transfer / card payment, refund or a
 // balance adjustment. The same form edits imported rows (category, description, merchant, project,
 // tags, note); their amount and date stay as the bank printed them.
-import { decimalToCents, centsToDecimalString, formatMoney, isLiability, type EntryProblem, type TransactionKind } from "@billie/finance-core";
+import { decimalToCents, centsToDecimalString, formatMoney, isLiability, localToday, type EntryProblem, type TransactionKind } from "@billie/finance-core";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, useI18n } from "../i18n";
 import { LedgerError, type CategoryNode, type EntryDetail, type EntryInput } from "../services/ledger";
+import type { QuickEntry } from "../services/quickEntry";
 import { useDraftState, useMode } from "../hooks/useMode";
 
 const KINDS: TransactionKind[] = ["expense", "income", "transfer", "refund", "adjustment"];
-const today = () => new Date().toISOString().slice(0, 10);
 
 /** "12.34" / "12,34" / "-5" -> cents; null when not a plain amount. */
 export function parseAmount(text: string, allowNegative = false): number | null {
@@ -24,7 +24,7 @@ export function parseAmount(text: string, allowNegative = false): number | null 
   }
 }
 
-type EntryFormProps = { entry?: EntryDetail | null; initialKind?: TransactionKind; onDone: (message: string) => void; onCancel: () => void };
+type EntryFormProps = { entry?: EntryDetail | null; initialKind?: TransactionKind; prefill?: QuickEntry; draftId?: string; onDone: (message: string) => void; onCancel: () => void };
 
 /**
  * The fields are a draft (useDraftState), so switching to Default Mode and back keeps what was typed.
@@ -33,7 +33,7 @@ type EntryFormProps = { entry?: EntryDetail | null; initialKind?: TransactionKin
 export function EntryForm(props: EntryFormProps) {
   const { m } = useI18n();
   const { hasDraft, clearDraft } = useMode();
-  const draftKey = `entry-${props.entry?.id ?? "new"}`;
+  const draftKey = `entry-${props.entry?.id ?? props.draftId ?? "new"}`;
   const [generation, setGeneration] = useState(0);
   const [restored, setRestored] = useState(() => hasDraft(draftKey));
   const finish = (done: () => void) => { clearDraft(draftKey); done(); };
@@ -50,7 +50,7 @@ export function EntryForm(props: EntryFormProps) {
   );
 }
 
-function EntryFormFields({ entry, initialKind = "expense", onDone, onCancel, draftKey }: EntryFormProps & { draftKey: string }) {
+function EntryFormFields({ entry, initialKind = "expense", prefill, onDone, onCancel, draftKey }: EntryFormProps & { draftKey: string }) {
   const { m, t } = useI18n();
   const x = m.ledger.entry;
   const { store, accounts, customCategories, currency, refresh } = useFinance();
@@ -62,8 +62,8 @@ function EntryFormFields({ entry, initialKind = "expense", onDone, onCancel, dra
   const transferTo = entry && (entry.kind === "transfer" || entry.kind === "card_payment") ? (entry.amountCents > 0 ? entry.accountId : entry.counterpart?.accountId) : undefined;
 
   const [kind, setKind] = useDraftState<TransactionKind>(draftKey, "kind", startKind);
-  const [amount, setAmount] = useDraftState(draftKey, "amount", entry ? centsToDecimalString(startKind === "adjustment" ? entry.amountCents : Math.abs(entry.amountCents)).replace(/\.(\d)$/, ".$10") : "");
-  const [date, setDate] = useDraftState(draftKey, "date", entry?.occurredOn ?? today());
+  const [amount, setAmount] = useDraftState(draftKey, "amount", entry ? centsToDecimalString(startKind === "adjustment" ? entry.amountCents : Math.abs(entry.amountCents)).replace(/\.(\d)$/, ".$10") : prefill?.amount ?? "");
+  const [date, setDate] = useDraftState(draftKey, "date", entry?.occurredOn ?? localToday());
   const [time, setTime] = useDraftState(draftKey, "time", entry?.time ?? "");
   const [accountId, setAccountId] = useDraftState<number | "">(draftKey, "accountId", transferFrom ?? live.find((account) => !account.unassigned)?.id ?? "");
   const [toAccountId, setToAccountId] = useDraftState<number | "">(draftKey, "toAccountId", transferTo ?? "");
@@ -72,7 +72,7 @@ function EntryFormFields({ entry, initialKind = "expense", onDone, onCancel, dra
   const [project, setProject] = useDraftState(draftKey, "project", entry?.project ?? "");
   const [tags, setTags] = useDraftState(draftKey, "tags", entry?.tags.join(", ") ?? "");
   const [note, setNote] = useDraftState(draftKey, "note", entry?.note ?? "");
-  const [description, setDescription] = useDraftState(draftKey, "description", entry?.description ?? "");
+  const [description, setDescription] = useDraftState(draftKey, "description", entry?.description ?? prefill?.description ?? "");
   const [refundOf, setRefundOf] = useDraftState<number | "">(draftKey, "refundOf", entry?.refundOf?.id ?? "");
   const [tree, setTree] = useState<CategoryNode[]>([]);
   const [candidates, setCandidates] = useState<Awaited<ReturnType<typeof store.ledger.refundCandidates>>>([]);

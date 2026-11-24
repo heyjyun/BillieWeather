@@ -1,0 +1,16 @@
+import type { Locale } from "./index";
+
+const en = {
+  label: "Describe an expense or income", example: "Spent 12.34 on lunch",
+  help: "Enter a direction, an amount in this ledger’s currency, and a description.",
+  review: "Review typed entry", invalid: "Enter an amount and description, starting with “spent” or “received”.",
+};
+
+export const quickEntryCopy: Record<Locale, typeof en> = {
+  en,
+  "zh-CN": { label: "描述一笔支出或收入", example: "支出 12.34 午餐", help: "填写收支方向、以账本币种计的金额和描述。",
+    review: "核对文字记录", invalid: "请以「支出」或「收入」开头，再输入金额和描述。" },
+  "zh-TW": { label: "描述一筆支出或收入", example: "支出 12.34 午餐", help: "填寫收支方向、以帳簿幣別計的金額和描述。",
+    review: "核對文字記錄", invalid: "請以「支出」或「收入」開頭，再輸入金額和描述。" },
+  ja: en, ko: en, es: en,
+};

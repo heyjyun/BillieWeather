@@ -1,3 +1,4 @@
+import type { QuickEntry } from "./services/quickEntry";
 import { icons } from "@billie/design-tokens";
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { emailOwnerKey, ownerKeyFor } from "./services/databases";
@@ -63,7 +64,7 @@ const ADD_SYNC_TABS: Array<{ key: "import" | "receipt" | "manual"; page: Page }>
 export const MANUAL_PAGES: ReadonlySet<Page> = new Set<Page>(["manual", "accounts", "planning", "lists"]);
 
 /** What to open on the Transactions page: a new entry of a kind, or the trash / review list. */
-export interface TransactionIntent { entryKind?: TransactionKind; view?: "trash" | "review" | "organize" }
+export interface TransactionIntent { entryKind?: TransactionKind; entryDraft?: QuickEntry; view?: "trash" | "review" | "organize" }
 
 function Icon({ d }: { d: string }) {
   return <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
@@ -127,6 +128,15 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   const { persistent } = useFinance();
   // billieweather:// links and #/capture/… open one screen; they never save or send anything.
   const goRef = useRef(go);
+  useEffect(() => {
+    function quickEntry(event: KeyboardEvent) {
+      if (event.repeat || event.isComposing || event.altKey || !(event.metaKey || event.ctrlKey) || !event.shiftKey || event.key.toLowerCase() !== "e") return;
+      event.preventDefault();
+      goRef.current("transactions", null, undefined, { entryKind: "expense" });
+    }
+    window.addEventListener("keydown", quickEntry);
+    return () => window.removeEventListener("keydown", quickEntry);
+  }, []);
   goRef.current = go;
   useEffect(() => {
     const open = (route: DeepLinkRoute) => {
@@ -222,7 +232,7 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
         {page === "data" && <Data focus={focus} />}
         {page === "settings" && <Settings openLibrary={() => go("features")} openData={() => go("data")} />}
         {page === "features" && <FeatureLibrary open={openModule} />}
-        {page === "addSync" && <AddSync openImport={() => go("import")} openReceipt={() => go("receipt")} openEntry={() => go("transactions", null, undefined, { entryKind: "expense" })} openManual={() => go("manual")} />}
+        {page === "addSync" && <AddSync openImport={() => go("import")} openReceipt={() => go("receipt")} openEntry={(entryDraft) => go("transactions", null, undefined, { entryKind: entryDraft?.kind ?? "expense", entryDraft })} openManual={() => go("manual")} />}
         {page === "assistant" && <Assistant />}
         </>
         )}

@@ -93,7 +93,12 @@ it("imports with an optional region, then changes it and reclassifies on request
   const file = new File([bytes as BlobPart], "uk.pdf", { type: "application/pdf" });
   Object.defineProperty(file, "arrayBuffer", { value: async () => bytes.buffer.slice(0) });
   await act(async () => fireEvent.change(input, { target: { files: [file] } }));
-  await screen.findByText(/Imported 3 transactions from uk\.pdf automatically/);
+  const confirm = await screen.findByRole("button", { name: "Confirm and import transactions" });
+  expect((confirm as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.queryByRole("button", { name: "Change region" })).toBeNull();
+  fireEvent.click(screen.getByRole("checkbox", { name: /I reviewed the included rows/ }));
+  await act(async () => fireEvent.click(confirm));
+  await screen.findByText(/uk\.pdf: Imported 3 reviewed PDF transactions/);
   await screen.findByText("Region: United Kingdom");
 
   // Change the region: metadata only.

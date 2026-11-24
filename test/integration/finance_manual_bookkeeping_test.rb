@@ -72,6 +72,26 @@ class FinanceManualBookkeepingTest < ActionDispatch::IntegrationTest
     assert Finance::AuditEvent.where(user: @user, subject_type: "BankAccount").count >= 10
   end
 
+  test "typed Quick Add only prefills the usual form and requires explicit save" do
+    sign_in @user
+    checking = Finance::BankAccount.create!(user: @user, manual: true, name: "Synthetic cash", account_type: "cash", currency: "USD")
+    assert_no_difference -> { @user.finance_transactions.count } do
+      post preview_quick_finance_entries_path, params: {quick_entry: "收入 12,34 合成工资"}
+      assert_response :success
+      assert_select "#entry-form input[name='entry[kind]'][value='income']"
+      assert_select "#entry-form input[name='entry[amount]'][value='12.34']"
+      assert_select "#entry-form [name='entry[description]'][value='合成工资']"
+      post preview_quick_finance_entries_path, params: {quick_entry: "transfer 5000"}
+      assert_redirected_to finance_add_sync_path
+    end
+    assert_difference -> { @user.finance_transactions.count }, 1 do
+      post finance_entries_path, params: {entry: {kind: "income", amount: "12.34", description: "合成工资",
+        booked_on: "2026-11-24", account_id: checking.id, category: "Income"}}
+      assert_response :redirect
+    end
+    assert_equal BigDecimal("12.34"), @user.finance_transactions.last.amount
+  end
+
   test "entries: expense, income, transfer, card payment, refund; edit, copy, delete, restore, purge" do
     checking = create_account("Checking", "checking", "1000")
     card = create_account("Card", "credit_card")

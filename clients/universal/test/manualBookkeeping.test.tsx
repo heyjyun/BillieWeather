@@ -131,3 +131,31 @@ it("keeps a complete book by hand: accounts, an expense, edit, trash and restore
   await waitFor(() => expect(within(log).getAllByText(/Created/).length).toBeGreaterThanOrEqual(3));
   expect(within(log).getByText(/Restored/)).toBeTruthy();
 });
+
+it("waits for Save after a typed entry preview and opens a blank manual form by shortcut", async () => {
+  sessionStorage.setItem("billie.token", "tok");
+  render(<App />);
+  await screen.findByRole("navigation");
+  await nav("Accounts");
+  await click(await screen.findByRole("button", { name: "Add account" }));
+  const accountForm = screen.getByRole("form", { name: "New account" });
+  type("Name", "Synthetic Quick Add cash", accountForm);
+  await click(within(accountForm).getByRole("button", { name: "Save" }));
+  await screen.findByText("Synthetic Quick Add cash");
+
+  await nav("Import");
+  await click((await screen.findAllByRole("button", { name: "Add & Sync" }))[0]);
+  type("Describe an expense or income", "Spent 12.34 on Synthetic lunch");
+  await click(screen.getByRole("button", { name: "Review typed entry" }));
+  const form = await screen.findByRole("form", { name: "New entry" });
+  expect(within(form).getByLabelText<HTMLInputElement>("Amount").value).toBe("12.34");
+  expect(within(form).getByLabelText<HTMLInputElement>(/Description/).value).toBe("Synthetic lunch");
+  const driver = files.get("billieweather.db")!;
+  expect(await driver.select("SELECT id FROM transactions")).toEqual([]);
+  await click(within(form).getByRole("button", { name: "Save" }));
+  expect(await screen.findByText("Synthetic lunch")).toBeTruthy();
+  expect(await driver.select("SELECT amount_cents, kind FROM transactions")).toEqual([{ amount_cents: -1234, kind: "expense" }]);
+  fireEvent.keyDown(window, { key: "E", shiftKey: true, metaKey: true });
+  const blank = await screen.findByRole("form", { name: "New entry" });
+  expect(within(blank).getByLabelText<HTMLInputElement>("Amount").value).toBe("");
+});

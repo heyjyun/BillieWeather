@@ -8,15 +8,22 @@ module Finance
       return import_batch if params.key?(:files)
 
       file = params[:file]
-      header = file&.read(5)
-      file&.rewind
-      if header == "%PDF-" || File.extname(file&.original_filename.to_s).downcase == ".pdf"
+      raise StatementImporter::ImportError, I18n.t("billie.backend.choose_files") if file.blank?
+      unless file.is_a?(ActionDispatch::Http::UploadedFile)
+        raise StatementImporter::ImportError, I18n.t("billie.backend.unreadable_files")
+      end
+      if file.size > StatementImporter::MAX_BYTES
+        raise StatementImporter::ImportError, I18n.t("billie.backend.file_size_limit")
+      end
+      header = file.read(5)
+      file.rewind
+      if header == "%PDF-" || File.extname(file.original_filename.to_s).downcase == ".pdf"
         current_user.finance_statement_drafts.where("expires_at < ?", Time.current).delete_all
         draft = PdfStatementExtractor.new(user: current_user, file: file, currency: @profile.currency).call
         return import_pdf_automatically(draft) if draft.auto_importable?
         return redirect_to finance_statement_draft_path(draft), notice: I18n.t("billie.backend.pdf_needs_review")
       end
-      importer = StatementImporter.new(user: current_user, file: params[:file], currency: @profile.currency, date_column: params[:date_column])
+      importer = StatementImporter.new(user: current_user, file: file, currency: @profile.currency, date_column: params[:date_column])
       statement = importer.call
       @profile.touch
       notice = I18n.t("billie.backend.csv_imported", count: statement.transaction_count, filename: statement.filename, column: importer.date_column_used)

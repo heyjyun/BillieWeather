@@ -9,9 +9,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { table, TRUTH, type Score } from "./realEngine";
 
+const channel = process.env.BILLIE_TEST_CHROMIUM_CHANNEL;
 let browserAvailable = true;
 try {
-  await (await chromium.launch()).close();
+  await (await chromium.launch({ channel })).close();
 } catch {
   browserAvailable = false;
 }
@@ -55,7 +56,7 @@ describe.skipIf(!browserAvailable)("Tesseract WebAssembly in Chromium (real engi
     await server.listen();
     origin = `http://localhost:${(server.httpServer!.address() as { port: number }).port}`;
     // Any host other than localhost fails to resolve, for the page and all of its workers.
-    browser = await chromium.launch({ args: ["--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost"] });
+    browser = await chromium.launch({ channel, args: ["--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost"] });
     context = await browser.newContext();
     context.on("request", (request) => requests.push(request.url()));
     page = await context.newPage();

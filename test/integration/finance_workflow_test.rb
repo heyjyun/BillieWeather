@@ -14,6 +14,20 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     @user = create(:user)
   end
 
+  test "non-file statement and receipt uploads leave both the ledger and capture inbox untouched" do
+    sign_in @user
+    assert_no_difference -> { Finance::Statement.count + Finance::Transaction.count + Finance::Receipt.count } do
+      ["not a file", ["not a file"], {path: "not a file"}].each do |bad|
+        post finance_statements_path, params: {file: bad}
+        assert_response :unprocessable_entity
+      end
+      post finance_receipts_path, params: {receipt: "not a form"}
+      assert_redirected_to finance_receipts_path
+      post finance_receipts_path, params: {receipt: {files: ["not a file"]}}
+      assert_redirected_to finance_receipts_path
+    end
+  end
+
   test "landing and authentication forms are public and finance pages require login" do
     get "/"
     assert_response :success

@@ -1,10 +1,11 @@
 import { CURRENCIES, type Currency } from "@billie/shared-types";
 import {
-  allCategories, formatMoney, ImportError, ImportPipelineError, isPdf, normalizeRegion, reviseDraft, STATEMENT_REGIONS, templateFrom,
+  allCategories, ImportError, ImportPipelineError, isPdf, markPdfDuplicates, normalizeRegion, reviseDraft, STATEMENT_REGIONS, MAX_IMPORT_BYTES, templateFrom,
   type ImportContext, type ImportDraft, type ImportReport, type RegionDetection, type RegionSource, type ReviewedPdfRow,
 } from "@billie/finance-core";
 import { useEffect, useState } from "react";
 import { PageHeading } from "../components/common";
+import { DocumentPicker } from "../components/DocumentPicker";
 import { ImportPreview } from "../components/ImportPreview";
 import { PdfReview, usePdfMessages } from "../components/PdfReview";
 import { RegionNotice, useRegionName } from "../components/RegionNotice";
@@ -12,7 +13,8 @@ import { useFinance } from "../hooks/useFinance";
 import { interpolate, useI18n } from "../i18n";
 import importErrors from "../i18n/importErrors.json";
 import { randomId } from "../services/ids";
-import { importFile, importPdfReview, type ImportedFile, type PdfReview as Review } from "../services/importFile";
+import { importPdfReview, previewPdfFile, type PdfReview as Review } from "../services/importFile";
+import { DocumentTooLarge, statementExtensions, type LocalDocument } from "../services/documentInput";
 import { StoreError, type FinanceStore } from "../services/store";
 import { usePersonal } from "../hooks/usePersonal";
 import { commitDraft, detectDraftRegion, ImportBlockedError, importContext, importDraftFile, importScannedPdf, UNIVERSAL_ACCEPT } from "../services/universalImport";
@@ -43,7 +45,6 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
   const [editingRegion, setEditingRegion] = useState<{ key: string; value: string } | null>(null);
   const regionName = useRegionName();
   const [busy, setBusy] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
   // `imported`: a statement was just added, so the message opens with "All set, Jyun!".
   const [message, setMessage] = useState<{ tone: "ok" | "warn" | "error"; text: string; imported?: boolean } | null>(null);
   const { p: personal, say } = usePersonal();
@@ -67,6 +68,7 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
   }, [store, statements]);
 
   function errorText(error: unknown): string {
+    if (error instanceof DocumentTooLarge) return u.errors.file_too_large;
     if (error instanceof ImportPipelineError) return u.errors[error.code] ?? x.genericError;
     if (error instanceof ImportBlockedError) return u.errors.blocked;
     if (error instanceof ImportError || error instanceof StoreError) {
@@ -76,75 +78,47 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
     return x.genericError;
   }
 
-  function successText(filename: string, result: ImportedFile, cur: Currency): string {
-    if (result.format === "pdf") return pdf.backend("pdf_imported_automatically", { count: result.count, filename });
-    return result.closingBalanceCents === null
-      ? t("import.success", { file: filename, count: result.count })
-      : t("import.successBalance", { file: filename, count: result.count, balance: formatMoney(result.closingBalanceCents, cur) });
-  }
-
-  async function onFiles(files: FileList | null) {
-    if (!files?.length) return;
+  async function onFiles(files: LocalDocument[]) {
+    if (!files.length) return;
     setBusy(true);
-    const lines: string[] = [];
-    const waitingPdf: Review[] = [];
-    const waiting: Waiting[] = [];
-    // Detection never changes the selection: a file starts with the region chosen above (or none).
-    const chosenSource: RegionSource | null = normalizeRegion(region) ? "user" : null;
-    const waitingItem = async (draft: ImportDraft): Promise<Waiting> => ({
-      draft, context: await importContext(store, normalizeRegion(region)), region: { source: chosenSource, detection: detectDraftRegion(draft) },
-    });
-    let failed = false;
-    let imported = 0;
+    const errors: string[] = [];
+    const pendingPdf: Review[] = [];
+    const pending: Waiting[] = [];
     const cur = deviceCurrency ?? currency;
     const chosenRegion = normalizeRegion(region);
-    for (const file of Array.from(files)) {
-      try {
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        if (isPdf(bytes, file.name)) {
-          // Pages without a text layer are read by OCR; text pages keep the reviewed text extraction.
+    const chosenSource: RegionSource | null = chosenRegion ? "user" : null;
+    const waitingItem = async (draft: ImportDraft): Promise<Waiting> => ({
+      draft, context: await importContext(store, chosenRegion), region: { source: chosenSource, detection: detectDraftRegion(draft) },
+    });
+
+    try {
+      for (const file of files) {
+        try {
+          const bytes = await file.read(MAX_IMPORT_BYTES);
           const controller = new AbortController();
           setRecognition(controller);
-          let scanned: Awaited<ReturnType<typeof importScannedPdf>> = null;
           try {
-            scanned = await importScannedPdf(store, bytes, file.name, cur, controller.signal, chosenRegion);
+            if (isPdf(bytes, file.name)) {
+              const scanned = await importScannedPdf(store, bytes, file.name, cur, controller.signal, chosenRegion);
+              if (scanned) pending.push(await waitingItem(scanned.draft));
+              if (!scanned?.allPages) pendingPdf.push(await previewPdfFile(store, bytes, file.name, cur, chosenRegion, chosenSource));
+            } else {
+              const draft = await importDraftFile(store, bytes, file.name, cur, controller.signal, chosenRegion);
+              pending.push(await waitingItem(draft));
+            }
           } finally {
             setRecognition(null);
           }
-          if (scanned) waiting.push(await waitingItem(scanned.draft));
-          if (scanned?.allPages) continue;
-          // Text PDFs keep their own reviewed extraction (a port of the website's).
-          const result = await importFile(store, bytes, file.name, cur, chosenRegion);
-          if (result.kind === "review") {
-            waitingPdf.push(result);
-            lines.push(`${file.name}: ${pdf.backend("pdf_needs_review")}`);
-          } else {
-            lines.push(successText(file.name, result, cur));
-            imported += 1;
-          }
-          continue;
+        } catch (error) {
+          errors.push(t("import.failed", { file: file.name, message: errorText(error) }));
         }
-        const controller = new AbortController();
-        setRecognition(controller);
-        let draft: ImportDraft;
-        try {
-          draft = await importDraftFile(store, bytes, file.name, cur, controller.signal, chosenRegion);
-        } finally {
-          setRecognition(null);
-        }
-        waiting.push(await waitingItem(draft));
-      } catch (error) {
-        failed = true;
-        lines.push(t("import.failed", { file: file.name, message: errorText(error) }));
       }
+      setReviews((current) => [...current, ...pendingPdf]);
+      setDrafts((current) => [...current, ...pending]);
+      setMessage(errors.length ? { tone: "error", text: errors.join(" ") } : null);
+    } finally {
+      setBusy(false);
     }
-    await refresh();
-    setBusy(false);
-    setReviews((current) => [...current, ...waitingPdf]);
-    setDrafts((current) => [...current, ...waiting]);
-    const tone = failed ? "error" : waitingPdf.length > 0 ? "warn" : "ok";
-    if (lines.length > 0) setMessage({ tone, text: lines.join(" "), imported: tone === "ok" && imported > 0 });
-    else setMessage(null);
   }
 
   /** After one import is saved, the others are re-checked against what is now stored (duplicates). */
@@ -231,9 +205,11 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
     setReviewError(null);
     try {
       const result = await importPdfReview(store, review, rows);
-      await refresh();
       setReviews((current) => current.filter((item) => item !== review));
       setMessage({ tone: "ok", text: `${review.filename}: ${pdf.backend("pdf_review_imported", { count: result.count })}`, imported: result.count > 0 });
+      await refresh();
+      const index = await store.dedupeIndex();
+      setReviews((current) => current.map((item) => ({ ...item, draft: markPdfDuplicates(item.draft, index) })));
     } catch (error) {
       setReviewError(errorText(error));
     } finally {
@@ -330,11 +306,9 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
             <RegionSelect label={u.region.label} value={region} disabled={busy} onChange={setRegion} />
             <small>{u.region.help}</small>
           </label>
-          <label className={`bw-dropzone ${busy ? "is-busy" : ""} ${dragOver ? "is-dragover" : ""}`} onDragEnter={() => setDragOver(true)} onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOver(false); }} onDrop={() => setDragOver(false)}>
-            <input type="file" accept={`${UNIVERSAL_ACCEPT},.pdf,application/pdf`} multiple disabled={busy} onChange={(e) => { void onFiles(e.target.files); e.target.value = ""; }} />
-            <strong>{recognition ? u.ocr.reading : busy ? x.importing : u.choose}</strong>
-            <small>{u.requirements}</small>
-          </label>
+          <DocumentPicker extensions={statementExtensions} accept={UNIVERSAL_ACCEPT + ",.pdf,application/pdf"} multiple busy={busy}
+            label={recognition ? u.ocr.reading : busy ? x.importing : u.choose} help={u.requirements} onChoose={onFiles}
+            onError={() => setMessage({ tone: "error", text: x.genericError })} />
           {recognition && <button type="button" className="bw-button bw-button-outline bw-button-small" onClick={() => recognition.abort()}>{u.ocr.stop}</button>}
           {onReceipt && (
             <p className="bw-caption">{m.receipt.fromImport}{" "}<button type="button" className="bw-link-button" onClick={onReceipt}>{m.receipt.openFromImport}</button></p>
