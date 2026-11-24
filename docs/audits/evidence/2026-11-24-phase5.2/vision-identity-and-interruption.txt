@@ -1,0 +1,4 @@
+A app update: same bundle id, rebuilt binary; prepare = (0, 0.3) op = (0, 0.41)
+B new id, kill at 5s = ('killed', 5.01) ; 18s op = ('TIMEOUT', 18.01) ; 18s op = ('TIMEOUT', 18.01) ; full prepare = (0, 33.87) ; op = (0, 0.45)
+C new id, uninterrupted prepare = (0, 32.01) ; op = (0, 0.44)
+D op starts 1s into prepare: op = ('TIMEOUT', 18.01) prepare = (0, 44.39) op after = (0, 0.44)

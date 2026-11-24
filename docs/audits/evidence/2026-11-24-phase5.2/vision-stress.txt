@@ -1,0 +1,13 @@
+1 cold prepare (0, 53.7)
+  warm prepare (0, 0.34)
+2 sequential images: n=100 {'ok': 100} min=0.48 p50=0.61 p95=0.91 max=1.0  elapsed=118s
+3 multi-page PDF page renders (20x2): n=40 {'ok': 40} min=0.39 p50=0.48 p95=0.55 max=0.64  elapsed=137s
+4 concurrent (20 rounds x 3): n=60 {'ok': 60} min=0.75 p50=0.84 p95=0.87 max=0.9  elapsed=154s
+5 cancel then recognise: n=20 {'ok': 20} min=0.52 p50=0.57 p95=0.6 max=0.66  elapsed=168s
+6 invalid input: n=20 {'handled': 20} min=0.01 p50=0.02 p95=0.37 max=0.37  elapsed=171s
+  empty stdin: EXIT1 0.01
+7 repeated prepare/shutdown: n=30 {'ok': 30} min=0.28 p50=0.29 p95=0.34 max=0.35  elapsed=179s
+8 re-signed update (same identifier): interrupted prepare (0, 0.61)
+   op during unprepared state (old behaviour, 18s) ('ok', 0.56)
+   full prepare (0, 0.29) then op ('ok', 0.57)
+9 leftover workers: 0 total 182

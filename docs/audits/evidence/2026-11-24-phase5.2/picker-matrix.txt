@@ -1,0 +1,267 @@
+dir=pickdir
+## none sheet qa-sample.csv pid=79824
+AXSelected -> 0 AXRow [] SELECTED @585,398 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.csv"]
+response 1 ["SCRATCH/pickdir/qa-sample.csv"]
+readable 119 bytes
+dir=pickdir
+## none sheet qa-sample.png pid=79998
+AXSelected -> 0 AXRow [] SELECTED @585,378 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.png"]
+response 1 ["SCRATCH/pickdir/qa-sample.png"]
+readable 85574 bytes
+dir=pickdir
+## none sheet qa-sample.jpg pid=80048
+AXSelected -> 0 AXRow [] SELECTED @585,358 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.jpg"]
+response 1 ["SCRATCH/pickdir/qa-sample.jpg"]
+readable 86322 bytes
+dir=pickdir
+## none sheet qa-sample.pdf pid=80116
+AXSelected -> 0 AXRow [] SELECTED @585,338 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.pdf"]
+response 1 ["SCRATCH/pickdir/qa-sample.pdf"]
+readable 118742 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## none sheet qa-sample.csv pid=80179
+AXSelected -> 0 AXRow [] SELECTED @585,398 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.csv"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.csv"]
+readable 119 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## none sheet qa-sample.png pid=80229
+AXSelected -> 0 AXRow [] SELECTED @585,338 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.png"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.png"]
+readable 85574 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## none sheet qa-sample.jpg pid=80634
+AXSelected -> 0 AXRow [] SELECTED @585,378 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.jpg"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.jpg"]
+readable 86322 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## none sheet qa-sample.pdf pid=80694
+AXSelected -> 0 AXRow [] SELECTED @585,358 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.pdf"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.pdf"]
+readable 118742 bytes
+dir=pickdir
+## uttype sheet qa-sample.csv pid=80872
+AXSelected -> 0 AXRow [] SELECTED @585,398 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.csv"]
+response 1 ["SCRATCH/pickdir/qa-sample.csv"]
+readable 119 bytes
+dir=pickdir
+## uttype sheet qa-sample.png pid=80999
+AXSelected -> 0 AXRow [] SELECTED @585,378 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.png"]
+response 1 ["SCRATCH/pickdir/qa-sample.png"]
+readable 85574 bytes
+dir=pickdir
+## uttype sheet qa-sample.jpg pid=81053
+AXSelected -> 0 AXRow [] SELECTED @585,358 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.jpg"]
+response 1 ["SCRATCH/pickdir/qa-sample.jpg"]
+readable 86322 bytes
+dir=pickdir
+## uttype sheet qa-sample.pdf pid=81108
+AXSelected -> 0 AXRow [] SELECTED @585,338 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.pdf"]
+response 1 ["SCRATCH/pickdir/qa-sample.pdf"]
+readable 118742 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## uttype sheet qa-sample.csv pid=81158
+AXSelected -> 0 AXRow [] SELECTED @585,398 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.csv"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.csv"]
+readable 119 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## uttype sheet qa-sample.png pid=81212
+AXSelected -> 0 AXRow [] SELECTED @585,338 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.png"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.png"]
+readable 85574 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## uttype sheet qa-sample.jpg pid=81264
+AXSelected -> 0 AXRow [] SELECTED @585,378 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.jpg"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.jpg"]
+readable 86322 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## uttype sheet qa-sample.pdf pid=81313
+AXSelected -> 0 AXRow [] SELECTED @585,358 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.pdf"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.pdf"]
+readable 118742 bytes
+dir=pickdir
+## legacy sheet qa-sample.csv pid=81375
+AXSelected -> 0 AXRow [] SELECTED @585,398 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.csv"]
+response 1 ["SCRATCH/pickdir/qa-sample.csv"]
+readable 119 bytes
+dir=pickdir
+## legacy sheet qa-sample.png pid=81700
+AXSelected -> 0 AXRow [] SELECTED @585,378 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.png"]
+response 1 ["SCRATCH/pickdir/qa-sample.png"]
+readable 85574 bytes
+dir=pickdir
+## legacy sheet qa-sample.jpg pid=81782
+AXSelected -> 0 AXRow [] SELECTED @585,358 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.jpg"]
+response 1 ["SCRATCH/pickdir/qa-sample.jpg"]
+readable 86322 bytes
+dir=pickdir
+## legacy sheet qa-sample.pdf pid=81845
+AXSelected -> 0 AXRow [] SELECTED @585,338 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.pdf"]
+response 1 ["SCRATCH/pickdir/qa-sample.pdf"]
+readable 118742 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## legacy sheet qa-sample.csv pid=81888
+AXSelected -> 0 AXRow [] SELECTED @585,398 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.csv"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.csv"]
+readable 119 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## legacy sheet qa-sample.png pid=82053
+AXSelected -> 0 AXRow [] SELECTED @585,338 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.png"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.png"]
+readable 85574 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## legacy sheet qa-sample.jpg pid=82100
+NOTFOUND
+NOTFOUND
+NOTFOUND
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## legacy sheet qa-sample.pdf pid=82139
+AXSelected -> 0 AXRow [] SELECTED @585,358 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.pdf"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.pdf"]
+readable 118742 bytes
+dir=pickdir
+## rfd sheet qa-sample.csv pid=82188
+AXSelected -> 0 AXRow [] SELECTED @585,398 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.csv"]
+response 1 ["SCRATCH/pickdir/qa-sample.csv"]
+readable 119 bytes
+dir=pickdir
+## rfd sheet qa-sample.png pid=82236
+AXSelected -> 0 AXRow [] SELECTED @585,378 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.png"]
+response 1 ["SCRATCH/pickdir/qa-sample.png"]
+readable 85574 bytes
+dir=pickdir
+## rfd sheet qa-sample.jpg pid=82288
+AXSelected -> 0 AXRow [] SELECTED @585,358 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.jpg"]
+response 1 ["SCRATCH/pickdir/qa-sample.jpg"]
+readable 86322 bytes
+dir=pickdir
+## rfd sheet qa-sample.pdf pid=82747
+AXSelected -> 0 AXRow [] SELECTED @585,338 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.pdf"]
+response 1 ["SCRATCH/pickdir/qa-sample.pdf"]
+readable 118742 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## rfd sheet qa-sample.csv pid=82786
+AXSelected -> 0 AXRow [] SELECTED @585,398 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.csv"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.csv"]
+readable 119 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## rfd sheet qa-sample.png pid=82827
+AXSelected -> 0 AXRow [] SELECTED @585,338 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.png"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.png"]
+readable 85574 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## rfd sheet qa-sample.jpg pid=82873
+AXSelected -> 0 AXRow [] SELECTED @585,378 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.jpg"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.jpg"]
+readable 86322 bytes
+dir=BillieWeather-Phase5.2-Synthetic-QA
+## rfd sheet qa-sample.pdf pid=82957
+AXSelected -> 0 AXRow [] SELECTED @585,358 670x20
+AXButton [Open | OKButton] @1155,643 81x26
+AXPress -> 0
+selection ["qa-sample.pdf"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.pdf"]
+readable 118742 bytes
+## none modal qa-sample.png pid=82994
+AXSelected -> 0 AXRow [] SELECTED @794,301 670x20
+AXButton [Open | OKButton] @1364,566 81x26
+AXPress -> 0
+selection ["qa-sample.png"]
+response 1 ["SCRATCH/pickdir/qa-sample.png"]
+readable 85574 bytes
+## legacy modal qa-sample.pdf pid=83037
+AXSelected -> 0 AXRow [] SELECTED @794,281 670x20
+AXButton [Open | OKButton] @1364,566 81x26
+AXPress -> 0
+selection ["qa-sample.pdf"]
+response 1 ["~/Downloads/BillieWeather-Phase5.2-Synthetic-QA/qa-sample.pdf"]
+readable 118742 bytes
