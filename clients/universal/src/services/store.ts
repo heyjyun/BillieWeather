@@ -578,13 +578,7 @@ export class FinanceStore {
 
   /** Reverses one import: removes exactly its statements and their transactions, nothing else. */
   async reverseImport(statementIds: readonly number[]): Promise<number> {
-    let removed = 0;
-    for (const id of statementIds) {
-      const [count] = await this.db.select<Row>("SELECT COUNT(*) AS n FROM transactions WHERE statement_id = $1", [id]);
-      await this.removeStatement(id);
-      removed += Number(count?.n ?? 0);
-    }
-    return removed;
+    return this.removeStatements(statementIds);
   }
 
   async templates(): Promise<ImportTemplate[]> {
@@ -722,14 +716,41 @@ export class FinanceStore {
     return out;
   }
 
-  /** Puts transactions back exactly as `transactionFlags` read them (undo or compensation). */
-  async restoreTransactionFlags(flags: readonly TransactionFlags[]): Promise<void> {
-    for (const flag of flags) {
-      await this.db.execute(
-        "UPDATE transactions SET category = $1, category_source = $2, tax_review = $3, excluded = $4, locally_modified = $5, updated_at = $6 WHERE id = $7",
-        [flag.category, flag.categorySource, flag.taxReview ? 1 : 0, flag.excluded ? 1 : 0, flag.locallyModified ? 1 : 0, flag.updatedAt, flag.id],
-      );
-    }
+  /**
+   * Puts transactions back exactly as `transactionFlags` read them (compensation), in one database
+   * transaction. With `written` (the flags right after the change being undone), only the fields
+   * that change wrote are put back, and only in rows where they still have those values: a later
+   * choice wins. Returns how many rows were put back.
+   */
+  async restoreTransactionFlags(flags: readonly TransactionFlags[], written?: readonly TransactionFlags[]): Promise<number> {
+    const after = new Map((written ?? []).map((flag) => [flag.id, flag]));
+    const columns = (flag: TransactionFlags): Array<[string, unknown]> => [
+      ["category", flag.category], ["category_source", flag.categorySource], ["tax_review", flag.taxReview ? 1 : 0], ["excluded", flag.excluded ? 1 : 0],
+    ];
+    const statements = flags.flatMap((flag): SqlStatement[] => {
+      const expected = after.get(flag.id);
+      if (!written) {
+        return [{
+          sql: "UPDATE transactions SET category = ?, category_source = ?, tax_review = ?, excluded = ?, locally_modified = ?, updated_at = ? WHERE id = ?",
+          params: [...columns(flag).map(([, value]) => value), flag.locallyModified ? 1 : 0, flag.updatedAt, flag.id],
+        }];
+      }
+      if (!expected) return [];
+      const values = new Map(columns(expected));
+      const changed = columns(flag).filter(([key, value]) => values.get(key) !== value);
+      if (changed.length === 0) return [];
+      return [{
+        // Untouched since: also back to "not modified here". Otherwise it stays marked as the person's.
+        sql: `UPDATE transactions SET ${changed.map(([key]) => `${key} = ?`).join(", ")},
+          locally_modified = CASE WHEN updated_at = ? THEN ? ELSE locally_modified END, updated_at = CASE WHEN updated_at = ? THEN ? ELSE updated_at END
+          WHERE id = ? AND deleted_at IS NULL AND ${changed.map(([key]) => `${key} = ?`).join(" AND ")}`,
+        params: [...changed.map(([, value]) => value), expected.updatedAt, flag.locallyModified ? 1 : 0, expected.updatedAt, flag.updatedAt,
+          flag.id, ...changed.map(([key]) => values.get(key))],
+      }];
+    });
+    if (statements.length === 0) return 0;
+    const results = await this.db.transaction(statements);
+    return results.filter((result) => result.rowsAffected > 0).length;
   }
 
   /**
@@ -750,7 +771,7 @@ export class FinanceStore {
   async restoreRules(rules: readonly MerchantRule[]): Promise<void> {
     for (const rule of rules) {
       await this.db.execute(
-        "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO UPDATE SET category = excluded.category, updated_at = excluded.updated_at",
+        "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO NOTHING",
         [rule.merchantKey, rule.income ? 1 : 0, rule.category, now()],
       );
     }
@@ -1014,23 +1035,36 @@ export class FinanceStore {
    * in the cloud, it is remembered as "not on this device" so downloads don't bring it back.
    */
   async removeStatement(id: number): Promise<void> {
-    const [row] = await this.db.select<Row>("SELECT sha256 FROM statements WHERE id = $1", [id]);
-    if (!row || String(row.sha256) === MANUAL_CONTAINER_SHA) throw new StoreError("not_found", "Statement not found.");
-    const ids = (await this.db.select<Row>("SELECT id FROM transactions WHERE statement_id = $1", [id])).map((item) => Number(item.id));
+    await this.removeStatements([id]);
+  }
+
+  /** Removes these statements in ONE transaction: an import that arrived as a whole leaves as a whole. Returns the entries removed. */
+  private async removeStatements(statementIds: readonly number[]): Promise<number> {
     const skipped = await this.skippedHashes();
-    skipped.add(String(row.sha256));
-    // One transaction: the statement, its entries, their links and tags, and the note that keeps a
-    // website download from bringing it back all go together. Links and tags are removed explicitly
-    // (sql.js in tests runs without foreign-key cascades).
+    const statements: SqlStatement[] = [];
+    let removed = 0;
+    for (const id of new Set(statementIds)) {
+      const [row] = await this.db.select<Row>("SELECT sha256, (SELECT COUNT(*) FROM transactions WHERE statement_id = $1) AS entries FROM statements WHERE id = $1", [id]);
+      if (!row || String(row.sha256) === MANUAL_CONTAINER_SHA) throw new StoreError("not_found", "Statement not found.");
+      skipped.add(String(row.sha256));
+      removed += Number(row.entries);
+      // Links and tags are removed explicitly (sql.js in tests runs without foreign-key cascades).
+      statements.push(
+        { sql: "DELETE FROM transaction_links WHERE from_transaction_id IN (SELECT id FROM transactions WHERE statement_id = $1) OR to_transaction_id IN (SELECT id FROM transactions WHERE statement_id = $1)", params: [id] },
+        { sql: "DELETE FROM transaction_tags WHERE transaction_id IN (SELECT id FROM transactions WHERE statement_id = $1)", params: [id] },
+        this.ledger.auditStatement({ actor: "user", action: "reverse_import", subjectType: "statement", subjectId: String(row.sha256), summary: `${Number(row.entries)} entries removed` }),
+        { sql: "DELETE FROM transactions WHERE statement_id = $1", params: [id] },
+        { sql: "DELETE FROM statements WHERE id = $1", params: [id] },
+      );
+    }
+    if (statements.length === 0) return 0;
+    // The note that keeps a website download from bringing them back goes with them.
     await this.db.transaction([
-      { sql: "DELETE FROM transaction_links WHERE from_transaction_id IN (SELECT id FROM transactions WHERE statement_id = $1) OR to_transaction_id IN (SELECT id FROM transactions WHERE statement_id = $1)", params: [id] },
-      { sql: "DELETE FROM transaction_tags WHERE transaction_id IN (SELECT id FROM transactions WHERE statement_id = $1)", params: [id] },
-      this.ledger.auditStatement({ actor: "user", action: "reverse_import", subjectType: "statement", subjectId: String(row.sha256), summary: `${ids.length} entries removed` }),
-      { sql: "DELETE FROM transactions WHERE statement_id = $1", params: [id] },
-      { sql: "DELETE FROM statements WHERE id = $1", params: [id] },
+      ...statements,
       { sql: "INSERT INTO settings (key, value) VALUES ('web_sync_skip', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", params: [JSON.stringify([...skipped])] },
       { sql: "DELETE FROM settings WHERE key = 'currency' AND NOT EXISTS (SELECT 1 FROM statements)" },
     ]);
+    return removed;
   }
 
   /** Statements (by file hash) the person chose not to keep on this device. */
@@ -1225,12 +1259,12 @@ export class FinanceStore {
 
   private async applyCategories(changes: Array<{ id: number; category: Category }>): Promise<number> {
     const stamp = now();
-    for (const change of changes) {
-      // Business purchases are flagged for tax review, as in Rails.
-      await this.db.execute(
-        "UPDATE transactions SET category = $1, tax_review = CASE WHEN $2 = 'Business' THEN 1 ELSE tax_review END, updated_at = $3 WHERE id = $4",
-        [change.category, change.category, stamp, change.id],
-      );
+    if (changes.length > 0) {
+      await this.db.transaction(changes.map((change) => ({
+        // Business purchases are flagged for tax review, as in Rails.
+        sql: "UPDATE transactions SET category = $1, tax_review = CASE WHEN $2 = 'Business' THEN 1 ELSE tax_review END, updated_at = $3 WHERE id = $4",
+        params: [change.category, change.category, stamp, change.id],
+      })));
     }
     return changes.length;
   }

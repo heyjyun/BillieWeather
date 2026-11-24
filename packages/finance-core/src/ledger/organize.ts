@@ -54,7 +54,7 @@ export function organizeProposals(rows: readonly OrganizeRow[], options: { rules
   }
 
   // 2. Transfers and card payments: opposite amounts within 3 days in two different accounts, not linked yet.
-  const unlinked = rows.filter((row) => !row.linked && !used.has(row.id) && row.accountId !== null && row.amountMinor !== 0 && free(row, "kind"));
+  const unlinked = rows.filter((row) => !row.linked && !used.has(row.id) && row.accountId !== null && row.amountMinor !== 0 && free(row, "kind") && (free(row, "category") || row.category === "Transfers"));
   const ins = new Map<number, OrganizeRow[]>();
   for (const row of unlinked) if (row.amountMinor > 0) ins.set(row.amountMinor, [...(ins.get(row.amountMinor) ?? []), row]);
   for (const outRow of unlinked.filter((row) => row.amountMinor < 0).sort((a, b) => a.occurredOn.localeCompare(b.occurredOn))) {
@@ -77,7 +77,7 @@ export function organizeProposals(rows: readonly OrganizeRow[], options: { rules
       .filter((row) => row.kind === "expense" && row.amountMinor <= -refund.amountMinor && row.accountId === refund.accountId && merchantKey(row.originalDescription) === merchant)
       .filter((row) => { const gap = days(row.occurredOn, refund.occurredOn); return gap >= 0 && gap <= 120; })
       .sort((a, b) => b.occurredOn.localeCompare(a.occurredOn))[0];
-    if (!original) continue;
+    if (!original || !(free(refund, "category") || refund.category === original.category)) continue;
     used.add(refund.id);
     out.push({ id: `refund:${refund.id}:${original.id}`, type: "refund", refundId: refund.id, expenseId: original.id, amountMinor: refund.amountMinor, reason: "refund_words", confidence: original.amountMinor === -refund.amountMinor ? 85 : 70 });
   }

@@ -53,10 +53,10 @@ function wrapFailing(store: FinanceStore, shouldFail: () => boolean): FinanceSto
   const failing: SqlDriver = {
     ...db,
     select: (sql, params) => db.select(sql, params),
-    execute: async (sql, params) => {
-      if (/^\s*UPDATE transactions SET category = \$1, tax_review/.test(sql) && shouldFail()) throw new Error("disk full");
-      return db.execute(sql, params);
-    },
+    execute: (sql, params) => db.execute(sql, params),
+    // The Nth row's write fails inside the real database transaction.
+    transaction: (statements) => db.transaction(statements.map((statement) =>
+      /^\s*UPDATE transactions SET category = \$1, tax_review/.test(statement.sql) && shouldFail() ? { sql: "INSERT INTO disk_full VALUES (1)" } : statement)),
   };
   (store as unknown as { db: SqlDriver }).db = failing;
   return store;
@@ -95,6 +95,33 @@ describe("BillieWeather typed commands on a real local database", () => {
     expect(env.byDescription("STARBUCKS")[0].category).toBe("Shopping");
     expect((await env.executor.undo(done.undo!.token, env.exec())).status).toBe("succeeded");
     expect(await env.store.transactionFlags(before.map((f) => f.id))).toEqual(before);
+  });
+
+  it("undo keeps what the person changed afterwards and says so", async () => {
+    const env = await setup();
+    const plan = await env.plan("move starbucks to shopping");
+    const done = await env.run(plan);
+    const [starbucks] = env.byDescription("STARBUCKS");
+    await env.store.setCategory(starbucks.id, "Health", false);
+    await env.store.setExcluded(starbucks.id, true);
+    await env.refresh();
+    const undone = await env.executor.undo(done.undo!.token, env.exec());
+    expect(undone.status).toBe("succeeded");
+    expect(JSON.stringify(undone)).toContain("undone_kept");
+    expect(env.byDescription("STARBUCKS")[0]).toMatchObject({ category: "Health", excluded: true });
+  });
+
+  it("undoing an exclusion keeps a category chosen meanwhile", async () => {
+    const env = await setup();
+    const done = await env.run(await env.plan("exclude uber eats"));
+    const [uber] = env.byDescription("UBER");
+    await env.store.setCategory(uber.id, "Travel", false);
+    await env.refresh();
+    expect((await env.executor.undo(done.undo!.token, env.exec())).status).toBe("succeeded");
+    expect(env.byDescription("UBER")[0]).toMatchObject({ category: "Travel", excluded: false });
+    // The person's edit stays protected from website copies.
+    const [row] = await env.store.sql.select<{ locally_modified: number }>("SELECT locally_modified FROM transactions WHERE id = ?", [uber.id]);
+    expect(Number(row.locally_modified)).toBe(1);
   });
 
   it("does not repeat a change when the same plan is submitted twice", async () => {

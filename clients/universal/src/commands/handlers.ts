@@ -85,7 +85,14 @@ export function createAuthorizer(): Authorizer {
   };
 }
 
-type FlagsPayload = { flags: TransactionFlags[] };
+type FlagsPayload = { flags: TransactionFlags[]; written: TransactionFlags[] };
+
+/** Undo of a bulk change: rows the person changed again since keep their newer values, and are counted. */
+async function undoFlags(store: FinanceStore, { flags, written }: FlagsPayload) {
+  const restored = await store.restoreTransactionFlags(flags, written);
+  const kept = flags.length - restored;
+  return kept > 0 ? msg("undone_kept", "Undone. {count} transaction(s) changed since then were kept as they are.", { count: kept }) : msg("undone", "Undone.");
+}
 
 async function withCompensation<T>(store: FinanceStore, ids: number[], apply: () => Promise<T>): Promise<{ result: T; before: TransactionFlags[] }> {
   const before = await store.transactionFlags(ids);
@@ -115,12 +122,12 @@ export function createHandlers(deps: HostDeps): Record<string, ActionHandler> {
       const ids = prepared.payload!;
       const { before } = await withCompensation(deps.store, ids, async () => { for (const id of ids) await deps.store.setExcluded(id, excluded); });
       await deps.refresh();
-      return { summary: msg(excluded ? "excluded" : "included", excluded ? "{count} transaction(s) excluded from totals." : "{count} transaction(s) counted again.", { count: ids.length }), undo: { flags: before } satisfies FlagsPayload };
+      return { summary: msg(excluded ? "excluded" : "included", excluded ? "{count} transaction(s) excluded from totals." : "{count} transaction(s) counted again.", { count: ids.length }), undo: { flags: before, written: await deps.store.transactionFlags(ids) } satisfies FlagsPayload };
     },
     async undo(payload) {
-      await deps.store.restoreTransactionFlags((payload as FlagsPayload).flags);
+      const result = await undoFlags(deps.store, payload as FlagsPayload);
       await deps.refresh();
-      return msg("undone", "Undone.");
+      return result;
     },
   });
 
@@ -172,12 +179,12 @@ export function createHandlers(deps: HostDeps): Record<string, ActionHandler> {
         const category = String(args.category) as Category;
         const { before } = await withCompensation(deps.store, ids, () => deps.store.setCategoryMany(ids, category));
         await deps.refresh();
-        return { summary: msg("categorized", "{count} transaction(s) moved to {category}.", { count: ids.length, category: deps.categoryLabel(category) }), undo: { flags: before } satisfies FlagsPayload };
+        return { summary: msg("categorized", "{count} transaction(s) moved to {category}.", { count: ids.length, category: deps.categoryLabel(category) }), undo: { flags: before, written: await deps.store.transactionFlags(ids) } satisfies FlagsPayload };
       },
       async undo(payload) {
-        await deps.store.restoreTransactionFlags((payload as FlagsPayload).flags);
+        const result = await undoFlags(deps.store, payload as FlagsPayload);
         await deps.refresh();
-        return msg("undone", "Undone.");
+        return result;
       },
     },
     "transactions.exclude": setExcluded(true) as ActionHandler,
@@ -241,16 +248,17 @@ export function createHandlers(deps: HostDeps): Record<string, ActionHandler> {
         const flags = await deps.store.transactionFlags(ids);
         const rules: MerchantRule[] = (await deps.store.rules()).filter((r) => r.category === name);
         await deps.store.deleteCategory(name);
+        const written = await deps.store.transactionFlags(ids);
         await deps.refresh();
-        return { summary: msg("category_deleted", "Deleted {name}; {count} transaction(s) are now Uncategorized.", { name, count: ids.length }), undo: { name, flags, rules } };
+        return { summary: msg("category_deleted", "Deleted {name}; {count} transaction(s) are now Uncategorized.", { name, count: ids.length }), undo: { name, flags, written, rules } };
       },
       async undo(payload) {
-        const { name, flags, rules } = payload as { name: string; flags: TransactionFlags[]; rules: MerchantRule[] };
+        const { name, flags, written, rules } = payload as FlagsPayload & { name: string; rules: MerchantRule[] };
         await deps.store.addCategory(name);
-        await deps.store.restoreTransactionFlags(flags);
+        const result = await undoFlags(deps.store, { flags, written });
         await deps.store.restoreRules(rules);
         await deps.refresh();
-        return msg("undone", "Undone.");
+        return result;
       },
     },
     "app.language": {
