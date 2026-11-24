@@ -2,6 +2,8 @@ require "bigdecimal"
 
 module Finance
   class Snapshot
+    BOOKING_MONTH = Arel.sql("DATE_TRUNC('month', booked_on::timestamp)::date").freeze
+
     def initialize(user:, start_date: nil, end_date: nil, account_id: nil)
       @user = user
       @start_date = start_date
@@ -27,11 +29,13 @@ module Finance
       income = income_by_category.values.sum(BigDecimal(0))
       # A refund (positive, kind refund) reduces spending; a card repayment or transfer never counts.
       expenses = -included.expense_kind.sum(:amount)
-      monthly = included.order(:booked_on).pluck(:booked_on, :amount, :kind)
-        .group_by { |date, _amount, _kind| date.beginning_of_month }
-        .map do |month, values|
-          incoming = values.sum(BigDecimal(0)) { |_date, amount, kind| Domain::INCOME_KINDS.include?(kind) ? amount : 0 }
-          outgoing = -values.sum(BigDecimal(0)) { |_date, amount, kind| Domain::EXPENSE_KINDS.include?(kind) ? amount : 0 }
+      monthly = included.group(BOOKING_MONTH, :kind).sum(:amount)
+        .group_by { |(month, _kind), _amount| month }
+        .sort_by(&:first)
+        .map do |month, totals|
+          amounts_by_kind = totals.to_h { |(_month, kind), amount| [kind, amount] }
+          incoming = Domain::INCOME_KINDS.sum(BigDecimal(0)) { |kind| amounts_by_kind.fetch(kind, 0) }
+          outgoing = -Domain::EXPENSE_KINDS.sum(BigDecimal(0)) { |kind| amounts_by_kind.fetch(kind, 0) }
           {month: month, income: incoming, expenses: outgoing, net: incoming - outgoing}
         end
       categories = included.expense_kind.group(:category).sum(:amount)

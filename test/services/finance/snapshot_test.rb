@@ -70,6 +70,22 @@ class Finance::SnapshotTest < ActiveSupport::TestCase
     assert_empty empty[:recent_transactions]
   end
 
+  test "monthly aggregation is chronological across years and keeps refund-only months" do
+    dated_transaction("2026-02-14", "12.50", "Food & dining", kind: "refund")
+    dated_transaction("2025-12-31", "100.10", "Income")
+    dated_transaction("2026-02-01", "-300", "Transfers", kind: "card_payment")
+    dated_transaction("2026-01-02", "-25.05", "Food & dining")
+    dated_transaction("2026-01-02", "5.00", "Food & dining", kind: "refund")
+
+    result = Finance::Snapshot.new(user: @user).to_h
+    assert_equal [
+      {month: Date.new(2025, 12, 1), income: BigDecimal("100.10"), expenses: BigDecimal("0"), net: BigDecimal("100.10")},
+      {month: Date.new(2026, 1, 1), income: BigDecimal("0"), expenses: BigDecimal("20.05"), net: BigDecimal("-20.05")},
+      {month: Date.new(2026, 2, 1), income: BigDecimal("0"), expenses: BigDecimal("-12.50"), net: BigDecimal("12.50")}
+    ], result[:monthly]
+    assert_equal BigDecimal("7.55"), result[:expenses]
+  end
+
   private
 
   def dated_transaction(date, amount, category, **attributes)

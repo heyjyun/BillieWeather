@@ -1,0 +1,38 @@
+/* Transactions Overview */
+.bw-overview-metrics > .bw-metric { min-height: 112px; border-radius: var(--bw-radius-lg); }
+.bw-overview-metrics > #dashboard-net { background: var(--bw-color-accent-soft); color: var(--bw-color-accent-soft-text); }
+.bw-overview-scope { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: end; }
+.bw-overview-analysis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-block: 18px; }
+.bw-overview-analysis > *, .bw-overview-scope > * { min-width: 0; }
+.bw-overview-trend { grid-column: 1 / -1; }
+.bw-overview-months { display: grid; gap: 6px; }
+.bw-overview-month { background: var(--bw-color-bg); border: 1px solid var(--bw-color-border); border-radius: var(--bw-radius-md); }
+.bw-overview-month summary {
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: minmax(4.5rem, 1fr) minmax(1.5rem, 4fr) max-content .55rem;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+}
+.bw-overview-month summary::-webkit-details-marker { display: none; }
+.bw-overview-month summary::after { content: ""; border: solid currentColor; border-width: 0 1px 1px 0; width: .4rem; height: .4rem; transform: rotate(45deg); }
+.bw-overview-month[open] summary::after { transform: rotate(225deg); }
+.bw-overview-month summary > span:first-child { font-weight: 650; }
+.bw-overview-month summary > strong { font-variant-numeric: tabular-nums; }
+.bw-overview-month:focus-within, .bw-overview-month[open] { border-color: var(--bw-color-accent); }
+.bw-overview-bar-pair { display: grid; gap: 4px; }
+.bw-overview-bar-in, .bw-overview-bar-out { display: block; width: var(--portion, 0%); max-width: 100%; height: 5px; border-radius: 20px; }
+.bw-overview-bar-in { background: var(--bw-color-viz-income); }
+.bw-overview-bar-out { background: var(--bw-color-viz-expense); }
+.bw-overview-month-figures { display: flex; flex-wrap: wrap; gap: 16px 24px; margin: 0; padding: 0 14px 12px; color: var(--bw-color-text-muted); }
+.bw-overview-month-figures div { display: flex; gap: 7px; }
+.bw-overview-month-figures dd { margin: 0; color: var(--bw-color-text); }
+.bw-overview-income-list { list-style: none; display: grid; gap: 16px; padding: 0; margin: 14px 0 0; }
+.bw-overview-income-list li { display: grid; grid-template-columns: minmax(0, 1fr) max-content; gap: 8px 14px; align-items: baseline; }
+.bw-overview-income-list i { grid-column: 1 / -1; }
+@media (max-width: 660px) {
+  .bw-overview-analysis, .bw-overview-scope { grid-template-columns: 1fr; }
+  .bw-overview-metrics > .bw-metric { min-height: 0; }
+  .bw-overview-month summary { gap: 8px; }
+}

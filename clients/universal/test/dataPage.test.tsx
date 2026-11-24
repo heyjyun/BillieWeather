@@ -4,7 +4,7 @@
 // statements one at a time.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { emailOwnerKey } from "../src/services/databases";
+import { emailOwnerKey, fileForSlot, saveRegistry } from "../src/services/databases";
 import { migrate, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
@@ -56,7 +56,7 @@ const ownList = () => {
   }
   return null;
 };
-const platform = (await import("../src/services/platform")) as unknown as { resetDatabases: () => void };
+const platform = await import("../src/services/platform") as typeof import("../src/services/platform") & { resetDatabases: () => void };
 
 function fakeCloud() {
   const cloud = { name: null as string | null, statements: [{ id: 501, filename: "web.csv", sha256: "w", rows: [["2026-03-01", "WEB ONE", "-1.0"], ["2026-03-02", "WEB TWO", "-2.0"]] }] };
@@ -180,6 +180,53 @@ it("creates, names and switches between local databases", async () => {
   fireEvent.change(within(card("Work laptop")).getByLabelText("Name"), { target: { value: "Studio iMac" } });
   await click(within(card("Work laptop")).getByRole("button", { name: "Save" }));
   await waitFor(() => expect(card("Studio iMac")).toBeTruthy());
+});
+
+it("keeps the active ledger visible when a website download finishes for the old ledger", async () => {
+  (globalThis as { __forgottenSlot?: boolean }).__forgottenSlot = true;
+  fakeCloud();
+  const request = vi.mocked(fetch).getMockImplementation()!;
+  let releaseHome!: () => void;
+  const homePending = new Promise<void>((resolve) => { releaseHome = resolve; });
+  let homeStarted = false;
+  vi.mocked(fetch).mockImplementation(async (input, init) => {
+    if (!homeStarted && String(input) === `${API_ORIGIN}/api/client/v1/finance`) {
+      homeStarted = true;
+      await homePending;
+    }
+    return request(input, init);
+  });
+
+  sessionStorage.setItem("billie.token", "tok");
+  localStorage.setItem("billie.account", JSON.stringify(account));
+  localStorage.setItem("billie.locale", "en");
+  const owner = await emailOwnerKey(account.email);
+  saveRegistry({ entries: [1, 2].map((slot) => ({ id: String(slot), file: fileForSlot(slot) })), active: "1" }, owner);
+
+  try {
+    render(<App />);
+    await screen.findByText("LOCAL ONLY");
+    await waitFor(() => expect(homeStarted).toBe(true));
+    const ledger = await screen.findByRole<HTMLSelectElement>("combobox", { name: "Ledger" });
+    await waitFor(() => expect(within(ledger).getByRole("option", { name: "Old laptop" })).toBeTruthy());
+    fireEvent.change(ledger, { target: { value: "2" } });
+    await screen.findByText("FORGOTTEN ROW");
+    await screen.findByText("WEB TWO");
+
+    const home = await platform.openDatabase("billieweather.db");
+    await act(async () => {
+      releaseHome();
+      await waitFor(async () => {
+        expect(await home.driver.select("SELECT value FROM settings WHERE key = 'web_sync_version'")).toEqual([{ value: "v1" }]);
+      });
+    });
+    expect(ledger.value).toBe("2");
+    expect(screen.getByText("FORGOTTEN ROW")).toBeTruthy();
+    expect(screen.queryByText("LOCAL ONLY")).toBeNull();
+  } finally {
+    releaseHome();
+    delete (globalThis as { __forgottenSlot?: boolean }).__forgottenSlot;
+  }
 });
 
 it("creating a database never wipes a database the device's list forgot", async () => {

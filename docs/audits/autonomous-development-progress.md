@@ -4,7 +4,7 @@
 
 - Phase 0.5 / 1a 已验收，证据见 [Phase 1a 验收报告](phase0.5-phase1a-implementation-report-2026-11-23.md)。独立工作树分支为 `autonomous-development`，基线提交为 `d3061e4`，原工作树有用户的未提交改动。
 - 原 :3000 和 :8100 开发服务仍指向同一 Neon 生产端点。独立工作树复制已验收代码和已安装构建依赖，本地工具 `bin/billie-local` 初始化专用 PostgreSQL。工具在启动 Rails 或 Python 前核对当前库名、数据目录、Unix socket 和数据库角色，数据库相关环境只允许本次专用连接。
-- Phase 1b 进行中。阶段验收记录会依次记录实现、回归、数据迁移、提交与回滚。
+- 原数据库配置审计覆盖 Rails Web、identity-api、本机 Tauri SQLite、开发脚本、环境变量和 Render 蓝图。Render 运行时环境仍待单独核验。
 
 ## Phase 1b · 跨设备模块偏好
 
@@ -25,7 +25,7 @@
 - 独立原生 macOS QA 应用从隔离服务取得 6 笔合成交易。全部日期收入 $3,700.00、支出 $120.20、净额 $3,579.80；切到上月后为 $1,200.00、$76.45、$1,123.55，月份明细可展开。混合账户、退款、还款和账本切换另由 Rails 和 Universal 自动测试验证。
 - Universal 类型检查与打包通过，Vitest 907 通过、12 跳过、0 失败。旧工作流测试原先按全页金额查找，在新增收入分类后同时命中两处，已精确定位原有收入总计行为。回滚只需撤销本阶段界面和查询提交。
 
-- Rails 全量回归 `818 tests, 31021 assertions, 0 failures, 0 errors, 2 skips`。下一阶段为 Phase 3 Add & Sync。
+- Rails 全量回归 `818 tests, 31021 assertions, 0 failures, 0 errors, 2 skips`。里程碑为 `aad3c7d`。
 
 ## Phase 3 · Add & Sync
 
@@ -36,5 +36,22 @@
 - 原生 macOS 隔离包用系统选择器打开合成 CSV。两行先显示在预览，点击确认后导入 2 笔、跳过 0 笔、失败 0 笔。验收 SQLite 含 2 个账单、8 笔交易，完整性检查为 `ok`，外键违规 0。真实收据 GUI 触发 Apple Vision 后，进程采样显示操作系统 TextRecognition 的 Neural Engine 队列等待。指定 CPU 阶段后仍能复现。后续桌面工具无法取得窗口，收据与扫描 PDF 的最终原生 GUI 验收仍待补验。
 - Chromium Web 验证了简中 `支出 12.34 合成午餐` 预填方向、金额和描述，以及银行连接没有操作入口。服务端集成测试验证预览零写入、显式保存写入一笔。见 [简体中文预览](evidence/2026-11-24-autonomous/phase3-web-quick-zh.png)。
 - Rails 全量通过，820 项、31,048 断言、0 失败、0 错误、2 跳过，行覆盖率 92.43%。Universal 在加入 OCR 超时回退前已回归 909 通过、12 跳过。新入口让三处旧测试读到了不再适用的行为，已更新为验证明确 PDF 确认、可用文字入口和仅限动态文件授权。最终 OCR 和平台验证见下文。
-- 回退时撤销 Phase 3 提交即可恢复原入口和导入流程。保留已经确认的交易和导入历史。
+- Phase 3 本地里程碑为 `dee1fea`。回退时撤销该提交即可恢复原入口和导入流程。保留已经确认的交易和导入历史。
 - OCR 回退、收据工作流和实际 Chromium 离线引擎的组合用例全部通过，28 项、0 失败。合成扫描 PDF 的 8 行金额和日期均匹配，7 行可直接确认，1 行待复核，没有错误金额被标为可直接确认。真实 Apple Vision 运行在本机陷入操作系统调用的等待，未将该次运行计为通过。继续独立的 Phase 4 加固与本地回归。
+
+## Phase 4 · 工程加固
+
+- Rails 在 PostgreSQL 按入账月份和类型聚合，再用原有财务规则计算收入、净支出和净额。120,000 行合成样本的数据库输出从 120,000 行减到 72 个分组。聚合占用 145 kB，旧排序在该样本中发生约 3.3 MB 的临时写入。该探测衡量结果规模与查询计划，未测生产请求延迟。另有跨年、仅退款月份及信用卡还款排除的回归。
+- Universal 计算期间起止日期时只扫描已计入的交易一次，只对不同月份排序。已归属的账本启动时跳过内容扫描，并行读取账本名称和数据。下载期间可以切换账本，迟到的响应仅刷新对应账本。监听状态、设置和交易按活动账本发布。新增延迟下载回归，覆盖两个账本都完成下载且旧账本不会覆盖当前界面。
+- 总览的公用样式移至 `public/billie-overview.css`，Rails 与 Universal 直接引用。复核 Chromium 桌面浅色与 390px 简中深色总览，金额一致、可键盘展开月份、无横向溢出及页面异常。
+- 主要文件包括 `app/services/finance/snapshot.rb`、`packages/finance-core/src/snapshot.ts`、`clients/universal/src/hooks/useFinance.tsx`、共享总览样式、账本切换测试和 Chromium OCR 回归。Phase 2–4 没有新增数据库迁移。专用 PostgreSQL 仍通过身份检查，无无效索引或未验证约束。新增 OCR 回归在浏览器断网后识别合成收据，并校验商家、USD 和精确总额 $10.25。
+- Apple Silicon macOS 的本地 Tauri debug 打包成功，Bundle ID 为 `com.billieweather.roadmap.phase4`。桌面自动化服务列不出应用窗口，原生收据、扫描 PDF 和最终 GUI 回归因此待复验。此 Mac 仅有 Xcode 命令行工具，缺少 iOS SDK 和 Android 工具链。Windows、Linux、Intel macOS 及移动端未构建、未验收。Chromium 验证覆盖 Rails Web 与浏览器中的本机 OCR。
+- 回退时撤销 Phase 4 提交。由于结构未变，无 Phase 4 数据库回滚。下一步仅在单独授权后进行发布准备。
+
+### 最终回归与发布条件
+
+- Rails 全量运行 821 项、31,050 断言、0 失败、0 错误、2 跳过，行覆盖率 92.44%。最终 SQL 日期类型转换再跑快照、期间和 Web 外壳套件，23 项、359 断言、0 失败、0 错误、0 跳过。
+- Universal 类型检查通过。Vitest 72 个测试文件全部通过，共 914 项、0 失败。其中共享财务域、报告、类型、命令和模块同步的单独验证为 18 个文件、372 项、0 失败。最终 Vitest 包含实际 Chromium 扫描件与收据 OCR，Apple Vision 实引擎文件的 12 项单独排除。它在早期 Phase 3 全量通过，本机随后出现系统调用阻塞。
+- macOS Rust 目标 19 项通过、0 失败。第 20 项真实 Apple Vision FFI 的独立复试在 25 秒终止，未计为通过。IPC 超时、取消和设备上回退均有自动化覆盖。原生回退在 WKWebView 的完整流程仍待验证。
+- 发布前需要复验 macOS 收据和扫描 PDF、核准的平台构建和签名，以及在经批准的隔离 Neon 环境验证迁移与回滚。核对 Render 实际数据库目标和迁移时机。先保留模块偏好及其历史，并在隔离环境验证开关回退，再决定是否启用跨设备同步。
+- 本轮使用专用 PostgreSQL、回环服务、独立应用标识和合成交易。原工作树和开发服务保留，未操作 Neon 生产库、真实财务记录或已安装的应用。提交只存在本地。发布状态保留为待验收。

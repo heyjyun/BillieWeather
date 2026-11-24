@@ -99,6 +99,16 @@ describe.skipIf(!browserAvailable)("Tesseract WebAssembly in Chromium (real engi
     if (fixture === "us-rotated-90.png") expect(result.pages[0].rotation).toBe(90);
   }, 240_000);
 
+  it("reads a synthetic receipt offline and extracts the merchant, currency and exact total", async () => {
+    await context.setOffline(true);
+    try {
+      const receipt = await page.evaluate(() => (window as unknown as { runReceipt: () => Promise<unknown> }).runReceipt());
+      expect(receipt).toEqual({ engine: "tesseract-js", merchant: "SYNTHETIC COFFEE", currency: "USD", total: "10.25" });
+    } finally {
+      await context.setOffline(false);
+    }
+  }, 240_000);
+
   it("made no request outside the app's own origin (page and workers)", () => {
     const outside = requests.map((url) => url.replace(/^worker:/, "")).filter((url) => !url.startsWith(origin) && !url.startsWith("blob:") && !url.startsWith("data:"));
     expect(outside).toEqual([]);

@@ -3,8 +3,9 @@
 // fixtures served from this origin. Driven by test/ocr/browser.real.test.ts.
 import { Categorizer, commitPlan, createOcrDraft, decisionFor, reviseDraft, type ImportContext, type OcrImage } from "@billie/finance-core";
 import { CURRENCIES } from "@billie/shared-types";
-import { enableOfflineOcr, tesseractForThisApp } from "../src/services/ocrEngine";
+import { enableOfflineOcr, registerOcrEngine, tesseractForThisApp } from "../src/services/ocrEngine";
 import { findScannedPages, renderPages } from "../src/services/ocr/pdfRaster";
+import { extractReceipt, recognizeReceipt } from "../src/services/receipt";
 
 const fixtures = new Map<string, Uint8Array>();
 /** Fixtures are fetched once, so later offline runs only exercise the OCR engine's own caching. */
@@ -42,7 +43,25 @@ async function runOcr(files: string[], currency: string, script?: "zh-Hans" | "z
   };
 }
 
-Object.assign(window, { runOcr });
+async function runReceipt() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 850;
+  canvas.height = 525;
+  const context = canvas.getContext("2d")!;
+  context.fillStyle = "white";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = "black";
+  context.font = "bold 46px sans-serif";
+  const lines = ["SYNTHETIC COFFEE", "11/24/2026", "SUBTOTAL $9.00", "TAX $1.25", "TOTAL $10.25", "CASH"];
+  lines.forEach((line, index) => context.fillText(line, 40, 75 + index * 76));
+  const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((png) => png ? resolve(png) : reject(new Error("No image")), "image/png"));
+  registerOcrEngine(await tesseractForThisApp());
+  const recognized = await recognizeReceipt(new Uint8Array(await blob.arrayBuffer()), "synthetic-receipt.png");
+  const fields = extractReceipt(recognized.lines, { currency: "USD", today: "2026-11-24" });
+  return { engine: recognized.engine, merchant: fields.merchant.value, total: fields.total.value, currency: fields.currency.value };
+}
+
+Object.assign(window, { runOcr, runReceipt });
 void enableOfflineOcr().then((controlled) => {
   document.getElementById("status")!.textContent = controlled ? "ready" : "ready-without-offline-cache";
 });

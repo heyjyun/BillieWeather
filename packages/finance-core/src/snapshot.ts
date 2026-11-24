@@ -27,10 +27,14 @@ export function buildSnapshot(input: {
 
   let incomeCents = 0;
   let expensesCents = 0;
+  let periodStart: IsoDate | null = null;
+  let periodEnd: IsoDate | null = null;
   const months = new Map<IsoDate, MonthlyTotal>();
   const categories = new Map<Category, number>();
   const incomeCategories = new Map<Category, number>();
-  for (const transaction of [...counted].sort((a, b) => (a.bookedOn < b.bookedOn ? -1 : a.bookedOn > b.bookedOn ? 1 : 0))) {
+  for (const transaction of counted) {
+    if (periodStart === null || transaction.bookedOn < periodStart) periodStart = transaction.bookedOn;
+    if (periodEnd === null || transaction.bookedOn > periodEnd) periodEnd = transaction.bookedOn;
     const month = `${transaction.bookedOn.slice(0, 7)}-01`;
     const entry = months.get(month) ?? { month, incomeCents: 0, expensesCents: 0, netCents: 0 };
     // Income and expense come from the kind; a refund (money in) reduces spending in its category.
@@ -52,7 +56,6 @@ export function buildSnapshot(input: {
     .map(([name, amountCents]) => ({ name, amountCents, share: expensesCents > 0 ? amountCents / expensesCents : null }))
     .sort((a, b) => b.amountCents - a.amountCents || a.name.localeCompare(b.name));
 
-  const dates = counted.map((transaction) => transaction.bookedOn).sort();
   const latestBalance = [...input.statements]
     .filter((statement) => statement.closingBalanceCents !== null && statement.closingBalanceOn !== null)
     .sort((a, b) => (a.closingBalanceOn! < b.closingBalanceOn! ? 1 : a.closingBalanceOn! > b.closingBalanceOn! ? -1 : b.id - a.id))[0];
@@ -68,13 +71,13 @@ export function buildSnapshot(input: {
     taxReviewCount: all.filter((transaction) => transaction.taxReview && !transaction.excluded).length,
     excludedCount: all.filter((transaction) => transaction.excluded).length,
     transferCount: all.filter((transaction) => ["transfer", "card_payment"].includes(kindOf(transaction)) && !transaction.excluded).length,
-    periodStart: dates[0] ?? null,
-    periodEnd: dates[dates.length - 1] ?? null,
+    periodStart,
+    periodEnd,
     categories: categoryTotals,
     incomeCategories: [...incomeCategories.entries()].filter(([, amountCents]) => amountCents > 0)
       .map(([name, amountCents]) => ({ name, amountCents, share: incomeCents > 0 ? amountCents / incomeCents : null }))
       .sort((a, b) => b.amountCents - a.amountCents || a.name.localeCompare(b.name)),
-    monthly: [...months.values()],
+    monthly: [...months.values()].sort((a, b) => a.month.localeCompare(b.month)),
     recentTransactions: [...all].sort(newestFirst).slice(0, 8),
     balanceCents: latestBalance?.closingBalanceCents ?? null,
     balanceOn: latestBalance?.closingBalanceOn ?? null,

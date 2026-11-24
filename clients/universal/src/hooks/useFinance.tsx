@@ -67,6 +67,14 @@ interface FinanceContextValue extends FinanceData {
 
 type Opened = { store: FinanceStore; persistent: boolean };
 
+async function readFinance(store: FinanceStore) {
+  const [transactions, statements, rules, currency, settings, customCategories, accounts] = await Promise.all([
+    store.transactions(), store.statements(), store.rules(), store.currency(),
+    store.webSyncSettings(), store.customCategories(), store.ledger.accounts({ includeArchived: true }),
+  ]);
+  return { data: { transactions, accounts, customCategories, statements, rules, currency }, settings };
+}
+
 // When this app session started: the "app last opened" time the website may show.
 const APP_OPENED_AT = new Date().toISOString();
 
@@ -119,7 +127,10 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
   const [syncEnabled, setSyncEnabledState] = useState(true);
   const [lastChecked, setLastChecked] = useState<string | null>(null);
   const [databaseName, setDatabaseName] = useState<string | null>(null);
-  const syncing = useRef(false);
+  const activeStore = useRef<FinanceStore | null>(null);
+  const activation = useRef(0);
+  const refreshSequence = useRef(0);
+  const syncing = useRef(new Set<FinanceStore>());
 
   // Basic facts about the local databases for the website's cards. Never throws, never blocks.
   const reportMetadata = useCallback(async () => {
@@ -142,60 +153,79 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     }
   }, [accountEmail, getToken, openById, ownerKey]);
 
-  const load = useCallback(async (store: FinanceStore) => {
-    const [transactions, statements, rules, currency, settings, customCategories, accounts] = await Promise.all([store.transactions(), store.statements(), store.rules(), store.currency(), store.webSyncSettings(), store.customCategories(), store.ledger.accounts({ includeArchived: true })]);
-    setData({ transactions, accounts, customCategories, statements, rules, currency });
+  const publishFinance = useCallback(({ data, settings }: Awaited<ReturnType<typeof readFinance>>) => {
+    setData(data);
     setSyncEnabledState(settings.enabled);
     setLastChecked(settings.checkedAt);
   }, []);
 
-  // Download changes from the website, if any. Runs on every sign-in and app start.
+  const load = useCallback(async (store: FinanceStore) => {
+    if (activeStore.current !== store) return;
+    const sequence = ++refreshSequence.current;
+    const next = await readFinance(store);
+    // A late refresh cannot publish transactions or settings into a different ledger.
+    if (activeStore.current === store && refreshSequence.current === sequence) publishFinance(next);
+  }, [publishFinance]);
+
+  // Website data is written to the requested ledger even if the person switches during download.
+  // The visible status and data belong to the ledger currently in use.
   const runSync = useCallback(async (store: FinanceStore, force = false) => {
     const token = getToken();
-    if (!token || syncing.current) return;
-    // Never download one account's website data into another account's database (I-13).
-    if (ownerKey && (await store.owner()) !== ownerKey) return;
-    syncing.current = true;
-    setSync({ status: "checking" });
+    if (!token || syncing.current.has(store)) return;
+    syncing.current.add(store);
+    const publish = (next: SyncState) => { if (activeStore.current === store) setSync(next); };
+    let owned = false;
     try {
+      if (ownerKey && (await store.owner()) !== ownerKey) return;
+      owned = true;
+      publish({ status: "checking" });
       const outcome = await syncFromWeb(store, token, { force });
-      setSync(outcome.status === "updated" ? { status: "updated", result: outcome.result } : { status: outcome.status });
+      publish(outcome.status === "updated" ? { status: "updated", result: outcome.result } : { status: outcome.status });
     } catch (caught) {
       if (caught instanceof AccountError && caught.code === "unauthorized") {
-        await expire();
+        if (getToken() === token) await expire();
         return;
       }
       if (caught instanceof StoreError && caught.code === "currency_mismatch") {
-        setSync({ status: "currencyMismatch", web: String(caught.vars.web), device: String(caught.vars.currency) });
+        publish({ status: "currencyMismatch", web: String(caught.vars.web), device: String(caught.vars.currency) });
       } else {
-        setSync({ status: caught instanceof AccountError && caught.code === "offline" ? "offline" : "failed" });
+        publish({ status: caught instanceof AccountError && caught.code === "offline" ? "offline" : "failed" });
       }
     } finally {
-      syncing.current = false;
-      await load(store);
+      try {
+        if (owned) await load(store);
+      } catch {
+        publish({ status: "failed" });
+      } finally {
+        syncing.current.delete(store);
+      }
     }
   }, [getToken, expire, load, ownerKey]);
 
-  // Makes one database the one every page reads, and downloads website changes into it.
   const activate = useCallback(async (id: string, isCancelled: () => boolean = () => false) => {
+    const sequence = ++activation.current;
     const { store, persistent } = await openById(id);
-    await load(store);
-    const name = await store.databaseName();
-    if (isCancelled()) return;
+    const [next, name] = await Promise.all([readFinance(store), store.databaseName()]);
+    if (isCancelled() || activation.current !== sequence) return;
     if (registryRef.current.active !== id) commitRegistry({ ...registryRef.current, active: id });
+    activeStore.current = store;
+    ++refreshSequence.current;
+    publishFinance(next);
     setDatabaseName(name);
     setSync({ status: "idle" });
     setState({ store, persistent, activeId: id });
     // A new database on this device is named first; downloading starts once it has a name.
     if (name || !persistent) void runSync(store);
-  }, [openById, load, commitRegistry, runSync]);
+  }, [openById, commitRegistry, publishFinance, runSync]);
 
   /** Checks (and records) ownership of one slot for this account. */
   const decide = useCallback(async (id: string): Promise<"use" | "ask" | "skip"> => {
     if (!ownerKey) return "use";
     const { store } = await openById(id);
+    const recorded = await store.owner();
+    if (recorded === ownerKey) return "use"; // The usual startup does not need a content scan.
     const hasContent = await store.hasContent();
-    const verdict = ownership(await store.owner(), ownerKey, emailKey ?? "", hasContent);
+    const verdict = ownership(recorded, ownerKey, emailKey ?? "", hasContent);
     if (verdict === "upgrade" && hasContent) return "ask";
     if (verdict === "mine") return "use";
     if (verdict === "upgrade" || verdict === "claim") {
@@ -261,6 +291,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
       return;
     }
     await activate(id, isCancelled);
+    if (isCancelled()) return;
     // Schedules the person set to post automatically (周期记账) are posted when the book opens.
     const opened = await openById(id);
     if ((await opened.store.ledger.postDue(undefined, { onlyAuto: true }).catch(() => 0)) > 0) await load(opened.store);
@@ -304,19 +335,22 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
       reportNow: reportMetadata,
       setSyncEnabled: async (enabled: boolean) => {
         await state.store.setWebSyncEnabled(enabled);
-        setSyncEnabledState(enabled);
-        setSync({ status: enabled ? "idle" : "disabled" });
+        if (activeStore.current === state.store) {
+          setSyncEnabledState(enabled);
+          setSync({ status: enabled ? "idle" : "disabled" });
+        }
         if (enabled) await runSync(state.store, true);
       },
       databaseName,
       renameDatabase: async (name: string) => {
-        setDatabaseName(await state.store.setDatabaseName(name));
+        const stored = await state.store.setDatabaseName(name);
+        if (activeStore.current === state.store) setDatabaseName(stored);
         void reportMetadata();
       },
       renameDatabaseById: async (id: string, name: string) => {
         const { store } = await openById(id);
         const stored = await store.setDatabaseName(name);
-        if (id === state.activeId) setDatabaseName(stored);
+        if (activeStore.current === store) setDatabaseName(stored);
         void reportMetadata();
       },
       databaseIds: registry.entries.map((e) => e.id),
