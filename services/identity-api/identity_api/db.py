@@ -11,14 +11,25 @@ import psycopg
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
+from .database_target import local_target, release_target, verify_target
+
 
 class Database:
-    def __init__(self, url: str, max_size: int = 5):
+    def __init__(self, url: str, max_size: int = 5, *, environment: str = "test"):
+        configure = None
+        if environment == "production":
+            target = release_target(url, migration=False)
+
+            def configure(conn: psycopg.Connection) -> None:
+                verify_target(conn, target, migration=False)
+        else:
+            local_target(url, environment)
         self.pool = ConnectionPool(
             url,
             min_size=0,
             max_size=max_size,
             kwargs={"autocommit": True, "prepare_threshold": None, "row_factory": dict_row, "application_name": "billieweather-identity-api"},
+            configure=configure,
             open=False,
         )
 

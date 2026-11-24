@@ -1,13 +1,15 @@
 """Migrations for the `identity` schema and the Rails compatibility check.
 
-    uv run python -m identity_api.schema migrate   # apply pending identity migrations (additive)
-    uv run python -m identity_api.schema check     # verify the Rails tables this service writes
+    uv run python -m identity_api.schema migrate           # local development only
+    uv run python -m identity_api.schema release-migrate   # approved direct connection
+    uv run python -m identity_api.schema check             # read-only schema readiness
 
 The service refuses to create accounts unless `check` passes: every column it writes must exist
 with the expected type, and the constraints it relies on must be present.
 """
 from __future__ import annotations
 
+import os
 import sys
 from importlib import resources
 
@@ -112,21 +114,42 @@ def main(argv: list[str]) -> int:
     from psycopg.rows import dict_row
 
     from .config import get_settings
+    from .database_target import local_target, release_target, verify_target
 
     command = argv[1] if len(argv) > 1 else "check"
-    settings = get_settings()
-    with psycopg.connect(settings.database_url, row_factory=dict_row, prepare_threshold=None, autocommit=True) as conn:
+    if command not in {"check", "migrate", "release-migrate"}:
+        print("Use check, migrate (local) or release-migrate")
+        return 2
+    target = None
+    release_migration = command == "release-migrate"
+    if release_migration:
+        if os.getenv("IDENTITY_ENV") != "production" or not os.getenv("BILLIE_RELEASE_APPROVAL", "").strip():
+            raise RuntimeError("Set IDENTITY_ENV=production and BILLIE_RELEASE_APPROVAL to the approved change reference")
+        url = os.getenv("DATABASE_URL_UNPOOLED", "")
+        target = release_target(url, migration=True)
+    else:
+        settings = get_settings()
+        url = settings.database_url
+        if settings.production:
+            if command == "migrate":
+                raise RuntimeError("Production schema changes require the release-migrate command")
+            target = release_target(url, migration=False)
+        else:
+            local_target(url, settings.identity_env)
+    with psycopg.connect(url, row_factory=dict_row, prepare_threshold=None, autocommit=True) as conn:
+        if target is not None:
+            verify_target(conn, target, migration=release_migration)
         problems = compatibility_problems(conn)
         if problems:
             print("Rails schema is NOT compatible:\n  " + "\n  ".join(problems))
             return 1
         print("Rails schema compatible.")
-        if command == "migrate":
+        if command in {"migrate", "release-migrate"}:
             applied = migrate(conn)
             print("Applied: " + (", ".join(applied) if applied else "nothing (up to date)"))
-        elif command != "check":
-            print(f"unknown command {command!r}; use migrate or check")
-            return 2
+        elif not identity_schema_ready(conn):
+            print("Identity schema migrations are pending.")
+            return 1
     return 0
 
 

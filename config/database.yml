@@ -14,6 +14,10 @@
 # Configure Using Gemfile
 # gem 'pg'
 #
+<%
+  require Rails.root.join("lib/billie_database_target").to_s
+  BillieDatabaseTarget.local!(Rails.env) if Rails.env.local?
+%>
 default: &default
   adapter: postgresql
   encoding: unicode
@@ -28,11 +32,6 @@ default: &default
 development:
   <<: *default
   database: untitled_application_development
-  # Neon: when DATABASE_URL is set (from .env.local), Rails uses it instead of the local database above.
-  # DATABASE_URL is Neon's pooled (PgBouncer, transaction mode) endpoint, which does not
-  # support session-level advisory locks or session-scoped prepared statements.
-  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>advisory_locks: false<% end %>
-  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>prepared_statements: false<% end %>
   # On MacOS some users are reporting crashes when first trying to access
   # the database. This workaround was suggested in this issue on `ruby-pg`:
   # https://github.com/ged/ruby-pg/issues/538
@@ -90,36 +89,18 @@ test:
   <% if ENV['CI'] %>password: <%= ENV['POSTGRES_PASSWORD'] %><% end %>
   <% if ENV['CI'] %>host: localhost<% end %>
 
-# As with config/secrets.yml, you never want to store sensitive information,
-# like your database password, in your source code. If your source code is
-# ever seen by anyone, they now have access to your database.
-#
-# Instead, provide the password as a unix environment variable when you boot
-# the app. Read http://guides.rubyonrails.org/configuring.html#configuring-a-database
-# for a full rundown on how to provide these environment variables in a
-# production deployment.
-#
-# On Heroku and other platform providers, you may have a full connection URL
-# available as an environment variable. For example:
-#
-#   DATABASE_URL="postgres://myuser:mypass@localhost/somedatabase"
-#
-# You can use this database configuration with:
-#
-#   production:
-#     url: <%= ENV['DATABASE_URL'] %>
-  # Neon's pooled endpoint (PgBouncer, transaction mode) doesn't support advisory locks
-  # or session-scoped prepared statements. Migrations use DATABASE_URL_UNPOOLED (see lib/tasks/neon.rake).
-  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>advisory_locks: false<% end %>
-  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>prepared_statements: false<% end %>
-#
 production:
-  <<: *default
-  database: untitled_application_production
-  username: untitled_application
-  password: <%= ENV['UNTITLED_APPLICATION_DATABASE_PASSWORD'] %>
-  url: <%= ENV['DATABASE_URL'] %>
-  # Neon's pooled endpoint (PgBouncer, transaction mode) doesn't support advisory locks
-  # or session-scoped prepared statements. Migrations use DATABASE_URL_UNPOOLED (see lib/tasks/neon.rake).
-  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>advisory_locks: false<% end %>
-  <% if ENV['DATABASE_URL'].to_s.include?('-pooler') %>prepared_statements: false<% end %>
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+  # The asset build supplies a loopback sentinel and drops service database credentials.
+  <%
+    url = ENV.fetch("DATABASE_URL") { raise "Missing production DATABASE_URL" } if Rails.env.production?
+    asset_build = ENV["BILLIE_ASSET_BUILD"] == "1" && url == "postgresql://127.0.0.1:1/billie_asset_build"
+    if url && !asset_build
+      BillieDatabaseTarget.release_url!(url, migration: false)
+    end
+  %>
+  <% if url %>url: <%= url.to_json %><% end %>
+  <% if url.to_s.include?("-pooler.") %>advisory_locks: false<% end %>
+  <% if url.to_s.include?("-pooler.") %>prepared_statements: false<% end %>

@@ -44,7 +44,7 @@ class Services:
 
 def build_services(settings: Settings, *, mail: Mailer | None = None, pwned: PwnedChecker | None = None,
                    google_client: GoogleClient | None = None, db: Database | None = None) -> Services:
-    db = db or Database(settings.database_url, settings.db_pool_max)
+    db = db or Database(settings.database_url, settings.db_pool_max, environment=settings.identity_env)
     pwned = pwned or PwnedChecker(settings.pwned_enabled, timeout=settings.pwned_timeout_seconds)
     if google_client is None and settings.google_configured:
         google_client = GoogleClient(settings.google_client_id, settings.google_client_secret, settings.google_redirect_uri)
@@ -61,7 +61,7 @@ def check_ready(services: Services) -> None:
         with services.db.transaction() as conn:
             problems = compatibility_problems(conn)
             if not identity_schema_ready(conn):
-                problems.append("identity schema not migrated (run: python -m identity_api.schema migrate)")
+                problems.append("identity schema not migrated (apply the approved schema release before starting)")
     except Exception as error:  # noqa: BLE001 - reported, never raised at startup
         problems = [f"database unavailable ({type(error).__name__})"]
     services.problems = tuple(problems)

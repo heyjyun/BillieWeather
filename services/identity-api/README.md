@@ -165,9 +165,9 @@ GRANT CREATE ON DATABASE <db> TO identity_api;  -- once, for CREATE SCHEMA ident
 cd services/identity-api
 uv sync
 # A LOCAL database with the Rails schema (never Neon):
-createdb billieweather_identity_compat
-(cd ../.. && RAILS_ENV=test DATABASE_URL=postgres://localhost/billieweather_identity_compat bin/rails db:schema:load)
-export DATABASE_URL=postgresql://localhost/billieweather_identity_compat
+createdb billieweather_identity_development
+(cd ../.. && RAILS_ENV=development DATABASE_URL=postgres://localhost/billieweather_identity_development bin/rails db:schema:load)
+export DATABASE_URL=postgresql://localhost/billieweather_identity_development
 uv run python -m identity_api.schema migrate
 uv run uvicorn identity_api.main:app --port 8100 --no-access-log
 # Codes are written to tmp/outbox/*.json (MAIL_DELIVERY=outbox). NOTHING is emailed; the log line
@@ -184,15 +184,17 @@ Client: `VITE_BILLIE_IDENTITY_URL=http://localhost:8100 npm run dev` in `clients
 
 ```bash
 uv run pytest                                   # creates billieweather_identity_test (subset schema)
+createdb billieweather_identity_compat
+(cd ../.. && RAILS_ENV=test DATABASE_URL=postgres://localhost/billieweather_identity_compat bin/rails db:schema:load)
 IDENTITY_TEST_DATABASE_URL=postgresql://localhost/billieweather_identity_compat IDENTITY_RAILS_COMPAT=1 uv run pytest   # + real Rails cross-check
 ```
 The harness refuses any database that is not local and named `*_test` / `*_compat`.
 
 ## Deployment (Render, manual)
 
-1. Neon: create a branch first and run `python -m identity_api.schema check` against it.
-2. Render: New › Blueprint › `services/identity-api/render.yaml` (separate from the Rails blueprint; `autoDeploy: false`).
-3. Set `DATABASE_URL` (Neon; the pooled URL works, prepared statements are disabled), `PUBLIC_URL`,
+1. Verify the target and apply the approved schema release using the [database release runbook](../../docs/audits/render-neon-release-runbook.md).
+2. Configure the separate Render Blueprint at `services/identity-api/render.yaml` with automatic deploys off. Startup checks schema readiness and serves `/health`.
+3. Set the verified pooled runtime `DATABASE_URL`, `PUBLIC_URL`,
    `POSTMARK_API_TOKEN`, `MAIL_FROM`, optional `GOOGLE_CLIENT_ID/SECRET` (add the redirect URI
    `{PUBLIC_URL}/v1/google/callback` to the Google client).
 4. Build the apps with `BILLIE_IDENTITY_URL=https://<service>.onrender.com` (and `BILLIE_API_URL`).

@@ -131,9 +131,9 @@ The [IRS document checklist](https://www.irs.gov/filing/gather-your-documents) g
 
 ## Render Free + Neon Free + Render Key Value Free
 
-`render.yaml` provisions one free Web Service and one free Key Value instance. PostgreSQL is external Neon. Set `DATABASE_URL` to the full Neon connection string, including database name and `sslmode=require`. Web and Key Value must share a Render region; choose a nearby Neon region.
+`render.yaml` provisions one free Web Service and one free Key Value instance. PostgreSQL is external Neon. Web and Key Value must share a Render region. The [database release runbook](docs/audits/render-neon-release-runbook.md) covers the pinned database target, TLS, runtime roles and backups.
 
-Connect this GitHub repository through Render **New → Blueprint**, review plans, and deploy. The build precompiles assets and applies migrations/seeds. `SECRET_KEY_BASE` is generated. `BASE_URL` defaults to Render's `RENDER_EXTERNAL_URL`; override it for a custom domain. Health endpoint: `/up`.
+The Blueprint leaves automatic deploys off. The build precompiles assets. Run the approved database release separately before starting a new artifact. `SECRET_KEY_BASE` is generated. `BASE_URL` defaults to Render's `RENDER_EXTERNAL_URL`. Set it explicitly for a custom domain. Use `/up` for the Rails health check.
 
 Add optional settings after the first deployment:
 

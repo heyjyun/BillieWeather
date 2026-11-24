@@ -8,17 +8,24 @@ services:
     plan: free
     rootDir: services/identity-api
     buildCommand: "pip install uv && uv sync --frozen --no-dev"
-    # Applies the additive `identity` schema migration (never touches Rails tables), checks Rails
-    # schema compatibility (refuses to start writing if it fails), then serves.
-    startCommand: "uv run python -m identity_api.schema migrate && uv run uvicorn identity_api.main:app --host 0.0.0.0 --port $PORT --no-access-log"
+    # The startup health check verifies the Rails and identity schema before serving writes.
+    startCommand: "uv run --no-sync uvicorn identity_api.main:app --host 0.0.0.0 --port $PORT --no-access-log"
     healthCheckPath: /health
-    autoDeploy: false
+    autoDeployTrigger: "off"
     envVars:
       - key: IDENTITY_ENV
         value: production
       - key: PYTHON_VERSION
         value: "3.13.1"
       - key: DATABASE_URL          # the same Neon database the Rails service uses
+        sync: false
+      - key: BILLIE_DB_ENV
+        value: production
+      - key: BILLIE_DB_HOST
+        sync: false
+      - key: BILLIE_DB_NAME
+        sync: false
+      - key: BILLIE_DB_TARGET_ID
         sync: false
       - key: PUBLIC_URL            # https://billieweather-identity-api.onrender.com
         sync: false

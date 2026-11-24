@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Run from the pinned release checkout, with credentials injected by the release operator.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+: "${BILLIE_RELEASE_APPROVAL:?Set the approved database change reference}"
+: "${DATABASE_URL_UNPOOLED:?Set the direct migration URL}"
+unset PRIMARY_DATABASE_URL BILLIE_ASSET_BUILD
+
+case "${1:-}" in
+  rails)
+    export RAILS_ENV=production DATABASE_URL="$DATABASE_URL_UNPOOLED"
+    exec bundle exec rake billie:release:migrate
+    ;;
+  identity)
+    cd services/identity-api
+    export IDENTITY_ENV=production
+    exec uv run --no-sync python -m identity_api.schema release-migrate
+    ;;
+  *)
+    printf '%s\n' 'Usage: bin/billie-release rails|identity' >&2
+    exit 2
+    ;;
+esac

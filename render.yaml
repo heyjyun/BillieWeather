@@ -8,13 +8,23 @@ services:
     maxmemoryPolicy: noeviction
   - type: web
     name: web
-    env: ruby
+    runtime: ruby
     plan: free
-    buildCommand: "RUN_MIGRATIONS=1 ./bin/render-build.sh"
-    startCommand: "corepack enable && bundle exec puma -C config/puma.rb"
+    buildCommand: ./bin/render-build.sh
+    startCommand: ./bin/render-start.sh
+    healthCheckPath: /up
+    autoDeployTrigger: "off"
     envVars:
-      # Neon connection string, e.g. postgresql://user:pass@ep-xxx.neon.tech/db?sslmode=require
+      # Pooled Neon URL for a dedicated runtime role. DDL credentials are release-only.
       - key: DATABASE_URL
+        sync: false
+      - key: BILLIE_DB_ENV
+        value: production
+      - key: BILLIE_DB_HOST
+        sync: false
+      - key: BILLIE_DB_NAME
+        sync: false
+      - key: BILLIE_DB_TARGET_ID
         sync: false
       - key: REDIS_URL
         fromService:
