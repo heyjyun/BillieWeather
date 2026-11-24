@@ -114,6 +114,7 @@ pub fn run() {
             // SQL plugin could migrate the only copy. Report a generic error without data paths.
             use tauri::Manager;
             let dir = app.path().app_config_dir()?;
+            snapshot::keep_private(&dir);
             let version = migrations().len() as u32;
             for slot in 1..=MAX_DATABASES {
                 snapshot::snapshot_if_needed(&dir, &slot_name(slot), version)

@@ -128,6 +128,19 @@ pub fn restore(dir: &Path, databases: &[String], snapshot: &str, target: &str) -
     Ok(())
 }
 
+/// The folder with the ledgers, their copies and WAL files is readable by its owner only, whatever
+/// the umask. Best effort: a volume without Unix permissions keeps working.
+pub fn keep_private(dir: &Path) {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+        let _ = std::fs::DirBuilder::new().recursive(true).mode(0o700).create(dir);
+        let _ = std::fs::set_permissions(dir, std::fs::Permissions::from_mode(0o700));
+    }
+    #[cfg(not(unix))]
+    let _ = dir;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -199,5 +212,22 @@ mod tests {
         assert_eq!(mine.len(), KEEP, "{names:?}");
         assert!(!mine.iter().any(|n| n.contains("-100.bak") || n.contains("-200.bak")));
         assert!(names.contains(&"billieweather-2.db.pre-v7-50.bak".to_string()), "other slots are never pruned");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn the_ledger_folder_is_readable_by_its_owner_only() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = std::env::temp_dir().join(format!("bw-private-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        keep_private(&dir);
+        let mode = |path: &Path| std::fs::metadata(path).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode(&dir), 0o700);
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+        std::fs::write(dir.join("billieweather.db"), b"kept").unwrap();
+        keep_private(&dir);
+        assert_eq!(mode(&dir), 0o700);
+        assert_eq!(std::fs::read(dir.join("billieweather.db")).unwrap(), b"kept");
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }
