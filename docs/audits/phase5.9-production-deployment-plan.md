@@ -26,7 +26,7 @@ Everyone signs in once more, in the apps and on the website: older tokens and co
 
 ## Rollback
 
-Redeploy the previous Rails release and keep the schema. **This brings back the old defect**: tokens issued before the release, and tokens that were signed out, are accepted again until they expire (rehearsed: 200). Do not run the down migration unless the table itself is the problem; it deletes the sessions, so everyone signs in again. If accounts may be compromised, change those passwords: both releases honour that.
+**Superseded on 2026-11-25**: close the rollback fence and roll back to `rollback/session-safe` instead ([runbook](render-neon-release-runbook.md)). Without the fence: redeploy the previous Rails release and keep the schema. **This brings back the old defect**: tokens issued before the release, and tokens that were signed out, are accepted again until they expire (rehearsed: 200). Do not run the down migration unless the table itself is the problem; it deletes the sessions, so everyone signs in again. If accounts may be compromised, change those passwords: both releases honour that.
 
 ## Rehearsal, 2026-11-24, isolated PostgreSQL, 20 synthetic transactions
 

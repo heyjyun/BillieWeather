@@ -1,10 +1,13 @@
 require_relative "../billie_database_target"
+require_relative "../billie_runtime_settings"
 
 namespace :billie do
   namespace :release do
     desc "Verify the release database and schema using the runtime role"
     task check: :environment do
       abort "Use RAILS_ENV=production for release startup" unless Rails.env.production?
+      # A local rehearsal has no public address; its database rules are checked below.
+      BillieRuntimeSettings.verify! unless ENV["BILLIE_DB_ENV"] == "local" && ENV["RENDER"] != "true"
       target = BillieDatabaseTarget.release_url!(ENV.fetch("DATABASE_URL"), migration: false)
       ActiveRecord::Base.with_connection do |connection|
         BillieDatabaseTarget.verify!(connection, target, migration: false)

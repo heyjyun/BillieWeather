@@ -152,11 +152,23 @@ class SessionRevocationTest < ActionDispatch::IntegrationTest
 
   test "expired tokens are refused" do
     token = app_token
-    travel UserSession::LIFETIME - 1.minute do
-      assert_equal 200, app_status(token)
+    [UserSession::IDLE - 1.minute, UserSession::IDLE * 2 - 1.hour, UserSession::LIFETIME - 1.minute].each do |later|
+      travel(later) { assert_equal 200, app_status(token) }
     end
     travel UserSession::LIFETIME + 1.minute do
       assert_equal 401, app_status(token)
+    end
+  end
+
+  test "a session nobody used ends early, for apps and browsers, and use keeps it alive" do
+    unused = app_token
+    used = app_token
+    browser
+    travel(UserSession::IDLE - 1.day) { assert_equal 200, app_status(used) }
+    travel UserSession::IDLE + 1.minute do
+      assert_equal 401, app_status(unused)
+      assert_equal 200, app_status(used)
+      assert_equal 0, UserSession.active.where(kind: "web").count
     end
   end
 

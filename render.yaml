@@ -47,5 +47,7 @@ envVarGroups:
     envVars:
       - key: HIDE_THINGS
         generateValue: true
-      - key: SECRET_KEY_BASE
+      # Never SECRET_KEY_BASE: releases from before server-side sign-ins read that name, and a rollback to
+      # one would accept credentials that were signed out. Delete SECRET_KEY_BASE from the group (runbook).
+      - key: BILLIE_SECRET_KEY_BASE
         generateValue: true

@@ -1,0 +1,10 @@
+Rollback rehearsal, 2026-11-25, production mode, isolated PostgreSQL, synthetic account. HTTP status of GET account per token.
+old = e4380af (main), new = working tree with the fence, safe = old + server-side sign-ins + fence. K1/K2 = two synthetic keys.
+1 old, SECRET_KEY_BASE=K1:   issue A 200; sign A out 204; A again 200   (the old defect)
+2 old:                       issue B 200
+3 new, BILLIE_SECRET_KEY_BASE=K2: A 401, B 401; issue N 200, sign out 204, N 401
+4 old again, SECRET_KEY_BASE=K1:  A 200, B 200, N 401   (rollback WITHOUT the fence: signed-out A works again)
+5 old again, SECRET_KEY_BASE removed: refuses to boot (Missing secret_key_base)
+6 old again, SECRET_KEY_BASE=other:   A 401, B 401, N 401
+7 safe, BILLIE_SECRET_KEY_BASE=K2:    A 401, B 401, N 401; issue S 200, sign out 204, S 401
+8 new again:                          A 401, B 401, N 401, S 401

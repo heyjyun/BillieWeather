@@ -1,0 +1,4 @@
+2026-11-25 01:27:02 CST sprint started; scheduler being set up
+2026-11-25 01:31:19 CST scheduler: launchd refused Documents access (TCC); detached waiter + in-session cron established and probed
+2026-11-25 01:31:19 CST 5.9 GUI: QA app activated once; hardware input (keys/clicks in another app) seen right after. DEVIATION: focus was taken from a user who was present. QA app stopped; GUI resumes only after 10 min without hardware input (driver enforces it)
+2026-11-25 01:32:45 CST the user re-sent the same sprint instructions; permission renewed; work continues

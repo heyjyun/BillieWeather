@@ -10,6 +10,8 @@ class UserSession < ApplicationRecord
   KINDS = %w[app web].freeze
   REASONS = %w[signed_out signed_out_elsewhere password_changed replaced].freeze
   LIFETIME = 30.days
+  # A session nobody used for this long ends early. It bounds a copy whose sign-out the server never heard of.
+  IDLE = 14.days
   # Revoked and expired rows are kept this long after they end, then pruned when the person next signs in.
   RETENTION = 90.days
   TOUCH_EVERY = 5.minutes
@@ -22,7 +24,10 @@ class UserSession < ApplicationRecord
 
   validates :kind, inclusion: {in: KINDS}
 
-  scope :active, -> { where(revoked_at: nil).where("user_sessions.expires_at > ?", Time.current) }
+  scope :active, -> {
+    where(revoked_at: nil).where("user_sessions.expires_at > ?", Time.current)
+      .where("COALESCE(user_sessions.last_used_at, user_sessions.created_at) > ?", IDLE.ago)
+  }
 
   class << self
     def digest(secret) = Digest::SHA256.hexdigest(secret.to_s)
