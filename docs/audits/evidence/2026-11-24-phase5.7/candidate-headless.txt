@@ -1,0 +1,6 @@
+csv: 2 rows, +9575; repeat blocked
+scanned statement: 8/8 rows match date+amount; before review ok=false undecided=1; committed 8, sum 28604; repeat blocked
+receipt-match.png: engine=apple-vision merchant=COFFEE CORNER date=2026-03-03 total=5.75 USD match=exact
+receipt-new.jpg: engine=apple-vision merchant=QA SYNTHETIC MARKET date=2026-03-20 total=10.25 USD match=none
+  confirmed: +1 row, -1025 cents; second capture match=exact
+after reopening: {"n":11,"sum":37154}; corrupt receipt refused, nothing written

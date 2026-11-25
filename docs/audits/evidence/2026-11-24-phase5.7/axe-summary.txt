@@ -1,0 +1,9 @@
+before (4cf57e7 UI, Chromium): 26 nodes
+10 | color-contrast | .bw-subtab.is-active[aria-current="page"] | Element has insufficient color contrast of 4.37 (foreground color: #c2357f, background color: #fce8f3, font si
+4 | empty-table-header | th:nth-child(8) | Element does not have text that is visible to screen readers
+4 | color-contrast | .is-manual | Element has insufficient color contrast of 3.37 (foreground color: #ffffff, background color: #e458a3, font si
+2 | color-contrast | .bw-mix-value | Element has insufficient color contrast of 4.41 (foreground color: #ffffff, background color: #2a78d6, font si
+2 | color-contrast | .is-on.bw-library-card[data-module="transactions"] | Element has insufficient color contrast of 4.37 (foreground color: #c2357f, background color: #fce8f3, font si
+2 | color-contrast | .is-on.bw-library-card[data-module="ai_assistant"] | Element has insufficient color contrast of 4.37 (foreground color: #c2357f, background color: #fce8f3, font si
+2 | color-contrast | .bw-mix-value | Element has insufficient color contrast of 3.63 (foreground color: #ffffff, background color: #3987e5, font si
+after (929c23a source, WebKit 2388, 4 theme/language combinations): 0; remaining modules light+dark in Chromium: 0

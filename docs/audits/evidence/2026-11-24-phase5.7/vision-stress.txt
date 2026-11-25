@@ -1,0 +1,16 @@
+1 fresh identity, uninterrupted cold preparation: (0, 34.29) | warm preparation: (0, 0.24)
+2 first recognition after preparation: ok 0.45 correct
+3 fresh identity, preparation stopped at 5 s: ('killed', 5.01) | next 18 s request: ('TIMEOUT', 18.0) | full preparation: (0, 48.43) | recognition: ('ok', 0.62)
+4 fresh identity, request 1 s into preparation: ('TIMEOUT', 18.01) | preparation: (0, 62.39) | after: ('ok', 0.56)
+5 sequential images: n=60 {'ok': 60} min=0.44 p50=0.55 p95=0.82 max=0.83
+6 two-page document pages: n=30 {'ok': 30} min=0.37 p50=0.46 p95=0.5 max=0.58
+7 three at once: n=45 {'ok': 45} min=0.73 p50=0.76 p95=0.89 max=1.23
+8 cancel, then recognise: n=20 {'ok': 20} min=0.44 p50=0.46 p95=0.53 max=0.55
+9 invalid input: n=20 {'handled': 20} min=0.01 p50=0.01 p95=0.32 max=0.34
+  empty input: ('EXIT1', 0.01)
+10 repeated preparation: n=20 {'ok': 20} min=0.24 p50=0.26 p95=0.26 max=0.26
+11 approximate app update (same identity, re-signed, new path and hash): first recognition ('ok', 0.7) | preparation (0, 0.25)
+12 worker never given its image ends by its own watchdog: exit 3 20.1 s
+13 worker whose parent exited: alive after 3 s = False
+14 leftover workers: 0 | total 276 s
+--- second candidate (929c23a), same identity qa.v1, different binary: first recognition 0.84 s correct; preparation 0.31 s

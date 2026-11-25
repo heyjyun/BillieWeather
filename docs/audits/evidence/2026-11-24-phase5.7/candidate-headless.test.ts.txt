@@ -1,0 +1,83 @@
+// Headless use of the release candidate's own OCR worker (not GUI acceptance): RC worker -> the same import
+// services -> a SQLite file -> reopened. Run with RC_APP, PICK and OUT set.
+import { spawnSync } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
+import initSqlJs from "sql.js";
+import { commitPlan, decisionFor, mergeOcrResults, OCR_LANGUAGES, parseOcrResult, reviseDraft, suggestedDecision, type OcrEngine } from "@billie/finance-core";
+import { migrate } from "./helpers";
+import { sqljsDriver } from "../src/services/sqljsDriver";
+import { FinanceStore } from "../src/services/store";
+import { registerOcrEngine } from "../src/services/ocrEngine";
+import { commitDraft, importContext, importDraftFile } from "../src/services/universalImport";
+import { createOcrDraft } from "@billie/finance-core";
+import { amountCents, checkDuplicates, entryFromReceipt, extractReceipt, initialValues, matchCandidates, recognizeReceipt } from "../src/services/receipt";
+
+const { RC_APP = "", PICK = "", OUT = "" } = process.env;
+const log: string[] = [];
+const engine: OcrEngine = {
+  info: { id: "apple-vision", location: "device", languages: [...OCR_LANGUAGES] },
+  recognize: async ({ images }) => mergeOcrResults(images.map((image) => {
+    const out = spawnSync(`${RC_APP}/Contents/MacOS/billieweather`, ["--billie-vision-worker", "en-US,zh-Hans,zh-Hant", String(image.page)], { input: image.bytes, timeout: 18_000, maxBuffer: 32e6 });
+    if (out.status !== 0) throw new Error(`worker ${out.status}`);
+    return parseOcrResult(JSON.parse(out.stdout.toString("utf8")));
+  })),
+};
+const bytes = (name: string) => new Uint8Array(readFileSync(`${PICK}/${name}`));
+const total = async (store: FinanceStore) => { const rows = await store.transactions(); return { n: rows.length, sum: rows.reduce((a, r) => a + r.amountCents, 0) }; };
+
+it("RC worker: cold preparation, CSV, scanned statement, receipts, duplicates, restart", async () => {
+  registerOcrEngine(engine);
+  const SQL = await initSqlJs(); const db = new SQL.Database(); migrate(db);
+  const store = new FinanceStore(sqljsDriver(db));
+  // CSV
+  const csv = await importDraftFile(store, bytes("qa-sample.csv"), "qa-sample.csv", "USD");
+  expect(await total(store)).toEqual({ n: 0, sum: 0 }); // preview and cancel write nothing
+  let ctx = await importContext(store);
+  await commitDraft(store, csv, ctx);
+  expect(await total(store)).toEqual({ n: 2, sum: 9575 });
+  await expect(importDraftFile(store, bytes("qa-sample.csv"), "qa-sample.csv", "USD")).rejects.toMatchObject({ code: "file_duplicate" });
+  ctx = await importContext(store);
+  log.push("csv: 2 rows, +9575; repeat blocked");
+  // Scanned statement (the two rendered pages of scanned-statement.pdf)
+  const pages = [1, 2].map((page) => ({ page, bytes: bytes(`multipage-${page}.png`), kind: "png" as const }));
+  let draft = await createOcrDraft({ bytes: bytes("scanned-statement.pdf"), filename: "scanned-statement.pdf", format: "pdf_scanned", images: pages }, { ...ctx, deviceCurrency: "USD" });
+  const truth = JSON.parse(readFileSync(`${PICK}/truth.json`, "utf8")).multipage;
+  const matched = truth.rows.filter((t: { date: string; amountMinor: number }) => draft.rows.some((r) => r.transactionDate === t.date && r.amountMinor === t.amountMinor)).length;
+  const before = { ok: commitPlan(draft, ctx).ok, undecided: draft.rows.filter((r) => decisionFor(draft, r) === "undecided").length };
+  expect(await total(store)).toEqual({ n: 2, sum: 9575 });
+  draft = reviseDraft(draft, { decisions: Object.fromEntries(draft.rows.filter((r) => r.status !== "rejected" && decisionFor(draft, r) === "undecided").map((r) => [r.id, "include"])) }, ctx);
+  void suggestedDecision;
+  await commitDraft(store, draft, ctx);
+  const afterPdf = await total(store);
+  expect(afterPdf.n - 2).toBe(truth.rows.length);
+  expect(afterPdf.sum - 9575).toBe(truth.rows.reduce((a: number, r: { amountMinor: number }) => a + r.amountMinor, 0));
+  const ctx2 = await importContext(store);
+  await expect(createOcrDraft({ bytes: bytes("scanned-statement.pdf"), filename: "scanned-statement.pdf", format: "pdf_scanned", images: pages }, ctx2)).rejects.toMatchObject({ code: "file_duplicate" });
+  log.push(`scanned statement: ${matched}/${truth.rows.length} rows match date+amount; before review ok=${before.ok} undecided=${before.undecided}; committed ${afterPdf.n - 2}, sum ${afterPdf.sum - 9575}; repeat blocked`);
+  // Receipts
+  const account = (await store.ledger.accounts())[0];
+  const cands = async () => matchCandidates(await store.transactions(), await store.ledger.accounts(), "USD");
+  for (const name of ["receipt-match.png", "receipt-new.jpg"]) {
+    const read = await recognizeReceipt(bytes(name), name);
+    const values = initialValues(extractReceipt(read.lines, { currency: "USD", today: "2026-11-24" }));
+    const check = checkDuplicates(values, await cands());
+    log.push(`${name}: engine=${read.engine} merchant=${values.merchant} date=${values.date} total=${values.total} ${values.currency} match=${check.level}`);
+    if (name === "receipt-match.png") expect(check.level).not.toBe("none");
+    else {
+      expect(check.level).toBe("none");
+      await store.ledger.createEntry(entryFromReceipt(values, { accountId: account.id, category: "Food & dining", words: { receipt: "Receipt", tax: "Tax", tip: "Tip", number: "No.", card: "Card" } as never }));
+      expect((await total(store)).n).toBe(afterPdf.n + 1);
+      const second = checkDuplicates(values, await cands());
+      expect(second.level).not.toBe("none");
+      log.push(`  confirmed: +1 row, ${-amountCents(values.total)!} cents; second capture match=${second.level}`);
+    }
+  }
+  await expect(recognizeReceipt(bytes("receipt-corrupt.png"), "receipt-corrupt.png")).rejects.toThrow();
+  const final = await total(store);
+  // Restart: the file is written, closed and opened again.
+  writeFileSync(`${OUT}/billieweather.db`, Buffer.from(db.export())); db.close();
+  const reopened = new FinanceStore(sqljsDriver(new SQL.Database(readFileSync(`${OUT}/billieweather.db`))));
+  expect(await total(reopened)).toEqual(final);
+  log.push(`after reopening: ${JSON.stringify(final)}; corrupt receipt refused, nothing written`);
+}, 300_000);
+afterAll(() => writeFileSync(`${OUT}/log.txt`, log.join("\n") + "\n"));

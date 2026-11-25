@@ -1,0 +1,52 @@
+import { createRequire } from 'node:module'; import { readFileSync, writeFileSync } from 'node:fs';
+const require = createRequire('~/Documents/Developer/Developping/BillieWeather/billieweather-roadmap/clients/universal/package.json');
+const { chromium } = require('playwright-core');
+const here = new URL('.', import.meta.url).pathname; const axe = readFileSync(here + 'node_modules/axe-core/axe.min.js', 'utf8');
+const origin = 'http://127.0.0.1:14857'; const browser = await chromium.launch({ executablePath: '~/Library/Caches/ms-playwright/chromium_headless_shell-1255/chrome-headless-shell-mac-arm64/chrome-headless-shell' }); const all = []; const probs = [];
+const pages = ['Transactions','Accounts','Categories','Budgets','Recurring & Bills','Reports','AI Assistant'];
+async function setup(theme, locale, signedIn, opts = {}) {
+  const account = { email: 'audit@example.invalid', nickname: 'Synthetic audit', locale, time_zone: 'America/Chicago', usage_region: 'US', registered_at: opts.welcome ? new Date().toISOString() : null, owner_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
+  const ctx = await browser.newContext({ viewport: opts.viewport ?? { width: 1280, height: 900 }, colorScheme: theme, reducedMotion: 'reduce' });
+  await ctx.route('**/*', async (route) => { const q = route.request(), u = new URL(q.url()); if (u.origin === origin || u.protocol === 'data:' || u.protocol === 'blob:') return route.continue();
+    const headers = { 'access-control-allow-origin': origin, 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS' };
+    if (q.method() === 'OPTIONS') return route.fulfill({ status: 204, headers }); let body, status = 200; const p = u.pathname;
+    if (p.endsWith('/session')) { status = 401; body = { error: 'invalid_credentials', code: 'invalid_credentials' }; }
+    else if (p.endsWith('/account')) { if (q.method() === 'PATCH') Object.assign(account, q.postDataJSON().account); body = { account }; }
+    else if (p.endsWith('/finance')) body = { currency: null, version: 'e', statement_count: 0, transaction_count: 0 };
+    else if (p.endsWith('/statements')) body = { statements: [] }; else if (p.endsWith('/transactions')) body = { transactions: [], next_after_id: null };
+    else if (p.endsWith('/rules')) body = { rules: [] }; else if (p.endsWith('/categories')) body = { categories: [] }; else { status = 404; body = { error: 'not_found' }; }
+    return route.fulfill({ status, contentType: 'application/json', headers, body: JSON.stringify(body) }); });
+  await ctx.addInitScript(([l, t, s]) => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('billie.locale', l); localStorage.setItem('billie.theme', t); if (s) sessionStorage.setItem('billie.token', 'synthetic'); sessionStorage.setItem('seeded', '1'); } }, [locale, theme, signedIn]);
+  const page = await ctx.newPage(); page.on('pageerror', (e) => probs.push('pageerror ' + e.message)); await page.goto(origin); return { ctx, page };
+}
+async function scan(page, label) { await page.waitForTimeout(350); await page.evaluate(axe);
+  const r = await page.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa','best-practice'] }));
+  const lang = await page.evaluate(() => document.documentElement.lang);
+  for (const v of r.violations) for (const n of v.nodes) all.push({ label, lang, id: v.id, impact: v.impact, target: n.target.join(' '), html: n.html.slice(0, 160), why: (n.any[0] ?? n.all[0] ?? n.none[0])?.message?.slice(0, 180) });
+  console.log(label, 'lang=' + lang, r.violations.map((v) => `${v.id}:${v.nodes.length}`).join(' ') || 'clean'); }
+for (const theme of ['light', 'dark']) for (const locale of ['en', 'zh-CN']) { const T = `${theme}/${locale} `;
+  let { ctx, page } = await setup(theme, locale, false); await page.locator('form').waitFor(); await scan(page, T + 'login');
+  await page.locator('input[type=email]').fill('a@example.invalid'); await page.locator('input[type=password]').fill('x'); await page.locator('button[type=submit]').click(); await page.locator('[role=alert]').waitFor(); await scan(page, T + 'login-error');
+  const f = await page.evaluate(() => document.activeElement?.tagName + '.' + (document.activeElement?.type ?? '')); console.log('   focus after login error:', f);
+  await page.locator('.bw-login-links button').first().click(); await page.locator('h1').waitFor(); await scan(page, T + 'register'); await ctx.close();
+  ({ ctx, page } = await setup(theme, locale, true, { welcome: true })); await page.locator('h1').waitFor(); await scan(page, T + 'welcome'); await ctx.close();
+  ({ ctx, page } = await setup(theme, locale, true)); await page.locator('nav').first().waitFor(); await scan(page, T + 'overview-empty');
+  const nav = page.locator('#module-nav button'); const tabs = () => page.locator('#transactions-tabs .bw-tabs button'); const sub = () => page.locator('.bw-subtabs button');
+  await tabs().nth(2).click(); await scan(page, T + 'addsync'); await sub().nth(0).click(); await scan(page, T + 'import');
+  await page.locator('input[type=file]').setInputFiles(here + '../qa-sample.csv'); await page.waitForTimeout(1500); await scan(page, T + 'import-preview');
+  console.log('   focus after choosing file:', await page.evaluate(() => document.activeElement?.tagName + ' ' + (document.activeElement?.className ?? '')));
+  const conf = page.locator('button.bw-button-dark:not([disabled])'); for (let i = 0; i < await conf.count(); i++) { const t = await conf.nth(i).innerText(); if (/import|导入/i.test(t)) { await conf.nth(i).click(); break; } } await page.waitForTimeout(1200); await scan(page, T + 'import-done');
+  console.log('   focus after import:', await page.evaluate(() => document.activeElement?.tagName + ' ' + (document.activeElement?.className ?? '')));
+  await sub().nth(1).click(); await scan(page, T + 'receipt'); await tabs().nth(0).click(); await scan(page, T + 'overview-data'); await tabs().nth(1).click(); await scan(page, T + 'all-transactions');
+  const n = await nav.count(); for (let i = 0; i < n; i++) { await nav.nth(i).click(); const mod = await nav.nth(i).getAttribute('data-module'); if (mod !== 'transactions') await scan(page, T + mod); }
+  await nav.last().click(); const settings = page.locator('.bw-nav ul').nth(1).locator('button'); await settings.click(); await scan(page, T + 'settings');
+  const lib = page.locator('main button', { hasText: /Feature Library|功能库/ }).first(); if (await lib.count()) { await lib.click(); await scan(page, T + 'feature-library'); }
+  await settings.click(); const data = page.locator('main button', { hasText: /Data|数据/ }).first(); if (await data.count()) { await data.click(); await scan(page, T + 'data'); }
+  await page.locator('.bw-mode-option').nth(1).click(); await page.waitForTimeout(300); await scan(page, T + 'manual');
+  await nav.first().click(); await tabs().nth(1).click(); await page.locator('.bw-page-heading .bw-button-dark').click(); await scan(page, T + 'manual-transactions+entry'); 
+  console.log('   focus after New entry:', await page.evaluate(() => document.activeElement?.tagName + ' ' + (document.activeElement?.className ?? '')));
+  for (const w of [320, 768]) { await page.setViewportSize({ width: w, height: 800 }); const over = []; for (const i of [0, 1, 2]) { await page.keyboard.press('Escape'); await tabs().nth(i).click(); await page.waitForTimeout(250); const o = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth); over.push(o); } console.log('   overflow at', w, over.join(',')); }
+  await ctx.close(); }
+await browser.close(); writeFileSync(here + (process.argv[2] ?? 'result') + '.json', JSON.stringify(all, null, 1));
+const g = {}; for (const a of all) { const k = `${a.id} [${a.impact}] ${a.target}`; (g[k] ??= { n: 0, why: a.why, html: a.html, labels: new Set() }).n++; g[k].labels.add(a.label); }
+console.log('\nTOTAL', all.length); for (const [k, v] of Object.entries(g).sort((a, b) => b[1].n - a[1].n).slice(0, 60)) console.log(v.n, k, '|', v.why, '|', [...v.labels].slice(0, 2).join('; ')); console.log(probs.slice(0, 5));

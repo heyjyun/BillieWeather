@@ -10,5 +10,5 @@
 6. **监控**：5xx 率、登录失败率、导入失败率、数据库连接与锁等待、健康检查。客户端只上报错误代码，不含金额、描述或路径。
 7. **回滚**：优先重新部署兼容的上一版本，保留结构与审计数据；数据恢复先在隔离目标核对。
 8. **事故响应**：关闭 `BILLIE_MODULE_SYNC` 或暂停受影响写入；保全日志与备份；确认受影响账户；修复后核对交易、退款、转账、导入不变量；记录时间线。
-9. **macOS**：Developer ID 签名、公证、stapling、`spctl` 通过、干净机器安装、旧版本升级、首次 OCR 准备、收据与扫描 PDF 导入、重启校验。不得以默认标识运行测试构建。
+9. **macOS**：Developer ID 签名、公证、stapling、`spctl` 通过、干净机器安装、旧版本升级、首次 OCR 准备、收据与扫描 PDF 导入、重启校验。测试构建只用 `node clients/universal/scripts/qa.mjs build | preflight | launch`，默认标识的 debug 构建会拒绝启动。RC 自身须走完 GUI 验收，步骤见 [Phase 5.7](phase5.7-final-rc-acceptance.md) 第 17 节。
 10. **其他平台**：Intel、Windows、iOS、Android 各自完成工具链构建、权限、签名和真机验收后才列入。

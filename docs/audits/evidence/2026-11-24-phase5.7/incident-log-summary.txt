@@ -1,0 +1,7 @@
+unified log, pid 89110, 2026-11-24 16:41:30-16:44:25, counts only
+SecKeychainFindGenericPassword 2
+didFinishLoadForFrame 1
+didCommitLoadForFrame 1
+httpStatusCode=200 142
+didFinishLoading 144
+lines naming billieweather.db or com.billieweather.client: 0
