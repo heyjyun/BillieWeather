@@ -21,7 +21,10 @@ describe("release gates", () => {
 describe("version", () => {
   it("comes from package.json everywhere", () => {
     const version = JSON.parse(file("package.json")).version as string;
-    expect(version).toMatch(/^\d+\.\d+\.\d+$/);
+    const [, plain, beta] = /^(\d+\.\d+\.\d+)(?:-beta\.([1-9]\d*))?$/.exec(version) ?? [];
+    expect(plain).toBeTruthy();
+    // MSI knows no "-beta": the fourth number is the beta (an MSI of the release itself has none).
+    expect(JSON.parse(file("src-tauri/tauri.conf.json")).bundle.windows.wix.version).toBe(beta ? `${plain}.${beta}` : plain);
     expect(JSON.parse(file("src-tauri/tauri.conf.json")).version).toBe("../package.json");
     expect(/^version = "(.*)"$/m.exec(file("src-tauri/Cargo.toml"))?.[1]).toBe(version);
     expect(JSON.parse(file("package-lock.json")).version).toBe(version);
