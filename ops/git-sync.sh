@@ -21,7 +21,7 @@ check() {
   files="$(git diff --name-only --diff-filter=AM "$range" 2>/dev/null || true)"
   [[ -n "$files" ]] || { echo "nothing new in $range"; return 0; }
   if echo "$files" | grep -E "$FORBIDDEN" | grep -v '\.env\.example$' | allow | grep .; then echo "^ data, keys or build output — not pushed"; bad=1; fi
-  hits="$(git diff "$range" -U0 | grep -E '^\+' | grep -v '^+++' | grep -nE "$SECRETS" | allow)"
+  hits="$(git diff "$range" -U0 | grep -E '^\+' | grep -v '^+++' | grep -nE "$SECRETS" | allow || true)"
   [[ -z "$hits" ]] || { echo "$hits" | head -5 | cut -c1-120; echo "^ looks like a credential — not pushed"; bad=1; }
   while read -r f; do
     [[ -f "$f" ]] || continue
