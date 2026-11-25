@@ -1,5 +1,5 @@
-bin/render-start.sh, RAILS_ENV=production, isolated PostgreSQL restore, runtime role without schema rights, commit 315c39f. 2026-11-25 02:29.
+bin/render-start.sh, RAILS_ENV=production, isolated PostgreSQL restore, runtime role without schema rights, commit 315c39f. 2026-11-25, about 02:28.
 billie:release:check passed with the runtime role; refused the owner role and a wrong target id (earlier run).
 login x2 ok (47-character tokens); finance 200; sign out 204 then 401, other token 200; sign out others -> 401, own 200; tampered 401; none 401
-web sign-in 303, /app 200, cookie Secure; HSTS, X-Frame-Options, nosniff, Referrer-Policy present; no Content-Security-Policy header
+web sign-in 303, /app 200, cookie Secure; HSTS, X-Frame-Options, nosniff, Referrer-Policy present; no Content-Security-Policy header then (added afterwards)
 API sign-in limit: 429 from the 11th request in a minute. Log of 142 lines: 0 emails, 0 passwords, 0 tokens

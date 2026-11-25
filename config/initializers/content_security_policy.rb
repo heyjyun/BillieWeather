@@ -1,3 +1,14 @@
+# Only what cannot break a page: no plugins, no <base> redirection of links and scripts, no framing by other
+# sites. script-src and style-src need nonces in the Bullet Train layouts first; form-action would stop the
+# redirect to Google.
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.object_src :none
+    policy.base_uri :self
+    policy.frame_ancestors :self
+  end
+end
+
 # Be sure to restart your server when you modify this file.
 
 # Define an application-wide content security policy.

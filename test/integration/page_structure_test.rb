@@ -21,4 +21,11 @@ class PageStructureTest < ActionDispatch::IntegrationTest
       assert_equal 1, page.css("h1").size, path
     end
   end
+
+  test "pages cannot be framed, rebased or host plugins" do
+    ["/users/sign_in", "/about"].each do |path|
+      get path
+      assert_equal "object-src 'none'; base-uri 'self'; frame-ancestors 'self'", response.headers["Content-Security-Policy"], path
+    end
+  end
 end
