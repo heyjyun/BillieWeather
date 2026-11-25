@@ -10,7 +10,7 @@ import { registerZhTW } from "./register";
 
 export const zhTW: Messages = {
   languageName: "繁體中文",
-  boot: { opening: "正在開啟本機資料…", dbError: "無法開啟本機資料庫。" },
+  boot: { opening: "正在開啟本機資料…", dbError: "無法開啟本機資料庫。", failure: { locked: "另一個程式或另一個 BillieWeather 正在使用它。請先關閉，再重試。資料沒有變動。", damaged: "檔案已損壞，BillieWeather 沒有更動它。請保留該檔案，然後在另一個資料庫的「資料」頁面還原備份或自動副本。", newer: "它上次由較新版本的 BillieWeather 開啟。請安裝最新版本後再開啟。資料沒有變動。", full: "此裝置的可用空間不足。請釋出一些空間，再重試。資料沒有變動。", permission: "BillieWeather 沒有權限開啟該檔案。請檢查資料夾的權限和可用空間，再重試。資料沒有變動。", other: "資料沒有變動。請重試，或重新啟動應用程式。" }, openAnother: "開啟另一個資料庫" },
   connection: { offline: "目前離線。本機儲存的所有資料都可以檢視和編輯；帳戶資訊和雲端同步會在恢復連線後繼續。", unreachable: "BillieWeather 伺服器暫時沒有回應。本機儲存的所有資料都可以檢視和編輯；帳戶資訊和雲端同步會在伺服器恢復後繼續。", retry: "重試", checking: "正在檢查…" },
   dbName: { eyebrow: "首次在此裝置上使用", heading: "為此裝置的資料庫命名", intro: "你的財務資料儲存在此裝置上的資料庫中。取個名字，方便區分你的各台裝置。之後可以在「資料」頁面修改。", label: "資料庫名稱", help: "已自動填入此裝置的名稱，可改成任意名字。", fallback: "我的裝置", create: "建立資料庫", creating: "正在建立…", failed: "名稱未能儲存，請重試。" },
   nav: { skip: "跳到主要內容", collapse: "收合側邊欄", expand: "展開側邊欄", main: "主要導覽", dashboard: "財務總覽", transactions: "交易紀錄", categories: "分類", import: "匯入", reports: "報表", data: "資料管理", settings: "設定", note: "除非你主動同步，財務資料只保存在本機" },

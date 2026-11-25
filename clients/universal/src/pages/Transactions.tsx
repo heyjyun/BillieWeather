@@ -91,7 +91,12 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   }
 
   async function change(transaction: Transaction, category: Category) {
-    const others = await store.setCategory(transaction.id, category, remember);
+    let others: number;
+    try {
+      others = await store.setCategory(transaction.id, category, remember);
+    } catch {
+      return setStatus(m.ledger.errors.unknown);
+    }
     await refresh();
     const merchant = merchantKey(transaction.description);
     if (remember && merchant && category !== "Uncategorized") {
@@ -103,9 +108,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   }
 
   async function toggleExcluded(transaction: Transaction) {
-    await store.setExcluded(transaction.id, !transaction.excluded);
-    await refresh();
-    setStatus(transaction.excluded ? x.included : x.excludedStatus);
+    await run(() => store.setExcluded(transaction.id, !transaction.excluded), transaction.excluded ? x.included : x.excludedStatus);
   }
 
   useEffect(() => { if (view !== "trash") setPurging(null); }, [view]);

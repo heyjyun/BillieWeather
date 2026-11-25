@@ -46,6 +46,9 @@ h1[tabindex]:focus, h2[tabindex]:focus, .bw-main:focus, .bw-message[tabindex]:fo
 /* ---------- Boot / loading ---------- */
 .bw-boot { display: grid; place-items: center; align-content: center; gap: 16px; min-height: 100vh; color: var(--muted); }
 .bw-boot::before { content: ""; width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--bw-color-accent); animation: bw-spin 0.8s linear infinite; }
+.bw-boot[role="alert"] { padding: 24px; text-align: center; color: var(--text, inherit); }
+.bw-boot[role="alert"] > * { max-width: 46ch; margin: 0; }
+.bw-boot[role="alert"]::before { display: none; }
 @keyframes bw-spin { to { transform: rotate(360deg); } }
 
 /* ---------- Shell: purple sidebar ---------- */

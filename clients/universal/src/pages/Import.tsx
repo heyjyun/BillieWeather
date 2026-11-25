@@ -13,6 +13,7 @@ import { useFocusWhenLost } from "../hooks/useFocus";
 import { useFinance } from "../hooks/useFinance";
 import { interpolate, useI18n } from "../i18n";
 import importErrors from "../i18n/importErrors.json";
+import { openFailure } from "../services/databases";
 import { randomId } from "../services/ids";
 import { importPdfReview, previewPdfFile, type PdfReview as Review } from "../services/importFile";
 import { DocumentTooLarge, statementExtensions, type LocalDocument } from "../services/documentInput";
@@ -76,7 +77,9 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
       const translated = (importErrors as Record<string, Record<string, string>>)[locale]?.[error.code];
       if (translated) return interpolate(translated, error.vars);
     }
-    return x.genericError;
+    // The database refused (locked, full, no permission…): say which, and that nothing was saved.
+    const refused = openFailure(String((error as Error)?.message ?? error));
+    return refused === "other" ? x.genericError : `${x.genericError} ${m.boot.failure[refused]}`;
   }
 
   async function onFiles(files: LocalDocument[]) {

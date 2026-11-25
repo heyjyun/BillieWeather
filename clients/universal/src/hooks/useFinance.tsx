@@ -1,7 +1,7 @@
 import type { Currency, MerchantRule, Statement, Transaction } from "@billie/shared-types";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AccountError } from "../services/account";
-import { declinedSlots, declineSlot, fileForSlot, freeSlot, freeSlots, loadRegistry, MAX_DATABASES, ownership, saveRegistry, slotsOfOthers, type Registry } from "../services/databases";
+import { declinedSlots, declineSlot, fileForSlot, freeSlot, freeSlots, loadRegistry, MAX_DATABASES, openFailure, ownership, saveRegistry, slotsOfOthers, type Registry } from "../services/databases";
 import { focusIsLost } from "./useFocus";
 import { deviceName, openDatabase, restoreSnapshot as restoreSnapshotFile } from "../services/platform";
 import { queueDelete, reportAll, reportingIdentity, reportingStatus, type ReportingStatus } from "../services/reporting";
@@ -241,7 +241,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
    * else a free slot (claimed). Another account's database is dropped from this account's list and
    * left untouched. Returns null while the person is asked about an unowned database with data.
    */
-  const resolveDatabase = useCallback(async (): Promise<string | "none" | null> => {
+  const resolveDatabase = useCallback(async (skip: ReadonlySet<string> = new Set()): Promise<string | "none" | null> => {
     const current = registryRef.current;
     const ordered = [...current.entries].sort((a, b) => (a.id === current.active ? -1 : b.id === current.active ? 1 : 0));
     const declined = ownerKey ? declinedSlots(ownerKey) : new Set<string>();
@@ -253,8 +253,11 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
       return "error" as const;
     });
     for (const entry of ordered) {
-      if (declined.has(entry.id)) continue;
+      if (declined.has(entry.id) || skip.has(entry.id)) continue;
       const verdict = await check(entry.id);
+      // The database in use never gives way to another one silently: the person would think their data was
+      // gone or changed. The error says so and offers the others.
+      if (verdict === "error" && entry.id === current.active) throw openError;
       if (verdict === "error") continue;
       if (verdict === "use") return entry.id;
       if (verdict === "ask") {
@@ -268,6 +271,8 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     // empty database in its place (the person would think their data was gone).
     if (openError) throw openError;
     // Nothing usable in this account's list: a free slot that no other account lists.
+    // (Never instead of one that could not be opened.)
+    if (skip.size > 0) return "none";
     const exclude = new Set([...slotsOfOthers(ownerKey, aliases), ...declined]);
     for (const slot of freeSlots(registryRef.current, exclude)) {
       commitRegistry({ entries: [...registryRef.current.entries, slot].sort((a, b) => Number(a.id) - Number(b.id)), active: slot.id });
@@ -284,8 +289,8 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     return "none";
   }, [ownerKey, aliases, decide, commitRegistry]);
 
-  const start = useCallback(async (isCancelled: () => boolean) => {
-    const id = await resolveDatabase();
+  const start = useCallback(async (isCancelled: () => boolean, skip?: ReadonlySet<string>) => {
+    const id = await resolveDatabase(skip);
     if (isCancelled() || id === null) return;
     if (id === "none") {
       setError("noRoom");
@@ -308,6 +313,14 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /** Tries the same database again (nothing was changed by the failure), or, when asked, opens another one. */
+  const reopen = useCallback(async (another: boolean) => {
+    const failed = registryRef.current.active;
+    setError(null);
+    setErrorDetail(null);
+    await start(() => false, another ? new Set([failed]) : undefined).catch(failOpen);
+  }, [start, failOpen]);
+
   const answerClaim = useCallback(async (mine: boolean) => {
     if (!claim || !ownerKey) return;
     const { id } = claim;
@@ -327,7 +340,9 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
   const value = useMemo<FinanceContextValue | null>(
     () => state ? {
       ...data, ...state, sync, syncEnabled, lastChecked,
-      refresh: () => load(state.store),
+      // Called after a change was saved. If the book cannot be read back, saying so is the truth; reporting
+      // the saved change as failed would invite saving it twice.
+      refresh: () => load(state.store).catch((reason: unknown) => { if (activeStore.current === state.store) failOpen(reason); }),
       syncNow: async (force = true) => {
         await runSync(state.store, force);
         void reportMetadata();
@@ -458,7 +473,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
         if (id === state.activeId) await activate(remaining[0].id);
       },
     } : null,
-    [data, state, registry, sync, syncEnabled, lastChecked, databaseName, reporting, reportMetadata, load, runSync, activate, openById, commitRegistry, ownerKey, emailKey, aliases],
+    [data, state, registry, sync, syncEnabled, lastChecked, databaseName, reporting, reportMetadata, load, runSync, activate, openById, commitRegistry, failOpen, ownerKey, emailKey, aliases],
   );
 
   if (claim) {
@@ -474,7 +489,19 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     );
   }
   if (error === "noRoom") return <div className="bw-boot" role="alert">{m.ledger.owner.noRoom}</div>;
-  if (error) return <div className="bw-boot" role="alert">{m.boot.dbError}{errorDetail ? <><br /><small>{errorDetail}</small></> : null}</div>;
+  if (error) {
+    return (
+      <div className="bw-boot" role="alert">
+        <p>{m.boot.dbError}</p>
+        <p>{m.boot.failure[openFailure(errorDetail ?? "")]}</p>
+        {errorDetail ? <small>{errorDetail}</small> : null}
+        <div className="bw-actions">
+          <button type="button" className="bw-button" onClick={() => void reopen(false)}>{m.connection.retry}</button>
+          {registry.entries.length > 1 && <button type="button" className="bw-button bw-button-outline" onClick={() => void reopen(true)}>{m.boot.openAnother}</button>}
+        </div>
+      </div>
+    );
+  }
   if (!value) return <div className="bw-boot">{m.boot.opening}</div>;
   if (value.persistent && !databaseName) {
     return (

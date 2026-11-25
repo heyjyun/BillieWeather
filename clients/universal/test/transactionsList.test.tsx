@@ -60,3 +60,21 @@ it("shows a long list in steps and still searches and selects all of it", async 
   await act(async () => { fireEvent.change(document.querySelector<HTMLInputElement>('input[type="search"]')!, { target: { value: "ROW 00001" } }); });
   expect(rows()).toBe(1);
 }, 120_000);
+
+it("says so when a category change or an exclusion could not be saved", async () => {
+  sessionStorage.setItem("billie.token", "tok");
+  render(<App />);
+  await screen.findByRole("navigation");
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Manual" })); });
+  await openInShell("All Transactions");
+  await screen.findByText(`${ROWS} of ${ROWS} transactions`, { exact: false });
+  const driver = files.get("billieweather.db")!;
+  driver.transaction = async () => { throw "database is locked"; };
+  const row = document.querySelector<HTMLElement>(".bw-tx-table > li")!;
+  const select = [...row.querySelectorAll("select")].find((item) => [...item.options].some((option) => option.value === "Health"))!;
+  await act(async () => { fireEvent.change(select, { target: { value: "Health" } }); });
+  const { MESSAGES } = await import("../src/i18n");
+  expect(await screen.findByText(MESSAGES.en.ledger.errors.unknown)).toBeTruthy();
+  const [stored] = await driver.select<{ n: number }>("SELECT COUNT(*) AS n FROM transactions WHERE category = 'Health'");
+  expect(stored.n).toBe(0);
+});

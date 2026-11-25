@@ -218,4 +218,105 @@ mod tests {
             assert!(select_all(&pool, &many).await.is_err());
         });
     }
+
+    const CRASH_DB: &str = "BW_CRASH_DB";
+    const ROWS: i64 = 40;
+
+    fn import_batch(sha: &str) -> Vec<Statement> {
+        let mut batch = vec![statement("INSERT INTO statements (sha256) VALUES (?)", json!([sha]))];
+        for row in 0..ROWS {
+            batch.push(statement("INSERT INTO transactions (statement_id, amount_cents) VALUES ((SELECT id FROM statements WHERE sha256 = ?), ?)", json!([sha, row])));
+        }
+        batch
+    }
+
+    /// Not a test of its own: the process `a_killed_writer_leaves_only_whole_imports` kills.
+    #[test]
+    fn crash_child() {
+        let Ok(path) = std::env::var(CRASH_DB) else { return };
+        run(async {
+            let pool = SqlitePoolOptions::new().connect_with(SqliteConnectOptions::new().filename(&path)).await.unwrap();
+            for n in 0.. {
+                execute_all(&pool, &import_batch(&format!("{}-{n}", std::process::id()))).await.unwrap();
+            }
+        });
+    }
+
+    #[test]
+    fn a_killed_writer_leaves_only_whole_imports() {
+        for (journal, round) in [("delete", 0), ("delete", 1), ("wal", 2), ("wal", 3)] {
+            let path = std::env::temp_dir().join(format!("bw-transaction-test-crash{round}-{}.db", std::process::id()));
+            run(async {
+                let pool = pool(&format!("crash{round}")).await;
+                sqlx::query(sqlx::AssertSqlSafe(format!("PRAGMA journal_mode = {journal}"))).execute(&pool).await.unwrap();
+                pool.close().await;
+            });
+            let mut child = std::process::Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", "transaction::tests::crash_child", "--nocapture"])
+                .env(CRASH_DB, &path)
+                .stdout(std::process::Stdio::null())
+                .spawn()
+                .unwrap();
+            std::thread::sleep(std::time::Duration::from_millis(400 + 137 * round));
+            child.kill().unwrap(); // SIGKILL: no cleanup code runs
+            child.wait().unwrap();
+            run(async {
+                let pool = SqlitePoolOptions::new().connect_with(SqliteConnectOptions::new().filename(&path)).await.unwrap();
+                let imports = count(&pool, "statements").await;
+                assert!(imports > 0, "the writer never committed anything");
+                let torn: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!("SELECT COUNT(*) FROM statements s WHERE (SELECT COUNT(*) FROM transactions t WHERE t.statement_id = s.id) <> {ROWS}"))).fetch_one(&pool).await.unwrap();
+                assert_eq!((torn, count(&pool, "transactions").await), (0, imports * ROWS));
+                let integrity: String = sqlx::query_scalar("PRAGMA integrity_check").fetch_one(&pool).await.unwrap();
+                assert_eq!(integrity, "ok");
+                assert!(sqlx::query("PRAGMA foreign_key_check").fetch_all(&pool).await.unwrap().is_empty());
+                // The next launch can write at once: the dead process left no lock behind.
+                execute_all(&pool, &import_batch("after")).await.unwrap();
+                pool.close().await;
+            });
+        }
+    }
+
+    #[test]
+    fn a_busy_database_is_waited_for_and_a_stuck_one_is_reported_without_writing() {
+        run(async {
+            let pool = pool("busy").await;
+            let path = std::env::temp_dir().join(format!("bw-transaction-test-busy-{}.db", std::process::id()));
+            let other = SqlitePoolOptions::new().max_connections(1).connect_with(SqliteConnectOptions::new().filename(&path)).await.unwrap();
+            let hold = other.begin_with("BEGIN IMMEDIATE").await.unwrap();
+            let release = std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(900));
+                run(async { hold.rollback().await.unwrap() });
+            });
+            execute_all(&pool, &import_batch("waited")).await.unwrap();
+            release.join().unwrap();
+
+            let hold = other.begin_with("BEGIN IMMEDIATE").await.unwrap();
+            let error = execute_all(&pool, &import_batch("stuck")).await.unwrap_err().to_string();
+            assert!(error.contains("database is locked"), "{error}");
+            hold.rollback().await.unwrap();
+            assert_eq!((count(&pool, "statements").await, count(&pool, "transactions").await), (1, ROWS));
+            execute_all(&pool, &import_batch("stuck")).await.unwrap(); // a retry is not a duplicate
+            assert_eq!(count(&pool, "statements").await, 2);
+        });
+    }
+
+    #[test]
+    fn a_full_disk_rolls_the_whole_batch_back() {
+        run(async {
+            let pool = pool("full").await;
+            execute_all(&pool, &import_batch("before")).await.unwrap();
+            let path = std::env::temp_dir().join(format!("bw-transaction-test-full-{}.db", std::process::id()));
+            // SQLite reports a page limit exactly as it reports a full volume (SQLITE_FULL).
+            let limited = SqlitePoolOptions::new().max_connections(1).after_connect(|connection, _| Box::pin(async move {
+                sqlx::query("PRAGMA max_page_count = 1").execute(connection).await.map(|_| ())
+            })).connect_with(SqliteConnectOptions::new().filename(&path)).await.unwrap();
+            let mut batch = import_batch("too-big");
+            batch.push(statement("INSERT INTO transactions (statement_id, amount_cents, note) VALUES (1, 1, ?)", json!(["x".repeat(200_000)])));
+            let error = execute_all(&limited, &batch).await.unwrap_err().to_string();
+            assert!(error.contains("full"), "{error}");
+            assert_eq!((count(&pool, "statements").await, count(&pool, "transactions").await), (1, ROWS));
+            let integrity: String = sqlx::query_scalar("PRAGMA integrity_check").fetch_one(&pool).await.unwrap();
+            assert_eq!(integrity, "ok");
+        });
+    }
 }

@@ -117,7 +117,12 @@ export function Categories({ focus = null }: { focus?: string | null } = {}) {
   }
 
   async function change(transaction: Transaction, category: Category) {
-    const others = await store.setCategory(transaction.id, category, true);
+    let others: number;
+    try {
+      others = await store.setCategory(transaction.id, category, true);
+    } catch {
+      return say(m.ledger.errors.unknown, true);
+    }
     await refresh();
     const merchant = merchantKey(transaction.description);
     const vars = { merchant: merchant ?? "", category: categoryLabel(m, category), count: others };

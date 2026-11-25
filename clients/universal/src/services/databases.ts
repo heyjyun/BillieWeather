@@ -145,6 +145,18 @@ export async function emailOwnerKey(email: string): Promise<string> {
   return `email:${[...digest].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
 }
 
+export type OpenFailure = "locked" | "damaged" | "newer" | "full" | "permission" | "other";
+
+/** What to tell the person when SQLite (or a migration) refuses to open a book. Nothing was changed in any of these cases. */
+export function openFailure(reason: string): OpenFailure {
+  if (/database is locked|database table is locked|\(code: (5|6|261|517)\)/i.test(reason)) return "locked";
+  if (/not a database|malformed|\(code: (11|26)\)/i.test(reason)) return "damaged";
+  if (/previously applied but (is missing|has been modified)/i.test(reason)) return "newer";
+  if (/disk is full|\(code: 13\)/i.test(reason)) return "full";
+  if (/unable to open database file|readonly database|permission|not authorized|\(code: (8|14|23)\)/i.test(reason)) return "permission";
+  return "other";
+}
+
 /**
  * What to do with a database for the signed-in owner:
  * - "mine": recorded for this owner (or for this account's email before the server sent an id: upgrade);

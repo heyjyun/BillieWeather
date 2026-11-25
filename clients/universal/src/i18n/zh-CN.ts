@@ -10,7 +10,7 @@ import { registerZhCN } from "./register";
 
 export const zhCN: Messages = {
   languageName: "简体中文",
-  boot: { opening: "正在打开本地数据…", dbError: "无法打开本地数据库。" },
+  boot: { opening: "正在打开本地数据…", dbError: "无法打开本地数据库。", failure: { locked: "另一个程序或另一个 BillieWeather 正在使用它。请先关闭，再重试。数据没有变化。", damaged: "文件已损坏，BillieWeather 没有改动它。请保留该文件，然后在另一个数据库的“数据”页面恢复备份或自动副本。", newer: "它上次由较新版本的 BillieWeather 打开。请安装最新版本后再打开。数据没有变化。", full: "此设备的可用空间不足。请释放一些空间，再重试。数据没有变化。", permission: "BillieWeather 没有权限打开该文件。请检查数据文件夹的权限和可用空间，再重试。数据没有变化。", other: "数据没有变化。请重试，或重新启动应用。" }, openAnother: "打开另一个数据库" },
   connection: { offline: "当前离线。本机保存的所有数据都可以查看和编辑；账户信息和云端同步会在恢复联网后继续。", unreachable: "BillieWeather 服务器暂时没有响应。本机保存的所有数据都可以查看和编辑；账户信息和云端同步会在服务器恢复后继续。", retry: "重试", checking: "正在检查…" },
   dbName: { eyebrow: "首次在此设备上使用", heading: "为此设备的数据库命名", intro: "你的财务数据保存在此设备上的数据库中。起个名字，方便区分你的各台设备。之后可以在“数据”页面修改。", label: "数据库名称", help: "已自动填入此设备的名称，可改成任意名字。", fallback: "我的设备", create: "创建数据库", creating: "正在创建…", failed: "名称未能保存，请重试。" },
   nav: { skip: "跳到主要内容", collapse: "收起侧边栏", expand: "展开侧边栏", main: "主导航", dashboard: "财务总览", transactions: "交易记录", categories: "分类", import: "导入", reports: "报表", data: "数据管理", settings: "设置", note: "除非你主动同步，财务数据只保存在本机" },

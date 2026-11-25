@@ -313,4 +313,74 @@ mod tests {
         std::fs::remove_file(path).unwrap();
     }
 
+    fn book(name: &str) -> std::path::PathBuf {
+        let path = std::env::temp_dir().join(format!("bw-{name}-{}.db", std::process::id()));
+        for suffix in ["", "-wal", "-shm", "-journal"] {
+            let _ = std::fs::remove_file(format!("{}{suffix}", path.display()));
+        }
+        path
+    }
+
+    async fn filled(path: &std::path::Path) -> sqlx::SqlitePool {
+        let pool = sqlx::SqlitePool::connect_with(SqliteConnectOptions::new().filename(path).create_if_missing(true)).await.unwrap();
+        migrator().run(&pool).await.unwrap();
+        sqlx::raw_sql("INSERT INTO statements (id, filename, currency, sha256, transaction_count, imported_at) VALUES (1, 's.csv', 'USD', 's', 1, '2026-11-20');
+            INSERT INTO transactions (id, statement_id, booked_on, description, amount_cents, category, updated_at) VALUES (1, 1, '2026-11-20', 'Synthetic', -1025, 'Shopping', '2026-11-20');")
+            .execute(&pool).await.unwrap();
+        pool
+    }
+
+    async fn schema(pool: &sqlx::SqlitePool) -> Vec<(String,)> {
+        sqlx::query_as("SELECT COALESCE(sql, name) FROM sqlite_master ORDER BY type, name").fetch_all(pool).await.unwrap()
+    }
+
+    /// An update whose migration fails leaves the old schema and every row, and can be fixed by a later update.
+    #[test]
+    fn a_failing_migration_changes_nothing_and_can_be_retried() {
+        let path = book("failing-migration");
+        tauri::async_runtime::block_on(async {
+            let pool = filled(&path).await;
+            let before = schema(&pool).await;
+            let with = |sql: &'static str| {
+                let mut list = migrator().migrations.to_vec();
+                list.push(SqlxMigration::new(10, "next".into(), MigrationType::ReversibleUp, sql.into_sql_str(), false));
+                Migrator { migrations: list.into(), ..Migrator::DEFAULT }
+            };
+            let broken = with("ALTER TABLE transactions ADD COLUMN half TEXT; UPDATE transactions SET description = 'damaged'; INSERT INTO no_such_table VALUES (1);");
+            assert!(broken.run(&pool).await.is_err());
+            assert_eq!(schema(&pool).await, before);
+            let row: (String, i64) = sqlx::query_as("SELECT description, amount_cents FROM transactions").fetch_one(&pool).await.unwrap();
+            assert_eq!(row, ("Synthetic".into(), -1025));
+            // The version that is installed now still opens the book…
+            migrator().run(&pool).await.unwrap();
+            // …and so does the corrected update.
+            with("ALTER TABLE transactions ADD COLUMN whole TEXT;").run(&pool).await.unwrap();
+            assert!(sqlx::query("SELECT whole FROM transactions").fetch_all(&pool).await.is_ok());
+            // Going back to the old version afterwards is refused, and the book stays as it is.
+            let refused = migrator().run(&pool).await.unwrap_err().to_string();
+            assert!(refused.contains("previously applied but is missing"), "{refused}");
+            let rows: (i64,) = sqlx::query_as("SELECT count(*) FROM transactions WHERE amount_cents = -1025").fetch_one(&pool).await.unwrap();
+            assert_eq!(rows.0, 1);
+            pool.close().await;
+        });
+        let _ = std::fs::remove_file(path);
+    }
+
+    /// A damaged file is reported, never replaced by an empty book.
+    #[test]
+    fn a_damaged_file_is_reported_and_left_untouched() {
+        let path = book("damaged");
+        let bytes = vec![0x5a_u8; 8192];
+        std::fs::write(&path, &bytes).unwrap();
+        tauri::async_runtime::block_on(async {
+            let options = SqliteConnectOptions::new().filename(&path).create_if_missing(true);
+            let error = match sqlx::SqlitePool::connect_with(options).await {
+                Ok(pool) => migrator().run(&pool).await.unwrap_err().to_string(),
+                Err(error) => error.to_string(),
+            };
+            assert!(error.contains("not a database"), "{error}");
+        });
+        assert_eq!(std::fs::read(&path).unwrap(), bytes);
+        let _ = std::fs::remove_file(path);
+    }
 }
