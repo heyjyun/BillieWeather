@@ -151,7 +151,8 @@ No usage limit was reached. launchd was tried, could not read `~/Documents` (mac
 6. The removed cache folders contained eight old QA app bundles; I listed them in the same command that removed them.
 7. The first browser-test run may have opened visible Chrome windows; this was not checked. Later runs were headless.
 8. A layout audit first reported success without leaving the welcome page; noticed and redone.
-9. Some times in the checkpoint file are estimates. Checkpoint and log commits have no attribution line.
+9. About 03:05 I stopped the display keep-awake; by 03:07 the screen had locked. The prompt was still blocking the desktop then (a SecurityAgent window was still listed afterwards), so no test was lost, but from then on the 08:01 check cannot run any GUI test unless you have unlocked the Mac.
+10. Some times in the checkpoint file are estimates. Checkpoint and log commits have no attribution line.
 
 ## 18. Your decisions
 

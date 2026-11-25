@@ -13,3 +13,4 @@
 2026-11-25 03:01:05 CST scheduled 03:00 continuation fired in the session (not after a usage limit)
 2026-11-25 03:01:19 CST waiter stopped (no limit occurred; it would have started a duplicate run); 08:01 in-session check stays
 2026-11-25 03:05:45 CST c4 built twice (identical), packaged; prompt still present; display keep-awake stopped; waiting for 08:01
+2026-11-25 03:07:55 CST screen locked (after display keep-awake was stopped); front is loginwindow, a SecurityAgent window still listed; GUI blocked until the user unlocks
