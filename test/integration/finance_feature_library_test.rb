@@ -7,10 +7,15 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
   CSV_TEXT = "Date,Description,Amount\n2026-01-03,SYNTHETIC GROCER,-42.10\n2026-01-09,ACME PAYROLL,2500.00\n"
 
   setup do
+    # This page's form contract is the one without device sync, whatever the caller's environment says.
+    @prior_flag = ENV["BILLIE_MODULE_SYNC"]
+    ENV["BILLIE_MODULE_SYNC"] = "0"
     @user = create(:onboarded_user, usage_region: "US")
     Finance::Profile.find_or_create_by!(user_id: @user.id) { |profile| profile.currency = "USD" }
     sign_in @user
   end
+
+  teardown { ENV["BILLIE_MODULE_SYNC"] = @prior_flag }
 
   def sidebar_labels
     css_select("#module-nav a.bw-nav-link .bw-nav-text").map { |node| node.text.strip }
