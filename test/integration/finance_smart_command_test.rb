@@ -178,6 +178,12 @@ class FinanceSmartCommandTest < ActionDispatch::IntegrationTest
       execute(key)
       assert_equal path, response.parsed_body.dig("data", "redirect"), key
     end
+    # The redirect target must be a working page, not a "turned off" one. Forecast is optional.
+    get finance_forecast_path
+    assert_module_disabled("forecast")
+    enable_modules!(@user, "forecast")
+    get finance_forecast_path
+    assert_module_page("forecast")
     elsewhere = plan(:open_transactions)
     elsewhere["arguments"]["page"] = {"value" => "https://evil.example", "source" => "input"}
     post finance_command_execute_path, params: {protocol: "nlae/1", plan: elsewhere, confirmation: {confirmed: false}}, as: :json

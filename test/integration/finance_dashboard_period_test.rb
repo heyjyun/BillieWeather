@@ -29,6 +29,8 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
   end
 
   test "dashboard defaults to all imported dates and preserves the saved current balance" do
+    # The spending-mix rows link to Categories & Tags, an optional module: turn it on like a person would.
+    enable_modules!(@user, "categories")
     get finance_dashboard_path
 
     assert_response :success
@@ -41,6 +43,8 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
     assert_select "#dashboard-spending-mix .bw-mix-part", count: 4
     assert_select "#dashboard-spending-mix .bw-mix-part.bw-viz-0[aria-label=?]", "Food & dining: $120.00, 47% of spending"
     assert_select "#dashboard-spending-mix .bw-mix-list a[href=?]", finance_categories_path(name: "Food & dining", anchor: "detail")
+    get finance_categories_path(name: "Food & dining")
+    assert_module_page("categories")
   end
 
   test "a bookmarkable custom range filters all dashboard figures and transactions inclusively without changing records" do
