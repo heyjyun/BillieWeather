@@ -739,12 +739,15 @@ export class FinanceStore {
       const values = new Map(columns(expected));
       const changed = columns(flag).filter(([key, value]) => values.get(key) !== value);
       if (changed.length === 0) return [];
+      const untouched = ["updated_at = ?", ...columns(expected).map(([key]) => `${key} = ?`)].join(" AND ");
+      const same = [expected.updatedAt, ...columns(expected).map(([, value]) => value)];
       return [{
-        // Untouched since: also back to "not modified here". Otherwise it stays marked as the person's.
+        // Untouched since: also back to "not modified here". Otherwise it stays marked as the person's. The
+        // time alone does not prove it (two changes can share a millisecond), so every field must match too.
         sql: `UPDATE transactions SET ${changed.map(([key]) => `${key} = ?`).join(", ")},
-          locally_modified = CASE WHEN updated_at = ? THEN ? ELSE locally_modified END, updated_at = CASE WHEN updated_at = ? THEN ? ELSE updated_at END
+          locally_modified = CASE WHEN ${untouched} THEN ? ELSE locally_modified END, updated_at = CASE WHEN ${untouched} THEN ? ELSE updated_at END
           WHERE id = ? AND deleted_at IS NULL AND ${changed.map(([key]) => `${key} = ?`).join(" AND ")}`,
-        params: [...changed.map(([, value]) => value), expected.updatedAt, flag.locallyModified ? 1 : 0, expected.updatedAt, flag.updatedAt,
+        params: [...changed.map(([, value]) => value), ...same, flag.locallyModified ? 1 : 0, ...same, flag.updatedAt,
           flag.id, ...changed.map(([key]) => values.get(key))],
       }];
     });

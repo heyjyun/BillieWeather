@@ -124,6 +124,22 @@ describe("BillieWeather typed commands on a real local database", () => {
     expect(Number(row.locally_modified)).toBe(1);
   });
 
+  it("keeps that protection when both changes fall in the same millisecond", async () => {
+    const env = await setup();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const done = await env.run(await env.plan("exclude uber eats"));
+      const [uber] = env.byDescription("UBER");
+      await env.store.setCategory(uber.id, "Travel", false);
+      await env.refresh();
+      await env.executor.undo(done.undo!.token, env.exec());
+      const [row] = await env.store.sql.select<{ locally_modified: number; category: string }>("SELECT locally_modified, category FROM transactions WHERE id = ?", [uber.id]);
+      expect(row).toMatchObject({ locally_modified: 1, category: "Travel" });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("does not repeat a change when the same plan is submitted twice", async () => {
     const env = await setup();
     const plan = await env.plan("exclude uber eats");
