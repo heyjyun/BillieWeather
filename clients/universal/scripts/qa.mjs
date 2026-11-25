@@ -167,8 +167,9 @@ function build(suffix) {
     const result = spawnSync("npx", ["tauri", "build", "--bundles", "app", "--config", file], { cwd: root, stdio: "inherit", env: { ...process.env, VITE_BILLIE_API_URL: api, VITE_BILLIE_IDENTITY_URL: identity, BILLIE_SOURCE_REVISION: revision } });
     if (result.status !== 0) process.exit(result.status ?? 1);
     const app = realpathSync(join(target, "release/bundle/macos", `${config.productName}.app`));
-    // Ad hoc, so the bundle has a signature of its own to check. Never a release signature.
-    if (run("codesign", ["--force", "--sign", "-", "--identifier", config.identifier, app]).status !== 0) throw new Error("Signing failed");
+    // Ad hoc, so the bundle has a signature of its own to check, with the hardened runtime of a release.
+    // Never a release signature.
+    if (run("codesign", ["--force", "--sign", "-", "--options", "runtime", "--identifier", config.identifier, app]).status !== 0) throw new Error("Signing failed");
     preflight(app);
     console.log(app);
   } finally {

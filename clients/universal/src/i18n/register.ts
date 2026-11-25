@@ -24,6 +24,7 @@ export const registerEn = {
     password_pwned: "This password has appeared in a data breach. Choose a different one.",
     password_confirmation_mismatch: "The passwords don't match.",
     usage_region_blank: "Select a country or region.", usage_region_inclusion: "Select a country or region from the list.",
+    code_invalid: "Enter all {length} digits of the code.",
    
   },
   verify: {
@@ -95,6 +96,7 @@ export const registerZhCN: RegisterMessages = {
     password_pwned: "此密码曾出现在数据泄露中，请换一个。",
     password_confirmation_mismatch: "两次输入的密码不一致。",
     usage_region_blank: "请选择国家或地区。", usage_region_inclusion: "请从列表中选择国家或地区。",
+    code_invalid: "请输入完整的 {length} 位验证码。",
    
   },
   verify: {
@@ -163,6 +165,7 @@ export const registerZhTW: RegisterMessages = {
     password_pwned: "此密碼曾出現在資料外洩中，請換一個。",
     password_confirmation_mismatch: "兩次輸入的密碼不一致。",
     usage_region_blank: "請選擇國家或地區。", usage_region_inclusion: "請從清單中選擇國家或地區。",
+    code_invalid: "請輸入完整的 {length} 位驗證碼。",
    
   },
   verify: {
@@ -231,6 +234,7 @@ export const registerJa: RegisterMessages = {
     password_pwned: "このパスワードは過去のデータ漏えいで見つかっています。別のパスワードを選んでください。",
     password_confirmation_mismatch: "パスワードが一致しません。",
     usage_region_blank: "国または地域を選択してください。", usage_region_inclusion: "一覧から国または地域を選択してください。",
+    code_invalid: "確認コードの{length}桁をすべて入力してください。",
    
   },
   verify: {
@@ -299,6 +303,7 @@ export const registerKo: RegisterMessages = {
     password_pwned: "이 비밀번호는 데이터 유출에서 발견되었습니다. 다른 비밀번호를 선택하세요.",
     password_confirmation_mismatch: "비밀번호가 일치하지 않습니다.",
     usage_region_blank: "국가 또는 지역을 선택하세요.", usage_region_inclusion: "목록에서 국가 또는 지역을 선택하세요.",
+    code_invalid: "인증 코드 {length}자리를 모두 입력하세요.",
    
   },
   verify: {
@@ -367,6 +372,7 @@ export const registerEs: RegisterMessages = {
     password_pwned: "Esta contraseña ha aparecido en una filtración de datos. Elige otra.",
     password_confirmation_mismatch: "Las contraseñas no coinciden.",
     usage_region_blank: "Selecciona un país o una región.", usage_region_inclusion: "Selecciona un país o una región de la lista.",
+    code_invalid: "Escribe los {length} dígitos del código.",
    
   },
   verify: {

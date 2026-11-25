@@ -225,6 +225,18 @@ describe("email registration", () => {
     expect(signIn).not.toHaveBeenCalled();
   });
 
+  it("says how long the code is when some digits are missing", async () => {
+    show();
+    fillForm();
+    fireEvent.click(screen.getByRole("button", { name: en.submit }));
+    await screen.findByRole("heading", { name: en.verify.heading });
+    const before = requests.length;
+    type(en.verify.code, "123456");
+    fireEvent.click(screen.getByRole("button", { name: en.verify.submit }));
+    expect(await screen.findByText("Enter all 8 digits of the code.")).toBeTruthy();
+    expect(requests.length).toBe(before);
+  });
+
   it("resend waits 60 seconds, then sends a new code; the server's rate limit is shown", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     show();

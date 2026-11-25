@@ -3,6 +3,7 @@ mod identity;
 mod ocr;
 mod session;
 mod snapshot;
+mod startup;
 mod transaction;
 mod variant;
 
@@ -123,7 +124,7 @@ pub fn run() {
         .setup(|app| {
             // Before any database is opened (and migrated) by the web view: copy every slot file
             // whose schema is about to change. Refuse startup if protection fails: otherwise the
-            // SQL plugin could migrate the only copy. Report a generic error without data paths.
+            // SQL plugin could migrate the only copy. Says so in a system alert, without data paths.
             use tauri::Manager;
             let dir = app.path().app_config_dir()?;
             let files: Vec<String> = (1..=MAX_DATABASES).map(slot_name).collect();
@@ -131,8 +132,9 @@ pub fn run() {
             snapshot::keep_private(&dir);
             let version = migrations().len() as u32;
             for slot in 1..=MAX_DATABASES {
-                snapshot::snapshot_if_needed(&dir, &slot_name(slot), version)
-                    .map_err(|_| std::io::Error::other("Could not protect the local database before migration"))?;
+                if snapshot::snapshot_if_needed(&dir, &slot_name(slot), version).is_err() {
+                    startup::explain_unprotected();
+                }
             }
             Ok(())
         })

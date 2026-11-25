@@ -124,7 +124,7 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
   const fieldText = (field: string, problem: string) => {
     if (field === "nickname") return (m.personal.nickname.errors as Record<string, string>)[problem] ?? r.fix;
     const table = r.fields as Record<string, string>;
-    return interpolate(table[`${field}_${problem}`] ?? r.fix, { min: PASSWORD_MIN, max: PASSWORD_MAX });
+    return interpolate(table[`${field}_${problem}`] ?? r.fix, { min: PASSWORD_MIN, max: PASSWORD_MAX, length: step.kind === "verify" ? step.pending.codeLength : "" });
   };
 
   /** Shows field errors and moves focus to the first one. */
