@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Merged by Tauri into the generated iOS Info.plist. Without the camera text iOS ends the app when a receipt is scanned. -->
+<plist version="1.0">
+<dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Take a photo of a receipt. It is read on this device.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose a receipt photo. It is read on this device.</string>
+</dict>
+</plist>

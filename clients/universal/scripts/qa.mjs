@@ -10,7 +10,7 @@ import { existsSync, lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync,
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { cspWithOrigin } from "./tauri.mjs";
+import { bundleVersion, commitCount, cspWithOrigin } from "./tauri.mjs";
 
 export const PRODUCTION = { identifier: "com.billieweather.client", name: "BillieWeather", scheme: "billieweather" };
 export const QA_IDENTIFIER = /^com\.billieweather\.client\.qa(\.[a-z0-9]{1,20})?$/;
@@ -161,7 +161,7 @@ function build(suffix) {
   const dir = mkdtempSync(join(tmpdir(), "billie-qa-"));
   try {
     const file = join(dir, "qa.json");
-    writeFileSync(file, JSON.stringify(config));
+    writeFileSync(file, JSON.stringify({ ...config, bundle: bundleVersion(commitCount(root)) }));
     const target = process.env.CARGO_TARGET_DIR;
     if (!target) throw new Error("Set CARGO_TARGET_DIR to a QA-only folder");
     const result = spawnSync("npx", ["tauri", "build", "--bundles", "app", "--config", file], { cwd: root, stdio: "inherit", env: { ...process.env, VITE_BILLIE_API_URL: api, VITE_BILLIE_IDENTITY_URL: identity, BILLIE_SOURCE_REVISION: revision } });

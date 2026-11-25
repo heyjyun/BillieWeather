@@ -44,6 +44,16 @@ export async function revokeToken(token: string): Promise<void> {
   if (await signOutRemote(token) && digest) drop(digest);
 }
 
+/** How often an open app tries again while the server has not confirmed a sign-out. */
+export const RETRY_MS = 60_000;
+export const hasPendingSignOuts = (): boolean => read().length > 0;
+
+/** Tries again every minute while something is pending: "online" only fires when the network itself returns, not the server. */
+export function retrySignOuts(): () => void {
+  const timer = setInterval(() => { if (hasPendingSignOuts()) void finishSignOuts(); }, RETRY_MS);
+  return () => clearInterval(timer);
+}
+
 let running: Promise<void> | null = null;
 
 /** Finishes earlier sign-outs the server has not confirmed. Called at start, when the network returns, and after signing in. */

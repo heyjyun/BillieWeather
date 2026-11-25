@@ -129,6 +129,12 @@ pub fn run() {
             let dir = app.path().app_config_dir()?;
             let files: Vec<String> = (1..=MAX_DATABASES).map(slot_name).collect();
             variant::check_data_dir(&dir, &app.config().identifier, &files).map_err(std::io::Error::other)?;
+            // Phones run one process per app; on desktops a second copy would share the databases.
+            #[cfg(desktop)]
+            match startup::hold_data_dir(&dir, std::time::Duration::from_secs(3)) {
+                Ok(lock) => { app.manage(lock); }
+                Err(()) => startup::explain_already_open(),
+            }
             snapshot::keep_private(&dir);
             let version = migrations().len() as u32;
             for slot in 1..=MAX_DATABASES {

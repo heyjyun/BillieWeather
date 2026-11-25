@@ -50,6 +50,15 @@ export function cspWithOrigin(csp, ...origins) {
   return csp.replace(/connect-src ([^;]+)/, (_match, sources) => `connect-src ${[sources.trim(), ...unique].join(" ")}`);
 }
 
+/** The build number of a commit (CFBundleVersion): counts up with every commit, the same for everyone. */
+export function buildNumber(count) {
+  if (!/^[1-9][0-9]{0,8}$/.test(String(count))) throw new Error("No build number: not a git checkout with history");
+  return String(count);
+}
+export const commitCount = (cwd) => buildNumber(spawnSync("git", ["rev-list", "--count", "HEAD"], { cwd, encoding: "utf8" }).stdout?.trim());
+/** Release builds carry the commit's build number; `dev` keeps the version. */
+export const bundleVersion = (number) => ({ macOS: { bundleVersion: number } });
+
 /** `dev` never shares the shipped app's identity, and with it the real ledgers and sign-in. */
 export function developmentIdentity(command) {
   if (command !== "dev") return {};
@@ -68,7 +77,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   console.log(`BillieWeather servers for this ${process.argv[2] ?? "run"}: API ${origin}, identity ${identity}`);
   const base = JSON.parse(readFileSync(join(root, "src-tauri/tauri.conf.json"), "utf8"));
   const overridePath = join(root, "src-tauri/tauri.api.conf.json");
-  writeFileSync(overridePath, JSON.stringify({ ...developmentIdentity(process.argv[2]), app: { security: { csp: cspWithOrigin(base.app.security.csp, origin, identity) } } }, null, 2) + "\n");
+  writeFileSync(overridePath, JSON.stringify({ ...developmentIdentity(process.argv[2]), ...(process.argv[2] === "build" ? { bundle: bundleVersion(commitCount(root)) } : {}), app: { security: { csp: cspWithOrigin(base.app.security.csp, origin, identity) } } }, null, 2) + "\n");
   const result = spawnSync("npx", ["tauri", ...process.argv.slice(2), "--config", overridePath], {
     cwd: root,
     stdio: "inherit",

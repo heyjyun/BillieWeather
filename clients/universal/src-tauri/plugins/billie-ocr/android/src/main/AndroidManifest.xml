@@ -26,7 +26,12 @@
       The scheduler service/receiver (JobInfoSchedulerService, AlarmManagerSchedulerBroadcastReceiver)
       are intentionally left in place; removing them is not needed once no backend exists.
     -->
-    <application>
+    <!-- The local ledger and the sign-in file never go into Google's cloud backup or a device transfer;
+         people move data with the app's own backup. Merged into the app, whose template sets neither. -->
+    <application
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/billie_no_extraction">
         <service
             android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
             tools:node="merge">

@@ -3,7 +3,7 @@
 // or could not save the token. Only a digest is ever remembered.
 import { createHash } from "node:crypto";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { finishSignOuts, revokeToken, tokenDigest } from "../src/services/signOut";
+import { finishSignOuts, RETRY_MS, retrySignOuts, revokeToken, tokenDigest } from "../src/services/signOut";
 import { AccountProvider, useAccount } from "../src/hooks/useAccount";
 import { I18nProvider } from "../src/i18n";
 import * as session from "../src/services/session";
@@ -56,6 +56,27 @@ describe("sign-out queue", () => {
     await finishSignOuts();
     expect(calls).toEqual([{ method: "POST", path: "/session/revocations", token: null, body: JSON.stringify({ token_digest: sha(TOKEN) }) }]);
     expect(localStorage.getItem(KEY)).toBeNull();
+  });
+
+  it("keeps trying while the app is open and the server, not the network, was down, and is silent otherwise", async () => {
+    statusFor = () => 502;
+    await revokeToken(TOKEN);
+    vi.useFakeTimers();
+    try {
+      const stop = retrySignOuts();
+      await vi.advanceTimersByTimeAsync(RETRY_MS);
+      expect(stored()).toHaveLength(1);
+      statusFor = () => 204;
+      await vi.advanceTimersByTimeAsync(RETRY_MS);
+      expect(stored()).toHaveLength(0);
+      const made = calls.length;
+      await vi.advanceTimersByTimeAsync(RETRY_MS * 5);
+      expect(calls).toHaveLength(made);
+      stop();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it.each([429, 500, 502, 404])("keeps the sign-out after HTTP %s", async (status) => {

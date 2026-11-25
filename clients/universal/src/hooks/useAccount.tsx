@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AccountError, fetchAccount, isNetworkFailure, signIn as apiSignIn, signOutOthers as apiSignOutOthers, updateAccount, type Account, type AccountPreferences } from "../services/account";
 import { cacheAccount, clearSession, loadCachedAccount, loadToken, saveToken } from "../services/session";
-import { finishSignOuts, revokeToken } from "../services/signOut";
+import { finishSignOuts, retrySignOuts, revokeToken } from "../services/signOut";
 import { isLocale, useI18n, type Locale } from "../i18n";
 
 type Status = "loading" | "signedOut" | "signedIn";
@@ -95,9 +95,10 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     })();
     verifyRef.current = verify;
     void finishSignOuts();
+    const stopRetrying = retrySignOuts();
     const reconnect = () => { void finishSignOuts(); if (token.current) void verify(token.current, loadCachedAccount()); };
     window.addEventListener("online", reconnect);
-    return () => { cancelled = true; verifyRef.current = null; window.removeEventListener("online", reconnect); };
+    return () => { cancelled = true; verifyRef.current = null; stopRetrying(); window.removeEventListener("online", reconnect); };
   }, [adopt, forget, setOffline]);
 
   const reconnect = useCallback(async () => {
