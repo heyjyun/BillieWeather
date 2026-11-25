@@ -7,7 +7,9 @@ namespace :billie do
     task check: :environment do
       abort "Use RAILS_ENV=production for release startup" unless Rails.env.production?
       # A local rehearsal has no public address; its database rules are checked below.
-      BillieRuntimeSettings.verify! unless ENV["BILLIE_DB_ENV"] == "local" && ENV["RENDER"] != "true"
+      unless ENV["BILLIE_DB_ENV"] == "local" && ENV["RENDER"] != "true"
+        BillieRuntimeSettings.verify!(credentials_key: Rails.application.credentials.secret_key_base.present?)
+      end
       target = BillieDatabaseTarget.release_url!(ENV.fetch("DATABASE_URL"), migration: false)
       ActiveRecord::Base.with_connection do |connection|
         BillieDatabaseTarget.verify!(connection, target, migration: false)

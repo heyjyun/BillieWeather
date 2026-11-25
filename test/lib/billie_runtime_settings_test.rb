@@ -16,7 +16,16 @@ class BillieRuntimeSettingsTest < ActiveSupport::TestCase
   test "the rollback fence is reported open while an older release could read the same key" do
     assert_match(/rollback fence open/, warnings("SECRET_KEY_BASE" => KEY).join)
     assert_match(/rollback fence open/, warnings("BILLIE_SECRET_KEY_BASE" => nil, "SECRET_KEY_BASE" => KEY).join)
-    assert_empty warnings("SECRET_KEY_BASE" => "z" * 64)
+    # Another value may be exactly the key older releases signed with.
+    assert_match(/rollback fence open/, warnings("SECRET_KEY_BASE" => "z" * 64).join)
+    assert_empty errors("SECRET_KEY_BASE" => "z" * 64)
+  end
+
+  test "a key in the encrypted credentials opens the fence as well" do
+    open = BillieRuntimeSettings.review(GOOD, credentials_key: true)
+    assert_match(/encrypted credentials/, open[:warnings].join)
+    assert_empty open[:errors]
+    assert_includes Rails.root.join("lib/tasks/neon.rake").read, "credentials_key: Rails.application.credentials.secret_key_base.present?"
   end
 
   test "missing, short or build-only settings stop the server without printing values" do
