@@ -1,1 +1,33 @@
-{"sprint_complete": false, "next_exact_action": "Phase 5.9 native acceptance"}
+{
+ "sprint_complete": false,
+ "updated": "2026-11-25 01:47 CST",
+ "phase": "6.1 (5.9 GUI waiting for an idle desktop)",
+ "done": [
+  "scheduler: in-session cron 3:01 and 8:01 + detached waiter 3:07/8:07, probed (launchd denied by macOS privacy)",
+  "6.0 repository audit: 115 dirty files in ../billieweather all identical to d3061e4; main is an ancestor, ff only",
+  "6.1 rollback fence + idle session expiry + settings check (37f4a8d), rehearsed; local branch rollback/session-safe",
+  "single-process lock, Windows startup alert, sign-out retry, iOS/Android privacy (965e513)",
+  "Rails full suite on 965e513: 855 tests, 0 failures, 2 skips"
+ ],
+ "pending": [
+  "5.9 native GUI acceptance on a REBUILT candidate (965e513 or later; f4902ba is obsolete)",
+  "6.0 architecture decision record; temp artifact cleanup; integration rehearsal in a clone",
+  "6.1 backup/restore rehearsal, macOS release docs",
+  "6.2 web browser workflows; platform matrix",
+  "final regression: universal, TS, Rust, Rails, identity",
+  "final report docs/audits/overnight-phase5.9-to-6.2-final-report.md"
+ ],
+ "blocked": [
+  "GUI: hardware input on the desktop since 01:30; driver acts only after 120 s idle",
+  "Developer ID / notarization",
+  "Neon, Render",
+  "Intel, Windows, iOS, Android toolchains (no rustup, Xcode, Android SDK, Docker)"
+ ],
+ "latest_verified_commit": "965e513",
+ "candidate": "ClaudeGenerated/phase5.9 (f4902ba, sha 1c7109bb...) OBSOLETE, rebuild",
+ "isolated_root": "/private/tmp/billie-roadmap.gk99lMpY",
+ "servers": "rails 33557, identity 38557 (started 01:29, code before 37f4a8d; restart before GUI)",
+ "scratch": "/private/tmp/claude-501/-Users-jyunz-Documents-Developer-Developping-BillieWeather/3aadd522-ebf5-462f-aa3e-5113667beb6c/scratchpad (driver drv, idle)",
+ "next_exact_action": "Check desktop idle; if idle >=120 s build QA candidate via qa.mjs and run native acceptance; otherwise continue pending items in order",
+ "next_resume": "03:00 and 08:00 CST"
+}
