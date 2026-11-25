@@ -434,15 +434,17 @@ export class LedgerStore {
     const [{ next }] = await this.db.select<Row>("SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM accounts");
     const stamp = now();
     const uuid = randomId();
-    await this.db.execute(
-      `INSERT INTO accounts (uuid, name, account_type, currency, institution, last4, opening_balance_cents, opening_balance_on, opening_balance_source, credit_limit_cents,
+    await this.db.transaction([
+      {
+        sql: `INSERT INTO accounts (uuid, name, account_type, currency, institution, last4, opening_balance_cents, opening_balance_on, opening_balance_source, credit_limit_cents,
         statement_day, due_day, include_in_net_worth, note, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [uuid, name, input.type, currency, input.institution?.trim() || null, input.last4?.trim() || null, Math.trunc(input.openingBalanceCents ?? 0), input.openingBalanceOn ?? null,
-        input.creditLimitCents ?? null, input.statementDay ?? null, input.dueDay ?? null, input.includeInNetWorth === false ? 0 : 1, input.note?.trim() || null, Number(next), stamp, stamp],
-    );
-    if (!(await this.bookCurrency())) await this.setSetting("currency", currency);
+        params: [uuid, name, input.type, currency, input.institution?.trim() || null, input.last4?.trim() || null, Math.trunc(input.openingBalanceCents ?? 0), input.openingBalanceOn ?? null,
+          input.creditLimitCents ?? null, input.statementDay ?? null, input.dueDay ?? null, input.includeInNetWorth === false ? 0 : 1, input.note?.trim() || null, Number(next), stamp, stamp],
+      },
+      { sql: "INSERT INTO settings (key, value) VALUES ('currency', ?) ON CONFLICT (key) DO NOTHING", params: [currency] },
+      this.auditStatement({ actor, action: "create", subjectType: "account", subjectId: uuid, summary: name, changes: { name: [null, name], type: [null, input.type], openingBalanceCents: [null, input.openingBalanceCents ?? 0] } }),
+    ]);
     const [row] = await this.db.select<Row>("SELECT id FROM accounts WHERE uuid = ?", [uuid]);
-    await this.audit({ actor, action: "create", subjectType: "account", subjectId: uuid, summary: name, changes: { name: [null, name], type: [null, input.type], openingBalanceCents: [null, input.openingBalanceCents ?? 0] } });
     return this.account(Number(row.id));
   }
 
@@ -475,22 +477,28 @@ export class LedgerStore {
     if (patch.note !== undefined) fields.note = patch.note?.trim() || null;
     const entries = Object.entries(fields);
     if (entries.length === 0) return before;
-    await this.db.execute(`UPDATE accounts SET ${entries.map(([key]) => `${key} = ?`).join(", ")}, updated_at = ? WHERE id = ?`, [...entries.map(([, value]) => value), now(), id]);
-    const after = await this.account(id);
     const changes: Record<string, [unknown, unknown]> = {};
     for (const key of Object.keys(patch) as Array<keyof AccountInput>) {
-      const was = (before as unknown as Record<string, unknown>)[key === "type" ? "type" : key];
-      const is = (after as unknown as Record<string, unknown>)[key === "type" ? "type" : key];
+      const column = key === "type" ? "account_type" : key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+      if (!(column in fields)) continue;
+      const was = (before as unknown as Record<string, unknown>)[key];
+      const is = key === "includeInNetWorth" ? fields[column] === 1 : fields[column] ?? null;
       if (was !== is) changes[key] = [was, is];
     }
-    await this.audit({ actor, action: "update", subjectType: "account", subjectId: before.uuid, summary: after.name, changes });
-    return after;
+    // The change and its record are written together.
+    await this.db.transaction([
+      { sql: `UPDATE accounts SET ${entries.map(([key]) => `${key} = ?`).join(", ")}, updated_at = ? WHERE id = ?`, params: [...entries.map(([, value]) => value), now(), id] },
+      this.auditStatement({ actor, action: "update", subjectType: "account", subjectId: before.uuid, summary: String(fields.name ?? before.name), changes }),
+    ]);
+    return this.account(id);
   }
 
   async setAccountArchived(id: number, archived: boolean, actor = "user"): Promise<void> {
     const account = await this.account(id);
-    await this.db.execute("UPDATE accounts SET archived_at = ?, updated_at = ? WHERE id = ?", [archived ? now() : null, now(), id]);
-    await this.audit({ actor, action: archived ? "archive" : "unarchive", subjectType: "account", subjectId: account.uuid, summary: account.name });
+    await this.db.transaction([
+      { sql: "UPDATE accounts SET archived_at = ?, updated_at = ? WHERE id = ?", params: [archived ? now() : null, now(), id] },
+      this.auditStatement({ actor, action: archived ? "archive" : "unarchive", subjectType: "account", subjectId: account.uuid, summary: account.name }),
+    ]);
   }
 
   /** Deletes an account that has never been used. Accounts with entries (even in the trash) or statements are archived instead. */
@@ -499,12 +507,15 @@ export class LedgerStore {
     const [usage] = await this.db.select<Row>("SELECT (SELECT COUNT(*) FROM transactions WHERE account_id = ?) AS entries, (SELECT COUNT(*) FROM statements WHERE account_id = ?) AS statements",
       [id, id]);
     if (Number(usage.entries) > 0 || Number(usage.statements) > 0) throw new LedgerError("account_in_use", "This account has entries; archive it instead.");
-    await this.db.execute("DELETE FROM accounts WHERE id = ?", [id]);
-    await this.audit({ actor, action: "delete", subjectType: "account", subjectId: account.uuid, summary: account.name });
+    await this.db.transaction([
+      { sql: "DELETE FROM accounts WHERE id = ?", params: [id] },
+      this.auditStatement({ actor, action: "delete", subjectType: "account", subjectId: account.uuid, summary: account.name }),
+    ]);
   }
 
   async reorderAccounts(ids: readonly number[]): Promise<void> {
-    for (const [index, id] of ids.entries()) await this.db.execute("UPDATE accounts SET sort_order = ?, updated_at = ? WHERE id = ?", [index + 1, now(), id]);
+    if (ids.length === 0) return;
+    await this.db.transaction(ids.map((id, index) => ({ sql: "UPDATE accounts SET sort_order = ?, updated_at = ? WHERE id = ?", params: [index + 1, now(), id] })));
   }
 
   /** Records a balance check (余额): one adjustment entry so the computed balance equals what the person sees. Returns the entry id, or null when nothing changes. */
@@ -539,11 +550,11 @@ export class LedgerStore {
     for (let n = 2; (await this.db.select<Row>("SELECT 1 FROM accounts WHERE lower(name) = lower(?)", [name])).length > 0; n += 1) name = cleanName(`${base} (${n})`);
     const stamp = now();
     const uuid = randomId();
-    await this.db.execute(
-      "INSERT INTO accounts (uuid, name, account_type, currency, institution, last4, account_key, opening_balance_source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'unknown', ?, ?)",
-      [uuid, name, type, info.currency, info.institution ?? null, info.last4 ?? null, info.key, stamp, stamp],
-    );
-    await this.audit({ actor: "import", action: "create", subjectType: "account", subjectId: uuid, summary: name });
+    await this.db.transaction([
+      { sql: "INSERT INTO accounts (uuid, name, account_type, currency, institution, last4, account_key, opening_balance_source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'unknown', ?, ?)",
+        params: [uuid, name, type, info.currency, info.institution ?? null, info.last4 ?? null, info.key, stamp, stamp] },
+      this.auditStatement({ actor: "import", action: "create", subjectType: "account", subjectId: uuid, summary: name }),
+    ]);
     const [created] = await this.db.select<Row>("SELECT id FROM accounts WHERE uuid = ?", [uuid]);
     return Number(created.id);
   }
@@ -571,8 +582,10 @@ export class LedgerStore {
     }
     const stamp = now();
     const uuid = randomId();
-    await this.db.execute(`INSERT INTO ${table} (uuid, name, created_at, updated_at) VALUES (?, ?, ?, ?)`, [uuid, clean, stamp, stamp]);
-    await this.audit({ actor, action: "create", subjectType: kind, subjectId: uuid, summary: clean });
+    await this.db.transaction([
+      { sql: `INSERT INTO ${table} (uuid, name, created_at, updated_at) VALUES (?, ?, ?, ?)`, params: [uuid, clean, stamp, stamp] },
+      this.auditStatement({ actor, action: "create", subjectType: kind, subjectId: uuid, summary: clean }),
+    ]);
     const [created] = await this.db.select<Row>(`SELECT id FROM ${table} WHERE uuid = ?`, [uuid]);
     return Number(created.id);
   }
@@ -595,16 +608,20 @@ export class LedgerStore {
     if (!current) throw new LedgerError("not_found", "Not found.");
     const clash = await this.db.select<Row>(`SELECT id FROM ${table} WHERE name = ? COLLATE NOCASE AND id <> ?`, [clean, id]);
     if (clash.length > 0) throw new LedgerError("name_taken", "That name is already used.");
-    await this.db.execute(`UPDATE ${table} SET name = ?, updated_at = ? WHERE id = ?`, [clean, now(), id]);
-    await this.audit({ actor, action: "update", subjectType: kind, subjectId: String(current.uuid), changes: { name: [current.name, clean] } });
+    await this.db.transaction([
+      { sql: `UPDATE ${table} SET name = ?, updated_at = ? WHERE id = ?`, params: [clean, now(), id] },
+      this.auditStatement({ actor, action: "update", subjectType: kind, subjectId: String(current.uuid), changes: { name: [current.name, clean] } }),
+    ]);
   }
 
   async setDimensionArchived(kind: DimensionKind, id: number, archived: boolean, actor = "user"): Promise<void> {
     const table = DIMENSION_TABLE[kind];
     const [current] = await this.db.select<Row>(`SELECT uuid, name FROM ${table} WHERE id = ?`, [id]);
     if (!current) throw new LedgerError("not_found", "Not found.");
-    await this.db.execute(`UPDATE ${table} SET archived_at = ?, updated_at = ? WHERE id = ?`, [archived ? now() : null, now(), id]);
-    await this.audit({ actor, action: archived ? "archive" : "unarchive", subjectType: kind, subjectId: String(current.uuid), summary: String(current.name) });
+    await this.db.transaction([
+      { sql: `UPDATE ${table} SET archived_at = ?, updated_at = ? WHERE id = ?`, params: [archived ? now() : null, now(), id] },
+      this.auditStatement({ actor, action: archived ? "archive" : "unarchive", subjectType: kind, subjectId: String(current.uuid), summary: String(current.name) }),
+    ]);
   }
 
   /** Moves every entry from one merchant/project/tag to another and removes the first. */
@@ -712,14 +729,16 @@ export class LedgerStore {
     }
     if (patch.kind !== undefined && !node.builtIn) kind = patch.kind;
     const hidden = patch.hidden !== undefined ? (patch.hidden ? 1 : 0) : Number(existing?.hidden ?? 0);
-    await this.db.execute(
-      `INSERT INTO category_meta (name, parent, category_kind, sort_order, hidden, updated_at) VALUES (?, ?, ?, ?, ?, ?)
+    await this.db.transaction([
+      {
+        sql: `INSERT INTO category_meta (name, parent, category_kind, sort_order, hidden, updated_at) VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT (name) DO UPDATE SET parent = excluded.parent, category_kind = excluded.category_kind, hidden = excluded.hidden, updated_at = excluded.updated_at`,
-      [node.name, parent, kind, existing ? Number(existing.sort_order) : node.sortOrder, hidden, now()],
-    );
-    // Children follow their parent's tree.
-    if (patch.kind !== undefined) await this.db.execute("UPDATE category_meta SET category_kind = ?, updated_at = ? WHERE parent = ?", [kind, now(), node.name]);
-    await this.audit({ actor, action: "update", subjectType: "category", subjectId: node.name, changes: Object.fromEntries(Object.entries(patch).map(([key, value]) => [key, [null, value]])) });
+        params: [node.name, parent, kind, existing ? Number(existing.sort_order) : node.sortOrder, hidden, now()],
+      },
+      // Children follow their parent's tree.
+      ...(patch.kind !== undefined ? [{ sql: "UPDATE category_meta SET category_kind = ?, updated_at = ? WHERE parent = ?", params: [kind, now(), node.name] }] : []),
+      this.auditStatement({ actor, action: "update", subjectType: "category", subjectId: node.name, changes: Object.fromEntries(Object.entries(patch).map(([key, value]) => [key, [null, value]])) }),
+    ]);
   }
 
   async reorderCategories(names: readonly string[]): Promise<void> {
@@ -826,43 +845,55 @@ export class LedgerStore {
     const stamp = now();
     const time = input.time && /^[0-2]\d:[0-5]\d$/.test(input.time) ? input.time : null;
     const note = input.note?.trim().slice(0, 500) || null;
-    const columns = "statement_id, account_id, booked_on, occurred_at_time, description, amount_cents, category, kind, entry_origin, merchant_id, project_id, note, currency, direction, category_source, validation_status, locally_modified, user_locked_fields, recurring_rule_id, recurring_on, link_group, link_hint, link_target_id, updated_at";
-    const rowValues = (values: { accountId: number; amount: number; category: string; kind: TransactionKind; description: string; linkGroup?: string | null; linkHint?: string | null; linkTarget?: number | null }) => [
+    const columns = "statement_id, account_id, booked_on, occurred_at_time, description, amount_cents, category, kind, entry_origin, merchant_id, project_id, note, currency, direction, category_source, validation_status, locally_modified, user_locked_fields, recurring_rule_id, recurring_on, link_group, link_hint, link_target_id, updated_at, uuid";
+    const rowValues = (values: { accountId: number; amount: number; category: string; kind: TransactionKind; description: string; linkGroup?: string | null; linkHint?: string | null; linkTarget?: number | null; uuid: string }) => [
       containerId, values.accountId, input.occurredOn, time, values.description, values.amount, values.category, values.kind, origin, merchantId, projectId, note, account.currency,
       values.amount < 0 ? "debit" : values.amount > 0 ? "credit" : "zero", "user", "user_confirmed", 1, JSON.stringify(["category", "kind"]),
-      recurrence?.ruleId ?? null, recurrence?.on ?? null, values.linkGroup ?? null, values.linkHint ?? null, values.linkTarget ?? null, stamp,
+      recurrence?.ruleId ?? null, recurrence?.on ?? null, values.linkGroup ?? null, values.linkHint ?? null, values.linkTarget ?? null, stamp, values.uuid,
     ];
     const group = randomId();
+    // The entry's own id is chosen here, so its tags and its operation-log event can be written with it.
+    const uuid = randomId();
+    const uuids = [uuid];
     let params: unknown[];
-    let rowsCount: number;
+    let first: { amountCents: number; category: string; description: string };
     if (input.kind === "transfer" || input.kind === "card_payment") {
       const to = await this.account(input.toAccountId!);
       const kind = transferKind(to.type);
       const legs = transferLegs(input.amountCents);
       const description = input.description?.trim() || `${account.name} → ${to.name}`;
+      uuids.push(randomId());
       params = [
-        ...rowValues({ accountId: account.id, amount: legs.from, category: "Transfers", kind, description, linkGroup: group }),
-        ...rowValues({ accountId: to.id, amount: legs.to, category: "Transfers", kind, description, linkGroup: group, linkHint: kind }),
+        ...rowValues({ accountId: account.id, amount: legs.from, category: "Transfers", kind, description, linkGroup: group, uuid }),
+        ...rowValues({ accountId: to.id, amount: legs.to, category: "Transfers", kind, description, linkGroup: group, linkHint: kind, uuid: uuids[1] }),
       ];
-      rowsCount = 2;
+      first = { amountCents: legs.from, category: "Transfers", description };
     } else {
       const category = categoryKindFor(input.kind) === null ? "Transfers" : (await this.knownCategory(input.category)) ?? (input.kind === "income" ? "Income" : "Uncategorized");
       const amount = input.kind === "adjustment" ? Math.trunc(input.amountCents) : signedAmount(input.kind, input.amountCents);
       const description = input.description?.trim() || (input.merchant?.trim() || category);
-      params = rowValues({ accountId: account.id, amount, category, kind: input.kind, description, linkHint: input.kind === "refund" && input.refundOf ? "refund_of" : null, linkTarget: input.kind === "refund" ? input.refundOf ?? null : null });
-      rowsCount = 1;
+      params = rowValues({ accountId: account.id, amount, category, kind: input.kind, description, linkHint: input.kind === "refund" && input.refundOf ? "refund_of" : null, linkTarget: input.kind === "refund" ? input.refundOf ?? null : null, uuid });
+      first = { amountCents: amount, category, description };
     }
     const perRow = columns.split(",").length;
-    // One transaction: the entry (both legs of a transfer), the link its insert creates, the
-    // clearing of the insert-time helpers and the container's count apply together or not at all.
+    const tagIds = await this.tagIds(input.tags ?? [], actor);
+    const mine = `uuid IN (${placeholders(uuids.length)})`;
+    const event = this.auditStatement({
+      actor, action: "create", subjectType: "transaction", subjectId: uuid, summary: `${input.kind} ${first.description}`,
+      changes: { kind: [null, input.kind], amountCents: [null, first.amountCents], account: [null, account.name], occurredOn: [null, input.occurredOn], category: [null, first.category] },
+    });
+    // One transaction: the entry (both legs of a transfer), the link its insert creates, its tags, the
+    // clearing of the insert-time helpers, the container's count and the operation-log event apply
+    // together or not at all, so a failed save can be retried without adding the entry twice.
     // The helpers must never outlive the INSERT (migration 0009).
-    let results: Awaited<ReturnType<SqlDriver["transaction"]>>;
     try {
-      results = await this.db.transaction([
-        { sql: `INSERT INTO transactions (${columns}) VALUES ${Array.from({ length: rowsCount }, () => `(${placeholders(perRow)})`).join(", ")}`, params },
-        rowsCount === 2
-          ? { sql: "UPDATE transactions SET link_group = NULL, link_hint = NULL, link_target_id = NULL WHERE link_group = ?", params: [group] }
-          : { sql: "UPDATE transactions SET link_group = NULL, link_hint = NULL, link_target_id = NULL WHERE id = last_insert_rowid()" },
+      await this.db.transaction([
+        { sql: `INSERT INTO transactions (${columns}) VALUES ${uuids.map(() => `(${placeholders(perRow)})`).join(", ")}`, params },
+        { sql: `UPDATE transactions SET link_group = NULL, link_hint = NULL, link_target_id = NULL WHERE ${mine}`, params: uuids },
+        ...tagIds.map((tagId) => ({ sql: `INSERT OR IGNORE INTO transaction_tags (transaction_id, tag_id) SELECT id, ? FROM transactions WHERE ${mine}`, params: [tagId, ...uuids] })),
+        // Undo names rows by id, which only the INSERT above knows; the log is append-only, so it is computed here.
+        { sql: event.sql.replace(/\?\)$/, `(SELECT json_array(json_object('op', 'soft_delete', 'ids', json_group_array(id))) FROM (SELECT id FROM transactions WHERE ${mine} ORDER BY id)))`),
+          params: [...(event.params ?? []).slice(0, -1), ...uuids] },
         { sql: "UPDATE statements SET transaction_count = (SELECT COUNT(*) FROM transactions WHERE statement_id = ?) WHERE id = ?", params: [containerId, containerId] },
       ]);
     } catch (error) {
@@ -871,19 +902,9 @@ export class LedgerStore {
       if (message.includes("refund_target_invalid")) throw new LedgerError("invalid_entry", "That expense cannot be refunded.", ["refund_target_required"]);
       throw error;
     }
-    // One INSERT statement assigns consecutive ids: a pair is the last id and the one before it.
-    const last = Number(results[0].lastInsertId);
-    const ids = rowsCount === 2 ? [last - 1, last] : [last];
-    const written = await this.db.select<Row>(`SELECT id FROM transactions WHERE id IN (${placeholders(ids.length)}) AND updated_at = ? AND statement_id = ? ORDER BY id`, [...ids, stamp, containerId]);
-    if (written.length !== rowsCount || ids.some((value) => !Number.isFinite(value) || value <= 0)) throw new LedgerError("invalid_entry", "The entry could not be read back.");
-    if (input.tags && input.tags.length > 0) await this.setTags(ids, input.tags, actor, false);
-    const detail = await this.entry(ids[0]);
-    await this.audit({
-      actor, action: "create", subjectType: "transaction", subjectId: detail.uuid, summary: `${input.kind} ${detail.description}`,
-      changes: { kind: [null, input.kind], amountCents: [null, detail.amountCents], account: [null, detail.accountName], occurredOn: [null, input.occurredOn], category: [null, detail.category] },
-      undo: [{ op: "soft_delete", ids }],
-    });
-    return ids;
+    const written = await this.db.select<Row>(`SELECT id, uuid FROM transactions WHERE ${mine}`, uuids);
+    if (written.length !== uuids.length) throw new LedgerError("invalid_entry", "The entry could not be read back.");
+    return uuids.map((value) => Number(written.find((row) => row.uuid === value)!.id));
   }
 
   /** One entry with its links (transfer counterpart, refund target, refunds received). */
@@ -935,6 +956,12 @@ export class LedgerStore {
     const stamp = now();
     const locked = new Set(before.lockedFields);
     const undo: UndoStep[] = [];
+    const statements: SqlStatement[] = [];
+    let tagged: number[] = [id];
+    const nameOf = async (table: "merchants" | "projects", key: number | null) => (key === null ? null : String((await this.db.select<Row>(`SELECT name FROM ${table} WHERE id = ?`, [key]))[0].name));
+    // The entry as it will read once saved, for the operation log.
+    let after = { kind: before.kind, amountCents: before.amountCents, occurredOn: input.occurredOn, category: before.category, description: before.description, note,
+      merchant: await nameOf("merchants", merchantId), project: await nameOf("projects", projectId), accountName: before.accountName, tags: before.tags };
     const snapshot = async (entryId: number) => {
       const [row] = await this.db.select<Row>("SELECT category, kind, description, merchant_id, project_id, note, account_id, amount_cents, booked_on, occurred_at_time, user_locked_fields, category_source FROM transactions WHERE id = ?", [entryId]);
       return row;
@@ -953,7 +980,9 @@ export class LedgerStore {
       }
       // Both legs and their link change together.
       const ids = [fromId, ...(toId ? [toId] : [])];
-      await this.db.transaction([{ sql:
+      tagged = ids;
+      after = { ...after, amountCents: id === fromId ? legs.from : legs.to, kind, category: "Transfers", description, accountName: id === fromId ? from.name : to.name };
+      statements.push({ sql:
         `UPDATE transactions SET
            account_id = CASE id WHEN ? THEN ? ELSE ? END,
            amount_cents = CASE id WHEN ? THEN ? ELSE ? END,
@@ -961,8 +990,7 @@ export class LedgerStore {
            booked_on = ?, occurred_at_time = ?, kind = ?, category = 'Transfers', description = ?, note = ?, merchant_id = ?, project_id = ?, locally_modified = 1, updated_at = ?
          WHERE id IN (${placeholders(ids.length)})`,
         params: [fromId, from.id, to.id, fromId, legs.from, legs.to, fromId, input.occurredOn, time, kind, description, note, merchantId, projectId, stamp, ...ids],
-      }, { sql: "UPDATE transaction_links SET link_type = ?, amount_cents = ? WHERE from_transaction_id = ? AND link_type IN ('transfer', 'card_payment')", params: [kind, legs.to, fromId] }]);
-      if (input.tags) await this.setTags(ids, input.tags, actor, false);
+      }, { sql: "UPDATE transaction_links SET link_type = ?, amount_cents = ? WHERE from_transaction_id = ? AND link_type IN ('transfer', 'card_payment')", params: [kind, legs.to, fromId] });
     } else {
       const category = categoryKindFor(input.kind) === null ? "Transfers" : (await this.knownCategory(input.category)) ?? (input.kind === "income" ? "Income" : "Uncategorized");
       const amount = input.kind === "adjustment" ? Math.trunc(input.amountCents) : signedAmount(input.kind, input.amountCents);
@@ -977,22 +1005,27 @@ export class LedgerStore {
       if (input.accountId !== before.accountId) locked.add("account");
       // Imported rows keep the bank's amount and date (they are evidence); manual entries change freely.
       const manual = before.origin === "manual" || before.origin === "recurring";
-      await this.db.execute(
-        `UPDATE transactions SET account_id = ?, ${manual ? "amount_cents = ?, booked_on = ?, direction = ?," : ""} occurred_at_time = ?, kind = ?, category = ?, description = ?, note = ?, merchant_id = ?, project_id = ?,
+      after = { ...after, ...(manual ? { amountCents: amount } : { occurredOn: before.occurredOn }), kind: input.kind, category, description, accountName: (await this.account(input.accountId)).name };
+      statements.push({
+        sql: `UPDATE transactions SET account_id = ?, ${manual ? "amount_cents = ?, booked_on = ?, direction = ?," : ""} occurred_at_time = ?, kind = ?, category = ?, description = ?, note = ?, merchant_id = ?, project_id = ?,
            category_source = CASE WHEN category <> ? THEN 'user' ELSE category_source END, user_locked_fields = ?, locally_modified = 1, tax_review = CASE WHEN ? = 'Business' THEN 1 ELSE tax_review END,
            link_hint = ?, link_target_id = ?, updated_at = ? WHERE id = ?`,
-        [input.accountId, ...(manual ? [amount, input.occurredOn, amount < 0 ? "debit" : amount > 0 ? "credit" : "zero"] : []), time, input.kind, category, description, note, merchantId, projectId,
+        params: [input.accountId, ...(manual ? [amount, input.occurredOn, amount < 0 ? "debit" : amount > 0 ? "credit" : "zero"] : []), time, input.kind, category, description, note, merchantId, projectId,
           category, JSON.stringify([...locked]), category, input.kind === "refund" ? "refund_of" : null, refundTarget ?? null, stamp, id],
-      );
-      if (input.tags) await this.setTags([id], input.tags, actor, false);
+      });
     }
-    const after = await this.entry(id);
+    if (input.tags) {
+      const tagIds = await this.tagIds(input.tags, actor);
+      statements.push(...LedgerStore.tagStatements(tagged, tagIds, false));
+      after.tags = tagIds.length === 0 ? [] : (await this.db.select<Row>(`SELECT name FROM tags WHERE id IN (${placeholders(tagIds.length)})`, tagIds)).map((row) => String(row.name));
+    }
     const changes: Record<string, [unknown, unknown]> = {};
     for (const key of ["kind", "amountCents", "occurredOn", "category", "description", "note", "merchant", "project", "accountName"] as const) {
       if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) changes[key] = [before[key], after[key]];
     }
-    if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) changes.tags = [before.tags, after.tags];
-    await this.audit({ actor, action: "update", subjectType: "transaction", subjectId: before.uuid, summary: after.description, changes, undo });
+    if (JSON.stringify([...before.tags].sort()) !== JSON.stringify([...after.tags].sort())) changes.tags = [before.tags, after.tags];
+    // The edit, its tags and the record that can undo it: one transaction.
+    await this.db.transaction([...statements, this.auditStatement({ actor, action: "update", subjectType: "transaction", subjectId: before.uuid, summary: after.description, changes, undo })]);
   }
 
   /** The entry and, for a transfer, its other leg (they always move together). */
@@ -1088,6 +1121,8 @@ export class LedgerStore {
     if (patch.category !== undefined && !category) throw new LedgerError("invalid_entry", "Unknown category.", ["category_kind"]);
     const merchantId = patch.merchant !== undefined ? await this.dimensionId("merchant", patch.merchant, actor) : undefined;
     const projectId = patch.project !== undefined ? await this.dimensionId("project", patch.project, actor) : undefined;
+    // Every entry of the batch, its tags and the records that can undo it: one transaction.
+    const statements: SqlStatement[] = [];
     let changed = 0;
     for (const id of ids) {
       const [row] = await this.db.select<Row>("SELECT * FROM transactions WHERE id = ? AND deleted_at IS NULL", [id]);
@@ -1114,36 +1149,44 @@ export class LedgerStore {
         // The change and the record that can undo it are written together. Locks are put back only
         // while nobody added one since; `locally_modified` stays set (a person may rely on it).
         const lockedAfter = JSON.stringify([...locked]);
-        await this.db.transaction([
+        statements.push(
           { sql: `UPDATE transactions SET ${sets.join(", ")}, user_locked_fields = ?, locally_modified = 1, updated_at = ? WHERE id = ?`, params: [...params, lockedAfter, now(), id] },
           this.auditStatement({ actor, action: "batch_update", subjectType: "transaction", subjectId: String(row.uuid), batchId, summary: String(row.description),
             changes: Object.fromEntries(Object.keys(undoFields).filter((key) => key !== "tax_review").map((key) => [key, [undoFields[key], null]])),
             undo: [{ op: "set", table: "transactions", id, fields: undoFields, expect: written, unlessChanged: { user_locked_fields: { from: row.user_locked_fields, to: lockedAfter } } }] }),
-        ]);
+        );
         changed += 1;
       }
     }
-    if (patch.addTags?.length) await this.setTags(ids, patch.addTags, actor, true);
-    if (patch.removeTags?.length) {
-      for (const name of patch.removeTags) {
-        const tagId = await this.dimensionId("tag", name, actor);
-        if (tagId) await this.db.execute(`DELETE FROM transaction_tags WHERE tag_id = ? AND transaction_id IN (${placeholders(ids.length)})`, [tagId, ...ids]);
-      }
+    if (patch.addTags?.length) statements.push(...LedgerStore.tagStatements(ids, await this.tagIds(patch.addTags, actor), true));
+    for (const tagId of await this.tagIds(patch.removeTags ?? [], actor)) {
+      statements.push({ sql: `DELETE FROM transaction_tags WHERE tag_id = ? AND transaction_id IN (${placeholders(ids.length)})`, params: [tagId, ...ids] });
     }
+    if (statements.length > 0) await this.db.transaction(statements);
     return changed;
   }
 
   /** Sets (or with `add`, adds) tags on entries. */
   async setTags(ids: readonly number[], names: readonly string[], actor = "user", add = false): Promise<void> {
+    const statements = LedgerStore.tagStatements(ids, await this.tagIds(names, actor), add);
+    if (statements.length > 0) await this.db.transaction(statements);
+  }
+
+  /** The tags' ids; new names are created. (An unused tag left by an interrupted edit changes no entry.) */
+  private async tagIds(names: readonly string[], actor: string): Promise<number[]> {
     const tagIds: number[] = [];
     for (const name of names) {
       const tagId = await this.dimensionId("tag", name, actor);
       if (tagId !== null && !tagIds.includes(tagId)) tagIds.push(tagId);
     }
-    for (const id of ids) {
-      if (!add) await this.db.execute("DELETE FROM transaction_tags WHERE transaction_id = ?", [id]);
-      for (const tagId of tagIds) await this.db.execute("INSERT OR IGNORE INTO transaction_tags (transaction_id, tag_id) VALUES (?, ?)", [id, tagId]);
-    }
+    return tagIds;
+  }
+
+  private static tagStatements(ids: readonly number[], tagIds: readonly number[], add: boolean): SqlStatement[] {
+    return ids.flatMap((id) => [
+      ...(add ? [] : [{ sql: "DELETE FROM transaction_tags WHERE transaction_id = ?", params: [id] }]),
+      ...tagIds.map((tagId) => ({ sql: "INSERT OR IGNORE INTO transaction_tags (transaction_id, tag_id) VALUES (?, ?)", params: [id, tagId] })),
+    ]);
   }
 
   /** Expenses that can still be refunded, newest first (for the refund form). */
@@ -1327,22 +1370,25 @@ export class LedgerStore {
     if (input.category && !category) throw new LedgerError("invalid_budget", "Unknown category.");
     const stamp = now();
     try {
-      if (input.id) {
-        await this.db.execute("UPDATE budgets SET period = ?, category = ?, project_id = ?, amount_cents = ?, alert_percent = ?, updated_at = ? WHERE id = ?", [input.period, category, input.projectId ?? null, input.amountCents, alert, stamp, input.id]);
-      } else {
-        await this.db.execute("INSERT INTO budgets (uuid, period, category, project_id, amount_cents, alert_percent, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-          [randomId(), input.period, category, input.projectId ?? null, input.amountCents, alert, stamp, stamp]);
-      }
+      await this.db.transaction([
+        input.id
+          ? { sql: "UPDATE budgets SET period = ?, category = ?, project_id = ?, amount_cents = ?, alert_percent = ?, updated_at = ? WHERE id = ?", params: [input.period, category, input.projectId ?? null, input.amountCents, alert, stamp, input.id] }
+          : { sql: "INSERT INTO budgets (uuid, period, category, project_id, amount_cents, alert_percent, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            params: [randomId(), input.period, category, input.projectId ?? null, input.amountCents, alert, stamp, stamp] },
+        this.auditStatement({ actor, action: input.id ? "update" : "create", subjectType: "budget", subjectId: input.id ?? null, summary: `${input.period} ${category ?? "all"}`, changes: { amountCents: [null, input.amountCents] } }),
+      ]);
     } catch (error) {
-      if (String((error as Error).message).includes("UNIQUE")) throw new LedgerError("invalid_budget", "There is already a budget for this.");
+      // The native side rejects with a plain string, sql.js with an Error.
+      if (String((error as Error)?.message ?? error).includes("UNIQUE")) throw new LedgerError("invalid_budget", "There is already a budget for this.");
       throw error;
     }
-    await this.audit({ actor, action: input.id ? "update" : "create", subjectType: "budget", subjectId: input.id ?? null, summary: `${input.period} ${category ?? "all"}`, changes: { amountCents: [null, input.amountCents] } });
   }
 
   async deleteBudget(id: number, actor = "user"): Promise<void> {
-    await this.db.execute("DELETE FROM budgets WHERE id = ?", [id]);
-    await this.audit({ actor, action: "delete", subjectType: "budget", subjectId: id });
+    await this.db.transaction([
+      { sql: "DELETE FROM budgets WHERE id = ?", params: [id] },
+      this.auditStatement({ actor, action: "delete", subjectType: "budget", subjectId: id }),
+    ]);
   }
 
   // -------------------------------------------------------------------------------- recurring
@@ -1368,28 +1414,35 @@ export class LedgerStore {
       const [existing] = await this.db.select<Row>("SELECT next_on, start_on FROM recurring_rules WHERE id = ?", [input.id]);
       if (!existing) throw new LedgerError("not_found", "Schedule not found.");
       const nextOn = String(existing.start_on) === input.startOn && existing.next_on ? String(existing.next_on) : input.startOn;
-      await this.db.execute("UPDATE recurring_rules SET name = ?, template = ?, frequency = ?, interval = ?, start_on = ?, end_on = ?, next_on = ?, auto_post = ?, updated_at = ? WHERE id = ?",
-        [name, template, input.frequency, interval, input.startOn, input.endOn ?? null, nextOn, input.autoPost ? 1 : 0, stamp, input.id]);
-      await this.audit({ actor, action: "update", subjectType: "recurring_rule", subjectId: input.id, summary: name });
+      await this.db.transaction([
+        { sql: "UPDATE recurring_rules SET name = ?, template = ?, frequency = ?, interval = ?, start_on = ?, end_on = ?, next_on = ?, auto_post = ?, updated_at = ? WHERE id = ?", params: [name, template, input.frequency, interval, input.startOn, input.endOn ?? null, nextOn, input.autoPost ? 1 : 0, stamp, input.id] },
+        this.auditStatement({ actor, action: "update", subjectType: "recurring_rule", subjectId: input.id, summary: name }),
+      ]);
       return input.id;
     }
     const uuid = randomId();
-    await this.db.execute("INSERT INTO recurring_rules (uuid, name, template, frequency, interval, start_on, end_on, next_on, auto_post, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [uuid, name, template, input.frequency, interval, input.startOn, input.endOn ?? null, input.startOn, input.autoPost ? 1 : 0, stamp, stamp]);
+    await this.db.transaction([
+      { sql: "INSERT INTO recurring_rules (uuid, name, template, frequency, interval, start_on, end_on, next_on, auto_post, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params: [uuid, name, template, input.frequency, interval, input.startOn, input.endOn ?? null, input.startOn, input.autoPost ? 1 : 0, stamp, stamp] },
+      this.auditStatement({ actor, action: "create", subjectType: "recurring_rule", subjectId: uuid, summary: name }),
+    ]);
     const [row] = await this.db.select<Row>("SELECT id FROM recurring_rules WHERE uuid = ?", [uuid]);
-    await this.audit({ actor, action: "create", subjectType: "recurring_rule", subjectId: uuid, summary: name });
     return Number(row.id);
   }
 
   async setRecurringPaused(id: number, paused: boolean, actor = "user"): Promise<void> {
-    await this.db.execute("UPDATE recurring_rules SET paused = ?, updated_at = ? WHERE id = ?", [paused ? 1 : 0, now(), id]);
-    await this.audit({ actor, action: paused ? "archive" : "unarchive", subjectType: "recurring_rule", subjectId: id });
+    await this.db.transaction([
+      { sql: "UPDATE recurring_rules SET paused = ?, updated_at = ? WHERE id = ?", params: [paused ? 1 : 0, now(), id] },
+      this.auditStatement({ actor, action: paused ? "archive" : "unarchive", subjectType: "recurring_rule", subjectId: id }),
+    ]);
   }
 
   /** Deletes a schedule. Entries it already created stay (they are ordinary entries). */
   async deleteRecurringRule(id: number, actor = "user"): Promise<void> {
-    await this.db.execute("DELETE FROM recurring_rules WHERE id = ?", [id]);
-    await this.audit({ actor, action: "delete", subjectType: "recurring_rule", subjectId: id });
+    await this.db.transaction([
+      { sql: "DELETE FROM recurring_rules WHERE id = ?", params: [id] },
+      this.auditStatement({ actor, action: "delete", subjectType: "recurring_rule", subjectId: id }),
+    ]);
   }
 
   /** Occurrences due up to `today` that have not been posted yet. */
@@ -1447,8 +1500,10 @@ export class LedgerStore {
     const rule = (await this.recurringRules()).find((item) => item.id === id);
     if (!rule || !rule.nextOn) return;
     const next = nextOccurrence(rule.startOn, rule.nextOn, rule.frequency, rule.interval);
-    await this.db.execute("UPDATE recurring_rules SET next_on = ?, updated_at = ? WHERE id = ?", [rule.endOn && next > rule.endOn ? null : next, now(), id]);
-    await this.audit({ action: "update", subjectType: "recurring_rule", subjectId: id, summary: `skipped ${rule.nextOn}` });
+    await this.db.transaction([
+      { sql: "UPDATE recurring_rules SET next_on = ?, updated_at = ? WHERE id = ?", params: [rule.endOn && next > rule.endOn ? null : next, now(), id] },
+      this.auditStatement({ action: "update", subjectType: "recurring_rule", subjectId: id, summary: `skipped ${rule.nextOn}` }),
+    ]);
   }
 
   // ------------------------------------------------------------------------------- review lists

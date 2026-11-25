@@ -273,32 +273,34 @@ export class FinanceStore {
   }
 
   /** Deletes a custom category: its transactions become Uncategorized, its rules are forgotten. Returns how many transactions moved. */
-  async deleteCategory(name: string, moveTo: Category = "Uncategorized"): Promise<number> {
+  async deleteCategory(name: string, moveTo: Category = "Uncategorized", merging: { before: SqlStatement[]; after: SqlStatement[] } = { before: [], after: [] }): Promise<number> {
     const [row] = await this.db.select<Row>("SELECT name FROM custom_categories WHERE name = $1", [name]);
     if (!row) throw new StoreError("not_found", "Category not found.");
     const target = moveTo.toLowerCase() === name.toLowerCase() ? "Uncategorized" : moveTo;
     if (!isBuiltInCategory(target) && !(await this.customCategories()).includes(target)) throw new StoreError("invalid_category", "Unknown category.");
     // Entries are moved, never deleted (I-9); the ids moved are kept in the operation log.
     const ids = (await this.db.select<Row>("SELECT id FROM transactions WHERE category = $1", [name])).map((item) => Number(item.id));
-    const [moved] = await this.db.transaction([
+    const results = await this.db.transaction([
+      ...merging.before,
       { sql: "UPDATE transactions SET category = $1, locally_modified = 1, updated_at = $2 WHERE category = $3", params: [target, now(), name] },
       { sql: "DELETE FROM merchant_rules WHERE category = $1", params: [name] },
       { sql: "DELETE FROM custom_categories WHERE name = $1", params: [name] },
       ...this.ledger.deleteCategoryMetaStatements(name),
       this.ledger.auditStatement({ action: "delete", subjectType: "category", subjectId: name, summary: `${ids.length} entries → ${target}`, changes: { entries: [ids, target] } }),
+      ...merging.after,
     ]);
-    return moved.rowsAffected;
+    return results[merging.before.length].rowsAffected;
   }
 
   /** Merges one custom category into another: entries and rules move, the first category is removed. */
   async mergeCategory(from: string, into: Category): Promise<number> {
     if (from.toLowerCase() === into.toLowerCase()) return 0;
     const ids = (await this.db.select<Row>("SELECT id FROM transactions WHERE category = $1", [from])).map((item) => Number(item.id));
-    await this.db.execute("UPDATE merchant_rules SET category = $1, updated_at = $2 WHERE category = $3 AND NOT EXISTS (SELECT 1 FROM merchant_rules r WHERE r.merchant_key = merchant_rules.merchant_key AND r.income = merchant_rules.income AND r.category = $4)",
-      [into, now(), from, into]);
-    const moved = await this.deleteCategory(from, into);
-    await this.ledger.audit({ action: "merge", subjectType: "category", subjectId: into, summary: `${from} → ${into}`, changes: { entries: [ids, into] } });
-    return moved;
+    return this.deleteCategory(from, into, {
+      before: [{ sql: "UPDATE merchant_rules SET category = $1, updated_at = $2 WHERE category = $3 AND NOT EXISTS (SELECT 1 FROM merchant_rules r WHERE r.merchant_key = merchant_rules.merchant_key AND r.income = merchant_rules.income AND r.category = $4)",
+        params: [into, now(), from, into] }],
+      after: [this.ledger.auditStatement({ action: "merge", subjectType: "category", subjectId: into, summary: `${from} → ${into}`, changes: { entries: [ids, into] } })],
+    });
   }
 
   /**
@@ -437,15 +439,34 @@ export class FinanceStore {
       kindHints: "", kind: kindForCategorized({ amountMinor: row.amountCents, accountType, description: row.description, category: row.category, incomeCategories }),
       sourceRef: `row:${index + 1}`, confidence: 100, validationStatus: "verified", raw: "{}",
     }));
-    const results = await this.db.transaction(await this.stagedStatements({
+    const results = await this.commitStaged(input.currency, await this.stagedStatements({
       filename: input.filename, currency: input.currency, sha256: input.sha256, sourceSha256: input.sha256, batchId: randomId(),
       closingBalanceCents: input.parsed.closingBalanceCents, closingBalanceOn: input.parsed.closingBalanceOn, rows, region, regionMeta: input.regionMeta,
       account, format: input.format,
     }));
     const statementId = Number(results[results.length - 1].lastInsertId);
-    // Like Rails: newer rules also clean up older Uncategorized rows.
-    const recategorized = await this.applyCategories(recategorizeUncategorized(await this.automaticTransactions(), await this.rules()));
-    return { statementId, recategorized };
+    return { statementId, recategorized: await this.recategorizeAfterImport() };
+  }
+
+  /**
+   * Writes a prepared import. The checks made while preparing it are repeated by the database inside the
+   * transaction, so two imports that overlap (a double click, a second window) cannot store a file twice
+   * or mix currencies; the loser gets the same answer as if it had come later.
+   */
+  private async commitStaged(currency: string | undefined, statements: readonly SqlStatement[]): Promise<Array<{ rowsAffected: number; lastInsertId?: number }>> {
+    // Writes nothing, or violates the settings key and rolls the whole import back.
+    const guard: SqlStatement = { sql: "INSERT INTO settings (key, value) SELECT 'currency', $1 WHERE EXISTS (SELECT 1 FROM settings WHERE key = 'currency' AND value <> $2)", params: [currency ?? null, currency ?? null] };
+    try {
+      return (await this.db.transaction([guard, ...statements])).slice(1);
+    } catch (error) {
+      const message = String((error as Error)?.message ?? error);
+      if (message.includes("statements.sha256")) throw new StoreError("statement_duplicate", "This statement was already imported.");
+      if (message.includes("settings.key")) {
+        const existing = (await this.currency()) ?? "";
+        throw new StoreError("currency_mismatch", `This device keeps statements in ${existing}. Delete local data to switch currency.`, { currency: existing });
+      }
+      throw error;
+    }
   }
 
   /**
@@ -525,9 +546,9 @@ export class FinanceStore {
       }));
       statementAt.push(statements.length - 1);
     }
-    const results = await this.db.transaction(statements);
+    const results = await this.commitStaged(plan[0]?.currency, statements);
     const statementIds = statementAt.map((position) => Number(results[position].lastInsertId));
-    const recategorized = await this.applyCategories(recategorizeUncategorized(await this.automaticTransactions(), await this.rules()));
+    const recategorized = await this.recategorizeAfterImport();
     return { batchId, statementIds, transactions: plan.reduce((sum, statement) => sum + statement.rows.length, 0), recategorized };
   }
 
@@ -616,16 +637,19 @@ export class FinanceStore {
     const [row] = await this.db.select<Row>("SELECT * FROM transactions WHERE id = $1", [id]);
     if (!row) throw new StoreError("not_found", "Transaction not found.");
     const transaction = toTransaction(row);
-    await this.applyCategories([{ id, category }]);
-    await this.lockCategory([id], category, String(row.category));
-    if (!remember) return 0;
-    const rule = ruleFor(transaction, category);
-    if (!rule) return 0;
-    await this.db.execute(
-      "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO UPDATE SET category = excluded.category, updated_at = excluded.updated_at",
-      [rule.merchantKey, rule.income ? 1 : 0, rule.category, now()],
-    );
-    return this.applyCategories(transactionsMatchingRule(await this.automaticTransactions(), rule, id).map((match) => ({ id: match.id, category })));
+    // The choice, its protection against automation, the log entry, the remembered rule and the other
+    // rows it files: one transaction.
+    const statements = await this.chooseCategoryStatements([id], category);
+    const rule = remember ? ruleFor(transaction, category) : null;
+    const others = rule ? transactionsMatchingRule(await this.automaticTransactions(), rule, id) : [];
+    if (rule) {
+      statements.push({
+        sql: "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO UPDATE SET category = excluded.category, updated_at = excluded.updated_at",
+        params: [rule.merchantKey, rule.income ? 1 : 0, rule.category, now()],
+      }, ...FinanceStore.categoryStatements(others.map((match) => ({ id: match.id, category }))));
+    }
+    await this.db.transaction(statements);
+    return others.length;
   }
 
   /**
@@ -762,12 +786,8 @@ export class FinanceStore {
    */
   async setCategoryMany(ids: readonly number[], category: Category): Promise<number> {
     if (!isBuiltInCategory(category) && !(await this.customCategories()).includes(category)) throw new StoreError("invalid_category", "Unknown category.");
-    const changed = await this.applyCategories(ids.map((id) => ({ id, category })));
-    for (const id of ids) {
-      const [row] = await this.db.select<Row>("SELECT category FROM transactions WHERE id = $1", [id]);
-      await this.lockCategory([id], category, row ? String(row.category) : category);
-    }
-    return changed;
+    if (ids.length > 0) await this.db.transaction(await this.chooseCategoryStatements(ids, category));
+    return ids.length;
   }
 
   /** Re-saves merchant rules exactly (undo of a category deletion). */
@@ -784,26 +804,31 @@ export class FinanceStore {
     const [row] = await this.db.select<Row>("SELECT uuid, user_locked_fields, excluded FROM transactions WHERE id = $1", [id]);
     const locked = new Set(parseList(row?.user_locked_fields));
     locked.add("excluded");
-    await this.db.execute("UPDATE transactions SET excluded = $1, locally_modified = 1, user_locked_fields = $2, updated_at = $3 WHERE id = $4", [excluded ? 1 : 0, JSON.stringify([...locked]), now(), id]);
-    if (row) await this.ledger.audit({ action: "update", subjectType: "transaction", subjectId: String(row.uuid), changes: { excluded: [Number(row.excluded) === 1, excluded] } });
+    if (!row) return;
+    await this.db.transaction([
+      { sql: "UPDATE transactions SET excluded = $1, locally_modified = 1, user_locked_fields = $2, updated_at = $3 WHERE id = $4", params: [excluded ? 1 : 0, JSON.stringify([...locked]), now(), id] },
+      this.ledger.auditStatement({ action: "update", subjectType: "transaction", subjectId: String(row.uuid), changes: { excluded: [Number(row.excluded) === 1, excluded] } }),
+    ]);
   }
 
   /**
    * A person chose this category: lock it against automation, record it, and keep the kind in step
    * (Transfers <-> transfer-like, Income <-> income, an expense category on money in = refund).
    */
-  private async lockCategory(ids: readonly number[], category: Category, previous: string): Promise<void> {
+  private async chooseCategoryStatements(ids: readonly number[], category: Category): Promise<SqlStatement[]> {
     const income = await this.ledger.incomeCategories(await this.customCategories());
+    const statements = FinanceStore.categoryStatements(ids.map((id) => ({ id, category })));
     for (const id of ids) {
-      const [row] = await this.db.select<Row>("SELECT t.uuid, t.amount_cents, t.kind, t.original_description, t.description, t.user_locked_fields, a.account_type FROM transactions t LEFT JOIN accounts a ON a.id = t.account_id WHERE t.id = $1", [id]);
+      const [row] = await this.db.select<Row>("SELECT t.uuid, t.category, t.amount_cents, t.kind, t.original_description, t.description, t.user_locked_fields, a.account_type FROM transactions t LEFT JOIN accounts a ON a.id = t.account_id WHERE t.id = $1", [id]);
       if (!row) continue;
       const locked = new Set(parseList(row.user_locked_fields));
       locked.add("category");
       const type = isAccountType(row.account_type) && row.account_type !== "other" ? (row.account_type as AccountType) : null;
       const kind = kindForCategorized({ amountMinor: Number(row.amount_cents), accountType: type, description: String(row.original_description ?? row.description), category, incomeCategories: income });
-      await this.db.execute("UPDATE transactions SET locally_modified = 1, category_source = 'user', user_locked_fields = $1, kind = $2 WHERE id = $3", [JSON.stringify([...locked]), kind, id]);
-      if (previous !== category || String(row.kind) !== kind) await this.ledger.audit({ action: "update", subjectType: "transaction", subjectId: String(row.uuid), changes: { category: [previous, category], kind: [row.kind, kind] } });
+      statements.push({ sql: "UPDATE transactions SET locally_modified = 1, category_source = 'user', user_locked_fields = $1, kind = $2 WHERE id = $3", params: [JSON.stringify([...locked]), kind, id] });
+      if (row.category !== category || String(row.kind) !== kind) statements.push(this.ledger.auditStatement({ action: "update", subjectType: "transaction", subjectId: String(row.uuid), changes: { category: [row.category, category], kind: [row.kind, kind] } }));
     }
+    return statements;
   }
 
   async deleteRule(rule: Pick<MerchantRule, "merchantKey" | "income">): Promise<void> {
@@ -1084,8 +1109,10 @@ export class FinanceStore {
   async allowDownload(sha256: string): Promise<void> {
     const skipped = await this.skippedHashes();
     skipped.delete(sha256);
-    await this.setSetting("web_sync_skip", JSON.stringify([...skipped]));
-    await this.db.execute("DELETE FROM settings WHERE key = $1", ["web_sync_version"]);
+    await this.db.transaction([
+      FinanceStore.settingStatement("web_sync_skip", JSON.stringify([...skipped])),
+      { sql: "DELETE FROM settings WHERE key = $1", params: ["web_sync_version"] },
+    ]);
   }
 
   /** What is stored on this device, split by where it came from. */
@@ -1108,9 +1135,12 @@ export class FinanceStore {
    * become ordinary local statements, so a later download no longer removes them.
    */
   async detachWebCopies(): Promise<void> {
-    await this.db.execute("UPDATE transactions SET remote_id = NULL WHERE remote_id IS NOT NULL");
-    await this.db.execute("UPDATE statements SET source = 'local', remote_id = NULL WHERE source = 'web'");
-    await this.db.execute("DELETE FROM settings WHERE key = $1", ["web_sync_version"]);
+    // Together: rows detached without their statement would be downloaded a second time.
+    await this.db.transaction([
+      { sql: "UPDATE transactions SET remote_id = NULL WHERE remote_id IS NOT NULL" },
+      { sql: "UPDATE statements SET source = 'local', remote_id = NULL WHERE source = 'web'" },
+      { sql: "DELETE FROM settings WHERE key = $1", params: ["web_sync_version"] },
+    ]);
   }
 
   async webSyncSettings(): Promise<WebSyncSettings> {
@@ -1146,12 +1176,22 @@ export class FinanceStore {
     const stamp = now();
     const custom = await this.ensureCategories([...(web.categories ?? []), ...web.transactions.map((transaction) => transaction.category), ...web.rules.map((rule) => rule.category)]);
 
+    // The whole download is ONE transaction: statements, rows, removals and rules arrive together, or the
+    // book is left exactly as it was.
+    const statements: SqlStatement[] = [];
+
     // Statements.
     const localRows = await this.db.select<Row>("SELECT id, sha256, source, remote_id FROM statements");
     const localHashes = new Set(localRows.filter((row) => row.source !== "web").map((row) => String(row.sha256)));
     const skipped = await this.skippedHashes();
     const copies = new Map(localRows.filter((row) => row.source === "web").map((row) => [Number(row.remote_id), Number(row.id)]));
-    const statementIdFor = new Map<number, number>();
+    /** Website statement id -> this device's id, or null for one added by this transaction. */
+    const statementIdFor = new Map<number, number | null>();
+    // A file deleted and uploaded again on the website keeps its hash, which two statements may not share:
+    // copies that are about to leave give theirs up first.
+    const kept = new Set(web.statements.filter((statement) => !skipped.has(statement.sha256) && !localHashes.has(statement.sha256)).map((statement) => statement.remoteId));
+    const leaving = [...copies].filter(([remoteId]) => !kept.has(remoteId)).map(([, localId]) => localId);
+    for (const localId of leaving) statements.push({ sql: "UPDATE statements SET sha256 = 'leaving:' || id WHERE id = $1", params: [localId] });
     for (const statement of web.statements) {
       if (skipped.has(statement.sha256)) continue; // the person removed it from this device
       if (localHashes.has(statement.sha256)) {
@@ -1160,26 +1200,12 @@ export class FinanceStore {
       }
       const existing = copies.get(statement.remoteId);
       const values = [statement.filename, statement.currency, statement.sha256, statement.transactionCount, statement.closingBalanceCents, statement.closingBalanceOn];
-      if (existing) {
-        await this.db.execute(
-          "UPDATE statements SET filename = $1, currency = $2, sha256 = $3, transaction_count = $4, closing_balance_cents = $5, closing_balance_on = $6 WHERE id = $7",
-          [...values, existing],
-        );
-        statementIdFor.set(statement.remoteId, existing);
-      } else {
-        const inserted = await this.db.execute(
-          "INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at, source, remote_id) VALUES ($1, $2, $3, $4, $5, $6, $7, 'web', $8)",
-          [...values, statement.importedAt || stamp, statement.remoteId],
-        );
-        statementIdFor.set(statement.remoteId, Number(inserted.lastInsertId));
-        result.statementsAdded += 1;
-      }
-    }
-    for (const [remoteId, localId] of copies) {
-      if (statementIdFor.has(remoteId)) continue;
-      await this.db.execute("DELETE FROM transactions WHERE statement_id = $1", [localId]);
-      await this.db.execute("DELETE FROM statements WHERE id = $1", [localId]);
-      result.statementsRemoved += 1;
+      statements.push(existing
+        ? { sql: "UPDATE statements SET filename = $1, currency = $2, sha256 = $3, transaction_count = $4, closing_balance_cents = $5, closing_balance_on = $6 WHERE id = $7", params: [...values, existing] }
+        : { sql: "INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at, source, remote_id) VALUES ($1, $2, $3, $4, $5, $6, $7, 'web', $8)",
+          params: [...values, statement.importedAt || stamp, statement.remoteId] });
+      statementIdFor.set(statement.remoteId, existing ?? null);
+      if (!existing) result.statementsAdded += 1;
     }
 
     // Transactions belonging to the website copies (kept in the "no account" account until web accounts travel too).
@@ -1190,19 +1216,18 @@ export class FinanceStore {
     const inserts: unknown[][] = [];
     for (const transaction of incoming) {
       seen.add(transaction.remoteId);
-      const statementId = statementIdFor.get(transaction.remoteStatementId)!;
       const row = existingTx.get(transaction.remoteId);
       if (!row) {
         const category = FinanceStore.knownCategory(transaction.category, custom);
         const kind = transaction.kind && isTransactionKind(transaction.kind) ? transaction.kind : legacyKind({ amountMinor: transaction.amountCents, category });
-        inserts.push([statementId, transaction.bookedOn, transaction.description, transaction.amountCents, category, transaction.taxReview ? 1 : 0, transaction.excluded ? 1 : 0, stamp, transaction.remoteId,
+        inserts.push([transaction.remoteStatementId, transaction.bookedOn, transaction.description, transaction.amountCents, category, transaction.taxReview ? 1 : 0, transaction.excluded ? 1 : 0, stamp, transaction.remoteId,
           kind, webAccountId, "web_copy", transaction.originalDescription ?? transaction.description]);
         continue;
       }
       const keepLocal = Number(row.locally_modified) === 1;
       const locked = new Set(parseList(row.user_locked_fields));
       const next = {
-        statement_id: statementId, booked_on: transaction.bookedOn,
+        statement_id: statementIdFor.get(transaction.remoteStatementId) ?? null, booked_on: transaction.bookedOn,
         description: keepLocal && locked.has("description") ? String(row.description) : transaction.description, amount_cents: transaction.amountCents,
         category: keepLocal ? String(row.category) : FinanceStore.knownCategory(transaction.category, custom),
         tax_review: keepLocal ? Number(row.tax_review) : transaction.taxReview ? 1 : 0,
@@ -1211,44 +1236,54 @@ export class FinanceStore {
       };
       const changed = (Object.keys(next) as Array<keyof typeof next>).some((key) => String(row[key]) !== String(next[key]));
       if (!changed) continue;
-      await this.db.execute(
-        "UPDATE transactions SET statement_id = $1, booked_on = $2, description = $3, amount_cents = $4, category = $5, tax_review = $6, excluded = $7, kind = $8, updated_at = $9 WHERE id = $10",
-        [next.statement_id, next.booked_on, next.description, next.amount_cents, next.category, next.tax_review, next.excluded, next.kind, stamp, Number(row.id)],
-      );
+      statements.push({
+        sql: "UPDATE transactions SET statement_id = (SELECT id FROM statements WHERE remote_id = $1), booked_on = $2, description = $3, amount_cents = $4, category = $5, tax_review = $6, excluded = $7, kind = $8, updated_at = $9 WHERE id = $10",
+        params: [transaction.remoteStatementId, next.booked_on, next.description, next.amount_cents, next.category, next.tax_review, next.excluded, next.kind, stamp, Number(row.id)],
+      });
       result.transactionsUpdated += 1;
     }
     for (let start = 0; start < inserts.length; start += 100) {
       const batch = inserts.slice(start, start + 100);
-      const params = batch.flat();
-      const values = batch.map((_, i) => `(${Array.from({ length: 13 }, (_, j) => `$${i * 13 + j + 1}`).join(", ")})`);
-      await this.db.execute(
-        `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, remote_id, kind, account_id, entry_origin, original_description) VALUES ${values.join(", ")}`,
-        params,
-      );
+      const values = batch.map((_, i) => `((SELECT id FROM statements WHERE remote_id = $${i * 13 + 1}), ${Array.from({ length: 12 }, (_, j) => `$${i * 13 + j + 2}`).join(", ")})`);
+      statements.push({
+        sql: `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, remote_id, kind, account_id, entry_origin, original_description) VALUES ${values.join(", ")}`,
+        params: batch.flat(),
+      });
       result.transactionsAdded += batch.length;
     }
     for (const [remoteId, row] of existingTx) {
       if (seen.has(remoteId)) continue;
-      await this.db.execute("DELETE FROM transaction_links WHERE from_transaction_id = $1 OR to_transaction_id = $1", [Number(row.id)]);
-      await this.db.execute("DELETE FROM transaction_tags WHERE transaction_id = $1", [Number(row.id)]);
-      await this.db.execute("DELETE FROM transactions WHERE id = $1", [Number(row.id)]);
-      result.transactionsRemoved += 1;
+      statements.push(
+        { sql: "DELETE FROM transaction_links WHERE from_transaction_id = $1 OR to_transaction_id = $2", params: [Number(row.id), Number(row.id)] },
+        { sql: "DELETE FROM transaction_tags WHERE transaction_id = $1", params: [Number(row.id)] },
+        { sql: "DELETE FROM transactions WHERE id = $1", params: [Number(row.id)] },
+      );
+      if (!leaving.includes(Number(row.statement_id))) result.transactionsRemoved += 1; // the others are counted as their statement
     }
+    // Last, when rows that moved to another statement on the website have moved here too.
+    for (const localId of leaving) statements.push({ sql: "DELETE FROM statements WHERE id = $1", params: [localId] });
+    result.statementsRemoved = leaving.length;
 
     // Remembered rules: this device's own rules win.
     for (const rule of web.rules) {
       if (FinanceStore.knownCategory(rule.category, custom) !== rule.category) continue;
-      await this.db.execute(
-        "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO NOTHING",
-        [rule.merchantKey, rule.income ? 1 : 0, rule.category, stamp],
-      );
+      statements.push({
+        sql: "INSERT INTO merchant_rules (merchant_key, income, category, updated_at) VALUES ($1, $2, $3, $4) ON CONFLICT (merchant_key, income) DO NOTHING",
+        params: [rule.merchantKey, rule.income ? 1 : 0, rule.category, stamp],
+      });
     }
-    if (!deviceCurrency && web.currency && web.statements.length > 0) await this.setSetting("currency", web.currency);
+    if (!deviceCurrency && web.currency && web.statements.length > 0) statements.push(FinanceStore.settingStatement("currency", web.currency));
+    if (statements.length > 0) await this.db.transaction(statements);
     return result;
   }
 
+  private static settingStatement(key: string, value: string): SqlStatement {
+    return { sql: "INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = excluded.value", params: [key, value] };
+  }
+
   private async setSetting(key: string, value: string): Promise<void> {
-    await this.db.execute("INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [key, value]);
+    const { sql, params } = FinanceStore.settingStatement(key, value);
+    await this.db.execute(sql, params);
   }
 
   /**
@@ -1260,15 +1295,26 @@ export class FinanceStore {
     return (await this.transactions()).filter((transaction) => !chosen.has(transaction.id));
   }
 
-  private async applyCategories(changes: Array<{ id: number; category: Category }>): Promise<number> {
+  private static categoryStatements(changes: ReadonlyArray<{ id: number; category: Category }>): SqlStatement[] {
     const stamp = now();
-    if (changes.length > 0) {
-      await this.db.transaction(changes.map((change) => ({
-        // Business purchases are flagged for tax review, as in Rails.
-        sql: "UPDATE transactions SET category = $1, tax_review = CASE WHEN $2 = 'Business' THEN 1 ELSE tax_review END, updated_at = $3 WHERE id = $4",
-        params: [change.category, change.category, stamp, change.id],
-      })));
+    return changes.map((change) => ({
+      // Business purchases are flagged for tax review, as in Rails.
+      sql: "UPDATE transactions SET category = $1, tax_review = CASE WHEN $2 = 'Business' THEN 1 ELSE tax_review END, updated_at = $3 WHERE id = $4",
+      params: [change.category, change.category, stamp, change.id],
+    }));
+  }
+
+  /**
+   * Newer rules also clean up older Uncategorized rows (like Rails). Runs after an import that is already
+   * saved: a failure here must not report the import as failed, and the next import tries again.
+   */
+  private async recategorizeAfterImport(): Promise<number> {
+    try {
+      const statements = FinanceStore.categoryStatements(recategorizeUncategorized(await this.automaticTransactions(), await this.rules()));
+      if (statements.length > 0) await this.db.transaction(statements);
+      return statements.length;
+    } catch {
+      return 0;
     }
-    return changes.length;
   }
 }

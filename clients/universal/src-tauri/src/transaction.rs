@@ -18,8 +18,9 @@ use serde_json::{Map, Value as JsonValue};
 use sqlx::sqlite::{SqliteArguments, SqliteRow};
 use sqlx::{Column, Row, Sqlite, SqlitePool, TypeInfo, ValueRef};
 
-/// The most statements one batch may carry (a 20,000-row import stages 50 rows per statement).
-pub const MAX_STATEMENTS: usize = 5_000;
+/// The most statements one batch may carry. A remembered rule or a website download writes one statement
+/// per changed entry, so this has to exceed the number of entries a book can reasonably hold.
+pub const MAX_STATEMENTS: usize = 100_000;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Statement {
