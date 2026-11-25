@@ -34,4 +34,23 @@ class ClientApiCorsTest < ActionDispatch::IntegrationTest
     preflight("/api/client/v1/devices/#{DEVICE}/databases/#{DATABASE}", "PUT", "https://evil.example")
     assert_nil response.headers["Access-Control-Allow-Origin"]
   end
+
+  # Before the fix the catch-all "/api/*" rule answered GET preflights here with "*" and the Authorization header.
+  test "other websites get no CORS headers for any app endpoint or method" do
+    ["/api/client/v1/finance", "/api/client/v1/finance/transactions", "/api/client/v1/session", "/api/client/v1/account",
+      "/api/client/v1/module_preferences", "/api/client/v1/finance/receipts"].each do |path|
+      %w[GET POST DELETE].each do |method|
+        preflight(path, method, "https://evil.example")
+        assert_nil response.headers["Access-Control-Allow-Origin"], "#{method} #{path}"
+        assert_nil response.headers["Access-Control-Allow-Headers"], "#{method} #{path}"
+      end
+    end
+    get "/api/client/v1/account", headers: {"Origin" => "https://evil.example"}
+    assert_nil response.headers["Access-Control-Allow-Origin"]
+  end
+
+  test "the public REST API keeps its open CORS policy" do
+    preflight("/api/v1/teams", "GET", "https://integration.example")
+    assert_equal "*", response.headers["Access-Control-Allow-Origin"]
+  end
 end
