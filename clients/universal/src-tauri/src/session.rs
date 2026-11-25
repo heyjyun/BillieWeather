@@ -72,14 +72,7 @@ mod store {
     }
 
     pub fn save(app: &tauri::AppHandle, token: &str) -> Result<(), String> {
-        let path = path(app)?;
-        std::fs::write(&path, token).map_err(|_| "session write failed".to_string())?;
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600)).map_err(|_| "session write failed".to_string())?;
-        }
-        Ok(())
+        super::write_private(&path(app)?, token).map_err(|_| "session write failed".to_string())
     }
 
     pub fn clear(app: &tauri::AppHandle) -> Result<(), String> {
@@ -89,6 +82,36 @@ mod store {
             Err(_) => Err("session delete failed".into()),
         }
     }
+}
+
+/// Writes `contents` to `path` so that no other account can ever read it: the bytes go to a new file
+/// in the same folder that is created with mode 0600 (on Unix) and is then renamed over `path`. There is
+/// no moment at which the token sits in a file with the umask's permissions, and a crash leaves either the
+/// old token or the new one, never half of one. Used for the token file on Android and Linux.
+#[cfg_attr(any(target_os = "macos", target_os = "ios", target_os = "windows"), allow(dead_code))]
+fn write_private(path: &std::path::Path, contents: &str) -> std::io::Result<()> {
+    use std::io::Write;
+    let name = path.file_name().ok_or_else(|| std::io::Error::other("no file name"))?.to_string_lossy().into_owned();
+    let partial = path.with_file_name(format!(".{name}.{}.partial", std::process::id()));
+    let _ = std::fs::remove_file(&partial);
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let result = (|| {
+        let mut file = options.open(&partial)?;
+        file.write_all(contents.as_bytes())?;
+        file.sync_all()?;
+        drop(file);
+        std::fs::rename(&partial, path)
+    })();
+    if result.is_err() {
+        let _ = std::fs::remove_file(&partial);
+    }
+    result
 }
 
 #[tauri::command]
@@ -111,7 +134,7 @@ pub fn session_clear(app: tauri::AppHandle) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::service_name;
+    use super::{service_name, write_private};
 
     const PRODUCTION: &str = "com.billieweather.client";
 
@@ -140,5 +163,27 @@ mod tests {
     fn tests_run_as_a_debug_build() {
         // `cargo test` compiles with debug assertions, so tests can only reach `.dev` entries.
         assert!(cfg!(debug_assertions));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn the_token_file_is_private_and_replaced_whole() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = std::env::temp_dir().join(format!("billie-session-test-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("session.token");
+        // An older version could leave a world-readable file behind; it is replaced, not reused.
+        std::fs::write(&path, "old").unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+        write_private(&path, "bwa_synthetic-token").unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "bwa_synthetic-token");
+        assert_eq!(std::fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o600);
+        let leftovers: Vec<_> = std::fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()).map(|e| e.file_name()).filter(|n| n != "session.token").collect();
+        assert!(leftovers.is_empty(), "{leftovers:?}");
+        // A failed write leaves the previous token in place.
+        assert!(write_private(&dir.join("missing").join("session.token"), "x").is_err());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "bwa_synthetic-token");
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }
