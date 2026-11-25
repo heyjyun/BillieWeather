@@ -4,6 +4,7 @@ mod ocr;
 mod session;
 mod snapshot;
 mod transaction;
+mod variant;
 
 #[cfg(target_os = "macos")]
 pub use ocr::{run_prepare as run_vision_prepare, run_worker as run_vision_worker};
@@ -97,8 +98,19 @@ pub fn sqlite_version() -> String {
     }
 }
 
+fn context() -> tauri::Context {
+    tauri::generate_context!()
+}
+
+/// For `--billie-identity` (scripts/qa.mjs): what this build would open, without opening it.
+pub fn identity_report() -> String {
+    variant::report(context().config()).to_string() + "\n"
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let context = context();
+    variant::enforce(context.config());
     assert!(
         unsafe { libsqlite3_sys::sqlite3_libversion_number() } >= 3_054_000,
         "The runtime SQLite requires version 3.54.0 or newer"
@@ -114,6 +126,8 @@ pub fn run() {
             // SQL plugin could migrate the only copy. Report a generic error without data paths.
             use tauri::Manager;
             let dir = app.path().app_config_dir()?;
+            let files: Vec<String> = (1..=MAX_DATABASES).map(slot_name).collect();
+            variant::check_data_dir(&dir, &app.config().identifier, &files).map_err(std::io::Error::other)?;
             snapshot::keep_private(&dir);
             let version = migrations().len() as u32;
             for slot in 1..=MAX_DATABASES {
@@ -144,7 +158,7 @@ pub fn run() {
             db_transaction,
             db_snapshot
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running BillieWeather");
 }
 

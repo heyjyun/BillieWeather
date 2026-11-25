@@ -15,7 +15,7 @@ use tauri::Manager;
 const FILE: &str = "device-identity.json";
 /// Only the released app reports metadata. QA builds (other identifiers) and debug builds
 /// keep their own data and never appear as devices on the website.
-pub const PRODUCTION_IDENTIFIER: &str = "com.billieweather.client";
+use crate::variant::PRODUCTION_IDENTIFIER;
 
 pub fn is_uuid(value: &str) -> bool {
     let bytes = value.as_bytes();

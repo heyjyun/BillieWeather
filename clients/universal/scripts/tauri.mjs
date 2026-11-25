@@ -8,6 +8,8 @@
 // local-only development app on purpose.
 // It allows exactly those two origins in the app's Content Security Policy and passes them to the
 // frontend as VITE_BILLIE_API_URL and VITE_BILLIE_IDENTITY_URL. Nothing else may reach the network.
+// `dev` runs as com.billieweather.client.dev with its own data folder; the app refuses to start as a
+// debug build of the shipped app (src-tauri/src/variant.rs). QA builds: scripts/qa.mjs.
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -48,6 +50,12 @@ export function cspWithOrigin(csp, ...origins) {
   return csp.replace(/connect-src ([^;]+)/, (_match, sources) => `connect-src ${[sources.trim(), ...unique].join(" ")}`);
 }
 
+/** `dev` never shares the shipped app's identity, and with it the real ledgers and sign-in. */
+export function developmentIdentity(command) {
+  if (command !== "dev") return {};
+  return { identifier: "com.billieweather.client.dev", productName: "BillieWeather Dev", plugins: { "deep-link": { desktop: { schemes: ["billieweather-dev"] }, mobile: [{ scheme: ["billieweather-dev"], appLink: false }] } } };
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const origin = apiOrigin(process.env.BILLIE_API_URL);
   const identity = identityOrigin(process.env.BILLIE_IDENTITY_URL);
@@ -60,7 +68,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   console.log(`BillieWeather servers for this ${process.argv[2] ?? "run"}: API ${origin}, identity ${identity}`);
   const base = JSON.parse(readFileSync(join(root, "src-tauri/tauri.conf.json"), "utf8"));
   const overridePath = join(root, "src-tauri/tauri.api.conf.json");
-  writeFileSync(overridePath, JSON.stringify({ app: { security: { csp: cspWithOrigin(base.app.security.csp, origin, identity) } } }, null, 2) + "\n");
+  writeFileSync(overridePath, JSON.stringify({ ...developmentIdentity(process.argv[2]), app: { security: { csp: cspWithOrigin(base.app.security.csp, origin, identity) } } }, null, 2) + "\n");
   const result = spawnSync("npx", ["tauri", ...process.argv.slice(2), "--config", overridePath], {
     cwd: root,
     stdio: "inherit",

@@ -13,6 +13,7 @@
     "tauri": "tauri",
     "desktop:dev": "node scripts/tauri.mjs dev",
     "desktop:build": "node scripts/tauri.mjs build",
+    "qa": "node scripts/qa.mjs",
     "ios:init": "tauri ios init",
     "ios:build": "tauri ios build",
     "android:init": "tauri android init",

@@ -11,7 +11,7 @@
 const ACCOUNT: &str = "session";
 
 /// The keychain service (desktop/iOS) or token file stem (Android/Linux) for this build.
-fn service_name(identifier: &str, debug: bool) -> String {
+pub fn service_name(identifier: &str, debug: bool) -> String {
     if debug {
         format!("{identifier}.dev")
     } else {

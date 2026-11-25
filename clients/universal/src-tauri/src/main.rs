@@ -8,6 +8,11 @@ fn main() {
         let _ = std::io::stdout().lock().write_all(version.as_bytes());
         return;
     }
+    if std::env::args_os().nth(1).as_deref() == Some(std::ffi::OsStr::new("--billie-identity")) {
+        use std::io::Write;
+        let _ = std::io::stdout().lock().write_all(billieweather_lib::identity_report().as_bytes());
+        return;
+    }
     #[cfg(target_os = "macos")]
     if std::env::args_os().nth(1).as_deref() == Some(std::ffi::OsStr::new("--billie-vision-worker")) {
         if billieweather_lib::run_vision_worker().is_err() {
