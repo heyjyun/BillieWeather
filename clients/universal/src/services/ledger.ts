@@ -539,6 +539,37 @@ export class LedgerStore {
     return this.unassignedAccountId(currency);
   }
 
+  /**
+   * Like unassignedAccountId / accountForImport, but writes nothing: the statements that create the account
+   * when it does not exist yet (and record that in the operation log), to run INSIDE the caller's own batch,
+   * so a batch that fails leaves no account behind (audit A-05). Rows then refer to the account through
+   * `(SELECT id FROM accounts WHERE account_key = ?)` with the returned `key`.
+   */
+  async accountStatementsForImport(info: { key: string | null; institution?: string | null; last4?: string | null; kind?: string | null; currency: string }): Promise<{ key: string; statements: SqlStatement[] }> {
+    const key = info.key ?? UNASSIGNED_ACCOUNT_KEY;
+    const [row] = await this.db.select<Row>("SELECT id FROM accounts WHERE account_key = ?", [key]);
+    if (row) return { key, statements: [] };
+    const stamp = now();
+    const uuid = randomId();
+    if (!info.key) {
+      return { key, statements: [{
+        sql: "INSERT INTO accounts (uuid, name, account_type, currency, account_key, opening_balance_source, sort_order, created_at, updated_at) VALUES (?, 'Imported (no account)', 'other', ?, ?, 'unknown', 999, ?, ?) ON CONFLICT (account_key) DO NOTHING",
+        params: [uuid, info.currency, key, stamp, stamp],
+      }] };
+    }
+    const type: AccountType = info.kind === "checking" || info.kind === "savings" || info.kind === "credit_card" || info.kind === "loan" ? info.kind : "other";
+    const base = cleanName(`${info.institution ?? ""}${info.last4 ? ` …${info.last4}` : ""}`) || "Account";
+    let name = base;
+    for (let n = 2; (await this.db.select<Row>("SELECT 1 FROM accounts WHERE lower(name) = lower(?)", [name])).length > 0; n += 1) name = cleanName(`${base} (${n})`);
+    const audit = this.auditStatement({ actor: "import", action: "create", subjectType: "account", subjectId: uuid, summary: name });
+    return { key, statements: [
+      { sql: "INSERT INTO accounts (uuid, name, account_type, currency, institution, last4, account_key, opening_balance_source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'unknown', ?, ?) ON CONFLICT (account_key) DO NOTHING",
+        params: [uuid, name, type, info.currency, info.institution ?? null, info.last4 ?? null, key, stamp, stamp] },
+      // Only when the account was created by this batch (another import may have created it meanwhile).
+      { sql: audit.sql.replace(/ VALUES \((.*)\)$/, " SELECT $1 WHERE EXISTS (SELECT 1 FROM accounts WHERE uuid = ?)"), params: [...(audit.params ?? []), uuid] },
+    ] };
+  }
+
   /** The account for an imported statement's account key, created on first import. */
   async accountForImport(info: { key: string | null; institution?: string | null; last4?: string | null; kind?: string | null; currency: string }): Promise<number> {
     if (!info.key) return this.unassignedAccountId(info.currency);

@@ -22,13 +22,13 @@ const web = (overrides: Partial<WebData> = {}): WebData => ({
 describe("merging website data into the local database", () => {
   it("adds website statements, transactions, rules and the currency; a repeat download changes nothing", async () => {
     const { store } = await newStore();
-    expect(await store.applyWebData(web())).toEqual({ statementsAdded: 1, statementsRemoved: 0, transactionsAdded: 3, transactionsUpdated: 0, transactionsRemoved: 0, skippedDuplicates: 0 });
+    expect(await store.applyWebData(web())).toEqual({ statementsAdded: 1, statementsRemoved: 0, transactionsAdded: 3, transactionsUpdated: 0, transactionsRemoved: 0, skippedDuplicates: 0, duplicateTransactionsSkipped: 0 });
     const [statement] = await store.statements();
     expect(statement).toMatchObject({ filename: "web-checking.csv", source: "web", closingBalanceCents: 120000 });
     expect((await store.transactions()).length).toBe(3);
     expect(await store.rules()).toEqual([{ merchantKey: "zed bakers", income: false, category: "Business" }]);
     expect(await store.currency()).toBe("USD");
-    expect(await store.applyWebData(web())).toEqual({ statementsAdded: 0, statementsRemoved: 0, transactionsAdded: 0, transactionsUpdated: 0, transactionsRemoved: 0, skippedDuplicates: 0 });
+    expect(await store.applyWebData(web())).toEqual({ statementsAdded: 0, statementsRemoved: 0, transactionsAdded: 0, transactionsUpdated: 0, transactionsRemoved: 0, skippedDuplicates: 0, duplicateTransactionsSkipped: 0 });
   });
 
   it("applies website edits and deletions, but keeps categories changed on this device", async () => {
