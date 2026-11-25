@@ -5,3 +5,4 @@
 2026-11-25 01:43:37 CST 37f4a8d, 965e513 committed; Rails 855/0/2
 2026-11-25 02:00:47 CST DEVIATION: one accessibility dump included the open panel's sidebar and two file names; nothing opened or captured; driver now never reads panels
 2026-11-25 02:11:02 CST native acceptance on overnight-c1 (f258e7a): registration, databases, CSV, scanned PDF, receipts, edit, trash, backup/restore, theme, 6 languages, feature library, restart, sign-out on/offline, other devices, single copy PASS; G1 layout and G3 snapshot defects fixed in next commit; rebuild pending
+2026-11-25 02:11:25 CST QA app quit by someone at the desktop about 02:10; hardware input active; GUI paused, resumes only after 10 min idle
