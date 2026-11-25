@@ -1,0 +1,37 @@
+import { chromium } from "playwright-core";
+const base = "http://127.0.0.1:33557", email = process.env.QA_EMAIL, password = "Violet-Harbor-Lantern-92";
+const browser = await chromium.launch({ channel: "chrome", headless: true });
+const out = [];
+const problems = (page, label) => {
+  page.on("console", (m) => { if (m.type() === "error") out.push(`${label} console: ${m.text().slice(0, 160)}`); });
+  page.on("pageerror", (e) => out.push(`${label} pageerror: ${String(e).slice(0, 160)}`));
+  page.on("response", (r) => { if (r.status() >= 400 && r.url().startsWith(base)) out.push(`${label} ${r.status()} ${new URL(r.url()).pathname}`); });
+};
+const audit = () => page.evaluate(() => {
+  const over = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+  const unnamed = [...document.querySelectorAll("button, a[href], input:not([type=hidden]), select, textarea")].filter((e) => e.offsetParent !== null && !(e.getAttribute("aria-label") || e.getAttribute("aria-labelledby") || e.textContent.trim() || e.title || e.labels?.length || e.placeholder || e.value)).map((e) => e.outerHTML.slice(0, 80));
+  const ids = [...document.querySelectorAll("[id]")].map((e) => e.id); const dup = ids.filter((id, i) => ids.indexOf(id) !== i);
+  return { over, unnamed, dup: [...new Set(dup)], h1: document.querySelectorAll("h1").length, lang: document.documentElement.lang, untranslated: document.body.innerText.includes("translation missing"), raw: (document.body.innerText.match(/\bbillie\.[a-z_]+\.[a-z_]+/) || [])[0] || null };
+});
+let page;
+const paths = (process.env.PATHS || "").split(",");
+for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["tablet", { width: 820, height: 1180 }], ["mobile", { width: 375, height: 812 }]]) {
+  const context = await browser.newContext({ viewport, isMobile: name === "mobile", hasTouch: name === "mobile" });
+  page = await context.newPage(); problems(page, name);
+  await page.goto(`${base}/users/sign_in?locale=en`);
+  console.log(name, "sign-in page", JSON.stringify(await audit()));
+  await page.fill("#user_email", email); await page.fill("#user_password", password);
+  await Promise.all([page.waitForURL((u) => !u.pathname.includes("sign_in"), { timeout: 15000 }), page.click("form input[type=submit], form button[type=submit]")]);
+  for (const path of paths) {
+    const response = await page.goto(base + path); await page.waitForTimeout(400);
+    const a = await audit();
+    const bad = a.over > 1 || a.unnamed.length || a.dup.length || a.h1 !== 1 || a.untranslated || a.raw || response.status() !== 200;
+    console.log(name, path, response.status(), new URL(page.url()).pathname, bad ? "CHECK " + JSON.stringify(a) : "ok");
+  }
+  if (name === "desktop") for (const locale of ["en", "zh-CN", "zh-TW", "ja", "ko", "es"]) for (const path of ["/app", "/app/settings", "/app/settings/features"]) {
+    const r = await page.goto(`${base}${path}?locale=${locale}`); const a = await audit();
+    console.log("locale", locale, path, r.status(), a.lang, a.untranslated || a.raw || a.over > 1 ? "CHECK " + JSON.stringify(a) : "ok");
+  }
+  await context.close();
+}
+await browser.close(); console.log("PROBLEMS", out.length); [...new Set(out)].forEach((line) => console.log("  ", line));

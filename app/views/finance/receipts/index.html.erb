@@ -8,7 +8,7 @@
       <span class="bw-feature-icon"><%= finance_icon "phone", size: 24 %></span>
       <h3><%= t("billie.receipts.capture.scan") %></h3>
       <p><%= t("billie.receipts.capture.scan_help") %></p>
-      <%= hidden_field_tag "receipt[source]", "camera" %>
+      <%= hidden_field_tag "receipt[source]", "camera", id: nil %>
       <%= label_tag "receipt_camera_file", t("billie.receipts.capture.scan_input"), class: "bw-sr-only" %>
       <input type="file" name="receipt[files][]" id="receipt_camera_file" accept="image/*" capture="environment" class="bw-file-input" required>
       <%= form.submit t("billie.receipts.capture.scan_submit"), class: "bw-button bw-button-dark" %>
@@ -19,7 +19,7 @@
         <span class="bw-upload-icon"><%= finance_icon "upload", size: 28 %></span>
         <h3><%= t("billie.receipts.capture.upload") %></h3>
         <p><%= t("billie.receipts.capture.upload_help") %></p>
-        <%= hidden_field_tag "receipt[source]", "upload" %>
+        <%= hidden_field_tag "receipt[source]", "upload", id: nil %>
         <%= label_tag "receipt_files", t("billie.receipts.capture.upload_input"), class: "bw-sr-only" %>
         <input type="file" name="receipt[files][]" id="receipt_files" multiple accept="image/jpeg,image/png,image/heic,image/heif,image/webp,application/pdf,.heic,.pdf" class="bw-file-input" required aria-describedby="receipt-limits">
         <small id="receipt-limits"><%= t("billie.receipts.capture.limits", count: Finance::ReceiptsController::MAX_FILES) %></small>

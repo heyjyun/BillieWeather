@@ -492,6 +492,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--bw-color-accen
 .bw-account-amount { text-align: right; font-weight: var(--bw-font-weight-semibold); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bw-account-amount small { display: block; font-weight: 400; font-size: var(--bw-font-size-xs); color: var(--bw-color-text-muted); margin-top: 2px; }
 .bw-inline-edit { margin-top: 6px; }
+form.bw-inline-edit :is(input, select) { max-width: 100%; }
 .bw-inline-edit summary { color: var(--bw-color-accent-strong); font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-medium); }
 .bw-inline-edit form { margin-top: 10px; max-width: 340px; }
 .bw-inline-edit small { display: block; margin-top: 6px; font-size: var(--bw-font-size-xs); color: var(--bw-color-text-muted); line-height: 1.6; }
