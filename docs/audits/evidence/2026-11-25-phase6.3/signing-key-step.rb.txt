@@ -1,0 +1,27 @@
+# One process per release and key setting. Synthetic account only; prints statuses, never a value.
+require "json"
+file = ENV.fetch("STATE"); state = File.exist?(file) ? JSON.parse(File.read(file)) : {"tokens" => {}, "cookies" => {}, "reset" => {}}
+EMAIL = "key-rehearsal@example.com"; PASSWORD = "Synthetic-9k2-Violet-Harbor"
+user = User.find_by(email: EMAIL) || User.new(email: EMAIL, password: PASSWORD, first_name: "Q", last_name: "A", time_zone: "UTC", usage_region: "US", nickname: "QA").tap { |u| u.save!(validate: false) }
+def session = ActionDispatch::Integration::Session.new(Rails.application).tap { |s| s.https!; s.host! "localhost" }
+def api(token) = session.tap { |s| s.get "/api/client/v1/account", headers: {"Authorization" => "Bearer #{token}"} }.response.status
+def web(cookie) = session.tap { |s| s.get "/app/quality-none", headers: {"Cookie" => cookie}; s.get "/account", headers: {"Cookie" => cookie} }.then { |s| [s.response.status, s.response.headers["Location"].to_s[/sign_in/] ? "to sign-in" : "inside"].join(" ") }
+out = {}
+state["tokens"].each { |n, t| out["app #{n}"] = api(t) }
+state["cookies"].each { |n, c| out["web #{n}"] = web(c) }
+state["reset"].each { |n, t| out["reset link #{n}"] = User.with_reset_password_token(t) ? "valid" : "dead" }
+out["password"] = User.find_by(email: EMAIL).valid_password?(PASSWORD)
+if (n = ENV["ISSUE"])
+  state["tokens"][n] = ClientApi::SessionToken.issue(user).first
+  s = session; s.get "/users/sign_in"
+  s.post "/users/sign_in", params: {user: {email: EMAIL, password: PASSWORD}, authenticity_token: s.response.body[/name="authenticity_token" value="([^"]+)"/, 1]}
+  state["cookies"][n] = s.cookies.to_hash.map { |k, v| "#{k}=#{CGI.escape(v)}" }.join("; ")
+  state["reset"][n] = user.send(:set_reset_password_token)
+  out["issued #{n}"] = [api(state["tokens"][n]), web(state["cookies"][n]), User.with_reset_password_token(state["reset"][n]) ? "valid" : "dead"]
+end
+if (n = ENV["SIGNOUT"])
+  s = session; s.delete "/api/client/v1/session", headers: {"Authorization" => "Bearer #{state["tokens"][n]}"}
+  out["app #{n} signed out"] = [s.response.status, api(state["tokens"][n])]
+end
+out["fence warning"] = BillieRuntimeSettings.review(ENV)[:warnings].any? { |w| w.include?("fence") } if defined?(BillieRuntimeSettings)
+File.write(file, JSON.generate(state)); puts "RESULT #{out.to_json}"
