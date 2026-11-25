@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { en, type Messages } from "./en";
 import { es } from "./es";
 import { ja } from "./ja";
@@ -64,8 +64,9 @@ export function I18nProvider({ children, initial }: { children: ReactNode; initi
     } catch {
       // storage unavailable
     }
-    document.documentElement.lang = next;
   }, []);
+  // Also for the language found at startup, not only after a change: screen readers pronounce by it.
+  useLayoutEffect(() => { document.documentElement.lang = locale; }, [locale]);
   const value = useMemo<I18nValue>(() => {
     const m = MESSAGES[locale];
     const t: Translate = (key, vars) => {

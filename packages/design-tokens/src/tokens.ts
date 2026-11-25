@@ -89,6 +89,9 @@ export interface ColorTokens {
   vizAxis: string;
   vizInk: string;
   vizStrong: string;
+  vizLabel: string;
+  vizLabelDeep: string;
+  vizLabelOther: string;
 }
 
 export const color: Record<ThemeName, ColorTokens> = {
@@ -151,6 +154,7 @@ export const color: Record<ThemeName, ColorTokens> = {
     vizAxis: "#CFC8D9",
     vizInk: "#4F4959",
     vizStrong: "#16131A",
+    vizLabel: "#000000", vizLabelDeep: "#FFFFFF", vizLabelOther: "#000000",
   },
   dark: {
     bg: "#17131C",
@@ -210,6 +214,7 @@ export const color: Record<ThemeName, ColorTokens> = {
     vizAxis: "#4E4459",
     vizInk: "#C9C3D2",
     vizStrong: "#F4F1F7",
+    vizLabel: "#000000", vizLabelDeep: "#000000", vizLabelOther: "#FFFFFF",
   },
 };
 
@@ -366,4 +371,9 @@ export const contrastPairs: Array<{ fg: keyof ColorTokens; bg: keyof ColorTokens
   { fg: "accent", bg: "sidebar", min: 3 },
   { fg: "focusRing", bg: "surface", min: 3 },
   { fg: "focusRing", bg: "bg", min: 3 },
+  // Percentages written on the spending bar.
+  ...(["viz0", "viz1", "viz2", "viz3", "viz4", "vizUncategorized"] as const).map((bg) => ({ fg: "vizLabel" as const, bg, min: 4.5 })),
+  { fg: "vizLabelDeep", bg: "viz5", min: 4.5 },
+  { fg: "vizLabelDeep", bg: "viz6", min: 4.5 },
+  { fg: "vizLabelOther", bg: "vizOther", min: 4.5 },
 ];

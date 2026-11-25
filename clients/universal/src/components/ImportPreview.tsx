@@ -2,6 +2,7 @@
 // changes financial results (highlighted when the person must choose), the rows with their
 // status and notes, and the reconciliation. Nothing is saved until "Import" is pressed, and that
 // button stays disabled while anything is undecided.
+import { useFocusWhenLost } from "../hooks/useFocus";
 import { CURRENCIES } from "@billie/shared-types";
 import {
   commitPlan, decisionFor, formatMoney, MAPPED_FIELDS, minorToDecimalString, reviseDraft, suggestedDecision,
@@ -106,6 +107,7 @@ export function ImportPreview(props: {
     </label>
   );
 
+  const heading = useFocusWhenLost<HTMLHeadingElement>();
   const conventions = draft.conventions;
   const setConvention = (change: Partial<Conventions>) => revise({ conventions: change });
   const shown = showAll ? draft.rows : draft.rows.slice(0, ROW_LIMIT);
@@ -117,7 +119,7 @@ export function ImportPreview(props: {
     }}>
       <section className="bw-panel">
         <span className="bw-eyebrow">{u.eyebrow}</span>
-        <h2 id="universal-title">{draft.filename}</h2>
+        <h2 ref={heading} tabIndex={-1} id="universal-title">{draft.filename}</h2>
         <p className="bw-muted">
           {t(u.detected, { format: u.formats[draft.format], encoding: draft.detected.encoding?.encoding ?? "UTF-8" })} · {u.privacy}
         </p>
@@ -235,7 +237,7 @@ export function ImportPreview(props: {
         <div className="bw-table-scroll">
           <table className="bw-review-table">
             <thead>
-              <tr><th>{u.table.status}</th><th>{u.table.date}</th><th>{u.table.description}</th><th>{u.table.amount}</th><th>{u.table.category}</th><th>{u.table.notes}</th><th>{u.table.decision}</th><th /></tr>
+              <tr><th>{u.table.status}</th><th>{u.table.date}</th><th>{u.table.description}</th><th>{u.table.amount}</th><th>{u.table.category}</th><th>{u.table.notes}</th><th>{u.table.decision}</th><th><span className="bw-sr-only">{u.edit}</span></th></tr>
             </thead>
             <tbody>
               {shown.map((row) => {

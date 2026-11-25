@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { interpolate, LanguageSelect, useI18n } from "../i18n";
 import { useAccount } from "../hooks/useAccount";
 import { API_ORIGIN, AccountError, websiteUrl } from "../services/account";
@@ -18,6 +18,13 @@ export function Login({ onCreateAccount, initialEmail = "" }: {
   const [needsOtp, setNeedsOtp] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rejected, setRejected] = useState(false);
+  const form = useRef<HTMLFormElement>(null);
+  // The fields are off while signing in, which drops focus: continue where the problem is.
+  useEffect(() => {
+    if (error && !busy) form.current?.querySelector<HTMLInputElement>(needsOtp ? "[autocomplete=one-time-code]" : "[type=password]")?.focus();
+  }, [error, busy, needsOtp]);
+  const problem = { "aria-describedby": error ? "login-error" : undefined, "aria-invalid": rejected || undefined };
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -27,11 +34,13 @@ export function Login({ onCreateAccount, initialEmail = "" }: {
   async function attempt(email: string, password: string, otpAttempt?: string) {
     setBusy(true);
     setError(null);
+    setRejected(false);
     try {
       await signIn(email, password, otpAttempt);
     } catch (caught) {
       const code = caught instanceof AccountError ? caught.code : "unknown";
       if (code === "otp_required") setNeedsOtp(true);
+      setRejected(code === "invalid_credentials" || code === "invalid_otp");
       const messages = m.login.errors as Record<string, string>;
       setError(interpolate(messages[code] ?? m.login.errors.unknown, { host: new URL(API_ORIGIN).host }));
       setPassword(code === "otp_required" || code === "invalid_otp" ? password : "");
@@ -50,20 +59,20 @@ export function Login({ onCreateAccount, initialEmail = "" }: {
         <span className="bw-eyebrow">{m.login.tagline}</span>
         <h1>{m.login.heading}</h1>
         <p className="bw-muted">{m.login.intro}</p>
-        <form onSubmit={submit} className="bw-login-form" noValidate>
+        <form ref={form} onSubmit={submit} className="bw-login-form" noValidate>
           <label className="bw-field"><span>{m.login.email}</span>
-            <input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={busy} />
+            <input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={busy} {...problem} />
           </label>
           <label className="bw-field"><span>{m.login.password}</span>
-            <input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={busy} />
+            <input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={busy} {...problem} />
           </label>
           {needsOtp && (
             <label className="bw-field"><span>{m.login.otp}</span>
-              <input inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={(e) => setOtp(e.target.value)} disabled={busy} autoFocus />
+              <input inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={(e) => setOtp(e.target.value)} disabled={busy} autoFocus {...problem} />
               <small>{m.login.otpHelp}</small>
             </label>
           )}
-          {error && <p className="bw-message bw-message-error" role="alert">{error}</p>}
+          {error && <p className="bw-message bw-message-error" id="login-error" role="alert">{error}</p>}
           <button type="submit" className="bw-button bw-button-dark" disabled={busy || !email || !password}>{busy ? m.login.submitting : m.login.submit}</button>
         </form>
         <div className="bw-login-links">

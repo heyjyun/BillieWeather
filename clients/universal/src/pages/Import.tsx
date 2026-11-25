@@ -9,6 +9,7 @@ import { DocumentPicker } from "../components/DocumentPicker";
 import { ImportPreview } from "../components/ImportPreview";
 import { PdfReview, usePdfMessages } from "../components/PdfReview";
 import { RegionNotice, useRegionName } from "../components/RegionNotice";
+import { useFocusWhenLost } from "../hooks/useFocus";
 import { useFinance } from "../hooks/useFinance";
 import { interpolate, useI18n } from "../i18n";
 import importErrors from "../i18n/importErrors.json";
@@ -272,6 +273,8 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
 
   const [current] = drafts;
   const [currentPdf] = reviews;
+  // After an import, a cancel or a file that could not be read: the result is where focus continues.
+  const result = useFocusWhenLost<HTMLParagraphElement>(current || currentPdf || busy ? null : message);
   return (
     <>
       <PageHeading eyebrow={x.eyebrow} title={x.title} />
@@ -316,7 +319,7 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
         </section>
       )}
       {message && (
-        <p className={`bw-message bw-message-${message.tone}${message.imported ? " bw-message-celebrate" : ""}`} role={message.tone === "error" ? "alert" : "status"}>
+        <p ref={result} tabIndex={-1} className={`bw-message bw-message-${message.tone}${message.imported ? " bw-message-celebrate" : ""}`} role={message.tone === "error" ? "alert" : "status"}>
           {message.imported && <strong className="bw-message-headline">{say(personal.import_done)}</strong>}
           {message.text}
         </p>

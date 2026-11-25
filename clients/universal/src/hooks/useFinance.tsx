@@ -2,6 +2,7 @@ import type { Currency, MerchantRule, Statement, Transaction } from "@billie/sha
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AccountError } from "../services/account";
 import { declinedSlots, declineSlot, fileForSlot, freeSlot, freeSlots, loadRegistry, MAX_DATABASES, ownership, saveRegistry, slotsOfOthers, type Registry } from "../services/databases";
+import { focusIsLost } from "./useFocus";
 import { deviceName, openDatabase, restoreSnapshot as restoreSnapshotFile } from "../services/platform";
 import { queueDelete, reportAll, reportingIdentity, reportingStatus, type ReportingStatus } from "../services/reporting";
 import { FinanceStore, StoreError, type WebSyncResult } from "../services/store";
@@ -463,7 +464,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
   if (claim) {
     return (
       <div className="bw-boot bw-claim" role="dialog" aria-labelledby="bw-claim-title">
-        <h1 id="bw-claim-title">{m.ledger.owner.claimTitle}</h1>
+        <h1 id="bw-claim-title" tabIndex={-1} ref={(element) => { if (element && focusIsLost()) element.focus(); }}>{m.ledger.owner.claimTitle}</h1>
         <p>{m.ledger.owner.claimBody}</p>
         <div className="bw-actions">
           <button type="button" className="bw-button" onClick={() => void answerClaim(true)}>{m.ledger.owner.claimMine}</button>

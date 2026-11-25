@@ -3,7 +3,7 @@ import { allCategories, formatMoney, merchantKey } from "@billie/finance-core";
 import { formatRange } from "@nlae/core";
 import { matchTransactions, type TransactionFilter } from "../commands/handlers";
 import { useEffect, useMemo, useState } from "react";
-import { CategorySelect, Empty, Money, PageHeading } from "../components/common";
+import { CategorySelect, ConfirmDelete, Empty, Money, PageHeading } from "../components/common";
 import { EntryForm } from "../components/EntryForm";
 import { OrganizePanel } from "../components/OrganizePanel";
 import { useFinance } from "../hooks/useFinance";
@@ -47,6 +47,8 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   const [batchCategory, setBatchCategory] = useState("");
   const [batchText, setBatchText] = useState({ merchant: "", project: "", tag: "" });
   const [trash, setTrash] = useState<EntryDetail[]>([]);
+  // Deleting for good is confirmed in the page: entries (one row) or the whole trash.
+  const [purging, setPurging] = useState<EntryDetail | "all" | null>(null);
   const [suspects, setSuspects] = useState<Awaited<ReturnType<typeof store.ledger.suspectIncome>>>([]);
   const cur = currency ?? accounts[0]?.currency ?? "USD";
   const x = m.transactions;
@@ -106,6 +108,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
     setStatus(transaction.excluded ? x.included : x.excludedStatus);
   }
 
+  useEffect(() => { if (view !== "trash") setPurging(null); }, [view]);
   const toggle = (id: number) => setSelected((was) => { const next = new Set(was); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   const ids = [...selected];
 
@@ -135,6 +138,16 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
           <p className="bw-caption">{L.trashIntro}</p>
           {trash.length === 0 ? <p>{L.trashEmpty}</p> : (
             <>
+              {purging && (
+                <ConfirmDelete key={purging === "all" ? "all" : purging.id} action={purging === "all" ? L.emptyTrash : L.purge} onCancel={() => setPurging(null)}
+                  question={purging === "all" ? t("ledger.list.emptyConfirm", { count: trash.length }) : t("ledger.list.purgeConfirm", { description: purging.description })}
+                  onConfirm={() => {
+                    const target = purging;
+                    setPurging(null);
+                    if (target === "all") void run(() => store.ledger.emptyTrash(), t("ledger.list.purged", { count: trash.length }));
+                    else void run(() => store.ledger.purgeEntries([target.id]), t("ledger.list.purged", { count: 1 }));
+                  }} />
+              )}
               <ul className="bw-tx-table">
                 {trash.map((entry) => (
                   <li key={entry.id}>
@@ -142,12 +155,12 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
                     <Money cents={entry.amountCents} currency={cur} signed />
                     <div className="bw-row-actions">
                       <button type="button" className="bw-link-button" onClick={() => run(() => store.ledger.restoreEntries([entry.id]), L.restored)}>{L.restore}</button>
-                      <button type="button" className="bw-link-button bw-danger" onClick={() => run(async () => t("ledger.list.purged", { count: await store.ledger.purgeEntries([entry.id]) }), t("ledger.list.purged", { count: 1 }))}>{L.purge}</button>
+                      <button type="button" className="bw-link-button bw-danger" onClick={() => setPurging(entry)}>{L.purge}</button>
                     </div>
                   </li>
                 ))}
               </ul>
-              <button type="button" className="bw-button bw-button-danger" onClick={() => { if (window.confirm(m.ledger.common.confirmDelete)) void run(() => store.ledger.emptyTrash(), t("ledger.list.purged", { count: trash.length })); }}>{L.emptyTrash}</button>
+              <button type="button" className="bw-button bw-button-danger" onClick={() => setPurging("all")}>{L.emptyTrash}</button>
             </>
           )}
           <button type="button" className="bw-link-button" onClick={() => setView("list")}>{L.backToList}</button>

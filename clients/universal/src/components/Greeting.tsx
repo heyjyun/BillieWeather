@@ -1,5 +1,6 @@
 // The dashboard's personal header: "Good morning, Jyun!" with a calm line for the context.
 // The same messages and rules as the website dashboard (app/models/personalization.rb).
+import { useFocusWhenLost } from "../hooks/useFocus";
 import { icons } from "@billie/design-tokens";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePersonal } from "../hooks/usePersonal";
@@ -20,13 +21,14 @@ export function useDayPart(): DayPart {
 export function GreetingHeader({ eyebrow, hasData, needsAttention, children }: { eyebrow: string; hasData: boolean; needsAttention: boolean; children?: ReactNode }) {
   const { p, say } = usePersonal();
   const part = useDayPart();
+  const heading = useFocusWhenLost<HTMLHeadingElement>();
   // The greeting already says the name, so the line under it never repeats it.
   const subtitle = !hasData ? p.dashboard.first_use.plain : needsAttention ? p.dashboard.attention : p.dashboard[part];
   return (
     <header className="bw-page-heading bw-greeting-heading">
       <div>
         <span className="bw-eyebrow">{eyebrow}</span>
-        <h1 className="bw-greeting" data-day-part={part}>
+        <h1 ref={heading} tabIndex={-1} className="bw-greeting" data-day-part={part}>
           <span className={`bw-greeting-glyph bw-greeting-${part}`} aria-hidden="true">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={GLYPH[part]} /></svg>
           </span>

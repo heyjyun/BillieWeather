@@ -13,7 +13,7 @@ export const zhTW: Messages = {
   boot: { opening: "正在開啟本機資料…", dbError: "無法開啟本機資料庫。" },
   connection: { offline: "目前離線。本機儲存的所有資料都可以檢視和編輯；帳戶資訊和雲端同步會在恢復連線後繼續。", unreachable: "BillieWeather 伺服器暫時沒有回應。本機儲存的所有資料都可以檢視和編輯；帳戶資訊和雲端同步會在伺服器恢復後繼續。", retry: "重試", checking: "正在檢查…" },
   dbName: { eyebrow: "首次在此裝置上使用", heading: "為此裝置的資料庫命名", intro: "你的財務資料儲存在此裝置上的資料庫中。取個名字，方便區分你的各台裝置。之後可以在「資料」頁面修改。", label: "資料庫名稱", help: "已自動填入此裝置的名稱，可改成任意名字。", fallback: "我的裝置", create: "建立資料庫", creating: "正在建立…", failed: "名稱未能儲存，請重試。" },
-  nav: { collapse: "收合側邊欄", expand: "展開側邊欄", main: "主要導覽", dashboard: "財務總覽", transactions: "交易紀錄", categories: "分類", import: "匯入", reports: "報表", data: "資料管理", settings: "設定", note: "除非你主動同步，財務資料只保存在本機" },
+  nav: { skip: "跳到主要內容", collapse: "收合側邊欄", expand: "展開側邊欄", main: "主要導覽", dashboard: "財務總覽", transactions: "交易紀錄", categories: "分類", import: "匯入", reports: "報表", data: "資料管理", settings: "設定", note: "除非你主動同步，財務資料只保存在本機" },
   preview: "瀏覽器預覽：財務資料只保存在記憶體中，不會被儲存。",
   footer: "BillieWeather 僅提供財務整理與估算，不提供針對個人的財務、法律或稅務建議。",
   categories: {

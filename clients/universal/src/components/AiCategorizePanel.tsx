@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
 import { useI18n } from "../i18n";
+import { InlineDialog } from "./common";
 import { AccountError } from "../services/account";
 import { AiCategorizeError, requestAiCategories } from "../services/aiCategorize";
 
@@ -59,8 +60,8 @@ export function AiCategorizePanel({ uncategorized, say }: { uncategorized: numbe
       {ai.step === "idle" && <button type="button" className="bw-button bw-button-dark" disabled={uncategorized === 0} onClick={startAi}>{x.aiStart}</button>}
       {ai.step === "working" && <p className="bw-caption" role="status">{x.aiWorking}</p>}
       {ai.step === "consent" && (
-        <div className="bw-consent" role="dialog" aria-labelledby="ai-consent-heading">
-          <h3 id="ai-consent-heading">{x.aiConsentTitle}</h3>
+        <InlineDialog className="bw-consent" label={x.aiConsentTitle} onCancel={() => setAi({ step: "idle" })}>
+          <h3>{x.aiConsentTitle}</h3>
           <p>{t("categoryPage.aiConsentBody", { merchants: ai.batch.length, count: ai.transactions })}</p>
           <p><strong>{x.aiPreview}</strong></p>
           <ul className="bw-consent-preview">
@@ -73,7 +74,7 @@ export function AiCategorizePanel({ uncategorized, say }: { uncategorized: numbe
             <button type="button" className="bw-button bw-button-dark" disabled={ai.batch.length === 0} onClick={() => runAi(ai.groups, ai.batch)}>{x.aiConfirm}</button>
             <button type="button" className="bw-link-button" onClick={() => setAi({ step: "idle" })}>{x.cancel}</button>
           </div>
-        </div>
+        </InlineDialog>
       )}
       <p className="bw-caption">{x.aiNote}</p>
     </section>

@@ -13,7 +13,7 @@ export const ko: Messages = {
   boot: { opening: "로컬 데이터를 여는 중…", dbError: "로컬 데이터베이스를 열 수 없습니다." },
   connection: { offline: "오프라인 상태입니다. 이 기기에 저장된 모든 데이터를 보고 편집할 수 있습니다. 계정 정보와 클라우드 동기화는 다시 연결되면 재개됩니다.", unreachable: "지금 BillieWeather 서버가 응답하지 않습니다. 이 기기에 저장된 모든 데이터를 보고 편집할 수 있습니다. 계정 정보와 클라우드 동기화는 서버가 돌아오면 재개됩니다.", retry: "다시 시도", checking: "확인 중…" },
   dbName: { eyebrow: "이 기기에서 처음", heading: "이 기기의 데이터베이스 이름 정하기", intro: "금융 데이터는 이 기기의 데이터베이스에 저장됩니다. 기기를 구분할 수 있도록 이름을 정하세요. 나중에 데이터 페이지에서 바꿀 수 있습니다.", label: "데이터베이스 이름", help: "이 기기의 이름이 입력되어 있습니다. 원하는 이름으로 바꿀 수 있습니다.", fallback: "내 기기", create: "데이터베이스 만들기", creating: "만드는 중…", failed: "이름을 저장하지 못했습니다. 다시 시도하세요." },
-  nav: { collapse: "사이드바 접기", expand: "사이드바 펼치기", main: "메인", dashboard: "대시보드", transactions: "거래 내역", categories: "카테고리", import: "가져오기", reports: "보고서", data: "데이터", settings: "설정", note: "직접 동기화하지 않는 한 재무 데이터는 이 기기에만 저장됩니다" },
+  nav: { skip: "본문으로 건너뛰기", collapse: "사이드바 접기", expand: "사이드바 펼치기", main: "메인", dashboard: "대시보드", transactions: "거래 내역", categories: "카테고리", import: "가져오기", reports: "보고서", data: "데이터", settings: "설정", note: "직접 동기화하지 않는 한 재무 데이터는 이 기기에만 저장됩니다" },
   preview: "브라우저 미리보기: 금융 데이터는 메모리에만 있으며 저장되지 않습니다.",
   footer: "BillieWeather는 재무 정리와 추정만 제공하며, 개인 맞춤형 금융·법률·세무 조언이 아닙니다.",
   categories: {

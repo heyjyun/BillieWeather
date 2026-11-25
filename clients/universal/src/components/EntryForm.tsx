@@ -3,6 +3,7 @@
 // tags, note); their amount and date stay as the bank printed them.
 import { decimalToCents, centsToDecimalString, formatMoney, isLiability, localToday, type EntryProblem, type TransactionKind } from "@billie/finance-core";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { radioGroupKeys, useOpenedPanel } from "../hooks/useFocus";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, useI18n } from "../i18n";
 import { LedgerError, type CategoryNode, type EntryDetail, type EntryInput } from "../services/ledger";
@@ -109,6 +110,7 @@ function EntryFormFields({ entry, initialKind = "expense", prefill, onDone, onCa
   const isTransfer = kind === "transfer" || kind === "card_payment";
   const toAccount = live.find((account) => account.id === toAccountId);
 
+  const panel = useOpenedPanel<HTMLFormElement>((form) => form.querySelector<HTMLElement>(".bw-form-grid input, .bw-form-grid select"));
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError("");
@@ -125,7 +127,11 @@ function EntryFormFields({ entry, initialKind = "expense", prefill, onDone, onCa
     const found = await store.ledger.validate(input, entry?.id);
     const relevant = imported ? found.filter((problem) => !["amount_required", "amount_zero", "amount_precision", "date_invalid"].includes(problem)) : found;
     setProblems(relevant);
-    if (relevant.length > 0) return;
+    if (relevant.length > 0) {
+      // The first field with a problem, once its message is on the page.
+      setTimeout(() => panel.current?.querySelector(".bw-field-error")?.closest("label")?.querySelector<HTMLElement>("input, select")?.focus());
+      return;
+    }
     setBusy(true);
     try {
       if (entry) {
@@ -149,10 +155,10 @@ function EntryFormFields({ entry, initialKind = "expense", prefill, onDone, onCa
 
   const problem = (key: EntryProblem) => (problems.includes(key) ? <small className="bw-field-error" role="alert">{m.ledger.problems[key]}</small> : null);
   return (
-    <form className="bw-panel bw-entry-form" aria-label={editing ? x.editTitle : x.newTitle} onSubmit={submit} noValidate>
+    <form ref={panel} className="bw-panel bw-entry-form" aria-label={editing ? x.editTitle : x.newTitle} onSubmit={submit} noValidate>
       <h2>{editing ? x.editTitle : x.newTitle}</h2>
       {!imported && (
-        <div className="bw-segmented" role="radiogroup" aria-label={x.type}>
+        <div className="bw-segmented" role="radiogroup" aria-label={x.type} onKeyDown={radioGroupKeys}>
           {KINDS.map((option) => (
             <button key={option} type="button" role="radio" aria-checked={kind === option} className={kind === option ? "is-active" : ""} onClick={() => { setKind(option); setProblems([]); }}>
               {m.ledger.kinds[option]}

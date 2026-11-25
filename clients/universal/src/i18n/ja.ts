@@ -13,7 +13,7 @@ export const ja: Messages = {
   boot: { opening: "ローカルデータを開いています…", dbError: "ローカルデータベースを開けませんでした。" },
   connection: { offline: "オフラインです。この端末に保存したデータはすべて表示・編集できます。アカウント情報とクラウド同期はオンラインに戻ると再開します。", unreachable: "BillieWeather のサーバーが現在応答していません。この端末に保存したデータはすべて表示・編集できます。アカウント情報とクラウド同期はサーバーが戻ると再開します。", retry: "再試行", checking: "確認中…" },
   dbName: { eyebrow: "このデバイスで初めて", heading: "このデバイスのデータベースに名前を付ける", intro: "家計データはこのデバイス上のデータベースに保存されます。デバイスを見分けられるよう名前を付けてください。あとで「データ」ページから変更できます。", label: "データベース名", help: "このデバイスの名前を入れてあります。好きな名前に変えられます。", fallback: "マイデバイス", create: "データベースを作成", creating: "作成しています…", failed: "名前を保存できませんでした。もう一度お試しください。" },
-  nav: { collapse: "サイドバーを折りたたむ", expand: "サイドバーを展開", main: "メイン", dashboard: "ダッシュボード", transactions: "取引", categories: "カテゴリ", import: "取り込み", reports: "レポート", data: "データ", settings: "設定", note: "同期しない限り、財務データはこの端末にだけ保存されます" },
+  nav: { skip: "本文へ移動", collapse: "サイドバーを折りたたむ", expand: "サイドバーを展開", main: "メイン", dashboard: "ダッシュボード", transactions: "取引", categories: "カテゴリ", import: "取り込み", reports: "レポート", data: "データ", settings: "設定", note: "同期しない限り、財務データはこの端末にだけ保存されます" },
   preview: "ブラウザプレビュー：お金のデータはメモリ上にのみあり、保存されません。",
   footer: "BillieWeather は家計の整理と見積もりを提供するもので、個人向けの金融・法律・税務アドバイスではありません。",
   categories: {

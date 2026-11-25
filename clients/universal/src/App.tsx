@@ -162,6 +162,7 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   const toggleSidebar = () => setCollapsed((was) => { saveSidebarCollapsed(!was); return !was; });
   return (
     <div className={`bw-app${collapsed ? " is-collapsed" : ""}${manual ? " is-manual-mode" : ""}`} data-mode={mode}>
+      <button type="button" className="bw-skip" onClick={() => document.getElementById("main")?.focus()}>{m.nav.skip}</button>
       <nav className="bw-nav" id="bw-nav" aria-label={m.nav.main}>
         <div className="bw-nav-head">
           <div className="bw-brand"><BrandMark /><span className="bw-brand-name">BillieWeather</span></div>
@@ -185,7 +186,7 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
           {account && <p className="bw-nav-user"><strong>{account.nickname || account.email}</strong>{account.nickname && <small>{account.email}</small>}</p>}
         </div>
       </nav>
-      <main className="bw-main" id="main">
+      <main className="bw-main" id="main" tabIndex={-1}>
         {!persistent && <p className="bw-preview-banner">{m.preview}</p>}
         <div className="bw-topline"><ModeSwitch mode={mode} onChange={switchMode} /></div>
         <CommandCenter go={go} />

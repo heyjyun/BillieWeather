@@ -48,6 +48,7 @@ export const ledgerEn = {
     kind: "Type", allKinds: "All types", account: "Account", allAccounts: "All accounts", merchant: "Merchant", project: "Project", tag: "Tag", any: "Any",
     select: "Select {description}", selectAll: "Select all shown", selected: "{count} selected", batchCategory: "Set category…", batchMerchant: "Set merchant", batchProject: "Set project", batchTag: "Add tag", batchApply: "Apply", batchDelete: "Move to trash", batchDone: "{count} entries updated.",
     trash: "Trash", trashTitle: "Trash", trashIntro: "Deleted entries stay here until you delete them for good. Restoring a transfer restores both sides.", restore: "Restore", purge: "Delete for good", emptyTrash: "Empty trash", trashEmpty: "The trash is empty.",
+    emptyConfirm: "Delete all {count} entries in the trash for good? This cannot be undone.", purgeConfirm: "Delete “{description}” for good? This cannot be undone.",
     backToList: "Back to transactions", restored: "Restored.", purged: "{count} entries deleted for good.",
     review: "Review", reviewTitle: "Money in that may not be income", reviewIntro: "These rows count as income, but look like refunds or card repayments. Refunds reduce spending; card repayments are transfers.", markAs: "Mark as {kind}", keepIncome: "It is income",
   },

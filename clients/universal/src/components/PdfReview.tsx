@@ -1,5 +1,6 @@
 // Review of a PDF statement before import, like the website's review page: every row can
 // be corrected or left out, and nothing is saved until the person confirms.
+import { useFocusWhenLost } from "../hooks/useFocus";
 import { PDF_GENERIC_NOTICES, type PdfWarning, type ReviewedPdfRow } from "@billie/finance-core";
 import { useMemo, useState, type FormEvent } from "react";
 import { interpolate, useI18n } from "../i18n";
@@ -35,6 +36,7 @@ export function PdfReview({ review, busy, error, onConfirm, onCancel }: {
   const { ui, warning } = usePdfMessages();
   const { m } = useI18n();
   const issues = m.universal.issues;
+  const heading = useFocusWhenLost<HTMLHeadingElement>();
   // Rows already imported from another file of the same account start unchecked; possible duplicates stay checked.
   const [rows, setRows] = useState<ReviewedPdfRow[]>(() => review.draft.rows.map((row) => ({ ...row, include: row.duplicate !== "duplicate" })));
   const duplicates = review.draft.rows.filter((row) => row.duplicate).length;
@@ -57,7 +59,7 @@ export function PdfReview({ review, busy, error, onConfirm, onCancel }: {
     <form className="bw-pdf-review" onSubmit={submit} aria-labelledby="pdf-review-title">
       <section className="bw-panel">
         <span className="bw-eyebrow">{ui("eyebrow")}</span>
-        <h2 id="pdf-review-title">{ui("title")}</h2>
+        <h2 ref={heading} tabIndex={-1} id="pdf-review-title">{ui("title")}</h2>
         <p className="bw-muted">{review.filename} · {review.currency}{account?.key ? ` · ${account.institution} …${account.last4}` : ""}</p>
         <h3>{ui("noticeTitle")}</h3>
         <p>{ui("notice")}</p>

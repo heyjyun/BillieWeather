@@ -7,8 +7,9 @@ import { allCategories, formatMoney, type MatchResult, type ReceiptExtraction, t
 import { CURRENCIES } from "@billie/shared-types";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { DocumentPicker } from "../components/DocumentPicker";
-import { PageHeading } from "../components/common";
+import { InlineDialog, PageHeading } from "../components/common";
 import { useAccount } from "../hooks/useAccount";
+import { radioGroupKeys, useFocusWhenLost } from "../hooks/useFocus";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, interpolate, useI18n } from "../i18n";
 import { AccountError } from "../services/account";
@@ -63,6 +64,9 @@ export function Receipt() {
   const saved = useRef(new Set<string>());
   const inFlight = useRef(false);
 
+  // The review form, then the result: each replaces the control that led to it.
+  const failure = useFocusWhenLost<HTMLParagraphElement>(error);
+  const stage = useFocusWhenLost<HTMLHeadingElement & HTMLParagraphElement>(`${capture?.id}-${done?.kind}`);
   const liveAccounts = useMemo(() => accounts.filter((account) => !account.archived), [accounts]);
   const categories = useMemo(() => allCategories(customCategories).filter((name) => !PURCHASE_HIDDEN.has(name)), [customCategories]);
   const account = liveAccounts.find((item) => item.id === accountId);
@@ -243,11 +247,11 @@ export function Receipt() {
           <p className="bw-caption">{x.privacy}</p>
         </section>
       )}
-      {error && <p className="bw-message bw-message-error" role="alert">{error}</p>}
+      {error && <p ref={failure} tabIndex={-1} className="bw-message bw-message-error" role="alert">{error}</p>}
 
       {capture && values && done && (
         <section className="bw-panel" aria-live="polite">
-          <p className="bw-message bw-message-ok" role="status">{interpolate(x.done[done.kind], { description: done.description, amount: done.amount })}</p>
+          <p ref={stage} tabIndex={-1} className="bw-message bw-message-ok" role="status">{interpolate(x.done[done.kind], { description: done.description, amount: done.amount })}</p>
           <div className="bw-actions"><button type="button" className="bw-button bw-button-outline" onClick={reset}>{x.done.another}</button></div>
           {webSection}
         </section>
@@ -255,7 +259,7 @@ export function Receipt() {
 
       {capture && values && !done && (
         <form className="bw-panel bw-entry-form bw-receipt-review" aria-label={x.review.title} noValidate onSubmit={(e) => { e.preventDefault(); void confirm(); }}>
-          <h2>{x.review.title}</h2>
+          <h2 ref={stage} tabIndex={-1}>{x.review.title}</h2>
           <p className="bw-caption">{x.review.intro} {interpolate(x.review.source, { engine: capture.recognized.engine })}</p>
           {issues.length > 0 && (
             <div className="bw-message bw-message-warn" role="status">
@@ -263,7 +267,7 @@ export function Receipt() {
               <ul>{issues.map((issue: ReceiptIssue) => <li key={issue}>{x.issues[issue]}</li>)}</ul>
             </div>
           )}
-          <div className="bw-segmented" role="radiogroup" aria-label={x.fields.direction}>
+          <div className="bw-segmented" role="radiogroup" aria-label={x.fields.direction} onKeyDown={radioGroupKeys}>
             {(["purchase", "refund"] as const).map((option) => (
               <button key={option} type="button" role="radio" aria-checked={values.direction === option} className={values.direction === option ? "is-active" : ""}
                 onClick={() => { setValues({ ...values, direction: option }); setGuard(null); }}>{x.direction[option]}</button>
@@ -322,17 +326,17 @@ export function Receipt() {
           {problems.length > 0 && <div className="bw-message bw-message-error" role="alert">{problems.map((problem) => <p key={problem}>{problem}</p>)}</div>}
 
           {guard && (guard.result.level === "exact" || guard.result.level === "probable") && best && (
-            <div className="bw-message bw-message-warn" role="alertdialog" aria-label={x.duplicate.title}>
+            <InlineDialog className="bw-message bw-message-warn" role="alertdialog" label={x.duplicate.title} onCancel={() => setGuard(null)}>
               <strong>{x.duplicate.title}</strong>
               <p>{interpolate(x.duplicate.same, best)}</p>
               <div className="bw-actions">
                 <button type="button" className="bw-button bw-button-dark" disabled={busy} onClick={() => keepExisting(guard.result.best!.ids[0])}>{x.duplicate.keep}</button>
                 <button type="button" className="bw-button bw-button-outline" disabled={busy} onClick={() => void save()}>{x.duplicate.different}</button>
               </div>
-            </div>
+            </InlineDialog>
           )}
           {guard && guard.result.level === "ambiguous" && (
-            <div className="bw-message bw-message-warn" role="alertdialog" aria-label={x.duplicate.ambiguousTitle}>
+            <InlineDialog className="bw-message bw-message-warn" role="alertdialog" label={x.duplicate.ambiguousTitle} onCancel={() => setGuard(null)}>
               <strong>{x.duplicate.ambiguousTitle}</strong>
               <p>{x.duplicate.ambiguous}</p>
               <div role="radiogroup" aria-label={x.duplicate.ambiguousTitle}>
@@ -350,7 +354,7 @@ export function Receipt() {
                 <button type="button" className="bw-button bw-button-dark" disabled={busy || guard.pick === null} onClick={() => keepExisting(guard.pick)}>{x.duplicate.pick}</button>
                 <button type="button" className="bw-button bw-button-outline" disabled={busy} onClick={() => void save()}>{x.duplicate.none}</button>
               </div>
-            </div>
+            </InlineDialog>
           )}
 
           <div className="bw-actions">

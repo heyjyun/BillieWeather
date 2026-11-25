@@ -1,3 +1,4 @@
+import { radioGroupKeys } from "../hooks/useFocus";
 import { useState } from "react";
 import { PageHeading } from "../components/common";
 import { useAccount } from "../hooks/useAccount";
@@ -95,7 +96,7 @@ export function Settings({ openLibrary, openData }: { openLibrary?: () => void; 
 
       <section className="bw-panel" aria-labelledby="appearance-heading">
         <h2 id="appearance-heading">{x.appearance}</h2>
-        <div className="bw-segmented" role="radiogroup" aria-label={x.theme}>
+        <div className="bw-segmented" role="radiogroup" aria-label={x.theme} onKeyDown={radioGroupKeys}>
           {(["system", "light", "dark"] as const).map((choice) => (
             <button key={choice} type="button" role="radio" aria-checked={theme === choice} className={theme === choice ? "is-active" : ""}
               onClick={() => { setTheme(choice); setThemeState(choice); }}>

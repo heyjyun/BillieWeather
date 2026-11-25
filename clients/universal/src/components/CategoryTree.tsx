@@ -1,6 +1,7 @@
 // The two-level category tree (一级/二级分类): parent, income or expense tree, hide/show, reorder,
 // merge one category into another, and delete with a chosen destination for its entries.
 import { useEffect, useState } from "react";
+import { InlineDialog } from "./common";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, useI18n } from "../i18n";
 import { LedgerError, type CategoryNode } from "../services/ledger";
@@ -83,7 +84,7 @@ export function CategoryTree() {
       <p className="bw-caption">{x.intro}</p>
       <p className="bw-sr-status" role="status" aria-live="polite">{status}</p>
       {merging && (
-        <div className="bw-confirm" role="dialog" aria-label={m.ledger.common.merge}>
+        <InlineDialog className="bw-confirm" label={m.ledger.common.merge} onCancel={() => setMerging(null)}>
           <label className="bw-field"><span>{merging.name} → </span>
             <select value={merging.into} onChange={(e) => setMerging({ ...merging, into: e.target.value })}>
               <option value="">—</option>
@@ -92,10 +93,10 @@ export function CategoryTree() {
           </label>
           <button type="button" className="bw-button" disabled={!merging.into} onClick={() => { const { name, into } = merging; setMerging(null); void act(() => store.mergeCategory(name, into), t("ledger.categoriesTree.merged", { from: name, into: categoryLabel(m, into) })); }}>{m.ledger.common.save}</button>
           <button type="button" className="bw-link-button" onClick={() => setMerging(null)}>{m.ledger.common.cancel}</button>
-        </div>
+        </InlineDialog>
       )}
       {deleting && (
-        <div className="bw-confirm" role="alertdialog" aria-label={m.ledger.common.delete}>
+        <InlineDialog className="bw-confirm" role="alertdialog" label={m.ledger.common.delete} onCancel={() => setDeleting(null)}>
           <label className="bw-field"><span>{x.deleteMoveTo}</span>
             <select value={deleting.moveTo} onChange={(e) => setDeleting({ ...deleting, moveTo: e.target.value })}>
               {flat.filter((node) => node.name !== deleting.name && node.kind !== "transfer").map((node) => <option key={node.name} value={node.name}>{categoryLabel(m, node.name)}</option>)}
@@ -103,7 +104,7 @@ export function CategoryTree() {
           </label>
           <button type="button" className="bw-button bw-button-danger" onClick={() => { const { name, moveTo } = deleting; setDeleting(null); void act(() => store.deleteCategory(name, moveTo)); }}>{m.ledger.common.delete}</button>
           <button type="button" className="bw-link-button" onClick={() => setDeleting(null)}>{m.ledger.common.cancel}</button>
-        </div>
+        </InlineDialog>
       )}
       <ul className="bw-tx-table bw-category-tree">
         {tree.map((node) => [row(node, 0), ...node.children.map((child) => row(child, 1))])}
