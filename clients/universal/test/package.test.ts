@@ -6,6 +6,7 @@ import { blockers } from "../scripts/package.mjs";
 
 // @ts-expect-error plain JS build script
 import { buildNumber } from "../scripts/tauri.mjs";
+import viteConfig from "../vite.config";
 
 const file = (path: string) => readFileSync(join(__dirname, "..", path), "utf8");
 const release = { identifier: "com.billieweather.client", authority: "Developer ID Application: Example (TEAM)", hardened: true, notarized: true, stapled: true, gatekeeper: true, getTaskAllow: false };
@@ -42,5 +43,15 @@ describe("mobile privacy and permissions", () => {
     for (const setting of ['android:allowBackup="false"', 'android:fullBackupContent="false"', 'android:dataExtractionRules="@xml/billie_no_extraction"']) expect(manifest).toContain(setting);
     const rules = file("src-tauri/plugins/billie-ocr/android/src/main/res/xml/billie_no_extraction.xml");
     for (const domain of ["root", "file", "database", "sharedpref", "external"]) expect(rules.split(`<exclude domain="${domain}" />`)).toHaveLength(3);
+  });
+});
+
+describe("build configuration", () => {
+  // Without an inline PostCSS config, Vite searches parent folders for one and can reach the Rails
+  // postcss.config.js at the repository root, which runs `bundle exec bin/theme`. That failed every
+  // Windows CI build (GitHub run 45253715553). An inline object turns the file search off.
+  it("gives PostCSS inline, so the website's config is never loaded", () => {
+    const config = viteConfig as { css?: { postcss?: unknown } };
+    expect(config.css?.postcss).toEqual({ plugins: [] });
   });
 });
