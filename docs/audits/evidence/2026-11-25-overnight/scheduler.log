@@ -1,0 +1,7 @@
+2026-11-25 01:27:07 CST fired mode=probe pid=91080
+2026-11-25 01:27:07 CST ERROR: cannot read /Users/jyunz/Documents/Developer/Developping/BillieWeather/billieweather-roadmap (Documents access refused to launchd processes)
+2026-11-25 01:28:31 CST waiter: started pid=91820 ppid=1
+2026-11-25 01:28:31 CST fired mode=probe pid=91823
+2026-11-25 01:28:33 CST probe: repository readable, branch ok, claude said: READY
+2026-11-25 01:29:27 CST fired mode=dry pid=92795
+2026-11-25 01:29:27 CST attempt 1: the session was active in the last 25 minutes; not starting a duplicate

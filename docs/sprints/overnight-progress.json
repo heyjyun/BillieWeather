@@ -1,7 +1,7 @@
 {
  "sprint_complete": false,
- "updated": "2026-11-25 02:34 CST",
- "phase": "5.9 GUI re-run BLOCKED by a macOS authentication prompt since 02:23; everything else done except final report",
+ "updated": "2026-11-25 02:37:09 CST",
+ "phase": "report written; native acceptance of the final build open",
  "done": [
   "scheduler: in-session cron 3:01 and 8:01 + detached waiter 3:07/8:07, probed (launchd denied by macOS privacy)",
   "6.0 repository audit: 115 dirty files in ../billieweather all identical to d3061e4; main is an ancestor, ff only",
@@ -34,7 +34,7 @@
  "isolated_root": "/private/tmp/billie-roadmap.gk99lMpY",
  "servers": "rails 33557, identity 38557 (started 01:29, code before 37f4a8d; restart before GUI)",
  "scratch": "/private/tmp/claude-501/-Users-jyunz-Documents-Developer-Developping-BillieWeather/3aadd522-ebf5-462f-aa3e-5113667beb6c/scratchpad (driver drv, idle)",
- "next_exact_action": "If the prompt is gone and the desktop idle >= 600 s: launch overnight-c3 via qa.mjs, run native matrix with scratchpad drv/g.sh. Otherwise write the final report docs/audits/overnight-phase5.9-to-6.2-final-report.md",
+ "next_exact_action": "At 03:01/08:01: if the SecurityAgent prompt is gone, screen unlocked and idle >= 600 s, launch overnight-c3 via qa.mjs and run report section 6; update the report. If still blocked at 08:01, set sprint_complete true and clean up per resume instructions item 8.",
  "next_resume": "03:00 and 08:00 CST",
  "failed": [
   "2 legacy Bullet Train browser tests (expect legal names / platform app row)"

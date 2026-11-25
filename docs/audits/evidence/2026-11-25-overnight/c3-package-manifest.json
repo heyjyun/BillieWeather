@@ -1,0 +1,25 @@
+{
+  "name": "BillieWeather QA night-0.1.0.dmg",
+  "version": "0.1.0",
+  "build": "102",
+  "minimumSystem": "11.0",
+  "architectures": "arm64",
+  "dmgSha256": "29aada0308592659fa7510bc963943172aea5c2361a7c248b9272e862cf2570d",
+  "executableSha256": "de08a85d2904d68486ff5926c360ac011576ff7970ea8e28f0c51f5c122462ee",
+  "cdHash": "23be56b5abc3c3cdca7d2123b50bf4888577f924",
+  "entitlements": "none",
+  "identifier": "com.billieweather.client.qa.night",
+  "authority": "adhoc",
+  "hardened": true,
+  "getTaskAllow": false,
+  "notarized": false,
+  "stapled": false,
+  "gatekeeper": false,
+  "blockers": [
+    "not the release identifier (QA builds are never distributed)",
+    "not signed with a Developer ID",
+    "not notarized",
+    "no stapled ticket",
+    "Gatekeeper does not accept it"
+  ]
+}

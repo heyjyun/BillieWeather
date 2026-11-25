@@ -1,0 +1,25 @@
+{
+  "name": "BillieWeather QA-0.1.0.dmg",
+  "version": "0.1.0",
+  "build": "100",
+  "minimumSystem": "11.0",
+  "architectures": "arm64",
+  "dmgSha256": "25f8bfdbc2015767de0437fbebd05b96e335bb0c0936c622785e94c8989e1ef0",
+  "executableSha256": "6e67ad21f38b7afab55efd4c5cac03b5d551f186566fe474863a7409a18baf2d",
+  "cdHash": "512a1feddb23dcdf465820aaf9e5ae533ae6cf8d",
+  "entitlements": "none",
+  "identifier": "com.billieweather.client.qa",
+  "authority": "adhoc",
+  "hardened": true,
+  "getTaskAllow": false,
+  "notarized": false,
+  "stapled": false,
+  "gatekeeper": false,
+  "blockers": [
+    "not the release identifier (QA builds are never distributed)",
+    "not signed with a Developer ID",
+    "not notarized",
+    "no stapled ticket",
+    "Gatekeeper does not accept it"
+  ]
+}
