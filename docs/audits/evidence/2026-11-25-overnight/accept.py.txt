@@ -1,0 +1,47 @@
+import subprocess, sys, time, re, json, glob, os, sqlite3, datetime
+S=os.path.dirname(os.path.abspath(__file__)); D=S+"/drv"; R="/private/tmp/billie-roadmap.gk99lMpY"; QD=os.path.expanduser("~/Library/Application Support/com.billieweather.client.qa.night2")
+results=[]
+class Stop(Exception): pass
+def d(*a, ok=False):
+    r=subprocess.run([D,*a],capture_output=True,text=True)
+    if r.returncode in (3,4,5,6,9): raise Stop(r.stderr.strip())
+    if r.returncode and not ok: raise RuntimeError(f"{a}: {r.stderr.strip() or r.stdout.strip()}")
+    return r.stdout
+def dump(): return d("dump")
+def has(text): return text in dump()
+def wait(text, t=12):
+    end=time.time()+t
+    while time.time()<end:
+        x=dump()
+        if text in x: return x
+        time.sleep(.5)
+    raise RuntimeError("not shown: "+text)
+def press(n,i=0): d("press",n,str(i)); time.sleep(1.2)
+def step(name, f):
+    try: r=f(); results.append((name,"PASS",str(r) if r else "")); print("PASS",name,r or "",flush=True)
+    except Stop as e: print("STOPPED",name,e,flush=True); results.append((name,"STOPPED",str(e))); finish()
+    except Exception as e: results.append((name,"FAIL",str(e)[:200])); print("FAIL",name,str(e)[:200],flush=True); d("shot",f"{S}/shots/fail-{len(results)}.png",ok=True)
+def finish(): json.dump(results,open(S+"/accept-results.json","w"),indent=1); sys.exit(0)
+def q(sql, db=None):
+    c=sqlite3.connect(f"file:{db or DB()}?mode=ro",uri=True); r=c.execute(sql).fetchall(); c.close(); return r
+def DB(): return QD+"/billieweather.db"
+def psql(sql): return subprocess.run(["psql","-X","-At","-h",R+"/socket","-p","35531","-U","billie_isolated","-d","billie_isolated_development","-c",sql],capture_output=True,text=True).stdout.strip()
+EMAIL=open(S+"/email2").read().strip(); PW="Violet-Harbor-Lantern-92"
+def expect(c,m="unexpected"):
+    if not c: raise RuntimeError(m)
+
+APP="/Users/jyunz/Documents/Developer/Developping/BillieWeather/ClaudeGenerated/overnight-c4/BillieWeather QA night2.app"
+def fill(n,v,i=0): d("fill",n,v,str(i)); time.sleep(.3)
+def pick(f): d("pickfile",f); time.sleep(2.5)
+def sel(n,v): d("select",n,v); time.sleep(1.5)
+def code():
+    return subprocess.run([sys.executable,S+"/code.py"],capture_output=True,text=True).stdout.strip()
+def sess(): return psql("select s.id||':'||kind||':'||coalesce(revoke_reason,'live') from user_sessions s join users u on u.id=s.user_id where u.email='%s' order by s.id"%EMAIL).split()
+def gone(text,t=8):
+    end=time.time()+t
+    while time.time()<end:
+        if text not in dump(): return
+        time.sleep(.5)
+    raise RuntimeError("still shown: "+text)
+def manual_home():
+    press("Add & Sync"); press("Manual bookkeeping"); time.sleep(.8)

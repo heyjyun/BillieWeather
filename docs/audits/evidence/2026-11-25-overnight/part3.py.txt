@@ -1,0 +1,51 @@
+from accept import *
+RM="/Users/jyunz/Documents/Developer/Developping/BillieWeather/billieweather-roadmap"
+def pid(): return [int(x) for x in subprocess.run(["pgrep","-f","overnight-c4/BillieWeather QA night2.app/Contents/MacOS"],capture_output=True,text=True).stdout.split()]
+def launch():
+    r=subprocess.run(["node",RM+"/clients/universal/scripts/qa.mjs","launch",APP],capture_output=True,text=True,cwd=RM); expect("LAUNCHED" in r.stdout,r.stderr[-200:]); time.sleep(3); d("activate"); time.sleep(2); wait("AXHeading",15)
+def login(): fill("Email",EMAIL); fill("Password",PW); press("Sign in"); wait("AXButton 'All Transactions'",15)
+def restart():
+    b=q("select count(*),sum(amount_cents) from transactions"); d("key","12","cmd"); time.sleep(2.5); expect(not pid(),"still running"); launch(); x=wait("AXButton 'Budgets'"); expect("Accept QA" in x); expect(q("select count(*),sum(amount_cents) from transactions")==b); return f"{b[0][0]} rows kept, module kept, still signed in"
+step("quit and reopen", restart)
+def others():
+    r=subprocess.run(["curl","-s","-X","POST","http://127.0.0.1:33557/api/client/v1/session","-H","Content-Type: application/json","-d",json.dumps({"email":EMAIL,"password":PW})],capture_output=True,text=True).stdout; t=json.loads(r)["token"]
+    st=lambda: subprocess.run(["curl","-s","-o","/dev/null","-w","%{http_code}","http://127.0.0.1:33557/api/client/v1/account","-H","Authorization: Bearer "+t],capture_output=True,text=True).stdout
+    press("Settings"); wait("Sign out other devices"); press("Sign out other devices"); press("Cancel"); expect(st()=="200","cancel ended it"); press("Sign out other devices"); press("Sign out other devices",1) if dump().count("AXButton 'Sign out other devices'")>1 else press("Sign out",1); time.sleep(2); expect(st()=="401",st()); expect("live" in sess()[0],str(sess())); return " ".join(sess())
+step("sign out other devices", others)
+def online():
+    press("Sign out"); wait("Sign in to BillieWeather"); time.sleep(1); expect(sess()[0].endswith("signed_out"),str(sess())); fill("Email",EMAIL); fill("Password","wrong-password-1"); press("Sign in"); wait("don't match"); login(); expect(sess()[-1].endswith("live")); return " ".join(sess())
+step("sign out online, wrong password, sign in", online)
+def offline():
+    p=subprocess.run(["lsof","-nP","-tiTCP:33557","-sTCP:LISTEN"],capture_output=True,text=True).stdout.split()[0]
+    cmd=subprocess.run(["ps","-o","command=","-p",p],capture_output=True,text=True).stdout; expect("33557" in cmd and "billieweather-roadmap" in cmd,cmd[:80]); os.kill(int(p),15); time.sleep(3)
+    press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); expect(sess()[-1].endswith("live"),"server knew")
+    try: os.remove(RM+"/tmp/pids/server.pid")
+    except FileNotFoundError: pass
+    env={**os.environ,"BILLIE_LOCAL_ROOT":R,"BILLIE_MODULE_SYNC":"1"}; log=open(R+"/rails.log","w")
+    subprocess.Popen(["bin/billie-local","rails","server","-p","33557","-b","127.0.0.1"],cwd=RM,env=env,stdout=log,stderr=log,start_new_session=True)
+    for _ in range(40):
+        if subprocess.run(["curl","-sf","http://127.0.0.1:33557/up"],capture_output=True).returncode==0: break
+        time.sleep(1)
+    t=time.time()
+    while time.time()-t<90 and not sess()[-1].endswith("signed_out"): time.sleep(3)
+    expect(sess()[-1].endswith("signed_out"),str(sess())); n=int(time.time()-t); login(); return f"server told {n} s after it returned"
+step("offline sign-out finished automatically", offline)
+def keyboard():
+    press("Overview"); seen=[]
+    d("key","3","cmd"); time.sleep(.2)
+    for i in range(14):
+        d("key","48"); time.sleep(.25); seen.append(d("focused").strip().split(" = ")[0])
+    u=[x for k,x in enumerate(seen) if k==0 or x!=seen[k-1]]; expect(len(set(u))>=6,str(u)); return f"{len(set(u))} distinct stops: "+" | ".join(u[:8])
+step("Tab moves through controls", keyboard)
+def cmdk(): d("key","40","cmd"); time.sleep(.8); f=d("focused"); expect("Command" in f or "AXComboBox" in f,f); d("key","53"); return f.strip()[:60]
+step("Cmd-K reaches the command field", cmdk)
+def skip():
+    press("Settings"); press("Skip to content") ; time.sleep(.5); return d("focused").strip()[:80]
+step("skip link", skip)
+def kbd_activate():
+    press("Transactions"); d("focus","All Transactions"); time.sleep(.3); f=d("focused"); expect("All Transactions" in f,f); d("key","36"); wait("EVERY LINE ITEM"); return "Return opened it"
+step("Return activates the focused tab", kbd_activate)
+def assistant():
+    press("AI Assistant"); time.sleep(1.5); x=dump(); expect("AXHeading" in x); return re.search(r"AXHeading '(.*?)'",x).group(1)
+step("AI Assistant opens", assistant)
+finish()

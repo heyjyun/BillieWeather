@@ -1,0 +1,29 @@
+import accept
+from accept import *
+exec(open(S+"/part3.py").read().split("def restart")[0].replace("from accept import *",""))
+FIRST=open(S+"/email2-first").read().strip(); SECOND="second-"+datetime.datetime.now().strftime("%H%M%S")+"@example.com"
+def second():
+    press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); press("Create an account"); wait("Create your account"); fill("Nickname ( required )","Second QA"); fill("Email",SECOND); fill("Password",PW); fill("Confirm password",PW); press("Create account"); wait("Check your email"); fill("Verification code",code()); press("Verify and continue"); wait("Name this device's database",15); fill("Database name","Second Book"); press("Create database"); wait("Welcome to BillieWeather"); press("Explore Dashboard"); x=wait("No statements yet"); expect("QA SYNTHETIC" not in x and "Accept" not in x); return "own empty database"
+step("second account sees nothing of the first", second)
+def g3():
+    press("Add & Sync"); press("Manual bookkeeping"); press("~Books, backup"); wait("Automatic copies before updates"); n=dump().count("AXButton 'Open as a new database'"); expect(n>0,"no copies listed"); press("Open as a new database",0); x=wait("belongs to another account on this device"); time.sleep(1); m=dump().count("AXButton 'Open as a new database'"); expect(m==n-1,f"{n}->{m}"); expect("Accept Book" not in x)
+    fs=sorted(glob.glob(QD+"/billieweather-*.db")); newest=max(fs,key=os.path.getmtime); r=sqlite3.connect(f"file:{newest}?mode=ro",uri=True); own=r.execute("select value from settings where key='owner_account_id'").fetchall(); cnt=r.execute("select count(*) from transactions").fetchone()[0]; r.close(); expect(not own and cnt==0,f"{own} {cnt}"); return f"refused with its own message, listed {n}->{m}, emptied file has no owner and 0 rows"
+step("G3: another account's automatic copy", g3)
+def back():
+    press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); fill("Email",FIRST); fill("Password",PW); press("Sign in"); x=wait("AXButton 'All Transactions'",15); wait("Accept Book"); expect(q("select count(*) from transactions")[0][0]==10)
+step("first account again, its data unchanged", back)
+def install():
+    d("key","12","cmd"); time.sleep(2.5); expect(not pid())
+    dmg=glob.glob(os.path.dirname(APP)+"/*.dmg")[0]; mnt=S+"/mnt"; os.makedirs(mnt,exist_ok=True); subprocess.run(["hdiutil","attach",dmg,"-nobrowse","-readonly","-mountpoint",mnt],check=True,capture_output=True)
+    try:
+        dest=os.path.realpath(S)+"/installed"; os.makedirs(dest,exist_ok=True); tgt=dest+"/BillieWeather QA night2.app"; expect(not os.path.exists(tgt)); subprocess.run(["ditto",mnt+"/BillieWeather QA night2.app",tgt],check=True)
+    finally: subprocess.run(["hdiutil","detach",mnt],capture_output=True)
+    r=subprocess.run(["node",RM+"/clients/universal/scripts/qa.mjs","launch",tgt],capture_output=True,text=True,cwd=RM); expect("LAUNCHED" in r.stdout,r.stderr[-200:]+r.stdout[-200:]); time.sleep(3); d("activate"); time.sleep(2); x=wait("AXButton 'All Transactions'",15); expect("Accept QA" in x); expect(q("select count(*) from transactions")[0][0]==10); return "copied from the DMG to a private folder, opened signed in with its data, no prompt"
+step("install from DMG", install)
+def copy2():
+    r=subprocess.run(["node",RM+"/clients/universal/scripts/qa.mjs","launch",APP],capture_output=True,text=True,cwd=RM); ps=pid(); out=r.stdout.strip().splitlines()[-1:] or r.stderr.strip()[-80:]
+    if ps:
+        o=subprocess.run(["lsof","-nP","-p",str(ps[0])],capture_output=True,text=True).stdout; n=sum(1 for l in o.splitlines() if re.search(r"billieweather.*\.db",l)); os.kill(ps[0],15); expect(n==0,f"opened {n}"); return f"second process held no database; {out}"
+    raise RuntimeError(f"LaunchServices did not start a second process: {out}")
+step("second copy through qa.mjs", copy2)
+finish()

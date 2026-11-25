@@ -1,0 +1,22 @@
+import accept
+from accept import *
+exec(open(S+"/part3.py").read().split("def restart")[0].replace("from accept import *",""))
+DBN=lambda: q("select count(*) from transactions")[0][0]
+def undo():
+    x=dump()
+    if "AXButton 'Keep'" in x: press("Keep")
+    b=DBN(); x=dump(); lines=[l.strip() for l in x.splitlines()]; first=next(l for l in lines if re.search(r"AXStaticText = .*\.csv$|AXStaticText = .*\.pdf$",l)); press("Undo import",0); x=wait("AXButton 'Remove'"); press("Keep"); expect(DBN()==b,"Keep removed"); press("Undo import",0); wait("AXButton 'Remove'"); press("Remove"); time.sleep(2); n=DBN(); expect(n==b-1500,f"{b}->{n} ({first})"); return f"Keep keeps, Remove: {b} -> {n}"
+step("undo import: Keep, then Remove", undo)
+def crash(delay):
+    if "Choose statement files" not in dump(): press("Transactions"); press("Add & Sync"); press("Import statements")
+    if "Choose statement files" not in dump(): press("Import statements",1)
+    b=q("select count(*),sum(amount_cents) from transactions"); press("Choose statement files"); time.sleep(1); pick(S+"/fx/big.csv"); wait("AXButton 'Import 1500",30)
+    main=pid()[0]; d("press","~Import 1500"); time.sleep(delay); os.kill(main,9); time.sleep(1.5)
+    mode="mode=ro" if os.path.exists(DB()+"-shm") else "immutable=1"
+    c=sqlite3.connect(f"file:{DB()}?{mode}",uri=True); a=c.execute("select count(*),sum(amount_cents) from transactions").fetchall(); i=c.execute("pragma integrity_check").fetchall(); f=c.execute("pragma foreign_key_check").fetchall(); st=c.execute("select count(*) from statements where filename='big.csv'").fetchone()[0]; c.close()
+    expect(i==[("ok",)] and not f,"integrity"); done=a[0][0]-b[0][0]; expect(done in (0,1500) and st==(1 if done else 0),f"partial: {b}->{a} statements {st}"); launch(); wait("AXButton 'All Transactions'")
+    if done: 
+        press("Add & Sync"); press("Import statements"); wait("Undo import"); press("Undo import",0); wait("AXButton 'Remove'"); press("Remove"); time.sleep(2)
+    return f"killed {delay}s after Import: {done} of 1500 saved, integrity ok"
+for delay in (0.0,0.03,0.08,0.15,0.3): step(f"kill during import, {delay}s", lambda: crash(delay))
+finish()

@@ -1,0 +1,58 @@
+import accept
+from accept import *
+import threading, shutil
+exec(open(S+"/part3.py").read().split("def restart")[0].replace("from accept import *",""))
+WORKER=["pgrep","-f","overnight-c4/BillieWeather QA night2.app/Contents/MacOS/billieweather --billie-vision-worker"]
+class Killer(threading.Thread):
+    def __init__(s): super().__init__(daemon=True); s.on=True; s.n=0
+    def run(s):
+        while s.on:
+            for p in subprocess.run(WORKER,capture_output=True,text=True).stdout.split():
+                try: os.kill(int(p),9); s.n+=1
+                except ProcessLookupError: pass
+            time.sleep(.02)
+def tess():
+    press("Transactions"); press("Add & Sync"); press("Scan & Capture"); wait("Upload receipt"); k=Killer(); k.start()
+    try:
+        press("Upload receipt"); time.sleep(1); pick(S+"/fx/receipt-match.png"); x=wait("Check for duplicates and save",90)
+    finally: k.on=False
+    m=re.search(r"Read on this device by ([a-z-]+)",x); expect(m and "tesseract" in m.group(1) and k.n>0,f"{m and m.group(1)} kills {k.n}"); b=q("select count(*) from transactions")[0][0]; press("Discard"); time.sleep(1); expect(q("select count(*) from transactions")[0][0]==b); return f"engine {m.group(1)}, {k.n} worker(s) ended"
+step("Tesseract takes over when the Vision worker dies", tess)
+def vis():
+    press("Scan & Capture"); wait("Upload receipt"); press("Upload receipt"); time.sleep(1); pick(S+"/fx/receipt-match.png"); x=wait("Read on this device by",60); m=re.search(r"Read on this device by ([a-z-]+)",x).group(1); press("Discard"); return m
+step("next receipt after a worker death", vis)
+def cancel():
+    press("Scan & Capture"); wait("Upload receipt"); b=q("select count(*) from transactions")[0][0]; k=Killer(); k.start()
+    try:
+        press("Upload receipt"); time.sleep(1); d("pickfile",S+"/fx/receipt-match.png"); end=time.time()+20; hit=None
+        while time.time()<end and not hit:
+            x=dump(); hit=next((n for n in ("Stop reading","Stop","Cancel reading") if f"AXButton '{n}'" in x),None); time.sleep(.1)
+        expect(hit,"no stop button seen"); press(hit); time.sleep(3); x=dump()
+    finally: k.on=False
+    expect("Check for duplicates and save" not in x and "Upload receipt" in x,"still reading"); expect(q("select count(*) from transactions")[0][0]==b); return hit
+step("recognition cancelled", cancel)
+def crash():
+    b=q("select count(*),sum(amount_cents) from transactions"); press("Import statements"); wait("Choose statement files"); press("Choose statement files"); time.sleep(1); pick(S+"/fx/big.csv"); wait("AXButton 'Import 1500",30)
+    main=[p for p in pid() if "worker" not in subprocess.run(["ps","-o","command=","-p",str(p)],capture_output=True,text=True).stdout][0]
+    subprocess.Popen([D,"press","~Import 1500"],stdout=subprocess.DEVNULL); delay=float(os.environ.get("DELAY",".35")); time.sleep(delay); os.kill(main,9); time.sleep(1.5)
+    c=sqlite3.connect(f"file:{DB()}?mode=ro",uri=True) if os.path.exists(DB()+"-shm") else sqlite3.connect(f"file:{DB()}?immutable=1",uri=True)
+    a=c.execute("select count(*),sum(amount_cents) from transactions").fetchall(); i=c.execute("pragma integrity_check").fetchall(); f=c.execute("pragma foreign_key_check").fetchall(); c.close()
+    expect(i==[("ok",)] and not f,"integrity"); expect(a==b or a[0][0]==b[0][0]+1500,f"partial: {b} -> {a}"); launch(); wait("AXButton 'All Transactions'"); return f"{b[0][0]} rows before, {a[0][0]} after the kill ({'all' if a!=b else 'none'} of 1500), integrity ok, reopened"
+step("killed during a 1500-row import", crash)
+def again():
+    press("Add & Sync"); press("Import statements"); press("Import statements") if "Choose statement files" not in dump() else None; b=q("select count(*) from transactions")[0][0]; 
+    press("Choose statement files"); time.sleep(1); pick(S+"/fx/big.csv"); time.sleep(3); x=dump()
+    if "already imported" in x: return "already in"
+    t=time.time(); press("~Import 1500"); wait("1500 transactions imported",60); expect(q("select count(*) from transactions")[0][0]==b+1500); return f"{b+1500} rows"
+step("same import after the crash", again)
+def perf():
+    t=time.time(); d("press","All Transactions"); wait("of 1510 transactions",20); return f"list of 1510 shown within {time.time()-t:.1f} s (polling included)"
+step("long list", perf)
+def undoimp():
+    press("Add & Sync"); press("Import statements"); wait("Undo import"); b=q("select count(*) from transactions")[0][0]; press("Undo import"); time.sleep(2); x=dump()
+    if q("select count(*) from transactions")[0][0]==b:
+        for n in ("Undo import","Delete","Remove","Confirm"):
+            if f"AXButton '{n}'" in x: press(n,0); time.sleep(2); break
+    n=q("select count(*) from transactions")[0][0]; expect(n==b-1500,f"{b}->{n}"); return f"{b} -> {n}"
+step("undo import of 1500 rows", undoimp)
+finish()

@@ -1,0 +1,56 @@
+overnight-c4, 79ab6c9, com.billieweather.client.qa.night2, 2026-11-25 03:24-03:38 CST
+Raw script results. Corrections: part4 'killed during import' ended before the import began (see part5); part4 'undo import' FAIL was the script pressing a second Undo (see part5);
+part6 G3 FAIL looked at the second account's own book; the emptied copy (billieweather-4.db) has no owner, 0 rows, 0 leftover strings.
+Second copy: alert text read and dismissed, process ended after OK, first copy kept running.
+
+PASS     part1  registration form: empty refused, then accepted
+PASS     part1  short code explained
+PASS     part1  wrong code refused
+PASS     part1  right code
+PASS     part1  database creation
+PASS     part1  CSV cancelled
+PASS     part1  CSV imported
+PASS     part1  CSV repeat refused
+PASS     part1  scanned PDF (Apple Vision), review, import
+PASS     part1  receipt image read, reviewed, saved
+PASS     part1  damaged receipt refused
+PASS     part1  duplicate receipt recognised
+PASS     part2  G1: import menus stay inside the window  [controls end at 1503, window at 1560]
+PASS     part2  category change is the person's
+PASS     part2  chosen category survives Reclassify of its own statement  [2 statements reclassified, choice kept]
+PASS     part2  transaction edited with note and tag
+PASS     part2  trash and restore
+PASS     part2  permanent deletion: Escape, Cancel, confirm
+PASS     part2  organize applied and undone
+PASS     part2  backup saved and restored as a verified new database
+PASS     part2  database selection
+PASS     part2  themes
+PASS     part2  languages  [6 languages]
+PASS     part2  Feature Library
+PASS     part3  quit and reopen  [10 rows kept, module kept, still signed in]
+PASS     part3  sign out other devices  [14:app:live 15:app:signed_out_elsewhere]
+PASS     part3  sign out online, wrong password, sign in  [14:app:signed_out 15:app:signed_out_elsewhere 16:app:live]
+PASS     part3  offline sign-out finished automatically  [server told 18 s after it returned]
+PASS     part3  Tab moves through controls  [13 distinct stops: AXButton 'All Transactions' = | AXButton 'Add & Sync' = | AXPopUpButton 'Ledger' | AXPopUpButton 'Account' | AXCheckBox 'All time' | AXCheckBox 'This month' | AXCheckBox 'Last month' | AXCheckBox 'Last 30 days']
+PASS     part3  Cmd-K reaches the command field  [AXComboBox 'Command' =]
+PASS     part3  skip link  [AXGroup 'Command Command Type a command — e.g. “how much did I spend on food las]
+PASS     part3  Return activates the focused tab  [Return opened it]
+PASS     part3  AI Assistant opens  [AI Assistant]
+PASS     part4  Tesseract takes over when the Vision worker dies  [engine tesseract-js, 1 worker(s) ended]
+PASS     part4  next receipt after a worker death  [apple-vision]
+PASS     part4  recognition cancelled  [Stop]
+PASS     part4  killed during a 1500-row import  [10 rows before, 10 after the kill (none of 1500), integrity ok, reopened]
+PASS     part4  same import after the crash  [1510 rows]
+PASS     part4  long list  [list of 1510 shown within 1.0 s (polling included)]
+FAIL     part4  undo import of 1500 rows  [1510->1510]
+PASS     part5  undo import: Keep, then Remove  [Keep keeps, Remove: 1510 -> 10]
+PASS     part5  kill during import, 0.0s  [killed 0.0s after Import: 0 of 1500 saved, integrity ok]
+PASS     part5  kill during import, 0.03s  [killed 0.03s after Import: 0 of 1500 saved, integrity ok]
+PASS     part5  kill during import, 0.08s  [killed 0.08s after Import: 1500 of 1500 saved, integrity ok]
+PASS     part5  kill during import, 0.15s  [killed 0.15s after Import: 1500 of 1500 saved, integrity ok]
+PASS     part5  kill during import, 0.3s  [killed 0.3s after Import: 1500 of 1500 saved, integrity ok]
+PASS     part6  second account sees nothing of the first  [own empty database]
+FAIL     part6  G3: another account's automatic copy  [[('id:e992d98f-5c61-44ba-abc5-8c66aba97696',)] 0]
+PASS     part6  first account again, its data unchanged
+PASS     part6  install from DMG  [copied from the DMG to a private folder, opened signed in with its data, no prompt]
+PASS     part6  second copy through qa.mjs  [second process held no database; ['LAUNCHED pid 65271; no file of the shipped app is open']]

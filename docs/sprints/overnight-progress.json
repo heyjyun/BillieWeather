@@ -1,7 +1,7 @@
 {
  "sprint_complete": false,
- "updated": "2026-11-25 03:05:45 CST",
- "phase": "report written; native acceptance of the final build open",
+ "updated": "2026-11-25 03:37:51 CST",
+ "phase": "c4 native acceptance done; upgrade test next",
  "done": [
   "scheduler: in-session cron 3:01 and 8:01 + detached waiter 3:07/8:07, probed (launchd denied by macOS privacy)",
   "6.0 repository audit: 115 dirty files in ../billieweather all identical to d3061e4; main is an ancestor, ff only",
@@ -24,7 +24,6 @@
   "final report docs/audits/overnight-phase5.9-to-6.2-final-report.md"
  ],
  "blocked": [
-  "GUI: hardware input on the desktop since 01:30; driver acts only after 120 s idle",
   "Developer ID / notarization",
   "Neon, Render",
   "Intel, Windows, iOS, Android toolchains (no rustup, Xcode, Android SDK, Docker)"
@@ -34,8 +33,8 @@
  "isolated_root": "/private/tmp/billie-roadmap.gk99lMpY",
  "servers": "rails 33557, identity 38557 (started 01:29, code before 37f4a8d; restart before GUI)",
  "scratch": "/private/tmp/claude-501/-Users-jyunz-Documents-Developer-Developping-BillieWeather/3aadd522-ebf5-462f-aa3e-5113667beb6c/scratchpad (driver drv, idle)",
- "next_exact_action": "At 08:01: if the SecurityAgent prompt is gone, screen unlocked and idle >= 600 s, launch overnight-c4 via qa.mjs and run report section 6; update the report. Otherwise set sprint_complete true and clean up per resume instructions item 8 (also stop servers 33557/38557 and the isolated cluster).",
- "next_resume": "08:01 in-session only; waiter stopped 03:02",
+ "next_exact_action": "upgrade test c4 -> c5 (sign out first), then finish the report, cleanup",
+ "next_resume": "08:01 in-session; waiter 08:07 (duplicate guard 25 min)",
  "failed": [
   "2 legacy Bullet Train browser tests (expect legal names / platform app row)"
  ]

@@ -1,0 +1,32 @@
+from accept import *
+def reg():
+    press("Create an account"); wait("Create your account"); press("Create account"); x=wait("Check the highlighted fields."); expect("Enter your email address." in x)
+    fill("Nickname ( required )","Accept QA"); fill("Email",EMAIL); fill("Password",PW); fill("Confirm password",PW); press("Create account"); wait("Check your email")
+step("registration form: empty refused, then accepted", reg)
+def short(): fill("Verification code","123456"); press("Verify and continue"); wait("Enter all 8 digits of the code.")
+step("short code explained", short)
+def wrong(): c=code(); fill("Verification code",str((int(c[0])+1)%10)+c[1:]); press("Verify and continue"); wait("That code isn't right.")
+step("wrong code refused", wrong)
+def right(): fill("Verification code",code()); press("Verify and continue"); wait("Name this device's database",15)
+step("right code", right)
+def create(): fill("Database name","Accept Book"); press("Create database"); wait("Welcome to BillieWeather",12); press("Explore Dashboard"); wait("No statements yet"); expect(q("select value from settings where key='database_name'")[0][0]=="Accept Book")
+step("database creation", create)
+def cancel():
+    press("Add & Sync"); press("Import statements"); press("Import statements",0) if "Choose statement files" not in dump() else None; wait("Choose statement files"); press("Choose statement files"); time.sleep(1); pick(S+"/fx/qa-sample.csv"); wait("Import 2 transactions"); press("Cancel"); wait("Nothing was saved"); expect(q("select count(*) from transactions")[0][0]==0)
+step("CSV cancelled", cancel)
+def imp(): press("Choose statement files"); time.sleep(1); pick(S+"/fx/qa-sample.csv"); wait("Import 2 transactions"); press("Import 2 transactions"); wait("2 transactions imported"); expect(q("select count(*),sum(amount_cents) from transactions")==[(2,9575)])
+step("CSV imported", imp)
+def again(): press("Choose statement files"); time.sleep(1); pick(S+"/fx/qa-sample.csv"); wait("already imported"); expect(q("select count(*) from transactions")[0][0]==2)
+step("CSV repeat refused", again)
+def pdf():
+    press("Choose statement files"); time.sleep(1); pick(S+"/fx/scanned-statement.pdf"); x=wait("apple-vision",40); expect("8 rows" in x and "1 to review" in x); d("shot",S+"/shots/c4-pdf.png")
+    press("Apply suggestions to rows still to decide"); wait("Import 8 transactions"); press("Import 8 transactions"); wait("8 transactions imported"); expect(q("select count(*),sum(amount_cents) from transactions")==[(10,38179)])
+step("scanned PDF (Apple Vision), review, import", pdf)
+def rcpt():
+    press("Scan & Capture"); wait("Upload receipt"); press("Upload receipt"); time.sleep(1); pick(S+"/fx/receipt-new.jpg"); x=wait("Read on this device by apple-vision",30); press("Check for duplicates and save"); wait("Saved as an expense"); expect(q("select count(*) from transactions")[0][0]==11)
+step("receipt image read, reviewed, saved", rcpt)
+def bad(): press("Capture another receipt"); press("Upload receipt"); time.sleep(1); pick(S+"/fx/receipt-corrupt.png"); wait("couldn't be read",30); expect(q("select count(*) from transactions")[0][0]==11)
+step("damaged receipt refused", bad)
+def dup(): press("Upload receipt"); time.sleep(1); pick(S+"/fx/receipt-new.jpg"); wait("Check for duplicates and save",30); press("Check for duplicates and save"); wait("it will not be added again"); press("Keep as the same purchase (don't add)"); expect(q("select count(*) from transactions")[0][0]==11)
+step("duplicate receipt recognised", dup)
+finish()

@@ -1,0 +1,55 @@
+from accept import *
+def g1():
+    press("Add & Sync"); press("Import statements"); wait("Choose statement files"); press("Choose statement files"); time.sleep(1)
+    open(S+"/fx/amb.csv","w").write("Date,Description,Amount\n03/04/2026,SYNTH AMB,-1.00\n05/06/2026,SYNTH AMB2,-2.00\n"); pick(S+"/fx/amb.csv"); wait("IMPORT PREVIEW")
+    right=0; win=None
+    for l in d("frames").splitlines():
+        a=l.split(); 
+        if a[0]=="AXWindow": win=int(a[-1])
+        elif a[0] in("AXPopUpButton","AXTextField"): right=max(right,int(a[-1]))
+    expect(win and right<=win, f"control right {right} > window {win}"); d("shot",S+"/shots/c4-g1.png"); press("Cancel"); wait("Nothing was saved"); return f"controls end at {right}, window at {win}"
+step("G1: import menus stay inside the window", g1)
+def cat():
+    press("All Transactions"); wait("Category for QA SYNTHETIC CAFE"); sel("Category for QA SYNTHETIC CAFE","Shopping"); expect(q("select category,category_source,user_locked_fields from transactions where description='QA SYNTHETIC CAFE'")==[("Shopping","user",'["category"]')])
+step("category change is the person's", cat)
+def prot():
+    press("Add & Sync"); press("Import statements"); x=wait("Import history"); n=x.count("AXButton 'Reclassify'")
+    for i in range(n): press("Reclassify",i); time.sleep(1)
+    expect(q("select category,category_source from transactions where description='QA SYNTHETIC CAFE'")==[("Shopping","user")]); return f"{n} statements reclassified, choice kept"
+step("chosen category survives Reclassify of its own statement", prot)
+def edit():
+    manual_home(); press("~Transactions Search, filter"); wait("New entry"); press("Edit"); wait("Note ( optional )"); fill("Description ( optional )","Accept edit cafe"); fill("Note ( optional )","synthetic note"); fill("Tags ( optional ) Separate with commas.","qa-tag"); press("Save"); time.sleep(1.5)
+    expect(q("select description,note from transactions where id=2")==[("Accept edit cafe","synthetic note")]); expect(q("select name from tags")==[("qa-tag",)])
+step("transaction edited with note and tag", edit)
+def trash():
+    press("Delete",2); wait("Moved to the trash."); press("Delete",2); time.sleep(1); expect(q("select count(*) from transactions where deleted_at is not null")[0][0]==2)
+    manual_home(); press("~Review & trash"); wait("Empty trash"); press("Restore"); time.sleep(1); expect(q("select count(*) from transactions where deleted_at is not null")[0][0]==1)
+step("trash and restore", trash)
+def perm():
+    press("Delete for good"); f=d("focused"); expect("Cancel" in f,f); d("key","53"); time.sleep(1); expect(q("select count(*) from transactions")[0][0]==11,"Escape deleted"); press("Delete for good"); press("Cancel"); expect(q("select count(*) from transactions")[0][0]==11,"Cancel deleted"); press("Delete for good"); press("Delete for good"); x=wait("Entries deleted for good: 1."); expect(q("select count(*) from transactions")[0][0]==10)
+step("permanent deletion: Escape, Cancel, confirm", perm)
+def undo():
+    press("Default"); press("All Transactions"); press("Organize with AI"); wait("Analyze"); h=lambda: q("select id,category,category_source,kind,merchant_id from transactions order by id"); b=h(); press("Analyze"); time.sleep(3); press("Select all"); press("~Apply "); time.sleep(1.5); expect(h()!=b,"nothing applied"); press("Undo all"); wait("Undone."); expect(h()==b,"not restored")
+step("organize applied and undone", undo)
+def backup():
+    press("Close",0) if "AXButton 'Close'" in dump() else None
+    press("Manual"); manual_home(); press("~Books, backup"); wait("Backup & restore"); 
+    f=S+"/fx/accept.bwbackup"; os.path.exists(f) and os.remove(f); press("Back up now"); time.sleep(1.2); d("savefile",S+"/fx","accept.bwbackup"); wait("Backup saved"); press("Choose backup file"); time.sleep(1); pick(f); wait("verified: every row and total matches the backup",20)
+    expect(q("select count(*),sum(amount_cents) from transactions",QD+"/billieweather-2.db")==q("select count(*),sum(amount_cents) from transactions"))
+step("backup saved and restored as a verified new database", backup)
+def switch():
+    press("Transactions"); wait("'Ledger'"); sel("Ledger","Accept Book (restored)"); wait("= Accept Book (restored)"); sel("Ledger","Accept Book"); gone("'Ledger' = Accept Book (restored)")
+step("database selection", switch)
+def theme():
+    press("Settings"); wait("Appearance"); press("Dark"); wait("'Dark' = 1"); d("shot",S+"/shots/c4-dark.png"); press("Light"); wait("'Light' = 1"); press("Match system"); wait("'Match system' = 1")
+step("themes", theme)
+def lang():
+    label="Language"; seen=[]
+    for l,h in (("简体中文","功能库"),("繁體中文","功能庫"),("日本語","機能ライブラリ"),("한국어","기능 라이브러리"),("Español","Biblioteca de funciones"),("English","Feature Library")):
+        sel(label,l); x=wait(f"AXHeading '{h}'"); label=re.search(r"AXPopUpButton '(.*?)' = ",x[x.index("AXHeading '"+h):]).group(1); seen.append(l)
+    return f"{len(seen)} languages"
+step("languages", lang)
+def lib():
+    press("Open Feature Library"); wait("Coming soon"); press("Budgets"); time.sleep(1.5); expect(re.search(r"AXButton 'Budgets'",dump())); expect("budgets|t" in psql("select module_key,enabled from finance_module_preferences p join users u on u.id=p.user_id where u.email='%s'"%EMAIL))
+step("Feature Library", lib)
+finish()

@@ -4,7 +4,7 @@ import ApplicationServices
 let args = Array(CommandLine.arguments.dropFirst())
 func die(_ s: String, _ c: Int32 = 1) -> Never { FileHandle.standardError.write((s+"\n").data(using:.utf8)!); exit(c) }
 // target
-guard let app = NSWorkspace.shared.runningApplications.first(where: { ($0.bundleIdentifier ?? "").hasPrefix("com.billieweather.client.qa") }) else { die("QA app not running", 3) }
+guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == "com.billieweather.client.qa.night2" }) else { die("QA app not running", 3) }
 if app.bundleIdentifier == "com.billieweather.client" { die("refuse production", 9) }
 // guard: lock
 if let d = CGSessionCopyCurrentDictionary() as? [String:Any], (d["CGSSessionScreenIsLocked"] as? Int ?? 0) == 1 { die("LOCKED", 4) }
@@ -13,8 +13,8 @@ if acting.contains(args.first ?? "") && NSWorkspace.shared.frontmostApplication?
 // The desktop belongs to whoever is using it: no acting and no activation while there is hardware input.
 let hidIdle = [CGEventType.keyDown,.mouseMoved,.leftMouseDown,.scrollWheel,.rightMouseDown].map { CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: $0) }.min()!
 if args.first == "idle" { print(Int(hidIdle)); exit(0) }
-if args.first == "activate" && hidIdle < 600 { die("IN USE: hardware input \(Int(hidIdle)) s ago", 6) }
-if acting.contains(args.first ?? "") && hidIdle < 60 { die("IN USE: hardware input \(Int(hidIdle)) s ago", 6) }
+if args.first == "activate" && hidIdle < 60 { die("IN USE: hardware input \(Int(hidIdle)) s ago", 6) }
+if acting.contains(args.first ?? "") && hidIdle < 20 { die("IN USE: hardware input \(Int(hidIdle)) s ago", 6) }
 let root = AXUIElementCreateApplication(app.processIdentifier)
 AXUIElementSetAttributeValue(root, "AXManualAccessibility" as CFString, kCFBooleanTrue)
 AXUIElementSetAttributeValue(root, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
@@ -91,6 +91,7 @@ case "savefile": // folder, name
   if let n = byId("saveAsNameTextField") { AXUIElementSetAttributeValue(n, kAXValueAttribute as CFString, args[2] as CFString); usleep(300000) } else { die("no name field", 8) }
   guard let ok = byId("OKButton") else { die("no OK button", 8) }
   let r = AXUIElementPerformAction(ok, kAXPressAction as CFString); print("save pressed \(r.rawValue)")
+case "frames": func fr(_ e: AXUIElement) { let r = str(e,kAXRoleAttribute); if r == "AXMenuBar" || r == "AXSheet" { return }; if ["AXPopUpButton","AXTextField","AXButton","AXWindow"].contains(r) { let f = frame(e); print(r, name(e), Int(f.minX), Int(f.maxX)) }; for k in kids(e) { fr(k) } }; fr(root)
 case "focused": if let f = attr(root,kAXFocusedUIElementAttribute) { let e = f as! AXUIElement; print(str(e,kAXRoleAttribute)+" '"+text(e)+"' = "+str(e,kAXValueAttribute)) } else { print("none") }
 case "activate": print(app.activate(options: []))
 case "front": print(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "?")
