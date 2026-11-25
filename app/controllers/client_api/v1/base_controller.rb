@@ -1,7 +1,7 @@
 module ClientApi
   module V1
-    # JSON API for the BillieWeather apps. Account information only: the apps never
-    # send statements or transactions here. Responses are never cached.
+    # JSON API for the BillieWeather apps: sign-in, account preferences and the person's own web financial
+    # data (FinanceController, ReceiptsController). Responses are never cached.
     class BaseController < ActionController::API
       before_action { response.headers["Cache-Control"] = "no-store" }
 

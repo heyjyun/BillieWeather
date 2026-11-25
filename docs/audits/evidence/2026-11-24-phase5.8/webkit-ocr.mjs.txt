@@ -1,0 +1,11 @@
+import { createServer } from "vite"; import { webkit } from "playwright-core";
+const server = await createServer({ configFile: "vite.config.ts", server: { port: 0, strictPort: false, hmr: false }, logLevel: "silent" }); await server.listen();
+const origin = `http://localhost:${server.httpServer.address().port}`; const b = await webkit.launch(); const p = await (await b.newContext()).newPage(); const outside = [];
+p.on("request", (r) => { if (!r.url().startsWith(origin) && !/^(blob|data):/.test(r.url())) outside.push(r.url()); });
+await p.goto(`${origin}/e2e/ocr.html`); await p.waitForFunction(() => document.getElementById("status")?.textContent?.startsWith("ready"), undefined, { timeout: 60000 });
+for (const [f, c, s] of [[["us-debit-credit.png"], "USD"], [["zh-cn.png"], "CNY", "zh-Hans"], [["multipage-1.png", "multipage-2.png"], "USD"], [["scanned-statement.pdf"], "USD"]]) {
+  const r = await p.evaluate(([f, c, s]) => window.runOcr(f, c, s).catch((e) => ({ error: String(e) })), [f, c, s]);
+  console.log(f.join("+"), r.error ?? `${r.engine.id} pages=${r.pages.length} rows=${r.rows.length} scanned=${r.scanned} ${Math.round(r.milliseconds)}ms`);
+}
+console.log("receipt", JSON.stringify(await p.evaluate(() => window.runReceipt().catch((e) => String(e))))); console.log("outside requests", outside.length, "webkit", b.version());
+await b.close(); await server.close();

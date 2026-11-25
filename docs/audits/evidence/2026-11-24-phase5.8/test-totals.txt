@@ -1,0 +1,18 @@
+baseline Rails (11e3187)
+824 tests, 31060 assertions, 0 failures, 0 errors, 2 skips
+final Rails (e905b3b)
+849 tests, 31300 assertions, 0 failures, 0 errors, 2 skips
+Universal (e905b3b)
+ Test Files  82 passed (82)
+      Tests  1071 passed (1071)
+Rust (e905b3b)
+test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.22s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.23s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+identity, subset schema
+128 passed, 1 skipped, 1 warning in 4.44s
+identity with real Rails
+129 passed, 1 warning in 16.22s
+previous Rails code on the new schema
+57 tests, 548 assertions, 0 failures, 0 errors, 0 skips

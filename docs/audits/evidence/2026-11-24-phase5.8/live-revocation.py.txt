@@ -1,0 +1,43 @@
+import json,sys,urllib.request,urllib.error,threading,http.cookiejar,re,urllib.parse,collections,hashlib
+B="http://127.0.0.1:33557"
+def call(m,p,tok=None,body=None):
+    r=urllib.request.Request(B+p,method=m,data=json.dumps(body).encode() if body is not None else None,headers={"Accept":"application/json",**({"Content-Type":"application/json"} if body is not None else {}),**({"Authorization":"Bearer "+tok} if tok else {})})
+    try:
+        with urllib.request.urlopen(r,timeout=60) as x: d=x.read(); return x.status,(json.loads(d) if d else None)
+    except urllib.error.HTTPError as e: return e.code,None
+E,P="migrate@example.com","a-long-test-password-1"
+def login():
+    s,j=call("POST","/api/client/v1/session",body={"email":E,"password":P}); assert s==201,s; return j["token"]
+if sys.argv[1]=="run":
+    a,b=login(),login()
+    res=collections.Counter(); after=collections.Counter(); done=threading.Event(); stop=threading.Event()
+    def hammer():
+        while not stop.is_set():
+            was=done.is_set(); s,_=call("GET","/api/client/v1/finance",a)
+            (after if was else res)[s]+=1
+    ts=[threading.Thread(target=hammer) for _ in range(6)]; [t.start() for t in ts]
+    import time; time.sleep(2)
+    outs=[]; ls=[threading.Thread(target=lambda: outs.append(call("DELETE","/api/client/v1/session",a)[0])) for _ in range(5)]
+    [t.start() for t in ls]; [t.join() for t in ls]; done.set(); time.sleep(2); stop.set(); [t.join() for t in ts]
+    print("before/during",dict(res),"started after sign-out",dict(after),"5 concurrent sign-outs",outs,"other app",call("GET","/api/client/v1/finance",b)[0])
+    # website
+    def jar():
+        j=http.cookiejar.CookieJar(); return j,urllib.request.build_opener(urllib.request.HTTPCookieProcessor(j))
+    def signin():
+        j,o=jar(); h=o.open(B+"/users/sign_in").read().decode(); t=re.search(r'name="authenticity_token" value="([^"]+)"',h).group(1)
+        r=o.open(B+"/users/sign_in",urllib.parse.urlencode({"authenticity_token":t,"user[email]":E,"user[password]":P}).encode()); return j,o,r.geturl()
+    j,o,u=signin(); ck="; ".join(f"{c.name}={c.value}" for c in j)
+    class NR(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self,*a): return None
+    def replay():
+        try: return urllib.request.build_opener(NR).open(urllib.request.Request(B+"/app",headers={"Cookie":ck})).status
+        except urllib.error.HTTPError as e: return e.code
+    print("web landed",u.replace(B,""),"copied cookie before",replay())
+    h=o.open(B+"/app/settings").read().decode(); t=re.search(r'name="csrf-token" content="([^"]+)"',h).group(1)
+    o.open(B+"/users/sign_out",urllib.parse.urlencode({"_method":"delete","authenticity_token":t}).encode())
+    print("copied cookie after logout",replay())
+    c=login(); d=login(); off=login(); print("offline digest revoke",call("POST","/api/client/v1/session/revocations",body={"token_digest":hashlib.sha256(off.encode()).hexdigest()})[0],call("GET","/api/client/v1/account",off)[0])
+    print("sign out others",call("DELETE","/api/client/v1/sessions",c),"others",call("GET","/api/client/v1/account",d)[0],call("GET","/api/client/v1/account",b)[0],"self",call("GET","/api/client/v1/account",c)[0])
+    json.dump({"revoked":[a,b,d,off],"live":[c],"cookie":ck},open(sys.argv[2],"w"))
+else:
+    s=json.load(open(sys.argv[2])); print("after restart revoked",[call("GET","/api/client/v1/finance",t)[0] for t in s["revoked"]],"live",[call("GET","/api/client/v1/finance",t)[0] for t in s["live"]])

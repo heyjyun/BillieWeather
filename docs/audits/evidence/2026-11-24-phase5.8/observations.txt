@@ -1,0 +1,19 @@
+Live server (isolated PostgreSQL, real puma, http://127.0.0.1:33557), live-revocation.py.txt:
+  before/during {200: 40, 401: 6}; requests started after sign-out {401: 71}; 5 concurrent sign-outs all 204; other app 200
+  website: copied cookie before sign-out 200, after sign-out 302
+  offline digest revocation 204, token then 401; sign out others {"revoked": 2}: others 401, self 200
+  after server restart: revoked tokens [401, 401, 401, 401], live token [200]; tokens found in logs: 0
+New code, fresh cluster: register 202, confirm 201, login 201, finance 200, logout 204, finance 401
+Baseline code (11e3187), session_revocation_test.rb: app token accepted after sign-out; copied website cookie still opened /app
+Migration 20261125000100 on a database with one synthetic account and statement:
+  up; repeat up applies 0; down: schema and data dumps identical to before; up again: identical to first up
+  previous release on the new schema: 57 tests, 0 failures, table verified present before and after
+  (a first attempt silently reloaded the old schema and was discarded)
+atomicity.test.ts on the previous code: 33 of 42 fail; on e905b3b: 42 of 42 pass
+tesseract.real.test.ts "cancellation during recognition" on the previous code: hung until the 60 s test limit
+WebKit 27.2 (Playwright), webkit-ocr.mjs.txt: 8 rows 511 ms; zh-Hans 6 rows 731 ms; 2 pages 8 rows 482 ms; scanned PDF 2 pages 8 rows 697 ms; receipt 10.25; outside requests 0
+Package, identity com.billieweather.client.qa.p58, screen locked, not signed in:
+  clean install: process up, data folder drwx------, no file of the shipped app open
+  existing schema-7 book: pre-v9 copy byte-identical, original byte-identical, .schema = 9
+  binary replaced (CDHash 50ccc6f2... -> 22a8864d...): started, book byte-identical, still one copy
+  spctl: rejected (ad hoc)

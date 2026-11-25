@@ -5,10 +5,10 @@
 1. **前置**：固定提交；Universal、Rust、Rails、identity 全套通过；RustSec、npm、Ruby 审计为 0 项漏洞。
 2. **环境变量**：`DATABASE_URL`（运行角色）、`BILLIE_DB_ENV`、`BILLIE_DB_HOST`、`BILLIE_DB_NAME`、`BILLIE_DB_TARGET_ID`；发布时另注入 `DATABASE_URL_UNPOOLED` 与 `BILLIE_RELEASE_APPROVAL`，完成后撤回。
 3. **备份**：记录恢复点与保留窗口，在隔离目标演练恢复并核对金额与归属。
-4. **迁移**：`bin/billie-release rails`，再 `bin/billie-release identity`。构建与启动不执行迁移。
+4. **迁移**：`bin/billie-release rails`，再 `bin/billie-release identity`。构建与启动不执行迁移。 `20261125000100`（`user_sessions`）必须先于 Rails 新版本部署；运行角色需要该表及序列的 DML 权限。发布后所有用户需重新登录一次，本机数据保留。
 5. **冒烟**：`/up`、`/health`、Redis、合成账号的注册、登录、导入、退款与转账口径。
 6. **监控**：5xx 率、登录失败率、导入失败率、数据库连接与锁等待、健康检查。客户端只上报错误代码，不含金额、描述或路径。
 7. **回滚**：优先重新部署兼容的上一版本，保留结构与审计数据；数据恢复先在隔离目标核对。
 8. **事故响应**：关闭 `BILLIE_MODULE_SYNC` 或暂停受影响写入；保全日志与备份；确认受影响账户；修复后核对交易、退款、转账、导入不变量；记录时间线。
-9. **macOS**：Developer ID 签名、公证、stapling、`spctl` 通过、干净机器安装、旧版本升级、首次 OCR 准备、收据与扫描 PDF 导入、重启校验。测试构建只用 `node clients/universal/scripts/qa.mjs build | preflight | launch`，默认标识的 debug 构建会拒绝启动。RC 自身须走完 GUI 验收，步骤见 [Phase 5.7](phase5.7-final-rc-acceptance.md) 第 17 节。
+9. **macOS**：Developer ID 签名、公证、stapling、`spctl` 通过、干净机器安装、旧版本升级、首次 OCR 准备、收据与扫描 PDF 导入、重启校验。测试构建只用 `node clients/universal/scripts/qa.mjs build | preflight | launch`，默认标识的 debug 构建会拒绝启动。RC 自身须走完 GUI 验收，步骤见 [Phase 5.8](phase5.8-rc-stabilization.md) 第 10 节。
 10. **其他平台**：Intel、Windows、iOS、Android 各自完成工具链构建、权限、签名和真机验收后才列入。
