@@ -2,7 +2,8 @@
 // gone (or was disabled while working), which leaves focus nowhere. These only ever act then.
 import { useEffect, useRef, type KeyboardEvent, type RefObject } from "react";
 
-export const focusIsLost = () => !document.activeElement || document.activeElement === document.body;
+/** Nowhere useful. WebKit (the apps) does not focus a clicked button: the click lands on `<main>` instead. */
+export const focusIsLost = () => !document.activeElement || document.activeElement === document.body || document.activeElement.id === "main";
 
 /** Moves focus to the returned ref's element whenever `key` changes and focus is nowhere. */
 export function useFocusWhenLost<T extends HTMLElement>(key: unknown = null): RefObject<T | null> {
@@ -27,7 +28,7 @@ export function useOpenedPanel<T extends HTMLElement>(pick: (panel: T) => HTMLEl
     return () => {
       setTimeout(() => {
         if (typeof document === "undefined" || !focusIsLost()) return;
-        const target = opener?.isConnected && opener !== document.body && !opener.matches(":disabled") ? opener : document.querySelector<HTMLElement>("main h1");
+        const target = opener?.isConnected && opener !== document.body && opener.id !== "main" && !opener.matches(":disabled") ? opener : document.querySelector<HTMLElement>("main h1");
         target?.focus({ preventScroll: true });
       });
     };

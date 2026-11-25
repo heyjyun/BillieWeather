@@ -116,6 +116,7 @@ h1[tabindex]:focus, h2[tabindex]:focus, .bw-main:focus, .bw-message[tabindex]:fo
 .bw-segmented button.is-active { background: var(--card); color: var(--ink); font-weight: var(--bw-font-weight-semibold); box-shadow: var(--bw-shadow-sm); }
 
 .bw-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: var(--bw-radius-md); border: 1px solid transparent; cursor: pointer; font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-semibold); white-space: nowrap; transition: background var(--bw-motion-fast), border-color var(--bw-motion-fast); }
+:where(button.bw-button) { background: var(--soft); color: var(--ink); }
 .bw-button:disabled { opacity: 0.5; cursor: not-allowed; }
 .bw-button:active:not(:disabled) { transform: translateY(1px); }
 .bw-button-dark { background: var(--accent); color: var(--bw-color-text-on-accent); box-shadow: var(--bw-shadow-sm); }

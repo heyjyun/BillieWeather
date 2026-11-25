@@ -167,6 +167,17 @@ it("deletes for good only after the in-page confirmation, whatever window.confir
   vi.unstubAllGlobals();
 });
 
+it("treats a click that lands on <main> (WebKit) as no focus: a closed form returns to the heading", async () => {
+  await openBook();
+  const add = await screen.findByRole("button", { name: "New entry" });
+  document.getElementById("main")!.focus();
+  await click(add);
+  const form = screen.getByRole("form", { name: "New entry" });
+  expect(focused()).toBe(within(form).getByLabelText("Amount"));
+  await click(within(form).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => expect(focused().tagName).toBe("H1"));
+});
+
 it("uses no browser dialogs, which the apps replace with asynchronous ones", () => {
   const walk = (dir: string): string[] => readdirSync(dir).flatMap((name) => { const path = join(dir, name); return statSync(path).isDirectory() ? walk(path) : /\.tsx?$/.test(name) ? [path] : []; });
   const offenders = [join(__dirname, "../src"), join(__dirname, "../../../packages")].flatMap(walk).filter((file) => !/node_modules|\/test\//.test(file))
