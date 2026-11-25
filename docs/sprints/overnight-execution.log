@@ -8,3 +8,4 @@
 2026-11-25 02:11:25 CST QA app quit by someone at the desktop about 02:10; hardware input active; GUI paused, resumes only after 10 min idle
 2026-11-25 02:24:13 CST 02:23 launching overnight-c2 over c1's session brought up a macOS authentication prompt (SecurityAgent; assumed keychain access by a different ad hoc build). Not touched; QA app stopped; prompt stayed; GUI on hold
 2026-11-25 02:25:11 CST removed two Cargo cache folders of old isolated runs (about 8 GB); they contained eight old QA app bundles (phases 1b-5.1), seen only in the same command
+2026-11-25 02:27:00 CST c3 (suffix night, same source) built and launched; macOS prompt keeps the front, QA window stays off screen; app stopped; GUI BLOCKED until the prompt is answered

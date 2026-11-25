@@ -52,3 +52,19 @@ def test_no_endpoint_accepts_a_session_token():
         assert "httpbearer" not in source and "oauth2passwordbearer" not in source, path.name
         # Incoming Authorization headers are never read (google.py and mailer.py only send their own).
         assert 'request.headers.get("authorization' not in source and 'header(alias="authorization' not in source, path.name
+
+
+def test_tracebacks_are_redacted_too():
+    import logging
+    import sys
+
+    from identity_api.logs import RedactingFormatter
+
+    try:
+        raise ValueError("Key (email)=(person@example.org) already exists; Bearer abc.def password=hunter2")
+    except ValueError:
+        record = logging.LogRecord("x", logging.ERROR, __file__, 1, "failed", None, sys.exc_info())
+    text = RedactingFormatter("%(levelname)s %(message)s").format(record)
+    assert "ValueError" in text and "Traceback" in text
+    for private in ("person@example.org", "abc.def", "hunter2"):
+        assert private not in text
