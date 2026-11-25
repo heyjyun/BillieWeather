@@ -690,3 +690,6 @@ button.bw-subtab.is-active { color: var(--accent-soft-text); border-color: var(-
 .bw-quick-entry { display: grid; gap: .6rem; margin: 0 0 .85rem; }
 .bw-quick-entry > .bw-button { justify-self: start; }
 button.bw-dropzone { width: 100%; font: inherit; }
+
+/* Long translations wrap inside the button instead of widening a narrow phone's page. */
+@media (max-width: 480px) { .bw-button { max-width: 100%; white-space: normal; height: auto; } }

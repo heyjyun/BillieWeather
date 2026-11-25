@@ -1,0 +1,35 @@
+import { chromium } from "playwright-core";
+import { createServer } from "node:http"; import { readFileSync, existsSync } from "node:fs"; import { join, extname } from "node:path";
+const types = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png" };
+const server = createServer((q, r) => { let f = join("dist", decodeURIComponent(q.url.split("?")[0])); if (q.url === "/" || !existsSync(f)) f = "dist/index.html"; r.writeHead(200, { "content-type": types[extname(f)] || "application/octet-stream" }); r.end(readFileSync(f)); }).listen(45871, "127.0.0.1");
+const account = { email: "layout@example.com", nickname: "Layout", locale: "en", time_zone: null, usage_region: "US", registered_at: "2026-11-25T00:00:00Z", badges: [], owner_id: "12345678-1234-4123-8123-123456789abc" };
+const b = await chromium.launch({ channel: "chrome", headless: true }); let bad = 0, ok = 0, pages = 0; const errors = new Set();
+for (const [name, width, height] of [["iPhone SE", 320, 568], ["iPhone", 390, 844], ["Android", 412, 915], ["iPad", 820, 1180], ["min window", 360, 560], ["desktop", 1200, 820]]) for (const locale of ["en", "es", "ja"]) {
+  const c = await b.newContext({ viewport: { width, height }, hasTouch: width < 900, isMobile: width < 900 }); const p = await c.newPage();
+  p.on("pageerror", (e) => errors.add(String(e).slice(0, 140)));
+  await p.route(/\/api\/client\/v1\//, (r) => { const u = r.request().url(); const h = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*" };
+    if (r.request().method() === "OPTIONS") return r.fulfill({ status: 204, headers: h });
+    if (u.endsWith("/session")) return r.fulfill({ status: 201, headers: h, json: { token: "bwa_" + "x".repeat(43), expires_at: "2027-01-01T00:00:00Z", account: { ...account, locale } } });
+    if (u.endsWith("/account")) return r.fulfill({ status: 200, headers: h, json: { account: { ...account, locale } } });
+    return r.fulfill({ status: 404, headers: h, json: {} }); });
+  const check = async (what) => { await p.waitForTimeout(250); const a = await p.evaluate(() => { const w = document.documentElement.clientWidth; return { over: document.documentElement.scrollWidth - w, wide: [...document.querySelectorAll("main *, .bw-auth *")].filter((e) => { const r = e.getBoundingClientRect(); if (r.width === 0 || r.right <= w + 1) return false; for (let n = e.parentElement; n; n = n.parentElement) { const o = getComputedStyle(n).overflowX; if (o === "auto" || o === "scroll" || o === "hidden") return false; } return true; }).slice(0, 3).map((e) => `${e.tagName}.${e.className}:${Math.round(e.getBoundingClientRect().right)}`), small: [...document.querySelectorAll("button, select, input:not([type=file])")].filter((e) => e.offsetParent && e.getBoundingClientRect().height > 0 && e.getBoundingClientRect().height < 24).slice(0, 2).map((e) => `${e.textContent.slice(0, 18)}:${Math.round(e.getBoundingClientRect().height)}`) }; });
+    if (a.over > 1 || a.wide.length) { bad++; console.log("CHECK", name, locale, what, JSON.stringify(a)); } else ok++; };
+  await p.goto("http://127.0.0.1:45871/"); await p.waitForSelector("form"); await check("sign-in");
+  await p.locator("input[type=email]").fill("layout@example.com"); await p.locator("input[type=password]").fill("Synthetic-1"); await p.locator("form button[type=submit]").click(); await p.waitForTimeout(1500);
+  for (let i = 0; i < 3; i++) { const submit = p.locator("form.bw-name-database button[type=submit], form button[type=submit]").first(); if (await p.locator(".bw-sidebar, nav").count()) break; if (await submit.count()) { await submit.click().catch(() => {}); await p.waitForTimeout(900); } }
+  if (await p.locator(".bw-welcome-actions button").count()) { await p.locator(".bw-welcome-actions button").nth(1).click(); await p.waitForTimeout(700); }
+  if (!(await p.locator("nav.bw-nav").count())) { console.log("NOT REACHED", name, locale); bad++; await c.close(); continue; }
+  await check("home");
+  if (process.env.SHOT && locale === "en" && [390, 820].includes(width)) await p.screenshot({ path: `${process.env.SHOT}/layout-${width}.png` });
+  const seen = new Set();
+  const visit = async (what) => { seen.add(await p.evaluate(() => document.querySelector("h1")?.textContent)); await check(what); };
+  const tabs = p.locator(".bw-tabs button");
+  for (let i = 0; i < Math.min(await tabs.count(), 8); i++) { await tabs.nth(i).click(); await visit("tab " + i);
+    if (i >= 2) for (let j = 0; j < 3; j++) { const sub = p.locator("main button").filter({ hasText: /Scan|Escanear|スキャン|Import|Importar|取り込|Manual|手動/ }).nth(j); if (await sub.count()) { await sub.click({ timeout: 1500 }).catch(() => {}); await visit(`tab ${i}.${j}`); } } }
+  const items = p.locator(".bw-nav-item");
+  for (let i = 0; i < await items.count(); i++) { await items.nth(i).click(); await visit("nav " + i); }
+  const library = p.locator("main button").filter({ hasText: /Feature Library|biblioteca|ライブラリ/i }).first(); if (await library.count()) { await library.click(); await visit("library"); }
+  pages = Math.max(pages, seen.size);
+  await c.close();
+}
+console.log("distinct pages per run", pages, "ok", ok, "bad", bad, "errors", [...errors]); await b.close(); server.close();
