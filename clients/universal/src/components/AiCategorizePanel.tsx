@@ -25,7 +25,13 @@ export function AiCategorizePanel({ uncategorized, say }: { uncategorized: numbe
 
   async function startAi() {
     say("");
-    const groups = await store.aiCandidates();
+    let groups: AiGroup[];
+    try {
+      groups = await store.aiCandidates();
+    } catch {
+      say(x.aiErrorFailed, true); // the local book could not be read; nothing was sent or changed
+      return;
+    }
     const batch = groups.slice(0, AI_BATCH_MAX);
     setAi({ step: "consent", groups, batch, transactions: batch.reduce((sum, group) => sum + group.ids.length, 0) });
   }
@@ -47,7 +53,9 @@ export function AiCategorizePanel({ uncategorized, say }: { uncategorized: numbe
       }
       if (caught instanceof AccountError) say(x.aiErrorOffline, true);
       else if (caught instanceof AiCategorizeError) say(caught.code === "wait" ? x.aiErrorWait : caught.code === "not_configured" ? x.aiErrorNotConfigured : x.aiErrorFailed, true);
-      else throw caught;
+      // Anything else (e.g. the local database refusing the batch, which is written atomically): say so
+      // instead of leaving an unhandled rejection and a silent panel.
+      else say(x.aiErrorFailed, true);
     } finally {
       setAi((current) => (current.step === "working" ? { step: "idle" } : current));
     }
