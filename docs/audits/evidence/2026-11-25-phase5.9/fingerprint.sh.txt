@@ -1,0 +1,3 @@
+# fingerprint of every table except sessions bookkeeping
+R=$1; P="psql -X -At -h $R/socket -p 35531 -U billie_isolated -d billie_isolated_development"
+for t in $($P -c "select table_name from information_schema.tables where table_schema='public' and table_type='BASE TABLE' and table_name ~ 'finance|receipt|module' order by 1"); do echo "$t $($P -c "select count(*)||' '||coalesce(md5(string_agg(x::text,'|' order by x::text)),'-') from $t x")"; done

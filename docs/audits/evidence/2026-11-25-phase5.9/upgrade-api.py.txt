@@ -1,0 +1,19 @@
+import json,sys,urllib.request,urllib.error,hashlib
+B="http://127.0.0.1:"+sys.argv[1]
+def call(m,p,tok=None,body=None):
+    r=urllib.request.Request(B+p,method=m,data=json.dumps(body).encode() if body is not None else None,headers={"Accept":"application/json",**({"Content-Type":"application/json"} if body is not None else {}),**({"Authorization":"Bearer "+tok} if tok else {})})
+    try:
+        with urllib.request.urlopen(r,timeout=60) as x: d=x.read(); return x.status,(json.loads(d) if d else None)
+    except urllib.error.HTTPError as e: return e.code,None
+E,P="upg@example.test","a-long-test-password-1"
+def login(pw=P): s,j=call("POST","/api/client/v1/session",body={"email":E,"password":pw}); return s,(j or {}).get("token")
+S=sys.argv[3]
+if sys.argv[2]=="old":
+    s,t=login(); print("old login",s)
+    rows=[{"booked_on":"2026-11-%02d"%(i+1),"description":"SYNTHETIC %d"%i,"amount":"-%d.25"%(10+i),"category":"Shopping"} for i in range(20)]
+    print("upload",call("POST","/api/client/v1/finance/statements",t,{"statement":{"sha256":hashlib.sha256(b"syn").hexdigest(),"currency":"USD","filename":"syn.csv","transactions":rows}}))
+    json.dump(t,open(S+"/oldtok","w"))
+elif sys.argv[2]=="check":
+    t=json.load(open(S+"/oldtok")); print("old token",call("GET","/api/client/v1/finance",t)[0])
+    s,n=login(); print("login",s,"finance",call("GET","/api/client/v1/finance",n)[0],"rows",len(json.dumps(call("GET","/api/client/v1/finance/transactions",n)[1]).split("SYNTHETIC"))-1)
+    print("logout",call("DELETE","/api/client/v1/session",n)[0],"then",call("GET","/api/client/v1/finance",n)[0])

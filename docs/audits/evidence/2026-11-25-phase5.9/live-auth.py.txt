@@ -1,0 +1,13 @@
+import json,sys,hashlib,time,subprocess
+sys.argv=[sys.argv[0],"33557","lib",sys.argv[1]]
+exec(open(sys.argv[3]+"/api.py").read().split('S=sys.argv[3]')[0])
+g=lambda t:call("GET","/api/client/v1/finance",t)[0]
+_,a=login();_,b=login();_,c=login()
+print("three devices",g(a),g(b),g(c))
+print("A logout",call("DELETE","/api/client/v1/session",a)[0],"A",g(a),"B",g(b),"C",g(c))
+print("offline digest for B",call("POST","/api/client/v1/session/revocations",body={"token_digest":hashlib.sha256(b.encode()).hexdigest()})[0],"B",g(b),"C",g(c))
+print("digest used as a token",g(hashlib.sha256(c.encode()).hexdigest()))
+_,d=login();_,e=login()
+print("sign out others from D",call("DELETE","/api/client/v1/sessions",d),"C",g(c),"E",g(e),"D",g(d))
+print("tampered",g(d[:-1]+("A" if d[-1]!="A" else "B")),"empty",g(None))
+json.dump({"d":d,"dead":[a,b,c,e]},open(sys.argv[3]+"/auth.json","w"))

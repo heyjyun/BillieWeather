@@ -1,0 +1,14 @@
+Test totals on f4902ba (isolated PostgreSQL for Rails and identity)
+  Universal 83 files, 1081 passed, 0 skipped (Chrome channel); TypeScript 0 errors
+  Rust 38 + 3 passed
+  Rails 849 tests, 31300 assertions, 0 failures, 0 errors, 2 skips
+  identity 128 passed, 1 skipped; with real Rails 129 passed
+  An earlier Rails run had 7 failures: BILLIE_MODULE_SYNC=1 was exported. 15 tests: flag 0 -> 0 failures, flag 1 -> 7. Fixed in the test (f4902ba).
+  An earlier identity run used the project's default local test database, not the isolated cluster.
+Reproducibility: f4902ba built twice, separate target folders, same checkout path and toolchain: executable SHA-256 identical (1c7109bb...).
+Live authentication, isolated Rails: three devices 200; A signs out 204 -> A 401, B 200, C 200; digest revocation of B 204 -> 401;
+  digest as a token 401; D signs out others {"revoked": 2}: C 401, E 401, D 200; tampered and missing token 401;
+  after restart D 200, revoked 401 x4; expired D 401; password change: session 401, old password 401, new 201; tokens in the log: 0
+Server upgrade: see the deployment plan. A first rehearsal had no financial rows (upload 422) and was discarded.
+Merge: 115 uncommitted or untracked files in the main checkout identical to d3061e4; fast-forward in a clone, trees equal, status clean.
+Native, 5.8 RC e905b3b: see the matrix in the report. While the QA window was on another Space it was neither rendered nor exposed to Accessibility.

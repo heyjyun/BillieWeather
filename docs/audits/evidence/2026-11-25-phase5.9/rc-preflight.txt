@@ -1,0 +1,36 @@
+{
+  "app": "BillieWeather QA.app",
+  "infoPlist": "com.billieweather.client.qa",
+  "signed": {
+    "valid": true,
+    "identifier": "com.billieweather.client.qa",
+    "authority": "adhoc"
+  },
+  "report": {
+    "bundleIdentifier": "com.billieweather.client.qa",
+    "cacheDir": "~/Library/Caches/com.billieweather.client.qa",
+    "connect": [
+      "'self'",
+      "ipc:",
+      "http://ipc.localhost",
+      "http://127.0.0.1:33557",
+      "http://127.0.0.1:38557"
+    ],
+    "dataDir": "~/Library/Application Support/com.billieweather.client.qa",
+    "debug": false,
+    "devUrl": null,
+    "identifier": "com.billieweather.client.qa",
+    "keychainService": "com.billieweather.client.qa",
+    "marker": "billie-launch-guard-version1",
+    "preferences": "~/Library/Preferences/com.billieweather.client.qa.plist",
+    "productName": "BillieWeather QA",
+    "refusal": null,
+    "sourceRevision": "f4902babe7a978bd40e616dee9023ee94516e6f7",
+    "sqlite": "3.54.1 2026-10-16 14:45:20 555e07ef33f69a0957d24d8e555b702464a131d6f1607f4c3c1e4551e8e6ca76",
+    "webkitDir": "~/Library/WebKit/com.billieweather.client.qa",
+    "windowTitles": [
+      "BillieWeather QA"
+    ]
+  }
+}
+PREFLIGHT PASSED
