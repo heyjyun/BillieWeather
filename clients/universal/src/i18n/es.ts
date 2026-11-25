@@ -55,7 +55,7 @@ export const es: Messages = {
   },
   import: {
     eyebrow: "AÑADE TUS CIFRAS", title: "Importar extractos",
-    intro: "Elige uno o más extractos CSV o PDF de tu banco. Los archivos se leen en este dispositivo y nunca se suben.",
+    intro: "Elige uno o más extractos de tu banco: CSV, TSV, Excel (XLSX), OFX/QFX o PDF, también escaneados. Los archivos se leen en este dispositivo y nunca se suben.",
     currency: "Moneda", currencyLocked: "Fijada por tu primera importación. Borra los datos locales en Ajustes para cambiarla.",
     choose: "Elegir archivos CSV o PDF", importing: "Importando…", requirements: "Necesita columnas de fecha, descripción e importe (o cargo/abono). Hasta 2 MB y 5.000 filas por archivo. PDF: con texto seleccionable y hasta 20 páginas; las filas dudosas se muestran para revisarlas antes.", reviewDiscarded: "{file}: revisión cancelada. No se importó nada.", reviewQueued: "Hay {count} PDF más esperando revisión.",
     success: "{file}: {count} movimientos importados.", successBalance: "{file}: {count} movimientos importados, saldo final {balance}.",

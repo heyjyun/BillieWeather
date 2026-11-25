@@ -55,7 +55,7 @@ export const zhTW: Messages = {
   },
   import: {
     eyebrow: "加入你的資料", title: "匯入帳單",
-    intro: "選擇一個或多個銀行的 CSV 或 PDF 帳單。檔案只在這台裝置上讀取，絕不會上傳。",
+    intro: "選擇一個或多個銀行帳單：CSV、TSV、Excel（XLSX）、OFX/QFX 或 PDF（包括掃描檔）。檔案只在這台裝置上讀取，絕不會上傳。",
     currency: "幣別", currencyLocked: "已由首次匯入決定。如需更換，請在設定中刪除本機資料。",
     choose: "選擇 CSV 或 PDF 檔案", importing: "正在匯入…", requirements: "需要日期、描述和金額（或借方/貸方）欄位。每個檔案最大 2 MB、最多 5,000 列。PDF 須為可選取文字的檔案，最多 20 頁；不清楚的列會先交給你複核。", reviewDiscarded: "{file}：已取消複核，未匯入任何內容。", reviewQueued: "還有 {count} 個 PDF 等待複核。",
     success: "{file}：已匯入 {count} 筆交易。", successBalance: "{file}：已匯入 {count} 筆交易，期末餘額 {balance}。",

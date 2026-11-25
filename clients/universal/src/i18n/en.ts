@@ -56,7 +56,7 @@ export const en = {
   },
   import: {
     eyebrow: "ADD YOUR NUMBERS", title: "Import statements",
-    intro: "Choose one or more CSV or PDF statements from your bank. Files are read on this device and are never uploaded.",
+    intro: "Choose one or more statements from your bank: CSV, TSV, Excel (XLSX), OFX/QFX or PDF, including scanned PDFs. Files are read on this device and are never uploaded.",
     currency: "Currency", currencyLocked: "Fixed by your first import. Delete local data in Settings to switch.",
     choose: "Choose CSV or PDF files", importing: "Importing…", requirements: "Needs date, description, and amount (or debit/credit) columns. Up to 2 MB and 5,000 rows each. PDFs: text-based, up to 20 pages; unclear rows are shown for review first.", reviewDiscarded: "{file}: review cancelled. Nothing was imported.", reviewQueued: "{count} more PDFs are waiting for review.",
     success: "{file}: {count} transactions imported.", successBalance: "{file}: {count} transactions imported, closing balance {balance}.",

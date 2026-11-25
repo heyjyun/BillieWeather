@@ -10,3 +10,5 @@
 2026-11-25 02:25:11 CST removed two Cargo cache folders of old isolated runs (about 8 GB); they contained eight old QA app bundles (phases 1b-5.1), seen only in the same command
 2026-11-25 02:27:00 CST c3 (suffix night, same source) built and launched; macOS prompt keeps the front, QA window stays off screen; app stopped; GUI BLOCKED until the prompt is answered
 2026-11-25 02:37:09 CST final report written; GUI still blocked by the prompt; schedules stay armed
+2026-11-25 03:01:05 CST scheduled 03:00 continuation fired in the session (not after a usage limit)
+2026-11-25 03:01:19 CST waiter stopped (no limit occurred; it would have started a duplicate run); 08:01 in-session check stays

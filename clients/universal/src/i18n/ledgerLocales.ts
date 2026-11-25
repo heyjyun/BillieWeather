@@ -442,7 +442,7 @@ export const ledgerEs: LedgerMessages = {
     select: "Seleccionar {description}", selectAll: "Seleccionar todo lo mostrado", selected: "{count} seleccionados", batchCategory: "Asignar categoría…", batchMerchant: "Asignar comercio", batchProject: "Asignar proyecto", batchTag: "Añadir etiqueta", batchApply: "Aplicar", batchDelete: "Mover a la papelera", batchDone: "{count} movimientos actualizados.",
     trash: "Papelera", trashTitle: "Papelera", trashIntro: "Los movimientos eliminados se quedan aquí hasta que los elimines definitivamente. Restaurar una transferencia restaura ambos lados.", restore: "Restaurar", purge: "Eliminar definitivamente", emptyTrash: "Vaciar papelera", trashEmpty: "La papelera está vacía.",
     emptyConfirm: "¿Eliminar para siempre las {count} entradas de la papelera? No se puede deshacer.", purgeConfirm: "¿Eliminar «{description}» para siempre? No se puede deshacer.",
-    backToList: "Volver a las transacciones", restored: "Restaurado.", purged: "{count} movimientos eliminados definitivamente.",
+    backToList: "Volver a las transacciones", restored: "Restaurado.", purged: "Movimientos eliminados definitivamente: {count}.",
     review: "Revisar", reviewTitle: "Entradas de dinero que quizá no sean ingresos", reviewIntro: "Estas filas cuentan como ingresos, pero parecen reembolsos o pagos de tarjeta. Los reembolsos reducen el gasto; los pagos de tarjeta son transferencias.", markAs: "Marcar como {kind}", keepIncome: "Es un ingreso",
   },
   categoriesTree: {

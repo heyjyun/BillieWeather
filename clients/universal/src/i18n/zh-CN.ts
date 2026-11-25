@@ -55,7 +55,7 @@ export const zhCN: Messages = {
   },
   import: {
     eyebrow: "添加你的数据", title: "导入账单",
-    intro: "选择一个或多个银行的 CSV 或 PDF 账单。文件只在这台设备上读取，绝不会上传。",
+    intro: "选择一个或多个银行账单：CSV、TSV、Excel（XLSX）、OFX/QFX 或 PDF（包括扫描版）。文件只在这台设备上读取，绝不会上传。",
     currency: "币种", currencyLocked: "已由首次导入确定。如需更换，请在设置中删除本地数据。",
     choose: "选择 CSV 或 PDF 文件", importing: "正在导入…", requirements: "需要日期、描述和金额（或借方/贷方）列。每个文件最大 2 MB、最多 5,000 行。PDF 须为可选中文字的文件，最多 20 页；不清楚的行会先交给你复核。", reviewDiscarded: "{file}：已取消复核，未导入任何内容。", reviewQueued: "还有 {count} 个 PDF 等待复核。",
     success: "{file}：已导入 {count} 笔交易。", successBalance: "{file}：已导入 {count} 笔交易，期末余额 {balance}。",
