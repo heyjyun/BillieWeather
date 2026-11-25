@@ -21,3 +21,7 @@ Steps, after approval and only while nothing uses the `billieweather` checkout (
 6. Pushing needs its own approval. Merging `main` does not deploy: automatic deploys are to be verified off in Render first.
 
 Undo before pushing: `git switch main && git reset --keep e4380af`; the branch and the backup stay.
+
+## Rechecked 2026-11-25 (overnight)
+
+All 115 dirty files in `billieweather` are still byte-identical to `d3061e4` (hash comparison, read-only). `main` = `e4380af`, 0 commits of its own. Fast-forward rehearsed in a clone: the merged tree equals the branch tree. `rollback/session-safe` is a new local branch on top of `e4380af`; it is not part of the merge.
