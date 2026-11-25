@@ -1,0 +1,5 @@
+# Reviewed exceptions for ops/git-sync.sh (extended regular expressions, one per line).
+# Paths: generated design tokens are source-controlled on purpose.
+^packages/design-tokens/dist/
+# Content: placeholder connection strings in redaction tests (user:p@ss, user:***).
+postgres(ql)?://user:(p@ss|\*\*\*)@host
