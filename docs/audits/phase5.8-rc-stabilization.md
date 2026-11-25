@@ -12,11 +12,11 @@
 
 - The P0 security defect is fixed and verified. It was wider than Phase 5.7 reported: website cookies had it too.
 - **Native GUI acceptance is BLOCKED.** The desktop was in use, then locked, for the whole phase. No GUI flow was run in this RC.
-- The database audit found crash-unsafe writes in 21 of 33 operations tested. All are fixed.
+- The database audit found crash-unsafe writes in 25 of 33 operations tested. All are fixed.
 
 ## 2. Baseline and candidate
 
-The Phase 5.7 RC was `929c23a`; the branch head was `11e3187` (documents only). Rails 824 tests reproduced before any change. The main checkout's uncommitted work was not touched.
+The Phase 5.7 RC was `929c23a`; the branch head was `11e3187` (documents only). Rails 824 tests reproduced before any change. The main checkout's uncommitted work was not touched. One deviation: I listed the installed app's data folder once (file names, sizes and times, shortened to a few lines); no file in it was opened or changed, and the app was not started.
 
 | Item | Value |
 | --- | --- |
@@ -94,7 +94,7 @@ Package without GUI, identity `…client.qa.p58`: clean install, protection copy
 | QA isolation and preflight | PASS |
 | Rails 849 tests, 31,300 assertions (2 existing skips) | PASS |
 | Universal 1071/1071, 0 skipped, with Chromium and real engines; TypeScript | PASS |
-| Rust 39/39 | PASS |
+| Rust 39/39 (one entry is the helper process that gets killed) | PASS |
 | Identity 128 + 1 skip; 129/129 with real Rails | PASS |
 | Native GUI, 13 workflows | BLOCKED |
 | Upgrade through the GUI, OCR cold start in the RC | NOT TESTED |
