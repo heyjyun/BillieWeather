@@ -6,6 +6,7 @@ import { CURRENCIES } from "@billie/shared-types";
 import { accountKey, accountTypeFromLegacy, isAccountType, kindForCategorized, legacyKind, isTransactionKind, type AccountKind, type AccountRef, type AccountType } from "@billie/finance-core";
 import { aiGroups, Categorizer, categoryNameProblem, CUSTOM_CATEGORY_MAX, isBuiltInCategory, merchantKey, normalizeCategoryName, normalizeRegion, normalizeRegionSource, parseDetection, recategorizeUncategorized, serializeDetection, type RegionDetection, type RegionSource, ruleFor, titleizeMerchant, transactionsMatchingRule, type AiGroup, type CategoryNameProblem, type ExistingTransaction, type ImportReport, type ImportTemplate, type PlannedRow, type PlannedStatement } from "@billie/finance-core";
 import { randomId } from "./ids";
+import { CLEAR_HISTORY, History, recordingDriver, type HistoryAction } from "./history/history";
 import { LedgerStore, MANUAL_CONTAINER_SHA } from "./ledger";
 
 export interface SqlStatement {
@@ -185,8 +186,22 @@ export class FinanceStore {
   /** Manual bookkeeping on the same database (accounts, entries, links, budgets, …). */
   readonly ledger: LedgerStore;
 
-  constructor(private db: SqlDriver) {
+  /** Undo and Redo of the edits made through `record` (the interface's store records every edit, history/recorded.ts). */
+  readonly history: History;
+
+  constructor(private db: SqlDriver, private recording = false) {
     this.ledger = new LedgerStore(db);
+    this.history = new History(db, (action, entry) => this.ledger.auditStatement({ action, subjectType: "history", subjectId: entry.id, summary: entry.description }));
+  }
+
+  /** Runs `edit` on a store whose writes all belong to one history entry; they are undone and redone together. */
+  async record<T>(action: HistoryAction, edit: (store: FinanceStore) => Promise<T>): Promise<T> {
+    if (this.recording) return edit(this);
+    try {
+      return await edit(new FinanceStore(recordingDriver(this.db, action), true));
+    } finally {
+      this.history.changed();
+    }
   }
 
   /** The database connection (for backups and "Organize with AI"; still this device only). */
@@ -845,6 +860,7 @@ export class FinanceStore {
     await this.db.transaction([
       // The operation log is append-only (migration 0007) except while this flag is set.
       { sql: "INSERT INTO settings (key, value) VALUES ('audit_purge', '1') ON CONFLICT (key) DO UPDATE SET value = '1'" },
+      ...CLEAR_HISTORY,
       ...["transaction_tags", "transaction_links", "transactions", "statements", "merchant_rules", "custom_categories", "import_staging_rows", "import_templates",
         "category_meta", "budgets", "recurring_rules", "merchants", "projects", "tags", "accounts", "organize_runs", "audit_events"].map((table) => ({ sql: `DELETE FROM ${table}` })),
       // The owner stays: an emptied database still belongs to the same account.

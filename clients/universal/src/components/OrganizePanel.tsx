@@ -91,7 +91,7 @@ export function OrganizePanel({ onClose }: { onClose: () => void }) {
             <div className="bw-actions">
               <button type="button" className="bw-button bw-button-dark" disabled={chosen.size === 0} onClick={async () => {
                 const approved = state.proposals.filter((p) => chosen.has(p.id));
-                const result = await applyProposals(store, store.sql, state.runId, approved, { rememberCategories: remember });
+                const result = await store.record("organize", (scoped) => applyProposals(scoped, scoped.sql, state.runId, approved, { rememberCategories: remember }));
                 await refresh();
                 setState({ step: "applied", ...result });
               }}>{t("ledger.organize.apply", { count: chosen.size })}</button>
@@ -104,7 +104,7 @@ export function OrganizePanel({ onClose }: { onClose: () => void }) {
         <>
           <p className="bw-message bw-message-ok" role="status">{t("ledger.organize.applied", { count: state.applied })}</p>
           <div className="bw-actions">
-            <button type="button" className="bw-button bw-button-outline" onClick={async () => { await undoRun(store, store.sql, state.batchId); await refresh(); setState({ step: "undone" }); }}>{x.undo}</button>
+            <button type="button" className="bw-button bw-button-outline" onClick={async () => { await store.record("organize_undo", (scoped) => undoRun(scoped, scoped.sql, state.batchId)); await refresh(); setState({ step: "undone" }); }}>{x.undo}</button>
             <button type="button" className="bw-link-button" onClick={onClose}>{m.ledger.common.close}</button>
           </div>
         </>

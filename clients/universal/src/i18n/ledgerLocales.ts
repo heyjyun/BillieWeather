@@ -81,8 +81,8 @@ export const ledgerZhCN: LedgerMessages = {
   activity: {
     title: "操作日志", intro: "这个账本的每一次变更：由谁或什么操作的（你、导入、规则、AI、周期记账）以及发生时间。仅保存在这台设备上。", empty: "暂无记录。",
     actors: { user: "你", import: "导入", rule: "规则", ai: "AI", system: "系统", sync: "网页版副本", recurring: "周期记账" },
-    actions: { create: "已创建", update: "已修改", delete: "已删除", restore: "已恢复", purge: "已彻底删除", link: "已关联", unlink: "已取消关联", import: "已导入", reverse_import: "已撤销导入", ai_apply: "AI 修改", ai_undo: "已撤销 AI 修改", batch_update: "批量编辑", batch_delete: "批量删除", merge: "已合并", archive: "已归档", unarchive: "已恢复", backup: "已备份", restore_backup: "已从备份恢复" },
-    subjects: { transaction: "流水", account: "账户", category: "分类", merchant: "商家", project: "项目", tag: "标签", budget: "预算", recurring_rule: "周期记账", statement: "账单", batch: "AI 批次", book: "账本" },
+    actions: { undo: "已撤销", redo: "已重做", create: "已创建", update: "已修改", delete: "已删除", restore: "已恢复", purge: "已彻底删除", link: "已关联", unlink: "已取消关联", import: "已导入", reverse_import: "已撤销导入", ai_apply: "AI 修改", ai_undo: "已撤销 AI 修改", batch_update: "批量编辑", batch_delete: "批量删除", merge: "已合并", archive: "已归档", unarchive: "已恢复", backup: "已备份", restore_backup: "已从备份恢复" },
+    subjects: { history: "修改", transaction: "流水", account: "账户", category: "分类", merchant: "商家", project: "项目", tag: "标签", budget: "预算", recurring_rule: "周期记账", statement: "账单", batch: "AI 批次", book: "账本" },
     undo: "撤销这批 AI 修改", undone: "已撤销（{count} 项修改）。",
   },
   organize: {
@@ -180,8 +180,8 @@ export const ledgerZhTW: LedgerMessages = {
   activity: {
     title: "操作紀錄", intro: "這個帳本的每一次變更：由誰或什麼執行（你、匯入、規則、AI、週期記帳）以及發生時間。僅儲存在這台裝置上。", empty: "目前沒有紀錄。",
     actors: { user: "你", import: "匯入", rule: "規則", ai: "AI", system: "系統", sync: "網頁版副本", recurring: "週期記帳" },
-    actions: { create: "已建立", update: "已修改", delete: "已刪除", restore: "已還原", purge: "已永久刪除", link: "已連結", unlink: "已取消連結", import: "已匯入", reverse_import: "已撤銷匯入", ai_apply: "AI 修改", ai_undo: "已復原 AI 修改", batch_update: "批次編輯", batch_delete: "批次刪除", merge: "已合併", archive: "已封存", unarchive: "已還原", backup: "已備份", restore_backup: "已從備份還原" },
-    subjects: { transaction: "紀錄", account: "帳戶", category: "分類", merchant: "商家", project: "專案", tag: "標籤", budget: "預算", recurring_rule: "週期記帳", statement: "帳單", batch: "AI 批次", book: "帳本" },
+    actions: { undo: "已復原", redo: "已重做", create: "已建立", update: "已修改", delete: "已刪除", restore: "已還原", purge: "已永久刪除", link: "已連結", unlink: "已取消連結", import: "已匯入", reverse_import: "已撤銷匯入", ai_apply: "AI 修改", ai_undo: "已復原 AI 修改", batch_update: "批次編輯", batch_delete: "批次刪除", merge: "已合併", archive: "已封存", unarchive: "已還原", backup: "已備份", restore_backup: "已從備份還原" },
+    subjects: { history: "變更", transaction: "紀錄", account: "帳戶", category: "分類", merchant: "商家", project: "專案", tag: "標籤", budget: "預算", recurring_rule: "週期記帳", statement: "帳單", batch: "AI 批次", book: "帳本" },
     undo: "復原這批 AI 修改", undone: "已復原（{count} 項修改）。",
   },
   organize: {
@@ -279,8 +279,8 @@ export const ledgerJa: LedgerMessages = {
   activity: {
     title: "操作ログ", intro: "この帳簿へのすべての変更です。誰が、または何が行ったか（あなた、インポート、ルール、AI、定期記帳）と、その日時を記録します。この端末にのみ保存されます。", empty: "まだありません。",
     actors: { user: "あなた", import: "インポート", rule: "ルール", ai: "AI", system: "システム", sync: "Web 版のコピー", recurring: "定期記帳" },
-    actions: { create: "作成", update: "変更", delete: "削除", restore: "元に戻した", purge: "完全に削除", link: "リンク", unlink: "リンク解除", import: "インポート", reverse_import: "インポートを取り消し", ai_apply: "AI による変更", ai_undo: "AI の変更を取り消し", batch_update: "一括編集", batch_delete: "一括削除", merge: "統合", archive: "アーカイブ", unarchive: "元に戻した", backup: "バックアップ", restore_backup: "バックアップから復元" },
-    subjects: { transaction: "記録", account: "口座", category: "カテゴリ", merchant: "店舗", project: "プロジェクト", tag: "タグ", budget: "予算", recurring_rule: "定期記帳", statement: "明細", batch: "AI の一括処理", book: "帳簿" },
+    actions: { undo: "取り消し", redo: "やり直し", create: "作成", update: "変更", delete: "削除", restore: "元に戻した", purge: "完全に削除", link: "リンク", unlink: "リンク解除", import: "インポート", reverse_import: "インポートを取り消し", ai_apply: "AI による変更", ai_undo: "AI の変更を取り消し", batch_update: "一括編集", batch_delete: "一括削除", merge: "統合", archive: "アーカイブ", unarchive: "元に戻した", backup: "バックアップ", restore_backup: "バックアップから復元" },
+    subjects: { history: "変更", transaction: "記録", account: "口座", category: "カテゴリ", merchant: "店舗", project: "プロジェクト", tag: "タグ", budget: "予算", recurring_rule: "定期記帳", statement: "明細", batch: "AI の一括処理", book: "帳簿" },
     undo: "この AI の一括処理を取り消す", undone: "取り消しました（{count} 件の変更）。",
   },
   organize: {
@@ -378,8 +378,8 @@ export const ledgerKo: LedgerMessages = {
   activity: {
     title: "활동 기록", intro: "이 장부의 모든 변경 사항입니다. 누가 또는 무엇이 했는지(본인, 가져오기, 규칙, AI, 반복 거래)와 시각을 보여 줍니다. 이 기기에만 저장됩니다.", empty: "아직 없습니다.",
     actors: { user: "본인", import: "가져오기", rule: "규칙", ai: "AI", system: "시스템", sync: "웹사이트 사본", recurring: "반복 거래" },
-    actions: { create: "생성함", update: "변경함", delete: "삭제함", restore: "복원함", purge: "완전 삭제함", link: "연결함", unlink: "연결 해제함", import: "가져옴", reverse_import: "가져오기 취소됨", ai_apply: "AI 변경", ai_undo: "AI 변경 취소됨", batch_update: "일괄 수정", batch_delete: "일괄 삭제", merge: "병합함", archive: "보관함", unarchive: "복원함", backup: "백업함", restore_backup: "백업에서 복원함" },
-    subjects: { transaction: "내역", account: "계좌", category: "카테고리", merchant: "거래처", project: "프로젝트", tag: "태그", budget: "예산", recurring_rule: "반복 거래", statement: "명세서", batch: "AI 일괄 작업", book: "장부" },
+    actions: { undo: "실행 취소함", redo: "다시 실행함", create: "생성함", update: "변경함", delete: "삭제함", restore: "복원함", purge: "완전 삭제함", link: "연결함", unlink: "연결 해제함", import: "가져옴", reverse_import: "가져오기 취소됨", ai_apply: "AI 변경", ai_undo: "AI 변경 취소됨", batch_update: "일괄 수정", batch_delete: "일괄 삭제", merge: "병합함", archive: "보관함", unarchive: "복원함", backup: "백업함", restore_backup: "백업에서 복원함" },
+    subjects: { history: "변경", transaction: "내역", account: "계좌", category: "카테고리", merchant: "거래처", project: "프로젝트", tag: "태그", budget: "예산", recurring_rule: "반복 거래", statement: "명세서", batch: "AI 일괄 작업", book: "장부" },
     undo: "이 AI 일괄 작업 되돌리기", undone: "되돌렸습니다 (변경 {count}건).",
   },
   organize: {
@@ -477,8 +477,8 @@ export const ledgerEs: LedgerMessages = {
   activity: {
     title: "Registro de actividad", intro: "Cada cambio en este libro: quién o qué lo hizo (tú, una importación, una regla, la IA, una programación) y cuándo. Se guarda solo en este dispositivo.", empty: "Aún no hay nada.",
     actors: { user: "Tú", import: "Importación", rule: "Regla", ai: "AI", system: "Sistema", sync: "Copia web", recurring: "Recurrente" },
-    actions: { create: "Creado", update: "Modificado", delete: "Eliminado", restore: "Restaurado", purge: "Eliminado definitivamente", link: "Vinculado", unlink: "Desvinculado", import: "Importado", reverse_import: "Importación deshecha", ai_apply: "Cambio de AI", ai_undo: "Cambio de AI deshecho", batch_update: "Edición por lotes", batch_delete: "Eliminación por lotes", merge: "Combinado", archive: "Archivado", unarchive: "Restaurado", backup: "Copia hecha", restore_backup: "Restaurado desde copia" },
-    subjects: { transaction: "movimiento", account: "cuenta", category: "categoría", merchant: "comercio", project: "proyecto", tag: "etiqueta", budget: "presupuesto", recurring_rule: "recurrente", statement: "extracto", batch: "lote de AI", book: "libro" },
+    actions: { undo: "Deshecho", redo: "Rehecho", create: "Creado", update: "Modificado", delete: "Eliminado", restore: "Restaurado", purge: "Eliminado definitivamente", link: "Vinculado", unlink: "Desvinculado", import: "Importado", reverse_import: "Importación deshecha", ai_apply: "Cambio de AI", ai_undo: "Cambio de AI deshecho", batch_update: "Edición por lotes", batch_delete: "Eliminación por lotes", merge: "Combinado", archive: "Archivado", unarchive: "Restaurado", backup: "Copia hecha", restore_backup: "Restaurado desde copia" },
+    subjects: { history: "cambio", transaction: "movimiento", account: "cuenta", category: "categoría", merchant: "comercio", project: "proyecto", tag: "etiqueta", budget: "presupuesto", recurring_rule: "recurrente", statement: "extracto", batch: "lote de AI", book: "libro" },
     undo: "Deshacer este lote de AI", undone: "Deshecho ({count} cambios).",
   },
   organize: {

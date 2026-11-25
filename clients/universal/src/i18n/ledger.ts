@@ -84,8 +84,8 @@ export const ledgerEn = {
   activity: {
     title: "Activity log", intro: "Every change to this book: who or what made it (you, an import, a rule, AI, a schedule) and when. Stored only on this device.", empty: "Nothing yet.",
     actors: { user: "You", import: "Import", rule: "Rule", ai: "AI", system: "System", sync: "Website copy", recurring: "Schedule" },
-    actions: { create: "Created", update: "Changed", delete: "Deleted", restore: "Restored", purge: "Deleted for good", link: "Linked", unlink: "Unlinked", import: "Imported", reverse_import: "Import removed", ai_apply: "AI change", ai_undo: "AI change undone", batch_update: "Batch edit", batch_delete: "Batch delete", merge: "Merged", archive: "Archived", unarchive: "Restored", backup: "Backed up", restore_backup: "Restored from backup" },
-    subjects: { transaction: "entry", account: "account", category: "category", merchant: "merchant", project: "project", tag: "tag", budget: "budget", recurring_rule: "schedule", statement: "statement", batch: "AI batch", book: "book" },
+    actions: { undo: "Undone", redo: "Redone", create: "Created", update: "Changed", delete: "Deleted", restore: "Restored", purge: "Deleted for good", link: "Linked", unlink: "Unlinked", import: "Imported", reverse_import: "Import removed", ai_apply: "AI change", ai_undo: "AI change undone", batch_update: "Batch edit", batch_delete: "Batch delete", merge: "Merged", archive: "Archived", unarchive: "Restored", backup: "Backed up", restore_backup: "Restored from backup" },
+    subjects: { history: "change", transaction: "entry", account: "account", category: "category", merchant: "merchant", project: "project", tag: "tag", budget: "budget", recurring_rule: "schedule", statement: "statement", batch: "AI batch", book: "book" },
     undo: "Undo this AI batch", undone: "Undone ({count} changes).",
   },
   organize: {

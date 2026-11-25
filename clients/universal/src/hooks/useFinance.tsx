@@ -6,6 +6,7 @@ import { declinedSlots, declineSlot, fileForSlot, freeSlot, freeSlots, loadRegis
 import { focusIsLost } from "./useFocus";
 import { deviceName, openDatabase, restoreSnapshot as restoreSnapshotFile } from "../services/platform";
 import { queueDelete, reportAll, reportingIdentity, reportingStatus, type ReportingStatus } from "../services/reporting";
+import { recordedStore } from "../services/history/recorded";
 import { FinanceStore, StoreError, type WebSyncResult } from "../services/store";
 import type { Account } from "../services/ledger";
 import { syncFromWeb } from "../services/webSync";
@@ -111,7 +112,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     if (!opened) {
       const entry = registryRef.current.entries.find((e) => e.id === id);
       if (!entry) return Promise.reject(new Error("unknown database"));
-      opened = openDatabase(entry.file).then(({ driver, persistent }) => ({ store: new FinanceStore(driver), persistent }));
+      opened = openDatabase(entry.file).then(({ driver, persistent }) => ({ store: recordedStore(new FinanceStore(driver)), persistent }));
       handles.current.set(id, opened);
       opened.catch(() => handles.current.delete(id));
     }
@@ -416,7 +417,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
         const exclude = new Set([...slotsOfOthers(ownerKey, aliases), ...(ownerKey ? declinedSlots(ownerKey) : [])]);
         for (const slot of freeSlots(registryRef.current, exclude)) {
           // Opened outside the list first; it joins the list only once the restore is verified.
-          const opened = await openDatabase(slot.file).then(({ driver }) => new FinanceStore(driver));
+          const opened = await openDatabase(slot.file).then(({ driver }) => recordedStore(new FinanceStore(driver)));
           if (await opened.hasContent()) continue;
           handles.current.set(slot.id, Promise.resolve({ store: opened, persistent: true }));
           return { id: slot.id, store: opened };
@@ -439,7 +440,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
           // Snapshot names identify slots, not owners. A slot may have been reused by another
           // account since the copy was made: check the copied file before listing or reporting it.
           const opened = await openDatabase(slot.file);
-          const store = new FinanceStore(opened.driver);
+          const store = recordedStore(new FinanceStore(opened.driver));
           const recorded = await store.owner();
           if (ownerKey && recorded && recorded !== ownerKey && recorded !== emailKey) {
             // Only this just-created disposable copy is cleared; its source snapshot is untouched.

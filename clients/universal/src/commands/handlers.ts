@@ -120,7 +120,7 @@ export function createHandlers(deps: HostDeps): Record<string, ActionHandler> {
     },
     async execute(prepared) {
       const ids = prepared.payload!;
-      const { before } = await withCompensation(deps.store, ids, async () => { for (const id of ids) await deps.store.setExcluded(id, excluded); });
+      const { before } = await withCompensation(deps.store, ids, async () => deps.store.record("exclude", async (book) => { for (const id of ids) await book.setExcluded(id, excluded); }));
       await deps.refresh();
       return { summary: msg(excluded ? "excluded" : "included", excluded ? "{count} transaction(s) excluded from totals." : "{count} transaction(s) counted again.", { count: ids.length }), undo: { flags: before, written: await deps.store.transactionFlags(ids) } satisfies FlagsPayload };
     },

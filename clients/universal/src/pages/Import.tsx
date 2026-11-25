@@ -173,8 +173,10 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
   async function acceptHistoryRegion(item: History[number], code: string) {
     setBusy(true);
     try {
-      await store.setStatementRegion(item.statementIds, code, "suggestion");
-      const count = await store.reclassifyStatements(item.statementIds);
+      const count = await store.record("region", async (book) => {
+        await book.setStatementRegion(item.statementIds, code, "suggestion");
+        return book.reclassifyStatements(item.statementIds);
+      });
       await refresh();
       setHistory(await store.importHistory());
       setMessage({ tone: "ok", text: interpolate(u.region.accepted, { file: item.filename, region: regionName(code), count }) });

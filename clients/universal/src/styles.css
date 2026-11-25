@@ -528,7 +528,15 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-claim { max-width: 34rem; margin: 10vh auto; display: grid; gap: 1rem; text-align: start; }
 
 /* Default Mode / Manual Mode (progressive disclosure). */
-.bw-topline { display: flex; justify-content: flex-end; }
+.bw-topline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.bw-history { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+.bw-history-buttons { display: inline-flex; gap: 2px; }
+.bw-history-button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border: 0; border-radius: var(--bw-radius-sm); background: none; color: var(--ink); cursor: pointer; font: inherit; font-size: var(--bw-font-size-sm); white-space: nowrap; }
+.bw-history-button:hover { background: var(--soft); }
+.bw-history-button[aria-disabled="true"] { color: var(--muted); opacity: .6; cursor: default; background: none; }
+.bw-history-button:focus-visible { outline: 2px solid var(--bw-color-focus-ring); outline-offset: 1px; }
+.bw-history-status { flex: 1 1 160px; min-width: 0; margin: 0; color: var(--muted); font-size: var(--bw-font-size-sm); overflow-wrap: anywhere; }
+.bw-history > .bw-confirm { flex: 1 1 100%; }
 .bw-mode-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--bw-radius-md); background: var(--soft); border: 1px solid var(--line); }
 .bw-mode-option { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 0; border-radius: var(--bw-radius-sm); background: none; color: var(--muted); cursor: pointer; font: inherit; font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-medium); white-space: nowrap; }
 .bw-mode-option svg { width: 16px; height: 16px; }
@@ -553,7 +561,7 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
   .bw-app.is-collapsed .bw-mode-badge { justify-content: center; padding: 8px 0; }
 }
 @media (max-width: 760px) {
-  .bw-topline { justify-content: stretch; } .bw-mode-switch { width: 100%; } .bw-mode-option { flex: 1 1 0; justify-content: center; min-height: 44px; }
+  .bw-topline { justify-content: stretch; } .bw-history { flex-basis: 100%; } .bw-history-button { min-height: 44px; } .bw-mode-switch { width: 100%; } .bw-mode-option { flex: 1 1 0; justify-content: center; min-height: 44px; }
   .bw-app.is-manual-mode .bw-nav { overflow-x: auto; scrollbar-width: none; }
   .bw-app.is-manual-mode .bw-nav::-webkit-scrollbar { display: none; }
   .bw-app.is-manual-mode .bw-nav-group { display: contents; }

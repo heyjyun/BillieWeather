@@ -17,7 +17,7 @@ import { randomId } from "./ids";
 export const BACKUP_FORMAT = "billieweather-backup";
 export const BACKUP_VERSION = 1;
 /** The local schema version these backups describe (the highest migration number). */
-export const LOCAL_SCHEMA_VERSION = 9;
+export const LOCAL_SCHEMA_VERSION = 10;
 
 type Row = Record<string, unknown>;
 type Cell = string | number | null;

@@ -1,3 +1,4 @@
+import { historyCopy } from "./history";
 import personal from "./personal.json";
 import { ledgerJa } from "./ledgerLocales";
 import type { Messages } from "./en";
@@ -10,6 +11,7 @@ import { registerJa } from "./register";
 
 export const ja: Messages = {
   languageName: "日本語",
+  history: historyCopy.ja,
   boot: { opening: "ローカルデータを開いています…", dbError: "ローカルデータベースを開けませんでした。", failure: { locked: "ほかのプログラム、または BillieWeather の別のウィンドウが使用中です。終了してから、もう一度お試しください。データは変更されていません。", damaged: "ファイルが破損しています。BillieWeather は変更していません。ファイルを残したまま、別のデータベースの「データ」ページからバックアップまたは自動コピーを復元してください。", newer: "新しいバージョンの BillieWeather で開かれています。最新バージョンをインストールすると開けます。データは変更されていません。", full: "デバイスの空き容量が足りません。空き容量を増やして、もう一度お試しください。データは変更されていません。", permission: "BillieWeather にファイルを開く権限がありません。データフォルダの権限と空き容量を確認して、もう一度お試しください。データは変更されていません。", other: "データは変更されていません。もう一度試すか、アプリを再起動してください。" }, openAnother: "別のデータベースを開く" },
   connection: { offline: "オフラインです。この端末に保存したデータはすべて表示・編集できます。アカウント情報とクラウド同期はオンラインに戻ると再開します。", unreachable: "BillieWeather のサーバーが現在応答していません。この端末に保存したデータはすべて表示・編集できます。アカウント情報とクラウド同期はサーバーが戻ると再開します。", retry: "再試行", checking: "確認中…" },
   dbName: { eyebrow: "このデバイスで初めて", heading: "このデバイスのデータベースに名前を付ける", intro: "家計データはこのデバイス上のデータベースに保存されます。デバイスを見分けられるよう名前を付けてください。あとで「データ」ページから変更できます。", label: "データベース名", help: "このデバイスの名前を入れてあります。好きな名前に変えられます。", fallback: "マイデバイス", create: "データベースを作成", creating: "作成しています…", failed: "名前を保存できませんでした。もう一度お試しください。" },

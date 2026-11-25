@@ -86,6 +86,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0009_refund_guard_and_link_hygiene.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 10,
+            description: "editing history for undo and redo",
+            sql: include_str!("../migrations/0010_editing_history.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -221,13 +227,16 @@ async fn db_snapshot(instances: tauri::State<'_, tauri_plugin_sql::DbInstances>,
 }
 
 #[cfg(test)]
+mod history_tests;
+
+#[cfg(test)]
 mod tests {
     use super::slot_file;
     use sqlx::migrate::{Migration as SqlxMigration, MigrationType, Migrator};
     use sqlx::sqlite::SqliteConnectOptions;
     use sqlx::SqlSafeStr;
 
-    fn migrator() -> Migrator {
+    pub(crate) fn migrator() -> Migrator {
         let list: Vec<SqlxMigration> = super::migrations()
             .into_iter()
             .map(|migration| SqlxMigration::new(
@@ -351,7 +360,7 @@ mod tests {
             let before = schema(&pool).await;
             let with = |sql: &'static str| {
                 let mut list = migrator().migrations.to_vec();
-                list.push(SqlxMigration::new(10, "next".into(), MigrationType::ReversibleUp, sql.into_sql_str(), false));
+                list.push(SqlxMigration::new(super::migrations().len() as i64 + 1, "next".into(), MigrationType::ReversibleUp, sql.into_sql_str(), false));
                 Migrator { migrations: list.into(), ..Migrator::DEFAULT }
             };
             let broken = with("ALTER TABLE transactions ADD COLUMN half TEXT; UPDATE transactions SET description = 'damaged'; INSERT INTO no_such_table VALUES (1);");
@@ -369,6 +378,33 @@ mod tests {
             assert!(refused.contains("previously applied but is missing"), "{refused}");
             let rows: (i64,) = sqlx::query_as("SELECT count(*) FROM transactions WHERE amount_cents = -1025").fetch_one(&pool).await.unwrap();
             assert_eq!(rows.0, 1);
+            pool.close().await;
+        });
+        let _ = std::fs::remove_file(path);
+    }
+
+    /// Version 10 itself: stopped in the middle it leaves the version 9 book exactly as it was, and succeeds later.
+    #[test]
+    fn the_history_migration_applies_whole_or_not_at_all() {
+        let path = book("history-migration");
+        tauri::async_runtime::block_on(async {
+            let nine = Migrator { migrations: migrator().migrations.iter().filter(|migration| migration.version <= 9).cloned().collect::<Vec<_>>().into(), ..Migrator::DEFAULT };
+            let pool = sqlx::SqlitePool::connect_with(SqliteConnectOptions::new().filename(&path).create_if_missing(true)).await.unwrap();
+            nine.run(&pool).await.unwrap();
+            sqlx::raw_sql("INSERT INTO statements (id, filename, currency, sha256, transaction_count, imported_at) VALUES (1, 's.csv', 'USD', 's', 1, '2026-11-20');
+                INSERT INTO transactions (id, statement_id, booked_on, description, amount_cents, category, updated_at) VALUES (1, 1, '2026-11-20', 'Synthetic', -1025, 'Shopping', '2026-11-20');
+                CREATE TRIGGER history_budgets_delete BEFORE DELETE ON budgets BEGIN SELECT 1; END;")
+                .execute(&pool).await.unwrap();
+            let before = schema(&pool).await;
+            // Nearly the last statement of the migration fails: its tables and other triggers must not stay.
+            assert!(migrator().run(&pool).await.is_err());
+            assert_eq!(schema(&pool).await, before);
+            nine.run(&pool).await.unwrap();
+            sqlx::raw_sql("DROP TRIGGER history_budgets_delete").execute(&pool).await.unwrap();
+            migrator().run(&pool).await.unwrap();
+            let row: (String, i64, i64) = sqlx::query_as("SELECT description, amount_cents, (SELECT count(*) FROM history_groups) FROM transactions").fetch_one(&pool).await.unwrap();
+            assert_eq!(row, ("Synthetic".into(), -1025, 0));
+            assert!(nine.run(&pool).await.unwrap_err().to_string().contains("previously applied but is missing"));
             pool.close().await;
         });
         let _ = std::fs::remove_file(path);

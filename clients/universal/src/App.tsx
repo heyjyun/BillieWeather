@@ -10,6 +10,7 @@ import { SignedOut } from "./pages/SignedOut";
 import { ModeProvider, useMode, type Mode } from "./hooks/useMode";
 import { SyncStatus } from "./components/SyncStatus";
 import { ConnectionStatus } from "./components/ConnectionStatus";
+import { HistoryControls } from "./components/HistoryControls";
 import { CommandCenter } from "./components/CommandCenter";
 import type { TransactionFilter } from "./commands/handlers";
 import type { TransactionKind } from "@billie/shared-types";
@@ -188,7 +189,7 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
       </nav>
       <main className="bw-main" id="main" tabIndex={-1}>
         {!persistent && <p className="bw-preview-banner">{m.preview}</p>}
-        <div className="bw-topline"><ModeSwitch mode={mode} onChange={switchMode} /></div>
+        <div className="bw-topline"><HistoryControls /><ModeSwitch mode={mode} onChange={switchMode} /></div>
         <CommandCenter go={go} />
         <ConnectionStatus />
         <SyncStatus />
