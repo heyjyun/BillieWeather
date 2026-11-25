@@ -75,6 +75,7 @@ export const ja: Messages = {
     account: "アカウント", email: "メールアドレス", memberSince: "登録日", region: "地域", globalCitizen: "地球市民",
     language: "言語", save: "保存", saved: "BillieWeather アカウントに保存しました。", saveFailed: "保存できませんでした。接続を確認してもう一度お試しください。",
     manageOnline: "ウェブサイトでアカウントを管理", signOut: "サインアウト", offlineAccount: "オフラインです。保存済みのアカウント情報を表示しています。",
+    signOutOthers: "ほかのデバイスをサインアウト", othersQuestion: "ほかのすべてのブラウザとアプリをサインアウトしますか？このアプリはサインインしたままで、デバイスに保存したデータは残ります。", othersDone: "ほかのすべてのブラウザとアプリをサインアウトしました。", othersFailed: "ほかのデバイスをサインアウトできませんでした。接続を確認して、もう一度お試しください。",
     accountOnline: "アカウント情報（メールアドレス、ニックネーム、言語、地域、登録日）は BillieWeather アカウントに保存され、どの端末でも同じになります。",
     rulesTitle: "記憶したカテゴリルール", rulesEmpty: "「記憶する」をオンにしてカテゴリを変えると、ルールがここに表示されます。",
     moneyIn: "入金", moneyOut: "出金", forget: "削除",

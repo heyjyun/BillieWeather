@@ -184,3 +184,27 @@ it("uses no browser dialogs, which the apps replace with asynchronous ones", () 
     .filter((file) => /window\.(confirm|alert|prompt)\(/.test(readFileSync(file, "utf8")));
   expect(offenders).toEqual([]);
 });
+
+describe("signing out other devices", () => {
+  it("asks in the page first; Escape and Cancel send nothing, and the result is announced", async () => {
+    sessionStorage.setItem("billie.token", "tok");
+    render(<App />);
+    await screen.findByRole("navigation");
+    await nav("Settings");
+    const ended = () => vi.mocked(fetch).mock.calls.filter(([url, init]) => String(url).endsWith("/sessions") && init?.method === "DELETE").length;
+    const ask = async () => click(await screen.findByRole("button", { name: "Sign out other devices" }));
+    await ask();
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog.contains(focused()) || focused() === dialog).toBe(true);
+    fireEvent.keyDown(dialog, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    expect(ended()).toBe(0);
+    await ask();
+    await click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Cancel" }));
+    expect(ended()).toBe(0);
+    await ask();
+    await click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Sign out other devices" }));
+    expect(await screen.findByText("Every other browser and app has been signed out.")).toBeTruthy();
+    expect(ended()).toBe(1);
+  });
+});

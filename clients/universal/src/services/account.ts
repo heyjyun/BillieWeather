@@ -104,9 +104,19 @@ export async function updateAccount(token: string, preferences: AccountPreferenc
   return toAccount((await request<{ account: AccountJson }>("/account", { method: "PATCH", token, body: { account: preferences } })).account);
 }
 
-/** Tells the server we are leaving; the token is discarded locally either way. */
-export async function signOutRemote(token: string): Promise<void> {
-  await request<void>("/session", { method: "DELETE", token }).catch(() => undefined);
+/** Ends this session on the server; true once the server has confirmed it. The token is discarded locally either way. */
+export async function signOutRemote(token: string): Promise<boolean> {
+  return request<void>("/session", { method: "DELETE", token }).then(() => true, () => false);
+}
+
+/** Ends a session whose token this device no longer has (see services/signOut.ts); true once confirmed. */
+export async function revokeByDigest(digest: string): Promise<boolean> {
+  return request<void>("/session/revocations", { method: "POST", body: { token_digest: digest } }).then(() => true, () => false);
+}
+
+/** Signs every other app and browser out of this account; this app stays signed in. Returns how many sessions ended. */
+export async function signOutOthers(token: string): Promise<number> {
+  return (await request<{ revoked: number }>("/sessions", { method: "DELETE", token })).revoked;
 }
 
 /** Pages on the BillieWeather website (password reset, account settings). Sign-up happens in the app (pages/Register.tsx). */

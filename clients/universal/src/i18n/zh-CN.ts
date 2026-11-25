@@ -75,6 +75,7 @@ export const zhCN: Messages = {
     account: "账户", email: "邮箱", memberSince: "注册时间", region: "地区", globalCitizen: "世界公民",
     language: "语言", save: "保存", saved: "已保存到你的 BillieWeather 账户。", saveFailed: "保存失败，请检查网络后重试。",
     manageOnline: "在网站上管理账户", signOut: "退出登录", offlineAccount: "当前离线，显示的是已保存的账户信息。",
+    signOutOthers: "退出其他设备", othersQuestion: "让其他所有浏览器和应用退出登录？此应用保持登录，设备上保存的数据不受影响。", othersDone: "其他所有浏览器和应用均已退出登录。", othersFailed: "无法退出其他设备。请检查网络连接后重试。",
     accountOnline: "你的账户信息（邮箱、昵称、语言、地区和注册时间）保存在 BillieWeather 账户中，在每台设备上都保持一致。",
     rulesTitle: "记住的分类规则", rulesEmpty: "在开启「记住」时修改分类，规则就会出现在这里。",
     moneyIn: "收入方向", moneyOut: "支出方向", forget: "忘记",

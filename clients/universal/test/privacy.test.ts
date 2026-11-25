@@ -65,8 +65,8 @@ describe("data isolation", () => {
     const source = readFileSync(ACCOUNT, "utf8");
     expect(source.match(/^import .*$/gm) ?? []).toEqual([]);
     expect(source).not.toMatch(/@billie\/|\bFinanceStore\b|\bTransaction\b|\bStatement\b|amountCents|merchantKey/);
-    // Only the account endpoints are ever called.
-    expect([...source.matchAll(/request<[^>]*>\("([^"]+)"/g)].map((match) => match[1]).sort()).toEqual(["/account", "/account", "/session", "/session"]);
+    // Only the account and sign-out endpoints are ever called.
+    expect([...source.matchAll(/request<[^>]*>\("([^"]+)"/g)].map((match) => match[1]).sort()).toEqual(["/account", "/account", "/session", "/session", "/session/revocations", "/sessions"]);
   });
 
   it("visibility sync has one account-scoped endpoint and never reads financial data", () => {

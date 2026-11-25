@@ -75,6 +75,7 @@ export const zhTW: Messages = {
     account: "帳戶", email: "電子郵件", memberSince: "註冊時間", region: "地區", globalCitizen: "世界公民",
     language: "語言", save: "儲存", saved: "已儲存到你的 BillieWeather 帳戶。", saveFailed: "儲存失敗，請檢查網路後重試。",
     manageOnline: "在網站上管理帳戶", signOut: "登出", offlineAccount: "目前離線，顯示的是已儲存的帳戶資訊。",
+    signOutOthers: "登出其他裝置", othersQuestion: "要讓其他所有瀏覽器和應用程式登出嗎？此應用程式會保持登入，裝置上儲存的資料不受影響。", othersDone: "其他所有瀏覽器和應用程式均已登出。", othersFailed: "無法登出其他裝置。請檢查網路連線後再試一次。",
     accountOnline: "你的帳戶資訊（電子郵件、暱稱、語言、地區和註冊時間）保存在 BillieWeather 帳戶中，在每台裝置上都保持一致。",
     rulesTitle: "記住的分類規則", rulesEmpty: "在開啟「記住」時修改分類，規則就會出現在這裡。",
     moneyIn: "收入方向", moneyOut: "支出方向", forget: "忘記",

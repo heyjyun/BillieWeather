@@ -1,8 +1,9 @@
 // Who is signed in. Signing in needs the internet once; afterwards the app opens with
 // the saved session and cached account details, and refreshes them when online.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AccountError, fetchAccount, isNetworkFailure, signIn as apiSignIn, signOutRemote, updateAccount, type Account, type AccountPreferences } from "../services/account";
+import { AccountError, fetchAccount, isNetworkFailure, signIn as apiSignIn, signOutOthers as apiSignOutOthers, updateAccount, type Account, type AccountPreferences } from "../services/account";
 import { cacheAccount, clearSession, loadCachedAccount, loadToken, saveToken } from "../services/session";
+import { finishSignOuts, revokeToken } from "../services/signOut";
 import { isLocale, useI18n, type Locale } from "../i18n";
 
 type Status = "loading" | "signedOut" | "signedIn";
@@ -19,6 +20,8 @@ interface AccountContextValue {
   reconnect: () => Promise<void>;
   signIn: (email: string, password: string, otp?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Signs every other app and browser out of this account. Returns how many sessions ended. */
+  signOutOthers: () => Promise<number>;
   savePreferences: (preferences: AccountPreferences) => Promise<void>;
   /** The sign-in token, for the website-data download. Never shown or logged. */
   getToken: () => string | null;
@@ -91,7 +94,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       await verify(saved, cached);
     })();
     verifyRef.current = verify;
-    const reconnect = () => { if (token.current) void verify(token.current, loadCachedAccount()); };
+    void finishSignOuts();
+    const reconnect = () => { void finishSignOuts(); if (token.current) void verify(token.current, loadCachedAccount()); };
     window.addEventListener("online", reconnect);
     return () => { cancelled = true; verifyRef.current = null; window.removeEventListener("online", reconnect); };
   }, [adopt, forget, setOffline]);
@@ -109,8 +113,16 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string, otp?: string) => {
     const result = await apiSignIn(email, password, otp);
-    await saveToken(result.token);
+    const previous = token.current;
+    try {
+      await saveToken(result.token);
+    } catch (error) {
+      await revokeToken(result.token); // this device could not keep it, so nobody should be able to use it
+      throw error;
+    }
     token.current = result.token;
+    if (previous && previous !== result.token) void revokeToken(previous);
+    void finishSignOuts();
     tokenOwner.current = identityOf(result.account);
     setOffline(false);
     if (isLocale(result.account.locale)) {
@@ -128,8 +140,19 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     const saved = token.current;
     await forget();
-    if (saved) await signOutRemote(saved);
+    if (saved) await revokeToken(saved);
   }, [forget]);
+
+  const signOutOthers = useCallback(async () => {
+    const saved = token.current;
+    if (!saved || tokenOwner.current !== identityOf(account)) throw new AccountError("unauthorized");
+    try {
+      return await apiSignOutOthers(saved);
+    } catch (error) {
+      if (token.current === saved && error instanceof AccountError && error.code === "unauthorized") await forget();
+      throw error;
+    }
+  }, [account, forget]);
 
   const savePreferences = useCallback(async (preferences: AccountPreferences) => {
     const saved = token.current;
@@ -148,8 +171,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   }, [adopt, forget, account, setOffline]);
 
   const getToken = useCallback(() => tokenOwner.current !== null && tokenOwner.current === identityOf(account) ? token.current : null, [account]);
-  const value = useMemo(() => ({ status, account, offline, offlineReason, reconnecting, reconnect, signIn, signOut, savePreferences, getToken, expire: forget }),
-    [status, account, offline, offlineReason, reconnecting, reconnect, signIn, signOut, savePreferences, getToken, forget]);
+  const value = useMemo(() => ({ status, account, offline, offlineReason, reconnecting, reconnect, signIn, signOut, signOutOthers, savePreferences, getToken, expire: forget }),
+    [status, account, offline, offlineReason, reconnecting, reconnect, signIn, signOut, signOutOthers, savePreferences, getToken, forget]);
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;
 }
 

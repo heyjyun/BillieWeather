@@ -75,6 +75,7 @@ export const ko: Messages = {
     account: "계정", email: "이메일", memberSince: "가입일", region: "지역", globalCitizen: "세계 시민",
     language: "언어", save: "저장", saved: "BillieWeather 계정에 저장했습니다.", saveFailed: "저장하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
     manageOnline: "웹사이트에서 계정 관리", signOut: "로그아웃", offlineAccount: "오프라인 상태입니다. 저장된 계정 정보를 표시합니다.",
+    signOutOthers: "다른 기기에서 로그아웃", othersQuestion: "다른 모든 브라우저와 앱에서 로그아웃할까요? 이 앱은 로그인 상태로 유지되며 기기에 저장된 데이터는 그대로 남습니다.", othersDone: "다른 모든 브라우저와 앱에서 로그아웃했습니다.", othersFailed: "다른 기기에서 로그아웃하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
     accountOnline: "계정 정보(이메일, 닉네임, 언어, 지역, 가입일)는 BillieWeather 계정에 저장되어 모든 기기에서 동일하게 유지됩니다.",
     rulesTitle: "기억한 분류 규칙", rulesEmpty: "\"기억하기\"를 켜고 분류를 바꾸면 규칙이 여기에 표시됩니다.",
     moneyIn: "입금", moneyOut: "출금", forget: "삭제",

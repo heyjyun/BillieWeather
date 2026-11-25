@@ -75,6 +75,7 @@ export const es: Messages = {
     account: "Cuenta", email: "Correo", memberSince: "Miembro desde", region: "Región", globalCitizen: "Ciudadanía global",
     language: "Idioma", save: "Guardar", saved: "Guardado en tu cuenta de BillieWeather.", saveFailed: "No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.",
     manageOnline: "Gestionar tu cuenta en el sitio web", signOut: "Cerrar sesión", offlineAccount: "Sin conexión: se muestran los datos de cuenta guardados.",
+    signOutOthers: "Cerrar sesión en otros dispositivos", othersQuestion: "¿Cerrar la sesión en todos los demás navegadores y aplicaciones? Esta aplicación sigue conectada y los datos guardados en tus dispositivos se conservan.", othersDone: "Se cerró la sesión en todos los demás navegadores y aplicaciones.", othersFailed: "No se pudo cerrar la sesión en otros dispositivos. Comprueba tu conexión e inténtalo de nuevo.",
     accountOnline: "Los datos de tu cuenta (correo, apodo, idioma, región y fecha de registro) se guardan en tu cuenta de BillieWeather para que sean iguales en todos tus dispositivos.",
     rulesTitle: "Reglas de categoría recordadas", rulesEmpty: "Cuando cambias una categoría con \"recordar\" activado, la regla aparece aquí.",
     moneyIn: "Entradas", moneyOut: "Salidas", forget: "Olvidar",

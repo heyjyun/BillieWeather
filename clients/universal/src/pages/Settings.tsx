@@ -1,6 +1,6 @@
 import { radioGroupKeys } from "../hooks/useFocus";
 import { useState } from "react";
-import { PageHeading } from "../components/common";
+import { InlineDialog, PageHeading } from "../components/common";
 import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, LanguageSelect, useI18n } from "../i18n";
@@ -19,7 +19,7 @@ function regionName(code: string | null | undefined, locale: string, globalCitiz
 
 export function Settings({ openLibrary, openData }: { openLibrary?: () => void; openData?: () => void } = {}) {
   const { m, locale } = useI18n();
-  const { account, offline, signOut, savePreferences } = useAccount();
+  const { account, offline, signOut, signOutOthers, savePreferences } = useAccount();
   const { store, refresh, rules } = useFinance();
   const [nickname, setNickname] = useState(account?.nickname ?? "");
   const [accountStatus, setAccountStatus] = useState<"saved" | "saveFailed" | null>(null);
@@ -40,6 +40,7 @@ export function Settings({ openLibrary, openData }: { openLibrary?: () => void; 
   }
 
   async function save(preferences: Parameters<typeof savePreferences>[0]) {
+    setOthersStatus(null);
     try {
       await savePreferences(preferences);
       setAccountStatus("saved");
@@ -48,6 +49,18 @@ export function Settings({ openLibrary, openData }: { openLibrary?: () => void; 
     }
   }
 
+
+  const [askOthers, setAskOthers] = useState(false);
+  const [othersStatus, setOthersStatus] = useState<string | null>(null);
+  async function endOtherSessions() {
+    setAskOthers(false);
+    try {
+      await signOutOthers();
+      setOthersStatus(x.othersDone);
+    } catch {
+      setOthersStatus(x.othersFailed);
+    }
+  }
 
   const memberSince = account?.registeredAt ? new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(new Date(account.registeredAt)) : "—";
 
@@ -86,12 +99,20 @@ export function Settings({ openLibrary, openData }: { openLibrary?: () => void; 
             <LanguageSelect id="settings-language" onChange={(next) => save({ locale: next })} />
           </label>
         </div>
-        <p role="status" aria-live="polite" className="bw-sr-status">{accountStatus && x[accountStatus]}</p>
+        <p role="status" aria-live="polite" className="bw-sr-status">{othersStatus ?? (accountStatus && x[accountStatus])}</p>
         <p className="bw-caption">{x.accountOnline}</p>
         <div className="bw-account-actions">
           <button type="button" className="bw-link-button" onClick={() => openExternal(websiteUrl("/app/settings", locale))}>{x.manageOnline} ↗</button>
           <button type="button" className="bw-button bw-button-outline" onClick={() => signOut()}>{x.signOut}</button>
+          <button type="button" className="bw-link-button" onClick={() => { setOthersStatus(null); setAskOthers(true); }}>{x.signOutOthers}</button>
         </div>
+        {askOthers && (
+          <InlineDialog className="bw-confirm" role="alertdialog" label={x.othersQuestion} onCancel={() => setAskOthers(false)}>
+            <p>{x.othersQuestion}</p>
+            <button type="button" className="bw-button bw-button-outline" onClick={() => void endOtherSessions()}>{x.signOutOthers}</button>
+            <button type="button" className="bw-link-button" onClick={() => setAskOthers(false)}>{m.ledger.common.cancel}</button>
+          </InlineDialog>
+        )}
       </section>
 
       <section className="bw-panel" aria-labelledby="appearance-heading">

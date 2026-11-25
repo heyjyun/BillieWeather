@@ -76,6 +76,7 @@ export const en = {
     account: "Account", email: "Email", memberSince: "Member since", region: "Region", globalCitizen: "Global Citizen",
     language: "Language", save: "Save", saved: "Saved to your BillieWeather account.", saveFailed: "Couldn't save. Check your connection and try again.",
     manageOnline: "Manage your account on the website", signOut: "Sign out", offlineAccount: "Offline — showing your saved account details.",
+    signOutOthers: "Sign out other devices", othersQuestion: "Sign out every other browser and app? This app stays signed in, and data stored on your devices is kept.", othersDone: "Every other browser and app has been signed out.", othersFailed: "Couldn't sign out other devices. Check your connection and try again.",
     accountOnline: "Your account details (email, nickname, language, region, and sign-up date) are stored with your BillieWeather account so they are the same on every device.",
     rulesTitle: "Remembered category rules", rulesEmpty: "When you change a category with \"remember\" on, the rule appears here.",
     moneyIn: "Money in", moneyOut: "Money out", forget: "Forget",
