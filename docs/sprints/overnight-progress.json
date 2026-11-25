@@ -1,7 +1,7 @@
 {
  "sprint_complete": false,
- "updated": "2026-11-25 02:23 CST",
- "phase": "5.9 native acceptance of overnight-c2 (4dc5571); 6.1 rehearsals done; 6.2 web+layout audits done",
+ "updated": "2026-11-25 02:34 CST",
+ "phase": "5.9 GUI re-run BLOCKED by a macOS authentication prompt since 02:23; everything else done except final report",
  "done": [
   "scheduler: in-session cron 3:01 and 8:01 + detached waiter 3:07/8:07, probed (launchd denied by macOS privacy)",
   "6.0 repository audit: 115 dirty files in ../billieweather all identical to d3061e4; main is an ancestor, ff only",
@@ -11,7 +11,9 @@
   "identity 128+1 skip, 129/129 with real Rails",
   "pg_dump/restore rehearsal identical; least-privilege roles rehearsed",
   "web audit 26 pages x 3 widths, app layouts 216 checks",
-  "native run on c1 (f258e7a): most of matrix PASS, defects G1 G3 fixed"
+  "native run on c1 (f258e7a): most of matrix PASS, defects G1 G3 fixed",
+  "Rails final 857/0/2 skips; browser system tests 42/44 (2 legacy)",
+  "production-mode smoke, CSP, traceback redaction, ADR, release notes"
  ],
  "pending": [
   "5.9 native GUI acceptance on a REBUILT candidate (965e513 or later; f4902ba is obsolete)",
@@ -27,11 +29,14 @@
   "Neon, Render",
   "Intel, Windows, iOS, Android toolchains (no rustup, Xcode, Android SDK, Docker)"
  ],
- "latest_verified_commit": "4dc5571",
- "candidate": "ClaudeGenerated/overnight-c2 executable 6e67ad21f38b7afab55efd4c5cac03b5d551f186566fe474863a7409a18baf2d",
+ "latest_verified_commit": "HEAD (clients identical to 4dc5571)",
+ "candidate": "ClaudeGenerated/overnight-c2 (identity .qa) and overnight-c3 (identity .qa.night), same client source",
  "isolated_root": "/private/tmp/billie-roadmap.gk99lMpY",
  "servers": "rails 33557, identity 38557 (started 01:29, code before 37f4a8d; restart before GUI)",
  "scratch": "/private/tmp/claude-501/-Users-jyunz-Documents-Developer-Developping-BillieWeather/3aadd522-ebf5-462f-aa3e-5113667beb6c/scratchpad (driver drv, idle)",
- "next_exact_action": "run scratchpad/accept.py on overnight-c2, then package DMG, temp cleanup, architecture decision, final suites, final report",
- "next_resume": "03:00 and 08:00 CST"
+ "next_exact_action": "If the prompt is gone and the desktop idle >= 600 s: launch overnight-c3 via qa.mjs, run native matrix with scratchpad drv/g.sh. Otherwise write the final report docs/audits/overnight-phase5.9-to-6.2-final-report.md",
+ "next_resume": "03:00 and 08:00 CST",
+ "failed": [
+  "2 legacy Bullet Train browser tests (expect legal names / platform app row)"
+ ]
 }
