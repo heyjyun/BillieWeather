@@ -6,6 +6,9 @@ module ClientApi
     class SessionsController < BaseController
       rate_limit to: 10, within: 1.minute, by: -> { request.remote_ip }, only: :create,
         with: -> { render json: {error: "rate_limited"}, status: :too_many_requests }
+      rate_limit to: 30, within: 1.minute, by: -> { request.remote_ip }, only: :revoke_by_digest, name: "revoke",
+        with: -> { render json: {error: "rate_limited"}, status: :too_many_requests }
+      before_action :authenticate_client!, only: :destroy_others
 
       def create
         email = params.require(:email).to_s.strip.downcase
@@ -42,9 +45,23 @@ module ClientApi
         user.access_locked?
       end
 
-      # Tokens are stateless; the app forgets its token. Changing the password signs out every app.
+      # Ends this app's session on the server. Always 204, so a retried or repeated sign-out succeeds
+      # and the answer says nothing about whether the token was valid.
       def destroy
+        UserSession.revoke_secret(bearer_token, kind: "app")
         head :no_content
+      end
+
+      # Finishes a sign-out that was made offline. The app kept only the token's SHA-256 digest, which
+      # opens nothing; all it can do is end that one session. Same answer for every input.
+      def revoke_by_digest
+        UserSession.revoke_digest(params[:token_digest], kind: "app")
+        head :no_content
+      end
+
+      # "Sign out other sessions": every other app and browser of this account, but not this app.
+      def destroy_others
+        render json: {revoked: UserSession.revoke_all!(current_user, reason: "signed_out_elsewhere", keep: current_session)}
       end
     end
   end

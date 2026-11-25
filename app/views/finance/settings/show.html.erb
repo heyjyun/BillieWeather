@@ -67,6 +67,13 @@
     <% end %>
   </section>
 
+  <section class="bw-panel" id="settings-sessions" aria-labelledby="settings-sessions-heading">
+    <h2 id="settings-sessions-heading"><%= t("billie.account.sessions_heading") %></h2>
+    <p><%= t("billie.account.sessions_intro") %></p>
+    <%= button_to t("billie.account.sessions_sign_out"), sessions_finance_settings_path, method: :delete,
+          form: {data: {turbo: false, confirm: t("billie.account.sessions_confirm")}}, class: "bw-button bw-button-outline" %>
+  </section>
+
   <section class="bw-panel" id="settings-region" aria-labelledby="settings-region-heading">
     <h2 id="settings-region-heading"><%= t("billie.region.label") %></h2>
     <p><%= t("billie.region.intro") %></p>

@@ -20,9 +20,14 @@ results = input.fetch("accounts").map do |account|
     session.get "/api/client/v1/account", headers: {"Authorization" => "Bearer #{token}"}
     me = JSON.parse(session.response.body)["account"] rescue nil
   end
-  # Sign out (the app forgets its token; the endpoint answers 204), then sign in again.
+  token_authenticates = token ? ClientApi::SessionToken.authenticate(token)&.id == user.id : false
+  # Sign out: the server revokes the token for account and financial endpoints. Then sign in again.
   session.delete "/api/client/v1/session", headers: token ? {"Authorization" => "Bearer #{token}"} : {}
   logout_status = session.response.status
+  after_logout = %w[/api/client/v1/account /api/client/v1/finance].map do |path|
+    session.get path, headers: {"Authorization" => "Bearer #{token}"}
+    session.response.status
+  end
   session.post "/api/client/v1/session", params: {email: account["email"], password: account["password"]}, as: :json
   relogin_status = session.response.status
   membership = user.memberships.first
@@ -48,7 +53,8 @@ results = input.fetch("accounts").map do |account|
     "account_endpoint_nickname" => me && me["nickname"],
     "logout_status" => logout_status,
     "relogin_status" => relogin_status,
-    "token_authenticates" => token ? ClientApi::SessionToken.authenticate(token)&.id == user.id : false
+    "token_authenticates" => token_authenticates,
+    "after_logout" => after_logout
   }
 end
 

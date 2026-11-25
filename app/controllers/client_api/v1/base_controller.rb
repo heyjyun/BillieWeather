@@ -12,12 +12,14 @@ module ClientApi
       private
 
       def authenticate_client!
-        token = request.authorization.to_s[/\ABearer (.+)\z/, 1]
-        @current_user = ClientApi::SessionToken.authenticate(token)
+        @current_session = ClientApi::SessionToken.session(bearer_token)
+        @current_user = @current_session&.user
         render json: {error: "unauthorized"}, status: :unauthorized unless @current_user
       end
 
-      attr_reader :current_user
+      def bearer_token = request.authorization.to_s[/\ABearer (.+)\z/, 1]
+
+      attr_reader :current_user, :current_session
 
       # Everything the apps may know about an account. No financial data.
       def account_json(user)

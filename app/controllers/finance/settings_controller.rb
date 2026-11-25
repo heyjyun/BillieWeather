@@ -73,6 +73,12 @@ module Finance
       render :show, status: :unprocessable_entity
     end
 
+    # Signs out every other browser and app of this account. This browser stays signed in.
+    def sessions
+      UserSession.revoke_all!(@user, reason: "signed_out_elsewhere", keep: UserWebSession.current(request.env["warden"]))
+      redirect_to finance_settings_path(anchor: "settings-sessions"), status: :see_other, notice: t("billie.account.sessions_signed_out")
+    end
+
     # Google accounts get a random password at sign-up; this lets them choose one by email.
     def password_reset
       @user.send_reset_password_instructions

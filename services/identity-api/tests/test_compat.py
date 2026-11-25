@@ -135,6 +135,7 @@ def test_rails_accepts_and_signs_in_python_created_accounts(client, make_client,
         assert result["login_status"] == 201 and result["token_authenticates"], result
         assert result["login_owner_id"] == result["db_owner_id"] and result["account_endpoint_email"] == result["email"]
         assert (result["logout_status"], result["relogin_status"]) == (204, 201), result  # sign out, then back in
+        assert result["after_logout"] == [401, 401], result  # the server revoked the signed-out token
     assert report["results"][2]["google_uid"] == "1098765"
     assert report["results"][3]["account_endpoint_nickname"] == "Jyun"
 

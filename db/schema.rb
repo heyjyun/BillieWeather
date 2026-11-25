@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_25_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -802,6 +802,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
     t.string "locale"
   end
 
+  create_table "user_sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "kind", limit: 8, null: false
+    t.string "token_digest", limit: 64, null: false
+    t.string "credential_fingerprint", limit: 64, null: false
+    t.datetime "expires_at", null: false
+    t.datetime "last_used_at"
+    t.datetime "revoked_at"
+    t.string "revoke_reason", limit: 32
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token_digest"], name: "index_user_sessions_on_token_digest", unique: true
+    t.index ["user_id", "revoked_at"], name: "index_user_sessions_on_user_id_and_revoked_at"
+    t.check_constraint "(revoked_at IS NULL) = (revoke_reason IS NULL)", name: "user_sessions_revocation"
+    t.check_constraint "credential_fingerprint::text ~ '^[0-9a-f]{64}$'::text", name: "user_sessions_fingerprint"
+    t.check_constraint "expires_at > created_at", name: "user_sessions_expiry"
+    t.check_constraint "kind::text = ANY (ARRAY['app'::character varying, 'web'::character varying]::text[])", name: "user_sessions_kind"
+    t.check_constraint "token_digest::text ~ '^[0-9a-f]{64}$'::text", name: "user_sessions_digest"
+  end
+
   create_table "users", id: :serial, force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -1000,6 +1020,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_000100) do
   add_foreign_key "scaffolding_completely_concrete_tangible_things", "scaffolding_absolutely_abstract_creative_concepts", column: "absolutely_abstract_creative_concept_id"
   add_foreign_key "scaffolding_completely_concrete_tangible_things_assignments", "memberships"
   add_foreign_key "scaffolding_completely_concrete_tangible_things_assignments", "scaffolding_completely_concrete_tangible_things", column: "tangible_thing_id"
+  add_foreign_key "user_sessions", "users", on_delete: :cascade
   add_foreign_key "users", "oauth_applications", column: "platform_agent_of_id"
   add_foreign_key "webhooks_outgoing_endpoints", "scaffolding_absolutely_abstract_creative_concepts"
   add_foreign_key "webhooks_outgoing_endpoints", "teams"

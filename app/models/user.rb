@@ -38,6 +38,7 @@ class User < ApplicationRecord
   has_many :finance_receipts, class_name: "Finance::Receipt", dependent: :destroy
   has_many :finance_receipt_matches, class_name: "Finance::ReceiptMatch", dependent: :delete_all
   has_many :finance_capture_tokens, class_name: "Finance::CaptureToken", dependent: :delete_all
+  has_many :user_sessions, dependent: :delete_all
   # Honorary badges (not roles: they grant no permissions) and private support-payment access.
   has_many :community_honors, class_name: "Community::Honor", dependent: :destroy
   has_one :community_support_access, class_name: "Community::SupportAccess", dependent: :destroy
@@ -46,12 +47,26 @@ class User < ApplicationRecord
   before_validation :normalize_nickname
   before_validation :normalize_cloud_database_name
   after_save { @usage_region_selection_attempted = false }
+  # In the same transaction as the new password: every app and browser signs in again.
+  after_update -> { UserSession.revoke_all!(self, reason: "password_changed") }, if: :saved_change_to_encrypted_password?
   validates :usage_region, presence: true, if: :usage_region_selection_required?
   validates :usage_region, inclusion: {in: UsageRegion::CODES}, allow_nil: true
   validates :nickname, length: {maximum: NICKNAME_MAX}
   validates :nickname, presence: true, if: :nickname_required?
   validate :nickname_has_no_control_characters
   validates :cloud_database_name, length: {maximum: 60}
+
+  # What the website's session cookie holds. Devise stores the id and password salt; the third value is
+  # a UserSession secret, so signing out on the server also ends copies of the cookie.
+  def self.serialize_into_session(user)
+    super + [UserSession.issue!(user, kind: "web").last]
+  end
+
+  # nil signs the browser out: unknown, expired or revoked sessions, and cookies from before UserSession.
+  def self.serialize_from_session(key, salt, secret = nil)
+    user = super(key, salt)
+    user if user && UserSession.active_for(secret, kind: "web", user: user)
+  end
 
   def usage_region=(value)
     @usage_region_selection_attempted = true
