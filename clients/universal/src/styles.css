@@ -528,7 +528,7 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-claim { max-width: 34rem; margin: 10vh auto; display: grid; gap: 1rem; text-align: start; }
 
 /* Default Mode / Manual Mode (progressive disclosure). */
-.bw-topline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.bw-topline { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 12px; }
 .bw-history { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
 .bw-history-buttons { display: inline-flex; gap: 2px; }
 .bw-history-button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border: 0; border-radius: var(--bw-radius-sm); background: none; color: var(--ink); cursor: pointer; font: inherit; font-size: var(--bw-font-size-sm); white-space: nowrap; }
@@ -536,7 +536,9 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-history-button[aria-disabled="true"] { color: var(--muted); opacity: .6; cursor: default; background: none; }
 .bw-history-button:focus-visible { outline: 2px solid var(--bw-color-focus-ring); outline-offset: 1px; }
 .bw-history-status { flex: 1 1 160px; min-width: 0; margin: 0; color: var(--muted); font-size: var(--bw-font-size-sm); overflow-wrap: anywhere; }
-.bw-history > .bw-confirm { flex: 1 1 100%; }
+/* A question that can be taken back: one calm line, the mode switch stays where it is. */
+.bw-history > .bw-confirm { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; border-color: var(--line); background: var(--soft); }
+.bw-history > .bw-confirm p { flex: 1 1 260px; }
 .bw-mode-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--bw-radius-md); background: var(--soft); border: 1px solid var(--line); }
 .bw-mode-option { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 0; border-radius: var(--bw-radius-sm); background: none; color: var(--muted); cursor: pointer; font: inherit; font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-medium); white-space: nowrap; }
 .bw-mode-option svg { width: 16px; height: 16px; }
