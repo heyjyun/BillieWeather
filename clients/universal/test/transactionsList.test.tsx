@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // A long ledger opens quickly: rows are added in steps, while counts, search and "select all" cover everything.
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import initSqlJs from "sql.js";
 import { migrate, openInShell, enableAllModulesByDefault } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
@@ -69,12 +69,23 @@ it("says so when a category change or an exclusion could not be saved", async ()
   await openInShell("All Transactions");
   await screen.findByText(`${ROWS} of ${ROWS} transactions`, { exact: false });
   const driver = files.get("billieweather.db")!;
+  const original = driver.transaction;
   driver.transaction = async () => { throw "database is locked"; };
   const row = document.querySelector<HTMLElement>(".bw-tx-table > li")!;
   const select = [...row.querySelectorAll("select")].find((item) => [...item.options].some((option) => option.value === "Health"))!;
   await act(async () => { fireEvent.change(select, { target: { value: "Health" } }); });
   const { MESSAGES } = await import("../src/i18n");
   expect(await screen.findByText(MESSAGES.en.ledger.errors.unknown)).toBeTruthy();
+  // A failure is an error, announced as an alert and styled as one, not a green status line.
+  const alert = screen.getByRole("alert");
+  expect(alert.textContent).toBe(MESSAGES.en.ledger.errors.unknown);
+  expect(alert.className).toContain("bw-message-error");
+  expect(screen.getAllByRole("status").some((node) => node.textContent === MESSAGES.en.ledger.errors.unknown)).toBe(false);
   const [stored] = await driver.select<{ n: number }>("SELECT COUNT(*) AS n FROM transactions WHERE category = 'Health'");
   expect(stored.n).toBe(0);
+  // Once a change is saved again, the error goes away and the success is a status message.
+  driver.transaction = original;
+  await act(async () => { fireEvent.change(select, { target: { value: "Health" } }); });
+  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  expect(screen.getAllByRole("status").some((node) => /^Saved\./.test(node.textContent ?? ""))).toBe(true);
 });

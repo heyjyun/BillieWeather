@@ -37,7 +37,10 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   const [dimension, setDimension] = useState("");
   const [commandFilter, setCommandFilter] = useState<TransactionFilter | null>(preset && (preset.period || preset.amount || preset.query) ? preset : null);
   const [remember, setRemember] = useState(true);
-  const [status, setStatus] = useState("");
+  // Successes go to the polite status line; failures are shown as an error and announced as an alert.
+  const [status, setStatusState] = useState<{ text: string; error: boolean }>({ text: "", error: false });
+  const setStatus = (text: string) => setStatusState({ text, error: false });
+  const setError = (text: string) => setStatusState({ text, error: true });
   // The open entry form is part of the draft, so it is still open (and filled in) after a mode switch.
   const [form, setForm] = useDraftState<{ entry: EntryDetail | null; kind?: TransactionKind; prefill?: TransactionIntent["entryDraft"]; draftId?: string } | null>("transactions-page", "form", null);
   const [requestedView, setView] = useState<View>(intent?.view ?? "list");
@@ -86,7 +89,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
       await refresh();
       setStatus(message);
     } catch (caught) {
-      setStatus(caught instanceof LedgerError ? m.ledger.errors[caught.code] ?? m.ledger.errors.unknown : m.ledger.errors.unknown);
+      setError(caught instanceof LedgerError ? m.ledger.errors[caught.code] ?? m.ledger.errors.unknown : m.ledger.errors.unknown);
     }
   }
 
@@ -95,7 +98,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
     try {
       others = await store.setCategory(transaction.id, category, remember);
     } catch {
-      return setStatus(m.ledger.errors.unknown);
+      return setError(m.ledger.errors.unknown);
     }
     await refresh();
     const merchant = merchantKey(transaction.description);
@@ -125,7 +128,12 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
       </div>
     </PageHeading>
   );
-  const statusLine = <p className="bw-sr-status" role="status" aria-live="polite">{status}</p>;
+  const statusLine = (
+    <>
+      <p className="bw-sr-status" role="status" aria-live="polite">{status.error ? "" : status.text}</p>
+      {status.error && <p className="bw-message bw-message-error" role="alert">{status.text}</p>}
+    </>
+  );
   const formPanel = manual && form && (
     <EntryForm key={form.draftId ?? form.entry?.id ?? "new"} entry={form.entry} initialKind={form.kind} prefill={form.prefill} draftId={form.draftId} onCancel={() => setForm(null)} onDone={(message) => { setForm(null); setStatus(message); }} />
   );
