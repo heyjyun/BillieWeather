@@ -83,6 +83,8 @@ async function recognizeImages(images: Array<{ page: number; bytes: Uint8Array; 
   if (signal?.aborted) throw new ReceiptError("cancelled");
   const result = parseOcrResult(raw);
   const lines = receiptLinesFromPages(result.pages);
+  // A page that could not be read may hold the total: the receipt is refused rather than half read.
+  if (lines.length > 0 && result.errors.length > 0) throw new ReceiptError("ocr_failed");
   if (lines.length === 0) throw new ReceiptError(result.errors.length > 0 ? "ocr_failed" : "no_text");
   return { lines, engine: result.engine.id || engine.info.id };
 }

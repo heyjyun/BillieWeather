@@ -53,6 +53,19 @@ describe("Tesseract WebAssembly (real engine, Node)", () => {
     expect(result.errors[0]).toMatchObject({ code: "cancelled" });
   }, 60_000);
 
+  it("a cancellation during recognition ends at once, and the next document is read normally", async () => {
+    const controller = new AbortController();
+    const started = performance.now();
+    setTimeout(() => controller.abort(), 1500);
+    const images = [1, 2, 3, 4, 5, 6].map((page) => ({ ...imagesFor("us-debit-credit.png")[0], page }));
+    const result = await engine().recognize({ images, languages: ["en", "zh-Hans", "zh-Hant"], signal: controller.signal });
+    expect(performance.now() - started).toBeLessThan(6000);
+    expect(result.errors.map((error) => error.code)).toContain("cancelled");
+    expect(result.pages.length + result.errors.length).toBe(images.length);
+    const again = await engine().recognize({ images: images.slice(0, 1), languages: ["en"] });
+    expect(again.pages).toHaveLength(1);
+  }, 60_000);
+
   afterAll(() => {
     if (scores.length === 0) return;
     const report = table(scores);

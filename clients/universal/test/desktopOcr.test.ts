@@ -68,3 +68,34 @@ it("reads this batch with the fallback while the models are still being prepared
   expect(recognize).toHaveBeenCalledOnce();
   expect(invoke.mock.calls.map(([command]) => command)).toEqual(["ocr_recognize_image", "ocr_recognize_image"]);
 });
+
+const pageOf = (page: number) => ({ page, width: 1, height: 1, rotation: 0, lines: [] });
+const visionPage = (page: number) => ({ engine: { id: "apple-vision", version: "v" }, languages: [], pages: [pageOf(page)], errors: [], unsupported: [] });
+const threePages = { ...options, images: [1, 2, 3].map((page) => ({ ...options.images[0], page })) };
+
+it("sends only the pages Vision could not read to the fallback and keeps the others, in order", async () => {
+  invoke.mockResolvedValueOnce(visionPage(1)).mockRejectedValueOnce("ocr_failed").mockResolvedValueOnce(visionPage(3));
+  const recognize = vi.fn(async () => ({ engine: { id: "tesseract-js", version: "t" }, languages: [], pages: [pageOf(2)], errors: [], unsupported: [] }));
+  const result = await appleVisionDesktopEngine(async () => ({ info: { id: "tesseract-js", location: "device", languages: [] }, recognize }) as never).recognize(threePages);
+  expect(recognize).toHaveBeenCalledExactlyOnceWith({ ...threePages, images: [threePages.images[1]] });
+  expect(result.pages.map((page) => page.page)).toEqual([1, 2, 3]);
+  expect(result.errors).toEqual([]);
+});
+
+it.each([
+  ["cannot start", async () => { throw new Error("no assets"); }],
+  ["crashes", async () => ({ info: { id: "tesseract-js", location: "device", languages: [] }, recognize: async () => { throw new Error("wasm"); } })],
+])("keeps what Vision read and reports the rest when the fallback %s", async (_name, fallback) => {
+  invoke.mockResolvedValueOnce(visionPage(1)).mockRejectedValueOnce("ocr_failed").mockResolvedValueOnce(visionPage(3));
+  const result = await appleVisionDesktopEngine(fallback as never).recognize(threePages);
+  expect(result.pages.map((page) => page.page)).toEqual([1, 3]);
+  expect(result.errors).toMatchObject([{ page: 2, code: "recognition_failed" }]);
+});
+
+it("never sends a document to a fallback that is not on this device", async () => {
+  invoke.mockRejectedValue("ocr_failed");
+  const recognize = vi.fn();
+  const result = await appleVisionDesktopEngine(async () => ({ info: { id: "cloud", location: "cloud", languages: [] }, recognize }) as never).recognize(threePages);
+  expect(recognize).not.toHaveBeenCalled();
+  expect(result.errors).toHaveLength(3);
+});

@@ -69,11 +69,20 @@ export function appleVisionDesktopEngine(fallback?: () => Promise<OcrEngine>): O
           throw error;
         }
       }, { id: "apple-vision", version: "unknown" });
-      if (!fallback || signal?.aborted ||
-          (!timedOut && (result.pages.length || !result.errors.some((error) => error.code === "recognition_failed")))) return result;
-      const engine = await fallback();
-      if (engine.info.location !== "device") return result;
-      return engine.recognize(input);
+      const failed = new Set(result.errors.filter((error) => error.code === "recognition_failed").map((error) => error.page));
+      if (!fallback || signal?.aborted || (!timedOut && failed.size === 0)) return result;
+      try {
+        const engine = await fallback();
+        if (engine.info.location !== "device") return result;
+        // Vision is not answering: the whole document is read again, by one engine. Otherwise only the pages
+        // it could not read are, and the pages it did read are kept.
+        if (timedOut || result.pages.length === 0) return await engine.recognize(input);
+        const rest = await engine.recognize({ ...input, images: images.filter((image) => failed.has(image.page)) });
+        const merged = mergeOcrResults([{ ...result, errors: result.errors.filter((error) => !failed.has(error.page)) }, rest]);
+        return { ...merged, engine: result.engine };
+      } catch {
+        return result; // the fallback failed too: the pages Vision read stay, the others are reported
+      }
     },
   };
 }

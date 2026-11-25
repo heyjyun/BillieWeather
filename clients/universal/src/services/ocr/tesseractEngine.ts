@@ -23,6 +23,28 @@ export interface TesseractAssets {
   rotate?: (image: OcrImage, degrees: 90 | 180 | 270) => Promise<Uint8Array>;
 }
 
+/** Starting the engine and loading its models (about 20 MB, from the app itself). */
+const LOAD_LIMIT_MS = 60_000;
+/** One reading of one page. A page takes a few seconds; a stuck worker would otherwise wait forever. */
+const PAGE_LIMIT_MS = 90_000;
+export const TESSERACT_LIMITS = { load: LOAD_LIMIT_MS, page: PAGE_LIMIT_MS };
+
+/** Cancelled or out of time: the worker is stopped, and the promises it still owes never settle. */
+class Stopped extends Error {
+  constructor(public reason: "cancelled" | "timeout") { super(reason); }
+}
+
+function bounded<T>(work: Promise<T>, milliseconds: number, signal?: AbortSignal): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const finish = () => { clearTimeout(timer); signal?.removeEventListener("abort", abort); };
+    const abort = () => { finish(); reject(new Stopped("cancelled")); };
+    const timer = setTimeout(() => { finish(); reject(new Stopped("timeout")); }, milliseconds);
+    signal?.addEventListener("abort", abort, { once: true });
+    work.then((value) => { finish(); resolve(value); }, (error: unknown) => { finish(); reject(error instanceof Error ? error : new Error(String(error))); });
+    if (signal?.aborted) abort();
+  });
+}
+
 interface TesseractWord { text: string; confidence: number; bbox: { x0: number; y0: number; x1: number; y1: number } }
 interface TesseractLine extends TesseractWord { words: TesseractWord[] }
 interface TesseractBlock { paragraphs: Array<{ lines: TesseractLine[] }> }
@@ -94,16 +116,28 @@ export function tesseractEngine(assets: TesseractAssets): OcrEngine {
       const sets = chinese.length > 0 ? chinese.map((code) => [...latin, code]) : [latin.length > 0 ? latin : ["eng"]];
       let loaded = sets[0];
       const traditional = new Map<number, OcrPage>();
-      const worker = await createWorker(loaded, OEM.LSTM_ONLY, {
+      const starting = createWorker(loaded, OEM.LSTM_ONLY, {
         workerPath: assets.workerPath, corePath: assets.corePath, langPath: assets.langPath, workerBlobURL: false, gzip: true,
         cacheMethod: assets.cacheMethod, logger: () => undefined, errorHandler: () => undefined,
       });
-      const abort = () => void worker.terminate();
-      signal?.addEventListener("abort", abort, { once: true });
+      /** Why nothing more can be read: the worker is stopped once, and the remaining pages say so. */
+      let stopped: Stopped["reason"] | null = null;
+      const refuse = (page: number) => result.errors.push(stopped === "cancelled" || signal?.aborted
+        ? { page, code: "cancelled", message: "Cancelled." } : { page, code: "recognition_failed", message: "Text recognition failed." });
+      let worker: Awaited<typeof starting>;
+      try {
+        worker = await bounded(starting, LOAD_LIMIT_MS, signal);
+      } catch (error) {
+        // Whenever it does start, it is not left running.
+        starting.then((late) => late.terminate(), () => undefined).catch(() => undefined);
+        stopped = error instanceof Stopped ? error.reason : "timeout";
+        for (const image of images) refuse(image.page);
+        return result;
+      }
       try {
         for (const image of images) {
-          if (signal?.aborted) {
-            result.errors.push({ page: image.page, code: "cancelled", message: "Cancelled." });
+          if (stopped || signal?.aborted) {
+            refuse(image.page);
             continue;
           }
           if (image.kind === "heic") {
@@ -113,12 +147,12 @@ export function tesseractEngine(assets: TesseractAssets): OcrEngine {
           }
           try {
             result.pages.push(await recognizePage(image));
-          } catch {
-            result.errors.push({ page: image.page, code: signal?.aborted ? "cancelled" : "recognition_failed", message: "Text recognition failed." });
+          } catch (error) {
+            if (error instanceof Stopped) stopped = error.reason;
+            refuse(image.page);
           }
         }
       } finally {
-        signal?.removeEventListener("abort", abort);
         await worker.terminate().catch(() => undefined);
       }
       result.unsupported = [...new Set(result.unsupported)];
@@ -131,10 +165,10 @@ export function tesseractEngine(assets: TesseractAssets): OcrEngine {
 
       async function readWith(languagesToLoad: string[], bytes: Uint8Array): Promise<OcrLine[]> {
         if (languagesToLoad.join("+") !== loaded.join("+")) {
-          await worker.reinitialize(languagesToLoad.join("+"), OEM.LSTM_ONLY);
+          await bounded(worker.reinitialize(languagesToLoad.join("+"), OEM.LSTM_ONLY), LOAD_LIMIT_MS, signal);
           loaded = languagesToLoad;
         }
-        const output = await worker.recognize(bytes as never, {}, { blocks: true, text: false, hocr: false, tsv: false });
+        const output = await bounded(worker.recognize(bytes as never, {}, { blocks: true, text: false, hocr: false, tsv: false }), PAGE_LIMIT_MS, signal);
         return linesOf((output.data as unknown as { blocks: TesseractBlock[] | null }).blocks);
       }
 

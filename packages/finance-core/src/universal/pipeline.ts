@@ -114,7 +114,8 @@ export async function createOcrDraft(input: { bytes: Uint8Array; filename: strin
     if ((error as { name?: string } | null)?.name === "AbortError") throw new ImportPipelineError("ocr_cancelled");
     throw new ImportPipelineError("ocr_failed");
   }
-  const recognized = new Set(result.pages.map((page) => page.page));
+  // A page without a single line was not read (too faint, upside down) or is blank: only a person can tell.
+  const recognized = new Set(result.pages.filter((page) => page.lines.length > 0).map((page) => page.page));
   const missingPages = input.images.map((image) => image.page).filter((page) => !recognized.has(page));
   if (result.pages.length === 0 || result.pages.every((page) => page.lines.length === 0)) {
     throw new ImportPipelineError(result.errors.some((item) => item.code === "cancelled") ? "ocr_cancelled" : "ocr_failed");

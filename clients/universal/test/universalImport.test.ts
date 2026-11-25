@@ -229,3 +229,23 @@ describe("OCR failures leave the database untouched", () => {
     expect(JSON.stringify(snapshot())).toBe(before);
   });
 });
+
+it("a page that gave no text must be acknowledged before anything is saved", async () => {
+  const { createOcrDraft, commitPlan } = await import("@billie/finance-core");
+  const { registerOcrEngine } = await import("../src/services/ocrEngine");
+  const { store } = await newStore();
+  const word = (text: string, x: number, y: number) => ({ text, confidence: 0.99, x, y, width: text.length * 8, height: 10 });
+  const line = (cells: string[], y: number) => { const words = cells.map((cell, i) => word(cell, 10 + i * 200, y)); return { ...word(cells.join(" "), 10, y), words }; };
+  const first = { page: 1, width: 800, height: 400, rotation: 0 as const, lines: [line(["Date", "Description", "Amount"], 10), line(["2026-01-02", "SHOP", "-3.00"], 40), line(["2026-01-03", "CAFE", "-4.00"], 70)] };
+  registerOcrEngine({ info: { id: "test", location: "device", languages: ["en"] }, recognize: async () => ({ engine: { id: "test", version: "1" }, languages: ["en"], errors: [], unsupported: [], pages: [first, { page: 2, width: 800, height: 400, rotation: 0 as const, lines: [] }] }) });
+  try {
+    const { importContext } = await import("../src/services/universalImport");
+    const context = await importContext(store);
+    const draft = await createOcrDraft({ bytes: new Uint8Array([1]), filename: "two.pdf", format: "pdf_scanned", images: [1, 2].map((page) => ({ page, bytes: new Uint8Array([1]), kind: "png" as const })) }, { ...context, deviceCurrency: "USD" });
+    expect(draft.ocr?.missingPages).toEqual([2]);
+    expect(draft.needs).toContain("ocrPages");
+    expect(commitPlan(draft, context).ok).toBe(false);
+  } finally {
+    registerOcrEngine(null);
+  }
+});
