@@ -24,7 +24,7 @@ echo "== Independence (nothing from the MacBook)"
 chk "no .env files in the checkout"       bash -c '! ls .env .env.* 2>/dev/null | grep -v example'
 chk "no database URL in the shell"        bash -c '[[ -z "${DATABASE_URL:-}${DATABASE_URL_UNPOOLED:-}${PRIMARY_DATABASE_URL:-}" ]]'
 chk "no Neon host in shell environment"   bash -c '! env | grep -qi "neon.tech"'
-chk "no MacBook hostnames in config"      bash -c '! git grep -nIE "MacBook|\.local:[0-9]+|100\.[0-9]+\.[0-9]+\.[0-9]+:" -- config clients/universal/src clients/universal/scripts ops bin'
+chk "no MacBook hostnames in config"      bash -c '! git grep -nIE "MacBook[A-Za-z0-9-]*\.local|\.local:[0-9]+|100\.[0-9]+\.[0-9]+\.[0-9]+:" -- config clients/universal/src clients/universal/scripts ops bin'
 chk "shipped app data absent on this Mac" bash -c '[[ ! -e "$HOME/Library/Application Support/com.billieweather.client/billieweather.db" ]]'
 chk "isolated backend up (ops/dev-services.sh start)" bash -c 'curl -fsS -o /dev/null http://127.0.0.1:38530/up && curl -fsS -o /dev/null http://127.0.0.1:38531/health'
 if [[ -f "$HOME/.billieweather-dev/local-root" ]]; then
