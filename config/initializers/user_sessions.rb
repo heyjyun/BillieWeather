@@ -1,10 +1,17 @@
 # Server-side website sessions (see UserSession). Rotation and sign-out hook into Warden so that every
 # way in or out, including the ones inside Devise and Bullet Train, is covered.
 module BillieReplacePreviousSession
-  # Signing in again in the same browser, or refreshing its credentials, replaces the previous session.
+  # One browser holds one session. Refreshing the same person's credentials (saving a profile) keeps it: a new
+  # secret would sign out whatever the browser is loading at that moment. Anything else replaces it.
   def store(user, scope)
-    UserWebSession.revoke(self, scope, "replaced") if user
-    super
+    return super unless user&.respond_to?(:user_sessions)
+    kept = UserWebSession.secret(self, scope)
+    if UserSession.active_for(kept, kind: "web", user: user)
+      session[key_for(scope)] = [user.to_key, user.authenticatable_salt, kept]
+    else
+      UserWebSession.revoke(self, scope, "replaced")
+      super
+    end
   end
 end
 Warden::SessionSerializer.prepend(BillieReplacePreviousSession)

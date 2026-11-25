@@ -207,14 +207,26 @@ class SessionRevocationTest < ActionDispatch::IntegrationTest
     assert_equal 200, client.response.status
   end
 
-  test "refreshing a browser's credentials retires its previous cookie" do
+  test "refreshing a browser's credentials keeps its one session, and sign-out still ends every copy" do
     client = browser
     thief = copy_of(client)
     client.patch account_user_path(@user), params: {user: {time_zone: "Tokyo"}}
     assert_equal 200, browser_status(client)
+    assert_equal 1, UserSession.where(user: @user, kind: "web").count
+    client.delete destroy_user_session_path
     assert_equal 302, browser_status(thief)
-    assert_equal 1, UserSession.active.where(user: @user, kind: "web").count
-    assert_equal ["replaced"], UserSession.where(user: @user, kind: "web").where.not(revoked_at: nil).pluck(:revoke_reason)
+  end
+
+  test "another person signing in with the same browser replaces the previous session" do
+    client = browser
+    thief = copy_of(client)
+    env = {"rack.session" => {"warden.user.user.key" => [[@user.id], @user.authenticatable_salt, UserSession.issue!(@user, kind: "web").last]}}
+    serializer = Warden::SessionSerializer.new(env)
+    Devise.mappings # the warden serializers are defined with the routes
+    serializer.store(@other, :user)
+    assert_equal [@other.id], env["rack.session"]["warden.user.user.key"][0]
+    assert_equal ["replaced"], UserSession.where(user: @user).where.not(revoked_at: nil).pluck(:revoke_reason)
+    assert_equal 200, browser_status(thief), "a different session of the same person is not affected"
   end
 
   # --- Account-wide -----------------------------------------------------------------------------
@@ -305,16 +317,19 @@ class SessionRevocationTest < ActionDispatch::IntegrationTest
   test "open page connections are closed, and a broker failure does not stop the sign-out" do
     closed = []
     remote = Object.new
-    remote.define_singleton_method(:where) { |identifiers| closed << identifiers; self }
+    remote.define_singleton_method(:where) do |identifiers|
+      closed << identifiers
+      self
+    end
     remote.define_singleton_method(:disconnect) { |**| raise "broker down" if closed.size > 1 }
     server = ActionCable.server
     server.define_singleton_method(:remote_connections) { remote }
-    client = browser
+    browser
     UserSession.revoke_all!(@user, reason: "signed_out_elsewhere")
     assert_equal [{current_user: @user}], closed
     client = browser
     client.delete destroy_user_session_path
-    assert_equal 302, client.response.status.then { |status| (status == 303) ? 302 : status }
+    assert client.response.redirect?
     assert_equal 2, closed.size
     assert_equal 0, UserSession.active.where(user: @user, kind: "web").count
   ensure
