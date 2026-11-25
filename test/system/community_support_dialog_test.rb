@@ -14,7 +14,7 @@ class CommunitySupportDialogTest < ApplicationSystemTestCase
       fill_in "user_email", with: friend.email
       fill_in "user_password", with: "a-long-test-password-1"
       find("form input[type='submit'], form button[type='submit']", match: :first).click
-      assert_no_current_path new_user_session_path
+      assert_no_current_path new_user_session_path, ignore_query: true
 
       visit billie_features_path(locale: "en")
       # Record clipboard writes instead of touching the real clipboard.

@@ -457,6 +457,10 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
         def execute(*)
           sleep @@execute_sleep_time
           patched_execute(*)
+        rescue ::Selenium::WebDriver::Error::UnknownError => error
+          # Chrome's wording for an element the page replaced meanwhile; Capybara finds a stale element again.
+          raise unless error.message.include?("Node with given id does not belong to the document")
+          raise ::Selenium::WebDriver::Error::StaleElementReferenceError, error.message
         end
 
         def self.slow_down_execute_time

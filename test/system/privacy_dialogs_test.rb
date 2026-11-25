@@ -11,7 +11,7 @@ class PrivacyDialogsTest < ApplicationSystemTestCase
     fill_in "user_email", with: user.email
     fill_in "user_password", with: PASSWORD
     find("form input[type='submit'], form button[type='submit']", match: :first).click
-    assert_no_current_path new_user_session_path
+    assert_no_current_path new_user_session_path, ignore_query: true
     visit finance_settings_path(locale: "en")
 
     assert_no_selector "dialog[open]"
