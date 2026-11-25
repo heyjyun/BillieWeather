@@ -1,7 +1,7 @@
 {
- "sprint_complete": false,
- "updated": "2026-11-25 03:37:51 CST",
- "phase": "c4 native acceptance done; upgrade test next",
+ "sprint_complete": true,
+ "updated": "2026-11-25 03:51:52 CST",
+ "phase": "complete as far as executable here; 6.2 platforms blocked externally",
  "done": [
   "scheduler: in-session cron 3:01 and 8:01 + detached waiter 3:07/8:07, probed (launchd denied by macOS privacy)",
   "6.0 repository audit: 115 dirty files in ../billieweather all identical to d3061e4; main is an ancestor, ff only",
@@ -13,29 +13,23 @@
   "web audit 26 pages x 3 widths, app layouts 216 checks",
   "native run on c1 (f258e7a): most of matrix PASS, defects G1 G3 fixed",
   "Rails final 857/0/2 skips; browser system tests 42/44 (2 legacy)",
-  "production-mode smoke, CSP, traceback redaction, ADR, release notes"
+  "production-mode smoke, CSP, traceback redaction, ADR, release notes",
+  "c4 native acceptance and upgrade; browser tests 44/44; cleanup"
  ],
  "pending": [
-  "5.9 native GUI acceptance on a REBUILT candidate (965e513 or later; f4902ba is obsolete)",
-  "6.0 architecture decision record; temp artifact cleanup; integration rehearsal in a clone",
-  "6.1 backup/restore rehearsal, macOS release docs",
-  "6.2 web browser workflows; platform matrix",
-  "final regression: universal, TS, Rust, Rails, identity",
-  "final report docs/audits/overnight-phase5.9-to-6.2-final-report.md"
+  "external requirements, see report section 15"
  ],
  "blocked": [
   "Developer ID / notarization",
   "Neon, Render",
   "Intel, Windows, iOS, Android toolchains (no rustup, Xcode, Android SDK, Docker)"
  ],
- "latest_verified_commit": "79ab6c9",
- "candidate": "ClaudeGenerated/overnight-c4 executable 7b7fc6bb3d317fa461a7d60760ec48e727d4704a6129c9eff05c46fc57e573d8, never launched",
+ "latest_verified_commit": "736f4c7 (client 79ab6c9)",
+ "candidate": "ClaudeGenerated/overnight-c4, accepted",
  "isolated_root": "/private/tmp/billie-roadmap.gk99lMpY",
- "servers": "rails 33557, identity 38557 (started 01:29, code before 37f4a8d; restart before GUI)",
+ "servers": "stopped",
  "scratch": "/private/tmp/claude-501/-Users-jyunz-Documents-Developer-Developping-BillieWeather/3aadd522-ebf5-462f-aa3e-5113667beb6c/scratchpad (driver drv, idle)",
- "next_exact_action": "upgrade test c4 -> c5 (sign out first), then finish the report, cleanup",
- "next_resume": "08:01 in-session; waiter 08:07 (duplicate guard 25 min)",
- "failed": [
-  "2 legacy Bullet Train browser tests (expect legal names / platform app row)"
- ]
+ "next_exact_action": "none; see report sections 18 and 19",
+ "next_resume": "none",
+ "failed": []
 }

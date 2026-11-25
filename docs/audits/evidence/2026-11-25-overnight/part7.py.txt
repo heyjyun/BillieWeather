@@ -1,0 +1,20 @@
+from accept import *
+RM="/Users/jyunz/Documents/Developer/Developping/BillieWeather/billieweather-roadmap"; NEW="/Users/jyunz/Documents/Developer/Developping/BillieWeather/ClaudeGenerated/overnight-c5-upgrade/BillieWeather QA night2.app"
+FIRST=open(S+"/email2-first").read().strip()
+fill=lambda n,v: (d("fill",n,v),time.sleep(.3))
+def item(): return subprocess.run(["security","find-generic-password","-s","com.billieweather.client.qa.night2","-a","session"],capture_output=True).returncode==0
+before=None
+def out():
+    global before
+    before=q("select id,description,amount_cents,category,category_source,note,coalesce(user_locked_fields,'') from transactions order by id"); expect(item(),"no item before"); press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); time.sleep(1); expect(not item(),"keychain item still there"); d("key","12","cmd"); time.sleep(2.5); return "keychain entry removed at sign-out"
+step("sign out in the old build", out)
+def up():
+    r=subprocess.run(["node",RM+"/clients/universal/scripts/qa.mjs","launch",NEW],capture_output=True,text=True,cwd=RM); expect("LAUNCHED" in r.stdout,r.stderr[-200:]); time.sleep(3); f=subprocess.run([S+"/front"],capture_output=True,text=True).stdout.strip(); expect("SecurityAgent" not in f,f); d("activate"); time.sleep(2); wait("Sign in to BillieWeather",15); return "no system prompt"
+step("newer build opens over the same data", up)
+def data():
+    fill("Email",FIRST); fill("Password",PW); press("Sign in"); wait("AXButton 'All Transactions'",15); x=wait("Accept Book"); expect(q("select id,description,amount_cents,category,category_source,note,coalesce(user_locked_fields,'') from transactions order by id")==before,"rows changed"); wait("AXButton 'Budgets'"); return f"{len(before)} rows identical, modules kept"
+step("data and preferences after the upgrade", data)
+def work():
+    press("Add & Sync"); press("Import statements"); press("Import statements",1) if "Choose statement files" not in dump() else None; press("Choose statement files"); time.sleep(1); pick=d("pickfile",S+"/fx/amb.csv"); time.sleep(2.5); wait("IMPORT PREVIEW"); press("Cancel"); wait("Nothing was saved"); d("key","12","cmd"); time.sleep(2); return "import works, quit"
+step("works after the upgrade", work)
+finish()

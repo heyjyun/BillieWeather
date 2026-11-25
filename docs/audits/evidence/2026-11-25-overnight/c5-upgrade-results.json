@@ -1,0 +1,22 @@
+[
+ [
+  "sign out in the old build",
+  "PASS",
+  "keychain entry removed at sign-out"
+ ],
+ [
+  "newer build opens over the same data",
+  "PASS",
+  "no system prompt"
+ ],
+ [
+  "data and preferences after the upgrade",
+  "PASS",
+  "10 rows identical, modules kept"
+ ],
+ [
+  "works after the upgrade",
+  "PASS",
+  "import works, quit"
+ ]
+]

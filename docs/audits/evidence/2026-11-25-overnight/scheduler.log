@@ -5,3 +5,7 @@
 2026-11-25 01:28:33 CST probe: repository readable, branch ok, claude said: READY
 2026-11-25 01:29:27 CST fired mode=dry pid=92795
 2026-11-25 01:29:27 CST attempt 1: the session was active in the last 25 minutes; not starting a duplicate
+2026-11-25 03:37:46 CST waiter: started pid=66681 ppid=1
+2026-11-25 03:37:46 CST fired mode=dry pid=66684
+2026-11-25 03:37:46 CST attempt 1: the session was active in the last 25 minutes; not starting a duplicate
+2026-11-25 03:37:46 CST waiter: 03:07:00 has passed
