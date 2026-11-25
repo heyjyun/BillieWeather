@@ -36,7 +36,7 @@ Web-only development (`npm run dev`, `npm test`) needs no Swift.
 ```sh
 cd clients/universal
 npm install          # isolated from the Rails app's yarn install
-npm test             # 549 tests (real OCR engines included where available): Ruby parity, universal import, SQLite storage, typed commands, sign-in + full UI workflow, translations, privacy guards
+npm test             # real OCR engines included where available: Ruby parity, universal import, SQLite storage, typed commands, sign-in + full UI workflow, translations, privacy guards
 npm run typecheck
 npm run dev          # browser preview at http://localhost:1420 (in-memory, nothing saved)
 npm run desktop:dev  # the real app window, signing in to http://localhost:3000
@@ -82,6 +82,12 @@ previewed and confirmed first, with Undo afterwards. The engine is the reusable
 [`packages/nl-action-engine`](../../packages/nl-action-engine/README.md) (no dependencies); the
 app's capabilities are declared in `src/commands/`. Details, safety properties and measured accuracy:
 [`docs/natural-language-actions.md`](../../docs/natural-language-actions.md).
+
+## Undo and Redo
+
+Every edit of the book can be undone and redone (buttons at the top; ⌘Z / ⇧⌘Z on Apple platforms, Ctrl+Z / Ctrl+Y elsewhere).
+The database records the edits itself; see [`docs/architecture/editing-history.md`](../../docs/architecture/editing-history.md).
+A new writing method of `FinanceStore` or `LedgerStore` must be listed in `src/services/history/policy.ts`.
 
 ## Local-first privacy
 
