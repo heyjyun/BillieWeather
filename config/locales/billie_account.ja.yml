@@ -14,6 +14,11 @@ ja:
       password_intro: 新しいパスワードを設定するには、現在のパスワードを入力してください。
       current_password: 現在のパスワード
       password_changed: パスワードを変更しました。
+      sessions_heading: "サインイン中のデバイス"
+      sessions_intro: "このアカウントを使っているほかのすべてのブラウザとアプリからサインアウトします。このブラウザはサインインしたままで、デバイスに保存したデータは残ります。"
+      sessions_sign_out: "ほかのデバイスをサインアウト"
+      sessions_confirm: "ほかのすべてのブラウザとアプリをサインアウトしますか？"
+      sessions_signed_out: "ほかのすべてのブラウザとアプリをサインアウトしました。"
       google_password_help: Google で登録した場合、アカウントにはランダムなパスワードが設定されています。ご自身のパスワードを設定するためのリンクをメールでお送りできます。
       send_password_link: パスワード設定リンクをメールで受け取る
       password_reset_sent: パスワード設定用のリンクを %{email} に送信しました。

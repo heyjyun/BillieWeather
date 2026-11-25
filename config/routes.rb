@@ -120,6 +120,7 @@ Rails.application.routes.draw do
       post :dismiss_nickname_prompt
       patch :database_name
       patch :password
+      delete :sessions
       patch :supporter_recognition
       post :password_reset
     end
@@ -180,6 +181,8 @@ Rails.application.routes.draw do
   # transfers, delete one statement or the whole cloud database after a typed confirmation).
   scope "api/client/v1", module: "client_api/v1", as: "client_api_v1", defaults: {format: :json} do
     resource :session, only: [:create, :destroy]
+    post "session/revocations", to: "sessions#revoke_by_digest", as: :session_revocations
+    delete "sessions", to: "sessions#destroy_others", as: :other_sessions
     resource :account, only: [:show, :update]
     resource :module_preferences, only: [:show, :update], controller: :module_preferences
     # Read-only copy of the person's web financial data for the app's local database.

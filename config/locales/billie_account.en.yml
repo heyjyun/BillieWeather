@@ -14,6 +14,11 @@ en:
       password_intro: Enter your current password to choose a new one.
       current_password: Current password
       password_changed: Your password has been changed.
+      sessions_heading: "Signed-in devices"
+      sessions_intro: "Sign out of every other browser and app that uses this account. This browser stays signed in, and data stored on your devices is kept."
+      sessions_sign_out: "Sign out other devices"
+      sessions_confirm: "Sign out every other browser and app?"
+      sessions_signed_out: "Every other browser and app has been signed out."
       google_password_help: Signed up with Google? Your account was given a random password. We can email you a link to choose your own.
       send_password_link: Email me a password link
       password_reset_sent: We sent a link to set your password to %{email}.

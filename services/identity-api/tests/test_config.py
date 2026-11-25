@@ -40,3 +40,15 @@ def test_development_real_email_must_be_fully_configured():
     with pytest.raises(RuntimeError, match="MAIL_DELIVERY=postmark needs"):
         Settings(**dev).validate_for_runtime()
     Settings(**dev, postmark_api_token="token", mail_from="BillieWeather <hi@example.com>").validate_for_runtime()
+
+
+def test_no_endpoint_accepts_a_session_token():
+    """Sign-in state belongs to Rails (user_sessions): a token, live or revoked, opens nothing here."""
+    import identity_api
+
+    for path in Path(identity_api.__file__).parent.glob("*.py"):
+        source = path.read_text().lower()
+        assert "user_sessions" not in source, path.name
+        assert "httpbearer" not in source and "oauth2passwordbearer" not in source, path.name
+        # Incoming Authorization headers are never read (google.py and mailer.py only send their own).
+        assert 'request.headers.get("authorization' not in source and 'header(alias="authorization' not in source, path.name

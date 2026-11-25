@@ -14,6 +14,11 @@ zh-TW:
       password_intro: 輸入目前的密碼後即可設定新密碼。
       current_password: 目前的密碼
       password_changed: 密碼已變更。
+      sessions_heading: "已登入的裝置"
+      sessions_intro: "讓使用此帳戶的其他所有瀏覽器和應用程式登出。目前的瀏覽器會保持登入，裝置上儲存的資料不受影響。"
+      sessions_sign_out: "登出其他裝置"
+      sessions_confirm: "要讓其他所有瀏覽器和應用程式登出嗎？"
+      sessions_signed_out: "其他所有瀏覽器和應用程式均已登出。"
       google_password_help: 透過 Google 註冊？您的帳戶使用的是隨機產生的密碼。我們可以寄一封郵件給您，透過連結設定自己的密碼。
       send_password_link: 寄送設定密碼的郵件
       password_reset_sent: 設定密碼的連結已寄至 %{email}。

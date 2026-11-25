@@ -100,9 +100,9 @@ through a deep link (the browser page only offers `billieweather://open`, which 
 
 ### Compatibility blocker (reported, not worked around)
 
-App session tokens are issued only by Rails (`ClientApi::SessionToken`, signed with Rails'
-`secret_key_base`). Minting them here would mean sharing the Rails master secret and coupling to
-Rails' message format. Instead, a Google sign-up in the app also sets a **BillieWeather password**,
+App session tokens are issued, checked and revoked only by Rails (`ClientApi::SessionToken`, rows in
+`user_sessions`). This service accepts no session token on any endpoint and has no need for access to that
+table. Minting tokens here would put a second writer on the sign-in state. Instead, a Google sign-up in the app also sets a **BillieWeather password**,
 and the app signs in with the existing email/password endpoint. Linking an existing account uses
 that account's password, then signs in the same way. Google keeps working on the website.
 
