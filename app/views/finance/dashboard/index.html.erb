@@ -22,7 +22,8 @@
     </p>
   </div>
   <div class="bw-heading-actions">
-    <% unless @selected_account || @filter_error %>
+    <%# Export lives in Reports (optional); Settings › Privacy offers to turn it on. %>
+    <% unless @selected_account || @filter_error || !module_enabled?("reports") %>
     <% export_period = @filter_values.except(:account_id).compact %>
     <%= link_to finance_report_path(export_period), class: "bw-button bw-button-outline", id: "dashboard-export-report" do %>
       <%= finance_icon "file", size: 17 %> <%= t("billie.export.button") %>
@@ -101,8 +102,11 @@
     <% age_note = finance_balance_age_note(@profile) %>
     <% if age_note %><small class="bw-balance-age"><%= age_note %></small><% end %>
     <% if @balance_summary && @balance_summary[:credit_total].present? %><small class="bw-credit-owed"><%= t("billie.finance.ui.owed_on_credit_cards") %> <strong><%= finance_money(@balance_summary[:credit_total], @profile.currency) %></strong> (<%= finance_count(@balance_summary[:credit_count], "card") %>)</small><% end %>
+    <%# Balances are edited on Cash Flow Forecast (optional): no link into a turned-off module. %>
+    <% if module_enabled?("forecast") %>
     <%= link_to t("billie.finance.ui.view_account_balances"), finance_forecast_path(anchor: "account-balances"), class: "bw-metric-link" %>
     <%= link_to t("billie.finance.ui.enter_or_edit_balance"), finance_forecast_path(edit: "1", anchor: "balance"), class: "bw-metric-link" %>
+    <% end %>
   </article>
   <% end %>
 </div>

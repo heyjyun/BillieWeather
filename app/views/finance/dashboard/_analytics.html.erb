@@ -35,9 +35,10 @@
   <section class="bw-panel bw-mix-panel" id="dashboard-spending-mix" aria-labelledby="dashboard-mix-heading">
     <div class="bw-panel-heading">
       <h2 id="dashboard-mix-heading"><%= t("billie.overview.spending_by_category") %></h2>
-      <%= link_to t("billie.spending.all_categories"), finance_categories_path, class: "bw-text-link" %>
+      <%# Category pages belong to Categories & Tags (optional): no links into it while it is off. %>
+      <% if module_enabled?("categories") %><%= link_to t("billie.spending.all_categories"), finance_categories_path, class: "bw-text-link" %><% end %>
     </div>
-    <%= render "finance/shared/spending_mix", mix: @spending_mix, currency: @profile.currency, empty_text: t("billie.finance.ui.no_categorized_expenses_yet"), link: true %>
+    <%= render "finance/shared/spending_mix", mix: @spending_mix, currency: @profile.currency, empty_text: t("billie.finance.ui.no_categorized_expenses_yet"), link: module_enabled?("categories") %>
   </section>
   <section class="bw-panel" id="dashboard-income-mix" aria-labelledby="dashboard-income-mix-heading">
     <h2 id="dashboard-income-mix-heading"><%= t("billie.overview.income_by_category") %></h2>
