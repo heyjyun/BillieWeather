@@ -6,3 +6,5 @@
 2026-11-25 02:00:47 CST DEVIATION: one accessibility dump included the open panel's sidebar and two file names; nothing opened or captured; driver now never reads panels
 2026-11-25 02:11:02 CST native acceptance on overnight-c1 (f258e7a): registration, databases, CSV, scanned PDF, receipts, edit, trash, backup/restore, theme, 6 languages, feature library, restart, sign-out on/offline, other devices, single copy PASS; G1 layout and G3 snapshot defects fixed in next commit; rebuild pending
 2026-11-25 02:11:25 CST QA app quit by someone at the desktop about 02:10; hardware input active; GUI paused, resumes only after 10 min idle
+2026-11-25 02:24:13 CST 02:23 launching overnight-c2 over c1's session brought up a macOS authentication prompt (SecurityAgent; assumed keychain access by a different ad hoc build). Not touched; QA app stopped; prompt stayed; GUI on hold
+2026-11-25 02:25:11 CST removed two Cargo cache folders of old isolated runs (about 8 GB); they contained eight old QA app bundles (phases 1b-5.1), seen only in the same command
