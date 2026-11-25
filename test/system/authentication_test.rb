@@ -7,7 +7,7 @@ class AuthenticationSystemTest < ApplicationSystemTestCase
 
     # Required fields are validated by the browser before the form is submitted.
     click_button "Create account"
-    assert_selector "#user_first_name:invalid"
+    assert_selector "#user_nickname:invalid"
     assert_current_path new_user_registration_path
 
     fill_registration_form(first_name: "Testy", last_name: "McTesterson", email: "andrew.culver@gmail.com",
@@ -23,8 +23,8 @@ class AuthenticationSystemTest < ApplicationSystemTestCase
     assert_selector ".bw-user", text: "Testy"
 
     user = User.find_by!(email: "andrew.culver@gmail.com")
-    assert_equal "Testy", user.first_name
-    assert_equal "McTesterson", user.last_name
+    assert_equal "Testy", user.nickname
+    assert_equal "US", user.usage_region
     sign_out_for(display_details)
 
     be_invited_to_sign_up
@@ -37,7 +37,7 @@ class AuthenticationSystemTest < ApplicationSystemTestCase
     within ".bw-auth-switch" do
       click_link "Log in"
     end
-    assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
+    assert_selector "h1", text: "Welcome to BillieWeather", exact_text: true
 
     visit root_path
     new_session_page_for(display_details)

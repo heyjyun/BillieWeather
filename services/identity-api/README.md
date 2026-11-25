@@ -183,7 +183,7 @@ Client: `VITE_BILLIE_IDENTITY_URL=http://localhost:8100 npm run dev` in `clients
 ## Tests
 
 ```bash
-uv run pytest                                   # creates billieweather_identity_test (subset schema)
+IDENTITY_TEST_DATABASE_URL=postgresql://localhost/billieweather_identity_test uv run pytest   # required: no default database; creates it (subset schema)
 createdb billieweather_identity_compat
 (cd ../.. && RAILS_ENV=test DATABASE_URL=postgres://localhost/billieweather_identity_compat bin/rails db:schema:load)
 IDENTITY_TEST_DATABASE_URL=postgresql://localhost/billieweather_identity_compat IDENTITY_RAILS_COMPAT=1 uv run pytest   # + real Rails cross-check

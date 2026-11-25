@@ -1,6 +1,7 @@
 require "test_helper"
 require "capybara/email"
 require "support/waiting"
+require "support/chrome_session_reset"
 require "minitest/retry"
 
 Minitest::Retry.use!(retry_count: 6, verbose: true, exceptions_to_retry: [Net::ReadTimeout, Capybara::ModalNotFound])
@@ -56,7 +57,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   if use_cuprite?
     driven_by :bt_cuprite
   else
-    driven_by :selenium, using: :chrome, screen_size: [1400, 1400]
+    driven_by :selenium, using: (ENV["MAGIC_TEST"].present? ? :chrome : :headless_chrome), screen_size: [1400, 1400]
   end
   include ActiveJob::TestHelper
   include MagicTest::Support
@@ -228,7 +229,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
     # this forces capybara to wait until the proper page loads.
     # otherwise our tests will immediately start trying to match things before the page even loads.
-    assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
+    assert_selector "h1", text: "Welcome to BillieWeather", exact_text: true
   end
   alias_method :new_session_page_for, :new_session_page
 
@@ -260,8 +261,9 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
   alias_method :new_registration_page_for, :new_registration_page
 
   def fill_registration_form(first_name:, last_name:, email:, password: example_password, password_confirmation: password)
-    fill_in "user_first_name", with: first_name
-    fill_in "user_last_name", with: last_name
+    # Sign-up asks for a nickname and a region instead of a legal name.
+    fill_in "user_nickname", with: first_name
+    find("#user_usage_region option[value='US']").select_option
     fill_in "user_email", with: email
     fill_in "user_password", with: password
     fill_in "user_password_confirmation", with: password_confirmation

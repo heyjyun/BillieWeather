@@ -28,7 +28,10 @@ from identity_api.schema import migrate
 # EMAIL_VERIFICATION_REQUIRED off); every test states the settings it needs.
 Settings.model_config["env_file"] = None
 
-TEST_URL = os.environ.get("IDENTITY_TEST_DATABASE_URL", "postgresql://localhost/billieweather_identity_test")
+TEST_URL = os.environ.get("IDENTITY_TEST_DATABASE_URL", "")
+if not TEST_URL:
+    # No default: an unset variable must never pick a database on this computer by itself.
+    raise pytest.UsageError("Set IDENTITY_TEST_DATABASE_URL to an isolated local *_test or *_compat database (see README)")
 FIXTURE = Path(__file__).parent / "fixtures" / "rails_accounts_schema.sql"
 
 
