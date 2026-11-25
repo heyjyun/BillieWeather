@@ -185,13 +185,13 @@ class InvitationsTest < ApplicationSystemTestCase
       click_on "Team Members"
     end
 
-    assert_text("Hanako Tanaka")
+    assert_text("Hanako")
 
-    membership_user = User.find_by(first_name: "Taka", last_name: "Yamaguchi")
+    membership_user = User.find_by(nickname: "Taka")
     last_membership = Membership.find_by(user: membership_user)
 
     within_current_memberships_table do
-      assert_text("Taka Yamaguchi")
+      assert_text("Taka")
       within_membership_row(last_membership) do
         assert page.has_no_content?("Invited")
         assert_text("Team Administrator")
@@ -199,7 +199,7 @@ class InvitationsTest < ApplicationSystemTestCase
       end
     end
 
-    assert_text("Taka Yamaguchi’s Membership on The Testing Team")
+    assert_text("Taka’s Membership on The Testing Team")
 
     # Users cannot create another team in invitation-only mode.
     unless invitation_only?
@@ -251,13 +251,13 @@ class InvitationsTest < ApplicationSystemTestCase
         click_link "Log in"
       end
 
-      assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
+      assert_selector "h1", text: "Welcome to BillieWeather", exact_text: true
       fill_in "user_email", with: "hanako.tanaka@gmail.com"
       fill_in "user_password", with: example_password
       click_button "Log in"
 
       assert_text("Join Another Team")
-      assert_text("Taka Yamaguchi has invited you to join Another Team")
+      assert_text("Taka has invited you to join Another Team")
       assert_text("This invitation was emailed to hanako@some-company.com")
       assert_text("but you're currently signed in as hanako.tanaka@gmail.com")
       click_on "Join Another Team"
@@ -274,7 +274,7 @@ class InvitationsTest < ApplicationSystemTestCase
       last_membership = Membership.find_by(user_email: "hanako@some-company.com")
 
       within_current_memberships_table do
-        assert_text("Hanako Tanaka")
+        assert_text("Hanako")
         within_membership_row(last_membership) do
           assert page.has_no_content?("Invited")
           assert_text("Viewer")
@@ -305,7 +305,7 @@ class InvitationsTest < ApplicationSystemTestCase
 
     assert_text("The Testing Team Team Members")
     within_current_memberships_table do
-      assert_text("Hanako Tanaka")
+      assert_text("Hanako")
       within_membership_row(first_membership) do
         assert_text("Team Administrator")
         click_on "Details"
@@ -313,13 +313,13 @@ class InvitationsTest < ApplicationSystemTestCase
     end
 
     wait_for_team_page account_membership_path(first_membership)
-    assert_text("Hanako Tanaka’s Membership on The Testing Team")
+    assert_text("Hanako’s Membership on The Testing Team")
     accept_alert { click_on "Demote from Admin" }
 
     wait_for_team_page account_team_memberships_path(hanakos_team)
     assert_text("The Testing Team Team Members")
     within_current_memberships_table do
-      assert_text("Hanako Tanaka")
+      assert_text("Hanako")
       within_membership_row(first_membership) do
         assert page.has_no_content?("Team Administrator")
         click_on "Details"
@@ -327,7 +327,7 @@ class InvitationsTest < ApplicationSystemTestCase
     end
 
     wait_for_team_page account_membership_path(first_membership)
-    assert_text("Hanako Tanaka’s Membership on The Testing Team")
+    assert_text("Hanako’s Membership on The Testing Team")
 
     # since the user is no longer an admin, they shouldn't see either of these options anymore.
     assert_text("Viewer")

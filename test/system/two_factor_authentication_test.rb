@@ -9,7 +9,7 @@ class TwoFactorAuthentication < ApplicationSystemTestCase
 
     device_test "a user can log in with a valid OTP" do
       visit new_user_session_path
-      assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
+      assert_selector "h1", text: "Welcome to BillieWeather", exact_text: true
 
       fill_in "user_email", with: @jane.email
       fill_in "user_password", with: @jane.password
@@ -22,7 +22,7 @@ class TwoFactorAuthentication < ApplicationSystemTestCase
 
     device_test "a user cannot log in with an invalid OTP" do
       visit new_user_session_path
-      assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
+      assert_selector "h1", text: "Welcome to BillieWeather", exact_text: true
 
       fill_in "user_email", with: @jane.email
       fill_in "user_password", with: @jane.password
@@ -36,7 +36,7 @@ class TwoFactorAuthentication < ApplicationSystemTestCase
 
     device_test "a user without OTP enabled can log in without an authentication code" do
       visit new_user_session_path
-      assert_selector "h1", text: "Your financial outlook awaits.", exact_text: true
+      assert_selector "h1", text: "Welcome to BillieWeather", exact_text: true
 
       fill_in "user_email", with: @john.email
       fill_in "user_password", with: @john.password

@@ -91,8 +91,9 @@ class User < ApplicationRecord
     platform_agent_of_id.nil? && nickname.blank?
   end
 
+  # An API application has no nickname; its name is kept in first_name (Platform::Application).
   def full_name
-    nickname.to_s
+    nickname.presence || (platform_agent_of_id ? first_name.to_s : "")
   end
 
   def details_provided?
