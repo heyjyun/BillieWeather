@@ -6,6 +6,17 @@ import { useI18n } from "../i18n";
 import { BackupError, backupFileName, createBackup, isEncryptedBackup, readBackup, restoreInto, serializeBackup } from "../services/backup";
 import { listSnapshots, openFile, saveFile } from "../services/platform";
 
+const refusedKey = (owner: string | null) => `billie.snapshots.refused.${owner ?? ""}`;
+function refusedSnapshots(owner: string | null): string[] {
+  try {
+    const list = JSON.parse(localStorage.getItem(refusedKey(owner)) ?? "[]") as unknown;
+    return Array.isArray(list) ? list.filter((item): item is string => typeof item === "string") : [];
+  } catch { return []; }
+}
+function refuseSnapshot(owner: string | null, name: string): void {
+  try { localStorage.setItem(refusedKey(owner), JSON.stringify([...refusedSnapshots(owner), name].slice(-32))); } catch { /* the list is only shorter until the page is opened again */ }
+}
+
 export function BackupPanel() {
   const { m, t } = useI18n();
   const x = m.ledger.backup;
@@ -16,7 +27,8 @@ export function BackupPanel() {
   const [restorePass, setRestorePass] = useState("");
   const [busy, setBusy] = useState(false);
   const [snapshots, setSnapshots] = useState<Awaited<ReturnType<typeof listSnapshots>>>([]);
-  useEffect(() => { Promise.resolve().then(() => listSnapshots()).then(setSnapshots).catch(() => setSnapshots([])); }, []);
+  // Copies are named after slots, not owners: one that turned out to be another account's is not offered again.
+  useEffect(() => { Promise.resolve().then(() => listSnapshots()).then((list) => setSnapshots(list.filter((item) => !refusedSnapshots(ownerKey).includes(item.name)))).catch(() => setSnapshots([])); }, [ownerKey]);
 
   const fail = (error: unknown) => setStatus({ ok: false, text: error instanceof BackupError ? x.errors[error.code] : m.ledger.errors.unknown });
 
@@ -91,7 +103,13 @@ export function BackupPanel() {
               <button type="button" className="bw-link-button" disabled={busy} onClick={async () => {
                 setBusy(true);
                 try { setStatus((await openSnapshot(snapshot.name)) ? { ok: true, text: x.snapshotRestored } : { ok: false, text: x.errors.no_room }); }
-                catch (error) { fail(error); }
+                catch (error) {
+                  fail(error);
+                  if (error instanceof BackupError && error.code === "other_account") {
+                    refuseSnapshot(ownerKey, snapshot.name);
+                    setSnapshots((list) => list.filter((item) => item.name !== snapshot.name));
+                  }
+                }
                 finally { setBusy(false); }
               }}>{x.restoreSnapshot}</button>
             </li>

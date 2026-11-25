@@ -1,5 +1,6 @@
 import type { Currency, MerchantRule, Statement, Transaction } from "@billie/shared-types";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { BackupError } from "../services/backup";
 import { AccountError } from "../services/account";
 import { declinedSlots, declineSlot, fileForSlot, freeSlot, freeSlots, loadRegistry, MAX_DATABASES, openFailure, ownership, saveRegistry, slotsOfOthers, type Registry } from "../services/databases";
 import { focusIsLost } from "./useFocus";
@@ -442,8 +443,10 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
           const recorded = await store.owner();
           if (ownerKey && recorded && recorded !== ownerKey && recorded !== emailKey) {
             // Only this just-created disposable copy is cleared; its source snapshot is untouched.
+            // Without an owner the emptied file is free again for a new database or a restore.
             await store.deleteAllData({ forgetName: true });
-            throw new Error("This snapshot belongs to another account.");
+            await store.sql.execute("DELETE FROM settings WHERE key = 'owner_account_id'");
+            throw new BackupError("other_account", "This snapshot belongs to another account.");
           }
           await store.sql.execute("DELETE FROM settings WHERE key IN ('report_id', 'web_sync_version', 'web_sync_checked_at', 'last_synced_at', 'web_sync_skip')");
           if (ownerKey) await store.setOwner(ownerKey);

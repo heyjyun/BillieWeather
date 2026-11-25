@@ -52,6 +52,11 @@ it("never adopts another account's automatic snapshot", async () => {
   await act(async () => { await expect(finance.openSnapshot("billieweather.db.pre-v7-123.bak")).rejects.toThrow("another account"); });
   expect(finance.databaseIds).toEqual(["1"]);
   expect(await finance.store.owner()).toBe("id:bob");
+  // The emptied copy is nobody's: nothing of the other account is left and the slot can be used again.
+  const left = files.get("billieweather-2.db")!;
+  expect(await left.select("SELECT value FROM settings WHERE key = 'owner_account_id'")).toEqual([]);
+  expect(await left.select("SELECT name FROM custom_categories")).toEqual([]);
+  expect((await finance.claimSlotForRestore())?.id).toBe("2");
 });
 
 it("gives an authorized snapshot copy a new metadata identity", async () => {

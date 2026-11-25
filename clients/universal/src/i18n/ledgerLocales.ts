@@ -76,7 +76,7 @@ export const ledgerZhCN: LedgerMessages = {
     restore: "从备份恢复", restoreHelp: "恢复会在现有数据库旁边新建一个数据库，不会改动任何现有内容。", choose: "选择备份文件", restorePassphrase: "这个备份已加密。请输入它的密码。", restoring: "正在恢复并校验…",
     restored: "已恢复为“{name}”并通过校验：每一行和每项合计都与备份一致。", restoredName: "{name}（已恢复）",
     snapshots: "更新前的自动副本", snapshotsIntro: "在更新改变数据存储方式之前，BillieWeather 会复制每个数据库文件，并保留最新的两份。", noSnapshots: "还没有自动副本。", restoreSnapshot: "作为新数据库打开", snapshotRestored: "副本已作为新数据库打开。",
-    errors: { not_a_backup: "这个文件不是 BillieWeather 备份。", newer_version: "该备份由更新的版本创建。请先更新 BillieWeather。", passphrase_required: "请输入备份的密码。", wrong_passphrase: "密码错误，或文件已损坏。", damaged: "备份文件已损坏或被修改。", target_not_empty: "备份只能恢复到全新的空数据库中。", verify_failed: "恢复出的副本与备份不一致，已被删除。你的现有数据没有改动。", no_room: "这台设备上没有空闲的数据库位置。请先删除一个数据库。" },
+    errors: { not_a_backup: "这个文件不是 BillieWeather 备份。", newer_version: "该备份由更新的版本创建。请先更新 BillieWeather。", passphrase_required: "请输入备份的密码。", wrong_passphrase: "密码错误，或文件已损坏。", damaged: "备份文件已损坏或被修改。", target_not_empty: "备份只能恢复到全新的空数据库中。", verify_failed: "恢复出的副本与备份不一致，已被删除。你的现有数据没有改动。", no_room: "这台设备上没有空闲的数据库位置。请先删除一个数据库。", other_account: "该副本属于这台设备上的另一个账户，因此没有打开。" },
   },
   activity: {
     title: "操作日志", intro: "这个账本的每一次变更：由谁或什么操作的（你、导入、规则、AI、周期记账）以及发生时间。仅保存在这台设备上。", empty: "暂无记录。",
@@ -175,7 +175,7 @@ export const ledgerZhTW: LedgerMessages = {
     restore: "從備份還原", restoreHelp: "還原會在現有資料庫旁邊建立一個新的資料庫，不會更動任何現有內容。", choose: "選擇備份檔案", restorePassphrase: "這個備份已加密。請輸入它的密語。", restoring: "正在還原並驗證…",
     restored: "已還原為「{name}」並通過驗證：每一列與每項合計都與備份一致。", restoredName: "{name}（已還原）",
     snapshots: "更新前的自動副本", snapshotsIntro: "在更新改變資料儲存方式之前，BillieWeather 會複製每個資料庫檔案，並保留最新的兩份。", noSnapshots: "還沒有自動副本。", restoreSnapshot: "以新資料庫開啟", snapshotRestored: "副本已作為新資料庫開啟。",
-    errors: { not_a_backup: "這個檔案不是 BillieWeather 備份。", newer_version: "該備份由較新的版本建立。請先更新 BillieWeather。", passphrase_required: "請輸入備份的密語。", wrong_passphrase: "密語錯誤，或檔案已損毀。", damaged: "備份檔案已損毀或被修改。", target_not_empty: "備份只能還原到全新的空資料庫中。", verify_failed: "還原出的副本與備份不一致，已被移除。你的現有資料沒有更動。", no_room: "這台裝置上沒有空閒的資料庫位置。請先移除一個資料庫。" },
+    errors: { not_a_backup: "這個檔案不是 BillieWeather 備份。", newer_version: "該備份由較新的版本建立。請先更新 BillieWeather。", passphrase_required: "請輸入備份的密語。", wrong_passphrase: "密語錯誤，或檔案已損毀。", damaged: "備份檔案已損毀或被修改。", target_not_empty: "備份只能還原到全新的空資料庫中。", verify_failed: "還原出的副本與備份不一致，已被移除。你的現有資料沒有更動。", no_room: "這台裝置上沒有空閒的資料庫位置。請先移除一個資料庫。", other_account: "此副本屬於這部裝置上的另一個帳戶，因此沒有開啟。" },
   },
   activity: {
     title: "操作紀錄", intro: "這個帳本的每一次變更：由誰或什麼執行（你、匯入、規則、AI、週期記帳）以及發生時間。僅儲存在這台裝置上。", empty: "目前沒有紀錄。",
@@ -274,7 +274,7 @@ export const ledgerJa: LedgerMessages = {
     restore: "バックアップから復元", restoreHelp: "復元すると、既存のデータベースとは別に新しいデータベースが作られます。既存のものは変更されません。", choose: "バックアップファイルを選択", restorePassphrase: "このバックアップは暗号化されています。パスフレーズを入力してください。", restoring: "復元して検証しています…",
     restored: "「{name}」として復元し、検証しました。すべての行と合計がバックアップと一致しています。", restoredName: "{name}（復元）",
     snapshots: "更新前の自動コピー", snapshotsIntro: "更新でデータの保存方法が変わる前に、BillieWeather が各データベースファイルをコピーします。新しい 2 件が保持されます。", noSnapshots: "自動コピーはまだありません。", restoreSnapshot: "新しいデータベースとして開く", snapshotRestored: "コピーを新しいデータベースとして開きました。",
-    errors: { not_a_backup: "このファイルは BillieWeather のバックアップではありません。", newer_version: "このバックアップは新しいバージョンで作成されました。先に BillieWeather を更新してください。", passphrase_required: "バックアップのパスフレーズを入力してください。", wrong_passphrase: "パスフレーズが違うか、ファイルが破損しています。", damaged: "バックアップファイルが破損しているか、変更されています。", target_not_empty: "バックアップは、新しい空のデータベースにのみ復元できます。", verify_failed: "復元したコピーがバックアップと一致しなかったため、削除しました。既存のデータは変更されていません。", no_room: "この端末には空きのデータベース枠がありません。先にデータベースを 1 つ削除してください。" },
+    errors: { not_a_backup: "このファイルは BillieWeather のバックアップではありません。", newer_version: "このバックアップは新しいバージョンで作成されました。先に BillieWeather を更新してください。", passphrase_required: "バックアップのパスフレーズを入力してください。", wrong_passphrase: "パスフレーズが違うか、ファイルが破損しています。", damaged: "バックアップファイルが破損しているか、変更されています。", target_not_empty: "バックアップは、新しい空のデータベースにのみ復元できます。", verify_failed: "復元したコピーがバックアップと一致しなかったため、削除しました。既存のデータは変更されていません。", no_room: "この端末には空きのデータベース枠がありません。先にデータベースを 1 つ削除してください。", other_account: "このコピーはこの端末の別のアカウントのものなので、開きませんでした。" },
   },
   activity: {
     title: "操作ログ", intro: "この帳簿へのすべての変更です。誰が、または何が行ったか（あなた、インポート、ルール、AI、定期記帳）と、その日時を記録します。この端末にのみ保存されます。", empty: "まだありません。",
@@ -373,7 +373,7 @@ export const ledgerKo: LedgerMessages = {
     restore: "백업에서 복원", restoreHelp: "복원하면 기존 데이터베이스 옆에 새 데이터베이스가 만들어집니다. 기존 데이터는 바뀌지 않습니다.", choose: "백업 파일 선택", restorePassphrase: "이 백업은 암호화되어 있습니다. 암호를 입력하세요.", restoring: "복원하고 검증하는 중…",
     restored: "“{name}”(으)로 복원하고 검증했습니다. 모든 행과 합계가 백업과 일치합니다.", restoredName: "{name} (복원됨)",
     snapshots: "업데이트 전 자동 복사본", snapshotsIntro: "업데이트로 데이터 저장 방식이 바뀌기 전에 BillieWeather가 각 데이터베이스 파일을 복사합니다. 최신 복사본 두 개가 유지됩니다.", noSnapshots: "아직 자동 복사본이 없습니다.", restoreSnapshot: "새 데이터베이스로 열기", snapshotRestored: "복사본을 새 데이터베이스로 열었습니다.",
-    errors: { not_a_backup: "이 파일은 BillieWeather 백업이 아닙니다.", newer_version: "더 새로운 버전에서 만든 백업입니다. 먼저 BillieWeather를 업데이트하세요.", passphrase_required: "백업 암호를 입력하세요.", wrong_passphrase: "암호가 틀렸거나 파일이 손상되었습니다.", damaged: "백업 파일이 손상되었거나 변경되었습니다.", target_not_empty: "백업은 새 빈 데이터베이스로만 복원할 수 있습니다.", verify_failed: "복원한 복사본이 백업과 일치하지 않아 삭제했습니다. 기존 데이터는 바뀌지 않았습니다.", no_room: "이 기기에는 빈 데이터베이스 공간이 없습니다. 먼저 데이터베이스를 하나 삭제하세요." },
+    errors: { not_a_backup: "이 파일은 BillieWeather 백업이 아닙니다.", newer_version: "더 새로운 버전에서 만든 백업입니다. 먼저 BillieWeather를 업데이트하세요.", passphrase_required: "백업 암호를 입력하세요.", wrong_passphrase: "암호가 틀렸거나 파일이 손상되었습니다.", damaged: "백업 파일이 손상되었거나 변경되었습니다.", target_not_empty: "백업은 새 빈 데이터베이스로만 복원할 수 있습니다.", verify_failed: "복원한 복사본이 백업과 일치하지 않아 삭제했습니다. 기존 데이터는 바뀌지 않았습니다.", no_room: "이 기기에는 빈 데이터베이스 공간이 없습니다. 먼저 데이터베이스를 하나 삭제하세요.", other_account: "이 사본은 이 기기의 다른 계정에 속하므로 열지 않았습니다." },
   },
   activity: {
     title: "활동 기록", intro: "이 장부의 모든 변경 사항입니다. 누가 또는 무엇이 했는지(본인, 가져오기, 규칙, AI, 반복 거래)와 시각을 보여 줍니다. 이 기기에만 저장됩니다.", empty: "아직 없습니다.",
@@ -472,7 +472,7 @@ export const ledgerEs: LedgerMessages = {
     restore: "Restaurar desde una copia", restoreHelp: "Al restaurar se crea una base de datos NUEVA junto a las existentes. No se cambia nada de lo que ya tienes.", choose: "Elegir archivo de copia", restorePassphrase: "Esta copia está cifrada. Introduce su frase de contraseña.", restoring: "Restaurando y verificando…",
     restored: "Restaurada como “{name}” y verificada: todas las filas y totales coinciden con la copia.", restoredName: "{name} (restaurada)",
     snapshots: "Copias automáticas antes de actualizar", snapshotsIntro: "Antes de que una actualización cambie cómo se guardan los datos, BillieWeather copia cada archivo de base de datos. Se conservan las dos copias más recientes.", noSnapshots: "Aún no hay copias automáticas.", restoreSnapshot: "Abrir como base de datos nueva", snapshotRestored: "La copia se abrió como una base de datos nueva.",
-    errors: { not_a_backup: "Ese archivo no es una copia de seguridad de BillieWeather.", newer_version: "Esa copia se hizo con una versión más reciente. Actualiza BillieWeather primero.", passphrase_required: "Introduce la frase de contraseña de la copia.", wrong_passphrase: "Frase de contraseña incorrecta o archivo dañado.", damaged: "El archivo de copia está dañado o fue modificado.", target_not_empty: "Las copias solo se restauran en una base de datos nueva y vacía.", verify_failed: "La copia restaurada no coincidía con la copia de seguridad, así que se eliminó. Tus datos existentes no se modificaron.", no_room: "No hay ninguna ranura de base de datos libre en este dispositivo. Elimina primero una base de datos." },
+    errors: { not_a_backup: "Ese archivo no es una copia de seguridad de BillieWeather.", newer_version: "Esa copia se hizo con una versión más reciente. Actualiza BillieWeather primero.", passphrase_required: "Introduce la frase de contraseña de la copia.", wrong_passphrase: "Frase de contraseña incorrecta o archivo dañado.", damaged: "El archivo de copia está dañado o fue modificado.", target_not_empty: "Las copias solo se restauran en una base de datos nueva y vacía.", verify_failed: "La copia restaurada no coincidía con la copia de seguridad, así que se eliminó. Tus datos existentes no se modificaron.", no_room: "No hay ninguna ranura de base de datos libre en este dispositivo. Elimina primero una base de datos.", other_account: "Esa copia pertenece a otra cuenta de este dispositivo, así que no se abrió." },
   },
   activity: {
     title: "Registro de actividad", intro: "Cada cambio en este libro: quién o qué lo hizo (tú, una importación, una regla, la IA, una programación) y cuándo. Se guarda solo en este dispositivo.", empty: "Aún no hay nada.",

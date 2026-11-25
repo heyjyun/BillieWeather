@@ -139,7 +139,9 @@ h1[tabindex]:focus, h2[tabindex]:focus, .bw-main:focus, .bw-message[tabindex]:fo
 .bw-notice:hover { border-color: var(--bw-color-warning); }
 
 /* Fields */
-.bw-field { display: grid; gap: 6px; font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-semibold); }
+/* A long option must never push its card or the window wider (minmax(0, 1fr) instead of the content's width). */
+.bw-field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 6px; font-size: var(--bw-font-size-sm); font-weight: var(--bw-font-weight-semibold); }
+.bw-field :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { max-width: 100%; min-width: 0; }
 .bw-field small { font-weight: 400; color: var(--muted); font-size: var(--bw-font-size-xs); }
 .bw-field input, .bw-field select, .bw-tx-table select, .bw-account-form select, .bw-sync-side select, .bw-db-rename input, .bw-login-language select {
   min-height: 44px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--bw-radius-md); background: var(--card); font-weight: 400; transition: border-color var(--bw-motion-fast), box-shadow var(--bw-motion-fast); }

@@ -59,7 +59,7 @@ export interface EncryptedBackup {
   data: string;
 }
 
-export type BackupErrorCode = "not_a_backup" | "newer_version" | "passphrase_required" | "wrong_passphrase" | "damaged" | "target_not_empty" | "verify_failed";
+export type BackupErrorCode = "not_a_backup" | "newer_version" | "passphrase_required" | "wrong_passphrase" | "damaged" | "target_not_empty" | "verify_failed" | "other_account";
 
 export class BackupError extends Error {
   constructor(public code: BackupErrorCode, message: string) {
