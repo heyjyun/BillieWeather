@@ -1,6 +1,6 @@
 {
  "sprint_complete": false,
- "updated": "2026-11-25 02:37:09 CST",
+ "updated": "2026-11-25 03:05:45 CST",
  "phase": "report written; native acceptance of the final build open",
  "done": [
   "scheduler: in-session cron 3:01 and 8:01 + detached waiter 3:07/8:07, probed (launchd denied by macOS privacy)",
@@ -29,13 +29,13 @@
   "Neon, Render",
   "Intel, Windows, iOS, Android toolchains (no rustup, Xcode, Android SDK, Docker)"
  ],
- "latest_verified_commit": "HEAD (clients identical to 4dc5571)",
- "candidate": "ClaudeGenerated/overnight-c2 (identity .qa) and overnight-c3 (identity .qa.night), same client source",
+ "latest_verified_commit": "79ab6c9",
+ "candidate": "ClaudeGenerated/overnight-c4 executable 7b7fc6bb3d317fa461a7d60760ec48e727d4704a6129c9eff05c46fc57e573d8, never launched",
  "isolated_root": "/private/tmp/billie-roadmap.gk99lMpY",
  "servers": "rails 33557, identity 38557 (started 01:29, code before 37f4a8d; restart before GUI)",
  "scratch": "/private/tmp/claude-501/-Users-jyunz-Documents-Developer-Developping-BillieWeather/3aadd522-ebf5-462f-aa3e-5113667beb6c/scratchpad (driver drv, idle)",
- "next_exact_action": "At 03:01/08:01: if the SecurityAgent prompt is gone, screen unlocked and idle >= 600 s, launch overnight-c3 via qa.mjs and run report section 6; update the report. If still blocked at 08:01, set sprint_complete true and clean up per resume instructions item 8.",
- "next_resume": "03:00 and 08:00 CST",
+ "next_exact_action": "At 08:01: if the SecurityAgent prompt is gone, screen unlocked and idle >= 600 s, launch overnight-c4 via qa.mjs and run report section 6; update the report. Otherwise set sprint_complete true and clean up per resume instructions item 8 (also stop servers 33557/38557 and the isolated cluster).",
+ "next_resume": "08:01 in-session only; waiter stopped 03:02",
  "failed": [
   "2 legacy Bullet Train browser tests (expect legal names / platform app row)"
  ]

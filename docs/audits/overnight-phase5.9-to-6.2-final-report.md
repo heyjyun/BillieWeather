@@ -1,11 +1,11 @@
 # Overnight sprint: Phase 5.9 to 6.2
 
-2026-11-25, 01:25 to about 02:40 CST, branch `autonomous-development`, macOS 27.2.1, Apple Silicon. Nothing was pushed, merged or deployed. Neon and Render were not contacted. No cost. Evidence: [evidence/2026-11-25-overnight](evidence/2026-11-25-overnight/).
+2026-11-25, 01:25 to about 02:40 CST, and 03:01 to 03:10, branch `autonomous-development`, macOS 27.2.1, Apple Silicon. Nothing was pushed, merged or deployed. Neon and Render were not contacted. No cost. Evidence: [evidence/2026-11-25-overnight](evidence/2026-11-25-overnight/).
 
 ## 1. Summary
 
 - **Please do first**: a macOS authentication prompt has been on the screen since about 02:23. It appeared when the second QA build was launched over the first build's sign-in. I did not read, answer or close it. The likely cause is keychain access by a differently signed ad hoc build. It belongs to a QA app that is already stopped; **Deny** or **Cancel** is safe for BillieWeather.
-- That prompt stopped native testing of the final build. **Native acceptance is complete for neither build**: most workflows PASS on build c1; the final build was launched but no workflow was run on it.
+- That prompt, still there at 03:05, stopped native testing of the final build. **Native acceptance is complete for neither build**: most workflows PASS on build c1; no workflow was run on any later build, and the final one (c4) was never started.
 - Three defects were found natively and fixed, and more by other means (section 7). The fixes have been seen in automated tests and headless browsers, **not on the final build's screen**.
 - Both open security findings have a mitigation, rehearsed in production mode on isolated databases (section 10).
 - All suites pass, except two old browser tests (section 11).
@@ -33,7 +33,7 @@
 
 ## 6. Native GUI matrix
 
-c1 = commit `f258e7a`, executable `e1aa3a3d…`, tested 01:57–02:10. Final = c2/c3 (section 14). c1 results are **not** carried over to the final build.
+c1 = commit `f258e7a`, executable `e1aa3a3d…`, tested 01:57–02:10. Final = c4 (section 14); c2 and c3 were launched without any workflow being run. c1 results are **not** carried over to the final build.
 
 | Workflow | c1 | Final |
 | --- | --- | --- |
@@ -76,7 +76,7 @@ c1 = commit `f258e7a`, executable `e1aa3a3d…`, tested 01:57–02:10. Final = c
 | – | 44 of 44 browser tests failed on current Chrome; others were outdated or random | Repaired, 42 pass | yes |
 | – | Identity log did not redact tracebacks | Redacted | automated |
 
-Seen, not fixed: "1 entries deleted for good"; the import page lists fewer formats than it reads; a remembered rule can be as broad as "qa synthetic".
+Fixed at 03:03 (`79ab6c9`): "1 entries deleted for good"; the import page listed fewer formats than it reads. Seen, not fixed: the API platform application has no name in the team list; a remembered rule can be as broad as "qa synthetic".
 
 ## 8–9. Architecture and databases
 
@@ -95,7 +95,7 @@ Seen, not fixed: "1 entries deleted for good"; the import page lists fewer forma
 
 | Suite | Result |
 | --- | --- |
-| Universal | 1091 passed |
+| Universal | 1091 passed (rerun on `79ab6c9`) |
 | TypeScript | 0 errors |
 | Rust | 42 passed (Rust sources last changed in `965e513`) |
 | Rails | 857, 0 failures, 2 skips |
@@ -120,17 +120,18 @@ No updater exists on any platform.
 
 ## 13. Commits
 
-`37f4a8d` rollback fence · `965e513` single process, mobile, Windows · `5b304a1` browser tests · `62b0b95` native defects · `f96d742` receipts page · `4dc5571` buttons · `e7ab324` log redaction · `315c39f` decisions · `61aa7e9` smoke test · `8e850e5` CSP, plus checkpoints. Branch `rollback/session-safe` = `dbd85e7`.
+`37f4a8d` rollback fence · `965e513` single process, mobile, Windows · `5b304a1` browser tests · `62b0b95` native defects · `f96d742` receipts page · `4dc5571` buttons · `e7ab324` log redaction · `315c39f` decisions · `61aa7e9` smoke test · `8e850e5` CSP · `79ab6c9` wording, plus checkpoints. Branch `rollback/session-safe` = `dbd85e7`.
 
 ## 14. Artifacts (`ClaudeGenerated`)
 
 | | Source | Executable SHA-256 | DMG SHA-256 |
 | --- | --- | --- | --- |
 | `overnight-c1` (superseded) | `f258e7a` | `e1aa3a3d0c853ad0bb34a6bf090ffbb1f30dd282e4c4583178f52835403c1b40` | – |
-| `overnight-c2`, identity `.qa` | `4dc5571` | `6e67ad21f38b7afab55efd4c5cac03b5d551f186566fe474863a7409a18baf2d` | `25f8bfdbc2015767de0437fbebd05b96e335bb0c0936c622785e94c8989e1ef0` |
-| `overnight-c3`, identity `.qa.night` | `f5466b5` (same client source) | `de08a85d2904d68486ff5926c360ac011576ff7970ea8e28f0c51f5c122462ee` | `29aada0308592659fa7510bc963943172aea5c2361a7c248b9272e862cf2570d` |
+| **`overnight-c4`, identity `.qa.night2` (final)** | `79ab6c9` | `7b7fc6bb3d317fa461a7d60760ec48e727d4704a6129c9eff05c46fc57e573d8` | `48aa51e8bbb3e9fd1825a902ace14e47e09887d633fb3d5f386f324afb14a130` |
+| `overnight-c2` (superseded), identity `.qa` | `4dc5571` | `6e67ad21f38b7afab55efd4c5cac03b5d551f186566fe474863a7409a18baf2d` | `25f8bfdbc2015767de0437fbebd05b96e335bb0c0936c622785e94c8989e1ef0` |
+| `overnight-c3` (superseded), identity `.qa.night` | `f5466b5` (same client source as c2) | `de08a85d2904d68486ff5926c360ac011576ff7970ea8e28f0c51f5c122462ee` | `29aada0308592659fa7510bc963943172aea5c2361a7c248b9272e862cf2570d` |
 
-Version 0.1.0, builds 100 and 102, arm64, ad hoc, hardened runtime, no entitlements, preflight PASS. Rust 1.99.1, Node 24.22.1. Reproducible builds were not rechecked this time.
+Version 0.1.0, builds 100, 102 and 109, arm64, ad hoc, hardened runtime, no entitlements, preflight PASS. Rust 1.99.1, Node 24.22.1. Two builds of `79ab6c9` in separate target folders, same checkout path, are identical (bundles compared file by file). Another path was not tried.
 
 ## 15. External requirements
 
@@ -138,7 +139,7 @@ Developer ID and notary profile; Neon branch and roles; Render access; rustup ta
 
 ## 16. Scheduling
 
-No usage limit was reached. launchd was tried, could not read `~/Documents` (macOS privacy), and was removed. Working: in-session schedule (03:01, 08:01) and a detached waiter (03:07, 08:07). The waiter's access to the repository and to Claude, and the resume script in dry mode, were tested; **a real resume has not happened**. They stay armed to retry the GUI.
+No usage limit was reached. launchd was tried, could not read `~/Documents` (macOS privacy), and was removed. Working: in-session schedule (03:01, 08:01) and a detached waiter (03:07, 08:07). The waiter's access to the repository and to Claude, and the resume script in dry mode, were tested; **a real resume has not happened**. At 03:01 the in-session schedule fired while the session was idle; this was not a recovery from a limit. The waiter was then stopped, because it would have started a duplicate session. The 08:01 check remains.
 
 ## 17. Mistakes and deviations
 
@@ -159,6 +160,6 @@ No usage limit was reached. launchd was tried, could not read `~/Documents` (mac
 ## 19. Next steps
 
 1. Dismiss the prompt.
-2. With the desktop free, about 30 minutes: launch `overnight-c3` through `qa.mjs` and repeat section 6, including every NOT TESTED row.
+2. With the desktop free, about 30 minutes: launch `overnight-c4` through `qa.mjs` and repeat section 6, including every NOT TESTED row.
 3. Merge by the [plan](phase5.9-integration-plan.md), then close the rollback fence by the runbook.
 4. Signing pair: confirm that an update does not ask for the keychain.
