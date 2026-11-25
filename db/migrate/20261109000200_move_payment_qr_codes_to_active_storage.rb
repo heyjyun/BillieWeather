@@ -24,7 +24,16 @@ class MovePaymentQrCodesToActiveStorage < ActiveRecord::Migration[8.1]
     remove_column :community_payment_methods, :qr_byte_size
   end
 
+  # Mirrors `up`: refuse to drop stored files silently. private_storage_files also holds every file
+  # stored later on the private database service (receipt images and PDFs, 20261117000100), and the
+  # old bytea columns cannot take them back, so a rollback over stored files would lose them for good.
+  # Export or remove them first (Admin → Payment Methods; "Delete my financial data" for receipts).
   def down
+    if select_value("SELECT COUNT(*) FROM private_storage_files").to_i.positive?
+      raise ActiveRecord::IrreversibleMigration, "private_storage_files still holds stored files (payment QR codes, receipts); " \
+        "rolling back would delete them. Remove them deliberately before migrating down."
+    end
+
     add_column :community_payment_methods, :qr_byte_size, :integer
     add_column :community_payment_methods, :qr_content_type, :string
     add_column :community_payment_methods, :qr_image, :binary
