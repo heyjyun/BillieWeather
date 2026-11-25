@@ -1,0 +1,87 @@
+# identity-api tests (with the Rails compatibility check) and dependency / static security audits.
+# Read-only: nothing is deployed or published. No repository secrets are used.
+name: Identity API and security audits
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1" # weekly, so new advisories surface without a code change
+
+permissions:
+  contents: read
+
+jobs:
+  identity-api:
+    name: identity-api pytest (+ Rails compatibility)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Same major version as the Neon database; keep in step with _run_tests.yml.
+        image: postgres:17-alpine
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_USER: rails
+          POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # Local, synthetic, disposable: the test harness refuses anything but a loopback *_test/*_compat database.
+      IDENTITY_TEST_DATABASE_URL: "postgresql://rails:password@localhost:5432/billie_identity_compat"
+      IDENTITY_RAILS_COMPAT: "1"
+      RAILS_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      # tests/test_compat.py finds Ruby with `mise which ruby`, so Ruby comes from mise.toml here.
+      - uses: jdx/mise-action@v2
+      - name: Install gems
+        run: mise exec -- bundle install --jobs 4
+      - uses: astral-sh/setup-uv@v6
+      - name: Load the full Rails schema into the compatibility database
+        run: mise exec -- bin/rails db:create db:schema:load
+        env:
+          DATABASE_URL: "postgresql://rails:password@localhost:5432/billie_identity_compat"
+      - name: pytest
+        working-directory: services/identity-api
+        run: uv run --frozen pytest -q -rs
+
+  audits:
+    name: Dependency and static security audits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: bundler-audit (Gemfile.lock)
+        run: |
+          gem install bundler-audit --no-document
+          bundle-audit check --update
+      - name: brakeman
+        run: |
+          gem install brakeman --no-document
+          brakeman --no-pager --quiet --no-exit-on-warn --format text
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: npm audit (clients/universal)
+        working-directory: clients/universal
+        run: npm audit --audit-level=high
+      - uses: dtolnay/rust-toolchain@stable
+      - name: cargo audit (src-tauri)
+        working-directory: clients/universal/src-tauri
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit
+      - uses: astral-sh/setup-uv@v6
+      - name: pip-audit (identity-api, locked dependencies)
+        working-directory: services/identity-api
+        run: |
+          uv export --frozen --no-dev --no-hashes --no-emit-project --format requirements-txt > "$RUNNER_TEMP/identity-requirements.txt"
+          uvx pip-audit --requirement "$RUNNER_TEMP/identity-requirements.txt" --no-deps --disable-pip
