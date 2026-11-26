@@ -1,0 +1,65 @@
+<section class="bw-panel bw-feature-manager" id="<%= embedded ? "settings-feature-library" : "feature-library" %>" data-feature-library data-filter="<%= filter %>" aria-labelledby="feature-manager-title">
+  <% if embedded %>
+    <h2 id="feature-manager-title"><%= t("billie.modules.library.management") %></h2>
+  <% else %>
+    <p class="bw-eyebrow"><%= link_to t("billie.modules.library.eyebrow"), finance_settings_path(anchor: "settings-feature-library"), class: "bw-text-link" %></p>
+    <h1 id="feature-manager-title"><%= t("billie.modules.library.title") %></h1>
+  <% end %>
+  <p class="bw-muted"><%= t("billie.modules.library.sidebar_intro") %></p>
+  <% unless embedded %>
+    <div class="bw-library-toolbar">
+      <nav class="bw-segmented bw-library-filters" aria-label="<%= t("billie.modules.library.filters_label") %>">
+        <% Finance::FeatureLibraryController::FILTERS.each do |option| %>
+          <%= link_to t("billie.modules.library.filters.#{option}"), finance_feature_library_path(filter: (option unless option == "all")), class: (option == filter ? "is-active" : nil), "aria-current": ("true" if option == filter), data: {library_filter: option} %>
+        <% end %>
+      </nav>
+    </div>
+  <% end %>
+  <p class="bw-sr-status" role="status" aria-live="polite" data-library-status></p>
+  <ul id="feature-rows" class="bw-feature-rows" role="list">
+    <% Finance::ModuleCatalog::MODULES.sort_by { |definition| [definition.available? ? 0 : 1, definition.order] }.each do |definition| %>
+      <% available = definition.available? %>
+      <% state = definition.availability_on %>
+      <% shown = module_in_sidebar?(definition.id) %>
+      <% name = t("billie.modules.names.#{definition.id}") %>
+      <% hidden = (filter == "sidebar" && !shown) || (filter == "hidden" && (!available || shown)) || (filter == "unavailable" && available) %>
+      <li class="bw-library-card<%= ' is-on' if shown %><%= ' is-coming-soon' unless available %>" id="module-<%= definition.id %>" data-module="<%= definition.id %>" data-availability="<%= state %>" data-available="<%= available %>" data-sidebar="<%= shown %>"<%= ' hidden' if hidden %>>
+        <div class="bw-library-card-head">
+          <span class="bw-library-icon"><%= finance_icon definition.icon, size: 20 %></span>
+          <div class="bw-library-title">
+            <h2 id="module-<%= definition.id %>-name"><%= name %></h2>
+            <% unless available %><span class="bw-caption"><%= t("billie.modules.status.#{state}") %></span><% end %>
+          </div>
+          <% if available %>
+            <%= link_to t("billie.modules.library.open"), public_send("#{definition.route}_path"), class: "bw-text-link bw-feature-open",
+              aria: {label: "#{t("billie.modules.library.open")} #{name}"} %>
+            <%= form_with url: finance_feature_library_module_path(definition.id), method: :patch, class: "bw-library-toggle", data: {turbo: false, library_toggle: definition.id} do |form| %>
+              <%= hidden_field_tag :filter, filter, id: nil %>
+              <%= hidden_field_tag :settings, "1", id: nil if embedded %>
+              <%= hidden_field_tag :sidebar_visible, shown ? "0" : "1", id: nil %>
+              <%= hidden_field_tag :expected_revision, module_revision(definition.id), id: nil %>
+              <button type="submit" class="bw-switch" role="switch" aria-checked="<%= shown %>" aria-labelledby="module-<%= definition.id %>-toggle" aria-describedby="module-<%= definition.id %>-desc" title="<%= t("billie.modules.library.toggle_label", name: name) %>">
+                <span class="bw-sr-only" id="module-<%= definition.id %>-toggle"><%= t("billie.modules.library.toggle_label", name: name) %></span>
+                <span class="bw-switch-track" aria-hidden="true"><span class="bw-switch-thumb"></span></span>
+              </button>
+            <% end %>
+          <% end %>
+        </div>
+        <p id="module-<%= definition.id %>-desc" class="bw-sr-only"><%= t("billie.modules.descriptions.#{definition.id}") %><% unless available %> <span class="bw-library-note"><%= t("billie.modules.library.#{state}_note") %></span><% end %></p>
+      </li>
+    <% end %>
+  </ul>
+  <p class="bw-muted bw-library-empty" data-library-empty hidden><%= t("billie.modules.library.empty") %></p>
+  <div class="bw-feature-locked">
+    <span><%= t("billie.modules.nav.settings") %></span>
+    <span><%= finance_icon "lock", size: 16 %> <%= t("billie.modules.library.always_shown") %></span>
+  </div>
+  <%= render "finance/feature_library/sidebar_preview" %>
+  <%= button_to t("billie.modules.library.reset"), finance_reset_feature_library_path,
+    params: (embedded ? {settings: "1"} : {}), form: {data: {turbo: false}, class: "bw-feature-reset"},
+    class: "bw-button bw-button-outline" %>
+  <% if embedded %>
+    <%= link_to t("billie.modules.library.open_library"), finance_feature_library_path, class: "bw-text-link", id: "open-feature-library" %>
+  <% end %>
+  <p class="bw-caption"><%= t(Finance::ModulePreferenceSync.enabled? ? "billie.modules.library.synced_note" : "billie.modules.library.sync_note") %></p>
+</section>

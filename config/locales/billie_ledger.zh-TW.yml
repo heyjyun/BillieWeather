@@ -436,7 +436,7 @@ zh-TW:
         empty: 這個時間段沒有收入或支出。
       mode:
         label: "介面模式"
-        default: "AI 自動記帳"
+        default: "AI 自動"
         manual: "手動記帳"
         default_help: "簡潔、以自動化為主的介面"
         manual_help: "完整的手動記帳工作區"

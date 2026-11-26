@@ -95,7 +95,7 @@ export const ledgerZhCN: LedgerMessages = {
     reasons: { rule: "与你记住的商家匹配", keywords: "与常见商家词匹配", ai: "由 AI 建议", opposite: "3 天内在你的两个账户中有相同金额的支出和收入", refund_words: "同一商家，消费之后有钱退回", same_row: "账户、日期、金额和文字都相同", cadence: "同一商家、同样金额，按固定间隔出现", merchant_words: "已去掉银行代码和数字", account_type: "信用卡上的入账，或含有退款字样" },
     autoRules: "同时记住每个已接受的分类对应的商家", recurringCreate: "创建周期记账",
   },
-  mode: { label: "界面模式", default: "AI 自动记账", manual: "手动记账", defaultHelp: "简洁、以自动化为主的界面", manualHelp: "完整的手动记账工作区", manualOn: "手动记账模式", draftRestored: "已恢复你未完成的输入。", draftDiscard: "放弃草稿", groups: { record: "记账", organize: "账户与列表", plan: "计划与报表", automatic: "自动功能" } },
+  mode: { label: "界面模式", default: "AI 自动", manual: "手动记账", defaultHelp: "简洁、以自动化为主的界面", manualHelp: "完整的手动记账工作区", manualOn: "手动记账模式", draftRestored: "已恢复你未完成的输入。", draftDiscard: "放弃草稿", groups: { record: "记账", organize: "账户与列表", plan: "计划与报表", automatic: "自动功能" } },
   manual: { nav: "手动记账首页", eyebrow: "手动记账模式", title: "手动记账", intro: "手动记账的全部工具，按任务分组。这些就是你在默认模式中看到的同一份记录。", quickAdd: "记一笔", quickAddBody: "选择类型开始记账。", recent: "最近手动记录", recentEmpty: "还没有手动记录。", sameRecords: "默认模式和手动记账模式显示同一份记录。切换模式不会复制、修改或删除任何内容。", tools: { entry: "支出、收入、转账、信用卡还款、退款或余额调整。", transactions: "搜索，按类型、账户、商家、项目或标签筛选；编辑、复制、批量编辑。", accounts: "账户：{count} 个。资产、负债与借贷；填写实际余额即可对账。", categories: "两级收入与支出分类，可排序、隐藏、合并。", lists: "商家、项目和标签：新建、重命名、合并、归档。", planning: "带提醒的预算，以及可入账、跳过或暂停的周期记账。", reports: "按分类、账户、商家、项目、标签或月份统计，含净资产走势。", reviewTitle: "核对与回收站", review: "待核对的收入、回收站，以及用 AI 整理。", bookTitle: "账本、备份与操作日志", book: "新建和重命名账本（数据库）、备份与恢复，查看每一次修改。" } },
 };
 
@@ -194,7 +194,7 @@ export const ledgerZhTW: LedgerMessages = {
     reasons: { rule: "符合你記住的商家", keywords: "符合常見的商家用字", ai: "由 AI 建議", opposite: "3 天內在你的兩個帳戶中有相同金額的支出和收入", refund_words: "同一商家，消費之後有錢退回", same_row: "帳戶、日期、金額和文字都相同", cadence: "同一商家、相同金額，按固定間隔出現", merchant_words: "已移除銀行代碼和數字", account_type: "信用卡上的入帳，或含有退款字樣" },
     autoRules: "同時記住每個已接受的分類對應的商家", recurringCreate: "建立週期記帳",
   },
-  mode: { label: "介面模式", default: "AI 自動記帳", manual: "手動記帳", defaultHelp: "簡潔、以自動化為主的介面", manualHelp: "完整的手動記帳工作區", manualOn: "手動記帳模式", draftRestored: "已還原你未完成的輸入。", draftDiscard: "捨棄草稿", groups: { record: "記帳", organize: "帳戶與清單", plan: "計畫與報表", automatic: "自動功能" } },
+  mode: { label: "介面模式", default: "AI 自動", manual: "手動記帳", defaultHelp: "簡潔、以自動化為主的介面", manualHelp: "完整的手動記帳工作區", manualOn: "手動記帳模式", draftRestored: "已還原你未完成的輸入。", draftDiscard: "捨棄草稿", groups: { record: "記帳", organize: "帳戶與清單", plan: "計畫與報表", automatic: "自動功能" } },
   manual: { nav: "手動記帳首頁", eyebrow: "手動記帳模式", title: "手動記帳", intro: "手動記帳的所有工具，依工作分組。這些就是你在預設模式中看到的同一份紀錄。", quickAdd: "記一筆", quickAddBody: "選擇類型開始記帳。", recent: "最近手動紀錄", recentEmpty: "還沒有手動紀錄。", sameRecords: "預設模式和手動記帳模式顯示同一份紀錄。切換模式不會複製、修改或刪除任何內容。", tools: { entry: "支出、收入、轉帳、信用卡還款、退款或餘額調整。", transactions: "搜尋，依類型、帳戶、商家、專案或標籤篩選；編輯、複製、批次編輯。", accounts: "帳戶：{count} 個。資產、負債與借貸；輸入實際餘額即可對帳。", categories: "兩層收入與支出分類，可排序、隱藏、合併。", lists: "商家、專案和標籤：新增、重新命名、合併、封存。", planning: "帶提醒的預算，以及可入帳、略過或暫停的週期記帳。", reports: "依分類、帳戶、商家、專案、標籤或月份統計，含淨資產走勢。", reviewTitle: "核對與回收站", review: "待核對的收入、回收站，以及用 AI 整理。", bookTitle: "帳本、備份與操作紀錄", book: "新增和重新命名帳本（資料庫）、備份與還原，查看每一次變更。" } },
 };
 
@@ -293,7 +293,7 @@ export const ledgerJa: LedgerMessages = {
     reasons: { rule: "覚えている店舗と一致", keywords: "よくある店舗名の語と一致", ai: "AI の提案", opposite: "3 日以内に、自分の 2 つの口座で同額の出金と入金", refund_words: "同じ店舗で、購入後にお金が戻っている", same_row: "口座、日付、金額、文字がすべて同じ", cadence: "同じ店舗・同じ金額が一定の間隔で発生", merchant_words: "銀行コードと数字を除去", account_type: "カードへの入金、または返金を示す語" },
     autoRules: "承認したカテゴリを、その店舗用に覚えておく", recurringCreate: "定期記帳を作成",
   },
-  mode: { label: "表示モード", default: "AI 自動記帳", manual: "手動記帳", defaultHelp: "シンプルで自動化中心の表示", manualHelp: "手動記帳のすべての機能", manualOn: "手動記帳モード", draftRestored: "入力途中の内容を復元しました。", draftDiscard: "下書きを破棄", groups: { record: "記帳", organize: "口座とリスト", plan: "計画とレポート", automatic: "自動ツール" } },
+  mode: { label: "表示モード", default: "AI 自動", manual: "手動記帳", defaultHelp: "シンプルで自動化中心の表示", manualHelp: "手動記帳のすべての機能", manualOn: "手動記帳モード", draftRestored: "入力途中の内容を復元しました。", draftDiscard: "下書きを破棄", groups: { record: "記帳", organize: "口座とリスト", plan: "計画とレポート", automatic: "自動ツール" } },
   manual: { nav: "手動記帳ホーム", eyebrow: "手動記帳モード", title: "手動記帳", intro: "手で帳簿をつけるための機能を、作業ごとにまとめています。標準モードと同じ記録です。", quickAdd: "記帳する", quickAddBody: "種類を選んで始めましょう。", recent: "最近の手動記帳", recentEmpty: "まだ手動記帳はありません。", sameRecords: "標準モードと手動記帳モードは同じ記録を表示します。モードを切り替えても、記録がコピー・変更・削除されることはありません。", tools: { entry: "支出、収入、振替、カード返済、返金、残高調整。", transactions: "検索、種類・口座・取引先・プロジェクト・タグでの絞り込み、編集・複製・一括編集。", accounts: "口座: {count}。資産・負債・借入。実際の残高を入力して照合できます。", categories: "並べ替え・非表示・統合ができる 2 階層の収入・支出カテゴリ。", lists: "取引先・プロジェクト・タグの作成、名前変更、統合、アーカイブ。", planning: "警告つきの予算と、記帳・スキップ・一時停止できる定期記帳。", reports: "カテゴリ・口座・取引先・プロジェクト・タグ・月別、純資産の推移つき。", reviewTitle: "確認とごみ箱", review: "確認が必要な収入、ごみ箱、AI による整理。", bookTitle: "帳簿・バックアップ・履歴", book: "帳簿（データベース）の作成と名前変更、バックアップと復元、すべての変更履歴。" } },
 };
 

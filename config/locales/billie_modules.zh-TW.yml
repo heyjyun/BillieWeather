@@ -19,11 +19,11 @@ zh-TW:
         import: "匯入"
         receipts: "收據"
         data_management: "資料管理"
-        transactions: 交易
-        ai_assistant: "AI 洞察"
+        transactions: "交易紀錄"
+        ai_assistant: "AI Insight"
         ledgers: 帳本
         accounts: 帳戶與資產
-        categories: 類別與標籤
+        categories: "分類"
         budgets: 預算
         reports: 報表
         recurring: 週期記帳與帳單
@@ -56,7 +56,12 @@ zh-TW:
         hidden: "已隱藏"
         core: "核心"
       library:
-        reset: "恢復預設側邊欄"
+        management: "功能管理"
+        preview: "即時側邊欄預覽"
+        always_shown: "始終顯示"
+        account: "我的帳戶"
+        sidebar_intro: "自訂側邊欄顯示的功能，不影響功能本身的可用性。"
+        reset: "恢復預設顯示"
         reset_saved: "已恢復預設側邊欄。"
         stale: 其他裝置已更改此偏好。這裡顯示最新選擇，你可以再次更改。
         synced_note: 模組選擇會在已登入的 BillieWeather 裝置之間同步。

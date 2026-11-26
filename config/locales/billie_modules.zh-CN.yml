@@ -15,15 +15,15 @@ zh-CN:
         reconciliation: 对账
         review_history: 复核与历史
       names:
-        overview: "财务概览"
+        overview: "财务总览"
         import: "导入"
-        receipts: "收据"
+        receipts: "小票"
         data_management: "数据管理"
-        transactions: 交易
-        ai_assistant: "AI 洞察"
+        transactions: "交易记录"
+        ai_assistant: "AI Insight"
         ledgers: 账本
         accounts: 账户与资产
-        categories: 类别与标签
+        categories: "分类"
         budgets: 预算
         reports: 报表
         recurring: 周期记账与账单
@@ -56,7 +56,12 @@ zh-CN:
         hidden: "已隐藏"
         core: "核心"
       library:
-        reset: "恢复默认侧边栏"
+        management: "功能管理"
+        preview: "实时侧边栏预览"
+        always_shown: "始终显示"
+        account: "我的账户"
+        sidebar_intro: "自定义侧边栏显示的功能，不影响功能本身的可用性。"
+        reset: "恢复默认显示"
         reset_saved: "已恢复默认侧边栏。"
         stale: 其他设备已更改此偏好。这里显示最新选择，你可以再次更改。
         synced_note: 模块选择将在已登录的 BillieWeather 设备之间同步。

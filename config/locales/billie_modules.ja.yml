@@ -56,6 +56,11 @@ ja:
         hidden: "非表示"
         core: "基本"
       library:
+        management: "機能管理"
+        preview: "サイドバーのプレビュー"
+        always_shown: "常に表示"
+        account: "マイアカウント"
+        sidebar_intro: "サイドバーに表示する機能を選べます。利用できる機能は引き続き使えます。"
         reset: "既定のサイドバーに戻す"
         reset_saved: "既定のサイドバーに戻しました。"
         stale: 別の端末でこの設定が変更されました。現在の設定を表示しています。ここで変更し直せます。

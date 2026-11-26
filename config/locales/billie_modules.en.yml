@@ -56,6 +56,11 @@ en:
         hidden: "Hidden"
         core: "Core"
       library:
+        management: "Feature Management"
+        preview: "Live sidebar preview"
+        always_shown: "Always shown"
+        account: "My Account"
+        sidebar_intro: "Choose what appears in the sidebar. All available features remain usable."
         reset: "Restore default sidebar"
         reset_saved: "Default sidebar restored."
         stale: This choice changed on another device. The current choice is shown. You can change it again here.

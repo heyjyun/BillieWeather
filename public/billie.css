@@ -1219,7 +1219,7 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-segmented > .is-active { background: var(--bw-color-surface); color: var(--bw-color-text); box-shadow: var(--bw-shadow-sm); }
 
 .bw-library-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-.bw-library-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.bw-feature-rows { list-style: none; margin: 0; padding: 0; }
 .bw-library-card, .bw-capability { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; border: 1px solid var(--bw-color-border); border-radius: var(--bw-radius-lg); background: var(--bw-color-surface); box-shadow: var(--bw-shadow-sm); transition: border-color var(--bw-motion-fast); }
 .bw-library-card.is-on { border-color: var(--bw-color-accent); }
 .bw-library-card.is-coming-soon, .bw-capability.is-coming-soon { background: var(--bw-color-surface-muted); box-shadow: none; }
@@ -1263,7 +1263,7 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
   /* Phone: the module list is the fixed bottom bar (see .bw-nav above), one row, Settings last. */
   .bw-module-nav { flex-direction: row; overflow: visible; }
   .bw-business-nav { display: flex; flex: 2 1 0; min-width: 0; overflow: auto hidden; margin: 0; padding: 0; scrollbar-width: none; }
-  .bw-module-nav > .bw-nav-link { flex: 1 0 78px; }
+  .bw-module-nav > .bw-nav-link { flex: 1 0 0; min-width: 78px; }
   .bw-nav-divider { display: none; }
   .bw-capability-grid { grid-template-columns: minmax(0, 1fr); }
   .bw-library-toolbar { flex-direction: column; align-items: stretch; }
@@ -1279,3 +1279,22 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 
 .bw-quick-entry { display: grid; gap: .6rem; margin: 0 0 .85rem; }
 .bw-quick-entry > .bw-button { justify-self: start; }
+
+.bw-feature-manager { display: grid; gap: 14px; }
+.bw-feature-manager :is(h1, h2, h3, p) { margin-block: 0; }
+.bw-feature-manager .bw-library-card { padding: 0; border: 0; border-bottom: 1px solid var(--bw-color-border); border-radius: 0; background: transparent; box-shadow: none; }
+.bw-feature-manager .bw-library-card-head { align-items: center; min-height: 60px; gap: clamp(8px, 2vw, 16px); }
+.bw-feature-manager .bw-library-icon { width: 24px; height: 30px; background: transparent; color: var(--bw-color-text-muted); }
+.bw-feature-manager .bw-library-title { overflow-wrap: anywhere; }
+.bw-feature-open { flex-shrink: 0; font-size: var(--bw-font-size-sm); }
+.bw-feature-locked { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--bw-color-text-muted); }
+.bw-feature-locked > span:last-child { display: inline-flex; align-items: center; gap: 8px; }
+.bw-sidebar-preview { padding: 16px; border-radius: var(--bw-radius-lg); background: var(--bw-color-surface-muted); }
+.bw-sidebar-preview ul { list-style: none; display: grid; gap: 10px; padding: 0; margin: 12px 0 0; }
+.bw-sidebar-preview li { display: flex; align-items: center; gap: 10px; }
+.bw-sidebar-preview svg { color: var(--bw-color-text-muted); flex-shrink: 0; }
+.bw-feature-reset, .bw-feature-reset button { width: 100%; }
+
+.bw-sidebar-bottom > .bw-account-shortcut { border-top: 1px solid var(--bw-color-sidebar-border); }
+@media (max-width: 760px) { .bw-sidebar-bottom > .bw-account-shortcut { display: none; } }
+@media (min-width: 761px) { html[data-sidebar="collapsed"] .bw-account-shortcut span { display: none; } }

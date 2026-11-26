@@ -10,12 +10,11 @@ module Finance
 
     def show
       @filter = params[:filter].presence_in(FILTERS) || "all"
-      @modules = ModuleCatalog::MODULES
     end
 
     def reset
       ModulePreference.restore_sidebar_defaults!(user: current_user)
-      redirect_to finance_feature_library_path, status: :see_other, notice: t("billie.modules.library.reset_saved")
+      redirect_to library_path, status: :see_other, notice: t("billie.modules.library.reset_saved")
     end
 
     def update
@@ -37,6 +36,12 @@ module Finance
 
     private
 
+    def library_path
+      return finance_settings_path(anchor: "settings-feature-library") if params[:settings] == "1"
+
+      finance_feature_library_path(filter: params[:filter].presence_in(FILTERS))
+    end
+
     # `sidebar_visible`; `enabled` is the name forms and scripts used before 2026-11-26.
     def requested_visibility
       raw = params.key?(:sidebar_visible) ? params[:sidebar_visible] : params[:enabled]
@@ -52,11 +57,12 @@ module Finance
         format.json do
           render json: {module: definition.id, sidebar_visible: module_in_sidebar?(definition.id), revision: module_revision(definition.id),
                         message: message, sidebar_revision: module_choices.values.sum { |choice| choice.fetch("revision") },
-                        nav: render_to_string(partial: "finance/shared/module_nav", formats: [:html])},
+                        nav: render_to_string(partial: "finance/shared/module_nav", formats: [:html]),
+                        preview: render_to_string(partial: "finance/feature_library/sidebar_preview", formats: [:html])},
             status: conflict ? :conflict : :ok
         end
         format.html do
-          path = finance_feature_library_path(filter: params[:filter].presence_in(FILTERS))
+          path = library_path
           if conflict
             redirect_to path, status: :see_other, alert: message
           else
@@ -78,7 +84,7 @@ module Finance
       message = t("billie.modules.library.errors.#{code}", name: definition && module_name(definition))
       respond_to do |format|
         format.json { render json: {error: code, message: message}, status: status }
-        format.html { redirect_to finance_feature_library_path, status: :see_other, alert: message }
+        format.html { redirect_to library_path, status: :see_other, alert: message }
       end
     end
   end

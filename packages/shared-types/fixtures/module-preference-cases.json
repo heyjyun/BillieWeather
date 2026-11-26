@@ -1,8 +1,8 @@
 {
   "$comment": "Replayed by clients/universal/test/modules.test.ts and test/models/finance/module_catalog_test.rb. 'sidebar' is the expected list of module ids in the sidebar, in catalog order. 'usable' (enabled) never depends on preferences: it is every module available on the surface, listed once per surface under 'usable_by_surface'. Choices stored with the legacy key 'enabled' mean the same as 'sidebarVisible'.",
   "usable_by_surface": {
-    "web": ["transactions", "ai_assistant", "overview", "import", "receipts", "accounts", "categories", "budgets", "reports", "recurring", "forecast"],
-    "app": ["transactions", "ai_assistant", "overview", "import", "receipts", "data_management", "accounts", "categories", "budgets", "reports", "recurring"]
+    "web": ["transactions", "ai_assistant", "overview", "categories", "import", "receipts", "reports", "data_management", "accounts", "budgets", "recurring", "forecast"],
+    "app": ["transactions", "ai_assistant", "overview", "categories", "import", "receipts", "reports", "data_management", "accounts", "budgets", "recurring"]
   },
   "cases": [
     { "name": "new person on the website: minimal sidebar, everything built is usable", "surface": "web", "preferences": null,

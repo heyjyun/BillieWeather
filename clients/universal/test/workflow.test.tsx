@@ -143,7 +143,7 @@ it("signs in, works with local data, switches language, and signs out", async ()
   await act(async () => fireEvent.change(screen.getByLabelText("Language"), { target: { value: "zh-CN" } }));
   await waitFor(() => expect(api.calls).toContainEqual(["updateAccount", { locale: "zh-CN" }]));
   expect(await screen.findByRole("heading", { name: "设置与隐私" })).toBeTruthy();
-  expect(within(screen.getByRole("navigation")).getByRole("button", { name: "交易" })).toBeTruthy(); // the sidebar lists modules (Feature Library)
+  expect(within(screen.getByRole("navigation")).getByRole("button", { name: "交易记录" })).toBeTruthy(); // the sidebar lists modules (Feature Library)
 
   // Excel follows the language too.
   await nav("报表");

@@ -73,7 +73,7 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
     assert_empty response.parsed_body["modules"]
   end
 
-  test "a website reset preserves app-only choices and a second device sees the restored defaults" do
+  test "a second device sees the restored website defaults, including data management" do
     sign_in @user
     send_update(request_body(change("data_management", true), change("ai_assistant", false), change("import", true)))
     assert_response :ok
@@ -82,7 +82,7 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
     assert_redirected_to finance_feature_library_path
     get PATH, headers: headers_for(@user)
     assert_response :ok
-    assert_equal [true, 1], response.parsed_body.dig("modules", "data_management").values_at("sidebar_visible", "revision")
+    assert_equal [false, 2], response.parsed_body.dig("modules", "data_management").values_at("sidebar_visible", "revision")
     assert_equal [true, 2], response.parsed_body.dig("modules", "ai_assistant").values_at("sidebar_visible", "revision")
     assert_equal [false, 2], response.parsed_body.dig("modules", "import").values_at("sidebar_visible", "revision")
   end

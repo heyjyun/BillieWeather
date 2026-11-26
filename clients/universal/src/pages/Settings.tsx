@@ -2,18 +2,23 @@
 // renders the Settings section registry (settings/registry.tsx), grouped by area, with an index at
 // the top. Settings is always in the sidebar.
 import type { ModuleDefinition } from "@billie/shared-types";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import { PageHeading } from "../components/common";
 import { useI18n } from "../i18n";
 import { areaAnchor, visibleSections, type Go, type SettingsShell } from "../settings/registry";
 
-export function Settings({ go, openModule }: { go?: Go; openModule?: (module: ModuleDefinition) => void } = {}) {
+const jump = (id: string) => document.getElementById(id)?.scrollIntoView?.({ block: "start" });
+
+export function Settings({ go, openModule, focus }: { go?: Go; openModule?: (module: ModuleDefinition) => void; focus?: string | null } = {}) {
   const { m } = useI18n();
   const x = m.settings;
   const h = m.settingsHub;
   const shell: SettingsShell | null = go && openModule ? { go, openModule } : null;
   const groups = visibleSections(shell !== null);
-  const jump = (id: string) => document.getElementById(id)?.scrollIntoView?.({ block: "start" });
+
+  useEffect(() => {
+    if (focus === "account") jump(areaAnchor("account"));
+  }, [focus]);
 
   return (
     <>

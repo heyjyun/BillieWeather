@@ -56,7 +56,6 @@
         </nav>
         <% else %>
         <div class="bw-workspace"><span class="bw-workspace-avatar" aria-hidden="true"><%= current_user.email.to_s.first.upcase %></span><div><strong><%= t('billie.layout.my_workspace') %></strong><small><%= t('billie.layout.personal_finances') %></small></div></div>
-        <% if manual_workspace %><div class="bw-mode-badge" id="manual-mode-badge"><%= finance_icon "transactions", size: 16 %><span><%= t('billie.ledger.mode.manual_on') %></span></div><% end %>
         <% if controller.is_a?(Finance::BaseController) %>
         <%= render "finance/shared/module_nav" %>
         <% else %>
@@ -64,14 +63,14 @@
         <% end %>
         <% end %>
         <div class="bw-sidebar-bottom">
-          <div class="bw-sidebar-note"><%= finance_icon "sun", size: 26 %><strong><%= t('billie.layout.clarity') %></strong><p><%= t('billie.layout.next_step') %></p></div>
+          <%= link_to finance_settings_path(anchor: "settings-profile"), class: "bw-nav-link bw-account-shortcut" do %><%= finance_icon "users" %><span><%= t("billie.modules.library.account") %></span><% end %>
           <div class="bw-user" aria-label="<%= t('billie.account_access.signed_in_as', name: current_user.nickname.presence || current_user.email) %>"><div><span class="bw-user-kind"><%= t('billie.account_access.account_kind') %></span><strong><%= current_user.nickname.presence || t('billie.layout.your_account') %></strong><small title="<%= current_user.email %>"><%= current_user.email %></small></div><%= button_to destroy_user_session_path, method: :delete, class: "bw-icon-button", title: t('billie.layout.log_out'), form: {data: {turbo: false}}, "aria-label": t('billie.layout.log_out') do %><%= finance_icon "logout" %><% end %></div>
           <%= button_to t('billie.account_access.switch_account'), destroy_user_session_path, method: :delete, params: {switch_account: 1}, class: "bw-sidebar-switch", id: "switch-account", form: {data: {turbo: false}} %>
         </div>
       </aside>
     <% end %>
     <div class="<%= public_page ? 'bw-public-shell' : 'bw-main-shell' %>">
-      <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb"><%= admin_area ? t('billie.community.nav.support_admin') : t('billie.layout.workspace') %> <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : t('billie.layout.overview') %></strong></div><% if command_bar %><div class="bw-command" data-smart-command data-locale="<%= I18n.locale %>" data-context-url="<%= finance_command_context_path %>" data-preview-url="<%= finance_command_preview_path %>" data-execute-url="<%= finance_command_execute_path %>" data-undo-url="<%= finance_command_undo_path %>"></div><% end %><div class="bw-topbar-actions"><%= render 'shared/billie_mode_switch', manual: manual_workspace if mode_switch %><%= render 'shared/billie_theme_switcher' %><%= render 'shared/billie_language_switcher' %></div></header><% end %>
+      <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb"><%= admin_area ? t('billie.community.nav.support_admin') : t('billie.layout.workspace') %> <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : t('billie.layout.overview') %></strong></div><% if command_bar %><div class="bw-command" data-smart-command data-locale="<%= I18n.locale %>" data-context-url="<%= finance_command_context_path %>" data-preview-url="<%= finance_command_preview_path %>" data-execute-url="<%= finance_command_execute_path %>" data-undo-url="<%= finance_command_undo_path %>"></div><% end %><div class="bw-topbar-actions"><%= render 'shared/billie_mode_switch', manual: manual_workspace if mode_switch %><% if manual_workspace %><span class="bw-sr-only" id="manual-mode-badge"><%= t('billie.ledger.mode.manual_on') %></span><% end %><%= render 'shared/billie_theme_switcher' %><%= render 'shared/billie_language_switcher' %></div></header><% end %>
       <main id="main-content" class="<%= 'bw-main' unless public_page %>">
         <%# Only messages are shown; other flash keys (e.g. ai_batch_id) carry data for the page. %><% flash.to_hash.slice("notice", "alert").each do |type, message| %><div class="bw-flash <%= 'bw-flash-error' if type.to_s == 'alert' %>" role="<%= type.to_s == 'alert' ? 'alert' : 'status' %>"><%= message %></div><% end %>
         <% if controller.is_a?(Finance::BaseController) %><% module_id = controller.send(:current_module_id) %><% if Finance::ModuleCatalog::TRANSACTION_MODULES.include?(module_id) %><%= render "finance/shared/transactions_tabs" %><% elsif Finance::ModuleCatalog::WEB_TABS.key?(module_id) %><%= render "finance/shared/module_tabs" %><% end %><% end %>

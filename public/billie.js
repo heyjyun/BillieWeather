@@ -682,12 +682,13 @@
         if (button.getAttribute("aria-busy") === "true") return;
         var input = form.querySelector("input[name=sidebar_visible]");
         var revision = form.querySelector("input[name=expected_revision]");
+        var settings = form.querySelector("input[name=settings]");
         var token = document.querySelector('meta[name="csrf-token"]');
         button.setAttribute("aria-busy", "true");
         fetch(form.action, {
           method: "PATCH",
           headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded", "X-CSRF-Token": token ? token.content : "" },
-          body: new URLSearchParams({ sidebar_visible: input.value, expected_revision: revision.value }).toString(),
+          body: new URLSearchParams({ sidebar_visible: input.value, expected_revision: revision.value, settings: settings ? settings.value : "" }).toString(),
           credentials: "same-origin"
         }).then(function (response) {
           return response.json().then(function (data) { return { ok: response.ok || response.status === 409, data: data }; });
@@ -699,11 +700,7 @@
           card.dataset.sidebar = on ? "true" : "false";
           card.classList.toggle("is-on", on);
           button.setAttribute("aria-checked", on ? "true" : "false");
-          var text = button.querySelector(".bw-switch-text");
-          if (text) text.textContent = on ? text.dataset.on : text.dataset.off;
           input.value = on ? "0" : "1";
-          var note = card.querySelector("[data-hidden-note]");
-          if (note) note.hidden = on;
           var nav = document.getElementById("module-nav");
           if (nav && result.data.nav && result.data.sidebar_revision >= navRevision) {
             navRevision = result.data.sidebar_revision;
@@ -711,6 +708,12 @@
             holder.innerHTML = result.data.nav;
             var fresh = holder.querySelector("#module-nav");
             if (fresh) nav.replaceWith(fresh);
+            var preview = root.querySelector("[data-sidebar-preview]");
+            if (preview && result.data.preview) {
+              holder.innerHTML = result.data.preview;
+              var freshPreview = holder.querySelector("[data-sidebar-preview]");
+              if (freshPreview) preview.replaceWith(freshPreview);
+            }
           }
           if (status) status.textContent = result.data.message || "";
           applyFilter();

@@ -1,47 +1,11 @@
 // Settings › Feature Library & sidebar, and the per-feature settings area.
-import { alternateSurface, moduleById, MODULES } from "@billie/shared-types";
-import { websitePathFor } from "../components/ModuleUnavailable";
-import { useModules } from "../hooks/useModules";
+import { moduleById, MODULES } from "@billie/shared-types";
 import { useI18n } from "../i18n";
-import { websiteUrl } from "../services/account";
-import { openExternal } from "../services/session";
+import { FeatureManager } from "../pages/FeatureLibrary";
 import type { SectionProps } from "./registry";
 
 export function FeatureLibrarySection({ shell }: SectionProps) {
-  const { m, locale } = useI18n();
-  const { sidebarList, hiddenList } = useModules();
-  const h = m.settingsHub.features;
-  const elsewhere = MODULES.filter((module) => alternateSurface(module, "app") === "web" && websitePathFor(module));
-  return (
-    <section className="bw-panel" id="settings-feature-library" aria-labelledby="settings-library-heading">
-      <h2 id="settings-library-heading">{m.modules.library.title}</h2>
-      <p className="bw-muted">{m.modules.library.intro}</p>
-      <dl className="bw-db-facts">
-        <div><dt>{h.inSidebar}</dt><dd data-sidebar-list>{[...sidebarList.map((module) => m.modules.names[module.id]), m.modules.nav.settings].join(" · ")}</dd></div>
-      </dl>
-      {hiddenList.length === 0 ? <p className="bw-caption">{h.noHidden}</p> : (
-        <>
-          <p className="bw-caption">{h.hiddenIntro}</p>
-          <ul className="bw-inline-links" id="settings-hidden-modules">
-            {hiddenList.map((module) => (
-              <li key={module.id} data-hidden-module={module.id}>
-                {shell ? <button type="button" className="bw-link-button" onClick={() => shell.openModule(module)}>{m.modules.names[module.id]}</button> : <span>{m.modules.names[module.id]}</span>}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {elsewhere.length > 0 && (
-        <p className="bw-caption" id="settings-website-only">
-          {h.elsewhere}{" "}
-          {elsewhere.map((module) => (
-            <button key={module.id} type="button" className="bw-link-button" data-website-module={module.id} onClick={() => openExternal(websiteUrl(websitePathFor(module)!, locale))}>{m.modules.names[module.id]} ↗</button>
-          ))}
-        </p>
-      )}
-      {shell && <div className="bw-db-actions"><button type="button" className="bw-button bw-button-dark" onClick={() => shell.go("features")}>{m.modules.library.open}</button></div>}
-    </section>
-  );
+  return <FeatureManager embedded open={shell?.openModule} openLibrary={shell ? () => shell.go("features") : undefined} />;
 }
 
 type ModuleWithSettings = "accounts" | "categories" | "budgets" | "recurring";

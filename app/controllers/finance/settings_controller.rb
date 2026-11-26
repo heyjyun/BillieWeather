@@ -5,6 +5,9 @@ module Finance
     def show
     end
 
+    def data
+    end
+
     def update
       attributes = params.require(:user).permit(:usage_region)
       attributes[:usage_region] = nil unless attributes.key?(:usage_region)
@@ -94,6 +97,8 @@ module Finance
     end
 
     private
+
+    def current_module_id = action_name == "data" ? "data_management" : super
 
     def load_user
       @user = current_user

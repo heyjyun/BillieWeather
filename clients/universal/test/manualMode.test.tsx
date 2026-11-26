@@ -49,7 +49,7 @@ const db = () => files.get("billieweather.db")!;
 const counts = async () => (await db().select<{ entries: number; accounts: number; audits: number }>(
   "SELECT (SELECT COUNT(*) FROM transactions) AS entries, (SELECT COUNT(*) FROM accounts) AS accounts, (SELECT COUNT(*) FROM audit_events) AS audits"))[0];
 
-it("starts simple, reveals the manual workspace on Manual, and hides it again without touching records", async () => {
+it("uses the same destinations and records in both accounting workflows", async () => {
   mockAccount();
   render(<App />);
   await screen.findByRole("navigation");
@@ -68,8 +68,15 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
   expect(screen.queryByRole("button", { name: "New entry" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Trash" })).toBeNull();
 
-  // 3. Manual opens the manual workspace with grouped navigation.
+  await click(screen.getByRole("button", { name: "Manual bookkeeping" }));
+  expect(screen.getByRole("button", { name: "New entry" })).toBeTruthy();
+  expect(manualButton.getAttribute("aria-pressed")).toBe("false");
+  await click(screen.getByRole("button", { name: "Manual bookkeeping" }));
+
+  // Switching mode stays on the current page. Opening the manual workspace is a separate action.
   await click(manualButton);
+  expect(screen.getByRole("heading", { name: "Transactions", level: 1 })).toBeTruthy();
+  await nav("Manual home");
   await screen.findByRole("heading", { name: "Manual bookkeeping" });
   expect(screen.getByRole("button", { name: "Manual Accounting" }).getAttribute("aria-pressed")).toBe("true");
   expect(badge()).toBeTruthy();
@@ -145,12 +152,16 @@ it("keeps unfinished input when switching modes, and can discard it", async () =
   expect((within(form).getByLabelText("Name") as HTMLInputElement).value).toBe("");
 });
 
-it.each([["zh-CN", "手动记账", "AI 自动记账"], ["zh-TW", "手動記帳", "AI 自動記帳"]])("labels the switch and workspace in %s", async (locale, manual, plain) => {
+it.each([["zh-CN", "手动记账", "AI 自动"], ["zh-TW", "手動記帳", "AI 自動"]])("labels the switch and workspace in %s", async (locale, manual, plain) => {
   localStorage.setItem("billie.locale", locale);
   mockAccount(locale);
   render(<App />);
   await screen.findByRole("navigation");
   expect(screen.getByRole("button", { name: plain }).getAttribute("aria-pressed")).toBe("true");
   await click(screen.getByRole("button", { name: manual }));
+  const { MESSAGES } = await import("../src/i18n");
+  const copy = MESSAGES[locale as "zh-CN" | "zh-TW"].modules.sections;
+  await click(screen.getByRole("button", { name: copy.addSync }));
+  await click(within(document.querySelector<HTMLElement>("#transactions-tabs .bw-subtabs")!).getByRole("button", { name: copy.manual }));
   await screen.findByRole("heading", { name: manual });
 });

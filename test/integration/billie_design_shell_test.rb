@@ -41,7 +41,7 @@ class BillieDesignShellTest < ActionDispatch::IntegrationTest
 
   test "shell controls are translated" do
     sign_in @user
-    {"zh-CN" => ["对账单", "收起侧边栏", "深色", "交易"], "zh-TW" => ["對帳單", "收合側邊欄", "深色", "交易"], "en" => ["Statements", "Collapse sidebar", "Dark", "Transactions"]}.each do |locale, (statements, collapse, dark, transactions)|
+    {"zh-CN" => ["对账单", "收起侧边栏", "深色", "交易记录"], "zh-TW" => ["對帳單", "收合側邊欄", "深色", "交易紀錄"], "en" => ["Statements", "Collapse sidebar", "Dark", "Transactions"]}.each do |locale, (statements, collapse, dark, transactions)|
       get finance_statements_path(locale: locale)
       assert_select "#transactions-tabs a[href='#{finance_statements_path}']", text: statements
       assert_select ".bw-nav a[href='#{finance_transactions_path}']", text: transactions

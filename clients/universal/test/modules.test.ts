@@ -31,12 +31,12 @@ describe("module catalog", () => {
   });
 
   it("every built module is usable for a new account; only the sidebar is minimal", () => {
-    expect(ids(enabledModules("app"))).toEqual(["transactions", "ai_assistant", "overview", "import", "receipts", "data_management", "accounts", "categories", "budgets", "reports", "recurring"]);
+    expect(ids(enabledModules("app"))).toEqual(["transactions", "ai_assistant", "overview", "categories", "import", "receipts", "reports", "data_management", "accounts", "budgets", "recurring"]);
     for (const id of ["accounts", "categories", "budgets", "reports", "recurring"]) {
       expect(isModuleEnabled(id, "app"), id).toBe(true);
       expect(isInSidebar(id, null, "app"), id).toBe(false);
     }
-    expect(ids(hiddenModules(null, "app"))).toEqual(["overview", "import", "receipts", "data_management", "accounts", "categories", "budgets", "reports", "recurring"]);
+    expect(ids(hiddenModules(null, "app"))).toEqual(["overview", "categories", "import", "receipts", "reports", "data_management", "accounts", "budgets", "recurring"]);
   });
 
   it("platform status: Forecast is website-only, not 'coming soon' and not switched off", () => {

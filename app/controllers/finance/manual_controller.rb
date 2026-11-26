@@ -2,7 +2,6 @@ module Finance
   # The Manual Mode home (手动记账): the book, quick ways to record each entry type, and every manual
   # bookkeeping tool grouped by task. It shows the same records as the default dashboard.
   class ManualController < BaseController
-    include ManualWorkspace
 
     def show
       @book = Book.default_for(current_user)

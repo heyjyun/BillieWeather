@@ -43,7 +43,8 @@ module Finance
       @total_count = scope.count
       @total_pages = [(@total_count / 50.0).ceil, 1].max
       @page = params[:page].to_i.clamp(1, @total_pages)
-      @review_counts = manual_mode? ? ledger_review_counts : {}
+      @manual_tools = manual_mode? || params[:tools] == "manual"
+      @review_counts = @manual_tools ? ledger_review_counts : {}
       respond_to do |format|
         format.html do
           @transactions = scope.offset((@page - 1) * 50).limit(50)

@@ -436,7 +436,7 @@ zh-CN:
         empty: 这个时间段没有收入或支出。
       mode:
         label: "界面模式"
-        default: "AI 自动记账"
+        default: "AI 自动"
         manual: "手动记账"
         default_help: "简洁、以自动化为主的界面"
         manual_help: "完整的手动记账工作区"

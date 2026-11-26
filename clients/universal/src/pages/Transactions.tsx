@@ -28,6 +28,8 @@ const KIND_FILTERS: TransactionKind[] = ["expense", "income", "refund", "transfe
 export function Transactions({ preset, intent }: { preset?: TransactionFilter; intent?: TransactionIntent } = {}) {
   const { m, t } = useI18n();
   const { manual } = useMode();
+  const [toolsExpanded, setToolsExpanded] = useState(false);
+  const manualTools = manual || toolsExpanded;
   const { transactions, customCategories, currency, store, refresh, accounts } = useFinance();
   const categories = useMemo(() => allCategories(customCategories), [customCategories]);
   const [query, setQuery] = useState(preset?.query ?? "");
@@ -44,7 +46,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   // The open entry form is part of the draft, so it is still open (and filled in) after a mode switch.
   const [form, setForm] = useDraftState<{ entry: EntryDetail | null; kind?: TransactionKind; prefill?: TransactionIntent["entryDraft"]; draftId?: string } | null>("transactions-page", "form", null);
   const [requestedView, setView] = useState<View>(intent?.view ?? "list");
-  const view: View = manual || requestedView === "organize" ? requestedView : "list";
+  const view: View = requestedView;
   useEffect(() => { if (intent?.entryKind) setForm({ entry: null, kind: intent.entryKind, prefill: intent.entryDraft, draftId: intent.entryDraft ? randomId() : undefined }); }, [intent, setForm]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [batchCategory, setBatchCategory] = useState("");
@@ -68,12 +70,12 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
     const d = dimension.trim().toLowerCase();
     return base.filter((transaction) => (commandFilter || filter === "all" || transaction.category === filter)
       && (commandFilter || !q || transaction.description.toLowerCase().includes(q) || (transaction.originalDescription ?? "").toLowerCase().includes(q) || (transaction.note ?? "").toLowerCase().includes(q))
-      && (!manual || kind === "all" || transaction.kind === kind)
-      && (!manual || accountFilter === "all" || transaction.accountId === accountFilter)
-      && (!manual || !d || [transaction.merchant, transaction.project, ...(transaction.tags ?? [])].some((value) => (value ?? "").toLowerCase().includes(d))));
-  }, [transactions, query, filter, commandFilter, kind, accountFilter, dimension, manual]);
+      && (!manualTools || kind === "all" || transaction.kind === kind)
+      && (!manualTools || accountFilter === "all" || transaction.accountId === accountFilter)
+      && (!manualTools || !d || [transaction.merchant, transaction.project, ...(transaction.tags ?? [])].some((value) => (value ?? "").toLowerCase().includes(d))));
+  }, [transactions, query, filter, commandFilter, kind, accountFilter, dimension, manualTools]);
   // Back to the first rows whenever the filters change (not after editing a row).
-  const filterKey = JSON.stringify([query, filter, kind, accountFilter, dimension, commandFilter, manual]);
+  const filterKey = JSON.stringify([query, filter, kind, accountFilter, dimension, commandFilter, manualTools]);
   const [shown, setShown] = useState({ key: filterKey, rows: PAGE_ROWS });
   const rowLimit = shown.key === filterKey ? shown.rows : PAGE_ROWS;
   const hidden = visible.length - rowLimit;
@@ -121,10 +123,11 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   const heading = (
     <PageHeading eyebrow={x.eyebrow} title={x.title}>
       <div className="bw-actions">
-        {manual && <button type="button" className="bw-button bw-button-dark" onClick={() => { setView("list"); setForm({ entry: null }); }}>{m.ledger.entry.add}</button>}
+        {!manual && <button type="button" className="bw-button bw-button-outline" aria-expanded={toolsExpanded} onClick={() => setToolsExpanded(!toolsExpanded)}>{m.ledger.manual.title}</button>}
+        {manualTools && <button type="button" className="bw-button bw-button-dark" onClick={() => { setView("list"); setForm({ entry: null }); }}>{m.ledger.entry.add}</button>}
         <button type="button" className="bw-button bw-button-outline" aria-pressed={view === "organize"} onClick={() => setView(view === "organize" ? "list" : "organize")}>{m.ledger.organize.button}</button>
-        {manual && suspects.length > 0 && <button type="button" className="bw-button bw-button-outline" aria-pressed={view === "review"} onClick={() => setView(view === "review" ? "list" : "review")}>{L.review} ({suspects.length})</button>}
-        {manual && <button type="button" className="bw-button bw-button-outline" aria-pressed={view === "trash"} onClick={() => setView(view === "trash" ? "list" : "trash")}>{L.trash}</button>}
+        {manualTools && suspects.length > 0 && <button type="button" className="bw-button bw-button-outline" aria-pressed={view === "review"} onClick={() => setView(view === "review" ? "list" : "review")}>{L.review} ({suspects.length})</button>}
+        {manualTools && <button type="button" className="bw-button bw-button-outline" aria-pressed={view === "trash"} onClick={() => setView(view === "trash" ? "list" : "trash")}>{L.trash}</button>}
       </div>
     </PageHeading>
   );
@@ -134,7 +137,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
       {status.error && <p className="bw-message bw-message-error" role="alert">{status.text}</p>}
     </>
   );
-  const formPanel = manual && form && (
+  const formPanel = form && (
     <EntryForm key={form.draftId ?? form.entry?.id ?? "new"} entry={form.entry} initialKind={form.kind} prefill={form.prefill} draftId={form.draftId} onCancel={() => setForm(null)} onDone={(message) => { setForm(null); setStatus(message); }} />
   );
 
@@ -219,7 +222,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
             {categories.map((c) => <option key={c} value={c}>{categoryLabel(m, c)}</option>)}
           </select>
         </label>
-        {manual && <>
+        {manualTools && <>
         <label className="bw-field"><span>{L.kind}</span>
           <select value={kind} onChange={(e) => setKind(e.target.value as TransactionKind | "all")}>
             <option value="all">{L.allKinds}</option>
@@ -243,7 +246,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
         </p>
       )}
       {statusLine}
-      {manual && selected.size > 0 && (
+      {manualTools && selected.size > 0 && (
         <div className="bw-panel bw-batch-bar" role="region" aria-label={t("ledger.list.selected", { count: selected.size })}>
           <strong>{t("ledger.list.selected", { count: selected.size })}</strong>
           <label className="bw-inline-field"><span className="bw-sr-only">{L.batchCategory}</span>
@@ -267,13 +270,13 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
         </div>
       )}
       <p className="bw-caption">
-        {manual && <><label className="bw-check"><input type="checkbox" checked={visible.length > 0 && visible.every((tx) => selected.has(tx.id))} onChange={(e) => setSelected(e.target.checked ? new Set(visible.map((tx) => tx.id)) : new Set())} /> {L.selectAll}</label>{" "}</>}
+        {manualTools && <><label className="bw-check"><input type="checkbox" checked={visible.length > 0 && visible.every((tx) => selected.has(tx.id))} onChange={(e) => setSelected(e.target.checked ? new Set(visible.map((tx) => tx.id)) : new Set())} /> {L.selectAll}</label>{" "}</>}
         {t("transactions.count", { shown: visible.length, total: transactions.length })}
       </p>
       <ul className="bw-tx-table">
         {visible.slice(0, rowLimit).map((transaction) => (
           <li key={transaction.id} className={transaction.excluded ? "is-excluded" : ""}>
-            {manual && <input type="checkbox" aria-label={t("ledger.list.select", { description: transaction.description })} checked={selected.has(transaction.id)} onChange={() => toggle(transaction.id)} />}
+            {manualTools && <input type="checkbox" aria-label={t("ledger.list.select", { description: transaction.description })} checked={selected.has(transaction.id)} onChange={() => toggle(transaction.id)} />}
             <div className="bw-tx-main">
               <strong>{transaction.description}</strong>
               <small>
@@ -290,7 +293,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
               : <CategorySelect label={t("transactions.categoryFor", { description: transaction.description })} value={transaction.category} categories={categories} onChange={(category) => change(transaction, category)} />}
             <Money cents={transaction.amountCents} currency={cur} signed />
             <div className="bw-row-actions">
-              {manual && <>
+              {manualTools && <>
               <button type="button" className="bw-link-button" onClick={async () => setForm({ entry: await store.ledger.entry(transaction.id) })}>{m.ledger.common.edit}</button>
               <button type="button" className="bw-link-button" onClick={() => run(() => store.ledger.duplicateEntry(transaction.id), m.ledger.entry.copied)}>{m.ledger.entry.copy}</button>
               <button type="button" className="bw-link-button" onClick={() => run(() => store.ledger.deleteEntries([transaction.id]), m.ledger.entry.deletedToTrash)}>{m.ledger.common.delete}</button>

@@ -32,6 +32,7 @@ export const modulesEn = {
   status: { available: "Available", comingSoon: "Coming soon", unsupported: "Not in the app yet", inSidebar: "In sidebar", hidden: "Hidden", core: "Core" },
   sections: { overview: "Overview", allTransactions: "All Transactions", addSync: "Add & Sync", import: "Import statements", receipt: "Scan & Capture", manual: "Manual bookkeeping" },
   library: {
+    management: "Feature Management", preview: "Live sidebar preview", alwaysShown: "Always shown", account: "My Account", sidebarIntro: "Choose what appears in the sidebar. All available features remain usable.",
     reset: "Restore default sidebar", resetSaved: "Default sidebar restored.",
     eyebrow: "SETTINGS", title: "Feature Library", intro: "Everything BillieWeather can do. Every available feature works right away; choose which ones appear in your sidebar.",
     open: "Open Feature Library", filtersLabel: "Show modules",
@@ -81,8 +82,8 @@ export type ModulesMessages = typeof modulesEn;
 export const modulesZhCN: ModulesMessages = {
   nav: { settings: "设置", sections: "交易分区" },
   names: {
-    overview: "财务概览", import: "导入", receipts: "收据", data_management: "数据管理",
-    transactions: "交易", ai_assistant: "AI 洞察", ledgers: "账本", accounts: "账户与资产", categories: "类别与标签",
+    overview: "财务总览", import: "导入", receipts: "小票", data_management: "数据管理",
+    transactions: "交易记录", ai_assistant: "AI Insight", ledgers: "账本", accounts: "账户与资产", categories: "分类",
     budgets: "预算", reports: "报表", recurring: "周期记账与账单", goals: "目标与规划", household: "家庭共享",
     forecast: "现金流预测", multi_currency: "多币种",
   },
@@ -108,7 +109,8 @@ export const modulesZhCN: ModulesMessages = {
   status: { available: "可用", comingSoon: "即将推出", unsupported: "应用暂不支持", inSidebar: "在侧边栏", hidden: "已隐藏", core: "核心" },
   sections: { overview: "总览", allTransactions: "全部交易", addSync: "添加与同步", import: "导入账单", receipt: "扫描与采集", manual: "手动记账" },
   library: {
-    reset: "恢复默认侧边栏", resetSaved: "已恢复默认侧边栏。",
+    management: "功能管理", preview: "实时侧边栏预览", alwaysShown: "始终显示", account: "我的账户", sidebarIntro: "自定义侧边栏显示的功能，不影响功能本身的可用性。",
+    reset: "恢复默认显示", resetSaved: "已恢复默认侧边栏。",
     eyebrow: "设置", title: "功能库", intro: "BillieWeather 的全部功能。所有可用功能都能直接使用；你可以选择哪些显示在侧边栏。",
     open: "打开功能库", filtersLabel: "显示模块",
     filters: { all: "全部", sidebar: "在侧边栏", hidden: "已隐藏", unavailable: "暂不可用" },
@@ -145,7 +147,7 @@ export const modulesZhCN: ModulesMessages = {
   },
   automation: "AI 与自动化",
   assistant: {
-    eyebrow: "AI 洞察", title: "AI 洞察", intro: "用日常语言提问，让 BillieWeather 帮你整理记录。每项更改都由你确认，并且都可以撤销。",
+    eyebrow: "AI 洞察", title: "AI Insight", intro: "用日常语言提问，让 BillieWeather 帮你整理记录。每项更改都由你确认，并且都可以撤销。",
     commandsTitle: "用日常语言提问",
     commandsBody: "使用每个页面顶部的指令栏：“显示上个月的咖啡”“今年在餐饮上花了多少”“把 Starbucks 归类为餐饮”。它在此设备上运行；更改会先预览，并且可以撤销。",
     insightsTitle: "洞察与对话", insightsBody: "书面分析、报税准备和关于你财务的对话目前在 BillieWeather 网站上。", insightsOpen: "在网站上打开",
@@ -156,7 +158,7 @@ export const modulesZhTW: ModulesMessages = {
   nav: { settings: "設定", sections: "交易分區" },
   names: {
     overview: "財務總覽", import: "匯入", receipts: "收據", data_management: "資料管理",
-    transactions: "交易", ai_assistant: "AI 洞察", ledgers: "帳本", accounts: "帳戶與資產", categories: "類別與標籤",
+    transactions: "交易紀錄", ai_assistant: "AI Insight", ledgers: "帳本", accounts: "帳戶與資產", categories: "分類",
     budgets: "預算", reports: "報表", recurring: "週期記帳與帳單", goals: "目標與規劃", household: "家庭共享",
     forecast: "現金流預測", multi_currency: "多幣種",
   },
@@ -182,7 +184,8 @@ export const modulesZhTW: ModulesMessages = {
   status: { available: "可用", comingSoon: "即將推出", unsupported: "應用程式暫不支援", inSidebar: "在側邊欄", hidden: "已隱藏", core: "核心" },
   sections: { overview: "總覽", allTransactions: "全部交易", addSync: "新增與同步", import: "匯入帳單", receipt: "掃描與擷取", manual: "手動記帳" },
   library: {
-    reset: "恢復預設側邊欄", resetSaved: "已恢復預設側邊欄。",
+    management: "功能管理", preview: "即時側邊欄預覽", alwaysShown: "始終顯示", account: "我的帳戶", sidebarIntro: "自訂側邊欄顯示的功能，不影響功能本身的可用性。",
+    reset: "恢復預設顯示", resetSaved: "已恢復預設側邊欄。",
     eyebrow: "設定", title: "功能庫", intro: "BillieWeather 的所有功能。所有可用功能都能直接使用；你可以選擇哪些顯示在側邊欄。",
     open: "開啟功能庫", filtersLabel: "顯示模組",
     filters: { all: "全部", sidebar: "在側邊欄", hidden: "已隱藏", unavailable: "暫不可用" },
@@ -219,7 +222,7 @@ export const modulesZhTW: ModulesMessages = {
   },
   automation: "AI 與自動化",
   assistant: {
-    eyebrow: "AI 洞察", title: "AI 洞察", intro: "用日常語言提問，讓 BillieWeather 協助你整理紀錄。每項變更都由你確認，而且都可以復原。",
+    eyebrow: "AI 洞察", title: "AI Insight", intro: "用日常語言提問，讓 BillieWeather 協助你整理紀錄。每項變更都由你確認，而且都可以復原。",
     commandsTitle: "用日常語言提問",
     commandsBody: "使用每個頁面頂端的指令列：「顯示上個月的咖啡」「今年在餐飲上花了多少」「把 Starbucks 歸類為餐飲」。它在此裝置上執行；變更會先預覽，而且可以復原。",
     insightsTitle: "洞察與對話", insightsBody: "書面分析、報稅準備和關於你財務的對話目前在 BillieWeather 網站上。", insightsOpen: "在網站上開啟",
@@ -256,6 +259,7 @@ export const modulesJa: ModulesMessages = {
   status: { available: "利用可能", comingSoon: "近日公開", unsupported: "アプリ未対応", inSidebar: "サイドバーに表示", hidden: "非表示", core: "基本" },
   sections: { overview: "概要", allTransactions: "すべての取引", addSync: "追加と同期", import: "明細の取り込み", receipt: "スキャンと取り込み", manual: "手動記帳" },
   library: {
+    management: "機能管理", preview: "サイドバーのプレビュー", alwaysShown: "常に表示", account: "マイアカウント", sidebarIntro: "サイドバーに表示する機能を選べます。利用できる機能は引き続き使えます。",
     reset: "既定のサイドバーに戻す", resetSaved: "既定のサイドバーに戻しました。",
     eyebrow: "設定", title: "機能ライブラリ", intro: "BillieWeather のすべての機能です。利用可能な機能はすぐに使えます。サイドバーに表示するものを選んでください。",
     open: "機能ライブラリを開く", filtersLabel: "表示するモジュール",
@@ -330,6 +334,7 @@ export const modulesKo: ModulesMessages = {
   status: { available: "사용 가능", comingSoon: "출시 예정", unsupported: "앱 미지원", inSidebar: "사이드바에 표시", hidden: "숨김", core: "기본" },
   sections: { overview: "개요", allTransactions: "전체 거래", addSync: "추가 및 동기화", import: "명세서 가져오기", receipt: "스캔 및 캡처", manual: "직접 기록" },
   library: {
+    management: "기능 관리", preview: "사이드바 미리 보기", alwaysShown: "항상 표시", account: "내 계정", sidebarIntro: "사이드바에 표시할 기능을 선택하세요. 사용 가능한 기능은 계속 사용할 수 있습니다.",
     reset: "기본 사이드바 복원", resetSaved: "기본 사이드바를 복원했습니다.",
     eyebrow: "설정", title: "기능 라이브러리", intro: "BillieWeather의 모든 기능입니다. 사용 가능한 기능은 바로 쓸 수 있으며, 사이드바에 표시할 항목을 선택하세요.",
     open: "기능 라이브러리 열기", filtersLabel: "모듈 표시",
@@ -404,6 +409,7 @@ export const modulesEs: ModulesMessages = {
   status: { available: "Disponible", comingSoon: "Próximamente", unsupported: "Aún no en la aplicación", inSidebar: "En la barra lateral", hidden: "Oculto", core: "Básico" },
   sections: { overview: "Resumen", allTransactions: "Todos los movimientos", addSync: "Añadir y sincronizar", import: "Importar extractos", receipt: "Escanear y capturar", manual: "Contabilidad manual" },
   library: {
+    management: "Gestión de funciones", preview: "Vista previa de la barra lateral", alwaysShown: "Siempre visible", account: "Mi cuenta", sidebarIntro: "Elige qué aparece en la barra lateral. Todas las funciones disponibles se pueden seguir usando.",
     reset: "Restaurar la barra lateral predeterminada", resetSaved: "Se restauró la barra lateral predeterminada.",
     eyebrow: "AJUSTES", title: "Biblioteca de funciones", intro: "Todo lo que BillieWeather puede hacer. Cada función disponible funciona desde el primer momento; elige cuáles aparecen en tu barra lateral.",
     open: "Abrir la biblioteca de funciones", filtersLabel: "Mostrar módulos",

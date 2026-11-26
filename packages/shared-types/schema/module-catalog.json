@@ -28,21 +28,21 @@
       "depends_on": []
     },
     {
-      "id": "import", "core": false, "default_sidebar_visible": false, "order": 22, "icon": "upload",
+      "id": "import", "core": false, "default_sidebar_visible": false, "order": 23, "icon": "upload",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_statements", "app": "import" },
       "depends_on": []
     },
     {
-      "id": "receipts", "core": false, "default_sidebar_visible": false, "order": 23, "icon": "camera",
+      "id": "receipts", "core": false, "default_sidebar_visible": false, "order": 24, "icon": "camera",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_receipts", "app": "receipt" },
       "depends_on": []
     },
     {
-      "id": "data_management", "core": false, "default_sidebar_visible": false, "order": 24, "icon": "layers",
-      "availability": { "web": "unsupported", "app": "available" },
-      "destination": { "web": null, "app": "data" },
+      "id": "data_management", "core": false, "default_sidebar_visible": false, "order": 26, "icon": "layers",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_data_management", "app": "data" },
       "depends_on": []
     },
     {
@@ -58,7 +58,7 @@
       "depends_on": []
     },
     {
-      "id": "categories", "core": false, "default_sidebar_visible": false, "order": 50, "icon": "tag",
+      "id": "categories", "core": false, "default_sidebar_visible": false, "order": 22, "icon": "tag",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_categories", "app": "categories" },
       "depends_on": []
@@ -70,7 +70,7 @@
       "depends_on": []
     },
     {
-      "id": "reports", "core": false, "default_sidebar_visible": false, "order": 70, "icon": "chart",
+      "id": "reports", "core": false, "default_sidebar_visible": false, "order": 25, "icon": "chart",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_ledger_report", "app": "reports" },
       "depends_on": []

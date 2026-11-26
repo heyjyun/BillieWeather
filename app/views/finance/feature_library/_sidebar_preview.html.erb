@@ -1,0 +1,9 @@
+<section class="bw-sidebar-preview" data-sidebar-preview aria-labelledby="sidebar-preview-title">
+  <h3 id="sidebar-preview-title"><%= t("billie.modules.library.preview") %></h3>
+  <ul>
+    <% sidebar_modules.each do |definition| %>
+      <li><%= finance_icon definition.icon, size: 20 %> <%= t("billie.modules.names.#{definition.id}") %></li>
+    <% end %>
+    <li><%= finance_icon "settings", size: 20 %> <%= t("billie.modules.nav.settings") %></li>
+  </ul>
+</section>

@@ -16,7 +16,7 @@ class Finance::ModuleCatalogTest < ActiveSupport::TestCase
   end
 
   test "the catalog lists the approved modules; only Transactions and AI Insight start in the sidebar" do
-    assert_equal %w[transactions ai_assistant overview import receipts data_management ledgers accounts categories budgets reports recurring goals household forecast multi_currency], Finance::ModuleCatalog::IDS
+    assert_equal %w[transactions ai_assistant overview categories import receipts reports data_management ledgers accounts budgets recurring goals household forecast multi_currency], Finance::ModuleCatalog::IDS
     assert_equal %w[transactions ai_assistant], Finance::ModuleCatalog::MODULES.select(&:default_sidebar_visible).map(&:id)
     refute Finance::ModuleCatalog::MODULES.first.respond_to?(:default_enabled), "sidebar defaults are not called 'enabled'"
     refute_includes Finance::ModuleCatalog::IDS, "settings"
@@ -35,7 +35,7 @@ class Finance::ModuleCatalogTest < ActiveSupport::TestCase
   end
 
   test "platform status: built modules are usable everywhere they are built; Forecast is website-only" do
-    assert_equal %w[transactions ai_assistant overview import receipts accounts categories budgets reports recurring forecast], Finance::ModuleCatalog.enabled_modules.map(&:id)
+    assert_equal %w[transactions ai_assistant overview categories import receipts reports data_management accounts budgets recurring forecast], Finance::ModuleCatalog.enabled_modules.map(&:id)
     forecast = Finance::ModuleCatalog.find("forecast")
     assert forecast.available?("web")
     assert forecast.unsupported?("app"), "not built in the app: 'unsupported', not 'coming soon' and not switched off"

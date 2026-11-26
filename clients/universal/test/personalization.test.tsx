@@ -2,7 +2,7 @@
 // Required nickname and personalized greetings in the apps (macOS, Windows, iOS, Android share this code).
 // The nickname rules mirror the server; greetings use the nickname only when there is one and never
 // fall back to the email address. Saving a nickname sends only the nickname to the account.
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { I18nProvider, LOCALES, MESSAGES, type Locale } from "../src/i18n";
 import { dayPart, personalize } from "../src/services/greeting";
 import { normalizeNickname, preferredName, validateNickname } from "../src/services/profile";
@@ -199,5 +199,5 @@ it.each(["saved", "saveFailed"] as const)("Settings shows %s in the newly select
   });
 
   expect(savePreferences).toHaveBeenCalledExactlyOnceWith({ locale: "zh-CN" });
-  expect(screen.getByRole("status").textContent).toBe(MESSAGES["zh-CN"].settings[result]);
+  expect(within(screen.getByRole("region", { name: MESSAGES["zh-CN"].settings.account })).getByRole("status").textContent).toBe(MESSAGES["zh-CN"].settings[result]);
 });

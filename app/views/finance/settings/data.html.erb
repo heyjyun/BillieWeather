@@ -1,0 +1,9 @@
+<% content_for :title, t("billie.modules.names.data_management") %>
+<div class="bw-page-heading">
+  <div>
+    <h1><%= t("billie.modules.names.data_management") %></h1>
+  </div>
+</div>
+<div class="bw-settings-stack">
+  <%= render "finance/settings/data_controls", errors_for: ->(_) {} %>
+</div>

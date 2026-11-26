@@ -116,6 +116,7 @@ Rails.application.routes.draw do
     patch "settings/features/:id", to: "feature_library#update", as: :feature_library_module, constraints: {id: /[a-z_]{2,40}/}
     # Transactions › Add & Sync: every way to bring transactions in (links to the existing tools).
     get "add", to: "add_sync#show", as: :add_sync
+    get "data", to: "settings#data", as: :data_management
     resource :settings, only: [:show, :update], controller: :settings do
       patch :nickname
       post :dismiss_nickname_prompt

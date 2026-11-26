@@ -2,7 +2,7 @@
     Settings, which is always shown. The sidebar is navigation only: a module that is not listed here
     still works and opens from the Feature Library. The same in Default and Manual Mode. Returned as
     JSON by FeatureLibraryController#update so a switch updates the sidebar without a reload. %>
-<% settings_active = %w[settings feature_library].include?(controller_name) %>
+<% settings_active = controller_name == "feature_library" || (controller_name == "settings" && action_name != "data") %>
 <nav class="bw-nav bw-module-nav" id="module-nav" aria-label="<%= t('billie.modules.nav.main') %>">
   <% definitions = local_assigns.fetch(:sidebar) { sidebar_modules } %>
   <% active_module = local_assigns.fetch(:active_module) { current_module_id } %>
@@ -14,6 +14,5 @@
       <%= finance_nav t("billie.modules.names.#{definition.id}"), public_send("#{definition.route}_path"), definition.icon, active: active_module == definition.id && !settings_active %>
     <% end %>
   </div>
-  <span class="bw-nav-divider" role="separator"></span>
   <%= finance_nav t('billie.modules.nav.settings'), finance_settings_path, "settings", active: settings_active %>
 </nav>

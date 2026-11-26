@@ -42,13 +42,13 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_select "select[name=kind] option[value=transfer]", 0
 
     get finance_categories_path
-    assert_select "#category-tree", 0
+    assert_select "details:not([open]) #category-tree"
   end
 
   test "Manual opens the complete workspace; Default hides it again without touching records" do
     switch_to("manual", return_to: finance_dashboard_path)
-    assert_redirected_to finance_manual_path
-    follow_redirect!
+    assert_redirected_to finance_dashboard_path
+    get finance_manual_path
     assert_response :success
     assert_select "h1", "Manual bookkeeping"
     assert_select "#mode-switch button[value=manual][aria-pressed=true]"
@@ -83,6 +83,10 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_select "#manual-mode-badge", 0
     assert_select "#add-entry", 0
     assert_select "#batch-form", 0
+    get finance_transactions_path(tools: "manual")
+    assert_select "#batch-form"
+    assert_select "#mode-switch button[value=default][aria-pressed=true]"
+    get finance_transactions_path
     # The same entry, now reviewed through the simple form.
     assert_select "strong", "ZXQ Cafe"
     assert_select "a[href='#{edit_finance_transaction_path(coffee)}']"
@@ -97,12 +101,12 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_equal BigDecimal("87"), wallet.reload.balance
   end
 
-  test "leaving Manual Mode from a manual-only page returns to the dashboard; unsafe destinations are ignored" do
+  test "switching workflows keeps the current page and rejects unsafe destinations" do
     switch_to("manual")
     switch_to("default", return_to: finance_accounts_path)
     assert_redirected_to finance_accounts_path
     switch_to("default", return_to: finance_manual_path)
-    assert_redirected_to finance_dashboard_path
+    assert_redirected_to finance_manual_path
     switch_to("default", return_to: "https://example.com/app")
     assert_redirected_to finance_dashboard_path
     switch_to("default", return_to: "//example.com/app")
@@ -114,12 +118,12 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_select "#manual-mode-badge", 0
   end
 
-  test "opening an account page keeps the mode; opening manual home selects Manual Accounting" do
+  test "both accounting workflows can open accounts and manual home" do
     get finance_accounts_path
     assert_response :success
     assert_select "#manual-mode-badge", 0
     get finance_manual_path
-    assert_select "#mode-switch button[value=manual][aria-pressed=true]"
+    assert_select "#mode-switch button[value=manual][aria-pressed=false]"
   end
 
   test "the manual workspace and its forms keep drafts and work in Simplified and Traditional Chinese" do
@@ -131,7 +135,7 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_select "#manual-mode-badge"
     get finance_manual_path, params: {locale: "zh-TW"}
     assert_select "h1", "手動記帳"
-    assert_select "#mode-switch button[value=default]", /AI 自動記帳/
+    assert_select "#mode-switch button[value=default]", /AI 自動/
     post finance_accounts_path, params: {finance_bank_account: {custom_name: "ZXQ 现金", account_type: "cash", opening_balance: "0"}}
     get new_finance_entry_path, params: {locale: "zh-TW"}
     assert_select "form#entry-form[data-draft-key='entry-new-expense']"

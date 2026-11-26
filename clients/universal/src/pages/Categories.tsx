@@ -39,7 +39,7 @@ function categoryRows(transactions: readonly Transaction[], categories: readonly
 }
 
 export function Categories({ focus = null }: { focus?: string | null } = {}) {
-  const { manual } = useMode(); // the two-level tree (arrange, hide, merge) is part of Manual Mode
+  const { manual } = useMode();
   const { m, t } = useI18n();
   const { transactions, customCategories, currency, store, refresh } = useFinance();
   const x = m.categoryPage;
@@ -201,7 +201,12 @@ export function Categories({ focus = null }: { focus?: string | null } = {}) {
           </form>
         </section>
       </div>
-      {manual && <CategoryTree />}
+      {manual ? <CategoryTree /> : (
+        <details className="bw-panel bw-section-gap">
+          <summary>{m.ledger.categoriesTree.title}</summary>
+          <CategoryTree />
+        </details>
+      )}
       <div className="bw-two-column bw-section-gap">
         <section className="bw-panel" id="categories-spending-monthly" aria-labelledby="monthly-heading">
           <span className="bw-eyebrow">{m.spending.monthlyEyebrow}</span>

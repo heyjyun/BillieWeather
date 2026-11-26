@@ -61,9 +61,6 @@ const TRANSACTION_SECTIONS: Array<{ key: "overview" | "allTransactions" | "addSy
 ];
 const ADD_SYNC_TABS: Array<{ key: "import" | "receipt" | "manual"; page: Page }> = [{ key: "import", page: "import" }, { key: "receipt", page: "receipt" }, { key: "manual", page: "manual" }];
 
-/** Opening the dedicated manual workspace selects Manual Accounting. */
-export const MANUAL_PAGES: ReadonlySet<Page> = new Set<Page>(["manual"]);
-
 /** What to open on the Transactions page: a new entry of a kind, or the trash / review list. */
 export interface TransactionIntent { entryKind?: TransactionKind; entryDraft?: QuickEntry; view?: "trash" | "review" | "organize" }
 
@@ -98,8 +95,6 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
     setFocus(part);
     setTransactionFilter(filter ? { key: Date.now(), filter } : null);
     setTransactionIntent(intent ? { key: Date.now(), intent } : null);
-    // A page that cannot open here (not built for the app) does not switch Manual Mode on.
-    if ((MANUAL_PAGES.has(next) || intent?.entryKind) && pageOpen(next)) setMode("manual");
     setPage(next);
   };
   const pageOpen = (target: Page) => PAGE_MODULES[target].length === 0 || PAGE_MODULES[target].some((id) => modules.usable(id));
@@ -119,14 +114,6 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   };
   const settingsActive = page === "settings" || page === "features" || (page === "data" && !modules.inSidebar("data_management"));
   const section = blocked ? null : TRANSACTION_SECTIONS.find((item) => item.pages.includes(page)) ?? null;
-  // Keep Settings open when switching accounting workflows.
-  const switchMode = (next: Mode) => {
-    if (next === mode) return;
-    setMode(next);
-    setTransactionIntent(null);
-    if (next === "manual" && !settingsActive) setPage("manual");
-    else if (next === "default" && MANUAL_PAGES.has(page)) setPage("dashboard");
-  };
   const { persistent } = useFinance();
   // billieweather:// links and #/capture/… open one screen; they never save or send anything.
   const goRef = useRef(go);
@@ -172,12 +159,10 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
             <Icon d={icons.collapse} />
           </button>
         </div>
-        {manual && <p className="bw-mode-badge" id="manual-mode-badge"><Icon d={icons.transactions} /><span>{m.ledger.mode.manualOn}</span></p>}
         {/* Sidebar: the modules the person shows (Feature Library), then Settings (always). The same in both modes.
             Modules not listed here still work; they open from Settings and the Feature Library. */}
         <ul id="module-nav">{modules.sidebarList.map(moduleButton)}</ul>
-        <span className="bw-nav-divider" role="separator" />
-        <ul>
+        <ul className="bw-system-nav">
           <li>
             <button type="button" className={settingsActive ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? m.modules.nav.settings : undefined} aria-current={settingsActive ? "page" : undefined} onClick={() => go("settings")}>
               <Icon d={icons.settings} /><span>{m.modules.nav.settings}</span>
@@ -185,13 +170,15 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
           </li>
         </ul>
         <div className="bw-nav-bottom">
-          <p className="bw-nav-note"><Icon d={icons.lock} /><span>{m.nav.note}</span></p>
+          <button type="button" className="bw-nav-item bw-account-shortcut" title={collapsed ? m.modules.library.account : undefined} onClick={() => go("settings", "account")}>
+            <ModuleIcon name="users" /><span>{m.modules.library.account}</span>
+          </button>
           {account && <p className="bw-nav-user"><strong>{account.nickname || account.email}</strong>{account.nickname && <small>{account.email}</small>}</p>}
         </div>
       </nav>
       <main className="bw-main" id="main" tabIndex={-1}>
         {!persistent && <p className="bw-preview-banner">{m.preview}</p>}
-        <div className="bw-topline"><HistoryControls /><ModeSwitch mode={mode} onChange={switchMode} /></div>
+        <div className="bw-topline"><HistoryControls /><ModeSwitch mode={mode} onChange={setMode} />{manual && <span className="bw-sr-only" id="manual-mode-badge">{m.ledger.mode.manualOn}</span>}</div>
         <CommandCenter go={go} />
         <ConnectionStatus />
         <SyncStatus />
@@ -234,7 +221,7 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
         {page === "receipt" && <Receipt />}
         {page === "reports" && <Reports />}
         {page === "data" && <Data focus={focus} />}
-        {page === "settings" && <Settings go={go} openModule={openModule} />}
+        {page === "settings" && <Settings go={go} openModule={openModule} focus={focus} />}
         {page === "features" && <FeatureLibrary open={openModule} />}
         {page === "addSync" && <AddSync openImport={() => go("import")} openReceipt={() => go("receipt")} openEntry={(entryDraft) => go("transactions", null, undefined, { entryKind: entryDraft?.kind ?? "expense", entryDraft })} openManual={() => go("manual")} />}
         {page === "assistant" && <Assistant />}

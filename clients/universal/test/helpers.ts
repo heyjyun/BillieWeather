@@ -86,7 +86,7 @@ const SHELL_ROUTES: Record<string, string[]> = {
   "Manual home": ["Transactions", "Add & Sync", "Manual bookkeeping"],
   Data: ["Settings", "Open database manager"],
   数据管理: ["设置", "打开数据库管理"],
-  导入: ["交易", "添加与同步", "导入账单"],
+  导入: ["交易记录", "添加与同步", "导入账单"],
 };
 
 /** Which Feature Library module (packages/shared-types/schema/module-catalog.json) shows each page. */

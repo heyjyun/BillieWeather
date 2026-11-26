@@ -56,6 +56,11 @@ es:
         hidden: "Oculto"
         core: "Básico"
       library:
+        management: "Gestión de funciones"
+        preview: "Vista previa de la barra lateral"
+        always_shown: "Siempre visible"
+        account: "Mi cuenta"
+        sidebar_intro: "Elige qué aparece en la barra lateral. Todas las funciones disponibles se pueden seguir usando."
         reset: "Restaurar la barra lateral predeterminada"
         reset_saved: "Se restauró la barra lateral predeterminada."
         stale: Este ajuste cambió en otro dispositivo. Se muestra la opción actual. Puedes volver a cambiarla aquí.

@@ -7,19 +7,15 @@ module Finance
     def update
       mode = params[:mode].presence_in(ManualWorkspace::MODES) || "default"
       session[ManualWorkspace::SESSION_KEY] = mode
-      redirect_to destination_for(mode)
+      redirect_to destination_for
     end
 
     private
 
-    def destination_for(mode)
+    def destination_for
       path = params[:return_to].to_s
       safe = path.match?(%r{\A/app(?:/|\?|\z)}) && !path.include?("\\")
-      return mode == "manual" ? finance_manual_path : finance_dashboard_path unless safe
-      return finance_manual_path if mode == "manual" && !path.match?(%r{\A/app/settings(?:/|\?|\z)})
-      return finance_dashboard_path if mode == "default" && ManualWorkspace.manual_path?(path)
-
-      path
+      safe ? path : finance_dashboard_path
     end
   end
 end

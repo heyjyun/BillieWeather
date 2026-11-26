@@ -134,7 +134,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     assert_response :not_found, "Settings is not a module"
     assert_empty Finance::ModulePreference.where(user: @user)
     get finance_feature_library_path
-    assert_select "#module-goals .bw-badge-soon", text: "Coming soon"
+    assert_select "#module-goals .bw-caption", text: "Coming soon"
     assert_select "#module-goals form", count: 0
     assert_select "#module-goals [role=switch]", count: 0
     assert_select "#module-goals a", {count: 0}, "no Open link for something that does not exist"
@@ -156,11 +156,9 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
 
   test "a module that is not in the sidebar opens directly from Settings and from the Feature Library" do
     get finance_settings_path
-    assert_select "#settings-hidden-modules a[data-hidden-module=accounts][href=?]", finance_accounts_path
-    assert_select "#settings-hidden-modules a[data-hidden-module=transactions]", {count: 0}, "only hidden modules are listed"
+    assert_select "#settings-feature-library #module-accounts[data-sidebar=false] a[href=?]", finance_accounts_path
     get finance_feature_library_path
     assert_select "#module-accounts[data-sidebar=false] a[href=?]", finance_accounts_path
-    assert_select "#module-accounts [data-hidden-note]:not([hidden])"
     get finance_accounts_path
     assert_module_page("accounts")
   end
@@ -223,15 +221,28 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     assert_select ".bw-library-card", count: Finance::ModuleCatalog::MODULES.length
     assert_select "#module-transactions [role=switch][aria-checked=true]"
     assert_select "#module-budgets [role=switch][aria-checked=false]"
-    assert_select "#module-budgets [role=switch] .bw-switch-text", text: "Hidden"
-    assert_select "#module-budgets .bw-badge-available", text: "Available", count: 1
     get finance_feature_library_path(filter: "unavailable")
-    assert_select ".bw-library-card:not([hidden])", count: 5
-    assert_select "#module-data_management[data-availability=unsupported] [role=switch]", 0
+    assert_select ".bw-library-card:not([hidden])", count: 4
     get finance_feature_library_path(filter: "sidebar")
     assert_select ".bw-library-card:not([hidden])", count: 2
     get finance_feature_library_path(filter: "hidden")
-    assert_select ".bw-library-card:not([hidden])", {count: 9}, "all available modules outside the default sidebar"
+    assert_select ".bw-library-card:not([hidden])", {count: 10}, "all available modules outside the default sidebar"
+  end
+
+  test "Settings renders switches, locked Settings, preview, and the Web data manager" do
+    get finance_settings_path(locale: "zh-CN")
+    assert_select "#settings-feature-library h2", text: "功能管理"
+    assert_select "[data-sidebar-preview] li", count: 3
+    assert_select "#module-data_management [role=switch][aria-checked=false]"
+    assert_select ".bw-feature-locked", /始终显示/
+    patch finance_feature_library_module_path("data_management"), params: {sidebar_visible: "1", settings: "1"}, as: :json
+    assert_includes response.parsed_body.fetch("preview"), "数据管理"
+    get finance_data_management_path
+    assert_response :success
+    assert_select "#module-nav a[aria-current=page][href=?]", finance_data_management_path
+    assert_select "#settings-database"
+    post finance_reset_feature_library_path, params: {settings: "1"}
+    assert_redirected_to finance_settings_path(anchor: "settings-feature-library")
   end
 
   test "Settings is organized in sections from a registry, including database management" do
