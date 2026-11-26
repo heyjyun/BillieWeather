@@ -48,14 +48,14 @@ module Finance
       end
 
       def find(args)
-        count = TransactionFilter.apply(transactions, args).count
+        count = TransactionFilter.apply(transactions, args, user: @user).count
         url = @urls.fetch(:transactions).call(TransactionFilter.page_params(args))
         {summary: message("found", "{count} matching transaction(s).", count: count), data: {count: count, redirect: url}}
       end
 
       def total(args, sign:)
         # By kind, like the dashboard: refunds reduce spending, card repayments and transfers never count.
-        rows = TransactionFilter.apply(transactions.included, args)
+        rows = TransactionFilter.apply(transactions.included, args, user: @user)
         rows = sign.negative? ? rows.expense_kind : rows.income_kind
         sum = rows.sum(:amount).to_d
         sum = -sum if sign.negative?
@@ -82,7 +82,7 @@ module Finance
       end
 
       def categories
-        names = CustomCategory.names_for(@user)
+        names = Category.names_for(@user)
         {summary: message("categories_list", "{count} categories: {list}", count: names.size, list: names.map { |name| @category_label.call(name) }.join(", ")), data: {count: names.size}}
       end
     end

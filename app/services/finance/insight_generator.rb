@@ -165,7 +165,7 @@ module Finance
 
       largest = @snapshot.fetch(:categories).first
       if largest && @snapshot.fetch(:expenses).positive?
-        observations << item(I18n.t("billie.backend.basic_largest_title"), I18n.t("billie.backend.basic_largest_body", category: I18n.t("billie.backend.categories.#{largest.fetch(:name)}", default: largest.fetch(:name)), amount: money(largest.fetch(:amount))))
+        observations << item(I18n.t("billie.backend.basic_largest_title"), I18n.t("billie.backend.basic_largest_body", category: DefaultCategories.label(largest.fetch(:name)), amount: money(largest.fetch(:amount))))
       end
 
       actions = if count.zero?

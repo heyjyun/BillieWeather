@@ -7,12 +7,6 @@ module Finance
   # "=HYPERLINK(...)" is stored as plain text and never runs as a formula.
   class ExcelReport
     CURRENCY_UNITS = {"USD" => "$", "CAD" => "CA$", "EUR" => "€", "GBP" => "£", "AUD" => "A$", "CNY" => "¥"}.freeze
-    LABEL_KEYS = {
-      "Income" => "income", "Housing" => "housing", "Food & dining" => "food", "Transport" => "transport",
-      "Utilities" => "utilities", "Shopping" => "shopping", "Health" => "health", "Business" => "business",
-      "Transfers" => "transfers", "Uncategorized" => "uncategorized"
-    }.freeze
-
     def initialize(report, sheets: Report::SHEETS)
       @report = report
       @sheets = Report::SHEETS & Array(sheets)
@@ -44,9 +38,9 @@ module Finance
       t("sheets.#{key}").gsub(%r{[\[\]:*?/\\]}, " ").strip.first(31)
     end
 
+    # Default categories that were not renamed show their translation; every other name verbatim.
     def category_label(name)
-      key = LABEL_KEYS[name.to_s]
-      key ? I18n.t("billie.helpers.labels.#{key}") : name.to_s
+      DefaultCategories.label(name.to_s)
     end
 
     def yes_no(value)

@@ -59,12 +59,11 @@ class Finance::ImportPerformanceTest < ActiveSupport::TestCase
     assert exported.all? { |row| row.currency == "USD" }
     assert_empty queries, "the profile is already supplied to Report"
   end
-  test "custom income classification reads category settings once for a large import" do
-    Finance::CustomCategory.create!(user: @user, name: "Synthetic Salary")
-    Finance::CategorySetting.create!(user: @user, name: "Synthetic Salary", category_kind: "income")
+  test "custom income classification reads the category tree once for a large import" do
+    Finance::Category.create_for!(@user, name: "Synthetic Salary", kind: "income")
     rows = 400.times.map { |index| {booked_on: Date.new(2026, 11, 1), amount: BigDecimal(index + 1), description: "Synthetic employer #{index}", category: "Synthetic Salary"} }
     queries = []
-    capture = ->(_name, _start, _finish, _id, payload) { queries << payload[:sql] if payload[:sql].include?('FROM "finance_category_settings"') }
+    capture = ->(_name, _start, _finish, _id, payload) { queries << payload[:sql] if payload[:sql].include?('FROM "finance_categories"') }
     plan = ActiveSupport::Notifications.subscribed(capture, "sql.active_record") { Finance::ImportPlan.new(user: @user, rows: rows, bank_account: @account) }
     assert_equal 400, plan.rows.length
     assert plan.rows.all? { |row| row[:kind] == "income" }

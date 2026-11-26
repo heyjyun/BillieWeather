@@ -96,7 +96,7 @@ en:
         unknown_action: Choose what to change.
         nothing_to_undo: There is nothing to undo for this change.
         no_change: The balance already matches.
-        parent_invalid: The parent must be a top-level category in the same tree.
+        parent_invalid: Choose one of your categories as the parent.
         merge_same: Choose a different item to merge into.
       accounts:
         title: Accounts
@@ -298,9 +298,9 @@ en:
           tag: Add tag
           delete: Move to trash
       categories:
-        tree_eyebrow: TWO LEVELS
+        tree_eyebrow: ANY DEPTH
         tree_title: Category tree
-        tree_body: Group categories under a parent, keep income and spending apart, reorder or hide what you don't use.
+        tree_body: Nest categories as deep as you like, reorder them, or hide what you don't use. Open a category to see its subcategories; totals include them.
         tree_expense: Spending
         tree_income: Income
         hidden: hidden
@@ -471,7 +471,7 @@ en:
         tools:
           entry: "Expense, income, transfer, card payment, refund or balance adjustment."
           transactions: "Search, filter by account, merchant, project or tag, and edit in batches."
-          categories: "Two-level income and expense categories you can arrange and hide."
+          categories: "Income and expense categories nested at any depth, which you can arrange and hide."
           merchants: "Who you paid, or who paid you."
           projects: "Trips, renovations, side jobs and other projects."
           tags: "Free labels that work across categories."

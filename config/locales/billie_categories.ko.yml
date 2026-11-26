@@ -57,9 +57,14 @@ ko:
         one: 가맹점 %{count}곳이 더 남아 있습니다. 다시 실행하면 이어서 진행합니다.
         other: 가맹점 %{count}곳이 더 남아 있습니다. 다시 실행하면 이어서 진행합니다.
       errors:
+        protected: "이체는 이름을 바꾸고 순서를 바꿀 수 있지만, 최상위 카테고리로 남으며 삭제하거나 병합할 수 없습니다."
+        category_cycle: "카테고리를 자기 자신이나 그 하위 카테고리 안에 넣을 수 없습니다."
+        category_unknown: "카테고리 중 하나를 선택하세요."
+        parent_invalid: "그 상위 카테고리는 여기에서 사용할 수 없습니다."
+        proposal_closed: "이미 처리된 제안입니다."
         blank: 카테고리 이름을 입력하세요.
         too_long: 카테고리 이름은 최대 %{count}자입니다.
-        reserved: 이미 기본 카테고리입니다.
+        reserved: 미분류는 고정 항목이라 카테고리 이름으로 쓸 수 없습니다.
         taken: 같은 이름의 카테고리가 이미 있습니다.
         too_many: 나만의 카테고리는 최대 %{count}개까지 만들 수 있습니다.
       ai_errors:
@@ -72,3 +77,46 @@ ko:
         failed: AI 서비스가 이 거래들을 분류하지 못했습니다. 아무것도 변경되지 않았습니다. 나중에 다시 시도하세요.
         unavailable: AI 서비스에 연결할 수 없습니다. 아무것도 변경되지 않았습니다. 나중에 다시 시도하세요.
         invalid_result: AI 서비스가 예상하지 못한 응답을 보냈습니다. 아무것도 변경되지 않았습니다. 다시 시도하세요.
+      tree_add_body: "최상위 또는 어느 카테고리 아래에든 깊이에 상관없이 카테고리를 추가할 수 있습니다. 추천 카테고리를 포함해 최대 %{count}개까지 만들 수 있습니다."
+      new_kind: "유형(최상위만)"
+      suggested_button: "추천 카테고리 추가"
+      suggested_summary: "추천 카테고리"
+      suggested_none: "추천 카테고리를 모두 가지고 있습니다."
+      proposals_title: "새 하위 카테고리 제안"
+      proposals_body: "AI가 별도의 하위 카테고리가 있으면 좋을 거래 묶음을 찾았습니다. 승인하기 전에는 아무것도 만들어지지 않습니다. 승인하면 해당 거래가 그 하위 카테고리로 분류되며, 하나의 변경으로 되돌릴 수 있습니다."
+      proposal_name: "이름"
+      proposal_approve: "승인"
+      proposal_dismiss: "무시"
+      proposal_dismissed: "제안 “%{name}”을(를) 무시했습니다."
+      move_up: "%{name} 위로 이동"
+      move_down: "%{name} 아래로 이동"
+      transfers_note: "이체는 이름을 바꾸고 하위 카테고리를 추가할 수 있지만, 최상위에 남으며 삭제하거나 병합할 수 없습니다. 여기에 분류한 항목은 모두 이체로 계산됩니다."
+      delete_destination: "거래를 옮길 카테고리"
+      delete_confirm_tree: "“%{name}”을(를) 삭제할까요? 거래와 기억된 규칙은 선택한 카테고리로 옮겨지고, 하위 카테고리는 한 단계 위로 이동합니다."
+      report_all: "모든 카테고리"
+      report_direct: "%{name} (직접)"
+      deleted_into:
+        one: "카테고리 “%{name}”을(를) 삭제했습니다. 거래 %{count}건이 %{into}(으)로 옮겨졌습니다."
+        other: "카테고리 “%{name}”을(를) 삭제했습니다. 거래 %{count}건이 %{into}(으)로 옮겨졌습니다."
+      suggested_body:
+        one: "추천 카테고리 %{count}개가 목록에 없습니다. 추가해도 기존 카테고리의 이름 변경, 이동, 중복은 생기지 않습니다."
+        other: "추천 카테고리 %{count}개가 목록에 없습니다. 추가해도 기존 카테고리의 이름 변경, 이동, 중복은 생기지 않습니다."
+      suggested_added:
+        one: "추천 카테고리 %{count}개를 추가했습니다."
+        other: "추천 카테고리 %{count}개를 추가했습니다."
+      proposals_waiting:
+        one: "AI가 새 하위 카테고리 %{count}개도 제안했습니다. 아래에서 확인하세요."
+        other: "AI가 새 하위 카테고리 %{count}개도 제안했습니다. 아래에서 확인하세요."
+      proposal_fits:
+        one: "거래 %{count}건에 해당 (%{merchants})."
+        other: "거래 %{count}건에 해당 (%{merchants})."
+      proposal_approved:
+        one: "“%{name}”을(를) 만들고 거래 %{count}건을 분류했습니다."
+        other: "“%{name}”을(를) 만들고 거래 %{count}건을 분류했습니다."
+      children_count:
+        one: "하위 카테고리 %{count}개"
+        other: "하위 카테고리 %{count}개"
+      kinds:
+        income: "수입"
+        expense: "지출"
+        transfer: "이체"

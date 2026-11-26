@@ -57,9 +57,14 @@ en:
         one: "%{count} more merchant is waiting; run it again to continue."
         other: "%{count} more merchants are waiting; run it again to continue."
       errors:
+        protected: "Transfers can be renamed and reordered, but it stays a top-level category and can't be deleted or merged."
+        category_cycle: "A category can't go inside itself or one of its own subcategories."
+        category_unknown: "Choose one of your categories."
+        parent_invalid: "That parent category can't be used here."
+        proposal_closed: "That suggestion was already handled."
         blank: Enter a category name.
         too_long: Category names can be up to %{count} characters.
-        reserved: That is already a built-in category.
+        reserved: Uncategorized is fixed and can't be used as a category name.
         taken: You already have a category with that name.
         too_many: You can have up to %{count} categories of your own.
       ai_errors:
@@ -72,3 +77,46 @@ en:
         failed: The AI service could not categorize these transactions. Nothing was changed; try again later.
         unavailable: The AI service could not be reached. Nothing was changed; try again later.
         invalid_result: The AI service returned an unexpected answer. Nothing was changed; try again.
+      tree_add_body: "Add a category at the top level or under any category, at any depth. You can have up to %{count} categories, suggested ones included."
+      new_kind: "Type (top level only)"
+      suggested_button: "Add suggested categories"
+      suggested_summary: "Suggested categories"
+      suggested_none: "You already have every suggested category."
+      proposals_title: "Suggested new subcategories"
+      proposals_body: "AI noticed groups of transactions that might deserve their own subcategory. Nothing is created until you approve; approving files those transactions under it as one change you can undo."
+      proposal_name: "Name"
+      proposal_approve: "Approve"
+      proposal_dismiss: "Dismiss"
+      proposal_dismissed: "Suggestion “%{name}” dismissed."
+      move_up: "Move %{name} up"
+      move_down: "Move %{name} down"
+      transfers_note: "Transfers can be renamed and get subcategories, but it stays at the top level and can't be deleted or merged. Anything filed under it counts as a transfer."
+      delete_destination: "Move its transactions to"
+      delete_confirm_tree: "Delete “%{name}”? Its transactions and remembered rules move to the category you chose, and its subcategories move up one level."
+      report_all: "All categories"
+      report_direct: "%{name} (direct)"
+      deleted_into:
+        one: "Category “%{name}” deleted; %{count} transaction moved to %{into}."
+        other: "Category “%{name}” deleted; %{count} transactions moved to %{into}."
+      suggested_body:
+        one: "%{count} suggested category is missing from your list. Adding them never renames, moves or duplicates anything you have."
+        other: "%{count} suggested categories are missing from your list. Adding them never renames, moves or duplicates anything you have."
+      suggested_added:
+        one: "Added %{count} suggested category."
+        other: "Added %{count} suggested categories."
+      proposals_waiting:
+        one: "AI also suggested %{count} new subcategory; review it below."
+        other: "AI also suggested %{count} new subcategories; review them below."
+      proposal_fits:
+        one: "Fits %{count} transaction (%{merchants})."
+        other: "Fits %{count} transactions (%{merchants})."
+      proposal_approved:
+        one: "Created “%{name}” and filed %{count} transaction under it."
+        other: "Created “%{name}” and filed %{count} transactions under it."
+      children_count:
+        one: "%{count} subcategory"
+        other: "%{count} subcategories"
+      kinds:
+        income: "Income"
+        expense: "Spending"
+        transfer: "Transfers"

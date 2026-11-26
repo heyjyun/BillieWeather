@@ -4,9 +4,10 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { AiCategorizePanel } from "../src/components/AiCategorizePanel";
 import { I18nProvider, MESSAGES } from "../src/i18n";
+import { CategoryTree } from "@billie/finance-core";
 
 const finance = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
-vi.mock("../src/hooks/useFinance", () => ({ useFinance: () => finance.current }));
+vi.mock("../src/hooks/useFinance", () => ({ useFinance: () => finance.current, useOptionalCategoryTree: () => null }));
 vi.mock("../src/hooks/useAccount", () => ({ useAccount: () => ({ getToken: () => "tok", expire: vi.fn() }) }));
 vi.mock("../src/services/aiCategorize", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/services/aiCategorize")>()),
@@ -19,7 +20,7 @@ const failed = MESSAGES.en.categoryPage.aiErrorFailed;
 
 function mount(store: Record<string, unknown>) {
   const say = vi.fn();
-  finance.current = { customCategories: [], refresh: vi.fn(async () => undefined), store };
+  finance.current = { customCategories: [], categoryTree: new CategoryTree([]), refresh: vi.fn(async () => undefined), store };
   render(<I18nProvider initial="en"><AiCategorizePanel uncategorized={2} say={say} /></I18nProvider>);
   return say;
 }

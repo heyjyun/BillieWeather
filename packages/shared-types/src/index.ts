@@ -2,7 +2,12 @@
 // app/models/finance/*.rb. Money is always integer minor units (cents) so that
 // totals never suffer from floating-point rounding.
 
-/** The built-in categories, the same on the website and in every app. */
+/**
+ * The ten names that were built in before 2026-11 (docs/architecture/category-hierarchy.md). They are
+ * no longer locked: the first nine are ordinary categories now (with legacy system keys), which people
+ * may rename, move or delete. Kept for data from older sources and for back-compat; the default
+ * taxonomy lives in packages/finance-core/schema/default-categories.json.
+ */
 export const CATEGORIES = [
   "Income",
   "Housing",
@@ -16,9 +21,13 @@ export const CATEGORIES = [
   "Uncategorized",
 ] as const;
 export type BuiltInCategory = (typeof CATEGORIES)[number];
+/** Same list under its current meaning. */
+export const LEGACY_CATEGORIES = CATEGORIES;
+/** The fixed placeholder for "not decided yet": never a stored category, never renamed, moved or deleted. */
+export const UNCATEGORIZED = "Uncategorized" as const;
 /**
- * A built-in category or one the person created (stored by name, like Rails'
- * Finance::CustomCategory). `string & {}` keeps editor suggestions for the built-in names.
+ * A category name (stored by name everywhere, like Rails' Finance::Category). `string & {}` keeps
+ * editor suggestions for the old built-in names.
  */
 export type Category = BuiltInCategory | (string & {});
 

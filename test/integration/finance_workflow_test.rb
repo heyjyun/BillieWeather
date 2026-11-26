@@ -162,7 +162,7 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
 
   test "transactions CSV neutralizes formulas in custom category names" do
     sign_in @user
-    Finance::CustomCategory.create!(user: @user, name: "=HYPERLINK(2)")
+    Finance::Category.create_for!(@user, name: "=HYPERLINK(2)")
     upload_csv("Date,Description,Amount\n#{Date.current.iso8601},Corner shop,-3.00\n") do |file|
       post finance_statements_path, params: {file: file}
     end

@@ -5,9 +5,10 @@ import { afterEach, expect, it, vi } from "vitest";
 import type { Transaction } from "@billie/shared-types";
 import { Dashboard } from "../src/pages/Dashboard";
 import { I18nProvider } from "../src/i18n";
+import { CategoryTree } from "@billie/finance-core";
 
 const finance = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
-vi.mock("../src/hooks/useFinance", () => ({ useFinance: () => finance.current }));
+vi.mock("../src/hooks/useFinance", () => ({ useFinance: () => finance.current, useOptionalCategoryTree: () => null }));
 vi.mock("../src/hooks/useAccount", () => ({ useAccount: () => ({ account: null }) }));
 afterEach(cleanup);
 
@@ -26,7 +27,7 @@ const data = [
 it("filters accounts and custom dates, with interactive month figures calculated by economic kind", async () => {
   const switchDatabase = vi.fn(async () => undefined);
   finance.current = {
-    transactions: data, statements: [], currency: "USD", ownerKey: null, accounts: [{ id: 1, name: "Checking" }, { id: 2, name: "Card" }],
+    categoryTree: new CategoryTree([]), transactions: data, statements: [], currency: "USD", ownerKey: null, accounts: [{ id: 1, name: "Checking" }, { id: 2, name: "Card" }],
     activeDatabaseId: "one", databaseIds: ["one", "two"], databaseName: "Home",
     openStore: vi.fn(async () => ({ databaseName: async () => "Work" })), switchDatabase,
   };

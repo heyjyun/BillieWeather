@@ -15,18 +15,21 @@ module Finance
       with: -> { render json: {error: "rate_limited"}, status: :too_many_requests }
 
     # What the browser needs to understand commands: category names (no transactions or amounts),
-    # page names, the person's local date and currency, and the plan scope.
+    # page names, the person's local date and currency, and the plan scope. Default categories that
+    # were not renamed (and Uncategorized) are listed with their names in every language.
     def context
       profile = Profile.find_by(user_id: current_user.id)
+      tree = CategoryTree.new(current_user)
+      defaults, own = tree.names.partition { |name| name == Transaction::UNCATEGORIZED || DefaultCategories::BY_NAME[name.downcase]&.name == name }
       render json: {
         product: SmartCommand::Manifest.current.product,
         tenant: SmartCommand::Executor.tenant_for(current_user),
         today: finance_today.iso8601,
         currency: profile&.currency || "USD",
-        builtInCategories: Transaction::CATEGORIES.map do |name|
-          {id: name, label: category_label(name), names: I18n.available_locales.map { |locale| I18n.t("billie.backend.categories.#{name}", locale: locale, default: name) }.uniq}
+        builtInCategories: defaults.map do |name|
+          {id: name, label: category_label(name), names: DefaultCategories.names_in_all_locales(name)}
         end,
-        customCategories: current_user.finance_custom_categories.order(Arel.sql("lower(name)")).pluck(:name),
+        customCategories: own.sort_by(&:downcase),
         pages: page_labels
       }
     end
@@ -72,7 +75,7 @@ module Finance
     end
 
     def category_label(name)
-      I18n.t("billie.backend.categories.#{name}", default: name)
+      DefaultCategories.label(name)
     end
 
     # Same date as Finance::BaseController#finance_today, so "this month" matches the pages.

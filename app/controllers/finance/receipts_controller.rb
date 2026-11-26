@@ -44,7 +44,7 @@ module Finance
 
     def show
       @matches = @receipt.matches.includes(finance_transaction: [:bank_account, :statement]).order(:status, score: :desc).to_a
-      @categories = CustomCategory.names_for(current_user)
+      @category_tree = CategoryTree.new(current_user)
       @accounts = current_user.finance_bank_accounts.where(archived_at: nil).order(:sort_order, :id).to_a
       @candidates = link_candidates
       @duplicate_of = @receipt.duplicate_of

@@ -1,5 +1,5 @@
 <% content_for :title, t("billie.ledger.budgets.title") %>
-<% scope_options = [[t("billie.ledger.budgets.total"), ""]] + @tree.roots("expense").flat_map { |r| [r, *r.children] }.map { |n| [(n.parent ? "— " : "") + finance_label(n.name), "category:#{n.name}"] } + @projects.map { |p| ["#{t("billie.ledger.fields.project")}: #{p.name}", "project:#{p.id}"] } %>
+<% scope_options = [[t("billie.ledger.budgets.total"), ""]] + @tree.options("expense", label: method(:finance_label)).reject { |_label, name| name == Finance::Transaction::UNCATEGORIZED }.map { |label, name| [label, "category:#{name}"] } + @projects.map { |p| ["#{t("billie.ledger.fields.project")}: #{p.name}", "project:#{p.id}"] } %>
 <div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.budgets.eyebrow") %></span><h1><%= t("billie.ledger.budgets.title") %></h1><p><%= t("billie.ledger.budgets.intro") %></p></div></div>
 <section class="bw-panel">
   <%= form_with url: finance_budgets_path, scope: :budget, data: {turbo: false}, class: "bw-form bw-form-grid" do |form| %>

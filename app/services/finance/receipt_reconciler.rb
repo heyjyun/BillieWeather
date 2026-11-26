@@ -359,8 +359,9 @@ module Finance
     end
 
     def suggested_category(receipt)
-      category = Categorizer.new(user: @user).categorize(receipt.merchant_name.to_s, -receipt.total.abs, account_type: nil)
-      (category == "Income" || category == "Transfers") ? "Uncategorized" : category
+      categorizer = Categorizer.new(user: @user)
+      category = categorizer.categorize(receipt.merchant_name.to_s, -receipt.total.abs, account_type: nil)
+      %w[income transfer].include?(categorizer.tree.kind_of(category)) ? Transaction::UNCATEGORIZED : category
     end
 
     def refresh(receipt)

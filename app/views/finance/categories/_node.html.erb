@@ -1,0 +1,25 @@
+<%# One category in the tree with its subcategories (recursive). Locals: node, tree, first, last. %>
+<% row = capture do %>
+  <%= link_to finance_label(node.name), finance_categories_path(name: node.name, anchor: "detail"), class: "bw-table-link" %>
+  <% if node.depth.zero? && node.kind != "expense" %> <small class="bw-cat-kind"><%= t("billie.categories.kinds.#{node.kind}") %></small><% end %>
+  <% if node.hidden %> <small class="bw-cat-kind"><%= t("billie.ledger.categories.hidden") %></small><% end %>
+  <% if node.children.any? %> <small class="bw-caption"><%= t("billie.categories.children_count", count: node.children.length) %></small><% end %>
+  <span class="bw-cat-order">
+    <%= button_to "↑", reorder_finance_category_path(node.id, direction: "up"), method: :patch, disabled: first, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-form", data: {turbo: false}}, "aria-label": t("billie.categories.move_up", name: finance_label(node.name)) %>
+    <%= button_to "↓", reorder_finance_category_path(node.id, direction: "down"), method: :patch, disabled: last, class: "bw-button bw-button-small bw-button-outline", form: {class: "bw-inline-form", data: {turbo: false}}, "aria-label": t("billie.categories.move_down", name: finance_label(node.name)) %>
+  </span>
+<% end %>
+<li data-category="<%= node.name %>">
+  <% if node.children.any? %>
+    <details <%= "open" if node.expanded %> data-category-expand-url="<%= expand_finance_category_path(node.id, format: :json) %>">
+      <summary><%= row %></summary>
+      <ul>
+        <% node.children.each_with_index do |child, index| %>
+          <%= render "finance/categories/node", node: child, tree: tree, first: index.zero?, last: index == node.children.length - 1 %>
+        <% end %>
+      </ul>
+    </details>
+  <% else %>
+    <div class="bw-category-leaf"><%= row %></div>
+  <% end %>
+</li>

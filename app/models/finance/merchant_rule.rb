@@ -16,7 +16,7 @@ module Finance
     # when no rule could be made (no usable merchant name, or category "Uncategorized").
     def self.remember!(user:, description:, amount:, category:)
       key = Categorizer.merchant_key(description)
-      return nil if key.nil? || category == "Uncategorized"
+      return nil if key.nil? || category == Transaction::UNCATEGORIZED
 
       income = amount.to_d.positive?
       begin
@@ -32,8 +32,8 @@ module Finance
     private
 
     def category_is_known
-      known = (Transaction::CATEGORIES - ["Uncategorized"]).include?(category) ||
-        (category.present? && user_id && CustomCategory.where(user_id: user_id, name: category).exists?)
+      # Any category at any depth; never the Uncategorized placeholder.
+      known = category.present? && category != Transaction::UNCATEGORIZED && user_id && Category.valid_for?(user_id, category)
       errors.add(:category, :inclusion) unless known
     end
   end

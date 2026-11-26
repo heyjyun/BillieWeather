@@ -22,6 +22,9 @@ export async function uploadStatement(token: string, statement: TransferStatemen
           // Bank, last four digits and kind only (never a full number), so the website files the
           // statement under the same account as its own imports of that account.
           ...(statement.account ? { account: { institution: statement.account.institution, last4: statement.account.last4, kind: statement.account.kind } } : {}),
+          // The rows' categories and their ancestors, parents first (name, parent, kind only), so the
+          // website creates the missing ones in the same place of the tree. Older servers ignore it.
+          ...(statement.categories?.length ? { categories: statement.categories.map((category) => ({ name: category.name, parent: category.parent, kind: category.kind })) } : {}),
           transactions: statement.rows.map((row) => ({
             booked_on: row.bookedOn, description: row.description, amount: centsToDecimalString(row.amountCents),
             category: row.category, tax_review: row.taxReview, excluded: row.excluded,

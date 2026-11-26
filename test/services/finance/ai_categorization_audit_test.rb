@@ -31,8 +31,8 @@ class Finance::AiCategorizationAuditTest < ActiveSupport::TestCase
 
   def run_ai(answers)
     stub_method(Finance::AiCategorizer, :available?, true) do
-      stub_method(Finance::AiCategorizer, :suggest, ->(items:, categories:) {
-        items.to_h { |item| [item[:key], answers.find { |pattern, _| item[:text].match?(pattern) }&.last] }.compact
+      stub_method(Finance::AiCategorizer, :suggest_with_proposals, ->(items:, categories:, **) {
+        {assignments: items.to_h { |item| [item[:key], answers.find { |pattern, _| item[:text].match?(pattern) }&.last] }.compact, proposals: []}
       }) do
         Finance::AiCategorizer.new(user: @user, consent: true).call
       end

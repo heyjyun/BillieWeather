@@ -185,27 +185,32 @@ class FinanceManualBookkeepingTest < ActionDispatch::IntegrationTest
     assert_equal "Select at least one transaction.", flash[:alert]
   end
 
-  test "categories: two levels, income tree, hide, merge" do
+  test "categories: any depth, income tree, hide, merge" do
     post finance_categories_path, params: {category: {name: "Coffee"}}
     post finance_categories_path, params: {category: {name: "Cafes"}}
     post finance_categories_path, params: {category: {name: "Bonus"}}
     patch arrange_finance_categories_path, params: {name: "Coffee", arrangement: {category_kind: "expense", parent_name: "Food & dining", sort_order: "1", hidden: "0"}}
     patch arrange_finance_categories_path, params: {name: "Bonus", arrangement: {category_kind: "income", parent_name: "Income"}}
+    # Depth is unlimited now (docs/architecture/category-hierarchy.md).
     patch arrange_finance_categories_path, params: {name: "Cafes", arrangement: {category_kind: "expense", parent_name: "Coffee"}}
-    assert_equal "The parent must be a top-level category in the same tree.", flash[:alert]
+    assert_nil flash[:alert]
+    patch arrange_finance_categories_path, params: {name: "Coffee", arrangement: {parent_name: "Cafes"}}
+    assert_match(/inside itself/, flash[:alert])
     tree = Finance::CategoryTree.new(@user)
     assert_equal "Food & dining", tree.parent_of("Coffee")
+    assert_equal "Coffee", tree.parent_of("Cafes")
     assert_equal "income", tree.kind_of("Bonus")
-    assert_equal ["Food & dining", "Coffee"], tree.with_children("Food & dining")
+    assert_equal ["Food & dining", "Coffee", "Cafes"], tree.with_children("Food & dining") & ["Food & dining", "Coffee", "Cafes"]
+    assert_equal ["Coffee", "Cafes"], tree.with_children("Coffee")
     get finance_categories_path(name: "Coffee")
-    assert_select "#category-tree [data-tree='income']", /Bonus/
+    assert_select "#category-tree li[data-category='Income']", /Bonus/
     assert_select "#arrange"
 
     cash = create_account("Wallet", "cash", "50")
     post finance_entries_path, params: {entry: {kind: "expense", amount: "1", booked_on: "2026-10-01", account_id: cash.id, category: "Bonus"}}
     assert_response :unprocessable_entity, "an income category can't hold an expense"
     entry = add(kind: "expense", amount: "4.50", booked_on: "2026-10-01", account_id: cash.id, category: "Cafes")
-    delete finance_category_path(@user.finance_custom_categories.find_by!(name: "Cafes")), params: {move_to: "Coffee"}
+    delete finance_category_path(Finance::Category.where(user_id: @user.id).find_by!(name: "Cafes")), params: {move_to: "Coffee"}
     assert_equal "Coffee", entry.reload.category
     patch arrange_finance_categories_path, params: {name: "Housing", arrangement: {hidden: "1"}}
     assert Finance::CategoryTree.new(@user).hidden?("Housing")

@@ -22,10 +22,10 @@ const localToday = () => {
 
 /** `region` is the optional country/region chosen on the Import page: extra context for categorization only. */
 export async function importContext(store: FinanceStore, region: string | null = null): Promise<ImportContext> {
-  const [categorizer, customCategories, templates, existing, existingFileHashes, deviceCurrency] = await Promise.all([
-    store.categorizer(region), store.customCategories(), store.templates(), store.dedupeIndex(), store.importedFileHashes(), store.currency(),
+  const [categorizer, customCategories, tree, templates, existing, existingFileHashes, deviceCurrency] = await Promise.all([
+    store.categorizer(region), store.customCategories(), store.categoryTree(), store.templates(), store.dedupeIndex(), store.importedFileHashes(), store.currency(),
   ]);
-  return { categorizer, customCategories, templates, existing, existingFileHashes, deviceCurrency, storableCurrencies: CURRENCIES, today: localToday(), ocr: ocrEngine() ?? (await initOcrEngine()) };
+  return { categorizer, customCategories, tree, templates, existing, existingFileHashes, deviceCurrency, storableCurrencies: CURRENCIES, today: localToday(), ocr: ocrEngine() ?? (await initOcrEngine()) };
 }
 
 /**

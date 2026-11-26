@@ -5,7 +5,7 @@ module Finance
     before_action :load_transaction, only: [:edit, :update]
 
     def index
-      @categories = CustomCategory.names_for(current_user)
+      @category_tree = CategoryTree.new(current_user)
       @accounts = current_user.finance_bank_accounts.ordered.to_a
       @merchants = current_user.finance_merchants.ordered.to_a
       @projects = current_user.finance_projects.ordered.to_a
@@ -26,7 +26,8 @@ module Finance
         term = "%#{Transaction.sanitize_sql_like(@filters["search"].to_s.first(200))}%"
         scope = scope.where("description ILIKE :term OR original_description ILIKE :term OR note ILIKE :term", term: term)
       end
-      scope = scope.where(category: @filters["category"]) if @categories.include?(@filters["category"])
+      # A category means itself plus all its descendants (docs/architecture/category-hierarchy.md).
+      scope = scope.where(category: @category_tree.subtree(@filters["category"])) if @filters["category"].present? && @category_tree.include?(@filters["category"])
       scope = scope.where(bank_account_id: @filters["account_id"]) if @accounts.any? { |a| a.id.to_s == @filters["account_id"] }
       scope = scope.where(merchant_id: @filters["merchant_id"]) if @merchants.any? { |m| m.id.to_s == @filters["merchant_id"] }
       scope = scope.where(project_id: @filters["project_id"]) if @projects.any? { |p| p.id.to_s == @filters["project_id"] }
@@ -61,13 +62,13 @@ module Finance
     end
 
     def edit
-      @categories = CustomCategory.names_for(current_user)
+      @category_tree = CategoryTree.new(current_user)
     end
 
     # Display fields of any entry (description, category, flags, merchant, project, tags, note). The
     # original description, and for imported rows the amount, date and account, never change here.
     def update
-      @categories = CustomCategory.names_for(current_user)
+      @category_tree = CategoryTree.new(current_user)
       attributes = params.require(:finance_transaction).permit(:description, :category, :tax_review, :excluded, :note, :merchant_name, :project_id, :tag_names).to_h.symbolize_keys
       if attributes.key?(:description) && attributes[:description].to_s.strip.empty?
         @transaction.errors.add(:description, :blank)
@@ -105,7 +106,7 @@ module Finance
       return notice if similar.nil?
 
       merchant = Categorizer.merchant_key(source).titleize
-      notice + I18n.t("billie.backend.merchant_remembered", merchant: merchant, category: I18n.t("billie.backend.categories.#{@transaction.category}", default: @transaction.category)) + ((similar > 0) ? I18n.t("billie.backend.similar_updated", count: similar) : ".")
+      notice + I18n.t("billie.backend.merchant_remembered", merchant: merchant, category: DefaultCategories.label(@transaction.category)) + ((similar > 0) ? I18n.t("billie.backend.similar_updated", count: similar) : ".")
     end
 
     def load_transaction

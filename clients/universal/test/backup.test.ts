@@ -105,7 +105,7 @@ describe("local backup and restore", () => {
     await target.store.addCategory("Existing category");
     expect(await target.store.hasContent()).toBe(true);
     await expect(restoreInto(target.driver, backup)).rejects.toMatchObject({ code: "target_not_empty" });
-    expect(await target.store.customCategories()).toEqual(["Existing category"]);
+    expect(await target.store.customCategories()).toContain("Existing category");
   });
 
   it("rejects malformed JSON documents and never silently drops orphaned financial rows", async () => {

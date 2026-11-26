@@ -7,7 +7,7 @@ import { allCategories, formatMoney, type MatchResult, type ReceiptExtraction, t
 import { CURRENCIES } from "@billie/shared-types";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { DocumentPicker } from "../components/DocumentPicker";
-import { InlineDialog, PageHeading } from "../components/common";
+import { categoryChoices, indented, InlineDialog, PageHeading } from "../components/common";
 import { useAccount } from "../hooks/useAccount";
 import { radioGroupKeys, useFocusWhenLost } from "../hooks/useFocus";
 import { useFinance } from "../hooks/useFinance";
@@ -36,14 +36,13 @@ type Done = { kind: "saved" | "savedRefund" | "kept"; description: string; amoun
 
 /** Fields the person must look at before saving when they were not read reliably. */
 const KEY_FIELDS: ReceiptFieldKey[] = ["merchant", "date", "total", "currency"];
-const PURCHASE_HIDDEN = new Set(["Income", "Transfers"]);
 
 const contentTypeOf = (file: LocalDocument, recognized: RecognizedReceipt) => file.type || (recognized.source === "image" ? "image/jpeg" : "application/pdf");
 
 export function Receipt() {
   const { m } = useI18n();
   const x = m.receipt;
-  const { store, refresh, transactions, accounts, customCategories, currency: bookCurrency } = useFinance();
+  const { store, refresh, transactions, accounts, customCategories, categoryTree, currency: bookCurrency } = useFinance();
   const { getToken } = useAccount();
   const [capture, setCapture] = useState<Capture | null>(null);
   const [values, setValues] = useState<ReceiptValues | null>(null);
@@ -68,7 +67,9 @@ export function Receipt() {
   const failure = useFocusWhenLost<HTMLParagraphElement>(error);
   const stage = useFocusWhenLost<HTMLHeadingElement & HTMLParagraphElement>(`${capture?.id}-${done?.kind}`);
   const liveAccounts = useMemo(() => accounts.filter((account) => !account.archived), [accounts]);
-  const categories = useMemo(() => allCategories(customCategories).filter((name) => !PURCHASE_HIDDEN.has(name)), [customCategories]);
+  // A purchase never goes to the income or transfer tree.
+  const purchaseCategory = (name: string) => categoryTree.kindOf(name) !== "income" && categoryTree.kindOf(name) !== "transfer";
+  const categories = useMemo(() => allCategories(customCategories).filter((name) => categoryTree.kindOf(name) !== "income" && categoryTree.kindOf(name) !== "transfer"), [customCategories, categoryTree]);
   const account = liveAccounts.find((item) => item.id === accountId);
   const book = account?.currency ?? bookCurrency ?? null;
 
@@ -97,7 +98,7 @@ export function Receipt() {
       if (next.merchant) {
         const categorizer = await store.categorizer();
         const suggestion = categorizer.categorize(next.merchant, -(amountCents(next.total) ?? 1));
-        const usable = !PURCHASE_HIDDEN.has(suggestion) && suggestion !== "Uncategorized";
+        const usable = purchaseCategory(suggestion) && suggestion !== "Uncategorized";
         setCategory(usable ? suggestion : "Uncategorized");
         setCategorySuggested(usable);
       } else {
@@ -297,7 +298,7 @@ export function Receipt() {
             <div className="bw-field">
               <label htmlFor="receipt-category">{x.fields.category}</label>
               <select id="receipt-category" value={category} onChange={(e) => { setCategory(e.target.value); setCategorySuggested(false); }}>
-                {categories.map((name) => <option key={name} value={name}>{categoryLabel(m, name)}</option>)}
+                {categoryChoices(categoryTree, categories, category).map((c) => <option key={c.name} value={c.name}>{indented(categoryLabel(m, c.name), c.depth)}</option>)}
               </select>
               {categorySuggested && <small className="bw-certainty is-uncertain">{x.categorySuggested}</small>}
             </div>

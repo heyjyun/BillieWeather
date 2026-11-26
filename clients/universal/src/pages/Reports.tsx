@@ -1,16 +1,18 @@
 import type { PeriodPreset } from "@billie/shared-types";
-import { buildSnapshot, localToday, resolvePeriod } from "@billie/finance-core";
+import { buildSnapshot, DIRECT_SUFFIX, localToday, resolvePeriod } from "@billie/finance-core";
 import { excelReport, reportFilename, reportRows, transactionCsv } from "@billie/reporting";
 import { useEffect, useMemo, useState } from "react";
 import { Empty, Money, PageHeading, PeriodPicker } from "../components/common";
 import { useFinance } from "../hooks/useFinance";
-import { useI18n } from "../i18n";
+import { categoryLabel, useI18n } from "../i18n";
 import { saveFile } from "../services/platform";
 
 export function Reports() {
   const { m, t } = useI18n();
-  const { transactions, statements, currency, store, accounts } = useFinance();
+  const { transactions, statements, currency, store, accounts, categoryTree } = useFinance();
   const [dimension, setDimension] = useState<"category" | "account" | "merchant" | "project" | "tag" | "month">("category");
+  // By category: top-level categories first; choosing one shows what is inside it (any depth).
+  const [focus, setFocus] = useState<string | null>(null);
   const [report, setReport] = useState<Awaited<ReturnType<typeof store.ledger.report>> | null>(null);
   const [history, setHistory] = useState<Awaited<ReturnType<typeof store.ledger.netWorthHistory>>>([]);
   const [preset, setPreset] = useState<PeriodPreset>("all_time");
@@ -20,7 +22,9 @@ export function Reports() {
   const rows = useMemo(() => reportRows(transactions, statements, period), [transactions, statements, period]);
   const x = m.reports;
   const r = m.ledger.reports;
-  useEffect(() => { void store.ledger.report(dimension, { from: period.startDate, to: period.endDate }).then(setReport); }, [store, dimension, period, transactions]);
+  useEffect(() => { void store.ledger.report(dimension, { from: period.startDate, to: period.endDate }, dimension === "category" ? focus : null).then(setReport); }, [store, dimension, period, transactions, focus]);
+  const categoryName = (key: string) => (key.endsWith(DIRECT_SUFFIX) ? t("ledger.reports.direct", { name: categoryLabel(m, key.slice(0, -DIRECT_SUFFIX.length)) }) : categoryLabel(m, key));
+  const drillable = (key: string) => !key.endsWith(DIRECT_SUFFIX) && (categoryTree.get(key)?.children.length ?? 0) > 0;
   useEffect(() => { void store.ledger.netWorthHistory(12).then(setHistory); }, [store, transactions, accounts]);
 
   // CSV keeps canonical English categories (same as the Rails export); Excel is translated.
@@ -68,11 +72,19 @@ export function Reports() {
           </div>
           <div className="bw-table-scroll">
             <table className="bw-cat-table">
+              {dimension === "category" && focus && (
+                <caption>
+                  {categoryTree.path(focus, (name) => categoryLabel(m, name))}{" "}
+                  <button type="button" className="bw-link-button" onClick={() => setFocus(categoryTree.get(focus)?.parent ?? null)}>← {categoryTree.get(focus)?.parent ? categoryLabel(m, categoryTree.get(focus)!.parent!) : r.drillUp}</button>
+                </caption>
+              )}
               <thead><tr><th scope="col">{r.dimensions[dimension]}</th><th scope="col">{r.income}</th><th scope="col">{r.expense}</th><th scope="col">{r.count}</th></tr></thead>
               <tbody>
                 {report.rows.map((row) => (
                   <tr key={row.key || "none"}>
-                    <td>{row.key ? (dimension === "category" ? (m.categories as Record<string, string>)[row.key] ?? row.key : row.key) : r.unlabeled}</td>
+                    <td>{row.key ? (dimension === "category" ? (drillable(row.key)
+                      ? <button type="button" className="bw-link-button" aria-label={t("ledger.reports.drill", { name: categoryName(row.key) })} onClick={() => setFocus(row.key)}>{categoryName(row.key)} ›</button>
+                      : categoryName(row.key)) : row.key) : r.unlabeled}</td>
                     <td><Money cents={row.incomeMinor} currency={cur} /></td>
                     <td><Money cents={row.expenseMinor} currency={cur} /></td>
                     <td>{row.count}</td>

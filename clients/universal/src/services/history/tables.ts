@@ -1,4 +1,4 @@
-// What Undo and Redo record (migration 0010, docs/architecture/editing-history.md).
+// What Undo and Redo record (migrations 0010 and 0011, docs/architecture/editing-history.md).
 //
 // The triggers of migration 0010 and the replay in history.ts build the same JSON image of a row from this
 // list; test/history.test.ts fails when a table gains a column that is neither listed nor excluded here, or
@@ -52,6 +52,8 @@ export const HISTORY_TABLES: readonly HistoryTable[] = [
   },
   { name: "custom_categories", key: ["name"], integer: false, columns: ["name", "created_at"], excluded: [] },
   { name: "category_meta", key: ["name"], integer: false, columns: ["name", "parent", "category_kind", "sort_order", "hidden"], excluded: ["updated_at"] },
+  // Migration 0011 (the category tree). `expanded` is a view preference, never part of an edit: undo leaves it alone.
+  { name: "categories", key: ["name"], integer: false, columns: ["name", "parent", "system_key", "kind", "sort_order", "hidden", "created_at"], excluded: ["expanded", "updated_at"] },
   { name: "merchant_rules", key: ["merchant_key", "income"], integer: false, columns: ["merchant_key", "income", "category"], excluded: ["updated_at"] },
   {
     // The hidden container of manual entries (ledger.ts) is not a statement to people: never recorded, its count is derived.

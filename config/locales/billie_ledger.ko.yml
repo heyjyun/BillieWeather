@@ -96,7 +96,7 @@ ko:
         unknown_action: 변경할 항목을 선택하세요.
         nothing_to_undo: 이 변경에는 되돌릴 것이 없습니다.
         no_change: 잔액이 이미 일치합니다.
-        parent_invalid: 상위 카테고리는 같은 트리의 1단계 카테고리여야 합니다.
+        parent_invalid: 상위 카테고리로 내 카테고리 중 하나를 선택하세요.
         merge_same: 다른 병합 대상을 선택하세요.
       accounts:
         title: 계좌
@@ -298,9 +298,9 @@ ko:
           tag: 태그 추가
           delete: 휴지통으로 이동
       categories:
-        tree_eyebrow: 2단계
+        tree_eyebrow: 단계 제한 없음
         tree_title: 카테고리 트리
-        tree_body: 카테고리를 상위 카테고리 아래로 묶고, 수입과 지출을 나누고, 순서를 바꾸거나 쓰지 않는 것을 숨기세요.
+        tree_body: 카테고리를 원하는 만큼 깊게 묶고, 순서를 바꾸거나 쓰지 않는 것을 숨기세요. 카테고리를 열면 하위 카테고리가 보이며, 합계에는 하위 카테고리도 포함됩니다.
         tree_expense: 지출
         tree_income: 수입
         hidden: 숨김
@@ -471,7 +471,7 @@ ko:
         tools:
           entry: "지출, 수입, 이체, 카드 대금 결제, 환불 또는 잔액 조정."
           transactions: "검색, 계좌·가맹점·프로젝트·태그로 필터, 일괄 편집."
-          categories: "정렬하고 숨길 수 있는 2단계 수입·지출 카테고리."
+          categories: "깊이 제한 없이 묶고, 정렬하고 숨길 수 있는 수입·지출 카테고리."
           merchants: "돈을 준 곳 또는 받은 곳."
           projects: "여행, 리모델링, 부업 등 프로젝트."
           tags: "카테고리와 상관없이 쓰는 자유 라벨."

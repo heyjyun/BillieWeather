@@ -154,24 +154,26 @@ describe("manual entry workflows", () => {
 });
 
 describe("categories, merchants, projects and tags", () => {
-  it("builds a two-level tree with income and expense branches; deletes move entries", async () => {
+  it("builds a tree of any depth with income and expense branches; deletes move entries", async () => {
     const { store, ids } = await book();
-    await store.addCategory("Coffee");
-    await store.addCategory("Salary");
+    await store.addCategory("Espresso");
+    await store.addCategory("Wages");
     await store.addCategory("Cafes");
-    await store.ledger.setCategoryMeta("Coffee", { parent: "Food & dining" }, await store.customCategories());
-    await store.ledger.setCategoryMeta("Salary", { parent: "Income" }, await store.customCategories());
-    await expect(store.ledger.setCategoryMeta("Cafes", { parent: "Coffee" }, await store.customCategories())).rejects.toMatchObject({ code: "category_depth" });
-    const tree = await store.ledger.categoryTree(await store.customCategories());
-    expect(tree.find((n) => n.name === "Food & dining")!.children.map((c) => c.name)).toEqual(["Coffee"]);
-    expect(tree.find((n) => n.name === "Income")!.children[0]).toMatchObject({ name: "Salary", kind: "income" });
+    await store.ledger.setCategoryMeta("Espresso", { parent: "Food & dining" });
+    await store.ledger.setCategoryMeta("Wages", { parent: "Income" });
+    await store.ledger.setCategoryMeta("Cafes", { parent: "Espresso" }); // a third level is fine now
+    const tree = await store.ledger.categoryTree();
+    expect(tree.find((n) => n.name === "Food & dining")!.children.map((c) => c.name)).toContain("Espresso");
+    expect(tree.find((n) => n.name === "Income")!.children.find((c) => c.name === "Wages")).toMatchObject({ kind: "income" });
+    expect((await store.categoryTree()).get("Cafes")).toMatchObject({ parent: "Espresso", depth: 2 });
+    await store.ledger.setCategoryMeta("Cafes", { parent: null });
     // An income subcategory works for income entries only.
-    await store.ledger.createEntry({ kind: "income", amountCents: 1000, occurredOn: "2026-10-01", accountId: ids.CHK, category: "Salary" });
-    await expect(store.ledger.createEntry({ kind: "expense", amountCents: 1000, occurredOn: "2026-10-01", accountId: ids.CHK, category: "Salary" })).rejects.toMatchObject({ problems: ["category_kind"] });
-    const [coffee] = await store.ledger.createEntry({ kind: "expense", amountCents: 450, occurredOn: "2026-10-02", accountId: ids.CHK, category: "Coffee" });
-    await store.renameCategory("Coffee", "Coffee shops");
+    await store.ledger.createEntry({ kind: "income", amountCents: 1000, occurredOn: "2026-10-01", accountId: ids.CHK, category: "Wages" });
+    await expect(store.ledger.createEntry({ kind: "expense", amountCents: 1000, occurredOn: "2026-10-01", accountId: ids.CHK, category: "Wages" })).rejects.toMatchObject({ problems: ["category_kind"] });
+    const [coffee] = await store.ledger.createEntry({ kind: "expense", amountCents: 450, occurredOn: "2026-10-02", accountId: ids.CHK, category: "Espresso" });
+    await store.renameCategory("Espresso", "Coffee shops");
     expect((await store.ledger.entry(coffee)).category).toBe("Coffee shops");
-    expect((await store.ledger.categoryTree(await store.customCategories())).find((n) => n.name === "Food & dining")!.children[0].name).toBe("Coffee shops");
+    expect((await store.ledger.categoryTree()).find((n) => n.name === "Food & dining")!.children.map((c) => c.name)).toContain("Coffee shops");
     expect(await store.mergeCategory("Coffee shops", "Food & dining")).toBe(1);
     expect((await store.ledger.entry(coffee)).category).toBe("Food & dining");
     await store.ledger.setCategoryMeta("Cafes", { hidden: true }, await store.customCategories());

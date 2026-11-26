@@ -57,9 +57,14 @@ zh-TW:
         one: 還有 %{count} 個商家待處理；再執行一次即可繼續。
         other: 還有 %{count} 個商家待處理；再執行一次即可繼續。
       errors:
+        protected: "「轉帳」可以重新命名和調整順序，但它始終是頂層分類，不能刪除或合併。"
+        category_cycle: "分類不能放進它自己或它的子分類裡。"
+        category_unknown: "請選擇你的一個分類。"
+        parent_invalid: "這裡不能使用該上層分類。"
+        proposal_closed: "該建議已經處理過了。"
         blank: 請輸入分類名稱。
         too_long: 分類名稱最多 %{count} 個字元。
-        reserved: 這已經是內建分類。
+        reserved: 「未分類」是固定項目，不能用作分類名稱。
         taken: 你已經有同名的分類。
         too_many: 最多可以有 %{count} 個自訂分類。
       ai_errors:
@@ -72,3 +77,46 @@ zh-TW:
         failed: AI 服務無法為這些交易分類。未做任何更改；請稍後再試。
         unavailable: 無法連接 AI 服務。未做任何更改；請稍後再試。
         invalid_result: AI 服務回傳了非預期的結果。未做任何更改；請重試。
+      tree_add_body: "可以在頂層或任意分類下新增分類，層級不限。包括建議分類在內，最多可有 %{count} 個分類。"
+      new_kind: "類型（僅頂層）"
+      suggested_button: "新增建議分類"
+      suggested_summary: "建議分類"
+      suggested_none: "你已經擁有所有建議分類。"
+      proposals_title: "建議的新子分類"
+      proposals_body: "AI 發現了幾組可能值得單獨設子分類的交易。在你核准之前不會建立任何內容；核准後，這些交易會歸入該子分類，作為一次可以復原的變更。"
+      proposal_name: "名稱"
+      proposal_approve: "核准"
+      proposal_dismiss: "略過"
+      proposal_dismissed: "已略過建議「%{name}」。"
+      move_up: "上移 %{name}"
+      move_down: "下移 %{name}"
+      transfers_note: "「轉帳」可以重新命名並新增子分類，但它始終位於頂層，不能刪除或合併。歸入其中的項目都按轉帳計算。"
+      delete_destination: "將交易移至"
+      delete_confirm_tree: "刪除「%{name}」？它的交易和記住的規則會移到你選擇的分類，子分類上移一層。"
+      report_all: "全部分類"
+      report_direct: "%{name}（直接）"
+      deleted_into:
+        one: "已刪除分類「%{name}」；%{count} 筆交易已移至 %{into}。"
+        other: "已刪除分類「%{name}」；%{count} 筆交易已移至 %{into}。"
+      suggested_body:
+        one: "你的清單中缺少 %{count} 個建議分類。新增它們不會重新命名、移動或重複你已有的任何分類。"
+        other: "你的清單中缺少 %{count} 個建議分類。新增它們不會重新命名、移動或重複你已有的任何分類。"
+      suggested_added:
+        one: "已新增 %{count} 個建議分類。"
+        other: "已新增 %{count} 個建議分類。"
+      proposals_waiting:
+        one: "AI 還建議了 %{count} 個新子分類，請在下方查看。"
+        other: "AI 還建議了 %{count} 個新子分類，請在下方查看。"
+      proposal_fits:
+        one: "適用於 %{count} 筆交易（%{merchants}）。"
+        other: "適用於 %{count} 筆交易（%{merchants}）。"
+      proposal_approved:
+        one: "已建立「%{name}」，並將 %{count} 筆交易歸入其中。"
+        other: "已建立「%{name}」，並將 %{count} 筆交易歸入其中。"
+      children_count:
+        one: "%{count} 個子分類"
+        other: "%{count} 個子分類"
+      kinds:
+        income: "收入"
+        expense: "支出"
+        transfer: "轉帳"

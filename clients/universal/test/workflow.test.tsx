@@ -126,6 +126,7 @@ it("signs in, works with local data, switches language, and signs out", async ()
 
   await nav("All Transactions");
   const select = await screen.findByLabelText("Category for AMAZON WEB SERVICES AWS.AMAZON.CO");
+  await act(async () => fireEvent.focus(select)); // a row's picker builds its list when it is used
   await act(async () => fireEvent.change(select, { target: { value: "Business" } }));
   await screen.findByText(/"amazon services" will be Business from now on/);
 

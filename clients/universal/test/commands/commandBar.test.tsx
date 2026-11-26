@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { ActionExecutor, DialogueSession, NaturalLanguageEngine } from "@nlae/core";
 import { CommandBar, createLocalController } from "@nlae/react";
 import type { Transaction } from "@billie/shared-types";
+import type { CategoryTree } from "@billie/finance-core";
 import { fixtureBytes, newStore } from "../helpers";
 import { importFile } from "../../src/services/importFile";
 import { billieRegistry, PRODUCT } from "../../src/commands/actions";
@@ -17,8 +18,8 @@ async function mount(locale: "en" | "zh-CN" = "en") {
   const { store } = await newStore();
   await importFile(store, fixtureBytes("basic-amount.csv"), "basic-amount.csv", "USD");
   await store.addCategory("Pets");
-  let finance = { transactions: [] as Transaction[], customCategories: [] as string[], currency: "USD" as string | null };
-  const refresh = async () => { finance = { transactions: await store.transactions(), customCategories: await store.customCategories(), currency: await store.currency() }; };
+  let finance = { transactions: [] as Transaction[], customCategories: [] as string[], currency: "USD" as string | null, categoryTree: null as CategoryTree | null };
+  const refresh = async () => { finance = { transactions: await store.transactions(), customCategories: await store.customCategories(), currency: await store.currency(), categoryTree: await store.categoryTree() }; };
   await refresh();
   const deps: HostDeps = { store, data: () => finance, refresh, navigate: () => undefined, setLanguage: () => undefined, setTheme: () => undefined, categoryLabel: (n) => n };
   const registry = billieRegistry();

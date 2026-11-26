@@ -13,3 +13,5 @@ export * from "./spending";
 export * from "./universal";
 export * from "./ledger";
 export * from "./receipt";
+export * from "./taxonomy";
+export * from "./categoryTree";

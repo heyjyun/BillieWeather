@@ -23,7 +23,7 @@ export const ledgerEn = {
   errors: {
     not_found: "It no longer exists.", invalid_name: "Enter a name.", name_taken: "That name is already used.", account_in_use: "This account has entries, so it can't be deleted. Archive it instead.",
     invalid_account_type: "Choose an account type.", invalid_entry: "Check the highlighted fields.", refund_too_large: "The refunds would be more than the original expense.",
-    category_depth: "Categories have two levels at most.", category_cycle: "A category can't contain itself.", invalid_budget: "Check the budget.", invalid_schedule: "Check the dates and frequency.",
+    category_depth: "That category can't be moved there.", category_protected: "Transfers can't be deleted, merged into another category or moved under one.", category_cycle: "A category can't contain itself.", invalid_budget: "Check the budget.", invalid_schedule: "Check the dates and frequency.",
     currency_unknown: "Choose this book's currency first.", not_in_trash: "Only entries in the trash can be deleted for good.", unknown: "Something went wrong.",
   },
   accounts: {
@@ -53,8 +53,10 @@ export const ledgerEn = {
     review: "Review", reviewTitle: "Money in that may not be income", reviewIntro: "These rows count as income, but look like refunds or card repayments. Refunds reduce spending; card repayments are transfers.", markAs: "Mark as {kind}", keepIncome: "It is income",
   },
   categoriesTree: {
-    title: "Category tree", intro: "Two levels, like a folder and its subfolders. Income and expense categories are separate trees. Hidden categories keep their history but are not offered for new entries.",
+    title: "Category tree", intro: "Categories nest as deeply as you like, like folders and subfolders. A subcategory belongs to its top-level category's tree (income, expense or transfer). Hidden categories keep their history but are not offered for new entries. Transfers can be renamed and given subcategories, but not deleted or moved under another category.",
     parent: "Parent", topLevel: "Top level", tree: "Tree", expense: "Expense", income: "Income", hidden: "Hidden", hide: "Hide", show: "Show", deleteMoveTo: "Move its entries to", merged: "Merged {from} into {into}.",
+    expand: "Show subcategories of {name}", collapse: "Hide subcategories of {name}", renameTo: "New name for {name}", addSub: "Add subcategory", subName: "New subcategory under {name}", move: "Move", moveUnder: "Move {name} under",
+    addSuggested: "Add suggested categories", suggestedHelp: "Adds the default categories you don't have yet. Nothing you have is renamed, moved or duplicated.", suggestedAdded: "Added {count} suggested categories.", suggestedNone: "You already have every suggested category.", actionsFor: "Actions for {name}",
   },
   lists: {
     eyebrow: "EXTRA DETAIL", title: "Merchants, projects & tags", intro: "Optional labels for entries. A merchant is who you paid or who paid you; a project groups entries across categories (a trip, a renovation); tags are free labels.",
@@ -70,6 +72,7 @@ export const ledgerEn = {
     autoPost: "Post automatically when due", next: "Next: {date}", ended: "Ended", paused: "Paused", pause: "Pause", resume: "Resume", skip: "Skip next", postDue: "Post {count} due entries", posted: "{count} entries posted.", preview: "Next dates: {dates}", noSchedules: "No recurring entries yet.",
   },
   reports: {
+    direct: "{name} (direct)", drill: "Show inside {name}", drillUp: "All top-level categories",
     by: "Group by", dimensions: { category: "Category", account: "Account", merchant: "Merchant", project: "Project", tag: "Tag", month: "Month" }, income: "Income", expense: "Spending", net: "Net", count: "Entries", unlabeled: "(none)",
     netWorthTitle: "Net worth over time", assets: "Assets", liabilities: "Liabilities", netWorth: "Net worth", month: "Month",
   },

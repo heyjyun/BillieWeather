@@ -20,7 +20,7 @@ export const ledgerZhCN: LedgerMessages = {
   errors: {
     not_found: "它已经不存在了。", invalid_name: "请输入名称。", name_taken: "这个名称已被使用。", account_in_use: "该账户下有流水，无法删除。请改为归档。",
     invalid_account_type: "请选择账户类型。", invalid_entry: "请检查标出的字段。", refund_too_large: "退款总额超过了原支出。",
-    category_depth: "分类最多两级。", category_cycle: "分类不能包含它自己。", invalid_budget: "请检查预算。", invalid_schedule: "请检查日期和频率。",
+    category_depth: "这个分类不能移到那里。", category_protected: "“转账”不能删除、合并到其他分类，也不能移到其他分类下。", category_cycle: "分类不能包含它自己。", invalid_budget: "请检查预算。", invalid_schedule: "请检查日期和频率。",
     currency_unknown: "请先选择这个账本的币种。", not_in_trash: "只有回收站里的流水才能彻底删除。", unknown: "出了点问题。",
   },
   accounts: {
@@ -50,8 +50,10 @@ export const ledgerZhCN: LedgerMessages = {
     review: "核对", reviewTitle: "可能不是收入的入账", reviewIntro: "这些记录算作收入，但看起来像退款或信用卡还款。退款会减少支出；信用卡还款属于转账。", markAs: "标记为{kind}", keepIncome: "这是收入",
   },
   categoriesTree: {
-    title: "分类树", intro: "共两级，就像文件夹和子文件夹。收入分类和支出分类是各自独立的树。隐藏的分类会保留历史记录，但不会出现在新流水的选项里。",
+    title: "分类树", intro: "分类可以像文件夹和子文件夹一样任意多级嵌套。子分类属于其一级分类所在的树（收入、支出或转账）。隐藏的分类会保留历史记录，但不会出现在新流水的选项里。“转账”可以重命名、添加子分类，但不能删除，也不能移到其他分类下。",
     parent: "上级", topLevel: "一级分类", tree: "分类树", expense: "支出", income: "收入", hidden: "已隐藏", hide: "隐藏", show: "显示", deleteMoveTo: "将其流水移到", merged: "已将 {from} 合并到 {into}。",
+    expand: "显示 {name} 的子分类", collapse: "收起 {name} 的子分类", renameTo: "{name} 的新名称", addSub: "添加子分类", subName: "{name} 下的新子分类", move: "移动", moveUnder: "将 {name} 移到",
+    addSuggested: "添加推荐分类", suggestedHelp: "添加你还没有的默认分类。你已有的分类不会被重命名、移动或重复添加。", suggestedAdded: "已添加 {count} 个推荐分类。", suggestedNone: "你已经拥有所有推荐分类。", actionsFor: "{name} 的操作",
   },
   lists: {
     eyebrow: "更多细节", title: "商家、项目与标签", intro: "流水的可选标记。商家是你付款的对象或付款给你的人；项目可以跨分类归集流水（比如一次旅行、一次装修）；标签是自由标记。",
@@ -67,6 +69,7 @@ export const ledgerZhCN: LedgerMessages = {
     autoPost: "到期自动入账", next: "下次：{date}", ended: "已结束", paused: "已暂停", pause: "暂停", resume: "继续", skip: "跳过下一次", postDue: "入账 {count} 笔到期流水", posted: "已入账 {count} 笔流水。", preview: "接下来的日期：{dates}", noSchedules: "还没有周期记账。",
   },
   reports: {
+    direct: "{name}（直接）", drill: "查看 {name} 内部", drillUp: "所有一级分类",
     by: "分组方式", dimensions: { category: "分类", account: "账户", merchant: "商家", project: "项目", tag: "标签", month: "月份" }, income: "收入", expense: "支出", net: "结余", count: "笔数", unlabeled: "（无）",
     netWorthTitle: "净资产变化", assets: "资产", liabilities: "负债", netWorth: "净资产", month: "月份",
   },
@@ -119,7 +122,7 @@ export const ledgerZhTW: LedgerMessages = {
   errors: {
     not_found: "它已經不存在了。", invalid_name: "請輸入名稱。", name_taken: "這個名稱已經有人使用。", account_in_use: "這個帳戶底下有紀錄，無法刪除。請改為封存。",
     invalid_account_type: "請選擇帳戶類型。", invalid_entry: "請檢查標示的欄位。", refund_too_large: "退款總額超過了原本的支出。",
-    category_depth: "分類最多兩層。", category_cycle: "分類不能包含自己。", invalid_budget: "請檢查預算。", invalid_schedule: "請檢查日期和頻率。",
+    category_depth: "這個分類不能移到那裡。", category_protected: "「轉帳」不能刪除、合併到其他分類，也不能移到其他分類下。", category_cycle: "分類不能包含自己。", invalid_budget: "請檢查預算。", invalid_schedule: "請檢查日期和頻率。",
     currency_unknown: "請先選擇這個帳本的幣別。", not_in_trash: "只有回收筒裡的紀錄才能永久刪除。", unknown: "發生了一點問題。",
   },
   accounts: {
@@ -149,8 +152,10 @@ export const ledgerZhTW: LedgerMessages = {
     review: "檢查", reviewTitle: "可能不是收入的入帳", reviewIntro: "這些紀錄被算作收入，但看起來像退款或信用卡還款。退款會減少支出；信用卡還款屬於轉帳。", markAs: "標記為{kind}", keepIncome: "這是收入",
   },
   categoriesTree: {
-    title: "分類樹", intro: "共兩層，就像資料夾和子資料夾。收入分類和支出分類是各自獨立的樹。隱藏的分類會保留歷史紀錄，但不會出現在新紀錄的選項中。",
+    title: "分類樹", intro: "分類可以像資料夾和子資料夾一樣任意多層巢狀。子分類屬於其最上層分類所在的樹（收入、支出或轉帳）。隱藏的分類會保留歷史紀錄，但不會出現在新紀錄的選項中。「轉帳」可以重新命名、新增子分類，但不能刪除，也不能移到其他分類下。",
     parent: "上層", topLevel: "最上層", tree: "分類樹", expense: "支出", income: "收入", hidden: "已隱藏", hide: "隱藏", show: "顯示", deleteMoveTo: "將其紀錄移到", merged: "已將 {from} 合併到 {into}。",
+    expand: "顯示 {name} 的子分類", collapse: "收合 {name} 的子分類", renameTo: "{name} 的新名稱", addSub: "新增子分類", subName: "{name} 下的新子分類", move: "移動", moveUnder: "將 {name} 移到",
+    addSuggested: "新增建議分類", suggestedHelp: "新增你還沒有的預設分類。你已有的分類不會被重新命名、移動或重複新增。", suggestedAdded: "已新增 {count} 個建議分類。", suggestedNone: "你已經擁有所有建議分類。", actionsFor: "{name} 的操作",
   },
   lists: {
     eyebrow: "更多細節", title: "商家、專案與標籤", intro: "紀錄的選用標記。商家是你付款的對象或付款給你的人；專案可以跨分類歸集紀錄（例如一趟旅行、一次裝修）；標籤則是自由標記。",
@@ -166,6 +171,7 @@ export const ledgerZhTW: LedgerMessages = {
     autoPost: "到期自動入帳", next: "下次：{date}", ended: "已結束", paused: "已暫停", pause: "暫停", resume: "繼續", skip: "跳過下一次", postDue: "入帳 {count} 筆到期紀錄", posted: "已入帳 {count} 筆紀錄。", preview: "接下來的日期：{dates}", noSchedules: "還沒有週期記帳。",
   },
   reports: {
+    direct: "{name}（直接）", drill: "查看 {name} 內部", drillUp: "所有最上層分類",
     by: "分組方式", dimensions: { category: "分類", account: "帳戶", merchant: "商家", project: "專案", tag: "標籤", month: "月份" }, income: "收入", expense: "支出", net: "結餘", count: "筆數", unlabeled: "（無）",
     netWorthTitle: "淨資產變化", assets: "資產", liabilities: "負債", netWorth: "淨資產", month: "月份",
   },
@@ -218,7 +224,7 @@ export const ledgerJa: LedgerMessages = {
   errors: {
     not_found: "すでに存在しません。", invalid_name: "名前を入力してください。", name_taken: "その名前はすでに使われています。", account_in_use: "この口座には記録があるため削除できません。代わりにアーカイブしてください。",
     invalid_account_type: "口座の種類を選んでください。", invalid_entry: "強調表示された項目を確認してください。", refund_too_large: "返金の合計が元の支出を超えています。",
-    category_depth: "カテゴリは 2 階層までです。", category_cycle: "カテゴリ自身を含めることはできません。", invalid_budget: "予算を確認してください。", invalid_schedule: "日付と頻度を確認してください。",
+    category_depth: "そのカテゴリはそこへ移動できません。", category_protected: "「振替」は削除、他のカテゴリへの統合、他のカテゴリの下への移動ができません。", category_cycle: "カテゴリ自身を含めることはできません。", invalid_budget: "予算を確認してください。", invalid_schedule: "日付と頻度を確認してください。",
     currency_unknown: "先にこの帳簿の通貨を選んでください。", not_in_trash: "ゴミ箱にある記録だけ完全に削除できます。", unknown: "問題が発生しました。",
   },
   accounts: {
@@ -248,8 +254,10 @@ export const ledgerJa: LedgerMessages = {
     review: "確認", reviewTitle: "収入ではないかもしれない入金", reviewIntro: "これらは収入として数えられていますが、返金やカード返済のようです。返金は支出を減らし、カード返済は振替になります。", markAs: "{kind}にする", keepIncome: "収入です",
   },
   categoriesTree: {
-    title: "カテゴリツリー", intro: "フォルダとサブフォルダのような 2 階層です。収入と支出のカテゴリは別々のツリーです。非表示のカテゴリは履歴を保ちますが、新しい記録の候補には出ません。",
+    title: "カテゴリツリー", intro: "カテゴリはフォルダとサブフォルダのように何階層でも入れ子にできます。サブカテゴリは最上位カテゴリのツリー（収入・支出・振替）に属します。非表示のカテゴリは履歴を保ちますが、新しい記録の候補には出ません。「振替」は名前の変更やサブカテゴリの追加はできますが、削除したり他のカテゴリの下に移したりはできません。",
     parent: "親カテゴリ", topLevel: "最上位", tree: "ツリー", expense: "支出", income: "収入", hidden: "非表示", hide: "非表示にする", show: "表示する", deleteMoveTo: "記録の移動先", merged: "{from} を {into} に統合しました。",
+    expand: "{name} のサブカテゴリを表示", collapse: "{name} のサブカテゴリを閉じる", renameTo: "{name} の新しい名前", addSub: "サブカテゴリを追加", subName: "{name} の下の新しいサブカテゴリ", move: "移動", moveUnder: "{name} の移動先",
+    addSuggested: "おすすめのカテゴリを追加", suggestedHelp: "まだないデフォルトのカテゴリを追加します。既存のカテゴリの名前変更・移動・重複追加はしません。", suggestedAdded: "おすすめのカテゴリを {count} 件追加しました。", suggestedNone: "おすすめのカテゴリはすべて追加済みです。", actionsFor: "{name} の操作",
   },
   lists: {
     eyebrow: "さらに詳しく", title: "店舗・プロジェクト・タグ", intro: "記録に付けられる任意のラベルです。店舗は支払った相手や支払ってくれた相手、プロジェクトはカテゴリをまたいで記録をまとめるもの（旅行、リフォームなど）、タグは自由なラベルです。",
@@ -265,6 +273,7 @@ export const ledgerJa: LedgerMessages = {
     autoPost: "期日に自動で計上", next: "次回：{date}", ended: "終了", paused: "一時停止中", pause: "一時停止", resume: "再開", skip: "次回をスキップ", postDue: "期日の {count} 件を計上", posted: "{count} 件を計上しました。", preview: "今後の日付：{dates}", noSchedules: "定期記帳がありません。",
   },
   reports: {
+    direct: "{name}（直接）", drill: "{name} の内訳を表示", drillUp: "すべての最上位カテゴリ",
     by: "グループ化", dimensions: { category: "カテゴリ", account: "口座", merchant: "店舗", project: "プロジェクト", tag: "タグ", month: "月" }, income: "収入", expense: "支出", net: "収支", count: "件数", unlabeled: "（なし）",
     netWorthTitle: "純資産の推移", assets: "資産", liabilities: "負債", netWorth: "純資産", month: "月",
   },
@@ -317,7 +326,7 @@ export const ledgerKo: LedgerMessages = {
   errors: {
     not_found: "더 이상 존재하지 않습니다.", invalid_name: "이름을 입력하세요.", name_taken: "이미 사용 중인 이름입니다.", account_in_use: "이 계좌에는 내역이 있어서 삭제할 수 없습니다. 대신 보관하세요.",
     invalid_account_type: "계좌 유형을 선택하세요.", invalid_entry: "표시된 항목을 확인하세요.", refund_too_large: "환불 합계가 원래 지출보다 큽니다.",
-    category_depth: "카테고리는 최대 두 단계입니다.", category_cycle: "카테고리가 자기 자신을 포함할 수 없습니다.", invalid_budget: "예산을 확인하세요.", invalid_schedule: "날짜와 주기를 확인하세요.",
+    category_depth: "그 카테고리는 그곳으로 옮길 수 없습니다.", category_protected: "'이체'는 삭제하거나, 다른 카테고리로 병합하거나, 다른 카테고리 아래로 옮길 수 없습니다.", category_cycle: "카테고리가 자기 자신을 포함할 수 없습니다.", invalid_budget: "예산을 확인하세요.", invalid_schedule: "날짜와 주기를 확인하세요.",
     currency_unknown: "먼저 이 장부의 통화를 선택하세요.", not_in_trash: "휴지통에 있는 내역만 완전히 삭제할 수 있습니다.", unknown: "문제가 발생했습니다.",
   },
   accounts: {
@@ -347,8 +356,10 @@ export const ledgerKo: LedgerMessages = {
     review: "검토", reviewTitle: "수입이 아닐 수 있는 입금", reviewIntro: "이 항목들은 수입으로 계산되지만 환불이나 카드 대금 상환처럼 보입니다. 환불은 지출을 줄이고, 카드 대금 상환은 이체입니다.", markAs: "{kind}(으)로 표시", keepIncome: "수입이 맞아요",
   },
   categoriesTree: {
-    title: "카테고리 트리", intro: "폴더와 하위 폴더처럼 두 단계입니다. 수입과 지출 카테고리는 서로 다른 트리입니다. 숨긴 카테고리는 기록은 유지되지만 새 내역의 선택지에는 나오지 않습니다.",
+    title: "카테고리 트리", intro: "카테고리는 폴더와 하위 폴더처럼 원하는 만큼 여러 단계로 넣을 수 있습니다. 하위 카테고리는 최상위 카테고리의 트리(수입, 지출, 이체)에 속합니다. 숨긴 카테고리는 기록은 유지되지만 새 내역의 선택지에는 나오지 않습니다. '이체'는 이름을 바꾸거나 하위 카테고리를 추가할 수 있지만, 삭제하거나 다른 카테고리 아래로 옮길 수는 없습니다.",
     parent: "상위", topLevel: "최상위", tree: "트리", expense: "지출", income: "수입", hidden: "숨김", hide: "숨기기", show: "보이기", deleteMoveTo: "내역을 옮길 곳", merged: "{from}을(를) {into}(으)로 병합했습니다.",
+    expand: "{name}의 하위 카테고리 보기", collapse: "{name}의 하위 카테고리 접기", renameTo: "{name}의 새 이름", addSub: "하위 카테고리 추가", subName: "{name} 아래 새 하위 카테고리", move: "이동", moveUnder: "{name}을(를) 옮길 곳",
+    addSuggested: "추천 카테고리 추가", suggestedHelp: "아직 없는 기본 카테고리를 추가합니다. 기존 카테고리의 이름을 바꾸거나 옮기거나 중복으로 추가하지 않습니다.", suggestedAdded: "추천 카테고리 {count}개를 추가했습니다.", suggestedNone: "추천 카테고리가 이미 모두 있습니다.", actionsFor: "{name} 작업",
   },
   lists: {
     eyebrow: "추가 정보", title: "거래처, 프로젝트, 태그", intro: "내역에 붙이는 선택 라벨입니다. 거래처는 돈을 낸 상대나 받은 상대이고, 프로젝트는 카테고리를 넘어 내역을 묶으며(여행, 인테리어 등), 태그는 자유 라벨입니다.",
@@ -364,6 +375,7 @@ export const ledgerKo: LedgerMessages = {
     autoPost: "기한이 되면 자동 기록", next: "다음: {date}", ended: "종료됨", paused: "일시중지됨", pause: "일시중지", resume: "재개", skip: "다음 건너뛰기", postDue: "기한 도래 내역 {count}건 기록", posted: "내역 {count}건을 기록했습니다.", preview: "다음 날짜: {dates}", noSchedules: "아직 반복 거래가 없습니다.",
   },
   reports: {
+    direct: "{name} (직접)", drill: "{name} 안 보기", drillUp: "모든 최상위 카테고리",
     by: "그룹 기준", dimensions: { category: "카테고리", account: "계좌", merchant: "거래처", project: "프로젝트", tag: "태그", month: "월" }, income: "수입", expense: "지출", net: "순수익", count: "건수", unlabeled: "(없음)",
     netWorthTitle: "순자산 추이", assets: "자산", liabilities: "부채", netWorth: "순자산", month: "월",
   },
@@ -416,7 +428,7 @@ export const ledgerEs: LedgerMessages = {
   errors: {
     not_found: "Ya no existe.", invalid_name: "Introduce un nombre.", name_taken: "Ese nombre ya está en uso.", account_in_use: "Esta cuenta tiene movimientos, así que no se puede eliminar. Archívala en su lugar.",
     invalid_account_type: "Elige un tipo de cuenta.", invalid_entry: "Revisa los campos resaltados.", refund_too_large: "Los reembolsos superarían el gasto original.",
-    category_depth: "Las categorías tienen dos niveles como máximo.", category_cycle: "Una categoría no puede contenerse a sí misma.", invalid_budget: "Revisa el presupuesto.", invalid_schedule: "Revisa las fechas y la frecuencia.",
+    category_depth: "Esa categoría no se puede mover ahí.", category_protected: "Transferencias no se puede eliminar, combinar con otra categoría ni mover dentro de otra.", category_cycle: "Una categoría no puede contenerse a sí misma.", invalid_budget: "Revisa el presupuesto.", invalid_schedule: "Revisa las fechas y la frecuencia.",
     currency_unknown: "Elige primero la moneda de este libro.", not_in_trash: "Solo se pueden eliminar definitivamente los movimientos de la papelera.", unknown: "Algo salió mal.",
   },
   accounts: {
@@ -446,8 +458,10 @@ export const ledgerEs: LedgerMessages = {
     review: "Revisar", reviewTitle: "Entradas de dinero que quizá no sean ingresos", reviewIntro: "Estas filas cuentan como ingresos, pero parecen reembolsos o pagos de tarjeta. Los reembolsos reducen el gasto; los pagos de tarjeta son transferencias.", markAs: "Marcar como {kind}", keepIncome: "Es un ingreso",
   },
   categoriesTree: {
-    title: "Árbol de categorías", intro: "Dos niveles, como una carpeta y sus subcarpetas. Las categorías de ingresos y de gastos son árboles separados. Las categorías ocultas conservan su historial, pero no se ofrecen para movimientos nuevos.",
+    title: "Árbol de categorías", intro: "Las categorías se anidan tanto como quieras, como carpetas y subcarpetas. Una subcategoría pertenece al árbol de su categoría superior (ingreso, gasto o transferencia). Las categorías ocultas conservan su historial, pero no se ofrecen para movimientos nuevos. Transferencias puede renombrarse y tener subcategorías, pero no eliminarse ni moverse dentro de otra categoría.",
     parent: "Superior", topLevel: "Nivel superior", tree: "Árbol", expense: "Gasto", income: "Ingreso", hidden: "Oculta", hide: "Ocultar", show: "Mostrar", deleteMoveTo: "Mover sus movimientos a", merged: "{from} combinada con {into}.",
+    expand: "Mostrar subcategorías de {name}", collapse: "Ocultar subcategorías de {name}", renameTo: "Nombre nuevo para {name}", addSub: "Añadir subcategoría", subName: "Nueva subcategoría dentro de {name}", move: "Mover", moveUnder: "Mover {name} dentro de",
+    addSuggested: "Añadir categorías sugeridas", suggestedHelp: "Añade las categorías predeterminadas que aún no tienes. No se cambia el nombre, ni se mueve ni se duplica nada de lo que ya tienes.", suggestedAdded: "Se añadieron {count} categorías sugeridas.", suggestedNone: "Ya tienes todas las categorías sugeridas.", actionsFor: "Acciones para {name}",
   },
   lists: {
     eyebrow: "MÁS DETALLE", title: "Comercios, proyectos y etiquetas", intro: "Etiquetas opcionales para los movimientos. Un comercio es a quien pagaste o quien te pagó; un proyecto agrupa movimientos de varias categorías (un viaje, una reforma); las etiquetas son libres.",
@@ -463,6 +477,7 @@ export const ledgerEs: LedgerMessages = {
     autoPost: "Registrar automáticamente al vencer", next: "Siguiente: {date}", ended: "Terminado", paused: "En pausa", pause: "Pausar", resume: "Reanudar", skip: "Omitir el siguiente", postDue: "Registrar {count} movimientos pendientes", posted: "{count} movimientos registrados.", preview: "Próximas fechas: {dates}", noSchedules: "Aún no hay movimientos recurrentes.",
   },
   reports: {
+    direct: "{name} (directo)", drill: "Ver dentro de {name}", drillUp: "Todas las categorías superiores",
     by: "Agrupar por", dimensions: { category: "Categoría", account: "Cuenta", merchant: "Comercio", project: "Proyecto", tag: "Etiqueta", month: "Mes" }, income: "Ingresos", expense: "Gastos", net: "Neto", count: "Movimientos", unlabeled: "(ninguno)",
     netWorthTitle: "Patrimonio neto a lo largo del tiempo", assets: "Activos", liabilities: "Pasivos", netWorth: "Patrimonio neto", month: "Mes",
   },

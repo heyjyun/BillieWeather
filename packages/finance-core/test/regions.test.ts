@@ -31,7 +31,7 @@ describe("categorizer with a region", () => {
       for (const c of cases) {
         const amount = decimalToCents(c.amount);
         const before = base.explain(c.description, amount);
-        if (before.reason !== "none") expect(regional.explain(c.description, amount)).toEqual(before);
+        if (before.reason !== "none") expect(regional.explain(c.description, amount)).toMatchObject(before);
       }
     }
   });
@@ -57,7 +57,7 @@ describe("categorizer with a region", () => {
     ["GB", "BOOTS 1123 LONDON", "Health"],
   ])("%s: recognizes %s", (region, description, category) => {
     expect(new Categorizer().categorize(description, -1234)).toBe("Uncategorized");
-    expect(new Categorizer([], { region }).explain(description, -1234)).toEqual({ category, reason: "region" });
+    expect(new Categorizer([], { region }).explain(description, -1234)).toMatchObject({ category, reason: "region" });
   });
 
   it("does not assume every transaction is from the chosen region", () => {
@@ -76,12 +76,12 @@ describe("categorizer with a region", () => {
   });
 
   it("keeps the deliberate AWS rule (Uncategorized) instead of a regional guess", () => {
-    expect(new Categorizer([], { region: "US" }).explain("AWS EMEA ZELLE", -1000)).toEqual({ category: "Uncategorized", reason: "rule" });
+    expect(new Categorizer([], { region: "US" }).explain("AWS EMEA ZELLE", -1000)).toMatchObject({ category: "Uncategorized", reason: "rule" });
   });
 
   it("lets a person's remembered rule win over the region", () => {
     const categorizer = new Categorizer([{ merchantKey: "zelle to", income: false, category: "Housing" }], { region: "US" });
-    expect(categorizer.explain("ZELLE TO J SMITH", -150000)).toEqual({ category: "Housing", reason: "learned" });
+    expect(categorizer.explain("ZELLE TO J SMITH", -150000)).toMatchObject({ category: "Housing", reason: "learned" });
     expect(regionalCategory("US", "ZELLE TO J SMITH")).toBe("Transfers");
   });
 });

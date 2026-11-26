@@ -1,9 +1,9 @@
 import type { Category, Transaction, TransactionKind } from "@billie/shared-types";
-import { allCategories, formatMoney, merchantKey } from "@billie/finance-core";
+import { allCategories, formatMoney, merchantKey, subtreeMatcher } from "@billie/finance-core";
 import { formatRange } from "@nlae/core";
 import { matchTransactions, type TransactionFilter } from "../commands/handlers";
 import { useEffect, useMemo, useState } from "react";
-import { CategorySelect, ConfirmDelete, Empty, Money, PageHeading } from "../components/common";
+import { categoryChoices, CategorySelect, ConfirmDelete, Empty, indented, Money, PageHeading } from "../components/common";
 import { EntryForm } from "../components/EntryForm";
 import { OrganizePanel } from "../components/OrganizePanel";
 import { useFinance } from "../hooks/useFinance";
@@ -30,7 +30,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   const { manual } = useMode();
   const [toolsExpanded, setToolsExpanded] = useState(false);
   const manualTools = manual || toolsExpanded;
-  const { transactions, customCategories, currency, store, refresh, accounts } = useFinance();
+  const { transactions, customCategories, categoryTree, currency, store, refresh, accounts } = useFinance();
   const categories = useMemo(() => allCategories(customCategories), [customCategories]);
   const [query, setQuery] = useState(preset?.query ?? "");
   const [filter, setFilter] = useState<Category | "all">(preset?.category ?? "all");
@@ -65,10 +65,12 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
 
   const visible = useMemo(() => {
     // A command's filter uses the same matching as the command's own count.
-    const base = commandFilter ? matchTransactions(transactions, { ...commandFilter, category: filter === "all" ? undefined : filter }) : transactions;
+    const base = commandFilter ? matchTransactions(transactions, { ...commandFilter, category: filter === "all" ? undefined : filter }, categoryTree) : transactions;
+    // A category filter means the category and everything below it.
+    const inFilter = filter === "all" ? null : subtreeMatcher(categoryTree, filter);
     const q = query.trim().toLowerCase();
     const d = dimension.trim().toLowerCase();
-    return base.filter((transaction) => (commandFilter || filter === "all" || transaction.category === filter)
+    return base.filter((transaction) => (commandFilter || inFilter === null || inFilter(transaction.category))
       && (commandFilter || !q || transaction.description.toLowerCase().includes(q) || (transaction.originalDescription ?? "").toLowerCase().includes(q) || (transaction.note ?? "").toLowerCase().includes(q))
       && (!manualTools || kind === "all" || transaction.kind === kind)
       && (!manualTools || accountFilter === "all" || transaction.accountId === accountFilter)
@@ -219,7 +221,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
         <label className="bw-field"><span>{x.category}</span>
           <select value={filter} onChange={(e) => setFilter(e.target.value as Category | "all")}>
             <option value="all">{x.allCategories}</option>
-            {categories.map((c) => <option key={c} value={c}>{categoryLabel(m, c)}</option>)}
+            {categoryChoices(categoryTree, categories, filter === "all" ? null : filter).map((c) => <option key={c.name} value={c.name}>{indented(categoryLabel(m, c.name), c.depth)}</option>)}
           </select>
         </label>
         {manualTools && <>
@@ -252,7 +254,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
           <label className="bw-inline-field"><span className="bw-sr-only">{L.batchCategory}</span>
             <select value={batchCategory} onChange={(e) => setBatchCategory(e.target.value)}>
               <option value="">{L.batchCategory}</option>
-              {categories.filter((c) => c !== "Transfers").map((c) => <option key={c} value={c}>{categoryLabel(m, c)}</option>)}
+              {categoryChoices(categoryTree, categories.filter((c) => categoryTree.kindOf(c) !== "transfer")).map((c) => <option key={c.name} value={c.name}>{indented(categoryLabel(m, c.name), c.depth)}</option>)}
             </select>
           </label>
           <input aria-label={L.batchMerchant} placeholder={L.batchMerchant} value={batchText.merchant} onChange={(e) => setBatchText({ ...batchText, merchant: e.target.value })} />
@@ -290,7 +292,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
             </div>
             {transaction.kind === "transfer" || transaction.kind === "card_payment" || transaction.kind === "adjustment"
               ? <span className="bw-tag bw-tag-muted">{m.ledger.kinds[transaction.kind]}</span>
-              : <CategorySelect label={t("transactions.categoryFor", { description: transaction.description })} value={transaction.category} categories={categories} onChange={(category) => change(transaction, category)} />}
+              : <CategorySelect label={t("transactions.categoryFor", { description: transaction.description })} value={transaction.category} categories={categories} lazy onChange={(category) => change(transaction, category)} />}
             <Money cents={transaction.amountCents} currency={cur} signed />
             <div className="bw-row-actions">
               {manualTools && <>

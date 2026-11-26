@@ -29,15 +29,19 @@ module FinanceHelper
     l(value.to_date, format: format || t("billie.helpers.date_format"))
   end
 
+  # Account type names are translated here; category names come from the default taxonomy's labels
+  # when they are still a default's English name (Finance::DefaultCategories.label), otherwise verbatim.
   def finance_label(value)
-    labels = {
-      "Income" => "income", "Housing" => "housing", "Food & dining" => "food", "Transport" => "transport",
-      "Utilities" => "utilities", "Shopping" => "shopping", "Health" => "health", "Business" => "business",
-      "Transfers" => "transfers", "Uncategorized" => "uncategorized", "Checking" => "checking",
-      "Savings" => "savings", "Credit account" => "credit_account", "Cash account" => "cash_account", "Account" => "account"
-    }
+    labels = {"Checking" => "checking", "Savings" => "savings", "Credit account" => "credit_account", "Cash account" => "cash_account", "Account" => "account"}
     key = labels[value.to_s]
-    key ? t("billie.helpers.labels.#{key}") : value
+    return t("billie.helpers.labels.#{key}") if key
+    return value if value.nil?
+    Finance::DefaultCategories.label(value.to_s)
+  end
+
+  # "Food & dining › Groceries" with each part translated like finance_label.
+  def finance_category_trail(tree, name)
+    tree.path(name, label: method(:finance_label))
   end
 
   def finance_count(count, noun, plural = nil)

@@ -28,10 +28,10 @@ class FinanceSmartCommandTest < ActionDispatch::IntegrationTest
     @other = create(:onboarded_user, email: "commands-other@example.com", usage_region: "US", time_zone: "Central Time (US & Canada)")
     import(@user, CSV_TEXT)
     import(@other, "Date,Description,Amount\n2026-11-02,UBER TRIP OTHER,-99.00\n")
-    @user.finance_custom_categories.create!(name: "Pets")
+    Finance::Category.create_for!(@user, name: "Pets")
     # The importer files Uber trips under Transport; start them unfiled so moving them is a real change.
     [@user, @other].each { |person| person.finance_transactions.where("description ILIKE ?", "%uber%").update_all(category: "Uncategorized") }
-    @other.finance_custom_categories.create!(name: "Secret")
+    Finance::Category.create_for!(@other, name: "Secret")
   end
 
   teardown { travel_back }
@@ -201,7 +201,8 @@ class FinanceSmartCommandTest < ActionDispatch::IntegrationTest
   test "categories are listed in the interface language, with this person's own" do
     sign_in @user
     execute(:list_categories)
-    assert_equal 11, response.parsed_body.dig("data", "count")
+    # The default taxonomy (84), their own "Pets", and Uncategorized.
+    assert_equal 86, response.parsed_body.dig("data", "count")
     assert_match(/Food & dining.*Pets/, response.parsed_body.dig("summary", "vars", "list"))
     refute_match(/Secret/, response.parsed_body.dig("summary", "vars", "list"))
   end
@@ -259,7 +260,7 @@ class FinanceSmartCommandTest < ActionDispatch::IntegrationTest
     forged["arguments"] = {"target" => {"value" => "Pets", "source" => "input"}}
     post finance_command_preview_path, params: {plan: forged}, as: :json
     assert_equal "unknown_action", response.parsed_body.dig("rejection", "code")
-    assert @user.finance_custom_categories.exists?(name: "Pets")
+    assert Finance::Category.where(user_id: @user.id).exists?(name: "Pets")
   end
 
   test "the preview lists exactly the rows the change then makes, and only this person's" do
@@ -403,30 +404,33 @@ class FinanceSmartCommandTest < ActionDispatch::IntegrationTest
     confirm!(preview!(:create_category))
     assert_equal "category_created", response.parsed_body.dig("summary", "code")
     created_undo = response.parsed_body.dig("undo", "token")
-    assert @user.finance_custom_categories.exists?(name: "Pet care")
+    assert Finance::Category.where(user_id: @user.id).exists?(name: "Pet care")
 
     post finance_command_preview_path, params: {plan: plan(:create_category)}, as: :json
     assert_equal "no_effect", response.parsed_body.dig("rejection", "code")
     assert_equal "category_exists", response.parsed_body.dig("rejection", "summary", "code")
     built_in = plan(:create_category)
-    built_in["arguments"]["name"] = {"value" => "shopping", "source" => "input"}
+    built_in["arguments"]["name"] = {"value" => "uncategorized", "source" => "input"}
     post finance_command_preview_path, params: {plan: built_in}, as: :json
     assert_equal "category_reserved", response.parsed_body.dig("rejection", "summary", "code")
+    built_in["arguments"]["name"] = {"value" => "shopping", "source" => "input"}
+    post finance_command_preview_path, params: {plan: built_in}, as: :json
+    assert_equal "category_exists", response.parsed_body.dig("rejection", "summary", "code")
 
     # Undo of a create is refused once the category is in use.
     uber_rows.first.update!(category: "Pet care")
     post finance_command_undo_path, params: {protocol: "nlae/1", token: created_undo}, as: :json
     assert_equal "undo_conflict", response.parsed_body["code"]
-    assert @user.finance_custom_categories.exists?(name: "Pet care")
+    assert Finance::Category.where(user_id: @user.id).exists?(name: "Pet care")
 
     uber_rows.first.update!(category: "Pets")
     confirm!(preview!(:rename_category))
     assert_equal "category_renamed", response.parsed_body.dig("summary", "code")
-    assert_equal "Animals", uber_rows.first.category, "transactions follow the rename (CustomCategory#rename!)"
+    assert_equal "Animals", uber_rows.first.category, "transactions follow the rename (Category#rename!)"
     post finance_command_undo_path, params: {protocol: "nlae/1", token: response.parsed_body.dig("undo", "token")}, as: :json
     assert_equal "succeeded", response.parsed_body["status"]
     assert_equal "Pets", uber_rows.first.category
-    assert @user.finance_custom_categories.exists?(name: "Pets")
+    assert Finance::Category.where(user_id: @user.id).exists?(name: "Pets")
   end
 
   test "deleting financial data also removes command history" do

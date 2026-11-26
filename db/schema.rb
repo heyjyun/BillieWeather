@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_25_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_26_000300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -230,6 +230,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_000100) do
     t.index ["token_digest"], name: "index_finance_capture_tokens_on_token_digest", unique: true
     t.index ["user_id", "revoked_at"], name: "index_finance_capture_tokens_on_user_id_and_revoked_at"
     t.check_constraint "token_digest::text ~ '^[0-9a-f]{64}$'::text", name: "finance_capture_tokens_digest"
+  end
+
+  create_table "finance_categories", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", limit: 40, null: false
+    t.bigint "parent_id"
+    t.string "system_key", limit: 80
+    t.string "category_kind", default: "expense", null: false
+    t.integer "sort_order", default: 0, null: false
+    t.boolean "hidden", default: false, null: false
+    t.boolean "expanded", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index "user_id, lower((name)::text)", name: "index_finance_categories_on_user_and_lower_name", unique: true
+    t.index ["id", "user_id"], name: "index_finance_categories_on_id_and_user", unique: true
+    t.index ["user_id", "parent_id"], name: "index_finance_categories_on_user_and_parent"
+    t.index ["user_id", "system_key"], name: "index_finance_categories_on_user_and_system_key", unique: true, where: "(system_key IS NOT NULL)"
+    t.check_constraint "category_kind::text = ANY (ARRAY['income'::character varying, 'expense'::character varying, 'transfer'::character varying]::text[])", name: "finance_categories_kind"
+    t.check_constraint "parent_id IS NULL OR parent_id <> id", name: "finance_categories_not_own_parent"
+  end
+
+  create_table "finance_category_proposals", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "parent_name", limit: 40, null: false
+    t.string "name", limit: 40, null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "status", limit: 20, default: "pending", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "status"], name: "index_finance_category_proposals_on_user_and_status"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'dismissed'::character varying]::text[])", name: "finance_category_proposals_status"
   end
 
   create_table "finance_category_settings", force: :cascade do |t|
@@ -888,6 +919,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_000100) do
     t.string "cloud_database_name", limit: 60
     t.datetime "finance_ai_categorized_at"
     t.uuid "finance_owner_uid", default: -> { "gen_random_uuid()" }, null: false
+    t.datetime "finance_categories_seeded_at"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["finance_owner_uid"], name: "index_users_on_finance_owner_uid", unique: true
     t.index ["google_uid"], name: "index_users_on_google_uid", unique: true, where: "(google_uid IS NOT NULL)"
@@ -986,6 +1018,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_25_000100) do
   add_foreign_key "finance_budgets", "finance_projects", column: ["project_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_budgets_project_owner", on_delete: :cascade
   add_foreign_key "finance_budgets", "users"
   add_foreign_key "finance_capture_tokens", "users"
+  add_foreign_key "finance_categories", "finance_categories", column: ["parent_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_finance_categories_parent_same_user", on_delete: :restrict
+  add_foreign_key "finance_categories", "users"
+  add_foreign_key "finance_category_proposals", "users", on_delete: :cascade
   add_foreign_key "finance_category_settings", "users"
   add_foreign_key "finance_command_executions", "users"
   add_foreign_key "finance_custom_categories", "users"

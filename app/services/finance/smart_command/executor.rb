@@ -183,8 +183,9 @@ module Finance
       def entity_ids(kind)
         @entity_ids ||= {}
         @entity_ids[kind] ||= case kind
-        when "category" then CustomCategory.names_for(@user)
-        when "customCategory" then @user.finance_custom_categories.pluck(:name)
+        when "category" then Category.names_for(@user)
+        # Every category can be renamed now (defaults too); only the Uncategorized placeholder cannot.
+        when "customCategory" then Category.for_user(@user).pluck(:name)
         else []
         end
       end

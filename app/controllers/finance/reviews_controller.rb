@@ -14,7 +14,7 @@ module Finance
       kind = params[:kind].presence_in(%w[refund card_payment transfer income])
       return redirect_to finance_review_income_path, alert: ledger_errors("kind_invalid") unless kind
       attrs = {kind: kind}
-      attrs[:category] = "Uncategorized" if kind == "refund" && entry.category == "Income"
+      attrs[:category] = Transaction::UNCATEGORIZED if kind == "refund" && Transaction.income_category?(current_user.id, entry.category)
       ledger.update(entry, attrs)
       redirect_to finance_review_income_path, notice: I18n.t("billie.ledger.review.reclassified", kind: I18n.t("billie.ledger.kinds.#{kind}"))
     end

@@ -96,7 +96,7 @@ ja:
         unknown_action: 変更する内容を選択してください。
         nothing_to_undo: この変更には取り消せるものがありません。
         no_change: 残高はすでに一致しています。
-        parent_invalid: 親は同じツリーの第 1 階層のカテゴリである必要があります。
+        parent_invalid: 親にはあなたのカテゴリのいずれかを選んでください。
         merge_same: 別の統合先を選択してください。
       accounts:
         title: 口座
@@ -298,9 +298,9 @@ ja:
           tag: タグを追加
           delete: ごみ箱へ移動
       categories:
-        tree_eyebrow: 2 階層
+        tree_eyebrow: 階層は自由
         tree_title: カテゴリツリー
-        tree_body: カテゴリを親の下にまとめ、収入と支出を分け、並べ替えたり使わないものを非表示にしたりできます。
+        tree_body: カテゴリを何階層でも入れ子にでき、並べ替えたり使わないものを非表示にしたりできます。カテゴリを開くとサブカテゴリが表示され、合計にはサブカテゴリも含まれます。
         tree_expense: 支出
         tree_income: 収入
         hidden: 非表示
@@ -471,7 +471,7 @@ ja:
         tools:
           entry: "支出、収入、振替、カード返済、返金、残高調整。"
           transactions: "検索、口座・取引先・プロジェクト・タグでの絞り込み、一括編集。"
-          categories: "並べ替えや非表示ができる、2 階層の収入・支出カテゴリ。"
+          categories: "何階層でも入れ子にでき、並べ替えや非表示ができる収入・支出カテゴリ。"
           merchants: "支払った相手、または支払ってくれた相手。"
           projects: "旅行、リフォーム、副業などのプロジェクト。"
           tags: "カテゴリをまたいで使える自由なラベル。"

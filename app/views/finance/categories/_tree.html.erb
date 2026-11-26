@@ -1,25 +1,11 @@
+<%# The person's category tree, any depth. Top-level categories show; their subcategories open on
+    request and the choice is remembered (finance_categories.expanded, saved by billie.js).
+    Locals: tree (Finance::CategoryTree). %>
 <section class="bw-panel bw-section-gap" id="category-tree" aria-labelledby="tree-heading">
   <div class="bw-panel-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.categories.tree_eyebrow") %></span><h2 id="tree-heading"><%= t("billie.ledger.categories.tree_title") %></h2><p><%= t("billie.ledger.categories.tree_body") %></p></div><%= finance_icon "tag" %></div>
-  <div class="bw-two-column">
-    <% %w[expense income].each do |kind| %>
-      <div>
-        <h3><%= t("billie.ledger.categories.tree_#{kind}") %></h3>
-        <ul class="bw-category-list" data-tree="<%= kind %>">
-          <% tree.roots(kind).each do |root| %>
-            <li>
-              <%= link_to finance_label(root.name), finance_categories_path(name: root.name, anchor: "detail"), class: "bw-table-link" %>
-              <% if root.hidden %><small class="bw-cat-kind"><%= t("billie.ledger.categories.hidden") %></small><% end %>
-              <% if root.children.any? %>
-                <ul>
-                  <% root.children.each do |child| %>
-                    <li>— <%= link_to finance_label(child.name), finance_categories_path(name: child.name, anchor: "detail"), class: "bw-table-link" %><% if child.hidden %> <small class="bw-cat-kind"><%= t("billie.ledger.categories.hidden") %></small><% end %></li>
-                  <% end %>
-                </ul>
-              <% end %>
-            </li>
-          <% end %>
-        </ul>
-      </div>
+  <ul class="bw-category-list bw-category-tree" data-tree="all">
+    <% tree.roots.each_with_index do |root, index| %>
+      <%= render "finance/categories/node", node: root, tree: tree, first: index.zero?, last: index == tree.roots.length - 1 %>
     <% end %>
-  </div>
+  </ul>
 </section>

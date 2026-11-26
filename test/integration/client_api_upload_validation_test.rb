@@ -33,7 +33,7 @@ class ClientApiUploadValidationTest < ActionDispatch::IntegrationTest
 
   test "malformed hashes are refused as invalid_sha256 and nothing is stored" do
     ["", "abc", "B" * 64, "g" * 64, "b" * 63, "b" * 65, "#{"b" * 63}\n", " #{"b" * 64}", ["b" * 64], {x: 1}, 12345].each do |bad|
-      assert_no_difference -> { Finance::Statement.count + Finance::Transaction.count + Finance::CustomCategory.count } do
+      assert_no_difference -> { Finance::Statement.count + Finance::Transaction.count + Finance::Category.where(system_key: nil).count } do
         upload(statement(sha256: bad))
       end
       assert_refused("invalid_sha256")

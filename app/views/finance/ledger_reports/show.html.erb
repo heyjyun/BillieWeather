@@ -5,6 +5,7 @@
     <div><%= form.label :preset, t("billie.ledger.report.period"), class: "bw-sr-only" %><%= form.select :preset, Finance::DashboardPeriod::PRESETS.map { |p| [t("billie.ledger.report.presets.#{p}"), p] }, selected: @period.preset %></div>
     <div><%= form.label :start_date, t("billie.ledger.report.from"), class: "bw-sr-only" %><%= form.date_field :start_date, value: params[:start_date] %></div>
     <div><%= form.label :end_date, t("billie.ledger.report.to"), class: "bw-sr-only" %><%= form.date_field :end_date, value: params[:end_date] %></div>
+    <%= hidden_field_tag :node, @node, id: nil if @node %>
     <div><%= form.label :dimension, t("billie.ledger.report.by"), class: "bw-sr-only" %><%= form.select :dimension, Finance::LedgerReport::DIMENSIONS.map { |d| [t("billie.ledger.report.dimensions.#{d}"), d] }, selected: @dimension %></div>
     <%= form.submit t("billie.finance.ui.apply_filters"), class: "bw-button bw-button-dark" %>
   <% end %>
@@ -18,13 +19,14 @@
   <div class="bw-metric bw-metric-mint"><span><%= t("billie.ledger.accounts.net_worth") %></span><strong><%= finance_money(worth[:net_worth], @profile.currency) %></strong></div>
 </div>
 <section class="bw-panel bw-panel-flush bw-section-gap">
-  <div class="bw-panel-heading"><div><h2><%= t("billie.ledger.report.by_title", dimension: t("billie.ledger.report.dimensions.#{@dimension}")) %></h2><p><%= t("billie.ledger.report.refund_note") %></p></div></div>
+  <div class="bw-panel-heading"><div><h2><%= t("billie.ledger.report.by_title", dimension: t("billie.ledger.report.dimensions.#{@dimension}")) %></h2><p><%= t("billie.ledger.report.refund_note") %></p>
+    <% if @node %><p id="report-path"><%= link_to t("billie.categories.report_all"), finance_ledger_report_path(request.query_parameters.except("node")), class: "bw-text-link" %> › <%= finance_category_trail(@report.tree, @node) %></p><% end %></div></div>
   <% if @rows.any? %>
     <div class="bw-table-scroll"><table class="bw-table" id="report-table">
       <thead><tr><th scope="col"><%= t("billie.ledger.report.dimensions.#{@dimension}") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.spending") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.share") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.report.income") %></th></tr></thead>
       <tbody>
         <% @rows.each do |label, row| %>
-          <tr><td><%= label.nil? ? t("billie.ledger.report.none") : (@dimension == "category" ? finance_label(label) : label) %></td>
+          <tr><td><% if label.nil? %><%= t("billie.ledger.report.none") %><% elsif @dimension != "category" %><%= label %><% elsif row[:direct] %><%= t("billie.categories.report_direct", name: finance_label(label)) %><% elsif row[:drill] %><%= link_to finance_label(label), finance_ledger_report_path(request.query_parameters.merge("node" => label)), class: "bw-table-link" %><% else %><%= finance_label(label) %><% end %></td>
             <td class="bw-text-right bw-nowrap"><%= finance_money(row[:expense], @profile.currency) %></td>
             <td class="bw-text-right"><%= finance_share(expense.positive? && row[:expense].positive? ? row[:expense] / expense : nil) %></td>
             <td class="bw-text-right bw-nowrap"><%= finance_money(row[:income], @profile.currency) %></td></tr>

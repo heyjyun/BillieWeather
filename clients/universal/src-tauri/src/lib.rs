@@ -92,6 +92,12 @@ fn migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/0010_editing_history.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 11,
+            description: "category tree of any depth with default taxonomy keys",
+            sql: include_str!("../migrations/0011_category_hierarchy.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

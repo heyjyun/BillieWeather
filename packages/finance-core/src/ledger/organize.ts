@@ -4,6 +4,7 @@
 // Fields a person locked are never proposed for change (invariant I-16).
 import { Categorizer, merchantKey, titleizeMerchant } from "../categorizer";
 import type { MerchantRule } from "@billie/shared-types";
+import type { CategoryTree } from "../categoryTree";
 import { inferKind, type AccountType, type TransactionKind } from "./domain";
 
 export interface OrganizeRow {
@@ -37,7 +38,7 @@ const key = (text: string) => text.normalize("NFKC").toLowerCase().replace(/\s+/
 const free = (row: OrganizeRow, field: string) => !row.lockedFields.includes(field);
 
 /** Every proposal for these live rows. `liability(accountId)` says whether an account is a card or loan. */
-export function organizeProposals(rows: readonly OrganizeRow[], options: { rules?: readonly MerchantRule[]; liability: (accountId: number) => boolean }): Proposal[] {
+export function organizeProposals(rows: readonly OrganizeRow[], options: { rules?: readonly MerchantRule[]; liability: (accountId: number) => boolean; tree?: CategoryTree | null }): Proposal[] {
   const out: Proposal[] = [];
   const used = new Set<number>();
 
@@ -54,7 +55,7 @@ export function organizeProposals(rows: readonly OrganizeRow[], options: { rules
   }
 
   // 2. Transfers and card payments: opposite amounts within 3 days in two different accounts, not linked yet.
-  const unlinked = rows.filter((row) => !row.linked && !used.has(row.id) && row.accountId !== null && row.amountMinor !== 0 && free(row, "kind") && (free(row, "category") || row.category === "Transfers"));
+  const unlinked = rows.filter((row) => !row.linked && !used.has(row.id) && row.accountId !== null && row.amountMinor !== 0 && free(row, "kind") && (free(row, "category") || (options.tree ? options.tree.kindOf(row.category) === "transfer" : row.category === "Transfers")));
   const ins = new Map<number, OrganizeRow[]>();
   for (const row of unlinked) if (row.amountMinor > 0) ins.set(row.amountMinor, [...(ins.get(row.amountMinor) ?? []), row]);
   for (const outRow of unlinked.filter((row) => row.amountMinor < 0).sort((a, b) => a.occurredOn.localeCompare(b.occurredOn))) {
@@ -90,12 +91,15 @@ export function organizeProposals(rows: readonly OrganizeRow[], options: { rules
   }
 
   // 5. Categories for Uncategorized expense/income/refund rows, grouped by merchant (rules and keyword lists; AI optional, added by the host).
-  const categorizer = new Categorizer([...(options.rules ?? [])]);
+  const categorizer = new Categorizer([...(options.rules ?? [])], { tree: options.tree });
+  // The tree a category belongs to (income, expense, transfer); the default names without a tree.
+  const kindOf = (name: string) => options.tree ? options.tree.kindOf(name) : name === "Transfers" ? "transfer" : name === "Income" ? "income" : name === "Uncategorized" ? null : "expense";
   const groups = new Map<string, { category: string; ids: number[]; description: string; reason: "rule" | "keywords" }>();
   for (const row of rows) {
     if (row.category !== "Uncategorized" || !free(row, "category") || !["expense", "income", "refund"].includes(row.kind)) continue;
     const decided = categorizer.explain(row.originalDescription, row.amountMinor, row.accountType);
-    if (decided.category === "Uncategorized" || decided.category === "Transfers" || (decided.category === "Income") !== (row.kind === "income")) continue;
+    const decidedKind = kindOf(decided.category);
+    if (decided.category === "Uncategorized" || decidedKind === null || decidedKind === "transfer" || (decidedKind === "income") !== (row.kind === "income")) continue;
     const groupKey = `${decided.category}|${merchantKey(row.originalDescription) ?? row.id}`;
     const group = groups.get(groupKey) ?? { category: decided.category, ids: [], description: row.description, reason: decided.reason === "learned" ? "rule" as const : "keywords" as const };
     group.ids.push(row.id);

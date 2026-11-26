@@ -8,7 +8,7 @@ Rails.application.routes.draw do
     constraints: {key: /alipay|wechat_pay|zelle|venmo/}
 
   # Support admin: a separate area, not part of the app. Not linked from public pages or
-  # the app sidebar; type /supportadmin. Admins (DEVELOPER_EMAILS) only, after signing in;
+  # the app sidebar; type /supportadmin. Admins with an explicit operator grant only, after signing in;
   # everyone else gets a 404. /admin itself is left free for other tools.
   scope "supportadmin", module: :admin, as: :admin do
     get "/", to: "home#index", as: :root
@@ -102,6 +102,19 @@ Rails.application.routes.draw do
     resources :categories, only: [:index, :create, :update, :destroy] do
       post :ai_categorize, on: :collection
       patch :arrange, on: :collection
+      post :add_suggested, on: :collection
+      member do
+        patch :move
+        patch :reorder
+        patch :expand
+        post :merge
+      end
+    end
+    resources :category_proposals, only: [] do
+      member do
+        post :approve
+        post :dismiss
+      end
     end
     resources :bank_accounts, only: :update
     resource :forecast, only: :show, controller: :forecast

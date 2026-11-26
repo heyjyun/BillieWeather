@@ -33,7 +33,11 @@ export const ENTRY_ORIGINS = schema.entry_origins as EntryOrigin[];
 export const LOCKED_FIELDS = schema.locked_fields as LockedField[];
 export const BUDGET_PERIODS = schema.budget_periods as BudgetPeriod[];
 export const FREQUENCIES = schema.recurrence_frequencies as Frequency[];
-export const CATEGORY_MAX_DEPTH: number = schema.category_max_depth;
+/**
+ * Categories nest without a depth limit since 2026-11 (docs/architecture/category-hierarchy.md); the
+ * schema's old `category_max_depth` is no longer enforced.
+ */
+export const CATEGORY_MAX_DEPTH: number = Number.POSITIVE_INFINITY;
 
 export const isAccountType = (value: unknown): value is AccountType => typeof value === "string" && value in schema.account_types;
 export const isTransactionKind = (value: unknown): value is TransactionKind => typeof value === "string" && value in schema.transaction_kinds;
@@ -121,10 +125,16 @@ export function inferKind(input: { amountMinor: number; accountType: AccountType
  * "Income" (or an income-kind category) makes it income, any other category on money in is a refund.
  * Cases: fixtures/kind-cases.json "categorized".
  */
-export function kindForCategorized(input: { amountMinor: number; accountType: AccountType | null; description: string; category: string; incomeCategories?: ReadonlySet<string> }): TransactionKind {
+export function kindForCategorized(input: {
+  amountMinor: number; accountType: AccountType | null; description: string; category: string; incomeCategories?: ReadonlySet<string>;
+  /** The category's tree (CategoryTree.kindOf). Without it, the old built-in names decide. */
+  categoryKind?: "income" | "expense" | "transfer" | null;
+}): TransactionKind {
   const inferred = inferKind(input);
-  if (input.category === "Transfers") return inferred === "card_payment" ? "card_payment" : "transfer";
-  if (input.category === "Income" || input.incomeCategories?.has(input.category)) return "income";
+  const tree = input.categoryKind !== undefined ? input.categoryKind
+    : input.category === "Transfers" ? "transfer" : input.category === "Income" || input.incomeCategories?.has(input.category) ? "income" : null;
+  if (tree === "transfer") return inferred === "card_payment" ? "card_payment" : "transfer";
+  if (tree === "income") return "income";
   if (input.amountMinor === 0) return "ignored";
   if (input.amountMinor < 0) return "expense";
   if (input.category === "Uncategorized") return inferred === "income" ? "income" : "refund";

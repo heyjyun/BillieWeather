@@ -4,7 +4,7 @@
 import type { Category, Currency, MerchantRule } from "@billie/shared-types";
 import { decimalToCents } from "@billie/finance-core";
 import { API_ORIGIN, AccountError } from "./account";
-import type { FinanceStore, WebData, WebSyncResult } from "./store";
+import type { FinanceStore, WebCategory, WebData, WebSyncResult } from "./store";
 
 const FINANCE = `${API_ORIGIN}/api/client/v1/finance`;
 
@@ -30,12 +30,13 @@ interface Summary { currency: Currency | null; version: string; statement_count:
 
 export async function fetchWebData(token: string, knownSummary?: Summary): Promise<WebData & { version: string }> {
   const summary = knownSummary ?? await get<Summary>("", token);
-  const [{ statements }, { rules }, { categories }] = await Promise.all([
+  const [{ statements }, { rules }, { categories, tree }] = await Promise.all([
     get<{ statements: Array<{ id: number; filename: string; currency: Currency; sha256: string; transaction_count: number; closing_balance: string | null; closing_balance_on: string | null; imported_at: string }> }>("/statements", token),
     get<{ rules: Array<{ merchant_key: string; income: boolean; category: MerchantRule["category"] }> }>("/rules", token),
-    // The person's own categories; a server without them answers 404, which means none.
-    get<{ categories: string[] }>("/categories", token).catch((error: unknown) => {
-      if (error instanceof AccountError && error.code === "unknown") return { categories: [] as string[] };
+    // The person's categories: `tree` (every category, parents first) from servers since 2026-11, else the
+    // flat `categories`; a server without them answers 404, which means none.
+    get<{ categories: string[]; tree?: unknown }>("/categories", token).catch((error: unknown) => {
+      if (error instanceof AccountError && error.code === "unknown") return { categories: [] as string[], tree: undefined };
       throw error;
     }),
   ]);
@@ -63,6 +64,12 @@ export async function fetchWebData(token: string, knownSummary?: Summary): Promi
     transactions,
     rules: rules.map((r) => ({ merchantKey: r.merchant_key, income: r.income, category: r.category })),
     categories: Array.isArray(categories) ? categories.filter((name): name is string => typeof name === "string") : [],
+    ...(Array.isArray(tree) ? { tree: tree.flatMap((entry: unknown): WebCategory[] => {
+      const item = entry as Record<string, unknown> | null;
+      if (!item || typeof item.name !== "string") return [];
+      return [{ name: item.name, parent: typeof item.parent === "string" ? item.parent : null, kind: typeof item.kind === "string" ? item.kind : undefined,
+        key: typeof item.key === "string" ? item.key : null, sort_order: typeof item.sort_order === "number" ? item.sort_order : undefined, hidden: item.hidden === true }];
+    }) } : {}),
   };
 }
 

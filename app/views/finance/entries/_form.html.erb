@@ -25,7 +25,7 @@
       <div class="bw-field"><%= form.label :to_account_id, t("billie.ledger.fields.to_account") %><%= form.select :to_account_id, accounts.map { |a| [a.display_name, a.id] }, {selected: form_data[:to_account_id], include_blank: t("billie.ledger.fields.choose_account")}, required: true %><small><%= t("billie.ledger.entries.card_payment_help") %></small></div>
     <% end %>
     <% if category_kind %>
-      <div class="bw-field"><%= form.label :category, t("billie.ledger.fields.category") %><%= form.select :category, tree.options(category_kind, include: form_data[:category], label: method(:finance_label)), {selected: form_data[:category].presence || "Uncategorized"} %></div>
+      <div class="bw-field"><%= form.label :category, t("billie.ledger.fields.category") %><%= form.select :category, tree.options(category_kind, include: form_data[:category], label: method(:finance_label)), {selected: form_data[:category].presence || Finance::Transaction::UNCATEGORIZED} %></div>
     <% end %>
     <% if kind == "refund" && !editing %>
       <div class="bw-field"><%= form.label :refund_of_id, t("billie.ledger.fields.refund_of") %><%= form.select :refund_of_id, refundable.map { |e| ["#{finance_date(e.booked_on)} · #{e.description.truncate(40)} · #{finance_money(e.amount, @profile.currency)}", e.id] }, {selected: form_data[:refund_of_id], include_blank: t("billie.ledger.fields.refund_of_none")} %><small><%= t("billie.ledger.entries.refund_help") %></small></div>

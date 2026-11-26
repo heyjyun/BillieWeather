@@ -1,0 +1,992 @@
+{
+  "$comment": "Default category taxonomy for new people (docs/architecture/category-hierarchy.md). Read by Rails (Finance::DefaultCategories) and TypeScript (@billie/finance-core defaultCategories). Two levels here; the category system itself nests without limit. Keys never change; names and labels may. 'legacy' marks the ten pre-2026-11 built-ins (minus Uncategorized), kept with their original names so existing accounts map onto them.",
+  "version": 1,
+  "uncategorized": {
+    "name": "Uncategorized",
+    "labels": {
+      "es": "Sin categoría",
+      "ja": "未分類",
+      "ko": "미분류",
+      "zh-CN": "未分类",
+      "zh-TW": "未分類"
+    }
+  },
+  "categories": [
+    {
+      "key": "income",
+      "name": "Income",
+      "kind": "income",
+      "labels": {
+        "es": "Ingresos",
+        "ja": "収入",
+        "ko": "수입",
+        "zh-CN": "收入",
+        "zh-TW": "收入"
+      },
+      "legacy": true,
+      "children": [
+        {
+          "key": "income.salary",
+          "name": "Salary",
+          "labels": {
+            "es": "Salario",
+            "ja": "給与",
+            "ko": "급여",
+            "zh-CN": "工资",
+            "zh-TW": "薪資"
+          }
+        },
+        {
+          "key": "income.bonus",
+          "name": "Bonus",
+          "labels": {
+            "es": "Bonificaciones",
+            "ja": "賞与",
+            "ko": "상여금",
+            "zh-CN": "奖金",
+            "zh-TW": "獎金"
+          }
+        },
+        {
+          "key": "income.side_income",
+          "name": "Side income",
+          "labels": {
+            "es": "Ingresos extra",
+            "ja": "副収入",
+            "ko": "부수입",
+            "zh-CN": "副业收入",
+            "zh-TW": "副業收入"
+          }
+        },
+        {
+          "key": "income.investment_income",
+          "name": "Investment income",
+          "labels": {
+            "es": "Rendimientos de inversiones",
+            "ja": "投資収益",
+            "ko": "투자 수익",
+            "zh-CN": "投资收益",
+            "zh-TW": "投資收益"
+          }
+        },
+        {
+          "key": "income.reimbursements",
+          "name": "Refunds & reimbursements",
+          "labels": {
+            "es": "Reembolsos",
+            "ja": "払い戻し・精算",
+            "ko": "환급·정산",
+            "zh-CN": "退款与报销",
+            "zh-TW": "退款與報銷"
+          }
+        },
+        {
+          "key": "income.gifts_received",
+          "name": "Gifts received",
+          "labels": {
+            "es": "Regalos recibidos",
+            "ja": "受け取った贈り物",
+            "ko": "받은 선물",
+            "zh-CN": "收到的礼金",
+            "zh-TW": "收到的禮金"
+          }
+        }
+      ]
+    },
+    {
+      "key": "housing",
+      "name": "Housing",
+      "kind": "expense",
+      "labels": {
+        "es": "Vivienda",
+        "ja": "住居",
+        "ko": "주거",
+        "zh-CN": "住房",
+        "zh-TW": "住房"
+      },
+      "legacy": true,
+      "children": [
+        {
+          "key": "housing.rent",
+          "name": "Rent",
+          "labels": {
+            "es": "Alquiler",
+            "ja": "家賃",
+            "ko": "월세",
+            "zh-CN": "房租",
+            "zh-TW": "房租"
+          }
+        },
+        {
+          "key": "housing.mortgage",
+          "name": "Mortgage",
+          "labels": {
+            "es": "Hipoteca",
+            "ja": "住宅ローン",
+            "ko": "주택담보대출",
+            "zh-CN": "房贷",
+            "zh-TW": "房貸"
+          }
+        },
+        {
+          "key": "housing.maintenance",
+          "name": "Home maintenance",
+          "labels": {
+            "es": "Mantenimiento del hogar",
+            "ja": "住まいの修繕",
+            "ko": "주택 관리·수리",
+            "zh-CN": "房屋维修",
+            "zh-TW": "房屋維修"
+          }
+        },
+        {
+          "key": "housing.furnishings",
+          "name": "Furniture & appliances",
+          "labels": {
+            "es": "Muebles y electrodomésticos",
+            "ja": "家具・家電",
+            "ko": "가구·가전",
+            "zh-CN": "家具家电",
+            "zh-TW": "家具家電"
+          }
+        },
+        {
+          "key": "housing.property_tax",
+          "name": "Property tax & HOA",
+          "labels": {
+            "es": "Impuestos y comunidad",
+            "ja": "固定資産税・管理費",
+            "ko": "재산세·관리비",
+            "zh-CN": "房产税与物业费",
+            "zh-TW": "房屋稅與管理費"
+          }
+        }
+      ]
+    },
+    {
+      "key": "utilities",
+      "name": "Utilities",
+      "kind": "expense",
+      "labels": {
+        "es": "Servicios del hogar",
+        "ja": "水道光熱・通信",
+        "ko": "공과금",
+        "zh-CN": "水电通信",
+        "zh-TW": "水電通信"
+      },
+      "legacy": true,
+      "children": [
+        {
+          "key": "utilities.electricity",
+          "name": "Electricity",
+          "labels": {
+            "es": "Electricidad",
+            "ja": "電気",
+            "ko": "전기",
+            "zh-CN": "电费",
+            "zh-TW": "電費"
+          }
+        },
+        {
+          "key": "utilities.water",
+          "name": "Water",
+          "labels": {
+            "es": "Agua",
+            "ja": "水道",
+            "ko": "수도",
+            "zh-CN": "水费",
+            "zh-TW": "水費"
+          }
+        },
+        {
+          "key": "utilities.gas",
+          "name": "Gas & heating",
+          "labels": {
+            "es": "Gas y calefacción",
+            "ja": "ガス・暖房",
+            "ko": "가스·난방",
+            "zh-CN": "燃气与供暖",
+            "zh-TW": "瓦斯與暖氣"
+          }
+        },
+        {
+          "key": "utilities.internet",
+          "name": "Internet & TV",
+          "labels": {
+            "es": "Internet y TV",
+            "ja": "インターネット・テレビ",
+            "ko": "인터넷·TV",
+            "zh-CN": "网络与电视",
+            "zh-TW": "網路與電視"
+          }
+        },
+        {
+          "key": "utilities.mobile",
+          "name": "Mobile phone",
+          "labels": {
+            "es": "Teléfono móvil",
+            "ja": "携帯電話",
+            "ko": "휴대전화",
+            "zh-CN": "手机话费",
+            "zh-TW": "手機費"
+          }
+        },
+        {
+          "key": "utilities.trash",
+          "name": "Trash & recycling",
+          "labels": {
+            "es": "Basura y reciclaje",
+            "ja": "ごみ・リサイクル",
+            "ko": "쓰레기·재활용",
+            "zh-CN": "垃圾与回收",
+            "zh-TW": "垃圾與回收"
+          }
+        }
+      ]
+    },
+    {
+      "key": "food",
+      "name": "Food & dining",
+      "kind": "expense",
+      "labels": {
+        "es": "Alimentación y restaurantes",
+        "ja": "食費・外食",
+        "ko": "식비·외식",
+        "zh-CN": "餐饮",
+        "zh-TW": "餐飲"
+      },
+      "legacy": true,
+      "children": [
+        {
+          "key": "food.groceries",
+          "name": "Groceries",
+          "labels": {
+            "es": "Supermercado",
+            "ja": "食料品",
+            "ko": "장보기",
+            "zh-CN": "买菜",
+            "zh-TW": "買菜"
+          }
+        },
+        {
+          "key": "food.restaurants",
+          "name": "Restaurants",
+          "labels": {
+            "es": "Restaurantes",
+            "ja": "レストラン",
+            "ko": "식당",
+            "zh-CN": "餐馆",
+            "zh-TW": "餐廳"
+          }
+        },
+        {
+          "key": "food.coffee",
+          "name": "Coffee & tea",
+          "labels": {
+            "es": "Café y té",
+            "ja": "カフェ",
+            "ko": "커피·차",
+            "zh-CN": "咖啡茶饮",
+            "zh-TW": "咖啡茶飲"
+          }
+        },
+        {
+          "key": "food.takeout",
+          "name": "Takeout & delivery",
+          "labels": {
+            "es": "Comida a domicilio",
+            "ja": "テイクアウト・デリバリー",
+            "ko": "포장·배달",
+            "zh-CN": "外卖",
+            "zh-TW": "外送"
+          }
+        },
+        {
+          "key": "food.alcohol",
+          "name": "Bars & alcohol",
+          "labels": {
+            "es": "Bares y bebidas",
+            "ja": "バー・お酒",
+            "ko": "술·바",
+            "zh-CN": "酒水",
+            "zh-TW": "酒水"
+          }
+        }
+      ]
+    },
+    {
+      "key": "transport",
+      "name": "Transport",
+      "kind": "expense",
+      "labels": {
+        "es": "Transporte",
+        "ja": "交通",
+        "ko": "교통",
+        "zh-CN": "交通",
+        "zh-TW": "交通"
+      },
+      "legacy": true,
+      "children": [
+        {
+          "key": "transport.fuel",
+          "name": "Fuel",
+          "labels": {
+            "es": "Combustible",
+            "ja": "ガソリン",
+            "ko": "주유",
+            "zh-CN": "加油",
+            "zh-TW": "加油"
+          }
+        },
+        {
+          "key": "transport.transit",
+          "name": "Public transit",
+          "labels": {
+            "es": "Transporte público",
+            "ja": "公共交通",
+            "ko": "대중교통",
+            "zh-CN": "公共交通",
+            "zh-TW": "大眾運輸"
+          }
+        },
+        {
+          "key": "transport.rideshare",
+          "name": "Taxi & rideshare",
+          "labels": {
+            "es": "Taxi y VTC",
+            "ja": "タクシー・配車",
+            "ko": "택시·차량 호출",
+            "zh-CN": "打车",
+            "zh-TW": "計程車"
+          }
+        },
+        {
+          "key": "transport.parking",
+          "name": "Parking & tolls",
+          "labels": {
+            "es": "Aparcamiento y peajes",
+            "ja": "駐車場・通行料",
+            "ko": "주차·통행료",
+            "zh-CN": "停车与路费",
+            "zh-TW": "停車與過路費"
+          }
+        },
+        {
+          "key": "transport.vehicle_maintenance",
+          "name": "Vehicle maintenance",
+          "labels": {
+            "es": "Mantenimiento del vehículo",
+            "ja": "車の整備",
+            "ko": "차량 정비",
+            "zh-CN": "车辆保养",
+            "zh-TW": "車輛保養"
+          }
+        },
+        {
+          "key": "transport.vehicle_payment",
+          "name": "Vehicle payment",
+          "labels": {
+            "es": "Cuota del vehículo",
+            "ja": "車のローン・リース",
+            "ko": "차량 할부",
+            "zh-CN": "车贷",
+            "zh-TW": "車貸"
+          }
+        }
+      ]
+    },
+    {
+      "key": "shopping",
+      "name": "Shopping",
+      "kind": "expense",
+      "labels": {
+        "es": "Compras",
+        "ja": "買い物",
+        "ko": "쇼핑",
+        "zh-CN": "购物",
+        "zh-TW": "購物"
+      },
+      "legacy": true,
+      "children": [
+        {
+          "key": "shopping.clothing",
+          "name": "Clothing & shoes",
+          "labels": {
+            "es": "Ropa y calzado",
+            "ja": "衣類・靴",
+            "ko": "의류·신발",
+            "zh-CN": "服饰鞋包",
+            "zh-TW": "服飾鞋包"
+          }
+        },
+        {
+          "key": "shopping.electronics",
+          "name": "Electronics",
+          "labels": {
+            "es": "Electrónica",
+            "ja": "電子機器",
+            "ko": "전자제품",
+            "zh-CN": "数码电子",
+            "zh-TW": "3C 電子"
+          }
+        },
+        {
+          "key": "shopping.household",
+          "name": "Household supplies",
+          "labels": {
+            "es": "Artículos del hogar",
+            "ja": "日用品",
+            "ko": "생활용품",
+            "zh-CN": "日用品",
+            "zh-TW": "日用品"
+          }
+        },
+        {
+          "key": "shopping.hobbies",
+          "name": "Hobbies",
+          "labels": {
+            "es": "Aficiones",
+            "ja": "趣味",
+            "ko": "취미",
+            "zh-CN": "兴趣爱好",
+            "zh-TW": "興趣嗜好"
+          }
+        },
+        {
+          "key": "shopping.gifts",
+          "name": "Gifts",
+          "labels": {
+            "es": "Regalos",
+            "ja": "贈り物",
+            "ko": "선물",
+            "zh-CN": "礼物",
+            "zh-TW": "禮物"
+          }
+        }
+      ]
+    },
+    {
+      "key": "health",
+      "name": "Health",
+      "kind": "expense",
+      "labels": {
+        "es": "Salud",
+        "ja": "医療・健康",
+        "ko": "의료·건강",
+        "zh-CN": "健康",
+        "zh-TW": "健康"
+      },
+      "legacy": true,
+      "children": [
+        {
+          "key": "health.medical",
+          "name": "Medical",
+          "labels": {
+            "es": "Médico",
+            "ja": "医療費",
+            "ko": "병원",
+            "zh-CN": "医疗",
+            "zh-TW": "醫療"
+          }
+        },
+        {
+          "key": "health.dental_vision",
+          "name": "Dental & vision",
+          "labels": {
+            "es": "Dental y óptica",
+            "ja": "歯科・眼科",
+            "ko": "치과·안과",
+            "zh-CN": "牙科与眼科",
+            "zh-TW": "牙科與眼科"
+          }
+        },
+        {
+          "key": "health.pharmacy",
+          "name": "Pharmacy",
+          "labels": {
+            "es": "Farmacia",
+            "ja": "薬局",
+            "ko": "약국",
+            "zh-CN": "药品",
+            "zh-TW": "藥品"
+          }
+        },
+        {
+          "key": "health.fitness",
+          "name": "Fitness",
+          "labels": {
+            "es": "Deporte y gimnasio",
+            "ja": "フィットネス",
+            "ko": "운동·헬스",
+            "zh-CN": "健身",
+            "zh-TW": "健身"
+          }
+        },
+        {
+          "key": "health.personal_care",
+          "name": "Personal care",
+          "labels": {
+            "es": "Cuidado personal",
+            "ja": "美容・身だしなみ",
+            "ko": "미용·개인 관리",
+            "zh-CN": "个人护理",
+            "zh-TW": "個人護理"
+          }
+        }
+      ]
+    },
+    {
+      "key": "entertainment",
+      "name": "Entertainment",
+      "kind": "expense",
+      "labels": {
+        "es": "Ocio",
+        "ja": "娯楽",
+        "ko": "여가·오락",
+        "zh-CN": "娱乐",
+        "zh-TW": "娛樂"
+      },
+      "children": [
+        {
+          "key": "entertainment.streaming",
+          "name": "Streaming & subscriptions",
+          "labels": {
+            "es": "Streaming y suscripciones",
+            "ja": "動画配信・サブスク",
+            "ko": "스트리밍·구독",
+            "zh-CN": "流媒体与订阅",
+            "zh-TW": "串流與訂閱"
+          }
+        },
+        {
+          "key": "entertainment.events",
+          "name": "Movies & events",
+          "labels": {
+            "es": "Cine y eventos",
+            "ja": "映画・イベント",
+            "ko": "영화·공연",
+            "zh-CN": "电影与演出",
+            "zh-TW": "電影與演出"
+          }
+        },
+        {
+          "key": "entertainment.games",
+          "name": "Games",
+          "labels": {
+            "es": "Videojuegos",
+            "ja": "ゲーム",
+            "ko": "게임",
+            "zh-CN": "游戏",
+            "zh-TW": "遊戲"
+          }
+        },
+        {
+          "key": "entertainment.books_music",
+          "name": "Books & music",
+          "labels": {
+            "es": "Libros y música",
+            "ja": "本・音楽",
+            "ko": "도서·음악",
+            "zh-CN": "书籍与音乐",
+            "zh-TW": "書籍與音樂"
+          }
+        },
+        {
+          "key": "entertainment.sports",
+          "name": "Sports & outdoors",
+          "labels": {
+            "es": "Deportes y aire libre",
+            "ja": "スポーツ・アウトドア",
+            "ko": "스포츠·야외 활동",
+            "zh-CN": "运动与户外",
+            "zh-TW": "運動與戶外"
+          }
+        }
+      ]
+    },
+    {
+      "key": "travel",
+      "name": "Travel",
+      "kind": "expense",
+      "labels": {
+        "es": "Viajes",
+        "ja": "旅行",
+        "ko": "여행",
+        "zh-CN": "旅行",
+        "zh-TW": "旅行"
+      },
+      "children": [
+        {
+          "key": "travel.flights",
+          "name": "Flights",
+          "labels": {
+            "es": "Vuelos",
+            "ja": "航空券",
+            "ko": "항공권",
+            "zh-CN": "机票",
+            "zh-TW": "機票"
+          }
+        },
+        {
+          "key": "travel.lodging",
+          "name": "Lodging",
+          "labels": {
+            "es": "Alojamiento",
+            "ja": "宿泊",
+            "ko": "숙박",
+            "zh-CN": "住宿",
+            "zh-TW": "住宿"
+          }
+        },
+        {
+          "key": "travel.car_rental",
+          "name": "Car rental",
+          "labels": {
+            "es": "Alquiler de coches",
+            "ja": "レンタカー",
+            "ko": "렌터카",
+            "zh-CN": "租车",
+            "zh-TW": "租車"
+          }
+        },
+        {
+          "key": "travel.activities",
+          "name": "Tours & activities",
+          "labels": {
+            "es": "Excursiones y actividades",
+            "ja": "ツアー・アクティビティ",
+            "ko": "투어·액티비티",
+            "zh-CN": "景点与活动",
+            "zh-TW": "景點與活動"
+          }
+        }
+      ]
+    },
+    {
+      "key": "education",
+      "name": "Education",
+      "kind": "expense",
+      "labels": {
+        "es": "Educación",
+        "ja": "教育",
+        "ko": "교육",
+        "zh-CN": "教育",
+        "zh-TW": "教育"
+      },
+      "children": [
+        {
+          "key": "education.tuition",
+          "name": "Tuition",
+          "labels": {
+            "es": "Matrícula",
+            "ja": "学費",
+            "ko": "등록금",
+            "zh-CN": "学费",
+            "zh-TW": "學費"
+          }
+        },
+        {
+          "key": "education.courses",
+          "name": "Courses & training",
+          "labels": {
+            "es": "Cursos y formación",
+            "ja": "講座・研修",
+            "ko": "강좌·교육 과정",
+            "zh-CN": "课程与培训",
+            "zh-TW": "課程與培訓"
+          }
+        },
+        {
+          "key": "education.school_supplies",
+          "name": "School supplies",
+          "labels": {
+            "es": "Material escolar",
+            "ja": "学用品",
+            "ko": "학용품",
+            "zh-CN": "学习用品",
+            "zh-TW": "學習用品"
+          }
+        }
+      ]
+    },
+    {
+      "key": "family",
+      "name": "Family & pets",
+      "kind": "expense",
+      "labels": {
+        "es": "Familia y mascotas",
+        "ja": "家族・ペット",
+        "ko": "가족·반려동물",
+        "zh-CN": "家庭与宠物",
+        "zh-TW": "家庭與寵物"
+      },
+      "children": [
+        {
+          "key": "family.childcare",
+          "name": "Childcare",
+          "labels": {
+            "es": "Cuidado infantil",
+            "ja": "保育",
+            "ko": "보육",
+            "zh-CN": "托育",
+            "zh-TW": "托育"
+          }
+        },
+        {
+          "key": "family.kids_activities",
+          "name": "Kids' activities",
+          "labels": {
+            "es": "Actividades infantiles",
+            "ja": "子どもの習い事",
+            "ko": "아이 활동",
+            "zh-CN": "孩子活动",
+            "zh-TW": "孩子活動"
+          }
+        },
+        {
+          "key": "family.baby",
+          "name": "Baby supplies",
+          "labels": {
+            "es": "Artículos para bebé",
+            "ja": "ベビー用品",
+            "ko": "유아용품",
+            "zh-CN": "母婴用品",
+            "zh-TW": "母嬰用品"
+          }
+        },
+        {
+          "key": "family.pet_supplies",
+          "name": "Pet food & supplies",
+          "labels": {
+            "es": "Comida y artículos para mascotas",
+            "ja": "ペットフード・用品",
+            "ko": "반려동물 사료·용품",
+            "zh-CN": "宠物食品用品",
+            "zh-TW": "寵物食品用品"
+          }
+        },
+        {
+          "key": "family.vet",
+          "name": "Vet",
+          "labels": {
+            "es": "Veterinario",
+            "ja": "動物病院",
+            "ko": "동물병원",
+            "zh-CN": "宠物医疗",
+            "zh-TW": "寵物醫療"
+          }
+        }
+      ]
+    },
+    {
+      "key": "financial",
+      "name": "Financial",
+      "kind": "expense",
+      "labels": {
+        "es": "Finanzas",
+        "ja": "金融",
+        "ko": "금융",
+        "zh-CN": "金融",
+        "zh-TW": "金融"
+      },
+      "children": [
+        {
+          "key": "financial.insurance",
+          "name": "Insurance",
+          "labels": {
+            "es": "Seguros",
+            "ja": "保険",
+            "ko": "보험",
+            "zh-CN": "保险",
+            "zh-TW": "保險"
+          }
+        },
+        {
+          "key": "financial.bank_fees",
+          "name": "Bank fees",
+          "labels": {
+            "es": "Comisiones bancarias",
+            "ja": "銀行手数料",
+            "ko": "은행 수수료",
+            "zh-CN": "银行手续费",
+            "zh-TW": "銀行手續費"
+          }
+        },
+        {
+          "key": "financial.interest",
+          "name": "Interest charges",
+          "labels": {
+            "es": "Intereses pagados",
+            "ja": "支払利息",
+            "ko": "이자 비용",
+            "zh-CN": "利息支出",
+            "zh-TW": "利息支出"
+          }
+        },
+        {
+          "key": "financial.taxes",
+          "name": "Taxes",
+          "labels": {
+            "es": "Impuestos",
+            "ja": "税金",
+            "ko": "세금",
+            "zh-CN": "税费",
+            "zh-TW": "稅費"
+          }
+        },
+        {
+          "key": "financial.loan_payments",
+          "name": "Loan payments",
+          "labels": {
+            "es": "Pagos de préstamos",
+            "ja": "ローン返済",
+            "ko": "대출 상환",
+            "zh-CN": "贷款还款",
+            "zh-TW": "貸款還款"
+          }
+        },
+        {
+          "key": "financial.charity",
+          "name": "Charity",
+          "labels": {
+            "es": "Donaciones",
+            "ja": "寄付",
+            "ko": "기부",
+            "zh-CN": "慈善捐款",
+            "zh-TW": "慈善捐款"
+          }
+        }
+      ]
+    },
+    {
+      "key": "business",
+      "name": "Business",
+      "kind": "expense",
+      "labels": {
+        "es": "Actividad profesional",
+        "ja": "事業費",
+        "ko": "사업 경비",
+        "zh-CN": "商务",
+        "zh-TW": "商務"
+      },
+      "legacy": true,
+      "children": [
+        {
+          "key": "business.office",
+          "name": "Office supplies",
+          "labels": {
+            "es": "Material de oficina",
+            "ja": "事務用品",
+            "ko": "사무용품",
+            "zh-CN": "办公用品",
+            "zh-TW": "辦公用品"
+          }
+        },
+        {
+          "key": "business.software",
+          "name": "Software & services",
+          "labels": {
+            "es": "Software y servicios",
+            "ja": "ソフトウェア・サービス",
+            "ko": "소프트웨어·서비스",
+            "zh-CN": "软件与服务",
+            "zh-TW": "軟體與服務"
+          }
+        },
+        {
+          "key": "business.business_travel",
+          "name": "Business travel",
+          "labels": {
+            "es": "Viajes de trabajo",
+            "ja": "出張",
+            "ko": "출장",
+            "zh-CN": "差旅",
+            "zh-TW": "差旅"
+          }
+        },
+        {
+          "key": "business.advertising",
+          "name": "Advertising",
+          "labels": {
+            "es": "Publicidad",
+            "ja": "広告",
+            "ko": "광고",
+            "zh-CN": "广告",
+            "zh-TW": "廣告"
+          }
+        },
+        {
+          "key": "business.professional",
+          "name": "Professional services",
+          "labels": {
+            "es": "Servicios profesionales",
+            "ja": "専門サービス",
+            "ko": "전문 서비스",
+            "zh-CN": "专业服务",
+            "zh-TW": "專業服務"
+          }
+        }
+      ]
+    },
+    {
+      "key": "transfers",
+      "name": "Transfers",
+      "kind": "transfer",
+      "labels": {
+        "es": "Transferencias",
+        "ja": "振替",
+        "ko": "이체",
+        "zh-CN": "转账",
+        "zh-TW": "轉帳"
+      },
+      "legacy": true,
+      "deletable": false,
+      "children": [
+        {
+          "key": "transfers.account_transfer",
+          "name": "Account transfer",
+          "labels": {
+            "es": "Traspaso entre cuentas",
+            "ja": "口座間振替",
+            "ko": "계좌 간 이체",
+            "zh-CN": "账户互转",
+            "zh-TW": "帳戶互轉"
+          }
+        },
+        {
+          "key": "transfers.card_payment",
+          "name": "Credit card payment",
+          "labels": {
+            "es": "Pago de tarjeta",
+            "ja": "カード代金の支払い",
+            "ko": "카드 대금 결제",
+            "zh-CN": "信用卡还款",
+            "zh-TW": "信用卡還款"
+          }
+        },
+        {
+          "key": "transfers.cash",
+          "name": "Cash withdrawal",
+          "labels": {
+            "es": "Retirada de efectivo",
+            "ja": "現金引き出し",
+            "ko": "현금 인출",
+            "zh-CN": "取现",
+            "zh-TW": "提領現金"
+          }
+        },
+        {
+          "key": "transfers.investment_transfer",
+          "name": "Investment transfer",
+          "labels": {
+            "es": "Traspaso a inversiones",
+            "ja": "投資口座への振替",
+            "ko": "투자 계좌 이체",
+            "zh-CN": "投资转账",
+            "zh-TW": "投資轉帳"
+          }
+        }
+      ]
+    }
+  ]
+}

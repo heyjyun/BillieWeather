@@ -4,6 +4,7 @@
 import type { Category, IsoDate } from "@billie/shared-types";
 import { CATEGORIES } from "@billie/shared-types";
 import { Categorizer, merchantKey, titleizeMerchant } from "../categorizer";
+import { legacyKeyForName } from "../taxonomy";
 import { accountTypeFromLegacy } from "../ledger/domain";
 import { currenciesForHint, detectDecimalSeparator, parseAmount, type DecimalDetection, type DecimalSeparator } from "./amount";
 import { currencyExponent, decimalToMinor, KNOWN_CURRENCIES, spreadsheetNumberToMinor } from "./currency";
@@ -86,11 +87,16 @@ export function kindHintsFor(description: string): KindHint[] {
 
 const cell = (row: readonly SourceCell[], index: number | undefined): SourceCell | null => (index === undefined ? null : (row[index] ?? { text: "" }));
 
-/** Category from a file column: a built-in or custom name in any letter case, else null. */
-function knownCategory(name: string, custom: readonly string[]): Category | null {
+/** Category from a file column: one of the person's names in any letter case, an old built-in name (as the person's current name for it), else null. */
+function knownCategory(name: string, custom: readonly string[], categorizer: Categorizer): Category | null {
   const clean = name.trim().toLowerCase();
   if (!clean) return null;
-  return CATEGORIES.find((candidate) => candidate.toLowerCase() === clean) ?? custom.find((candidate) => candidate.toLowerCase() === clean) ?? null;
+  const own = custom.find((candidate) => candidate.toLowerCase() === clean);
+  if (own) return own;
+  const legacy = CATEGORIES.find((candidate) => candidate.toLowerCase() === clean);
+  if (legacy === "Uncategorized") return legacy;
+  const key = legacy ? legacyKeyForName(legacy) : null;
+  return key ? categorizer.resolve(key) : null;
 }
 
 function lowConfidence(issues: Issue[], confidence: Partial<Record<CanonicalField, number>>) {
@@ -383,7 +389,7 @@ export function normalizeTable(input: {
       category = edit.category;
       categorySource = "user";
     } else {
-      const fromFile = knownCategory(cell(cells, mapping.category)?.text ?? "", context.customCategories);
+      const fromFile = knownCategory(cell(cells, mapping.category)?.text ?? "", context.customCategories, context.categorizer);
       if (fromFile) {
         category = fromFile;
         categorySource = "file";

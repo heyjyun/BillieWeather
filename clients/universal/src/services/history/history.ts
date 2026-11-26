@@ -138,8 +138,8 @@ export function replayStatements(group: number, direction: HistoryDirection): Sq
       params: touched(item) ? [stamp] : [],
     };
   };
-  const parents = ["settings", "accounts", "merchants", "projects", "tags", "recurring_rules", "custom_categories", "category_meta", "merchant_rules", "statements", "organize_runs"].map(table);
-  const lists = ["custom_categories", "category_meta", "merchant_rules", "budgets"].map(table);
+  const parents = ["settings", "accounts", "merchants", "projects", "tags", "recurring_rules", "custom_categories", "category_meta", "categories", "merchant_rules", "statements", "organize_runs"].map(table);
+  const lists = ["custom_categories", "category_meta", "categories", "merchant_rules", "budgets"].map(table);
   const [transactions, tags, links, budgets, statements] = ["transactions", "transaction_tags", "transaction_links", "budgets", "statements"].map(table);
   return [
     // 1 + the references that were already broken before (none, unless an old version left one): no undo adds to them.
@@ -167,8 +167,8 @@ export function replayStatements(group: number, direction: HistoryDirection): Sq
     // The result is exactly the other side of the edit, whatever other triggers did meanwhile...
     ...HISTORY_TABLES.map((item) => refuseIf(`SELECT COUNT(*) FROM ${onRow(item)} WHERE ${changes(item)} AND ${current(item)} IS NOT c.${to}${kept(item)}`)),
     // ...no entry, rule or budget names a category this removed, and every reference resolves.
-    refuseIf(`SELECT COUNT(*) FROM history_changes c WHERE ${changes(table("custom_categories"), ` AND c.${to} IS NULL`)}
-      AND NOT EXISTS (SELECT 1 FROM custom_categories k WHERE k.name = json_extract(c.row_key, '$[0]') COLLATE NOCASE)
+    refuseIf(`SELECT COUNT(*) FROM history_changes c WHERE ${changes(table("categories"), ` AND c.${to} IS NULL`)}
+      AND NOT EXISTS (SELECT 1 FROM categories k WHERE k.name = json_extract(c.row_key, '$[0]') COLLATE NOCASE)
       AND (EXISTS (SELECT 1 FROM transactions t WHERE t.category = json_extract(c.row_key, '$[0]') COLLATE NOCASE)
         OR EXISTS (SELECT 1 FROM merchant_rules k WHERE k.category = json_extract(c.row_key, '$[0]') COLLATE NOCASE)
         OR EXISTS (SELECT 1 FROM budgets k WHERE k.category = json_extract(c.row_key, '$[0]') COLLATE NOCASE))`),

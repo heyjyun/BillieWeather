@@ -5,6 +5,7 @@
 // what the storage adapter must write (one statement per account, atomically).
 import type { Category, IsoDate } from "@billie/shared-types";
 import type { Categorizer } from "../categorizer";
+import type { CategoryTree } from "../categoryTree";
 import { sha256Hex } from "../importer";
 import { detectDecimalSeparator, parseAmount, type DecimalSeparator } from "./amount";
 import { currencyExponent, decimalToMinor, toStorageCents } from "./currency";
@@ -59,8 +60,10 @@ export interface ImportContext {
   today: IsoDate;
   /** The platform's on-device OCR engine, or null when this platform has none. */
   ocr: OcrEngine | null;
-  /** Custom categories of the income tree (category_meta); money in filed there is income, not a refund. */
+  /** Custom categories of the income tree; money in filed there is income, not a refund. */
   incomeCategories?: ReadonlySet<string>;
+  /** The person's category tree: a category's kind decides income/transfer, the Business subtree is flagged for tax review. */
+  tree?: CategoryTree | null;
 }
 
 export type RowDecision = "include" | "skip";
@@ -655,7 +658,7 @@ export interface PlannedStatement {
 }
 
 /** Confirm: what will be written, or why nothing may be written yet. */
-export function commitPlan(draft: ImportDraft, context: Pick<ImportContext, "deviceCurrency" | "storableCurrencies" | "incomeCategories">): { ok: true; statements: PlannedStatement[] } | { ok: false; blockers: CommitBlocker[] } {
+export function commitPlan(draft: ImportDraft, context: Pick<ImportContext, "deviceCurrency" | "storableCurrencies" | "incomeCategories" | "tree">): { ok: true; statements: PlannedStatement[] } | { ok: false; blockers: CommitBlocker[] } {
   const blockers: CommitBlocker[] = [];
   if (draft.needs.length > 0) blockers.push({ code: "needs", needs: draft.needs });
   if (draft.summary.undecided > 0) blockers.push({ code: "undecided_rows", count: draft.summary.undecided });
@@ -686,8 +689,8 @@ export function commitPlan(draft: ImportDraft, context: Pick<ImportContext, "dev
       return {
         bookedOn: row.transactionDate, postedOn: row.postingDate, description: row.originalDescription, normalizedMerchant: row.normalizedMerchant, amountCents,
         currency, direction: directionOf(row.amountMinor!), balanceCents, bankReference: row.bankReference, accountKey: row.account.key, category,
-        categorySource: row.categorySource ?? "auto", taxReview: category === "Business", pending: row.pending, kindHints: row.kindHints.join(","),
-        kind: kindForCategorized({ amountMinor: amountCents, accountType: accountTypeFromLegacy(row.account.kind, "local"), description: row.originalDescription, category, incomeCategories: context.incomeCategories }),
+        categorySource: row.categorySource ?? "auto", taxReview: context.tree ? context.tree.isWithin(category, context.tree.nameForKey("business")) : category === "Business", pending: row.pending, kindHints: row.kindHints.join(","),
+        kind: kindForCategorized({ amountMinor: amountCents, accountType: accountTypeFromLegacy(row.account.kind, "local"), description: row.originalDescription, category, incomeCategories: context.incomeCategories, ...(context.tree ? { categoryKind: context.tree.kindOf(category) } : {}) }),
         sourceRef: [row.source.sheet ? `sheet:${row.source.sheet}` : null, row.source.page ? `page:${row.source.page}` : null, `row:${row.source.row}`].filter(Boolean).join(" "),
         confidence: Math.round(Math.min(1, ...confidences) * 100), validationStatus: reviewed ? "user_confirmed" : "verified",
         raw: JSON.stringify(row.raw).slice(0, 4000),

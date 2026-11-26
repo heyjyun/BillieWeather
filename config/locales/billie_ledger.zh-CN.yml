@@ -96,7 +96,7 @@ zh-CN:
         unknown_action: 请选择要修改的内容。
         nothing_to_undo: 这次修改没有可撤销的内容。
         no_change: 余额已经一致。
-        parent_invalid: 父分类必须是同一棵树中的一级分类。
+        parent_invalid: 请选择你的一个分类作为父分类。
         merge_same: 请选择另一个合并目标。
       accounts:
         title: 账户
@@ -298,9 +298,9 @@ zh-CN:
           tag: 添加标签
           delete: 移到回收站
       categories:
-        tree_eyebrow: 两级分类
+        tree_eyebrow: 层级不限
         tree_title: 分类树
-        tree_body: 把分类归到父分类下，收入与支出分开，可排序或隐藏不用的分类。
+        tree_body: 分类可以任意多层嵌套，可排序或隐藏不用的分类。展开分类可查看子分类；合计包含子分类。
         tree_expense: 支出
         tree_income: 收入
         hidden: 已隐藏
@@ -471,7 +471,7 @@ zh-CN:
         tools:
           entry: "支出、收入、转账、信用卡还款、退款或余额调整。"
           transactions: "搜索，按账户、商家、项目或标签筛选，批量编辑。"
-          categories: "两级收入与支出分类，可排序、可隐藏。"
+          categories: "层级不限的收入与支出分类，可排序、可隐藏。"
           merchants: "你付款给谁，或谁付款给你。"
           projects: "旅行、装修、副业等项目。"
           tags: "跨分类使用的自由标签。"

@@ -11,7 +11,7 @@ class Finance::SpendingBreakdownTest < ActiveSupport::TestCase
   test "the biggest spending categories own a color in every period; the rest are Other" do
     names = ["Housing", "Food & dining", "Transport", "Utilities", "Shopping", "Health", "Business"]
     names.each_with_index { |name, index| spend((800 - index * 100).to_s, name, "2026-01-10") }
-    @user.finance_custom_categories.create!(name: "Pets")
+    Finance::Category.create_for!(@user, name: "Pets")
     spend("5", "Pets", "2026-02-10")
     spend("50", "Uncategorized", "2026-02-11")
     spend("999", "Transfers", "2026-02-12")

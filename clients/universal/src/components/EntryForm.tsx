@@ -1,12 +1,13 @@
 // Create or edit one manual entry (记一笔): expense, income, transfer / card payment, refund or a
 // balance adjustment. The same form edits imported rows (category, description, merchant, project,
 // tags, note); their amount and date stay as the bank printed them.
-import { decimalToCents, centsToDecimalString, formatMoney, isLiability, localToday, type EntryProblem, type TransactionKind } from "@billie/finance-core";
+import { decimalToCents, centsToDecimalString, formatMoney, isLiability, localToday, UNCATEGORIZED, type EntryProblem, type TransactionKind } from "@billie/finance-core";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { radioGroupKeys, useOpenedPanel } from "../hooks/useFocus";
 import { useFinance } from "../hooks/useFinance";
+import { indented } from "./common";
 import { categoryLabel, useI18n } from "../i18n";
-import { LedgerError, type CategoryNode, type EntryDetail, type EntryInput } from "../services/ledger";
+import { LedgerError, type EntryDetail, type EntryInput } from "../services/ledger";
 import type { QuickEntry } from "../services/quickEntry";
 import { useDraftState, useMode } from "../hooks/useMode";
 
@@ -54,7 +55,7 @@ export function EntryForm(props: EntryFormProps) {
 function EntryFormFields({ entry, initialKind = "expense", prefill, onDone, onCancel, draftKey }: EntryFormProps & { draftKey: string }) {
   const { m, t } = useI18n();
   const x = m.ledger.entry;
-  const { store, accounts, customCategories, currency, refresh } = useFinance();
+  const { store, accounts, categoryTree, currency, refresh } = useFinance();
   const editing = Boolean(entry);
   const imported = Boolean(entry && entry.origin !== "manual" && entry.origin !== "recurring");
   const live = accounts.filter((account) => !account.archived || account.id === entry?.accountId || account.id === entry?.counterpart?.accountId);
@@ -75,7 +76,6 @@ function EntryFormFields({ entry, initialKind = "expense", prefill, onDone, onCa
   const [note, setNote] = useDraftState(draftKey, "note", entry?.note ?? "");
   const [description, setDescription] = useDraftState(draftKey, "description", entry?.description ?? prefill?.description ?? "");
   const [refundOf, setRefundOf] = useDraftState<number | "">(draftKey, "refundOf", entry?.refundOf?.id ?? "");
-  const [tree, setTree] = useState<CategoryNode[]>([]);
   const [candidates, setCandidates] = useState<Awaited<ReturnType<typeof store.ledger.refundCandidates>>>([]);
   const [merchants, setMerchants] = useState<string[]>([]);
   const [projects, setProjects] = useState<string[]>([]);
@@ -85,27 +85,23 @@ function EntryFormFields({ entry, initialKind = "expense", prefill, onDone, onCa
   const cur = currency ?? accounts[0]?.currency ?? "USD";
 
   useEffect(() => {
-    void store.ledger.categoryTree(customCategories).then(setTree);
     void store.ledger.dimensions("merchant").then((items) => setMerchants(items.map((item) => item.name)));
     void store.ledger.dimensions("project").then((items) => setProjects(items.map((item) => item.name)));
-  }, [store, customCategories]);
+  }, [store]);
   useEffect(() => {
     if (kind === "refund") void store.ledger.refundCandidates({ limit: 200 }).then((items) => setCandidates(entry?.refundOf && !items.some((item) => item.id === entry.refundOf!.id)
       ? [{ id: entry.refundOf.id, occurredOn: "", description: entry.refundOf.description, amountCents: entry.refundOf.amountCents, refundableCents: Math.abs(entry.refundOf.amountCents), accountName: "", category: entry.category }, ...items] : items));
   }, [kind, store, entry]);
 
-  // Categories offered for this kind: the matching tree, hidden ones left out (unless already chosen).
+  // Categories offered for this kind: the matching tree at every depth, indented, hidden ones left out
+  // (unless already chosen), then Uncategorized.
   const options = useMemo(() => {
     const wanted = kind === "income" ? "income" : "expense";
-    const out: Array<{ name: string; label: string }> = [];
-    for (const node of tree) {
-      if (node.kind === "transfer") continue;
-      const fits = node.kind === wanted || node.kind === "any";
-      if (fits && (!node.hidden || node.name === category)) out.push({ name: node.name, label: categoryLabel(m, node.name) });
-      for (const child of node.children) if ((child.kind === wanted) && (!child.hidden || child.name === category)) out.push({ name: child.name, label: `${categoryLabel(m, node.name)} › ${child.name}` });
-    }
-    return out;
-  }, [tree, kind, category, m]);
+    const out: Array<{ name: string; label: string }> = categoryTree.flatten({ keep: category || null })
+      .filter((node) => node.kind === wanted)
+      .map((node) => ({ name: node.name, label: indented(categoryLabel(m, node.name), node.depth) }));
+    return [...out, { name: UNCATEGORIZED, label: categoryLabel(m, UNCATEGORIZED) }];
+  }, [categoryTree, kind, category, m]);
   const needsCategory = kind === "expense" || kind === "income" || kind === "refund";
   const isTransfer = kind === "transfer" || kind === "card_payment";
   const toAccount = live.find((account) => account.id === toAccountId);
@@ -203,7 +199,7 @@ function EntryFormFields({ entry, initialKind = "expense", prefill, onDone, onCa
           <label className="bw-field">
             <span>{x.category}</span>
             <select value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">{kind === "income" ? categoryLabel(m, "Income") : categoryLabel(m, "Uncategorized")}</option>
+              <option value="">{kind === "income" ? categoryLabel(m, categoryTree.resolveKey("income")) : categoryLabel(m, UNCATEGORIZED)}</option>
               {options.map((option) => <option key={option.name} value={option.name}>{option.label}</option>)}
             </select>
             {problem("category_kind")}

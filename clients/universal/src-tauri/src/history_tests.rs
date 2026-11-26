@@ -6,9 +6,9 @@ use serde_json::{json, Value};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::collections::BTreeMap;
 
-const TABLES: [&str; 15] = [
+const TABLES: [&str; 16] = [
     "settings", "accounts", "merchants", "projects", "tags", "recurring_rules", "statements", "transactions", "transaction_tags", "transaction_links",
-    "custom_categories", "category_meta", "merchant_rules", "budgets", "organize_runs",
+    "custom_categories", "category_meta", "categories", "merchant_rules", "budgets", "organize_runs",
 ];
 
 async fn rows(pool: &sqlx::SqlitePool, sql: &str) -> Vec<Value> {
@@ -66,8 +66,22 @@ fn recorded_edits_are_undone_and_redone_exactly_on_the_native_database() {
                 "edit" | "outside" => {
                     let statements: Vec<Statement> = step["statements"].as_array().unwrap().iter()
                         .map(|item| Statement { sql: fixture["sql"][item[0].as_u64().unwrap() as usize].as_str().unwrap().into(), params: params(&item[1]) }).collect();
+                    let recorded = statements.iter().any(|statement| statement.sql.contains("history_groups"));
+                    let before = dump(&pool).await;
                     execute_all(&pool, &statements).await.unwrap_or_else(|error| panic!("{}: {error}", step["name"]));
-                    if kind == "edit" {
+                    if kind == "edit" && !recorded {
+                        // Setup outside any group (the one-time default category seed): Undo never takes it back,
+                        // so it belongs to every state the book can return to.
+                        let after = dump(&pool).await;
+                        for state in states.iter_mut() {
+                            for table in TABLES {
+                                let list = state.get_mut(table).unwrap();
+                                list.retain(|row| !before[table].contains(row) || after[table].contains(row));
+                                list.extend(after[table].iter().filter(|row| !before[table].contains(*row)).cloned());
+                                list.sort();
+                            }
+                        }
+                    } else if kind == "edit" {
                         let newest = rows(&pool, "SELECT MAX(id) AS id FROM history_groups").await[0]["id"].as_i64();
                         if newest.is_some() && newest != groups.last().copied() {
                             groups.push(newest.unwrap());

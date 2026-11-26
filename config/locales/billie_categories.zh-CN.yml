@@ -57,9 +57,14 @@ zh-CN:
         one: 还有 %{count} 个商户待处理；再运行一次即可继续。
         other: 还有 %{count} 个商户待处理；再运行一次即可继续。
       errors:
+        protected: "“转账”可以重命名和调整顺序，但它始终是顶级分类，不能删除或合并。"
+        category_cycle: "分类不能放进它自己或它的子分类里。"
+        category_unknown: "请选择你的一个分类。"
+        parent_invalid: "这里不能使用该上级分类。"
+        proposal_closed: "该建议已经处理过了。"
         blank: 请输入分类名称。
         too_long: 分类名称最多 %{count} 个字符。
-        reserved: 这已经是内置分类。
+        reserved: “未分类”是固定项，不能用作分类名称。
         taken: 你已经有同名的分类。
         too_many: 最多可以有 %{count} 个自定义分类。
       ai_errors:
@@ -72,3 +77,46 @@ zh-CN:
         failed: AI 服务无法为这些交易分类。未做任何更改；请稍后再试。
         unavailable: 无法连接 AI 服务。未做任何更改；请稍后再试。
         invalid_result: AI 服务返回了意外的结果。未做任何更改；请重试。
+      tree_add_body: "可以在顶级或任意分类下添加分类，层级不限。包括建议分类在内，最多可有 %{count} 个分类。"
+      new_kind: "类型（仅顶级）"
+      suggested_button: "添加建议分类"
+      suggested_summary: "建议分类"
+      suggested_none: "你已经拥有所有建议分类。"
+      proposals_title: "建议的新子分类"
+      proposals_body: "AI 发现了几组可能值得单独设子分类的交易。在你批准之前不会创建任何内容；批准后，这些交易会归入该子分类，作为一次可以撤销的更改。"
+      proposal_name: "名称"
+      proposal_approve: "批准"
+      proposal_dismiss: "忽略"
+      proposal_dismissed: "已忽略建议“%{name}”。"
+      move_up: "上移 %{name}"
+      move_down: "下移 %{name}"
+      transfers_note: "“转账”可以重命名并添加子分类，但它始终位于顶级，不能删除或合并。归入其中的条目都按转账计算。"
+      delete_destination: "将交易移至"
+      delete_confirm_tree: "删除“%{name}”？它的交易和记住的规则会移到你选择的分类，子分类上移一级。"
+      report_all: "全部分类"
+      report_direct: "%{name}（直接）"
+      deleted_into:
+        one: "已删除分类“%{name}”；%{count} 笔交易已移至 %{into}。"
+        other: "已删除分类“%{name}”；%{count} 笔交易已移至 %{into}。"
+      suggested_body:
+        one: "你的列表中缺少 %{count} 个建议分类。添加它们不会重命名、移动或重复你已有的任何分类。"
+        other: "你的列表中缺少 %{count} 个建议分类。添加它们不会重命名、移动或重复你已有的任何分类。"
+      suggested_added:
+        one: "已添加 %{count} 个建议分类。"
+        other: "已添加 %{count} 个建议分类。"
+      proposals_waiting:
+        one: "AI 还建议了 %{count} 个新子分类，请在下方查看。"
+        other: "AI 还建议了 %{count} 个新子分类，请在下方查看。"
+      proposal_fits:
+        one: "适用于 %{count} 笔交易（%{merchants}）。"
+        other: "适用于 %{count} 笔交易（%{merchants}）。"
+      proposal_approved:
+        one: "已创建“%{name}”，并将 %{count} 笔交易归入其中。"
+        other: "已创建“%{name}”，并将 %{count} 笔交易归入其中。"
+      children_count:
+        one: "%{count} 个子分类"
+        other: "%{count} 个子分类"
+      kinds:
+        income: "收入"
+        expense: "支出"
+        transfer: "转账"

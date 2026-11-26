@@ -175,7 +175,7 @@ module Finance
           next if entries.empty?
           before = entries.to_h { |entry| [entry.id, ai_snapshot(entry)] }
           attributes = {category: category, category_source: "ai", category_model: model, updated_at: now}
-          attributes[:tax_review] = true if category == "Business"
+          attributes[:tax_review] = true if tree.business?(category)
           ids = entries.map(&:id)
           locked_scope = Transaction.where(user_id: @user.id, id: ids)
           Transaction.sync_kinds_for_category!(locked_scope, category, @user.id)
@@ -280,7 +280,7 @@ module Finance
 
     def known_category!(name)
       name = name.to_s
-      raise Invalid, "category_unknown" unless tree.names.include?(name)
+      raise Invalid, "category_unknown" unless tree.include?(name)
       name
     end
 
@@ -318,15 +318,15 @@ module Finance
       validate!(p, account, refund_of: (p[:kind] == "refund" && p[:refund_of_id].present?) ? refund_info : :unset, account_optional: origin == "receipt")
       raise Invalid, "refund_target_invalid" if refund_target && !%w[expense].include?(refund_target.kind)
       amount = Domain.signed_amount(p[:kind], money!(p[:amount]))
-      category = p[:category].presence || refund_target&.category || "Uncategorized"
+      category = p[:category].presence || refund_target&.category || Transaction::UNCATEGORIZED
       known_category!(category)
-      category = "Uncategorized" if category == "Transfers"
+      category = Transaction::UNCATEGORIZED if tree.kind_of(category) == "transfer"
       dims = dimensions(p)
       entry = Transaction.new(user: @user, bank_account: account, entry_origin: origin, kind: p[:kind], amount: amount,
         booked_on: date!(p[:booked_on]), occurred_at_time: p[:occurred_at_time].presence, category: category,
         description: description_for(p, dims[:merchant], category), note: p[:note].presence, merchant: dims[:merchant] || refund_target&.merchant,
         project: dims[:project] || refund_target&.project, category_source: (origin == "receipt") ? (p[:category_source].presence_in(%w[user auto]) || "auto") : "user",
-        tax_review: category == "Business", recurring_rule: recurring&.first, recurring_on: recurring&.last)
+        tax_review: tree.business?(category), recurring_rule: recurring&.first, recurring_on: recurring&.last)
       # A person typed these; a receipt entry's category may be an automatic suggestion (only a person's choice is locked).
       entry.user_locked_fields = (origin == "receipt" && entry.category_source != "user") ? [] : %w[category kind]
       entry.tags = dims[:tags]
@@ -347,7 +347,7 @@ module Finance
       date = date!(p[:booked_on])
       legs = [[from, -amount], [to, amount]].map do |account, signed|
         Transaction.create!(user: @user, bank_account: account, entry_origin: origin, kind: kind, amount: signed, booked_on: date,
-          occurred_at_time: p[:occurred_at_time].presence, category: "Transfers", category_source: "user", note: p[:note].presence,
+          occurred_at_time: p[:occurred_at_time].presence, category: tree.transfer_category(p[:category]), category_source: "user", note: p[:note].presence,
           description: p[:description].presence || transfer_description(from, to), project: dims[:project], user_locked_fields: %w[kind],
           recurring_rule: recurring&.first, recurring_on: recurring&.last)
       end
@@ -361,7 +361,7 @@ module Finance
       validate!(p.merge(category: nil), account)
       amount = money!(p[:amount], allow_negative: true)
       entry = Transaction.create!(user: @user, bank_account: account, entry_origin: "manual", kind: "adjustment", amount: amount,
-        booked_on: date!(p[:booked_on]), category: "Transfers", category_source: "user", note: p[:note].presence,
+        booked_on: date!(p[:booked_on]), category: tree.transfer_category, category_source: "user", note: p[:note].presence,
         description: p[:description].presence || I18n.t("billie.ledger.kinds.adjustment"), user_locked_fields: %w[kind])
       audit("create", entry, {}, snapshot(entry), actor: actor, batch_id: batch_id)
       touch
@@ -375,9 +375,9 @@ module Finance
       date = p.key?(:booked_on) ? date!(p[:booked_on]) : entry.booked_on
       category = p.key?(:category) ? known_category!(p[:category]) : entry.category
       if Transaction::TRANSFER_LIKE.include?(kind)
-        category = "Transfers"
+        category = tree.transfer_category(category)
       else
-        category = "Uncategorized" if category == "Transfers"
+        category = Transaction::UNCATEGORIZED if tree.kind_of(category) == "transfer"
         validate!({kind: kind, amount: typed.to_s("F"), booked_on: date.iso8601, category: category}, account)
       end
       if kind == "refund" && (link = entry.outgoing_links.find_by(link_type: "refund_of"))
@@ -414,8 +414,8 @@ module Finance
       if p[:kind].present? && p[:kind] != entry.kind
         raise Invalid, "kind_invalid" unless Transaction::KINDS.include?(p[:kind])
         entry.kind = p[:kind]
-        entry.category = "Transfers" if entry.transfer_like?
-        entry.category = "Uncategorized" if !entry.transfer_like? && entry.category == "Transfers"
+        entry.category = tree.transfer_category(entry.category) if entry.transfer_like?
+        entry.category = Transaction::UNCATEGORIZED if !entry.transfer_like? && tree.kind_of(entry.category) == "transfer"
       end
       apply_common(entry, p)
     end
@@ -483,7 +483,7 @@ module Finance
     end
 
     def description_for(p, merchant, category)
-      p[:description].to_s.squish.presence || merchant&.name || I18n.t("billie.backend.categories.#{category}", default: category)
+      p[:description].to_s.squish.presence || merchant&.name || DefaultCategories.label(category)
     end
 
     def transfer_description(from, to)

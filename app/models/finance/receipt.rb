@@ -136,8 +136,8 @@ module Finance
     end
 
     def category_is_known
-      return if category.nil? || Transaction::CATEGORIES.include?(category)
-      errors.add(:category, :inclusion) unless CustomCategory.where(user_id: user_id, name: category).exists?
+      return if category.nil?
+      errors.add(:category, :inclusion) unless Category.valid_for?(user_id, category)
     end
   end
 end

@@ -58,7 +58,7 @@ module Finance
       "reviews" => "transactions", "add_sync" => "transactions",
       "insights" => "ai_assistant", "tax_preparation" => "ai_assistant",
       "accounts" => "accounts",
-      "categories" => "categories", "dimensions" => "categories",
+      "categories" => "categories", "category_proposals" => "categories", "dimensions" => "categories",
       "budgets" => "budgets",
       "ledger_reports" => "reports", "reports" => "reports",
       "recurring_rules" => "recurring",

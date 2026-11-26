@@ -4,6 +4,17 @@
 // client's job. Error codes match the Rails I18n keys under billie.backend.*.
 import { CATEGORIES, CURRENCIES, type Category, type Currency, type IsoDate, type ParsedStatement, type ParsedTransaction } from "@billie/shared-types";
 import { Categorizer } from "./categorizer";
+import { legacyKeyForName } from "./taxonomy";
+
+/** A file's category: one of the person's (any letter case), an old built-in name (as the person's current name for it), else Uncategorized. */
+function fileCategory(given: string, options: ImportOptions): Category {
+  const lower = given.toLowerCase();
+  const own = options.categories?.find((candidate) => candidate.toLowerCase() === lower);
+  if (own) return own;
+  const legacy = CATEGORIES.find((candidate) => candidate.toLowerCase() === lower);
+  const key = legacy ? legacyKeyForName(legacy) : null;
+  return key ? options.categorizer.resolve(key) : "Uncategorized";
+}
 import { MalformedCsvError, parseCsv } from "./csv";
 import { decimalToCents, MONEY_LIMIT_CENTS } from "./money";
 
@@ -97,6 +108,8 @@ export interface ImportOptions {
   filename: string;
   currency: Currency;
   categorizer: Categorizer;
+  /** The person's category names; a file's category column is matched against them (any letter case). */
+  categories?: readonly string[];
 }
 
 /** Validates the raw file bytes and returns UTF-8 text without a BOM. */
@@ -208,9 +221,9 @@ export function parseStatement(text: string, options: ImportOptions): ParsedStat
 
     const given = value(fields, "category").trim();
     const category: Category = columns.category !== undefined && given !== ""
-      ? (CATEGORIES.find((candidate) => candidate.toLowerCase() === given.toLowerCase()) ?? "Uncategorized")
+      ? fileCategory(given, options)
       : options.categorizer.categorize(description, amountCents);
-    return { bookedOn: parseDate(value(fields, "date"), line), description, amountCents, category, taxReview: category === "Business", excluded: false };
+    return { bookedOn: parseDate(value(fields, "date"), line), description, amountCents, category, taxReview: category === options.categorizer.resolve("business"), excluded: false };
   }
 
   function parseMoney(raw: string, line: number, blankZero: boolean): number {

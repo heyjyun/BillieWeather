@@ -96,7 +96,7 @@ es:
         unknown_action: Elige qué cambiar.
         nothing_to_undo: No hay nada que deshacer en este cambio.
         no_change: El saldo ya coincide.
-        parent_invalid: La categoría principal debe ser de primer nivel y del mismo árbol.
+        parent_invalid: Elige una de tus categorías como categoría principal.
         merge_same: Elige otro elemento con el que combinar.
       accounts:
         title: Cuentas
@@ -298,9 +298,9 @@ es:
           tag: Añadir etiqueta
           delete: Mover a la papelera
       categories:
-        tree_eyebrow: DOS NIVELES
+        tree_eyebrow: SIN LÍMITE DE NIVELES
         tree_title: Árbol de categorías
-        tree_body: Agrupa categorías bajo una principal, separa ingresos y gastos, reordena u oculta lo que no uses.
+        tree_body: Anida categorías a cualquier profundidad, reordénalas u oculta lo que no uses. Abre una categoría para ver sus subcategorías; los totales las incluyen.
         tree_expense: Gastos
         tree_income: Ingresos
         hidden: oculta
@@ -471,7 +471,7 @@ es:
         tools:
           entry: "Gasto, ingreso, transferencia, pago de tarjeta, reembolso o ajuste de saldo."
           transactions: "Busca, filtra por cuenta, comercio, proyecto o etiqueta, y edita en lote."
-          categories: "Categorías de ingresos y gastos en dos niveles, que puedes ordenar y ocultar."
+          categories: "Categorías de ingresos y gastos anidadas a cualquier profundidad, que puedes ordenar y ocultar."
           merchants: "A quién pagaste o quién te pagó."
           projects: "Viajes, reformas, trabajos extra y otros proyectos."
           tags: "Etiquetas libres que sirven en cualquier categoría."

@@ -96,7 +96,7 @@ zh-TW:
         unknown_action: 請選擇要修改的內容。
         nothing_to_undo: 這次修改沒有可撤銷的內容。
         no_change: 餘額已經一致。
-        parent_invalid: 父分類必須是同一棵樹中的一級分類。
+        parent_invalid: 請選擇你的一個分類作為父分類。
         merge_same: 請選擇另一個合並目標。
       accounts:
         title: 帳戶
@@ -298,9 +298,9 @@ zh-TW:
           tag: 添加標籤
           delete: 移到回收站
       categories:
-        tree_eyebrow: 兩級分類
+        tree_eyebrow: 層級不限
         tree_title: 分類樹
-        tree_body: 把分類歸到父分類下，收入與支出分開，可排序或隱藏不用的分類。
+        tree_body: 分類可以任意多層巢狀，可排序或隱藏不用的分類。展開分類可查看子分類；合計包含子分類。
         tree_expense: 支出
         tree_income: 收入
         hidden: 已隱藏
@@ -471,7 +471,7 @@ zh-TW:
         tools:
           entry: "支出、收入、轉帳、信用卡還款、退款或餘額調整。"
           transactions: "搜尋，依帳戶、商家、專案或標籤篩選，批次編輯。"
-          categories: "兩層收入與支出分類，可排序、可隱藏。"
+          categories: "層級不限的收入與支出分類，可排序、可隱藏。"
           merchants: "你付款給誰，或誰付款給你。"
           projects: "旅行、裝修、副業等專案。"
           tags: "跨分類使用的自由標籤。"

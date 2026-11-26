@@ -57,9 +57,14 @@ es:
         one: Queda %{count} comercio más; vuelve a ejecutarla para continuar.
         other: Quedan %{count} comercios más; vuelve a ejecutarla para continuar.
       errors:
+        protected: "Transferencias se puede renombrar y reordenar, pero sigue siendo una categoría principal y no se puede eliminar ni combinar."
+        category_cycle: "Una categoría no puede ir dentro de sí misma ni de una de sus subcategorías."
+        category_unknown: "Elige una de tus categorías."
+        parent_invalid: "Esa categoría principal no se puede usar aquí."
+        proposal_closed: "Esa sugerencia ya se atendió."
         blank: Escribe un nombre de categoría.
         too_long: Los nombres de categoría pueden tener hasta %{count} caracteres.
-        reserved: Esa ya es una categoría integrada.
+        reserved: Sin categoría es fijo y no se puede usar como nombre de categoría.
         taken: Ya tienes una categoría con ese nombre.
         too_many: Puedes tener hasta %{count} categorías propias.
       ai_errors:
@@ -72,3 +77,46 @@ es:
         failed: El servicio de IA no pudo categorizar estas transacciones. No se cambió nada; inténtalo más tarde.
         unavailable: No se pudo conectar con el servicio de IA. No se cambió nada; inténtalo más tarde.
         invalid_result: El servicio de IA devolvió una respuesta inesperada. No se cambió nada; vuelve a intentarlo.
+      tree_add_body: "Añade una categoría en el nivel superior o dentro de cualquier categoría, a cualquier profundidad. Puedes tener hasta %{count} categorías, incluidas las sugeridas."
+      new_kind: "Tipo (solo nivel superior)"
+      suggested_button: "Añadir categorías sugeridas"
+      suggested_summary: "Categorías sugeridas"
+      suggested_none: "Ya tienes todas las categorías sugeridas."
+      proposals_title: "Nuevas subcategorías sugeridas"
+      proposals_body: "La IA encontró grupos de transacciones que podrían merecer su propia subcategoría. No se crea nada hasta que lo apruebes; al aprobar, esas transacciones se archivan en ella como un solo cambio que puedes deshacer."
+      proposal_name: "Nombre"
+      proposal_approve: "Aprobar"
+      proposal_dismiss: "Descartar"
+      proposal_dismissed: "Sugerencia “%{name}” descartada."
+      move_up: "Subir %{name}"
+      move_down: "Bajar %{name}"
+      transfers_note: "Transferencias se puede renombrar y tener subcategorías, pero sigue en el nivel superior y no se puede eliminar ni combinar. Todo lo que se archive en ella cuenta como transferencia."
+      delete_destination: "Mover sus transacciones a"
+      delete_confirm_tree: "¿Eliminar “%{name}”? Sus transacciones y reglas recordadas pasan a la categoría elegida y sus subcategorías suben un nivel."
+      report_all: "Todas las categorías"
+      report_direct: "%{name} (directo)"
+      deleted_into:
+        one: "Categoría “%{name}” eliminada; %{count} transacción pasó a %{into}."
+        other: "Categoría “%{name}” eliminada; %{count} transacciones pasaron a %{into}."
+      suggested_body:
+        one: "Falta %{count} categoría sugerida en tu lista. Añadirlas nunca renombra, mueve ni duplica lo que ya tienes."
+        other: "Faltan %{count} categorías sugeridas en tu lista. Añadirlas nunca renombra, mueve ni duplica lo que ya tienes."
+      suggested_added:
+        one: "Se añadió %{count} categoría sugerida."
+        other: "Se añadieron %{count} categorías sugeridas."
+      proposals_waiting:
+        one: "La IA también sugirió %{count} nueva subcategoría; revísala abajo."
+        other: "La IA también sugirió %{count} nuevas subcategorías; revísalas abajo."
+      proposal_fits:
+        one: "Encaja con %{count} transacción (%{merchants})."
+        other: "Encaja con %{count} transacciones (%{merchants})."
+      proposal_approved:
+        one: "Se creó “%{name}” y se archivó %{count} transacción en ella."
+        other: "Se creó “%{name}” y se archivaron %{count} transacciones en ella."
+      children_count:
+        one: "%{count} subcategoría"
+        other: "%{count} subcategorías"
+      kinds:
+        income: "Ingresos"
+        expense: "Gastos"
+        transfer: "Transferencias"

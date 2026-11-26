@@ -11,12 +11,17 @@ module Finance
 
       module_function
 
-      def apply(scope, args, category: true)
+      # A category means itself plus all its descendants (docs/architecture/category-hierarchy.md);
+      # `user` is needed for that roll-up (without it only the exact name matches).
+      def apply(scope, args, category: true, user: nil)
         query = args["query"]
         if query.is_a?(String) && query.strip.present?
           scope = scope.where("description ILIKE ?", "%#{Transaction.sanitize_sql_like(query.strip.first(MAX_QUERY))}%")
         end
-        scope = scope.where(category: args["category"]) if category && args["category"].is_a?(String)
+        if category && args["category"].is_a?(String)
+          names = user ? CategoryTree.new(user).subtree(args["category"]) : [args["category"]]
+          scope = scope.where(category: names.presence || [args["category"]])
+        end
         if (period = args["period"]).is_a?(Hash)
           scope = scope.where("booked_on >= ?", Date.iso8601(period["start"])) if period["start"]
           scope = scope.where("booked_on <= ?", Date.iso8601(period["end"])) if period["end"]

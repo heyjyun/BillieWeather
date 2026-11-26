@@ -7,7 +7,8 @@ module Finance
       @period = DashboardPeriod.new(preset: params[:preset].presence || "this_month", start_date: params[:start_date], end_date: params[:end_date], today: finance_today)
       @dimension = params[:dimension].presence_in(LedgerReport::DIMENSIONS) || "category"
       @report = LedgerReport.new(user: current_user, start_date: @period.start_date, end_date: @period.end_date)
-      @rows = @report.by(@dimension)
+      @node = (@dimension == "category" && params[:node].present? && @report.tree.node(params[:node])) ? @report.tree.node(params[:node]).name : nil
+      @rows = @report.by(@dimension, node: @node)
       @monthly = LedgerReport.new(user: current_user, start_date: (@period.end_date || finance_today) << 11, end_date: @period.end_date || finance_today).monthly
     rescue DashboardPeriod::InvalidPeriod => error
       @period = DashboardPeriod.new(preset: "this_month", today: finance_today)

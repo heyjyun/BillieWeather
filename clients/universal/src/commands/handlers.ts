@@ -5,7 +5,7 @@
 
 import type { ActionArguments, ActionHandler, Authorizer, DateRangeValue, EntityProvider, Message, MoneyValue } from "@nlae/core";
 import type { Category, MerchantRule, Transaction } from "@billie/shared-types";
-import { formatMoney, isBuiltInCategory, isCounted, kindOf, merchantKey, normalizeCategoryName } from "@billie/finance-core";
+import { formatMoney, isCounted, isUncategorized, kindOf, merchantKey, normalizeCategoryName, subtreeMatcher, type CategoryTree } from "@billie/finance-core";
 import type { FinanceStore, TransactionFlags } from "../services/store";
 import type { Page } from "../App";
 import { categoryEntities } from "./actions";
@@ -23,7 +23,7 @@ export interface TransactionFilter {
 export interface HostDeps {
   store: FinanceStore;
   /** The current data of the database in use. */
-  data: () => { transactions: readonly Transaction[]; customCategories: readonly string[]; currency: string | null };
+  data: () => { transactions: readonly Transaction[]; customCategories: readonly string[]; currency: string | null; categoryTree?: CategoryTree | null };
   refresh: () => Promise<void>;
   navigate: (page: Page, filter?: TransactionFilter) => void;
   setLanguage: (locale: string) => void;
@@ -34,13 +34,17 @@ export interface HostDeps {
 const msg = (code: string, message: string, vars: Record<string, string | number> = {}): Message => ({ code, message, vars });
 const fold = (text: string) => text.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
 
-/** Same rule for previews, totals and changes: description contains the phrase (or same merchant). */
-export function matchTransactions(transactions: readonly Transaction[], filter: TransactionFilter): Transaction[] {
+/**
+ * Same rule for previews, totals and changes: description contains the phrase (or same merchant). A
+ * category means the category and everything below it (`tree`; without one, only that category).
+ */
+export function matchTransactions(transactions: readonly Transaction[], filter: TransactionFilter, tree?: CategoryTree | null): Transaction[] {
   const query = filter.query ? fold(filter.query) : "";
+  const inCategory = filter.category ? subtreeMatcher(tree, filter.category) : null;
   const queryMerchant = filter.query ? merchantKey(filter.query) : null;
   return transactions.filter((t) => {
     if (query && !fold(t.description).includes(query) && !(queryMerchant && merchantKey(t.description) === queryMerchant)) return false;
-    if (filter.category && t.category !== filter.category) return false;
+    if (inCategory && !inCategory(t.category)) return false;
     if (filter.period?.start && t.bookedOn < filter.period.start) return false;
     if (filter.period?.end && t.bookedOn > filter.period.end) return false;
     if (filter.amount) {
@@ -66,9 +70,11 @@ const counted = (t: Transaction) => isCounted(t);
 export function createEntities(deps: Pick<HostDeps, "data" | "categoryLabel">): EntityProvider {
   return {
     list(kind) {
-      const { customCategories } = deps.data();
+      const { customCategories, categoryTree } = deps.data();
       if (kind === "category") return categoryEntities(customCategories, deps.categoryLabel);
-      if (kind === "customCategory") return customCategories.map((name) => ({ id: name, label: name }));
+      // "Which of your categories?": the ones the person made first, then the defaults.
+      const made = (name: string) => (categoryTree?.get(name)?.key ? 1 : 0);
+      if (kind === "customCategory") return [...customCategories].sort((a, b) => made(a) - made(b)).map((name) => ({ id: name, label: name }));
       return [];
     },
   };
@@ -106,7 +112,7 @@ async function withCompensation<T>(store: FinanceStore, ids: number[], apply: ()
 
 export function createHandlers(deps: HostDeps): Record<string, ActionHandler> {
   const currency = () => deps.data().currency ?? "USD";
-  const matches = (args: ActionArguments) => matchTransactions(deps.data().transactions, filterOf(args));
+  const matches = (args: ActionArguments) => matchTransactions(deps.data().transactions, filterOf(args), deps.data().categoryTree);
   const describe = (t: Transaction) => ({ kind: "transaction", id: String(t.id), label: `${t.bookedOn} · ${t.description}` });
 
   const readOnly = (op: string, label: string) => ({ operations: [{ op, target: { kind: "view", id: label, label } }] });
@@ -193,7 +199,7 @@ export function createHandlers(deps: HostDeps): Record<string, ActionHandler> {
       async prepare(args) {
         const name = normalizeCategoryName(String(args.name));
         const existing = deps.data().customCategories;
-        if (isBuiltInCategory(name) || existing.some((c) => c.toLowerCase() === name.toLowerCase())) return { operations: [], summary: msg("category_exists", "{name} already exists.", { name }) };
+        if (isUncategorized(name) || existing.some((c) => c.toLowerCase() === name.toLowerCase())) return { operations: [], summary: msg("category_exists", "{name} already exists.", { name }) };
         return { operations: [{ op: "create", target: { kind: "category", id: name, label: name } }] };
       },
       async execute(_p, args) {
@@ -247,7 +253,7 @@ export function createHandlers(deps: HostDeps): Record<string, ActionHandler> {
         const ids = prepared.payload as number[];
         const flags = await deps.store.transactionFlags(ids);
         const rules: MerchantRule[] = (await deps.store.rules()).filter((r) => r.category === name);
-        await deps.store.deleteCategory(name);
+        await deps.store.deleteCategory(name, "Uncategorized");
         const written = await deps.store.transactionFlags(ids);
         await deps.refresh();
         return { summary: msg("category_deleted", "Deleted {name}; {count} transaction(s) are now Uncategorized.", { name, count: ids.length }), undo: { name, flags, written, rules } };

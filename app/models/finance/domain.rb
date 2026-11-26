@@ -97,11 +97,15 @@ module Finance
 
     # The kind stored for an imported row once its category is decided (person, file, rule, keyword):
     # financial-schema.json kind_inference.categorized_rule; cases in kind-cases.json "categorized".
-    def kind_for_categorized(amount:, account_type:, description:, category:, income_categories: [])
+    # With `transfer_categories` (a person's whole transfer subtree, docs/architecture/category-hierarchy.md)
+    # the category kinds come only from the two lists; without it the old built-in names count too.
+    def kind_for_categorized(amount:, account_type:, description:, category:, income_categories: [], transfer_categories: nil)
       amount = BigDecimal(amount.to_s)
       inferred = infer_kind(amount: amount, account_type: account_type, description: description)
-      return (inferred == "card_payment") ? "card_payment" : "transfer" if category == "Transfers"
-      return "income" if category == "Income" || income_categories.include?(category)
+      legacy = transfer_categories.nil?
+      transfer = legacy ? category == "Transfers" : transfer_categories.include?(category)
+      return (inferred == "card_payment") ? "card_payment" : "transfer" if transfer
+      return "income" if (legacy && category == "Income") || Array(income_categories).include?(category)
       return "ignored" if amount.zero?
       return "expense" if amount.negative?
       return (inferred == "income") ? "income" : "refund" if category == "Uncategorized"

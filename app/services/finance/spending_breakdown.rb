@@ -9,10 +9,14 @@ module Finance
   # Colors follow the category, never its rank in the current view: the SLOTS biggest
   # all-time spending categories (Uncategorized aside) each own one chart color, the same on
   # every page and in every date range. Everything else is drawn as "Other".
+  #
+  # Categories roll up to their root (docs/architecture/category-hierarchy.md): a subcategory's
+  # spending counts in its top-level category, and `trend` / `top_merchants` on any category cover
+  # its whole subtree.
   class SpendingBreakdown
     SLOTS = 7
     OTHER = "__other"
-    UNCATEGORIZED = "Uncategorized"
+    UNCATEGORIZED = Category::UNCATEGORIZED
     MERCHANT_LIMIT = 5
 
     def initialize(user:)
@@ -58,7 +62,8 @@ module Finance
       window = month_window(months)
       return [] if window.empty?
       sums = Hash.new { |hash, key| hash[key] = Hash.new(BigDecimal(0)) }
-      within(spending, window.first, window.last.end_of_month).pluck(:booked_on, :category, :amount).each do |date, category, amount|
+      within(spending, window.first, window.last.end_of_month).pluck(:booked_on, :category, :amount).each do |date, stored, amount|
+        category = tree.root_of(stored)
         key = palette.include?(category) ? category : ((category == UNCATEGORIZED) ? UNCATEGORIZED : OTHER)
         sums[date.beginning_of_month][key] -= amount
       end
@@ -79,7 +84,7 @@ module Finance
       window = month_window(months)
       return {months: [], average: nil, latest: nil} if window.empty?
       sums = Hash.new(BigDecimal(0))
-      within(spending.where(category: name), window.first, window.last.end_of_month).pluck(:booked_on, :amount).each do |date, amount|
+      within(spending.where(category: tree.subtree(name)), window.first, window.last.end_of_month).pluck(:booked_on, :amount).each do |date, amount|
         sums[date.beginning_of_month] -= amount
       end
       rows = window.map { |month| {month: month, amount: sums[month]} }
@@ -91,7 +96,7 @@ module Finance
     # Where a category's money went, biggest merchants first.
     def top_merchants(name, limit: MERCHANT_LIMIT)
       totals = Hash.new { |hash, key| hash[key] = {amount: BigDecimal(0), count: 0} }
-      spending.where(category: name).pluck(:description, :amount).each do |description, amount|
+      spending.where(category: tree.subtree(name)).pluck(:description, :amount).each do |description, amount|
         key = Categorizer.merchant_key(description) || description.to_s.strip.downcase
         totals[key][:amount] -= amount
         totals[key][:count] += 1
@@ -117,8 +122,14 @@ module Finance
       scope
     end
 
+    def tree
+      @tree ||= CategoryTree.new(@user)
+    end
+
+    # Spending per top-level category (subcategories counted in their root).
     def totals_by_category(scope)
-      scope.group(:category).sum(:amount).transform_values { |amount| -amount }.select { |_name, amount| amount.positive? }
+      scope.group(:category).sum(:amount).each_with_object(Hash.new(BigDecimal(0))) { |(name, amount), totals| totals[tree.root_of(name)] -= amount }
+        .select { |_name, amount| amount.positive? }
     end
 
     def part(key, tone, amount, total)

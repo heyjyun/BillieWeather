@@ -80,14 +80,20 @@ export const CATEGORY_SYNONYMS: Record<string, string[]> = {
 };
 
 /**
- * Built-in categories under every translated name; the person's own exactly as typed.
- * `translations(name)` returns the built-in category's name in every interface language.
+ * Every category the person has (their names, any depth) plus Uncategorized. A default category
+ * (one of the old built-in names, or any name `translations` knows) is also found under its name in
+ * every interface language and its synonyms; the person's own names exactly as typed. Older callers
+ * pass only their own categories: the old built-in names are then added first, as before.
  */
-export function categoryEntities(customCategories: readonly string[], label: (name: string) => string, translations: (name: string) => readonly string[]): EntityCandidate[] {
-  const builtIn = CATEGORIES.map((name) => ({
-    id: name, label: label(name), aliases: [...new Set([name, ...translations(name).filter(Boolean), ...(CATEGORY_SYNONYMS[name] ?? [])])],
-  }));
-  return [...builtIn, ...customCategories.map((name) => ({ id: name, label: name }))];
+export function categoryEntities(categories: readonly string[], label: (name: string) => string, translations: (name: string) => readonly string[]): EntityCandidate[] {
+  const seen = new Set<string>();
+  const ordered = [...(categories.some((name) => (CATEGORIES as readonly string[]).includes(name)) ? [] : CATEGORIES.filter((name) => name !== "Uncategorized")), ...categories, "Uncategorized"];
+  return ordered.flatMap((name) => {
+    if (seen.has(name.toLowerCase())) return [];
+    seen.add(name.toLowerCase());
+    const aliases = [...new Set([name, ...translations(name).filter(Boolean), ...(CATEGORY_SYNONYMS[name] ?? [])])];
+    return [aliases.length > 1 ? { id: name, label: label(name), aliases } : { id: name, label: label(name) }];
+  });
 }
 
 const queryParam = { name: "query", type: "text" as const, capture: "remainder" as const, contextKey: "transactionQuery", maxLength: 80, description: "Which transactions (merchant or description)" };

@@ -17,7 +17,7 @@ import { randomId } from "./ids";
 export const BACKUP_FORMAT = "billieweather-backup";
 export const BACKUP_VERSION = 1;
 /** The local schema version these backups describe (the highest migration number). */
-export const LOCAL_SCHEMA_VERSION = 10;
+export const LOCAL_SCHEMA_VERSION = 11;
 
 type Row = Record<string, unknown>;
 type Cell = string | number | null;
@@ -25,8 +25,41 @@ type Cell = string | number | null;
 /** Tables restored in this order (parents before children, so foreign keys always resolve). */
 export const BACKUP_TABLES = [
   "settings", "accounts", "merchants", "projects", "tags", "recurring_rules", "statements", "transactions", "transaction_tags", "transaction_links",
-  "custom_categories", "category_meta", "merchant_rules", "budgets", "import_templates", "organize_runs", "audit_events",
+  "custom_categories", "category_meta", "categories", "merchant_rules", "budgets", "import_templates", "organize_runs", "audit_events",
 ] as const;
+
+/**
+ * What migration 0011 does to a book from before the category tree, for restoring such a backup into a
+ * current database: the nine old built-ins (when the book is in use), the custom categories with their old
+ * parent, kind, order and hidden settings, and `category_seed` = legacy. Keep in step with the migration.
+ */
+const LEGACY_CATEGORY_STATEMENTS: readonly SqlStatement[] = [
+  { sql: `WITH legacy (name, system_key, kind, position) AS (VALUES
+      ('Income', 'income', 'income', 0), ('Housing', 'housing', 'expense', 1), ('Food & dining', 'food', 'expense', 2),
+      ('Transport', 'transport', 'expense', 3), ('Utilities', 'utilities', 'expense', 4), ('Shopping', 'shopping', 'expense', 5),
+      ('Health', 'health', 'expense', 6), ('Business', 'business', 'expense', 7), ('Transfers', 'transfers', 'transfer', 8))
+    INSERT INTO categories (name, parent, system_key, kind, sort_order, hidden, created_at, updated_at)
+      SELECT l.name, NULL, l.system_key, l.kind, COALESCE(m.sort_order, 1000 + l.position), COALESCE(m.hidden, 0), strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      FROM legacy l LEFT JOIN category_meta m ON m.name = l.name
+      WHERE EXISTS (SELECT 1 FROM transactions) OR EXISTS (SELECT 1 FROM custom_categories) OR EXISTS (SELECT 1 FROM category_meta)
+        OR EXISTS (SELECT 1 FROM merchant_rules) OR EXISTS (SELECT 1 FROM budgets)
+      ORDER BY l.position` },
+  { sql: `WITH legacy (name) AS (VALUES ('Income'), ('Housing'), ('Food & dining'), ('Transport'), ('Utilities'), ('Shopping'), ('Health'), ('Business'), ('Transfers')),
+    custom AS (SELECT name, created_at, ROW_NUMBER() OVER (ORDER BY name COLLATE NOCASE) - 1 AS position FROM custom_categories),
+    placed AS (
+      SELECT c.name, c.created_at, c.position, m.sort_order, m.hidden, m.category_kind, pl.name AS legacy_parent, pm.category_kind AS parent_kind,
+        CASE WHEN m.parent IS NOT NULL AND lower(m.parent) <> lower(c.name)
+          AND ((pl.name IS NOT NULL AND pl.name <> 'Transfers') OR (pc.name IS NOT NULL AND pm.parent IS NULL)) THEN COALESCE(pl.name, pc.name) END AS parent
+      FROM custom c LEFT JOIN category_meta m ON m.name = c.name LEFT JOIN legacy pl ON lower(pl.name) = lower(m.parent)
+      LEFT JOIN custom_categories pc ON pc.name = m.parent LEFT JOIN category_meta pm ON pm.name = m.parent)
+    INSERT OR IGNORE INTO categories (name, parent, system_key, kind, sort_order, hidden, created_at, updated_at)
+      SELECT name, parent, NULL,
+        CASE WHEN parent IS NULL THEN COALESCE(category_kind, 'expense') WHEN legacy_parent = 'Income' THEN 'income' WHEN legacy_parent IS NOT NULL THEN 'expense' ELSE COALESCE(parent_kind, 'expense') END,
+        COALESCE(sort_order, 1010 + position), COALESCE(hidden, 0), created_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      FROM placed ORDER BY position` },
+  { sql: "UPDATE categories SET parent = NULL WHERE parent IS NOT NULL AND NOT EXISTS (SELECT 1 FROM categories p WHERE p.name = categories.parent)" },
+  { sql: "INSERT INTO settings (key, value) SELECT 'category_seed', 'legacy' WHERE EXISTS (SELECT 1 FROM categories)" },
+];
 
 /** Settings that describe the device copy, not the book: never restored (a restored copy gets its own). */
 const DEVICE_SETTINGS = new Set(["report_id", "owner_account_id", "web_sync_version", "web_sync_checked_at", "last_synced_at", "audit_purge", "web_sync_skip"]);
@@ -232,9 +265,13 @@ export async function readBackup(bytes: Uint8Array, passphrase?: string | null):
 export async function restoreInto(db: SqlDriver, content: BackupContent, options: { owner?: string | null; name?: string | null } = {}): Promise<BackupManifest> {
   content = await verifyContent(content);
   const existing = await tableNames(db);
+  // A new slot may already hold the default categories it was seeded with when it opened: not content.
+  const seeded = (await db.select<Row>("SELECT value FROM settings WHERE key = 'category_seed'"))[0]?.value === "defaults";
+  const setup = new Set([...DEVICE_SETTINGS, ...(seeded ? ["category_seed"] : [])]);
   for (const table of BACKUP_TABLES) {
     if (!existing.has(table)) continue;
-    const used = await db.select<Row>(`SELECT 1 FROM ${table}${table === "settings" ? ` WHERE key NOT IN (${[...DEVICE_SETTINGS].map(() => "?").join(", ")})` : ""} LIMIT 1`, table === "settings" ? [...DEVICE_SETTINGS] : []);
+    const where = table === "settings" ? ` WHERE key NOT IN (${[...setup].map(() => "?").join(", ")})` : table === "categories" && seeded ? " WHERE system_key IS NULL" : "";
+    const used = await db.select<Row>(`SELECT 1 FROM ${table}${where} LIMIT 1`, table === "settings" ? [...setup] : []);
     if (used.length) throw new BackupError("target_not_empty", "Backups are restored into a new, empty database only.");
   }
   // Schema compatibility is checked before inserting anything; silently discarding a column or
@@ -245,7 +282,8 @@ export async function restoreInto(db: SqlDriver, content: BackupContent, options
   }
   // Everything below is ONE database transaction, including the verification: the new slot ends
   // up holding exactly the backup, or nothing at all. There is no half-restored state to clean up.
-  const statements: SqlStatement[] = [];
+  // The seeded defaults make way for the backup's own categories.
+  const statements: SqlStatement[] = existing.has("categories") ? [{ sql: "DELETE FROM categories" }, { sql: "DELETE FROM settings WHERE key = 'category_seed'" }] : [];
   for (const table of BACKUP_TABLES) {
     const data = content.tables[table];
     if (!data || !existing.has(table) || data.rows.length === 0) continue;
@@ -271,6 +309,8 @@ export async function restoreInto(db: SqlDriver, content: BackupContent, options
       }
     }
   }
+  // A backup from before the category tree (schema 10 and older): the book keeps exactly the categories it had.
+  if (existing.has("categories") && !content.tables.categories) statements.push(...LEGACY_CATEGORY_STATEMENTS);
   if (options.owner) statements.push({ sql: "INSERT INTO settings (key, value) VALUES ('owner_account_id', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", params: [options.owner] });
   if (options.name) statements.push({ sql: "INSERT INTO settings (key, value) VALUES ('database_name', ?) ON CONFLICT (key) DO UPDATE SET value = excluded.value", params: [options.name] });
   const expected = content.manifest;

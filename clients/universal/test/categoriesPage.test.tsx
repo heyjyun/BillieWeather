@@ -102,7 +102,7 @@ it("adds a category, categorizes with AI after consent, and manages the category
   await screen.findByText("Category “Cloud” added.");
   await act(async () => fireEvent.change(screen.getByLabelText("New category"), { target: { value: "shopping" } }));
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Add category" })));
-  await screen.findByText("That is already a built-in category.");
+  await screen.findByText("You already have a category with that name.");
 
   // Nothing is sent until the person confirms the consent panel, which shows exactly what goes.
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Categorize with AI" })));
@@ -110,15 +110,20 @@ it("adds a category, categorizes with AI after consent, and manages the category
   expect(categorize).toEqual([]);
   expect(within(consent).getByText("AMAZON WEB SERVICES AWS.AMAZON.CO")).toBeTruthy();
   expect(within(consent).getByText("HYPERLINK evil")).toBeTruthy();
-  expect(consent.textContent).toContain("Your own categories: Cloud");
+  expect(consent.textContent).toContain("Food & dining › Groceries");
+  expect(consent.textContent).toContain("Cloud");
   await act(async () => fireEvent.click(within(consent).getByRole("button", { name: "Send and categorize" })));
   await screen.findByText("1 transaction(s) categorized from 2 merchant(s).");
 
   expect(categorize).toHaveLength(1);
   expect(categorize[0].headers.get("Authorization")).toBe("Bearer tok");
+  // Every visible category, as its full path, parents first.
+  expect(categorize[0].body.categories).toContain("Food & dining › Groceries");
+  expect(categorize[0].body.categories).toContain("Cloud");
+  expect((categorize[0].body.categories as string[]).indexOf("Food & dining")).toBeLessThan((categorize[0].body.categories as string[]).indexOf("Food & dining › Groceries"));
   expect(categorize[0].body).toEqual({
     consent: true,
-    categories: ["Cloud"],
+    categories: categorize[0].body.categories,
     items: [{ key: "1", description: "AMAZON WEB SERVICES AWS.AMAZON.CO", direction: "out" }, { key: "2", description: "HYPERLINK evil", direction: "out" }],
   });
   expect(JSON.stringify(categorize[0].body)).not.toMatch(/61\.2|6120|2026-|b\.csv|basic-amount/);
@@ -140,6 +145,7 @@ it("adds a category, categorizes with AI after consent, and manages the category
   await act(async () => fireEvent.click(screen.getByRole("button", { name: "Add category" })));
   await nav("All Transactions");
   const select = (await screen.findByLabelText("Category for AMAZON WEB SERVICES AWS.AMAZON.CO")) as HTMLSelectElement;
+  fireEvent.focus(select); // a row's picker builds its list when it is used
   expect([...select.options].map((option) => option.value)).toContain("Pets");
 });
 
@@ -188,4 +194,41 @@ it("explains a server without AI and an offline device, and changes nothing", as
     await screen.findByText(message);
   }
   expect(screen.getByText("2 transaction(s) are Uncategorized. AI can suggest a category for each; categories you chose are never changed.")).toBeTruthy();
+});
+
+it("shows the category tree collapsed, saves expanding a category, and adds a subcategory", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    const url = String(input);
+    if (url.endsWith("/finance")) return new Response(JSON.stringify({ currency: null, version: "v0" }), { status: 200 });
+    if (url.endsWith("/statements")) return new Response(JSON.stringify({ statements: [] }), { status: 200 });
+    if (url.endsWith("/rules")) return new Response(JSON.stringify({ rules: [] }), { status: 200 });
+    if (url.includes("/transactions")) return new Response(JSON.stringify({ transactions: [], next_after_id: null }), { status: 200 });
+    return new Response("{}", { status: 404 });
+  });
+  render(<App />);
+  fireEvent.change(await screen.findByLabelText("Email"), { target: { value: "cat@example.com" } });
+  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "pw" } });
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Sign in" })));
+  const create = await screen.findByRole("button", { name: "Create database" });
+  await waitFor(() => expect(screen.getByLabelText<HTMLInputElement>("Database name").value).toBe("Test Mac"));
+  await act(async () => fireEvent.click(create));
+  await screen.findByRole("navigation");
+  await nav("Categories");
+  const tree = await screen.findByRole("region", { name: "Category tree" });
+  // Top-level categories only, subcategories collapsed.
+  expect(within(tree).queryByText("Groceries")).toBeNull();
+  const toggle = within(tree).getByRole("button", { name: "Show subcategories of Food & dining" });
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  await act(async () => fireEvent.click(toggle));
+  expect(within(tree).getByText("Groceries")).toBeTruthy();
+  await waitFor(() => expect(within(tree).getByRole("button", { name: "Hide subcategories of Food & dining" }).getAttribute("aria-expanded")).toBe("true"));
+  // Add a subcategory under Groceries.
+  const groceries = within(tree).getByText("Groceries").closest("li")!;
+  await act(async () => fireEvent.click(within(groceries).getByRole("button", { name: "Add subcategory" })));
+  fireEvent.change(within(groceries).getByLabelText("New subcategory under Groceries"), { target: { value: "Organic" } });
+  await act(async () => fireEvent.click(within(groceries).getByRole("button", { name: "Save" })));
+  await waitFor(() => expect(within(tree).getByRole("button", { name: "Show subcategories of Groceries" })).toBeTruthy());
+  // Add suggested categories: everything is there already.
+  await act(async () => fireEvent.click(within(tree).getByRole("button", { name: "Add suggested categories" })));
+  await waitFor(() => expect(within(tree).getByRole("status").textContent).toBe("You already have every suggested category."));
 });

@@ -12,10 +12,9 @@
 import {
   accountClass, adjustmentFor, budgetStatus, categoryKindFor, entryProblems, isAccountType, isLiability, isTransactionKind, netWorth, nextOccurrence,
   occurrences, periodBounds, signedAmount, totals, transferKind, transferLegs, type AccountType, type BudgetPeriod, type BudgetStatus, type CategoryKind,
-  type EntryProblem, type Frequency, type LedgerAccount, type LedgerEntry, type TransactionKind, CATEGORY_MAX_DEPTH, FREQUENCIES,
-  isBuiltInCategory, normalizeCategoryName,
+  type EntryProblem, type Frequency, type LedgerAccount, type LedgerEntry, type TransactionKind, FREQUENCIES,
+  normalizeCategoryName, CategoryTree, flatDefaultCategories, rollUpGroup, rollUpName, SYSTEM_KEYS, UNCATEGORIZED, type CategoryKindName, type CategoryNode, type CategoryRow,
 } from "@billie/finance-core";
-import { CATEGORIES } from "@billie/shared-types";
 import { randomId } from "./ids";
 import type { SqlDriver, SqlStatement } from "./store";
 
@@ -131,14 +130,26 @@ export interface EntryDetail {
   refundableCents: number;
 }
 
-export interface CategoryNode {
-  name: string;
-  builtIn: boolean;
-  kind: CategoryKind | "transfer" | "any";
-  parent: string | null;
-  hidden: boolean;
-  sortOrder: number;
-  children: CategoryNode[];
+/** A category in the tree (finance-core categoryTree.ts): name, parent, key, kind, order, hidden, expanded, depth, children. */
+export type { CategoryNode, CategoryRow } from "@billie/finance-core";
+
+const toCategoryRow = (row: Row): CategoryRow => ({
+  name: String(row.name), parent: str(row.parent), key: str(row.system_key), kind: (["income", "expense", "transfer"].includes(String(row.kind)) ? String(row.kind) : "expense") as CategoryKindName,
+  sortOrder: Number(row.sort_order ?? 0), hidden: Number(row.hidden ?? 0) === 1, expanded: Number(row.expanded ?? 0) === 1,
+});
+
+/** The statements that seed the default taxonomy into a book without `category_seed` (all or nothing, once). */
+export function defaultSeedStatements(): SqlStatement[] {
+  const stamp = now();
+  const keyName = new Map(flatDefaultCategories.map((category) => [category.key, category.name]));
+  const unseeded = "NOT EXISTS (SELECT 1 FROM settings WHERE key = 'category_seed')";
+  return [
+    ...flatDefaultCategories.map((category) => ({
+      sql: `INSERT INTO categories (name, parent, system_key, kind, sort_order, hidden, expanded, created_at, updated_at) SELECT ?, ?, ?, ?, ?, 0, 0, ?, ? WHERE ${unseeded} ON CONFLICT DO NOTHING`,
+      params: [category.name, category.parentKey ? keyName.get(category.parentKey) ?? null : null, category.key, category.kind, category.sortOrder, stamp, stamp],
+    })),
+    { sql: "INSERT INTO settings (key, value) VALUES ('category_seed', 'defaults') ON CONFLICT (key) DO NOTHING" },
+  ];
 }
 
 export interface Dimension {
@@ -260,7 +271,8 @@ export interface AuditInput {
 }
 
 export class LedgerStore {
-  constructor(private db: SqlDriver) {}
+  /** `base`: the plain connection, for setup that must never be part of an edit (seeding the default categories). */
+  constructor(private db: SqlDriver, private base: SqlDriver = db) {}
 
   // ---------------------------------------------------------------------------------------- audit
 
@@ -523,7 +535,7 @@ export class LedgerStore {
     const account = await this.account(accountId);
     const delta = adjustmentFor(account.balanceCents, Math.trunc(targetCents));
     if (delta === 0) return null;
-    const [id] = await this.createEntry({ kind: "adjustment", amountCents: delta, occurredOn, accountId, category: "Transfers", description: "Balance adjustment", note }, actor);
+    const [id] = await this.createEntry({ kind: "adjustment", amountCents: delta, occurredOn, accountId, category: await this.transferCategory(), description: "Balance adjustment", note }, actor);
     return id;
   }
 
@@ -697,106 +709,199 @@ export class LedgerStore {
   }
 
   // ------------------------------------------------------------------------------- categories
+  // The category tree (migration 0011, docs/architecture/category-hierarchy.md): one `categories` row per
+  // category, keyed by name; any depth; the kind belongs to the root; Uncategorized is never a row.
 
-  /** The two-level category tree: built-ins and custom categories with their settings. */
-  async categoryTree(customCategories: readonly string[]): Promise<CategoryNode[]> {
-    const meta = new Map((await this.db.select<Row>("SELECT * FROM category_meta")).map((row) => [String(row.name).toLowerCase(), row]));
-    const nodes = new Map<string, CategoryNode>();
-    const builtInKind = (name: string): CategoryNode["kind"] => (name === "Income" ? "income" : name === "Transfers" ? "transfer" : name === "Uncategorized" ? "any" : "expense");
-    [...CATEGORIES, ...customCategories.filter((name) => !isBuiltInCategory(name))].forEach((name, index) => {
-      const row = meta.get(name.toLowerCase());
-      const builtIn = isBuiltInCategory(name);
-      nodes.set(name.toLowerCase(), {
-        name, builtIn, kind: builtIn ? builtInKind(name) : ((str(row?.category_kind) ?? "expense") as CategoryKind),
-        parent: builtIn ? null : str(row?.parent), hidden: Number(row?.hidden ?? 0) === 1, sortOrder: row ? Number(row.sort_order) : 1000 + index, children: [],
-      });
-    });
-    const roots: CategoryNode[] = [];
-    for (const node of nodes.values()) {
-      const parent = node.parent ? nodes.get(node.parent.toLowerCase()) : undefined;
-      if (parent && !parent.parent && parent !== node) {
-        node.parent = parent.name;
-        // A child inherits its parent's tree (income or expense).
-        if (parent.kind === "income" || parent.kind === "expense") node.kind = parent.kind;
-        parent.children.push(node);
-      } else {
-        node.parent = null;
-        roots.push(node);
-      }
+  /**
+   * Seeds a book that has never had categories with the default taxonomy, once (setting `category_seed`).
+   * Runs on the plain connection, outside any history entry: it is setup, not an edit. Safe to run twice
+   * or from two windows: every statement checks the setting inside the same transaction.
+   */
+  async ensureCategorySeed(): Promise<void> {
+    const [row] = await this.base.select<Row>("SELECT value FROM settings WHERE key = 'category_seed'");
+    if (row) return;
+    await this.base.transaction(defaultSeedStatements());
+  }
+
+  /** Every category as stored, seeding the defaults first in a book that has never had any. */
+  async categoryRows(): Promise<CategoryRow[]> {
+    let rows: Row[];
+    try {
+      rows = await this.db.select<Row>("SELECT * FROM categories");
+    } catch (error) {
+      // A book from before migration 0011 that has not been upgraded yet: no categories to offer.
+      if (/no such table: categories/.test(String((error as Error)?.message ?? error))) return [];
+      throw error;
     }
-    const order = (a: CategoryNode, b: CategoryNode) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
-    for (const node of nodes.values()) node.children.sort(order);
-    return roots.sort(order);
+    if (rows.length === 0) {
+      // A book that cannot be written now still reads (an empty tree); the caller's own write reports the problem.
+      await this.ensureCategorySeed().catch(() => undefined);
+      rows = await this.db.select<Row>("SELECT * FROM categories");
+    }
+    return rows.map(toCategoryRow);
   }
 
-  /** Names in the income tree (custom categories whose kind or parent's kind is income). */
-  async incomeCategories(customCategories: readonly string[]): Promise<Set<string>> {
-    const names = new Set<string>();
-    const walk = (nodes: CategoryNode[]) => nodes.forEach((node) => { if (node.kind === "income" && node.name !== "Income") names.add(node.name); walk(node.children); });
-    walk(await this.categoryTree(customCategories));
-    return names;
+  /** The person's category tree (lookups, paths, kinds, keys, subtrees). */
+  async categoryIndex(): Promise<CategoryTree> {
+    return new CategoryTree(await this.categoryRows());
   }
 
-  /** Sets a category's parent (two levels at most), tree (custom only) or hidden flag. */
-  async setCategoryMeta(name: string, patch: { parent?: string | null; kind?: CategoryKind; hidden?: boolean }, customCategories: readonly string[], actor = "user"): Promise<void> {
-    const tree = await this.categoryTree(customCategories);
-    const flat = tree.flatMap((node) => [node, ...node.children]);
-    const node = flat.find((item) => item.name.toLowerCase() === name.toLowerCase());
+  /** The tree's roots with their children. The argument is ignored (kept for older callers). */
+  async categoryTree(_legacy?: readonly string[]): Promise<CategoryNode[]> {
+    return (await this.categoryIndex()).roots;
+  }
+
+  /** Names in the income tree. The argument is ignored (kept for older callers). */
+  async incomeCategories(_legacy?: readonly string[]): Promise<Set<string>> {
+    return (await this.categoryIndex()).namesOfKind("income");
+  }
+
+  /** The person's current name for a default's key (parent key, then Uncategorized, when it was deleted). */
+  async categoryForKey(key: string): Promise<string> {
+    return (await this.categoryIndex()).resolveKey(key);
+  }
+
+  /** The INSERT of a new category (checks are the caller's: CategoryStore.addCategory). */
+  insertCategoryStatement(input: { name: string; parent: string | null; kind: CategoryKindName; key?: string | null; sortOrder: number; hidden?: boolean }): SqlStatement {
+    const stamp = now();
+    return {
+      sql: "INSERT INTO categories (name, parent, system_key, kind, sort_order, hidden, expanded, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)",
+      params: [input.name, input.parent, input.key ?? null, input.kind, input.sortOrder, input.hidden ? 1 : 0, stamp, stamp],
+    };
+  }
+
+  /** The next sort position among a parent's children (or among the roots). */
+  nextSortOrder(tree: CategoryTree, parent: string | null): number {
+    const siblings = parent ? tree.get(parent)?.children ?? [] : tree.roots;
+    return siblings.reduce((max, node) => Math.max(max, node.sortOrder), 0) + 1;
+  }
+
+  /**
+   * Moves a category (parent), changes a root's kind, or hides/shows it. Moving under another root gives
+   * the whole subtree that root's kind; a move that would make a category its own ancestor is refused
+   * (category_cycle). Transfers stays a root; only income and expense roots get a kind from people.
+   * The last argument is ignored (kept for older callers).
+   */
+  async setCategoryMeta(name: string, patch: { parent?: string | null; kind?: CategoryKind; hidden?: boolean }, _legacy?: readonly string[], actor = "user"): Promise<void> {
+    const tree = await this.categoryIndex();
+    const node = tree.get(name);
     if (!node) throw new LedgerError("not_found", "Category not found.");
-    const [existing] = await this.db.select<Row>("SELECT * FROM category_meta WHERE name = ?", [node.name]);
-    let parent = existing ? str(existing.parent) : null;
-    let kind = existing ? String(existing.category_kind) : node.kind === "income" ? "income" : "expense";
-    if (patch.parent !== undefined) {
-      if (node.builtIn && patch.parent) throw new LedgerError("category_depth", "Built-in categories stay at the top level.");
+    const stamp = now();
+    const statements: SqlStatement[] = [];
+    let parent = node.parent;
+    let kind: CategoryKindName = node.kind;
+    if (patch.parent !== undefined && (patch.parent ?? null) !== node.parent) {
       if (patch.parent) {
-        const target = flat.find((item) => item.name.toLowerCase() === patch.parent!.toLowerCase());
+        const target = tree.get(patch.parent);
         if (!target) throw new LedgerError("not_found", "Parent category not found.");
-        if (target.name.toLowerCase() === node.name.toLowerCase()) throw new LedgerError("category_cycle", "A category cannot contain itself.");
-        if (target.parent || node.children.length > 0 || CATEGORY_MAX_DEPTH < 2) throw new LedgerError("category_depth", "Categories have two levels at most.");
-        if (target.kind === "transfer" || target.name === "Uncategorized") throw new LedgerError("category_depth", "That category cannot have subcategories.");
+        if (tree.wouldCycle(node.name, target.name)) throw new LedgerError("category_cycle", "A category cannot be placed inside itself.");
+        if (node.key === SYSTEM_KEYS.transfers) throw new LedgerError("category_depth", "Transfers stays at the top level.");
         parent = target.name;
-        if (target.kind === "income" || target.kind === "expense") kind = target.kind;
+        kind = target.kind;
       } else parent = null;
+      statements.push({ sql: "UPDATE categories SET parent = ?, sort_order = ?, updated_at = ? WHERE name = ?", params: [parent, this.nextSortOrder(tree, parent), stamp, node.name] });
     }
-    if (patch.kind !== undefined && !node.builtIn) kind = patch.kind;
-    const hidden = patch.hidden !== undefined ? (patch.hidden ? 1 : 0) : Number(existing?.hidden ?? 0);
-    await this.db.transaction([
-      {
-        sql: `INSERT INTO category_meta (name, parent, category_kind, sort_order, hidden, updated_at) VALUES (?, ?, ?, ?, ?, ?)
-       ON CONFLICT (name) DO UPDATE SET parent = excluded.parent, category_kind = excluded.category_kind, hidden = excluded.hidden, updated_at = excluded.updated_at`,
-        params: [node.name, parent, kind, existing ? Number(existing.sort_order) : node.sortOrder, hidden, now()],
-      },
-      // Children follow their parent's tree.
-      ...(patch.kind !== undefined ? [{ sql: "UPDATE category_meta SET category_kind = ?, updated_at = ? WHERE parent = ?", params: [kind, now(), node.name] }] : []),
-      this.auditStatement({ actor, action: "update", subjectType: "category", subjectId: node.name, changes: Object.fromEntries(Object.entries(patch).map(([key, value]) => [key, [null, value]])) }),
-    ]);
+    if (patch.kind !== undefined && patch.kind !== node.kind) {
+      if (node.parent || parent) throw new LedgerError("category_depth", "A subcategory has its top-level category's tree.");
+      if (node.kind === "transfer") throw new LedgerError("category_depth", "Transfers stays a transfer category.");
+      if (patch.kind !== "income" && patch.kind !== "expense") throw new LedgerError("invalid_entry", "Choose income or expense.");
+      kind = patch.kind;
+    }
+    if (kind !== node.kind) {
+      const names = tree.subtree(node.name);
+      statements.push({ sql: `UPDATE categories SET kind = ?, updated_at = ? WHERE name IN (${placeholders(names.length)})`, params: [kind, stamp, ...names] });
+      statements.push(...this.syncEntryKindsStatements(names, kind, stamp));
+    }
+    if (patch.hidden !== undefined && patch.hidden !== node.hidden) {
+      statements.push({ sql: "UPDATE categories SET hidden = ?, updated_at = ? WHERE name = ?", params: [patch.hidden ? 1 : 0, stamp, node.name] });
+    }
+    if (statements.length === 0) return;
+    statements.push(this.auditStatement({ actor, action: "update", subjectType: "category", subjectId: node.name,
+      changes: Object.fromEntries(Object.entries(patch).map(([key, value]) => [key, [key === "parent" ? node.parent : key === "kind" ? node.kind : node.hidden, value]])) }));
+    await this.db.transaction(statements);
   }
 
+  /** Puts siblings in this order (every name must share one parent; others are ignored). */
   async reorderCategories(names: readonly string[]): Promise<void> {
-    for (const [index, name] of names.entries()) {
-      await this.db.execute(
-        `INSERT INTO category_meta (name, category_kind, sort_order, updated_at) VALUES (?, ?, ?, ?)
-         ON CONFLICT (name) DO UPDATE SET sort_order = excluded.sort_order, updated_at = excluded.updated_at`,
-        [name, name === "Income" ? "income" : "expense", index + 1, now()],
-      );
-    }
+    const tree = await this.categoryIndex();
+    const nodes = names.map((name) => tree.get(name)).filter((node): node is CategoryNode => node !== undefined);
+    if (nodes.length === 0) return;
+    const parent = nodes[0].parent?.toLowerCase() ?? null;
+    const siblings = nodes.filter((node) => (node.parent?.toLowerCase() ?? null) === parent);
+    const stamp = now();
+    await this.db.transaction(siblings.map((node, index) => ({ sql: "UPDATE categories SET sort_order = ?, updated_at = ? WHERE name = ?", params: [index + 1, stamp, node.name] })));
   }
 
-  /** Keeps category settings in step when a custom category is renamed (called by FinanceStore). */
+  /** Moves a category one place up (-1) or down (+1) among its siblings. */
+  /**
+   * Keeps entries' kinds in step with the kind of the category they are in, like Rails'
+   * Transaction.sync_kinds_for_category!: a transfer category makes counted entries transfers, an
+   * income category makes money in income, an expense category makes counted entries and transfers
+   * expenses (refunds for money in). Entries whose kind a person locked are left alone.
+   */
+  syncEntryKindsStatements(categories: readonly string[], kind: CategoryKindName, stamp = now()): SqlStatement[] {
+    if (categories.length === 0) return [];
+    const unlocked = `category IN (${placeholders(categories.length)}) AND COALESCE(user_locked_fields, '') NOT LIKE '%"kind"%'`;
+    if (kind === "transfer") {
+      return [{ sql: `UPDATE transactions SET kind = 'transfer', locally_modified = 1, updated_at = ? WHERE ${unlocked} AND kind IN ('expense', 'income', 'refund')`, params: [stamp, ...categories] }];
+    }
+    if (kind === "income") {
+      return [{ sql: `UPDATE transactions SET kind = 'income', locally_modified = 1, updated_at = ? WHERE ${unlocked} AND kind IN ('expense', 'refund') AND amount_cents > 0`, params: [stamp, ...categories] }];
+    }
+    return [{ sql: `UPDATE transactions SET kind = CASE WHEN amount_cents > 0 THEN 'refund' ELSE 'expense' END, locally_modified = 1, updated_at = ?
+      WHERE ${unlocked} AND kind IN ('expense', 'income', 'refund', 'transfer') AND kind <> CASE WHEN amount_cents > 0 THEN 'refund' ELSE 'expense' END`, params: [stamp, ...categories] }];
+  }
+
+  async moveCategoryStep(name: string, step: -1 | 1): Promise<void> {
+    const tree = await this.categoryIndex();
+    const node = tree.get(name);
+    if (!node) throw new LedgerError("not_found", "Category not found.");
+    const siblings = (node.parent ? tree.get(node.parent)!.children : tree.roots).map((item) => item.name);
+    const index = siblings.indexOf(node.name);
+    const swap = index + step;
+    if (swap < 0 || swap >= siblings.length) return;
+    [siblings[index], siblings[swap]] = [siblings[swap], siblings[index]];
+    const stamp = now();
+    await this.db.transaction(siblings.map((item, position) => ({ sql: "UPDATE categories SET sort_order = ?, updated_at = ? WHERE name = ?", params: [position + 1, stamp, item] })));
+  }
+
+  /** Saves whether a category is shown expanded (a view preference: not an edit, never synced). */
+  async setCategoryExpanded(name: string, expanded: boolean): Promise<void> {
+    await this.db.execute("UPDATE categories SET expanded = ? WHERE name = ?", [expanded ? 1 : 0, name]);
+  }
+
+  /** A rename everywhere the category is held: its row, its children, budgets and schedules (FinanceStore adds entries and rules). */
   renameCategoryMetaStatements(from: string, to: string): SqlStatement[] {
+    const stamp = now();
     return [
-      { sql: "UPDATE category_meta SET name = ?, updated_at = ? WHERE name = ?", params: [to, now(), from] },
-      { sql: "UPDATE category_meta SET parent = ?, updated_at = ? WHERE parent = ?", params: [to, now(), from] },
-      { sql: "UPDATE budgets SET category = ?, updated_at = ? WHERE category = ?", params: [to, now(), from] },
+      { sql: "UPDATE categories SET name = ?, updated_at = ? WHERE name = ?", params: [to, stamp, from] },
+      { sql: "UPDATE categories SET parent = ?, updated_at = ? WHERE parent = ?", params: [to, stamp, from] },
+      { sql: "UPDATE budgets SET category = ?, updated_at = ? WHERE category = ?", params: [to, stamp, from] },
+      { sql: "UPDATE recurring_rules SET template = json_set(template, '$.category', ?), updated_at = ? WHERE json_extract(template, '$.category') = ? COLLATE NOCASE", params: [to, stamp, from] },
     ];
   }
 
-  /** Removes a deleted category's settings; its children move to the top level. */
-  deleteCategoryMetaStatements(name: string): SqlStatement[] {
+  /**
+   * Removing a category from the tree: its children move up to its parent in its place (keeping their
+   * order), its budgets move to `destination` unless that already has one for the period (then they
+   * go), and schedules follow the entries.
+   */
+  deleteCategoryMetaStatements(tree: CategoryTree, name: string, destination: string, childrenMoved = false): SqlStatement[] {
+    const node = tree.get(name);
+    if (!node) return [];
+    const stamp = now();
+    // `childrenMoved`: a merge has already given the children to the destination.
+    const siblings = (node.parent ? tree.get(node.parent)!.children : tree.roots).flatMap((item) => (item === node ? (childrenMoved ? [] : node.children) : [item]));
+    const toUncategorized = destination === UNCATEGORIZED;
     return [
-      { sql: "UPDATE category_meta SET parent = NULL, updated_at = ? WHERE parent = ?", params: [now(), name] },
-      { sql: "DELETE FROM category_meta WHERE name = ?", params: [name] },
-      { sql: "DELETE FROM budgets WHERE category = ?", params: [name] },
+      { sql: "DELETE FROM categories WHERE name = ?", params: [node.name] },
+      ...siblings.map((item, index) => ({ sql: "UPDATE categories SET parent = ?, sort_order = ?, updated_at = ? WHERE name = ?", params: [node.parent, index + 1, stamp, item.name] })),
+      ...(toUncategorized ? [] : [{
+        sql: "UPDATE budgets SET category = ?, updated_at = ? WHERE category = ? AND NOT EXISTS (SELECT 1 FROM budgets b WHERE b.category = ? AND b.period = budgets.period AND COALESCE(b.project_id, 0) = COALESCE(budgets.project_id, 0))",
+        params: [destination, stamp, node.name, destination],
+      }]),
+      { sql: "DELETE FROM budgets WHERE category = ?", params: [node.name] },
+      { sql: "UPDATE recurring_rules SET template = json_set(template, '$.category', ?), updated_at = ? WHERE json_extract(template, '$.category') = ? COLLATE NOCASE", params: [destination, stamp, node.name] },
     ];
   }
 
@@ -814,21 +919,28 @@ export class LedgerStore {
     return this.manualContainerId(currency);
   }
 
-  private async categoryKindOf(name: string): Promise<CategoryNode["kind"]> {
-    if (isBuiltInCategory(name)) return name === "Income" ? "income" : name === "Transfers" ? "transfer" : name === "Uncategorized" ? "any" : "expense";
-    const [row] = await this.db.select<Row>(
-      "SELECT m.category_kind, p.category_kind AS parent_kind, p.name AS parent_name FROM category_meta m LEFT JOIN category_meta p ON p.name = m.parent WHERE m.name = ?", [name]);
-    if (!row) return "expense";
-    if (row.parent_name === "Income") return "income";
-    return (str(row.parent_kind) ?? str(row.category_kind) ?? "expense") as CategoryKind;
+  private async categoryKindOf(name: string): Promise<CategoryKindName | "any"> {
+    return (await this.categoryIndex()).kindOf(name) ?? "any";
   }
 
+  /** The stored spelling of a known category, Uncategorized, or null for anything else. */
   private async knownCategory(name: string | null | undefined): Promise<string | null> {
     const clean = normalizeCategoryName(name ?? "");
     if (!clean) return null;
-    if (isBuiltInCategory(clean)) return clean;
-    const [row] = await this.db.select<Row>("SELECT name FROM custom_categories WHERE name = ?", [clean]);
-    return row ? String(row.name) : null;
+    if (clean.toLowerCase() === UNCATEGORIZED.toLowerCase()) return UNCATEGORIZED;
+    return (await this.categoryIndex()).canonical(clean);
+  }
+
+  /** The category transfer legs get: the chosen one when it is in the transfer tree, else Transfers (by key). */
+  private async transferCategory(chosen?: string | null): Promise<string> {
+    const tree = await this.categoryIndex();
+    return chosen && tree.kindOf(chosen) === "transfer" ? tree.canonical(chosen)! : tree.resolveKey(SYSTEM_KEYS.transfers);
+  }
+
+  /** 1 when the category is in the Business subtree (flagged for tax review, as in Rails), else 0. */
+  private async businessFlag(category: string | null | undefined): Promise<number> {
+    const tree = await this.categoryIndex();
+    return category && tree.isWithin(category, tree.nameForKey(SYSTEM_KEYS.business)) ? 1 : 0;
   }
 
   /** Validates a manual entry and returns the problems found (empty when it can be saved). */
@@ -894,13 +1006,14 @@ export class LedgerStore {
       const legs = transferLegs(input.amountCents);
       const description = input.description?.trim() || `${account.name} → ${to.name}`;
       uuids.push(randomId());
+      const transfers = await this.transferCategory(input.category);
       params = [
-        ...rowValues({ accountId: account.id, amount: legs.from, category: "Transfers", kind, description, linkGroup: group, uuid }),
-        ...rowValues({ accountId: to.id, amount: legs.to, category: "Transfers", kind, description, linkGroup: group, linkHint: kind, uuid: uuids[1] }),
+        ...rowValues({ accountId: account.id, amount: legs.from, category: transfers, kind, description, linkGroup: group, uuid }),
+        ...rowValues({ accountId: to.id, amount: legs.to, category: transfers, kind, description, linkGroup: group, linkHint: kind, uuid: uuids[1] }),
       ];
-      first = { amountCents: legs.from, category: "Transfers", description };
+      first = { amountCents: legs.from, category: transfers, description };
     } else {
-      const category = categoryKindFor(input.kind) === null ? "Transfers" : (await this.knownCategory(input.category)) ?? (input.kind === "income" ? "Income" : "Uncategorized");
+      const category = categoryKindFor(input.kind) === null ? await this.transferCategory(input.category) : (await this.knownCategory(input.category)) ?? (input.kind === "income" ? await this.categoryForKey(SYSTEM_KEYS.income) : UNCATEGORIZED);
       const amount = input.kind === "adjustment" ? Math.trunc(input.amountCents) : signedAmount(input.kind, input.amountCents);
       const description = input.description?.trim() || (input.merchant?.trim() || category);
       params = rowValues({ accountId: account.id, amount, category, kind: input.kind, description, linkHint: input.kind === "refund" && input.refundOf ? "refund_of" : null, linkTarget: input.kind === "refund" ? input.refundOf ?? null : null, uuid });
@@ -1012,18 +1125,19 @@ export class LedgerStore {
       // Both legs and their link change together.
       const ids = [fromId, ...(toId ? [toId] : [])];
       tagged = ids;
-      after = { ...after, amountCents: id === fromId ? legs.from : legs.to, kind, category: "Transfers", description, accountName: id === fromId ? from.name : to.name };
+      const transfers = await this.transferCategory(input.category);
+      after = { ...after, amountCents: id === fromId ? legs.from : legs.to, kind, category: transfers, description, accountName: id === fromId ? from.name : to.name };
       statements.push({ sql:
         `UPDATE transactions SET
            account_id = CASE id WHEN ? THEN ? ELSE ? END,
            amount_cents = CASE id WHEN ? THEN ? ELSE ? END,
            direction = CASE id WHEN ? THEN 'debit' ELSE 'credit' END,
-           booked_on = ?, occurred_at_time = ?, kind = ?, category = 'Transfers', description = ?, note = ?, merchant_id = ?, project_id = ?, locally_modified = 1, updated_at = ?
+           booked_on = ?, occurred_at_time = ?, kind = ?, category = ?, description = ?, note = ?, merchant_id = ?, project_id = ?, locally_modified = 1, updated_at = ?
          WHERE id IN (${placeholders(ids.length)})`,
-        params: [fromId, from.id, to.id, fromId, legs.from, legs.to, fromId, input.occurredOn, time, kind, description, note, merchantId, projectId, stamp, ...ids],
+        params: [fromId, from.id, to.id, fromId, legs.from, legs.to, fromId, input.occurredOn, time, kind, transfers, description, note, merchantId, projectId, stamp, ...ids],
       }, { sql: "UPDATE transaction_links SET link_type = ?, amount_cents = ? WHERE from_transaction_id = ? AND link_type IN ('transfer', 'card_payment')", params: [kind, legs.to, fromId] });
     } else {
-      const category = categoryKindFor(input.kind) === null ? "Transfers" : (await this.knownCategory(input.category)) ?? (input.kind === "income" ? "Income" : "Uncategorized");
+      const category = categoryKindFor(input.kind) === null ? await this.transferCategory(input.category) : (await this.knownCategory(input.category)) ?? (input.kind === "income" ? await this.categoryForKey(SYSTEM_KEYS.income) : UNCATEGORIZED);
       const amount = input.kind === "adjustment" ? Math.trunc(input.amountCents) : signedAmount(input.kind, input.amountCents);
       const description = input.description?.trim() || before.description;
       const row = await snapshot(id);
@@ -1039,10 +1153,10 @@ export class LedgerStore {
       after = { ...after, ...(manual ? { amountCents: amount } : { occurredOn: before.occurredOn }), kind: input.kind, category, description, accountName: (await this.account(input.accountId)).name };
       statements.push({
         sql: `UPDATE transactions SET account_id = ?, ${manual ? "amount_cents = ?, booked_on = ?, direction = ?," : ""} occurred_at_time = ?, kind = ?, category = ?, description = ?, note = ?, merchant_id = ?, project_id = ?,
-           category_source = CASE WHEN category <> ? THEN 'user' ELSE category_source END, user_locked_fields = ?, locally_modified = 1, tax_review = CASE WHEN ? = 'Business' THEN 1 ELSE tax_review END,
+           category_source = CASE WHEN category <> ? THEN 'user' ELSE category_source END, user_locked_fields = ?, locally_modified = 1, tax_review = CASE WHEN ? = 1 THEN 1 ELSE tax_review END,
            link_hint = ?, link_target_id = ?, updated_at = ? WHERE id = ?`,
         params: [input.accountId, ...(manual ? [amount, input.occurredOn, amount < 0 ? "debit" : amount > 0 ? "credit" : "zero"] : []), time, input.kind, category, description, note, merchantId, projectId,
-          category, JSON.stringify([...locked]), category, input.kind === "refund" ? "refund_of" : null, refundTarget ?? null, stamp, id],
+          category, JSON.stringify([...locked]), await this.businessFlag(category), input.kind === "refund" ? "refund_of" : null, refundTarget ?? null, stamp, id],
       });
     }
     if (input.tags) {
@@ -1167,8 +1281,8 @@ export class LedgerStore {
       // Automation (AI, rules) never overrides what a person chose.
       const respect = extra.lock === false;
       if (category !== undefined && category !== null && categoryKindFor(kind) !== null && !(respect && locked.has("category"))) {
-        sets.push("category = ?", "category_source = ?", "category_confidence = ?", "category_model = ?", "tax_review = CASE WHEN ? = 'Business' THEN 1 ELSE tax_review END");
-        params.push(category, extra.categorySource ?? "user", extra.confidence ?? null, extra.model ?? null, category);
+        sets.push("category = ?", "category_source = ?", "category_confidence = ?", "category_model = ?", "tax_review = CASE WHEN ? = 1 THEN 1 ELSE tax_review END");
+        params.push(category, extra.categorySource ?? "user", extra.confidence ?? null, extra.model ?? null, await this.businessFlag(category));
         Object.assign(undoFields, { category: row.category, category_source: row.category_source, category_confidence: row.category_confidence, category_model: row.category_model, tax_review: row.tax_review });
         Object.assign(written, { category, category_source: extra.categorySource ?? "user" });
         if (!respect) locked.add("category");
@@ -1270,10 +1384,11 @@ export class LedgerStore {
     const kind = transferKind(toAccount.type);
     const rows = await this.db.select<Row>("SELECT id, kind, category, category_source, user_locked_fields FROM transactions WHERE id IN (?, ?)", [outId, inId]);
     const linkUuid = randomId();
+    const transfers = await this.transferCategory();
     const undo = rows.map((row): UndoStep => ({ op: "set", table: "transactions", id: Number(row.id), fields: { kind: row.kind, category: row.category, category_source: row.category_source },
-      expect: { kind, category: "Transfers" }, expectLink: { link_type: kind, from: outId, to: inId } }));
+      expect: { kind, category: transfers }, expectLink: { link_type: kind, from: outId, to: inId } }));
     await this.db.transaction([
-      { sql: "UPDATE transactions SET kind = ?, category = 'Transfers', locally_modified = 1, updated_at = ? WHERE id IN (?, ?)", params: [kind, now(), outId, inId] },
+      { sql: "UPDATE transactions SET kind = ?, category = ?, locally_modified = 1, updated_at = ? WHERE id IN (?, ?)", params: [kind, transfers, now(), outId, inId] },
       { sql: "INSERT OR IGNORE INTO transaction_links (uuid, link_type, from_transaction_id, to_transaction_id, amount_cents, status, decided_by, created_at) VALUES (?, ?, ?, ?, ?, 'confirmed', ?, ?)",
         params: [linkUuid, kind, outId, inId, inn.amountCents, decidedBy, now()] },
       this.auditStatement({ actor, action: "link", subjectType: "transaction", subjectId: out.uuid, batchId, summary: `${kind}: ${out.accountName} → ${inn.accountName}`,
@@ -1302,7 +1417,11 @@ export class LedgerStore {
     if (!row || row.deleted_at !== null) throw new LedgerError("not_found", "Entry not found.");
     const locked = new Set(parseLocked(row.user_locked_fields));
     if (extra.lock === false && locked.has("kind")) return;
-    const category = categoryKindFor(kind) === null ? "Transfers" : String(row.category) === "Transfers" || (kind !== "income" && String(row.category) === "Income") ? "Uncategorized" : String(row.category);
+    // A category of the transfer tree only fits transfer-like kinds, one of the income tree only income.
+    const tree = await this.categoryIndex();
+    const current = tree.kindOf(String(row.category));
+    const category = categoryKindFor(kind) === null ? await this.transferCategory(String(row.category))
+      : current === "transfer" || (kind !== "income" && current === "income") ? UNCATEGORIZED : String(row.category);
     if (extra.lock !== false) locked.add("kind");
     const lockedAfter = JSON.stringify([...locked]);
     await this.db.transaction([
@@ -1352,9 +1471,14 @@ export class LedgerStore {
     return out;
   }
 
-  /** Income/expense grouped by a dimension over a date range (refunds net within their group). */
-  async report(dimension: "category" | "account" | "merchant" | "project" | "tag" | "month", range: { from?: string | null; to?: string | null } = {}): Promise<{ incomeMinor: number; expenseMinor: number; netMinor: number; rows: Array<{ key: string; incomeMinor: number; expenseMinor: number; count: number }> }> {
-    const entries = await this.ledgerEntries();
+  /**
+   * Income/expense grouped by a dimension over a date range (refunds net within their group). By category,
+   * entries roll up to their root; with `focus` (a category), to the focused category's children, its own
+   * entries shown as "X (direct)" when it has children, and entries outside its subtree left out.
+   */
+  async report(dimension: "category" | "account" | "merchant" | "project" | "tag" | "month", range: { from?: string | null; to?: string | null } = {}, focus: string | null = null): Promise<{ incomeMinor: number; expenseMinor: number; netMinor: number; rows: Array<{ key: string; incomeMinor: number; expenseMinor: number; count: number }> }> {
+    const tree = dimension === "category" ? await this.categoryIndex() : null;
+    const entries = (await this.ledgerEntries()).filter((entry) => !tree || !focus || rollUpGroup(tree, entry.category, focus) !== null);
     const accountNames = new Map((await this.accounts({ includeArchived: true })).map((account) => [account.id, account.name]));
     const total = totals(entries, range);
     const groups = new Map<string, { key: string; incomeMinor: number; expenseMinor: number; count: number }>();
@@ -1369,7 +1493,7 @@ export class LedgerStore {
     for (const entry of entries) {
       if (totals([entry], range).incomeMinor === 0 && totals([entry], range).expenseMinor === 0) continue;
       if (dimension === "tag") for (const tag of entry.tags?.length ? entry.tags : [""]) add(tag, entry);
-      else add(dimension === "category" ? entry.category : dimension === "account" ? accountNames.get(Number(entry.accountId)) ?? "" : dimension === "month" ? entry.occurredOn.slice(0, 7)
+      else add(dimension === "category" ? rollUpName(rollUpGroup(tree!, entry.category, focus)!) : dimension === "account" ? accountNames.get(Number(entry.accountId)) ?? "" : dimension === "month" ? entry.occurredOn.slice(0, 7)
         : String((dimension === "merchant" ? entry.merchant : entry.project) ?? ""), entry);
     }
     const rows = [...groups.values()].sort((a, b) => (dimension === "month" ? a.key.localeCompare(b.key) : b.expenseMinor + b.incomeMinor - (a.expenseMinor + a.incomeMinor)));
@@ -1382,10 +1506,13 @@ export class LedgerStore {
     const monthStart = await this.monthStartDay();
     const rows = await this.db.select<Row>("SELECT b.*, p.name AS project_name FROM budgets b LEFT JOIN projects p ON p.id = b.project_id ORDER BY b.period, b.category IS NOT NULL, b.category, b.id");
     const entries = await this.ledgerEntries();
+    const tree = await this.categoryIndex();
     return rows.map((row) => {
       const period = String(row.period) as BudgetPeriod;
       const bounds = periodBounds(on, period, monthStart);
-      const scoped = entries.filter((entry) => (row.category === null || entry.category.toLowerCase() === String(row.category).toLowerCase()) && (row.project_id === null || entry.project === row.project_name));
+      // A budget on a category counts spending in its whole subtree.
+      const inScope = row.category === null ? null : tree.has(String(row.category)) ? tree.subtreeSet(String(row.category)) : new Set([String(row.category).toLowerCase()]);
+      const scoped = entries.filter((entry) => (inScope === null || inScope.has(entry.category.toLowerCase())) && (row.project_id === null || entry.project === row.project_name));
       const spent = totals(scoped, bounds).expenseMinor;
       return {
         id: Number(row.id), uuid: String(row.uuid), period, category: str(row.category), projectId: num(row.project_id), projectName: str(row.project_name), amountCents: Number(row.amount_cents),

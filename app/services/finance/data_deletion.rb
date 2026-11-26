@@ -10,7 +10,7 @@ module Finance
   class DataDeletion
     # Order matters: children before the rows their foreign keys point at.
     MODELS = [CommandExecution, AuditEvent, OrganizeRun, CaptureToken, ReceiptMatch, Receipt, TransactionLink, Transaction, Budget, RecurringRule, Merchant, Project, Tag, CategorySetting,
-      StatementDraft, Statement, BankAccount, MerchantRule, CustomCategory, Insight, Book, Profile].freeze
+      StatementDraft, Statement, BankAccount, MerchantRule, CustomCategory, CategoryProposal, Category, Insight, Book, Profile].freeze
 
     def self.call(user:)
       new(user: user).call
@@ -31,7 +31,11 @@ module Finance
     # For callers that already hold the user's lock inside their own transaction.
     def delete_records!
       ActiveStorage::Attachment.where(record_type: Receipt.name, record_id: Receipt.where(user_id: @user.id).select(:id)).includes(:blob).find_each(&:purge)
-      MODELS.to_h { |model| [model.table_name, model.where(user_id: @user.id).delete_all] }
+      counts = MODELS.to_h { |model| [model.table_name, model.where(user_id: @user.id).delete_all] }
+      # Starting over: the next read creates the default categories again (Finance::Category.ensure_seeded!).
+      User.where(id: @user.id).update_all(finance_categories_seeded_at: nil)
+      Category.remember_seeded(@user, nil)
+      counts
     end
 
     # Prophet forecasts are cached for up to 12 hours under keys that start with the user's id.

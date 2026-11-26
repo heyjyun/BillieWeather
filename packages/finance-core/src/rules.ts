@@ -1,6 +1,7 @@
 // "Remember my change" (app/models/finance/merchant_rule.rb + Categorizer.apply_rule_to_uncategorized).
 import type { Category, MerchantRule, Transaction } from "@billie/shared-types";
 import { Categorizer, merchantKey } from "./categorizer";
+import type { CategoryTree } from "./categoryTree";
 
 /** The rule to save when someone recategorizes a transaction, or null when none can be made. */
 export function ruleFor(transaction: Pick<Transaction, "description" | "amountCents">, category: Category): MerchantRule | null {
@@ -19,8 +20,8 @@ export function transactionsMatchingRule(transactions: readonly Transaction[], r
 }
 
 /** Re-run today's rules over Uncategorized rows only; categories a person chose are never changed. */
-export function recategorizeUncategorized(transactions: readonly Transaction[], rules: readonly MerchantRule[]): Array<{ id: number; category: Category }> {
-  const categorizer = new Categorizer(rules);
+export function recategorizeUncategorized(transactions: readonly Transaction[], rules: readonly MerchantRule[], tree?: CategoryTree | null): Array<{ id: number; category: Category }> {
+  const categorizer = new Categorizer(rules, { tree });
   return transactions.flatMap((transaction) => {
     if (transaction.category !== "Uncategorized") return [];
     const category = categorizer.categorize(transaction.description, transaction.amountCents);

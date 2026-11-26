@@ -69,7 +69,7 @@ module Finance
       # ---------- transactions: category, excluded ----------
 
       def prepare_rows(args, lock, field:, value:, category_filter: true)
-        scope = TransactionFilter.apply(transactions, args, category: category_filter).where.not(field => value).order(:id)
+        scope = TransactionFilter.apply(transactions, args, category: category_filter, user: @user).where.not(field => value).order(:id)
         scope = scope.lock if lock
         rows = scope.limit(MAX_BULK + 1).to_a
         return {operations: [], summary: message("too_many", "More than #{MAX_BULK} transactions match. Narrow it down.", max: MAX_BULK)} if rows.size > MAX_BULK
@@ -107,7 +107,7 @@ module Finance
         conflict! unless rows.size == saved.size
         conflict! if rows.any? { |row| row[field] != saved.fetch(row.id)["after"] }
         # A category deleted since cannot be restored.
-        conflict! if field == "category" && saved.values.map { |row| row["before"] }.uniq.any? { |name| !CustomCategory.valid_for?(@user, name) }
+        conflict! if field == "category" && saved.values.map { |row| row["before"] }.uniq.any? { |name| !Category.valid_for?(@user, name) }
         rows.each do |row|
           entry = saved.fetch(row.id)
           attributes = {field => entry["before"]}
@@ -125,41 +125,42 @@ module Finance
         elsif record.errors.of_kind?(:name, :taken)
           message("category_exists", "{name} already exists.", name: record.name)
         elsif record.errors.of_kind?(:base, :too_many)
-          message("category_limit", "You can have at most {max} categories of your own.", max: CustomCategory::MAX_PER_USER)
+          message("category_limit", "You can have at most {max} categories of your own.", max: Category::MAX_PER_USER)
         else
           message("invalid", "That value can't be used here.")
         end
       end
 
       def prepare_create(args)
-        record = @user.finance_custom_categories.new(name: args["name"])
+        Category.ensure_seeded!(@user)
+        record = Category.new(user_id: @user.id, name: args["name"], category_kind: "expense")
         return {operations: [], summary: category_problem(record)} unless record.valid?
         {operations: [{op: "create", target: {kind: "category", id: record.name, label: record.name}}], payload: {name: record.name}}
       end
 
       def execute_create(prepared)
-        record = @user.finance_custom_categories.create!(name: prepared[:payload][:name])
+        record = Category.create_for!(@user, name: prepared[:payload][:name])
         touch_profile
         {summary: message("category_created", "Created category {name}.", name: record.name), undo: {"id" => record.id, "name" => record.name}}
       end
 
       # Removes the category only while nothing uses it, so later work is never lost.
       def undo_create(payload)
-        record = @user.finance_custom_categories.lock.find_by(id: payload.fetch("id"))
+        record = Category.where(user_id: @user.id).lock.find_by(id: payload.fetch("id"))
         conflict! unless record && record.name == payload.fetch("name")
-        conflict! if transactions.where(category: record.name).exists? || MerchantRule.where(user_id: @user.id, category: record.name).exists?
+        conflict! if transactions.where(category: record.name).exists? || MerchantRule.where(user_id: @user.id, category: record.name).exists? || record.children.exists?
         record.destroy!
         touch_profile
       end
 
       def prepare_rename(args, lock)
-        scope = @user.finance_custom_categories
+        scope = Category.for_user(@user)
         scope = scope.lock if lock
         record = scope.find_by(name: args["from"])
         return {operations: [], summary: message("no_effect", "Nothing would change.")} unless record
         from = record.name
         # Validate the new name with the model's own rules, then put the record back as it is
-        # stored: CustomCategory#rename! reads the old name from it.
+        # stored: Category#rename! reads the old name from it.
         record.name = args["to"]
         to = record.name
         problem = (to == from) ? message("same_name", "That is already its name.") : (category_problem(record) unless record.valid?)
@@ -178,7 +179,7 @@ module Finance
 
       # Renames back only if it still has the new name and the old one is free again.
       def undo_rename(payload)
-        record = @user.finance_custom_categories.lock.find_by(id: payload.fetch("id"))
+        record = Category.where(user_id: @user.id).lock.find_by(id: payload.fetch("id"))
         conflict! unless record && record.name == payload.fetch("to")
         conflict! unless record.rename!(payload.fetch("from"))
       end

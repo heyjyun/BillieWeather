@@ -19,8 +19,7 @@ module Finance
       @origin = origin
       @dates = rows.map { |row| row[:booked_on] }.minmax.then { |first, last| first..last } unless rows.empty?
       account_type = bank_account&.account_type
-      custom = rows.any? { |row| row[:category].present? && !Transaction::CATEGORIES.include?(row[:category]) }
-      income_categories = custom ? CategorySetting.where(user_id: user.id, category_kind: "income").pluck(:name).map(&:downcase).to_set : Set.new
+      tree = CategoryTree.new(user)
       verdicts = dedupe ? DuplicateDetector.call(stored_rows, rows.map { |row| detector_row(row) }) : rows.map { nil }
       @rows = []
       @skipped = 0
@@ -37,13 +36,13 @@ module Finance
         end
         source = row[:category_source] || (from_file ? "file" : category_source)
         kind, category = EntryClassifier.classify(description: row[:description], amount: row[:amount], account_type: account_type,
-          category: row[:category], user_id: user.id, income_categories: income_categories)
+          category: row[:category], user_id: user.id, tree: tree)
         # Device transfers already carry the person's explicit classification and bank evidence.
         kind = row[:kind] || kind
-        category = Transaction.category_for_kind(kind, row[:category] || category)
+        category = Transaction.category_for_kind(kind, row[:category] || category, tree: tree)
         @rows << row.merge(kind: kind, category: category, original_description: row[:original_description] || row[:description], entry_origin: origin,
           category_source: source, bank_account_id: bank_account&.id,
-          tax_review: row[:tax_review] || category == "Business", excluded: row[:excluded] || false)
+          tax_review: row[:tax_review] || tree.business?(category), excluded: row[:excluded] || false)
         @flagged << [@rows.length - 1, verdict.of] if verdict&.result == "review"
       end
     end

@@ -72,7 +72,11 @@ it("says so when a category change or an exclusion could not be saved", async ()
   const original = driver.transaction;
   driver.transaction = async () => { throw "database is locked"; };
   const row = document.querySelector<HTMLElement>(".bw-tx-table > li")!;
-  const select = [...row.querySelectorAll("select")].find((item) => [...item.options].some((option) => option.value === "Health"))!;
+  const select = row.querySelector<HTMLSelectElement>('select[aria-label^="Category for"]')!;
+  // Each row's picker builds its list of categories only when it is used.
+  expect(select.options).toHaveLength(1);
+  await act(async () => { fireEvent.focus(select); });
+  expect([...select.options].some((option) => option.value === "Health")).toBe(true);
   await act(async () => { fireEvent.change(select, { target: { value: "Health" } }); });
   const { MESSAGES } = await import("../src/i18n");
   expect(await screen.findByText(MESSAGES.en.ledger.errors.unknown)).toBeTruthy();

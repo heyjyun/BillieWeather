@@ -8,6 +8,7 @@
 // A statement from one region can still hold foreign transactions, so each list only names
 // merchants and terms that are specific enough to be right wherever they appear.
 import type { Category } from "@billie/shared-types";
+import { resolveDefaultKey } from "./categoryTree";
 
 /** Regions offered on the Import page (ISO 3166-1 alpha-2). Names come from Intl.DisplayNames. */
 export const STATEMENT_REGIONS = [
@@ -39,8 +40,8 @@ function anywhere(...list: string[]): RegExp {
 export interface RegionalRules {
   /** Checked first. Only for terms that unambiguously mean money moving between people or own accounts. */
   transfers: readonly RegExp[];
-  /** First match wins, like RULES in categorizer.ts. */
-  rules: ReadonlyArray<readonly [Category, RegExp]>;
+  /** First match wins, like KEYWORD_RULES in categorizer.ts. Default-category keys (schema/default-categories.json). */
+  rules: ReadonlyArray<readonly [string, RegExp]>;
 }
 
 // Payment channels (ACH, Alipay, WeChat Pay, UnionPay, Direct Debit, Faster Payment…) say how
@@ -51,38 +52,38 @@ const REGIONAL_RULES: Partial<Record<StatementRegion, RegionalRules>> = {
     // Peer-to-peer apps and card autopay from checking; money to a person or to one's own card.
     transfers: [words("zelle", "venmo", "credit crd autopay", "crd autopay")],
     rules: [
-      ["Food & dining", words("chick-fil-a", "five guys", "shake shack", "popeyes", "jersey mike", "in-n-out", "panda express", "sweetgreen", "jack in the box",
+      ["food", words("chick-fil-a", "five guys", "shake shack", "popeyes", "jersey mike", "in-n-out", "panda express", "sweetgreen", "jack in the box",
         "dairy queen", "arby's", "meijer", "albertsons", "giant eagle", "sprouts farmers", "hy-vee", "winco", "h-e-b")],
-      ["Transport", words("sunoco", "speedway", "valero", "circle k", "conoco", "phillips 66", "citgo", "septa", "wmata", "bart", "metra", "nj transit", "caltrain", "lirr")],
-      ["Utilities", words("duke energy", "con edison", "coned", "dominion energy", "national grid", "cox comm", "frontier comm", "google fi", "mint mobile")],
-      ["Health", words("duane reade", "kaiser permanente", "one medical")],
-      ["Shopping", words("dollar general", "dollar tree", "tj maxx", "marshalls", "kohl's", "ross stores")],
+      ["transport", words("sunoco", "speedway", "valero", "circle k", "conoco", "phillips 66", "citgo", "septa", "wmata", "bart", "metra", "nj transit", "caltrain", "lirr")],
+      ["utilities", words("duke energy", "con edison", "coned", "dominion energy", "national grid", "cox comm", "frontier comm", "google fi", "mint mobile")],
+      ["health", words("duane reade", "kaiser permanente", "one medical")],
+      ["shopping", words("dollar general", "dollar tree", "tj maxx", "marshalls", "kohl's", "ross stores")],
     ],
   },
   CN: {
     transfers: [anywhere("转账", "信用卡还款", "还信用卡", "微信红包")],
     rules: [
-      ["Food & dining", anywhere("美团外卖", "饿了么", "外卖", "餐饮", "餐厅", "饭店", "咖啡", "星巴克", "瑞幸", "肯德基", "麦当劳", "超市", "盒马", "永辉", "便利店", "奶茶", "喜茶", "蜜雪冰城")],
-      ["Food & dining", words("meituan waimai", "ele.me", "luckin")],
-      ["Transport", anywhere("滴滴", "地铁", "公交", "12306", "铁路", "高铁", "航空", "加油", "中国石化", "中国石油", "停车", "高速")],
-      ["Transport", words("didi chuxing", "sinopec", "petrochina")],
-      ["Utilities", anywhere("电费", "水费", "燃气", "话费", "宽带", "中国移动", "中国联通", "中国电信", "国家电网")],
-      ["Housing", anywhere("房租", "租金", "物业", "房贷")],
-      ["Health", anywhere("药房", "药店", "医院", "诊所", "医保")],
-      ["Shopping", anywhere("淘宝", "天猫", "京东", "拼多多", "唯品会")],
-      ["Shopping", words("taobao", "tmall", "jd.com", "pinduoduo")],
+      ["food", anywhere("美团外卖", "饿了么", "外卖", "餐饮", "餐厅", "饭店", "咖啡", "星巴克", "瑞幸", "肯德基", "麦当劳", "超市", "盒马", "永辉", "便利店", "奶茶", "喜茶", "蜜雪冰城")],
+      ["food", words("meituan waimai", "ele.me", "luckin")],
+      ["transport", anywhere("滴滴", "地铁", "公交", "12306", "铁路", "高铁", "航空", "加油", "中国石化", "中国石油", "停车", "高速")],
+      ["transport", words("didi chuxing", "sinopec", "petrochina")],
+      ["utilities", anywhere("电费", "水费", "燃气", "话费", "宽带", "中国移动", "中国联通", "中国电信", "国家电网")],
+      ["housing", anywhere("房租", "租金", "物业", "房贷")],
+      ["health", anywhere("药房", "药店", "医院", "诊所", "医保")],
+      ["shopping", anywhere("淘宝", "天猫", "京东", "拼多多", "唯品会")],
+      ["shopping", words("taobao", "tmall", "jd.com", "pinduoduo")],
     ],
   },
   GB: {
     // UK channels (standing order, direct debit, faster payment) often pay rent or bills, so none is a transfer.
     transfers: [],
     rules: [
-      ["Housing", words("council tax", "letting agent", "lettings")],
-      ["Food & dining", words("tesco", "sainsbury's", "sainsburys", "asda", "morrisons", "waitrose", "ocado", "greggs", "pret a manger", "nando's", "wagamama", "deliveroo", "just eat")],
-      ["Transport", words("tfl", "transport for london", "trainline", "national rail", "lner", "avanti west coast", "esso", "texaco", "dvla", "congestion charge", "ulez")],
-      ["Utilities", words("british gas", "octopus energy", "edf energy", "ovo energy", "thames water", "severn trent", "virgin media", "vodafone", "giffgaff", "tv licence", "bt broadband")],
-      ["Health", words("boots", "superdrug", "nhs", "puregym")],
-      ["Shopping", words("argos", "primark", "john lewis", "currys", "b&q", "tk maxx", "marks & spencer", "sports direct", "asos")],
+      ["housing", words("council tax", "letting agent", "lettings")],
+      ["food", words("tesco", "sainsbury's", "sainsburys", "asda", "morrisons", "waitrose", "ocado", "greggs", "pret a manger", "nando's", "wagamama", "deliveroo", "just eat")],
+      ["transport", words("tfl", "transport for london", "trainline", "national rail", "lner", "avanti west coast", "esso", "texaco", "dvla", "congestion charge", "ulez")],
+      ["utilities", words("british gas", "octopus energy", "edf energy", "ovo energy", "thames water", "severn trent", "virgin media", "vodafone", "giffgaff", "tv licence", "bt broadband")],
+      ["health", words("boots", "superdrug", "nhs", "puregym")],
+      ["shopping", words("argos", "primark", "john lewis", "currys", "b&q", "tk maxx", "marks & spencer", "sports direct", "asos")],
     ],
   },
 };
@@ -97,12 +98,18 @@ export function regionalRules(region: string | null | undefined): RegionalRules 
 export const REGIONS_WITH_RULES = Object.keys(REGIONAL_RULES) as StatementRegion[];
 
 /**
- * The category a region's rules suggest for money going out, or null. Callers only ask after the
- * general rules said Uncategorized; money coming in is never asked (it is Income or a transfer already).
+ * The default-category key a region's rules suggest for money going out, or null. Callers only ask
+ * after the general rules said Uncategorized; money coming in is never asked (it is Income or a transfer already).
  */
-export function regionalCategory(region: string | null | undefined, description: string): Category | null {
+export function regionalCategoryKey(region: string | null | undefined, description: string): string | null {
   const rules = regionalRules(region);
   if (!rules) return null;
-  if (rules.transfers.some((pattern) => pattern.test(description))) return "Transfers";
+  if (rules.transfers.some((pattern) => pattern.test(description))) return "transfers";
   return rules.rules.find(([, pattern]) => pattern.test(description))?.[0] ?? null;
+}
+
+/** Like regionalCategoryKey, as a category name (`resolve`: the person's tree; by default the default names). */
+export function regionalCategory(region: string | null | undefined, description: string, resolve: (key: string) => Category = resolveDefaultKey): Category | null {
+  const key = regionalCategoryKey(region, description);
+  return key ? resolve(key) : null;
 }

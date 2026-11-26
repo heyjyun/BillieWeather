@@ -31,7 +31,7 @@ module Finance
         when "receipt_number" then value&.to_s&.first(64)
         when "category"
           next cleaned[:category] = nil if value.nil?
-          (Transaction::CATEGORIES.include?(value) || user.finance_custom_categories.exists?(name: value)) ? value : errors << "category_invalid"
+          Category.valid_for?(user, value) ? value : errors << "category_invalid"
         when "bank_account_id"
           next cleaned[:bank_account_id] = nil if value.nil?
           user.finance_bank_accounts.exists?(id: value) ? value.to_i : errors << "account_not_found"

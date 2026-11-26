@@ -15,7 +15,7 @@ class Finance::DomainContractTest < ActiveSupport::TestCase
     assert_equal "credit_card", Finance::Domain.account_type_from_legacy("credit")
     assert_equal "checking", Finance::Domain.account_type_from_legacy("cash")
     assert_equal "other", Finance::Domain.account_type_from_legacy("unknown")
-    assert_equal Finance::Transaction::CATEGORIES, Finance::Domain::SCHEMA["builtin_categories"].map { |c| c["key"] }
+    assert_equal Finance::DefaultCategories::LEGACY_NAMES.sort, Finance::Domain::SCHEMA["builtin_categories"].map { |c| c["key"] }.sort
   end
 
   test "inferKind cases (kind-cases.json)" do

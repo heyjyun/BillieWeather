@@ -30,7 +30,10 @@ class User < ApplicationRecord
   has_many :finance_transactions, class_name: "Finance::Transaction", dependent: :destroy
   has_many :finance_insights, class_name: "Finance::Insight", dependent: :destroy
   has_many :finance_merchant_rules, class_name: "Finance::MerchantRule", dependent: :destroy
-  has_many :finance_custom_categories, class_name: "Finance::CustomCategory", dependent: :delete_all
+  has_many :finance_custom_categories, class_name: "Finance::CustomCategory", dependent: :delete_all # legacy table, kept for rollback
+  # The category tree (docs/architecture/category-hierarchy.md). One DELETE removes parents and children together.
+  has_many :finance_categories, class_name: "Finance::Category", dependent: :delete_all
+  has_many :finance_category_proposals, class_name: "Finance::CategoryProposal", dependent: :delete_all
   has_many :finance_statement_drafts, class_name: "Finance::StatementDraft", dependent: :destroy
   has_many :finance_bank_accounts, class_name: "Finance::BankAccount", dependent: :destroy
   has_many :finance_local_database_reports, class_name: "Finance::LocalDatabaseReport", dependent: :delete_all
@@ -45,7 +48,7 @@ class User < ApplicationRecord
   has_many :finance_merchants, class_name: "Finance::Merchant", dependent: :delete_all
   has_many :finance_projects, class_name: "Finance::Project", dependent: :delete_all
   has_many :finance_tags, class_name: "Finance::Tag", dependent: :delete_all
-  has_many :finance_category_settings, class_name: "Finance::CategorySetting", dependent: :delete_all
+  has_many :finance_category_settings, class_name: "Finance::CategorySetting", dependent: :delete_all # legacy table, kept for rollback
   has_many :finance_books, class_name: "Finance::Book", dependent: :delete_all
   has_many :finance_receipts, class_name: "Finance::Receipt", dependent: :destroy
   has_many :finance_receipt_matches, class_name: "Finance::ReceiptMatch", dependent: :delete_all

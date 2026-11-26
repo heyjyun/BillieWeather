@@ -1,3 +1,4 @@
+import { defaultCategoryByName, defaultCategoryLabel, defaultCategoryName, UNCATEGORIZED } from "@billie/finance-core";
 import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { en, type Messages } from "./en";
 import { es } from "./es";
@@ -12,9 +13,28 @@ export const MESSAGES: Record<Locale, Messages> = { en, "zh-CN": zhCN, "zh-TW": 
 
 const STORAGE_KEY = "billie.locale";
 
-/** A category's name in the interface language: built-in names are translated, the person's own are shown as typed. */
+// Which default (system key) each of the open book's categories carries, set by FinanceProvider when the
+// book's categories are read. Without it, a name that is a default's English name counts as that default.
+let categoryKeys: Map<string, string | null> | null = null;
+
+/** Tells categoryLabel which default each category of the open book is (null: none known yet). */
+export function setCategoryKeys(rows: ReadonlyArray<{ name: string; key: string | null }> | null): void {
+  categoryKeys = rows ? new Map(rows.map((row) => [row.name.toLowerCase(), row.key])) : null;
+}
+
+/**
+ * A category's name in the interface language. A default category is translated only while its stored
+ * name is still the default English name for its key (schema/default-categories.json labels); a renamed
+ * default and the person's own categories are shown exactly as typed. Uncategorized is always translated.
+ */
 export function categoryLabel(m: Messages, name: string): string {
-  return Object.prototype.hasOwnProperty.call(m.categories, name) ? (m.categories as Record<string, string>)[name] : name;
+  const own = m.categories as Record<string, string>;
+  if (name === UNCATEGORIZED) return own.Uncategorized ?? name;
+  const key = categoryKeys ? categoryKeys.get(name.toLowerCase()) ?? null : defaultCategoryByName(name)?.key ?? null;
+  if (!key || defaultCategoryName(key) !== name) return name;
+  if (Object.prototype.hasOwnProperty.call(own, name)) return own[name];
+  const locale = LOCALES.find((code) => MESSAGES[code] === m) ?? "en";
+  return locale === "en" ? name : defaultCategoryLabel(key, locale) ?? name;
 }
 
 export const isLocale = (value: unknown): value is Locale => typeof value === "string" && (LOCALES as readonly string[]).includes(value);

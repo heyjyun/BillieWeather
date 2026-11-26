@@ -4,7 +4,7 @@
 // the existing consented "Categorize with AI" request (cleaned merchant text and direction only).
 // Applying uses the ordinary ledger operations with actor "ai" and one batch id, so every change
 // is in the activity log and the whole run can be undone. A person's locked fields are never changed.
-import { aiGroups, cleanForAi, isAccountType, organizeProposals, type AccountType, type OrganizeRow, type Proposal, type TransactionKind } from "@billie/finance-core";
+import { aiCategoryPaths, aiGroups, cleanForAi, isAccountType, matchAiCategory, organizeProposals, type AccountType, type OrganizeRow, type Proposal, type TransactionKind } from "@billie/finance-core";
 import { randomId } from "./ids";
 import type { FinanceStore, SqlDriver } from "./store";
 
@@ -36,19 +36,22 @@ export async function analyze(store: FinanceStore, db: SqlDriver, options: Analy
   const rows = await organizeRows(db);
   const accounts = await store.ledger.accounts({ includeArchived: true });
   const liability = new Set(accounts.filter((a) => a.accountClass === "liability").map((a) => a.id));
-  const proposals = organizeProposals(rows, { rules: await store.rules(), liability: (id) => liability.has(id) });
+  const tree = await store.categoryTree();
+  const proposals = organizeProposals(rows, { rules: await store.rules(), liability: (id) => liability.has(id), tree });
   if (options.cloud) {
     const placed = new Set(proposals.flatMap((p) => (p.type === "categorize" ? p.ids : [])));
     const leftover = rows.filter((row) => row.category === "Uncategorized" && !placed.has(row.id) && !row.lockedFields.includes("category") && ["expense", "income", "refund"].includes(row.kind));
     const groups = aiGroups(leftover.map((row) => ({ id: row.id, description: row.originalDescription, amountCents: row.kind === "income" ? Math.abs(row.amountMinor) : -Math.abs(row.amountMinor), category: row.category }))).slice(0, 150);
     if (groups.length > 0) {
-      const custom = await store.customCategories();
-      const answers = await options.cloud(groups.map((g) => ({ key: g.key, text: g.text, direction: g.direction })), custom);
+      // Every category as its full path; an answer may name a category or its path.
+      const answers = await options.cloud(groups.map((g) => ({ key: g.key, text: g.text, direction: g.direction })), aiCategoryPaths(tree));
       for (const answer of answers) {
         const group = groups.find((g) => g.key === answer.key);
-        if (!group || answer.category === "Uncategorized" || answer.category === "Transfers") continue;
-        if ((answer.category === "Income") !== (group.direction === "in")) continue;
-        proposals.push({ id: `ai:${group.key}`, type: "categorize", ids: group.ids, category: answer.category, description: cleanForAi(group.text) ?? group.text, reason: "ai", confidence: 60 });
+        const category = matchAiCategory(tree, answer.category);
+        const kind = category ? tree.kindOf(category) : null;
+        if (!group || !category || kind === "transfer") continue;
+        if ((kind === "income") !== (group.direction === "in")) continue;
+        proposals.push({ id: `ai:${group.key}`, type: "categorize", ids: group.ids, category, description: cleanForAi(group.text) ?? group.text, reason: "ai", confidence: 60 });
       }
     }
   }

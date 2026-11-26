@@ -5,7 +5,8 @@ module Finance
   class Transaction < ActiveRecord::Base
     self.table_name = "finance_transactions"
 
-    CATEGORIES = ["Income", "Housing", "Food & dining", "Transport", "Utilities", "Shopping", "Health", "Business", "Transfers", "Uncategorized"].freeze
+    # The fixed "not decided yet" placeholder (never a Finance::Category row).
+    UNCATEGORIZED = Category::UNCATEGORIZED
     KINDS = Domain::TRANSACTION_KINDS
     TRANSFER_LIKE = (KINDS - Domain::COUNTED_KINDS).freeze
     LOCKABLE = Domain::LOCKED_FIELDS
@@ -61,27 +62,31 @@ module Finance
     validate :locked_fields_are_known
     validate :only_receipt_entries_superseded
 
-    # The category name a transfer-like kind carries (kept for older readers of the text column).
-    def self.category_for_kind(kind, category)
-      TRANSFER_LIKE.include?(kind.to_s) ? "Transfers" : category
+    # The category a transfer-like kind carries: the given one when it is already in the person's
+    # transfer subtree, otherwise the current name of their Transfers category (system_key "transfers").
+    def self.category_for_kind(kind, category, user_id: nil, tree: nil)
+      return category unless TRANSFER_LIKE.include?(kind.to_s)
+      tree ||= user_id && CategoryTree.new(user_id)
+      tree ? tree.transfer_category(category) : category
     end
 
-    # Whether a category is in the income tree (built-in Income or a custom income category).
+    # Whether a category is in an income tree (its root's kind is income).
     def self.income_category?(user_id, name)
-      return true if name == "Income"
-      return false if CATEGORIES.include?(name)
-      CategorySetting.where(user_id: user_id).where("lower(name) = ?", name.to_s.downcase).pick(:category_kind) == "income"
+      return false if name.blank? || name == UNCATEGORIZED
+      Category.kind_of(user_id, name) == "income"
     end
 
     # Bulk category changes (rules, AI, renames) keep `kind` consistent with the new category, like
     # `keep_kind_with_category` does for single edits. Rows whose kind a person locked are skipped.
     def self.sync_kinds_for_category!(scope, category, user_id)
+      return if category.blank? || category == UNCATEGORIZED
       unlocked = scope.where.not("jsonb_exists(user_locked_fields, 'kind')")
-      if category == "Transfers"
+      case Category.kind_of(user_id, category)
+      when "transfer"
         unlocked.where(kind: Domain::COUNTED_KINDS).update_all(kind: "transfer")
-      elsif income_category?(user_id, category)
+      when "income"
         unlocked.where(kind: Domain::COUNTED_KINDS).where("amount > 0").update_all(kind: "income")
-      elsif category != "Uncategorized"
+      when "expense"
         unlocked.where(kind: Domain::COUNTED_KINDS + ["transfer"]).update_all(Arel.sql("kind = CASE WHEN amount > 0 THEN 'refund' ELSE 'expense' END"))
       end
     end
@@ -135,15 +140,17 @@ module Finance
       self.original_description = description if original_description.blank?
     end
 
-    # The category select is still the main control: choosing Transfers makes the row a transfer,
-    # choosing an expense category on money in makes it a refund, Income makes it income.
+    # The category select is still the main control: choosing a category in the transfer subtree makes
+    # the row a transfer, choosing an expense category on money in makes it a refund, an income
+    # category makes it income.
     def keep_kind_with_category
       return unless will_save_change_to_category? && !will_save_change_to_kind?
-      return if category.blank? || category == "Uncategorized"
+      return if category.blank? || category == UNCATEGORIZED
       positive = amount.to_d.positive?
-      self.kind = if category == "Transfers"
+      category_kind = user_id ? Category.kind_of(user_id, category) : nil
+      self.kind = if category_kind == "transfer"
         transfer_like? ? kind : "transfer"
-      elsif self.class.income_category?(user_id, category)
+      elsif category_kind == "income"
         positive ? "income" : kind_without_transfer
       else
         positive ? "refund" : "expense"
@@ -154,10 +161,10 @@ module Finance
       transfer_like? ? "expense" : kind
     end
 
-    # A built-in category or one of this person's own (Finance::CustomCategory).
+    # Uncategorized or one of this person's categories (Finance::Category).
     def category_is_known
-      return if CATEGORIES.include?(category)
-      return if category.present? && user_id && CustomCategory.where(user_id: user_id, name: category).exists?
+      return if category == UNCATEGORIZED
+      return if category.present? && user_id && Category.valid_for?(user_id, category)
       errors.add(:category, :inclusion)
     end
 

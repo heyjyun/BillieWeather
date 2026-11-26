@@ -1,9 +1,12 @@
 module Finance
   # Automatic categorization. No external service and no data leaves the app:
   #   1. rules this person taught us by correcting a transaction (Finance::MerchantRule),
-  #   2. built-in transfer detection, positive amounts as Income,
+  #   2. built-in transfer detection, positive amounts as income,
   #   3. built-in merchant and keyword lists,
   #   4. otherwise "Uncategorized".
+  # Steps 2 and 3 decide a default category key (docs/architecture/category-hierarchy.md); the key
+  # becomes the person's current name for it (Finance::CategoryTree#name_for_key), falling back to
+  # the parent key and then to Uncategorized when they deleted it.
   class Categorizer
     def self.words(*list)
       /\b(?:#{list.map { |word| Regexp.escape(word) }.join("|")})\b/i
@@ -24,23 +27,23 @@ module Finance
     # Order matters: the first match wins, so more specific lists come first
     # (for example "uber eats" is Food, not Transport; "amazon web services" is Business, not Shopping).
     RULES = {
-      "Housing" => words("rent", "mortgage", "property management", "hoa", "landlord", "apartment", "lease", "home insurance", "renters insurance", "homeowners"),
-      "Food & dining" => words("grocery", "groceries", "supermarket", "restaurant", "coffee", "cafe", "dining", "whole foods", "trader joe", "starbucks",
+      "housing" => words("rent", "mortgage", "property management", "hoa", "landlord", "apartment", "lease", "home insurance", "renters insurance", "homeowners"),
+      "food" => words("grocery", "groceries", "supermarket", "restaurant", "coffee", "cafe", "dining", "whole foods", "trader joe", "starbucks",
         "kroger", "safeway", "aldi", "publix", "wegmans", "costco wholesale", "mcdonald", "burger king", "wendy", "taco bell", "chipotle", "domino", "pizza",
         "kfc", "dunkin", "panera", "doordash", "grubhub", "uber eats", "ubereats", "instacart", "bakery", "bistro", "diner", "sushi", "deli", "boba", "bar & grill",
         "7-eleven", "food", "kitchen", "tea house", "noodle", "ramen", "taqueria"),
-      "Transport" => words("uber", "lyft", "transit", "metro", "parking", "fuel", "gas station", "shell", "exxon", "chevron", "bp", "mobil", "ventra", "cta", "mta",
+      "transport" => words("uber", "lyft", "transit", "metro", "parking", "fuel", "gas station", "shell", "exxon", "chevron", "bp", "mobil", "ventra", "cta", "mta",
         "amtrak", "airlines", "airways", "airline", "southwest", "jetblue", "toll", "ezpass", "e-zpass", "zipcar", "car wash", "auto repair", "dmv", "greyhound", "bus"),
-      "Utilities" => words("electric", "electricity", "water bill", "internet", "utility", "utilities", "comcast", "verizon", "at&t", "phone bill",
+      "utilities" => words("electric", "electricity", "water bill", "internet", "utility", "utilities", "comcast", "verizon", "at&t", "phone bill",
         "xfinity", "spectrum", "t-mobile", "tmobile", "sewer", "waste management", "trash", "natural gas", "gas bill", "comed", "pg&e", "wireless", "cable"),
-      "Health" => words("pharmacy", "medical", "doctor", "hospital", "dental", "cvs", "walgreens", "rite aid", "clinic", "urgent care", "optical", "vision",
+      "health" => words("pharmacy", "medical", "doctor", "hospital", "dental", "cvs", "walgreens", "rite aid", "clinic", "urgent care", "optical", "vision",
         "therapy", "labcorp", "quest diagnostics", "health insurance", "gym", "fitness", "yoga", "planet fitness", "dentist", "physician"),
       # Kept to the template's original list. Many tools (cloud, design, AI) are as likely to be
       # personal as business, so those are left for the person to decide and remember.
-      "Business" => words("office supplies", "software", "adobe", "notion", "github", "hosting", "business insurance"),
+      "business" => words("office supplies", "software", "adobe", "notion", "github", "hosting", "business insurance"),
       # Matched before Shopping so an AWS bill is not filed as Amazon shopping; it stays Uncategorized.
-      "Uncategorized" => words("aws", "amazon web services"),
-      "Shopping" => words("amazon", "target", "walmart", "shopping", "clothing", "apparel", "ebay", "etsy", "best buy", "home depot", "lowe's", "ikea", "nike",
+      nil => words("aws", "amazon web services"),
+      "shopping" => words("amazon", "target", "walmart", "shopping", "clothing", "apparel", "ebay", "etsy", "best buy", "home depot", "lowe's", "ikea", "nike",
         "adidas", "zara", "h&m", "uniqlo", "macy", "nordstrom", "costco", "apple store", "apple.com", "store", "mart", "outlet", "boutique")
     }.freeze
 
@@ -68,13 +71,22 @@ module Finance
       key = self.class.merchant_key(description)
       learned = key && learned_rules[[key, amount.positive?]]
       return learned if learned
-      return "Transfers" if TRANSFERS.match?(description)
+      tree.name_for_key(category_key(description, amount, account_type: account_type))
+    end
+
+    # The default category key the built-in rules choose, or nil for Uncategorized.
+    def category_key(description, amount, account_type: nil)
+      return DefaultCategories::TRANSFERS_KEY if TRANSFERS.match?(description)
       if amount.positive?
         kind = Domain.infer_kind(amount: amount, account_type: account_type, description: description)
-        return "Income" if kind == "income"
-        return "Transfers" if %w[card_payment transfer].include?(kind)
+        return DefaultCategories::INCOME_KEY if kind == "income"
+        return DefaultCategories::TRANSFERS_KEY if %w[card_payment transfer].include?(kind)
       end
-      RULES.find { |_category, pattern| pattern.match?(description) }&.first || "Uncategorized"
+      RULES.find { |_key, pattern| pattern.match?(description) }&.first
+    end
+
+    def tree
+      @tree ||= CategoryTree.new(@user)
     end
 
     # Re-run today's rules over this account's Uncategorized transactions, so newly
@@ -85,9 +97,9 @@ module Finance
       changes = Hash.new { |hash, category| hash[category] = [] }
       automatic(user).includes(:bank_account).find_each do |transaction|
         category = categorizer.categorize(transaction.original_description, transaction.amount, account_type: transaction.bank_account&.account_type)
-        changes[category] << transaction.id unless category == "Uncategorized"
+        changes[category] << transaction.id unless category == Transaction::UNCATEGORIZED
       end
-      changes.sum { |category, ids| update_category(ids, category) }
+      changes.sum { |category, ids| update_category(ids, category, tree: categorizer.tree) }
     end
 
     # Used after a person corrects one transaction: same merchant, same direction.
@@ -100,15 +112,15 @@ module Finance
 
     # Uncategorized rows automation may still decide: live, and the category not locked by a person.
     def self.automatic(user)
-      Transaction.live.where(user_id: user.id, category: "Uncategorized").where.not("jsonb_exists(user_locked_fields, 'category')")
+      Transaction.live.where(user_id: user.id, category: Transaction::UNCATEGORIZED).where.not("jsonb_exists(user_locked_fields, 'category')")
     end
 
-    def self.update_category(ids, category)
+    def self.update_category(ids, category, tree: nil)
       return 0 if ids.empty?
       attributes = {category: category, category_source: "rule", updated_at: Time.current}
-      attributes[:tax_review] = true if category == "Business"
       scope = Transaction.where(id: ids)
       user_id = scope.pick(:user_id)
+      attributes[:tax_review] = true if (tree || CategoryTree.new(user_id)).business?(category)
       Transaction.sync_kinds_for_category!(scope, category, user_id)
       scope.update_all(attributes)
     end

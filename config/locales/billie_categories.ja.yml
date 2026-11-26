@@ -57,9 +57,14 @@ ja:
         one: まだ %{count} 件の加盟店が残っています。もう一度実行すると続けます。
         other: まだ %{count} 件の加盟店が残っています。もう一度実行すると続けます。
       errors:
+        protected: "振替は名前の変更と並べ替えができますが、最上位のカテゴリのままで、削除や統合はできません。"
+        category_cycle: "カテゴリを自分自身やそのサブカテゴリの中に入れることはできません。"
+        category_unknown: "カテゴリを選んでください。"
+        parent_invalid: "その親カテゴリはここでは使えません。"
+        proposal_closed: "その提案はすでに処理されています。"
         blank: カテゴリ名を入力してください。
         too_long: カテゴリ名は %{count} 文字までです。
-        reserved: それは組み込みのカテゴリです。
+        reserved: 未分類は固定の項目のため、カテゴリ名には使えません。
         taken: 同じ名前のカテゴリがすでにあります。
         too_many: 独自のカテゴリは %{count} 個までです。
       ai_errors:
@@ -72,3 +77,46 @@ ja:
         failed: AI サービスがこれらの取引を分類できませんでした。何も変更されていません。後でもう一度お試しください。
         unavailable: AI サービスに接続できませんでした。何も変更されていません。後でもう一度お試しください。
         invalid_result: AI サービスから予期しない応答がありました。何も変更されていません。もう一度お試しください。
+      tree_add_body: "最上位、または任意のカテゴリの下に、何階層でもカテゴリを追加できます。提案カテゴリを含めて最大 %{count} 件まで作れます。"
+      new_kind: "種類（最上位のみ）"
+      suggested_button: "おすすめのカテゴリを追加"
+      suggested_summary: "おすすめのカテゴリ"
+      suggested_none: "おすすめのカテゴリはすべて追加済みです。"
+      proposals_title: "新しいサブカテゴリの提案"
+      proposals_body: "AI が、専用のサブカテゴリがあるとよさそうな取引のまとまりを見つけました。承認するまで何も作成されません。承認すると、それらの取引がそのサブカテゴリに分類され、1 つの変更としていつでも元に戻せます。"
+      proposal_name: "名前"
+      proposal_approve: "承認"
+      proposal_dismiss: "却下"
+      proposal_dismissed: "提案「%{name}」を却下しました。"
+      move_up: "%{name} を上へ"
+      move_down: "%{name} を下へ"
+      transfers_note: "振替は名前の変更やサブカテゴリの追加ができますが、最上位のままで、削除や統合はできません。ここに分類したものはすべて振替として扱われます。"
+      delete_destination: "取引の移動先"
+      delete_confirm_tree: "「%{name}」を削除しますか？取引と記憶したルールは選んだカテゴリに移り、サブカテゴリは 1 階層上に移動します。"
+      report_all: "すべてのカテゴリ"
+      report_direct: "%{name}（直接）"
+      deleted_into:
+        one: "カテゴリ「%{name}」を削除し、%{count} 件の取引を %{into} に移しました。"
+        other: "カテゴリ「%{name}」を削除し、%{count} 件の取引を %{into} に移しました。"
+      suggested_body:
+        one: "おすすめのカテゴリのうち %{count} 件がまだありません。追加しても、今あるカテゴリの名前の変更・移動・重複は起こりません。"
+        other: "おすすめのカテゴリのうち %{count} 件がまだありません。追加しても、今あるカテゴリの名前の変更・移動・重複は起こりません。"
+      suggested_added:
+        one: "おすすめのカテゴリを %{count} 件追加しました。"
+        other: "おすすめのカテゴリを %{count} 件追加しました。"
+      proposals_waiting:
+        one: "AI は新しいサブカテゴリも %{count} 件提案しました。下で確認してください。"
+        other: "AI は新しいサブカテゴリも %{count} 件提案しました。下で確認してください。"
+      proposal_fits:
+        one: "%{count} 件の取引に該当（%{merchants}）。"
+        other: "%{count} 件の取引に該当（%{merchants}）。"
+      proposal_approved:
+        one: "「%{name}」を作成し、%{count} 件の取引を分類しました。"
+        other: "「%{name}」を作成し、%{count} 件の取引を分類しました。"
+      children_count:
+        one: "サブカテゴリ %{count} 件"
+        other: "サブカテゴリ %{count} 件"
+      kinds:
+        income: "収入"
+        expense: "支出"
+        transfer: "振替"

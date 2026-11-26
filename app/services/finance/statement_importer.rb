@@ -299,12 +299,12 @@ module Finance
       end
 
       category = if @columns[:category] && value(fields, :category).present?
-        CustomCategory.lookup(@user, value(fields, :category)) || "Uncategorized"
+        Category.lookup(@user, value(fields, :category)) || Transaction::UNCATEGORIZED
       else
         @categorizer.categorize(description, amount)
       end
       {booked_on: parse_date(value(fields, :date), line), description: description,
-       amount: amount, category: category, tax_review: category == "Business", excluded: false,
+       amount: amount, category: category, tax_review: @categorizer.tree.business?(category), excluded: false,
        file_category: @columns[:category].present? && value(fields, :category).present?}
     end
 

@@ -3,7 +3,7 @@ import { formatMoney, FREQUENCIES, type Frequency, type TransactionKind } from "
 import { allCategories } from "@billie/finance-core";
 import { useEffect, useState, type FormEvent } from "react";
 import { useDraftState } from "../hooks/useMode";
-import { Money, PageHeading } from "../components/common";
+import { categoryChoices, indented, Money, PageHeading } from "../components/common";
 import { parseAmount } from "../components/EntryForm";
 import { useFinance } from "../hooks/useFinance";
 import { categoryLabel, useI18n } from "../i18n";
@@ -15,7 +15,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 export function Planning({ focus = null }: { focus?: string | null } = {}) {
   const { m, t } = useI18n();
   const x = m.ledger.planning;
-  const { store, accounts, customCategories, currency, refresh, transactions } = useFinance();
+  const { store, accounts, customCategories, categoryTree, currency, refresh, transactions } = useFinance();
   const cur = currency ?? accounts[0]?.currency ?? "USD";
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [rules, setRules] = useState<RecurringRule[]>([]);
@@ -27,7 +27,9 @@ export function Planning({ focus = null }: { focus?: string | null } = {}) {
   const [budgetForm, setBudgetForm] = useDraftState("planning-page", "budget", { period: "month" as "month" | "year", scope: "", amount: "", alert: "90" });
   const [ruleForm, setRuleForm] = useDraftState<null | { id?: number; name: string; kind: TransactionKind; amount: string; accountId: string; toAccountId: string; category: string; frequency: Frequency; interval: string; startOn: string; endOn: string; autoPost: boolean }>("planning-page", "schedule", null);
   const live = accounts.filter((a) => !a.archived && !a.unassigned);
-  const categories = allCategories(customCategories).filter((c) => c !== "Transfers");
+  const categories = allCategories(customCategories).filter((c) => categoryTree.kindOf(c) !== "transfer");
+  // Pickers show the tree, indented, without hidden categories.
+  const choices = (names: readonly string[], value?: string | null) => categoryChoices(categoryTree, names, value);
 
   const reload = async () => {
     setBudgets(await store.ledger.budgets());
@@ -112,7 +114,7 @@ export function Planning({ focus = null }: { focus?: string | null } = {}) {
           <label className="bw-field"><span>{x.scope}</span>
             <select value={budgetForm.scope} onChange={(e) => setBudgetForm({ ...budgetForm, scope: e.target.value })}>
               <option value="">{x.everything}</option>
-              <optgroup label={m.ledger.entry.category}>{categories.filter((c) => c !== "Income").map((c) => <option key={c} value={`c:${c}`}>{categoryLabel(m, c)}</option>)}</optgroup>
+              <optgroup label={m.ledger.entry.category}>{choices(categories.filter((c) => categoryTree.kindOf(c) !== "income")).map((c) => <option key={c.name} value={`c:${c.name}`}>{indented(categoryLabel(m, c.name), c.depth)}</option>)}</optgroup>
               {projects.length > 0 && <optgroup label={m.ledger.entry.project}>{projects.map((p) => <option key={p.id} value={`p:${p.id}`}>{p.name}</option>)}</optgroup>}
             </select>
           </label>
@@ -149,7 +151,7 @@ export function Planning({ focus = null }: { focus?: string | null } = {}) {
               ) : (
                 <label className="bw-field"><span>{m.ledger.entry.category}</span>
                   <select value={ruleForm.category} onChange={(e) => setRuleForm({ ...ruleForm, category: e.target.value })}>
-                    <option value="">—</option>{categories.filter((c) => (ruleForm.kind === "income") === (c === "Income") || !["Income"].includes(c)).map((c) => <option key={c} value={c}>{categoryLabel(m, c)}</option>)}
+                    <option value="">—</option>{choices(categories.filter((c) => ruleForm.kind === "income" || categoryTree.kindOf(c) !== "income"), ruleForm.category).map((c) => <option key={c.name} value={c.name}>{indented(categoryLabel(m, c.name), c.depth)}</option>)}
                   </select>
                 </label>
               )}

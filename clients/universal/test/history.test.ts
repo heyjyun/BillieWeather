@@ -55,8 +55,9 @@ type Book = Awaited<ReturnType<typeof book>>;
 /** Everything in the book except times that replay sets, the append-only log and the history itself. */
 async function dump(sql: SqlDriver) {
   const result: Record<string, unknown> = {};
+  const present = new Set((await sql.select<{ name: string }>("SELECT name FROM sqlite_master WHERE type = 'table'")).map((row) => row.name));
   for (const table of BACKUP_TABLES) {
-    if (table === "audit_events") continue;
+    if (table === "audit_events" || !present.has(table)) continue;
     const rows = await sql.select<Record<string, unknown>>(`SELECT * FROM ${table}`);
     result[table] = rows.map((row) => { const { updated_at: _time, ...rest } = row; return JSON.stringify(rest); }).sort();
   }
@@ -510,16 +511,21 @@ describe("upgrade from version 9", () => {
     const SQL = await initSqlJs();
     const db = new SQL.Database();
     migrate(db, 9);
-    const old = new FinanceStore(sqljsDriver(db));
-    await importFile(old, csv(), "s.csv", "USD");
-    const before = await dump(old.sql);
+    // A version-9 book as that version wrote it (today's store reads the version-11 category tree).
+    db.exec(`INSERT INTO statements (id, filename, currency, sha256, transaction_count, imported_at) VALUES (1, 's.csv', 'USD', 's', 2, '2026-11-20');
+      INSERT INTO transactions (id, statement_id, booked_on, description, amount_cents, category, updated_at, uuid) VALUES
+        (1, 1, '2026-11-20', 'Synthetic Coffee', -450, 'Food & dining', '2026-11-20', 'u1'), (2, 1, '2026-11-21', 'Synthetic Store', -1025, 'Shopping', '2026-11-21', 'u2');`);
+    const withoutTree = async (sql: SqlDriver) => { const { categories: _tree, ...rest } = await dump(sql); return rest; };
+    const before = await withoutTree(sqljsDriver(db));
     migrate(db);
     const now = await open(db);
-    expect(await dump(now.sql)).toEqual(before);
+    expect(await withoutTree(now.sql)).toEqual({ ...before, settings: [...(before.settings as string[]), JSON.stringify({ key: "category_seed", value: "legacy" })].sort() });
+    // The nine old built-ins became ordinary categories with their legacy keys; nothing new was added.
+    expect((await now.store.categoryRows()).map((row) => row.key).sort()).toEqual(["business", "food", "health", "housing", "income", "shopping", "transfers", "transport", "utilities"]);
     expect(await now.h.state()).toEqual({ undo: null, redo: null });
     const [{ id }] = await now.store.transactions();
     await now.store.setExcluded(id, true);
     expect(await step(now, "undo")).toBe("done");
-    expect(await dump(now.sql)).toEqual(before);
+    expect((await withoutTree(now.sql)).transactions).toEqual(before.transactions);
   });
 });

@@ -10,6 +10,8 @@ import {
 } from "@billie/finance-core";
 import { useEffect, useMemo, useState } from "react";
 import { categoryLabel, interpolate, useI18n } from "../i18n";
+import { categoryChoices, indented } from "./common";
+import { useOptionalCategoryTree } from "../hooks/useFinance";
 
 const ROW_LIMIT = 300;
 
@@ -32,6 +34,7 @@ export function ImportPreview(props: {
 }) {
   const { draft, context } = props;
   const { m } = useI18n();
+  const categoryTree = useOptionalCategoryTree() ?? context.tree ?? null;
   const u = m.universal;
   const [showAll, setShowAll] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -261,7 +264,7 @@ export function ImportPreview(props: {
                     <td>
                       {row.status !== "rejected" && row.category !== null ? (
                         <select aria-label={`${u.table.category} ${row.originalDescription}`} value={row.category} onChange={(event) => revise({ edits: { [row.id]: { category: event.target.value } } })}>
-                          {props.categories.map((name) => <option key={name} value={name}>{categoryLabel(m, name)}</option>)}
+                          {categoryChoices(categoryTree, props.categories, row.category).map((choice) => <option key={choice.name} value={choice.name}>{indented(categoryLabel(m, choice.name), choice.depth)}</option>)}
                         </select>
                       ) : "—"}
                     </td>

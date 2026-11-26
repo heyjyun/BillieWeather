@@ -1,19 +1,36 @@
-<% custom = !Finance::Transaction::CATEGORIES.include?(name) %>
-<% kind = tree.kind_of(name) %>
+<%# Managing one category: rename, move (any parent except itself and its subcategories), kind
+    (top-level only), order, hide, delete with a destination, merge. Uncategorized is fixed;
+    Transfers stays top-level and cannot be deleted or merged.
+    Locals: name, tree, record (Finance::Category). %>
+<% node = tree.node(name) %>
+<% transfers = record.transfers_root? %>
 <div class="bw-cat-manage" id="arrange">
+  <%= form_with url: finance_category_path(record), method: :patch, scope: :category, data: {turbo: false}, class: "bw-form bw-cat-add" do |form| %>
+    <div class="bw-field"><%= form.label :name, t("billie.categories.rename_label"), for: "rename-#{record.id}" %><%= form.text_field :name, value: record.name, id: "rename-#{record.id}", required: true, maxlength: Finance::Category::MAX_LENGTH %></div>
+    <%= form.submit t("billie.categories.rename"), class: "bw-button bw-button-outline" %>
+  <% end %>
   <%= form_with url: arrange_finance_categories_path, method: :patch, scope: :arrangement, data: {turbo: false}, class: "bw-form bw-form-grid" do |form| %>
     <%= hidden_field_tag :name, name, id: nil %>
-    <% if custom %>
-      <div class="bw-field"><%= form.label :category_kind, t("billie.ledger.categories.kind_label") %><%= form.select :category_kind, [[t("billie.ledger.categories.tree_expense"), "expense"], [t("billie.ledger.categories.tree_income"), "income"]], selected: kind %></div>
-      <div class="bw-field"><%= form.label :parent_name, t("billie.ledger.categories.parent_label") %><%= form.select :parent_name, [[t("billie.ledger.categories.no_parent"), ""]] + tree.roots(kind).reject { |root| root.name == name }.map { |root| [finance_label(root.name), root.name] }, selected: tree.parent_of(name) %></div>
+    <% unless transfers %>
+      <div class="bw-field"><%= form.label :parent_name, t("billie.ledger.categories.parent_label") %><%= form.select :parent_name, [[t("billie.ledger.categories.no_parent"), ""]] + tree.parent_options(name, label: method(:finance_label)), selected: node.parent.to_s %></div>
     <% end %>
-    <div class="bw-field"><%= form.label :sort_order, t("billie.ledger.categories.order_label") %><%= form.number_field :sort_order, value: tree.roots(kind).flat_map { |r| [r, *r.children] }.find { |n| n.name == name }&.sort_order || 0, min: -999, max: 999 %></div>
-    <label class="bw-checkbox-inline"><%= form.check_box :hidden, {checked: tree.hidden?(name)}, "1", "0" %><span><%= t("billie.ledger.categories.hide_label") %></span></label>
+    <% if node.depth.zero? && !transfers %>
+      <div class="bw-field"><%= form.label :category_kind, t("billie.ledger.categories.kind_label") %><%= form.select :category_kind, [[t("billie.ledger.categories.tree_expense"), "expense"], [t("billie.ledger.categories.tree_income"), "income"]], selected: node.kind %></div>
+    <% end %>
+    <label class="bw-checkbox-inline"><%= form.check_box :hidden, {checked: node.hidden}, "1", "0" %><span><%= t("billie.ledger.categories.hide_label") %></span></label>
     <%= form.submit t("billie.ledger.categories.arrange"), class: "bw-button bw-button-outline" %>
   <% end %>
-  <% if custom && (record = custom_record) %>
-    <%= form_with url: finance_category_path(record), method: :delete, data: {turbo: false, confirm: t("billie.ledger.categories.merge_confirm", name: name)}, class: "bw-form bw-cat-add" do |form| %>
-      <div class="bw-field"><%= label_tag "merge-#{record.id}", t("billie.ledger.categories.merge_label") %><%= select_tag :move_to, options_for_select(tree.names.reject { |n| n == name || n == "Transfers" }.map { |n| [finance_label(n), n] }), id: "merge-#{record.id}" %></div>
+  <% if transfers %>
+    <p class="bw-caption"><%= t("billie.categories.transfers_note") %></p>
+  <% else %>
+    <% destinations = tree.options(include_hidden: true, label: method(:finance_label), exclude: [name]) %>
+    <%= form_with url: finance_category_path(record), method: :delete, data: {turbo: false, confirm: t("billie.categories.delete_confirm_tree", name: name)}, class: "bw-form bw-cat-add" do |form| %>
+      <div class="bw-field"><%= label_tag "delete-#{record.id}", t("billie.categories.delete_destination") %><%= select_tag :move_to, options_for_select(destinations, node.parent || Finance::Transaction::UNCATEGORIZED), id: "delete-#{record.id}" %></div>
+      <%= form.submit t("billie.categories.delete"), class: "bw-button bw-button-danger-outline" %>
+    <% end %>
+    <% merge_targets = tree.options(include_hidden: true, label: method(:finance_label), exclude: [name]).reject { |_label, value| value == Finance::Transaction::UNCATEGORIZED } %>
+    <%= form_with url: merge_finance_category_path(record), method: :post, data: {turbo: false, confirm: t("billie.ledger.categories.merge_confirm", name: name)}, class: "bw-form bw-cat-add" do |form| %>
+      <div class="bw-field"><%= label_tag "merge-#{record.id}", t("billie.ledger.categories.merge_label") %><%= select_tag :into, options_for_select(merge_targets), id: "merge-#{record.id}" %></div>
       <%= form.submit t("billie.ledger.categories.merge"), class: "bw-button bw-button-outline" %>
     <% end %>
   <% end %>

@@ -25,31 +25,33 @@ describe("custom categories", () => {
     expect(await store.renameCategory("Cloud bills", "Cloud")).toBe("Cloud");
     expect((await byDescription(store, aws.description)).category).toBe("Cloud");
     expect((await store.rules()).map((rule) => rule.category)).toEqual(["Cloud"]);
-    expect(await store.customCategories()).toEqual(["Cloud"]);
+    expect(await store.customCategories()).toContain("Cloud");
+    expect(await store.customCategories()).not.toContain("Cloud bills");
 
     expect(await store.deleteCategory("Cloud")).toBe(1);
     expect((await byDescription(store, aws.description)).category).toBe("Uncategorized");
     expect(await store.rules()).toEqual([]);
-    expect(await store.customCategories()).toEqual([]);
+    expect(await store.customCategories()).not.toContain("Cloud");
   });
 
-  it("refuses built-in, duplicate (any letter case), blank and too-long names", async () => {
+  it("refuses Uncategorized, duplicate (any letter case, any depth), blank and too-long names", async () => {
     const { store } = await newStore();
     await store.addCategory("Pets");
-    for (const [name, problem] of [["shopping", "reserved"], ["PETS", "taken"], ["   ", "blank"], ["x".repeat(41), "too_long"]]) {
+    for (const [name, problem] of [["uncategorized", "reserved"], ["shopping", "taken"], ["groceries", "taken"], ["PETS", "taken"], ["   ", "blank"], ["x".repeat(41), "too_long"]]) {
       await expect(store.addCategory(name)).rejects.toMatchObject({ code: "invalid_category", vars: { problem } });
     }
-    await store.addCategory("Gifts");
-    await expect(store.renameCategory("Gifts", "pets")).rejects.toBeInstanceOf(StoreError);
+    await store.addCategory("Party");
+    await expect(store.renameCategory("Party", "pets")).rejects.toBeInstanceOf(StoreError);
     expect(await store.renameCategory("Pets", "pets")).toBe("pets"); // its own name in another case is fine
     expect(categoryNameProblem("Childcare", ["Pets"])).toBeNull();
   });
 
-  // Raised from 50 to 200 with two-level categories (Rails Finance::CustomCategory has the same limit).
-  it("keeps at most 200 custom categories", async () => {
+  // 500 categories per book since the category tree, the defaults included (Rails has the same limit).
+  it("keeps at most 500 categories, the defaults included", async () => {
     const { store } = await newStore();
-    for (let i = 1; i <= 200; i += 1) await store.addCategory(`Category ${i}`);
-    await expect(store.addCategory("One more")).rejects.toMatchObject({ code: "too_many_categories" });
+    const start = (await store.categoryRows()).length;
+    for (let i = start + 1; i <= 500; i += 1) await store.addCategory(`Category ${i}`);
+    await expect(store.addCategory("One more")).rejects.toMatchObject({ code: "too_many_categories", vars: { max: 500 } });
   });
 
   it("migration 3 keeps every existing transaction and rule and then allows custom names", async () => {
@@ -86,7 +88,9 @@ describe("custom categories", () => {
     const { store: target } = await newStore();
     await target.addCategory("cloud"); // same name, other letter case: reused
     await target.mergeData(await source.exportData());
-    expect(await target.customCategories()).toEqual(["cloud", "Unused yet"]);
+    const names = await target.customCategories();
+    expect(names).toEqual(expect.arrayContaining(["cloud", "Unused yet"]));
+    expect(names).not.toContain("Cloud");
     expect((await byDescription(target, "AMAZON WEB SERVICES AWS.AMAZON.CO")).category).toBe("cloud");
 
     const { store: device } = await newStore();
@@ -98,15 +102,19 @@ describe("custom categories", () => {
         { remoteId: 11, remoteStatementId: 1, bookedOn: "2026-01-02", description: "GIFT SHOP", amountCents: -100, category: "Gifts", taxReview: false, excluded: false },
       ],
     });
-    expect(await device.customCategories()).toEqual(["Gifts", "Pets"]);
+    expect(await device.customCategories()).toEqual(expect.arrayContaining(["Gifts", "Pets"]));
     expect((await device.transactions()).map((t) => t.category).sort()).toEqual(["Gifts", "Pets"]);
   });
 
-  it("deleting all data forgets custom categories", async () => {
+  it("deleting all data forgets the book's categories and starts again from the defaults", async () => {
     const { store } = await newStore();
     await store.addCategory("Pets");
+    await store.renameCategory("Groceries", "Supermarket");
     await store.deleteAllData();
-    expect(await store.customCategories()).toEqual([]);
+    const names = await store.customCategories();
+    expect(names).not.toContain("Pets");
+    expect(names).toContain("Groceries");
+    expect(names).toHaveLength(84);
   });
 });
 

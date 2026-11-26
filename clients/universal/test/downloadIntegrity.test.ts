@@ -132,11 +132,11 @@ describe("a write that fails leaves no account, audit row or category behind (A-
     state.armed = true;
     await expect(store.applyWebData(webStatement([{ id: 9401, on: "2026-03-02", text: "SYNTH THING", cents: -100 }], { categories: ["Synthetic hobbies"] }))).rejects.toThrow(/locked/);
     expect(count(db, "SELECT COUNT(*) FROM accounts")).toBe(0);
-    expect(count(db, "SELECT COUNT(*) FROM custom_categories")).toBe(0);
+    expect(count(db, "SELECT COUNT(*) FROM categories WHERE name = 'Synthetic hobbies'")).toBe(0);
     expect(await store.hasContent()).toBe(false);
     state.armed = false;
     expect(await store.applyWebData(webStatement([{ id: 9401, on: "2026-03-02", text: "SYNTH THING", cents: -100 }], { categories: ["Synthetic hobbies"] }))).toMatchObject({ transactionsAdded: 1 });
-    expect(count(db, "SELECT COUNT(*) FROM custom_categories WHERE name = 'Synthetic hobbies'")).toBe(1);
+    expect(count(db, "SELECT COUNT(*) FROM categories WHERE name = 'Synthetic hobbies'")).toBe(1);
     expect(count(db, "SELECT COUNT(*) FROM transactions t JOIN accounts a ON a.id = t.account_id WHERE a.account_key = '__unassigned__'")).toBe(1);
   });
 });

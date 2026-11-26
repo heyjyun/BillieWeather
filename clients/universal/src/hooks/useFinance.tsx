@@ -11,15 +11,18 @@ import { FinanceStore, StoreError, type WebSyncResult } from "../services/store"
 import type { Account } from "../services/ledger";
 import { syncFromWeb } from "../services/webSync";
 import { useAccount } from "./useAccount";
-import { useI18n } from "../i18n";
+import { setCategoryKeys, useI18n } from "../i18n";
+import { CategoryTree, type CategoryRow } from "@billie/finance-core";
 import { NameDatabase } from "../components/NameDatabase";
 
 interface FinanceData {
   transactions: Transaction[];
   /** Every account of this book, archived ones included (services/ledger.ts). */
   accounts: Account[];
-  /** The person's own categories in this database (built-in ones are in CATEGORIES). */
+  /** Every category name in this database, alphabetically (Uncategorized is not a category). */
   customCategories: string[];
+  /** Every category as stored (the tree: parent, key, kind, order, hidden, expanded). */
+  categories: CategoryRow[];
   statements: Statement[];
   rules: MerchantRule[];
   currency: Currency | null;
@@ -32,6 +35,8 @@ export type SyncState =
 
 interface FinanceContextValue extends FinanceData {
   store: FinanceStore;
+  /** The categories as a tree (lookups, paths, kinds, subtrees; finance-core categoryTree.ts). */
+  categoryTree: CategoryTree;
   persistent: boolean;
   refresh: () => Promise<void>;
   sync: SyncState;
@@ -71,11 +76,12 @@ interface FinanceContextValue extends FinanceData {
 type Opened = { store: FinanceStore; persistent: boolean };
 
 async function readFinance(store: FinanceStore) {
-  const [transactions, statements, rules, currency, settings, customCategories, accounts] = await Promise.all([
+  const [transactions, statements, rules, currency, settings, categories, accounts] = await Promise.all([
     store.transactions(), store.statements(), store.rules(), store.currency(),
-    store.webSyncSettings(), store.customCategories(), store.ledger.accounts({ includeArchived: true }),
+    store.webSyncSettings(), store.categoryRows(), store.ledger.accounts({ includeArchived: true }),
   ]);
-  return { data: { transactions, accounts, customCategories, statements, rules, currency }, settings };
+  const customCategories = categories.map((row) => row.name).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  return { data: { transactions, accounts, customCategories, categories, statements, rules, currency }, settings };
 }
 
 // When this app session started: the "app last opened" time the website may show.
@@ -118,7 +124,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     }
     return opened;
   }, []);
-  const [data, setData] = useState<FinanceData>({ transactions: [], accounts: [], customCategories: [], statements: [], rules: [], currency: null });
+  const [data, setData] = useState<FinanceData>({ transactions: [], accounts: [], customCategories: [], categories: [], statements: [], rules: [], currency: null });
   const [error, setError] = useState<string | null>(null);
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
   // Shows why the local database could not be opened (the plugin's or SQLite's own message).
@@ -157,6 +163,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
   }, [accountEmail, getToken, openById, ownerKey]);
 
   const publishFinance = useCallback(({ data, settings }: Awaited<ReturnType<typeof readFinance>>) => {
+    setCategoryKeys(data.categories);
     setData(data);
     setSyncEnabledState(settings.enabled);
     setLastChecked(settings.checkedAt);
@@ -339,9 +346,10 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
     await start(() => false).catch(failOpen);
   }, [claim, ownerKey, openById, commitRegistry, start, failOpen]);
 
+  const categoryTree = useMemo(() => new CategoryTree(data.categories), [data.categories]);
   const value = useMemo<FinanceContextValue | null>(
     () => state ? {
-      ...data, ...state, sync, syncEnabled, lastChecked,
+      ...data, ...state, categoryTree, sync, syncEnabled, lastChecked,
       // Called after a change was saved. If the book cannot be read back, saying so is the truth; reporting
       // the saved change as failed would invite saving it twice.
       refresh: () => load(state.store).catch((reason: unknown) => { if (activeStore.current === state.store) failOpen(reason); }),
@@ -477,7 +485,7 @@ export function FinanceProvider({ children, ownerKey = null, emailKey = null }: 
         if (id === state.activeId) await activate(remaining[0].id);
       },
     } : null,
-    [data, state, registry, sync, syncEnabled, lastChecked, databaseName, reporting, reportMetadata, load, runSync, activate, openById, commitRegistry, failOpen, ownerKey, emailKey, aliases],
+    [data, state, categoryTree, registry, sync, syncEnabled, lastChecked, databaseName, reporting, reportMetadata, load, runSync, activate, openById, commitRegistry, failOpen, ownerKey, emailKey, aliases],
   );
 
   if (claim) {
@@ -524,4 +532,9 @@ export function useFinance(): FinanceContextValue {
   const value = useContext(FinanceContext);
   if (!value) throw new Error("useFinance must be used inside FinanceProvider");
   return value;
+}
+
+/** The open book's category tree, or null outside a FinanceProvider (previews and isolated components). */
+export function useOptionalCategoryTree(): CategoryTree | null {
+  return useContext(FinanceContext)?.categoryTree ?? null;
 }

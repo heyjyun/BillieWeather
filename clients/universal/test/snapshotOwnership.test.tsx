@@ -32,7 +32,7 @@ vi.mock("../src/services/platform", async () => {
       if (files.has(file)) throw new Error("occupied");
       const driver = make();
       await driver.execute("INSERT INTO settings (key, value) VALUES ('database_name', 'Snapshot'), ('owner_account_id', ?), ('report_id', 'old-device-copy')", [snapshotOwner]);
-      await driver.execute("INSERT INTO custom_categories (name, created_at) VALUES ('Private category', '2026-11-01')");
+      await driver.execute("INSERT INTO categories (name, kind, created_at, updated_at) VALUES ('Private category', 'expense', '2026-11-01', '2026-11-01')");
       files.set(file, driver);
     },
   };

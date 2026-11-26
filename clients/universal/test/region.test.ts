@@ -272,7 +272,7 @@ describe("8. no region or financial data is uploaded unintentionally", () => {
     await uploadStatement("tok", data.statements[0]);
     fetchSpy.mockRestore();
     const sent = JSON.parse(bodies[0]);
-    expect(Object.keys(sent.statement).sort()).toEqual(["closing_balance", "closing_balance_on", "currency", "filename", "sha256", "transactions"]);
+    expect(Object.keys(sent.statement).sort()).toEqual(["categories", "closing_balance", "closing_balance_on", "currency", "filename", "sha256", "transactions"]);
     expect(bodies[0]).not.toMatch(/region|"CN"/);
   });
 

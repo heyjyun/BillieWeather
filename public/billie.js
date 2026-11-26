@@ -743,6 +743,24 @@
     document.querySelectorAll("[data-insight-chat]").forEach(setupInsightChat);
     document.querySelectorAll("[data-local-manage]").forEach(setupLocalManage);
     document.querySelectorAll("[data-feature-library]").forEach(setupFeatureLibrary);
+    document.querySelectorAll("details[data-category-expand-url]").forEach(setupCategoryExpand);
+  }
+
+  // Category tree (docs/architecture/category-hierarchy.md): opening or closing a category's
+  // subcategories is saved for the person (finance_categories.expanded). Failures are silent: the
+  // tree still works, it just opens collapsed next time.
+  function setupCategoryExpand(details) {
+    if (details.dataset.expandReady) return;
+    details.dataset.expandReady = "1";
+    details.addEventListener("toggle", function () {
+      var token = document.querySelector('meta[name="csrf-token"]');
+      fetch(details.dataset.categoryExpandUrl, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token ? token.content : "" },
+        body: JSON.stringify({ expanded: details.open })
+      }).catch(function () {});
+    });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

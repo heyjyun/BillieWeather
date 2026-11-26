@@ -20,7 +20,7 @@ module ClientApi
         statements = Finance::Statement.where(user_id: current_user.id)
         transactions = Finance::Transaction.where(user_id: current_user.id)
         rules = Finance::MerchantRule.where(user_id: current_user.id)
-        categories = Finance::CustomCategory.where(user_id: current_user.id)
+        categories = Finance::Category.for_user(current_user)
         parts = [
           statements.count, statements.maximum(:updated_at)&.utc&.iso8601(6),
           transactions.count, transactions.maximum(:updated_at)&.utc&.iso8601(6),
@@ -79,15 +79,19 @@ module ClientApi
         return render json: {error: "invalid"}, status: :unprocessable_entity if closing == :invalid
         account = payload[:account].presence && upload_account_details(payload[:account])
         return render json: {error: "invalid"}, status: :unprocessable_entity if account == :invalid
+        upload_categories = parse_upload_categories(payload.key?(:categories) ? payload[:categories] : params[:categories])
+        return render json: {error: "invalid"}, status: :unprocessable_entity if upload_categories == :invalid
         result = current_user.with_lock do
           record = Finance::Profile.find_or_create_by!(user_id: current_user.id) { |p| p.currency = currency }
           next {error: "currency_mismatch", currency: record.currency, status: :conflict} if record.currency != currency
           if (existing = Finance::Statement.find_by(user_id: current_user.id, sha256: sha256))
             next {id: existing.id, created: false, status: :ok}
           end
-          # Categories the person made in the app arrive as names; the cloud adds them as its own custom categories.
+          # The app may describe its categories (parents first): missing ones are created under their
+          # parent. Names still unknown after that arrive as roots, as before.
+          upload_categories.each { |item| ensure_upload_category(item) }
           known = {}
-          parsed.each { |row| row[:category] = (known[row[:category]] ||= Finance::CustomCategory.ensure_for!(current_user, row[:category])) }
+          parsed.each { |row| row[:category] = (known[row[:category]] ||= Finance::Category.ensure_for!(current_user, row[:category])) }
           # Same classification and cross-file duplicate check as a website import; the device's
           # categories are kept (they were decided there).
           # The account the device identified (bank, last four digits, kind) files the statement under
@@ -192,21 +196,29 @@ module ClientApi
           .map { |rule| {merchant_key: rule.merchant_key, income: rule.income, category: rule.category} }}
       end
 
-      # The person's own categories (the built-in ones are the same everywhere and not listed).
+      # The person's categories (docs/architecture/category-hierarchy.md, Sync). `categories` keeps its
+      # old meaning for older apps: every name except the ten legacy built-in names. `tree` lists every
+      # category, parents before children (never `expanded`: that preference stays per database).
       def categories
-        render json: {categories: Finance::CustomCategory.where(user_id: current_user.id).order(Arel.sql("lower(name)")).pluck(:name)}
+        tree = Finance::CategoryTree.new(current_user)
+        legacy = Finance::DefaultCategories::LEGACY_NAMES
+        render json: {
+          categories: tree.nodes.map(&:name).reject { |name| legacy.include?(name) }.sort_by { |name| [name.downcase, name] },
+          tree: tree.as_wire
+        }
       end
 
       # "Categorize with AI" from an app. The app sends only what its consent screen shows: for
-      # each merchant a key, a cleaned description and the direction, plus the names of its own
-      # categories. Nothing is stored here; the answer maps keys to category names.
+      # each merchant a key, a cleaned description and the direction, plus its categories as names or
+      # full paths ("Food & dining › Groceries"). Nothing is stored here; the answer maps keys to
+      # category names and may propose new subcategories (`proposals`, ignored by older apps).
       def categorize
         return render json: {error: "consent_required"}, status: :unprocessable_entity unless params[:consent] == true
         return render json: {error: "not_configured"}, status: :service_unavailable unless Finance::AiCategorizer.available?
         items = Array(params[:items])
         custom = Array(params[:categories])
-        if items.empty? || items.length > MAX_CATEGORIZE_ITEMS || custom.length > Finance::CustomCategory::MAX_PER_USER ||
-            !custom.all? { |name| name.is_a?(String) && name.length <= Finance::CustomCategory::MAX_LENGTH && name == Finance::CustomCategory.normalize_name(name) && name.present? }
+        if items.empty? || items.length > MAX_CATEGORIZE_ITEMS || custom.length > Finance::Category::MAX_PER_USER ||
+            !custom.all? { |name| valid_category_reference?(name) }
           return render json: {error: "invalid"}, status: :unprocessable_entity
         end
         cleaned = items.map do |item|
@@ -216,8 +228,11 @@ module ClientApi
         end
         return render json: {error: "invalid"}, status: :unprocessable_entity if cleaned.any?(&:nil?) || cleaned.map { |item| item[:key] }.uniq.length != cleaned.length
         Finance::AiCategorizer.claim_run!(current_user)
-        suggestions = Finance::AiCategorizer.suggest(items: cleaned, categories: custom - Finance::Transaction::CATEGORIES)
-        render json: {assignments: suggestions.map { |key, category| {key: key, category: category} }}
+        result = Finance::AiCategorizer.suggest_with_proposals(items: cleaned, categories: custom, legacy: true)
+        render json: {
+          assignments: result[:assignments].map { |key, category| {key: key, category: category} },
+          proposals: result[:proposals].map { |proposal| proposal.slice(:parent, :name, :keys) }
+        }
       rescue Finance::AiCategorizer::Error => error
         status = {wait: :too_many_requests, not_configured: :service_unavailable, quota: :service_unavailable}.fetch(error.code, :bad_gateway)
         render json: {error: error.code.to_s}, status: status
@@ -251,10 +266,45 @@ module ClientApi
         return nil unless original_description.is_a?(String) && original_description.present? && original_description.length <= 500
         kind = row[:kind]
         return nil if row.key?(:kind) && !Finance::Domain::TRANSACTION_KINDS.include?(kind)
-        category = Finance::CustomCategory.normalize_name(row[:category])
-        return nil if category.empty? || category.length > Finance::CustomCategory::MAX_LENGTH
+        category = Finance::Category.normalize_name(row[:category])
+        return nil if category.empty? || category.length > Finance::Category::MAX_LENGTH
         {booked_on: booked_on, description: description, original_description: original_description, kind: kind, amount: amount, category: category,
          tax_review: row[:tax_review] == true, excluded: row[:excluded] == true}
+      end
+
+      # A category name, or a path of names joined by " › ", each part already normalized.
+      def valid_category_reference?(value)
+        return false unless value.is_a?(String) && value.present? && value.length <= 400
+        parts = value.split(Finance::Category::PATH_SEPARATOR.strip).map(&:strip)
+        parts.any? && parts.all? { |part| part.present? && part.length <= Finance::Category::MAX_LENGTH && part == Finance::Category.normalize_name(part) } &&
+          (parts.length > 1 || value == Finance::Category.normalize_name(value))
+      end
+
+      # [{name:, parent:, kind:}] from a statement upload (parents first), [] when absent, :invalid when malformed.
+      def parse_upload_categories(value)
+        return [] if value.nil?
+        return :invalid unless value.is_a?(Array) && value.length <= Finance::Category::MAX_PER_USER
+        value.map do |item|
+          return :invalid unless item.respond_to?(:key?) && item.respond_to?(:[])
+          name = item[:name]
+          parent = item[:parent]
+          kind = item[:kind]
+          return :invalid unless name.is_a?(String) && (parent.nil? || parent.is_a?(String)) && (kind.nil? || Finance::Category::KINDS.include?(kind))
+          name = Finance::Category.normalize_name(name)
+          parent = parent && Finance::Category.normalize_name(parent).presence
+          return :invalid if name.empty? || name.length > Finance::Category::MAX_LENGTH || (parent && parent.length > Finance::Category::MAX_LENGTH)
+          {name: name, parent: parent, kind: kind}
+        end
+      end
+
+      # Creates one category an app described, unless the cloud already has that name. A root of kind
+      # transfer goes under the Transfers category (people cannot create transfer roots).
+      def ensure_upload_category(item)
+        return if item[:name].casecmp?(Finance::Category::UNCATEGORIZED) || Finance::Category.lookup(current_user, item[:name])
+        parent = item[:parent]
+        parent = Finance::Category.name_for_key(current_user, Finance::DefaultCategories::TRANSFERS_KEY) if parent.nil? && item[:kind] == "transfer"
+        parent = nil if parent == Finance::Category::UNCATEGORIZED || (parent && Finance::Category.lookup(current_user, parent).nil?)
+        Finance::Category.ensure_for!(current_user, item[:name], parent: parent, kind: item[:kind])
       end
 
       # Exact decimal as text ("-12.50"), never a float.

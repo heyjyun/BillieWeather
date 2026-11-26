@@ -1,5 +1,5 @@
 import type { PeriodPreset } from "@billie/shared-types";
-import { buildSnapshot, localToday, resolvePeriod, spendingMix, spendingPalette } from "@billie/finance-core";
+import { buildSnapshot, localToday, resolvePeriod, rollUp, spendingMix, spendingPalette } from "@billie/finance-core";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CategoryBadge, Empty, Money, PeriodPicker } from "../components/common";
 import { GreetingHeader } from "../components/Greeting";
@@ -29,8 +29,12 @@ export function Dashboard({ go }: { go: (page: Page, part?: string | null) => vo
   const accountId = accounts.find((account) => String(account.id) === selected)?.id;
   const scoped = useMemo(() => accountId === undefined ? transactions : transactions.filter((tx) => tx.accountId === accountId), [accountId, transactions]);
   const snap = useMemo(() => buildSnapshot({ transactions: scoped, statements, period, currency: cur }), [scoped, statements, period, cur]);
-  const palette = useMemo(() => spendingPalette(transactions), [transactions]);
-  const mix = useMemo(() => spendingMix(scoped, palette, period), [scoped, palette, period]);
+  // Category charts group by top-level category (subcategories roll up into them).
+  const tree = finance.categoryTree;
+  const byRoot = useMemo(() => rollUp(scoped, tree), [scoped, tree]);
+  const grouped = useMemo(() => buildSnapshot({ transactions: byRoot, statements, period, currency: cur }), [byRoot, statements, period, cur]);
+  const palette = useMemo(() => spendingPalette(rollUp(transactions, tree)), [transactions, tree]);
+  const mix = useMemo(() => spendingMix(byRoot, palette, period), [byRoot, palette, period]);
   const d = m.dashboard;
   const copy = overviewCopy[locale];
   const databaseList = databaseIds.join("|");
@@ -141,7 +145,7 @@ export function Dashboard({ go }: { go: (page: Page, part?: string | null) => vo
                   <SpendingMixChart mix={mix} currency={cur} emptyText={d.noSpending}
                     onOpen={usable("categories") ? (category) => go("categories", category) : undefined} />
                 </section>
-                <IncomeMix categories={snap.incomeCategories} currency={cur} />
+                <IncomeMix categories={grouped.incomeCategories} currency={cur} />
               </div>
               <section className="bw-panel" aria-labelledby="recent-heading">
                 <div className="bw-panel-top">
