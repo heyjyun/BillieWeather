@@ -15,12 +15,22 @@
 #   end
 # end
 
-# Permit CORS from any origin for API routes
+# Origins allowed to call the apps' API (/api/client/v1). Bearer tokens only; no cookies cross-origin.
+module BillieCors
+  # The Tauri WebViews (macOS/iOS, Windows/Android) and the app's dev server. Production uses exactly this list.
+  APP_ORIGINS = ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost", "http://localhost:1420"].freeze
+  # Development and test only: the dev server on 127.0.0.1, and the isolated diagnostic build's Vite on
+  # port 1430 (an isolated diagnostic build with its own identifier, data folder and WebView origin).
+  DEV_APP_ORIGINS = ["http://127.0.0.1:1420", "http://localhost:1430", "http://127.0.0.1:1430"].freeze
+
+  def self.app_origins(environment = Rails.env)
+    %w[development test].include?(environment.to_s) ? APP_ORIGINS + DEV_APP_ORIGINS : APP_ORIGINS
+  end
+end
+
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
-  # The BillieWeather apps (Tauri WebViews on macOS/iOS, Windows/Android, and the dev server).
-  # Bearer tokens only; no cookies are sent cross-origin.
   allow do
-    origins "tauri://localhost", "http://tauri.localhost", "https://tauri.localhost", "http://localhost:1420"
+    origins(*BillieCors.app_origins)
     resource "/api/client/v1/*", headers: ["Authorization", "Content-Type", "Accept"], methods: [:get, :post, :put, :patch, :delete, :options], max_age: 600
   end
 
