@@ -23,7 +23,7 @@ Time: about an hour, most of it downloads. Steps marked 👤 need a person at th
 brew install gh && gh auth login            # browser sign-in
 mkdir -p ~/Developer && cd ~/Developer
 gh repo clone heyjyun/BillieWeather BillieWeather && cd BillieWeather
-git switch main                             # consolidated on 2026-11-25; feature branches start here
+git switch main                             # the only long-lived branch; temporary branches start here
 ops/bootstrap-mac-mini.sh --check           # what is missing
 ops/bootstrap-mac-mini.sh                   # install tools, dependencies, isolated databases
 echo devbox > ~/.billieweather-dev/role     # marks this Mac as the development machine
@@ -67,6 +67,27 @@ ops/agent-run.sh start night-1 prompts/night-1.md
 ops/agent-run.sh status
 ```
 
-## 6. Releases
+## 6. Git: one shared `main` with the MacBook
+
+The mini and the MacBook both work on `main` through GitHub; there is no integration branch.
+
+```sh
+ops/git-sync.sh pull                        # start of every session: fast-forward main only
+git switch -c feature/x                     # optional temporary branch for larger or agent work
+# … commit, ops/doctor.sh --tests …
+git fetch origin && git rev-list --left-right --count main...origin/main   # divergence check
+ops/git-sync.sh push main                   # a person pushes; never --force
+```
+
+If the clone predates 2026-11-25 and still has `autonomous-development` checked out, discard
+nothing. Run `git fetch origin --prune`, check `git cherry -v origin/main
+autonomous-development` (empty or `-` lines only means it is merged), then `git switch main && git
+merge --ff-only origin/main`. Rules and the full flow: [GIT_SYNC.md](GIT_SYNC.md).
+
+Agents on the mini commit locally and never push. **Pushing `main` currently starts a Render
+production deploy**: see [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md#render-deployment-separate-from-git-sync).
+No production credential (Neon owner/runtime URL, `BILLIE_RELEASE_APPROVAL`) is ever stored on the mini.
+
+## 7. Releases
 
 `ops/release-build.sh` at a tag → `~/BillieWeather-Releases/<version>/`. See RELEASE_WORKFLOW.md.

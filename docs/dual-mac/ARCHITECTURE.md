@@ -1,43 +1,53 @@
 # Dual-Mac architecture
 
-Two computers with separate jobs. Git (GitHub) and release folders are the only things that move
-between them. No database, `.env`, Keychain item or service is shared.
+Two computers, one shared Git branch. Source moves only through GitHub (`origin/main`); release
+folders move separately. No database, `.env`, Keychain item or service is shared.
 
-| | Mac mini — development | MacBook Air — daily use |
+| | Mac mini — main development | MacBook Air — daily use + occasional development |
 | --- | --- | --- |
-| Purpose | engineering, tests, native GUI QA, builds, DMG packaging, overnight agents | the stable BillieWeather app and the person's own books |
-| Source | full checkout, `autonomous-development` + feature branches | none needed (optional read-only clone) |
-| Toolchain | Ruby 4.0.3, Node 24, Rust ≥1.94, uv/Python, PostgreSQL 14, CLT | none (macOS built-ins only) |
-| Databases | isolated PostgreSQL cluster (`bin/billie-local`, socket only) + QA SQLite under `com.billieweather.client.qa.*` | the app's SQLite under `com.billieweather.client` |
+| Purpose | engineering, full tests, native GUI QA, builds, DMG packaging, overnight agents | the stable BillieWeather app and the person's own books; small source changes |
+| Source | clone of `main` + short-lived branches/worktrees | clone of `main` + short-lived branches/worktrees |
+| Toolchain | Ruby 4.0.3, Node 24, Rust ≥1.94, uv/Python, PostgreSQL 18, CLT | whatever the change needs; the full suite runs on the mini |
+| Databases | isolated PostgreSQL cluster (`bin/billie-local`, socket only) + QA SQLite under `com.billieweather.client.qa.*` | the app's SQLite under `com.billieweather.client`; development only through `bin/billie-local` |
 | Apps | QA builds only (`com.billieweather.client.qa.<suffix>`), dev builds (`…client.dev`) | `/Applications/BillieWeather.app` (`com.billieweather.client`) |
-| Servers | Rails :38530, identity-api :38531 on 127.0.0.1 (`ops/dev-services.sh`) | whatever the stable build was given (see "Stable servers") |
-| Agents | Claude Code / Codex via `ops/agent-run.sh`, tmux, launchd recovery | none |
+| Servers | Rails :38530, identity-api :38531 on 127.0.0.1 (`ops/dev-services.sh`) | see "Stable servers" |
+| Agents | Claude Code / Codex via `ops/agent-run.sh`, tmux, launchd recovery; commit locally, never push | interactive sessions only |
 
 ```
-           feature branch ──► autonomous-development ──► main ──► tag vX.Y.Z
- Mac mini:   ops/doctor.sh --tests      native QA (QA bundle)     ops/release-build.sh
-                                                                      │  ~/BillieWeather-Releases/X.Y.Z/
-                                                                      ▼  (DMG, manifest, compat, SHA256SUMS)
- MacBook:                                          ops/install-stable.sh  (verify → back up → install)
-                                                   ops/install-stable.sh --rollback
+  Mac mini ─┐                                   ┌─ MacBook
+  fetch,    │   feature/* (optional, reviewed)   │  fetch,
+  ff-only   ├──────────► origin/main ◄───────────┤  ff-only
+  push      │                │                   │  push
+            │                ├──► tag vX.Y.Z ──► ops/release-build.sh (mini) ──► ~/BillieWeather-Releases/X.Y.Z/
+            │                │                                                   └► MacBook: ops/install-stable.sh
+            │                └──► Render Auto-Deploy (production web) — see RELEASE_WORKFLOW.md
 ```
+
+Git synchronization and Render deployment are separate concerns that happen to share a trigger
+today: a push to `main` starts a production deploy. See
+[RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md#render-deployment-separate-from-git-sync).
 
 ## Branches and tags
 
-- `main` — verified stable source. Only fast-forwarded from `autonomous-development` after native QA.
-- `autonomous-development` — former integration branch; fully merged into `main` on 2026-11-25. New work branches from `main`.
-- `feature/*`, `fix/*`, `infra/*` — one task each, usually in its own worktree.
-- `rollback/*` — kept fallbacks (e.g. `rollback/session-safe`).
+- `main` — the single long-lived shared branch and the source of releases. Both Macs fetch it,
+  fast-forward to it, and push to it without force after checking for divergence.
+- `feature/*`, `fix/*`, `infra/*`, `audit/*` — temporary, one task each, often in their own worktree.
+  Reviewed, merged into `main`, then deleted once nothing unique remains.
+- `rollback/*` — kept deployable fallbacks (`rollback/session-safe`), not development lines.
+- No integration branch. `autonomous-development` and `consolidated-main` were merged into `main` on
+  2026-11-25 and are retired.
 - `vX.Y.Z[-pre]` annotated tags — a release; `ops/release-build.sh` only builds at a tag.
+- `archive/<date>/*` tags — preserved tips of retired branches; push them before deleting the branch
+  if they hold anything not in `main`.
 - `checkpoint/*` tags — local safety points before risky work; not pushed unless asked.
 
-Details: [GIT_SYNC.md](GIT_SYNC.md).
+Details and the current branch inventory: [GIT_SYNC.md](GIT_SYNC.md).
 
 ## Isolation guarantees (summary)
 
 1. **Bundle identifier separates data.** The shipped app owns `~/Library/Application Support/com.billieweather.client` and its Keychain service; every QA build has `…client.qa.<suffix>` and `qa.mjs preflight` refuses anything else. A debug build refuses to run as the shipped identifier (`src-tauri/src/variant.rs`).
-2. **The development Mac has no real data.** `ops/doctor.sh` fails if the shipped app's database exists there.
-3. **Servers cannot reach production.** `bin/billie-local` builds `DATABASE_URL` itself, verifies database name, data directory, socket-only listening and role, and refuses to run beside `.env` files.
+2. **The development Mac has no real data.** `ops/doctor.sh` fails if the shipped app's database exists there. On the MacBook, development never opens the shipped app's database.
+3. **Servers cannot reach production.** `bin/billie-local` builds `DATABASE_URL` itself, verifies database name, data directory, socket-only listening and role, and refuses to run beside `.env` files. In production, `config/database.yml` and `billie:release:check` refuse any URL that is not the approved Neon target (see RELEASE_WORKFLOW.md).
 4. **The GUI driver acts only on a QA app**, only while it is frontmost, never within 20 s of keyboard/mouse input, never while the screen is locked, and exits with "refuse production" if pointed at `com.billieweather.client`.
 
 Details: [DATABASE_ISOLATION.md](DATABASE_ISOLATION.md).
