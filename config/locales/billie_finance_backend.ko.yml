@@ -53,6 +53,7 @@
         "statement_duplicate": "동일한 명세서를 이미 가져왔습니다.",
         "statement_all_duplicates": "이 파일의 모든 거래(%{count}건)는 다른 파일에서 이미 기록되어 새로 가져온 것이 없습니다.",
         "import_duplicates_notice": "다른 파일에서 이미 기록된 %{skipped}행을 건너뛰었습니다. 중복 가능성이 있는 %{flagged}건은 확인 목록에 있습니다.",
+        "import_follow_up_failed": "분류되지 않은 이전 거래나 잔액을 아직 업데이트하지 못했습니다. 다음 가져오기나 페이지를 열 때 다시 시도합니다.",
         "pdf_existing_review": "이 PDF는 이미 검토 대기 중입니다. 아래의 기존 초안을 여세요.",
         "pdf_review_unclear": "가져오기 전에 불명확한 날짜나 금액을 검토하세요.",
         "pdf_auto_imported": "PDF를 자동으로 가져왔습니다. 거래 건수를 원본 명세서와 비교하세요.",

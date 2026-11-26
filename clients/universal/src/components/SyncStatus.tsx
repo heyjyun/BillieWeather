@@ -11,9 +11,16 @@ export function SyncStatus() {
     case "checking": text = m.sync.checking; break;
     case "updated": {
       const r = sync.result;
-      if (r.statementsAdded + r.transactionsAdded + r.transactionsUpdated + r.transactionsRemoved + r.statementsRemoved === 0) { text = m.sync.upToDate; break; }
-      text = t("sync.updated", { statements: r.statementsAdded, added: r.transactionsAdded, updated: r.transactionsUpdated, removed: r.transactionsRemoved });
-      tone = "ok";
+      // Website rows left out because a file imported here already has them (store.applyWebData) are said,
+      // so "up to date" never hides that the website and this device count differently.
+      const skipped = r.duplicateTransactionsSkipped ?? 0;
+      const changed = r.statementsAdded + r.transactionsAdded + r.transactionsUpdated + r.transactionsRemoved + r.statementsRemoved > 0;
+      const skippedText = skipped > 0 ? t("sync.skippedDuplicates", { count: skipped }) : "";
+      if (!changed && !skipped) { text = m.sync.upToDate; break; }
+      text = changed
+        ? [t("sync.updated", { statements: r.statementsAdded, added: r.transactionsAdded, updated: r.transactionsUpdated, removed: r.transactionsRemoved }), skippedText].filter(Boolean).join(" ")
+        : skippedText;
+      tone = changed ? "ok" : "info";
       break;
     }
     case "offline": text = m.sync.offline; tone = "warn"; break;

@@ -30,6 +30,7 @@ module Finance
       if importer.duplicates_skipped.positive? || importer.duplicates_flagged.positive?
         notice += " " + I18n.t("billie.backend.import_duplicates_notice", skipped: importer.duplicates_skipped, flagged: importer.duplicates_flagged)
       end
+      notice += " " + I18n.t("billie.backend.import_follow_up_failed") if importer.follow_up_failed?
       redirect_to finance_transactions_path, notice: imported_notice(notice)
     rescue StatementImporter::ImportError => error
       load_statement_lists

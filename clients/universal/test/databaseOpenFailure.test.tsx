@@ -151,6 +151,8 @@ it.each([
   ["error returned from database: (code: 26) file is not a database", "damaged"],
   ["error returned from database: (code: 11) database disk image is malformed", "damaged"],
   ["migration 10 was previously applied but is missing in the resolved migrations", "newer"],
+  ["migration 7 was previously applied but has been modified", "incomplete"],
+  ["the local database schema is incomplete (version 9, 9 of 10 migrations)", "incomplete"],
   ["error returned from database: (code: 13) database or disk is full", "full"],
   ["error returned from database: (code: 14) unable to open database file", "permission"],
   ["error returned from database: (code: 8) attempt to write a readonly database", "permission"],

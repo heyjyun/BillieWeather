@@ -53,6 +53,7 @@
         "statement_duplicate": "Este mismo extracto ya se ha importado.",
         "statement_all_duplicates": "Todas las transacciones de este archivo (%{count}) ya estaban registradas desde otro archivo, así que no se importó nada nuevo.",
         "import_duplicates_notice": "Se omitieron %{skipped} filas ya registradas desde otro archivo; %{flagged} posibles duplicados quedan para revisión.",
+        "import_follow_up_failed": "Aún no se pudieron actualizar los movimientos antiguos sin categoría o el saldo; se volverá a intentar en tu próxima importación o al abrir una página.",
         "pdf_existing_review": "Este PDF ya está pendiente de revisión. Abre el borrador existente a continuación.",
         "pdf_review_unclear": "Revisa las fechas o los importes que no estén claros antes de importar.",
         "pdf_auto_imported": "PDF importado automáticamente. Compara el número de transacciones con tu extracto.",

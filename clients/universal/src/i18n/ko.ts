@@ -12,7 +12,7 @@ import { registerKo } from "./register";
 export const ko: Messages = {
   languageName: "한국어",
   history: historyCopy.ko,
-  boot: { opening: "로컬 데이터를 여는 중…", dbError: "로컬 데이터베이스를 열 수 없습니다.", failure: { locked: "다른 프로그램이나 두 번째 BillieWeather가 사용 중입니다. 종료한 후 다시 시도하세요. 데이터는 변경되지 않았습니다.", damaged: "파일이 손상되었습니다. BillieWeather는 파일을 변경하지 않았습니다. 파일을 보관한 채 다른 데이터베이스의 데이터 페이지에서 백업이나 자동 사본을 복원하세요.", newer: "더 새로운 버전의 BillieWeather에서 마지막으로 열었습니다. 최신 버전을 설치하면 열 수 있습니다. 데이터는 변경되지 않았습니다.", full: "기기의 여유 공간이 부족합니다. 공간을 확보한 후 다시 시도하세요. 데이터는 변경되지 않았습니다.", permission: "BillieWeather에 파일을 열 권한이 없습니다. 데이터 폴더의 권한과 여유 공간을 확인한 후 다시 시도하세요. 데이터는 변경되지 않았습니다.", other: "데이터는 변경되지 않았습니다. 다시 시도하거나 앱을 다시 시작하세요." }, openAnother: "다른 데이터베이스 열기" },
+  boot: { opening: "로컬 데이터를 여는 중…", dbError: "로컬 데이터베이스를 열 수 없습니다.", failure: { locked: "다른 프로그램이나 두 번째 BillieWeather가 사용 중입니다. 종료한 후 다시 시도하세요. 데이터는 변경되지 않았습니다.", damaged: "파일이 손상되었습니다. BillieWeather는 파일을 변경하지 않았습니다. 파일을 보관한 채 다른 데이터베이스의 데이터 페이지에서 백업이나 자동 사본을 복원하세요.", newer: "더 새로운 버전의 BillieWeather에서 마지막으로 열었습니다. 최신 버전을 설치하면 열 수 있습니다. 데이터는 변경되지 않았습니다.", incomplete: "구조가 이 버전의 BillieWeather가 예상하는 것과 다릅니다. 업데이트가 끝나지 않았거나 파일이 변경되었습니다. BillieWeather는 파일을 변경하지 않았습니다. 다른 데이터베이스의 데이터 페이지에서 자동 사본이나 백업을 복원하거나 최신 버전을 설치하세요. 데이터는 변경되지 않았습니다.", full: "기기의 여유 공간이 부족합니다. 공간을 확보한 후 다시 시도하세요. 데이터는 변경되지 않았습니다.", permission: "BillieWeather에 파일을 열 권한이 없습니다. 데이터 폴더의 권한과 여유 공간을 확인한 후 다시 시도하세요. 데이터는 변경되지 않았습니다.", other: "데이터는 변경되지 않았습니다. 다시 시도하거나 앱을 다시 시작하세요." }, openAnother: "다른 데이터베이스 열기" },
   connection: { offline: "오프라인 상태입니다. 이 기기에 저장된 모든 데이터를 보고 편집할 수 있습니다. 계정 정보와 클라우드 동기화는 다시 연결되면 재개됩니다.", unreachable: "지금 BillieWeather 서버가 응답하지 않습니다. 이 기기에 저장된 모든 데이터를 보고 편집할 수 있습니다. 계정 정보와 클라우드 동기화는 서버가 돌아오면 재개됩니다.", retry: "다시 시도", checking: "확인 중…" },
   dbName: { eyebrow: "이 기기에서 처음", heading: "이 기기의 데이터베이스 이름 정하기", intro: "금융 데이터는 이 기기의 데이터베이스에 저장됩니다. 기기를 구분할 수 있도록 이름을 정하세요. 나중에 데이터 페이지에서 바꿀 수 있습니다.", label: "데이터베이스 이름", help: "이 기기의 이름이 입력되어 있습니다. 원하는 이름으로 바꿀 수 있습니다.", fallback: "내 기기", create: "데이터베이스 만들기", creating: "만드는 중…", failed: "이름을 저장하지 못했습니다. 다시 시도하세요." },
   nav: { skip: "본문으로 건너뛰기", collapse: "사이드바 접기", expand: "사이드바 펼치기", main: "메인", dashboard: "대시보드", transactions: "거래 내역", categories: "카테고리", import: "가져오기", reports: "보고서", data: "데이터", settings: "설정", note: "직접 동기화하지 않는 한 재무 데이터는 이 기기에만 저장됩니다" },
@@ -86,6 +86,7 @@ export const ko: Messages = {
     checking: "BillieWeather 웹 데이터를 확인하는 중…",
     upToDate: "이 기기의 웹 데이터가 최신 상태입니다.",
     updated: "웹 계정에서 다운로드했습니다: 새 명세서 {statements}개, 새 거래 {added}건, 업데이트 {updated}건, 삭제 {removed}건.",
+    skippedDuplicates: "웹의 거래 {count}건은 다시 추가하지 않았습니다. 이 기기에서 가져온 파일에 이미 있습니다.",
     offline: "오프라인이라 웹 데이터를 확인할 수 없습니다. 이 기기에 있는 데이터를 사용합니다.",
     failed: "웹 데이터를 다운로드하지 못했습니다. 나중에 다시 시도하세요.",
     currencyMismatch: "웹 데이터는 {web}, 이 기기는 {device}을(를) 사용하므로 웹 데이터를 다운로드하지 않았습니다.",

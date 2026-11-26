@@ -53,6 +53,7 @@
         "statement_duplicate": "This exact statement has already been imported.",
         "statement_all_duplicates": "Every transaction in this file (%{count}) was already recorded from another file, so nothing new was imported.",
         "import_duplicates_notice": "%{skipped} rows already recorded from another file were skipped; %{flagged} possible duplicates are listed for review.",
+        "import_follow_up_failed": "Older uncategorized rows or the balance could not be updated yet; this happens again after your next import or when you open a page.",
         "pdf_existing_review": "This PDF is already awaiting review. Open the existing draft below.",
         "pdf_review_unclear": "Review the unclear dates or amounts before importing.",
         "pdf_auto_imported": "PDF imported automatically. Compare its transaction count with your statement.",
