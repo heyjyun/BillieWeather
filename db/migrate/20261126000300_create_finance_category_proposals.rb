@@ -13,6 +13,8 @@ class CreateFinanceCategoryProposals < ActiveRecord::Migration[8.1]
       t.timestamps
     end
     add_index :finance_category_proposals, [:user_id, :status], name: "index_finance_category_proposals_on_user_and_status"
-    add_check_constraint :finance_category_proposals, "status IN ('pending', 'approved', 'dismissed')", name: "finance_category_proposals_status"
+    # status IN ('pending', 'approved', 'dismissed'), written as PostgreSQL dumps it after a schema load, so a migrated
+    # database and a freshly loaded one produce the same db/schema.rb (bin/db_schema_check).
+    add_check_constraint :finance_category_proposals, "status::text = ANY (ARRAY['pending'::character varying::text, 'approved'::character varying::text, 'dismissed'::character varying::text])", name: "finance_category_proposals_status"
   end
 end

@@ -25,7 +25,9 @@ class CreateFinanceCategories < ActiveRecord::Migration[8.1]
     # The parent belongs to the same person (composite key), and a parent with children cannot be deleted.
     add_foreign_key :finance_categories, :finance_categories, column: [:parent_id, :user_id], primary_key: [:id, :user_id],
       on_delete: :restrict, name: "fk_finance_categories_parent_same_user"
-    add_check_constraint :finance_categories, "category_kind IN ('income', 'expense', 'transfer')", name: "finance_categories_kind"
+    # category_kind IN ('income', 'expense', 'transfer'), written as PostgreSQL dumps it after a schema load, so a migrated
+    # database and a freshly loaded one produce the same db/schema.rb (bin/db_schema_check).
+    add_check_constraint :finance_categories, "category_kind::text = ANY (ARRAY['income'::character varying::text, 'expense'::character varying::text, 'transfer'::character varying::text])", name: "finance_categories_kind"
     add_check_constraint :finance_categories, "parent_id IS NULL OR parent_id <> id", name: "finance_categories_not_own_parent"
 
     add_column :users, :finance_categories_seeded_at, :datetime
