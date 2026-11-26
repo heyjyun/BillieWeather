@@ -53,34 +53,41 @@ Personal builds are ad hoc signed, hardened, not notarized (`manifest.json` list
 
 ## Render deployment (separate from Git sync)
 
-### Actual behavior, verified 2026-11-25 from GitHub's deployment records
+### Policy (owner decision, 2026-11-26): production deploys are manual
 
-- The Render web service `web` has Auto-Deploy **On Commit** for `main` (GitHub environment
-  `main - web`). **Every push to `origin/main` starts a production deploy.** There is no staging
-  service and no separate deploy branch. The identity API has no Render service yet.
-- Recent deploys:
+- Render Auto-Deploy for the web service `web` must be **Off**. A push to `main` must never start a
+  production deploy; a person starts each deploy in the Render dashboard (Manual Deploy → a specific
+  commit of `main`) after the release steps below.
+- `render.yaml` and `services/identity-api/render.yaml` carry `autoDeployTrigger: "off"` as a backstop
+  (`test/lib/billie_runtime_settings_test.rb` keeps it there). Render applies a Blueprint only to a
+  service it manages, so **the dashboard setting is the one that counts.**
+- Before every push to `main`, confirm it: Render dashboard → `web` → Settings → Build & Deploy →
+  Auto-Deploy shows **Off**. If it shows On Commit or After CI checks pass, do not push `main`.
+- Status of the dashboard setting: it had not been switched yet on 2026-11-26 because the consolidation
+  session could not reach Render (no browser or API access), so `main` was not pushed then. Record here
+  the date it was verified Off.
+
+### History, verified 2026-11-25 from GitHub's deployment records
+
+- Until the switch, `web` had Auto-Deploy **On Commit** for `main` (GitHub environment `main - web`):
+  every push to `origin/main` started a production deploy. There is no staging service and no
+  separate deploy branch. The identity API has no Render service yet.
 
   | Commit | Deploy result (GitHub status) |
   | --- | --- |
   | e4380af (2026-11-23) | success — last successful production deploy |
   | 63958b0 (2026-11-26 04:36Z and 04:38Z) | failure (twice) |
-  | 899241e (2026-11-26 04:54Z, current `main`) | failure |
+  | 899241e (2026-11-26 04:54Z) | failure |
 
 - A failed deploy leaves the previous successful deploy running (per the runbook, `/up` on e4380af
-  stayed 200 after the 63958b0 failures). So production is still **e4380af**, not `main`.
+  stayed 200 after the 63958b0 failures). So production is still **e4380af**.
 - The failures are the intended fail-closed startup checks: since e4380af the build no longer migrates,
   and `bin/render-start.sh` runs `billie:release:check` before Puma, which refuses any database that is
   not the approved Neon target. The Render/Neon settings in the runbook have not been applied yet.
 
 ### Consequences for Git synchronization
 
-- **Pushing `main` is not deployment-safe.** Right now each push is a failed deploy attempt (harmless to
-  data, noisy). Once the Render settings and Neon target are fixed, every push to `main` will go to
-  production immediately, without a separate approval.
-- Until the owner decides, before every push to `main`: check that the commit set is acceptable as a
-  production release, or have the owner first switch Render Auto-Deploy to **Off** (manual deploys) or
-  to **After CI checks pass**. That change is made in the Render dashboard by the owner, not by an agent.
-- Feature branches can be pushed freely: Render deploys only `main`.
+- With Auto-Deploy Off, pushing `main` is a Git operation only. Deploying is a separate, manual step.
 - Git-sync tooling never deploys, never calls Render, and never handles production credentials.
 
 ### Production database safeguards (unchanged; never relax to get a deploy through)
@@ -96,15 +103,16 @@ Personal builds are ad hoc signed, hardened, not notarized (`manifest.json` list
   `BILLIE_RELEASE_APPROVAL`, a Neon restore point first, and the owner credential withdrawn afterwards.
 - Pending additive migrations before the next deploy can start: `20261123000100`, `20261124000100`,
   `20261125000100` (`user_sessions`).
-- Rollback: redeploy the last release that reads the current schema; `rollback/session-safe` is the
-  documented fallback after the rollback fence is closed. Never restore the old `SECRET_KEY_BASE`.
+- Rollback: redeploy the last release that reads the current schema. After the rollback fence is
+  closed the documented fallback is commit `dbd85e7` (the former `rollback/session-safe` branch). It is
+  in `main`'s history through the content-free merge `4e0e842`, so Render can deploy it by commit. Never restore the old `SECRET_KEY_BASE`.
 
 Full settings, the marker SQL, the approved-change and rollback procedures:
 [docs/audits/render-neon-release-runbook.md](../audits/render-neon-release-runbook.md).
 
 ### Deployment blockers (owner actions; none are done by agents)
 
-1. Decide Render Auto-Deploy for `main` (keep On Commit, switch to Off, or After CI checks pass).
+1. Switch Render Auto-Deploy for `web` to **Off** (decided 2026-11-26) and verify it in the dashboard.
 2. Neon, as the owner on the direct endpoint: confirm the PostgreSQL major version, create the runtime
    role, create the `billie_release.target` marker.
 3. Apply the three pending migrations through `bin/billie-release rails` with approval and a restore point.

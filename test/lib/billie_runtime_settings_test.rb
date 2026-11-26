@@ -52,4 +52,12 @@ class BillieRuntimeSettingsTest < ActiveSupport::TestCase
     assert_includes keys, BillieRuntimeSettings::KEY
     assert_not_includes keys, BillieRuntimeSettings::LEGACY_KEY
   end
+
+  test "both blueprints leave production deploys to a person" do
+    [Rails.root.join("render.yaml"), Rails.root.join("services/identity-api/render.yaml")].each do |path|
+      web = YAML.safe_load_file(path).fetch("services").select { |service| service["type"] == "web" }
+      assert_not_empty web, path.to_s
+      web.each { |service| assert_equal "off", service["autoDeployTrigger"], "#{path}: #{service["name"]}" }
+    end
+  end
 end

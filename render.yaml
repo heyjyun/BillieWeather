@@ -13,6 +13,9 @@ services:
     buildCommand: ./bin/render-build.sh
     startCommand: ./bin/render-start.sh
     healthCheckPath: /up
+    # Production deploys are started by hand only. The dashboard setting must match (Settings → Build &
+    # Deploy → Auto-Deploy: Off); Render ignores this file for a service not managed by the Blueprint.
+    autoDeployTrigger: "off"
     envVars:
       # Pooled Neon URL for a dedicated runtime role. DDL credentials are release-only. Exact form and the
       # other required settings (the password goes after the role): docs/audits/render-neon-release-runbook.md.

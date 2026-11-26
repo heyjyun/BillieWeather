@@ -4,9 +4,9 @@ GitHub (`heyjyun/BillieWeather`, public) is the only channel for source between 
 Mac mini. **`origin/main` is the single long-lived shared branch.** `ops/git-sync.sh` wraps the safe
 operations.
 
-> Pushing `main` is a Git operation **and** currently triggers a Render production deploy. Read
-> [RELEASE_WORKFLOW.md → Render deployment](RELEASE_WORKFLOW.md#render-deployment-separate-from-git-sync)
-> before every push to `main`.
+> Pushing `main` is a Git operation only: Render Auto-Deploy is **Off** and production deploys are
+> started by hand. Before every push to `main`, confirm it is still Off; see
+> [RELEASE_WORKFLOW.md → Render deployment](RELEASE_WORKFLOW.md#render-deployment-separate-from-git-sync).
 
 ## Model
 
@@ -22,10 +22,11 @@ operations.
 - Temporary branches (`feature/*`, `fix/*`, `infra/*`, `audit/*`) are allowed when a task needs
   isolation or review. They start from the current `origin/main`, are reviewed, merged into `main`,
   and deleted only after `git cherry origin/main <branch>` shows nothing unique (or the unique part is
-  deliberately rejected and preserved, see below).
-- No permanent integration branch. `autonomous-development`, `consolidated-main` and `infra/dual-mac`
-  were integration branches until 2026-11-25; they are fully merged and are not used for new work.
-- `rollback/*` branches are the one kept exception: deployable fallbacks, not development lines.
+  deliberately rejected and the rejection is documented in `main`).
+- `main` is the only permanent branch, locally and on GitHub. The integration, audit, release and
+  rollback branches of November 2026 were consolidated into `main` and deleted on 2026-11-26.
+- Rollback targets are commits in `main`'s history, not branches (the session-safe rollback release
+  `dbd85e7` is reachable from `main` through a content-free `-s ours` merge).
 
 ## Before every push: fetch and check for divergence
 
@@ -54,7 +55,7 @@ ops/doctor.sh --tests                             # on the Mac mini (the MacBook
 git fetch origin && git rebase origin/main        # or merge; resolve, retest
 ops/git-sync.sh check origin/main..feature/x
 git switch main && git merge --ff-only feature/x  # after review
-ops/git-sync.sh push main                         # deploy warning above applies
+ops/git-sync.sh push main                         # confirm Render Auto-Deploy is Off first
 git branch -d feature/x                           # -d refuses if not merged; never -D on unique work
 ```
 
@@ -63,10 +64,10 @@ remote copy only after it is merged.
 
 ## Rules
 
-- Never `push --force` (or `--force-with-lease`) to `main` or `rollback/*`; never rewrite pushed history.
+- Never `push --force` (or `--force-with-lease`); never rewrite pushed history.
 - Never discard unique work: before deleting a branch, worktree or tag, run
-  `git cherry -v origin/main <ref>` and compare files; preserve anything unique (merge it, or keep an
-  `archive/<date>/<name>` tag **pushed to GitHub** if it must survive this Mac).
+  `git cherry -v origin/main <ref>` and compare files; merge anything worth keeping into `main`
+  (sanitized), or document in `main` why it was rejected. No archive branches or archive tags on GitHub.
 - Never commit: `*.db*`, `*.bak`, `*.dmg`, `.app`, `target/`, `node_modules/`, `.env*` (except
   `.env.example`), `config/master.key`, `config/credentials/*.key`, statements, receipts, exported data.
 - `ops/git-sync.sh push` refuses on scan findings; add a line to `ops/git-sync.allow` only after
@@ -74,42 +75,28 @@ remote copy only after it is merged.
 - Agents (`ops/agent-run.sh`) commit locally and never push; a person reviews and pushes.
 - Tags are never pushed implicitly. `checkpoint/*` tags stay local unless asked.
 
-## Verified state — 2026-11-25 22:58 CST (MacBook, after `git fetch origin --prune`)
+## Verified state — 2026-11-26 (MacBook, after consolidation)
 
-**GitHub** — branches: `main` 899241e, `consolidated-main` 1656256, `archive/phase1a-checkpoint`
-8f6d0a3, `rollback/session-safe` dbd85e7. **No tags on GitHub.**
+See [CONSOLIDATION_2026-11-26.md](CONSOLIDATION_2026-11-26.md) for what was merged, rejected and
+deleted, and what is still open.
 
-Local `main` = `origin/main` = 899241e. All MacBook checkouts are clean.
+## Syncing an older clone (Mac mini)
 
-| Ref | Where | Not in `origin/main` | Disposition |
-| --- | --- | --- | --- |
-| `main` | local + GitHub | — | the shared branch |
-| `autonomous-development` (f595291) | local, worktree `billieweather-roadmap` | 1 commit, every file identical in main (ed74ccb) | merged by content; removable |
-| `infra/dual-mac` (3afc9cb) | local, worktree `billieweather-dualmac` | none | merged; removable |
-| `release/production-consolidated-2026-11-25` (63958b0) | local, worktree `/private/tmp/billie-release.*/source` | none | merged; removable once release verification is finished |
-| `audit/fix-a`, `fix-a2`, `fix-b`, `fix-c`, `fix-c2` | local, scratch worktrees | none | merged; removable |
-| `phase-1a-modular-shell` (2d3df08), `archive/phase1a-checkpoint` (8f6d0a3, also GitHub) | local main checkout `billieweather/` | patch-equivalent commit already in main | merged; removable (the checkout should switch to `main`) |
-| `consolidated-main` (1656256) | GitHub only | none | merged; removable from GitHub |
-| `audit/four-agent-2026-11-25` (c3c895e) | local, worktree `billieweather-audit` | 21 full run logs + 1 screenshot; main took the summaries on purpose (ed74ccb) | **keep** until tag `archive/2026-11-25/audit-four-agent` is on GitHub or the logs are judged disposable |
-| `audit/fix-b2` (7db883f) | local, scratch worktree | client console logging (S6), **rejected** by the audit Chief (privacy.test.ts forbids client logging) | **keep** until tag `archive/2026-11-25/audit-fix-b2` is on GitHub |
-| `rollback/session-safe` (dbd85e7) | local + GitHub | 2 commits, deliberately separate | **keep**: the documented Render rollback target |
-| detached worktree `/private/tmp/billie-release.*/rollback` | dbd85e7 | = `rollback/session-safe` | removable after release verification |
-| detached worktree `…/706fd939…/scratchpad/wt79` | 79ab6c9, in main | one untracked `seed63.test.ts`, byte-identical to main's `docs/audits/evidence/2026-11-25-phase6.3/seed.test.ts.txt` | removable |
-
-The 17 local `archive/2026-11-25/*` and `checkpoint/*` tags point at every pre-consolidation tip. Only
-`ClaudeGenerated/checkpoint-phase6.3/billieweather-pre-integration.bundle` backs any of them up
-off-repo, and it predates c3c895e and 7db883f. Those two commits therefore exist **only on this
-MacBook**. Pushing their two archive tags (needs authorization) is the preservation step before
-any of those branches is deleted:
+For a clone made before 2026-11-26. Nothing is deleted until it has been checked.
 
 ```sh
-git push origin archive/2026-11-25/audit-four-agent archive/2026-11-25/audit-fix-b2
+cd <path-to>/billieweather
+git status --short                     # must print nothing; commit or stash local work first
+git fetch origin --prune               # removes the deleted remote branches locally
+git for-each-ref --format='%(refname:short)' refs/heads | grep -vx main | while read b; do
+  echo "== $b"; git cherry -v origin/main "$b"     # only "-" lines, or nothing: merged
+done
+git switch main
+git merge --ff-only origin/main        # fails if local main has unpushed commits: use the table above
+git rev-parse main origin/main         # both lines must match
+git branch -d <each branch the loop showed as merged>   # -d only; a "+" line is unique work: stop
+git worktree list && git worktree prune
 ```
 
-(Check the four-agent logs for machine paths first; ed74ccb kept them local for that reason.)
-
-### Mac mini
-
-Not inspectable from the MacBook. First setup: clone `main` per [MAC_MINI_SETUP.md](MAC_MINI_SETUP.md).
-An existing clone: `git fetch origin --prune && git switch main && git merge --ff-only origin/main`,
-then the divergence check above for any local branch.
+A branch with `+` lines holds work that is not on GitHub: rebase it onto `origin/main`, review, merge
+into `main` and push (after the Render check), or document why it is dropped, before deleting it.

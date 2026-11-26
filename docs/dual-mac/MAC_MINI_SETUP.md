@@ -79,13 +79,14 @@ git fetch origin && git rev-list --left-right --count main...origin/main   # div
 ops/git-sync.sh push main                   # a person pushes; never --force
 ```
 
-If the clone predates 2026-11-25 and still has `autonomous-development` checked out, discard
-nothing. Run `git fetch origin --prune`, check `git cherry -v origin/main
-autonomous-development` (empty or `-` lines only means it is merged), then `git switch main && git
-merge --ff-only origin/main`. Rules and the full flow: [GIT_SYNC.md](GIT_SYNC.md).
+GitHub has only `main` since 2026-11-26. For a clone made before then, see
+[GIT_SYNC.md → Syncing an older clone](GIT_SYNC.md#syncing-an-older-clone-mac-mini): it fetches with
+`--prune`, checks every local branch for unique work, then fast-forwards `main`. Rules and the full
+flow: [GIT_SYNC.md](GIT_SYNC.md).
 
-Agents on the mini commit locally and never push. **Pushing `main` currently starts a Render
-production deploy**: see [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md#render-deployment-separate-from-git-sync).
+Agents on the mini commit locally and never push. Pushing `main` does not deploy: Render Auto-Deploy
+is Off and production deploys are started by hand. Confirm it is still Off before pushing `main`; see
+[RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md#render-deployment-separate-from-git-sync).
 No production credential (Neon owner/runtime URL, `BILLIE_RELEASE_APPROVAL`) is ever stored on the mini.
 
 ## 7. Releases

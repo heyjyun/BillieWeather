@@ -27,7 +27,7 @@ None of these checks may be relaxed to get a deploy through; fix the settings in
 | Build Command | `./bin/render-build.sh` |
 | Start Command | `./bin/render-start.sh` |
 | Health Check Path | `/up` |
-| Auto-Deploy | On Commit (pushing `main` deploys production) |
+| Auto-Deploy | **Off** — deploys are started by hand (Manual Deploy → a commit of `main`); `render.yaml` sets `autoDeployTrigger: "off"` as a backstop |
 
 If the service was created by hand rather than from the Blueprint, Render ignores `render.yaml`: set the
 commands above in the dashboard.
@@ -112,7 +112,7 @@ Releases before server-side sign-ins accept signed tokens that cannot be revoked
 1. Create `BILLIE_SECRET_KEY_BASE` with a fresh value (`openssl rand -hex 64`, or let the blueprint generate it). Everyone has to sign in once anyway; outstanding password-reset links and unfinished command plans stop working too.
 2. Deploy, run the smoke test, then delete `SECRET_KEY_BASE` from the service **and** the environment group. The start-up check warns while it still holds the same value.
 3. From then on a rollback to an older release either refuses to boot (key missing) or accepts no earlier credential (another value). Rehearsed: [evidence](evidence/2026-11-25-overnight/rollback-rehearsal.txt).
-4. If the application must be rolled back, deploy the local branch `rollback/session-safe`: the previous release plus server-side sign-ins, on the current schema. It keeps revoked sign-ins revoked. Never put the old `SECRET_KEY_BASE` value back.
+4. If the application must be rolled back, deploy commit `dbd85e7` (formerly the branch `rollback/session-safe`; it is in `main`'s history through a content-free merge): the previous release plus server-side sign-ins, on the current schema. It keeps revoked sign-ins revoked. Never put the old `SECRET_KEY_BASE` value back.
 
 ## Roll back
 

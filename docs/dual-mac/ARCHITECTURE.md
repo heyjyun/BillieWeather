@@ -20,11 +20,11 @@ folders move separately. No database, `.env`, Keychain item or service is shared
   push      │                │                   │  push
             │                ├──► tag vX.Y.Z ──► ops/release-build.sh (mini) ──► ~/BillieWeather-Releases/X.Y.Z/
             │                │                                                   └► MacBook: ops/install-stable.sh
-            │                └──► Render Auto-Deploy (production web) — see RELEASE_WORKFLOW.md
+            │                └ ─ ► Render web: manual deploys only (Auto-Deploy Off) — see RELEASE_WORKFLOW.md
 ```
 
-Git synchronization and Render deployment are separate concerns that happen to share a trigger
-today: a push to `main` starts a production deploy. See
+Git synchronization and Render deployment are separate: a push to `main` does not deploy (Render
+Auto-Deploy is Off; a person starts each production deploy). See
 [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md#render-deployment-separate-from-git-sync).
 
 ## Branches and tags
@@ -33,12 +33,13 @@ today: a push to `main` starts a production deploy. See
   fast-forward to it, and push to it without force after checking for divergence.
 - `feature/*`, `fix/*`, `infra/*`, `audit/*` — temporary, one task each, often in their own worktree.
   Reviewed, merged into `main`, then deleted once nothing unique remains.
-- `rollback/*` — kept deployable fallbacks (`rollback/session-safe`), not development lines.
-- No integration branch. `autonomous-development` and `consolidated-main` were merged into `main` on
-  2026-11-25 and are retired.
+- No other permanent branch. GitHub holds only `main`. The integration, audit, release and rollback
+  branches of November 2026 were consolidated into `main` and deleted on 2026-11-26.
+- Rollback targets are commits in `main`'s history, not branches: the session-safe rollback release
+  `dbd85e7` is reachable from `main` through a content-free merge (see RELEASE_WORKFLOW.md).
 - `vX.Y.Z[-pre]` annotated tags — a release; `ops/release-build.sh` only builds at a tag.
-- `archive/<date>/*` tags — preserved tips of retired branches; push them before deleting the branch
-  if they hold anything not in `main`.
+- `archive/<date>/*` tags — local-only markers of retired branch tips (not on GitHub). New archive tags
+  are not created: anything worth keeping is merged into `main` before a branch is deleted.
 - `checkpoint/*` tags — local safety points before risky work; not pushed unless asked.
 
 Details and the current branch inventory: [GIT_SYNC.md](GIT_SYNC.md).
