@@ -55,18 +55,32 @@ module BillieDatabaseTarget
     identity = ENV.fetch("BILLIE_DB_TARGET_ID", "")
     target_host = target["host"]
     expected_neon = pinned_host.match?(/\Aep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech\z/) && !pinned_host.split(".").first.end_with?("-pooler")
-    allowed = case environment
+    # Each failed condition is named (never a value), so a refused start says what to fix.
+    problems = []
+    case environment
     when "production", "staging"
       pooled_host = pinned_host.sub(".", "-pooler.")
-      expected_neon && target["sslmode"] == "verify-full" &&
-        (target_host == pinned_host || (!migration && target_host == pooled_host))
+      problems << "BILLIE_DB_HOST must be the direct Neon endpoint hostname (without -pooler)" unless expected_neon
+      problems << "the URL must set sslmode=verify-full" unless target["sslmode"] == "verify-full"
+      if target_host != pinned_host && (migration || target_host != pooled_host)
+        problems << (migration ? "the URL host must equal BILLIE_DB_HOST" : "the URL host must be BILLIE_DB_HOST or its -pooler form")
+      end
     when "local"
-      ENV["RENDER"] != "true" && !pinned_host.empty? && local_host?(pinned_host) && target_host == pinned_host
+      problems << "BILLIE_DB_ENV=local is refused on Render" if ENV["RENDER"] == "true"
+      if pinned_host.empty? || !local_host?(pinned_host) || target_host != pinned_host
+        problems << "BILLIE_DB_HOST must be a local host equal to the URL host"
+      end
+    else
+      problems << "BILLIE_DB_ENV must be production, staging or local"
     end
-    if !allowed || name.empty? || target["dbname"] != name || target["user"].to_s.empty? ||
-        !identity.match?(/\A[a-zA-Z0-9_-]{12,128}\z/)
-      raise "PostgreSQL URL does not match the approved database target"
+    if name.empty?
+      problems << "BILLIE_DB_NAME is missing"
+    elsif target["dbname"] != name
+      problems << "the URL database must equal BILLIE_DB_NAME"
     end
+    problems << "the URL has no user" if target["user"].to_s.empty?
+    problems << "BILLIE_DB_TARGET_ID must be 12-128 letters, digits, _ or -" unless identity.match?(/\A[a-zA-Z0-9_-]{12,128}\z/)
+    raise "PostgreSQL URL does not match the approved database target: #{problems.join("; ")}" if problems.any?
     target
   end
 

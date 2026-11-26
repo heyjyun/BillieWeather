@@ -46,18 +46,36 @@ def release_target(url: str, *, migration: bool) -> dict[str, str]:
     pinned_host = os.getenv("BILLIE_DB_HOST", "")
     name = os.getenv("BILLIE_DB_NAME", "")
     identity = os.getenv("BILLIE_DB_TARGET_ID", "")
+    # Each failed condition is named (never a value), so a refused start says what to fix.
+    problems: list[str] = []
     if environment in {"staging", "production"}:
         endpoint, _, suffix = pinned_host.partition(".")
         expected_neon = re.fullmatch(r"ep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech", pinned_host) and not endpoint.endswith("-pooler")
         allowed_hosts = {pinned_host} if migration else {pinned_host, f"{endpoint}-pooler.{suffix}"}
-        allowed = expected_neon and target.get("sslmode") == "verify-full" and target.get("host") in allowed_hosts
+        if not expected_neon:
+            problems.append("BILLIE_DB_HOST must be the direct Neon endpoint hostname (without -pooler)")
+        if target.get("sslmode") != "verify-full":
+            problems.append("the URL must set sslmode=verify-full")
+        if target.get("host") not in allowed_hosts:
+            problems.append("the URL host must equal BILLIE_DB_HOST" if migration
+                            else "the URL host must be BILLIE_DB_HOST or its -pooler form")
     elif environment == "local":
-        allowed = os.getenv("RENDER") != "true" and local_host(pinned_host) and target.get("host") == pinned_host
+        if os.getenv("RENDER") == "true":
+            problems.append("BILLIE_DB_ENV=local is refused on Render")
+        if not (local_host(pinned_host) and target.get("host") == pinned_host):
+            problems.append("BILLIE_DB_HOST must be a local host equal to the URL host")
     else:
-        allowed = False
-    if (not allowed or not name or target.get("dbname") != name or not target.get("user")
-        or not re.fullmatch(r"[a-zA-Z0-9_-]{12,128}", identity)):
-        raise RuntimeError("PostgreSQL URL does not match the approved database target")
+        problems.append("BILLIE_DB_ENV must be production, staging or local")
+    if not name:
+        problems.append("BILLIE_DB_NAME is missing")
+    elif target.get("dbname") != name:
+        problems.append("the URL database must equal BILLIE_DB_NAME")
+    if not target.get("user"):
+        problems.append("the URL has no user")
+    if not re.fullmatch(r"[a-zA-Z0-9_-]{12,128}", identity):
+        problems.append("BILLIE_DB_TARGET_ID must be 12-128 letters, digits, _ or -")
+    if problems:
+        raise RuntimeError("PostgreSQL URL does not match the approved database target: " + "; ".join(problems))
     return target
 
 

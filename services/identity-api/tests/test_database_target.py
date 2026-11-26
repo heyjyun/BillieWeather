@@ -42,3 +42,24 @@ def test_verified_target_comes_from_database_marker(sql, monkeypatch):
         sql.execute("SET LOCAL billie.target_id = 'synthetic_target_51'")
         with pytest.raises(RuntimeError, match="did not confirm the approved database target"):
             verify_target(sql, connection, migration=True)
+
+
+def test_refused_release_target_names_what_is_wrong_without_values(monkeypatch):
+    for key in ("BILLIE_DB_ENV", "BILLIE_DB_HOST", "BILLIE_DB_NAME", "BILLIE_DB_TARGET_ID"):
+        monkeypatch.delenv(key, raising=False)
+    url = "postgresql://runtime@ep-synthetic-pooler.us-east-2.aws.neon.tech/finance?sslmode=require"
+    with pytest.raises(RuntimeError) as refused:
+        release_target(url, migration=False)
+    message = str(refused.value)
+    for text in ("approved database target", "BILLIE_DB_ENV must be", "BILLIE_DB_NAME is missing", "BILLIE_DB_TARGET_ID must be"):
+        assert text in message
+    for value in ("ep-synthetic", "finance", "runtime"):
+        assert value not in message
+    monkeypatch.setenv("BILLIE_DB_ENV", "staging")
+    monkeypatch.setenv("BILLIE_DB_HOST", ENDPOINT)
+    monkeypatch.setenv("BILLIE_DB_NAME", "finance")
+    monkeypatch.setenv("BILLIE_DB_TARGET_ID", "synthetic_target_51")
+    with pytest.raises(RuntimeError, match="sslmode=verify-full"):
+        release_target(url, migration=False)
+    with pytest.raises(RuntimeError, match="must equal BILLIE_DB_HOST"):
+        release_target(POOLED, migration=True)

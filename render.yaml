@@ -14,7 +14,9 @@ services:
     startCommand: ./bin/render-start.sh
     healthCheckPath: /up
     envVars:
-      # Pooled Neon URL for a dedicated runtime role. DDL credentials are release-only.
+      # Pooled Neon URL for a dedicated runtime role. DDL credentials are release-only. Exact form and the
+      # other required settings (the password goes after the role): docs/audits/render-neon-release-runbook.md.
+      #   postgresql://<role>@<ep-id>-pooler.<region>.aws.neon.tech/<db>?sslmode=verify-full&sslrootcert=/etc/ssl/certs/ca-certificates.crt
       - key: DATABASE_URL
         sync: false
       - key: BILLIE_DB_ENV

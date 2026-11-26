@@ -32,6 +32,23 @@ class BillieDatabaseTargetTest < ActiveSupport::TestCase
     end
   end
 
+  test "a refused release target names what is wrong without printing values" do
+    url = "postgresql://runtime@ep-synthetic-pooler.us-east-2.aws.neon.tech/finance?sslmode=require"
+    with_database_env("BILLIE_DB_ENV" => nil, "BILLIE_DB_HOST" => nil, "BILLIE_DB_NAME" => nil, "BILLIE_DB_TARGET_ID" => nil) do
+      error = assert_raises(RuntimeError) { BillieDatabaseTarget.release_url!(url, migration: false) }
+      assert_match "does not match the approved database target", error.message
+      ["BILLIE_DB_ENV must be", "BILLIE_DB_NAME is missing", "BILLIE_DB_TARGET_ID must be"].each { |text| assert_includes error.message, text }
+      ["ep-synthetic", "finance", "runtime"].each { |value| refute_includes error.message, value }
+    end
+    with_release_target do
+      error = assert_raises(RuntimeError) { BillieDatabaseTarget.release_url!(url, migration: false) }
+      assert_includes error.message, "sslmode=verify-full"
+      refute_includes error.message, "BILLIE_DB_NAME"
+      error = assert_raises(RuntimeError) { BillieDatabaseTarget.release_url!(POOLED, migration: true) }
+      assert_includes error.message, "the URL host must equal BILLIE_DB_HOST"
+    end
+  end
+
   test "release verifies a database-owned marker instead of a session setting" do
     ActiveRecord::Base.with_connection do |connection|
       connection.execute("CREATE SCHEMA billie_release")

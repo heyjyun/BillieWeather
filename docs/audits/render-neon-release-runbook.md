@@ -1,5 +1,76 @@
 # Render and Neon database release runbook
 
+## Why the 63958b0 deploy failed, and the exact settings that make it start (2026-11-25)
+
+Up to e4380af the build ran `db:migrate` (`RUN_MIGRATIONS=1`) with whatever `DATABASE_URL` the service had,
+and the start command was plain Puma. Since then the build never touches a database, the start command
+runs `billie:release:check` first, and `config/database.yml` refuses any production URL that is not the
+approved target. Render rolled back to e4380af automatically (both 63958b0 deploys: `failure`; `/up`
+on e4380af stayed 200). Without dashboard logs the exact line is unconfirmed, but a service that was not
+re-provisioned fails at the first of these, in this order. Since this commit the refusal names every
+failed condition (never a value), so the deploy log says which one:
+
+1. Dashboard still on the old commands, or `BILLIE_DB_*` unset → `PostgreSQL URL does not match the approved database target: BILLIE_DB_ENV must be …; BILLIE_DB_NAME is missing; …`
+2. Neon's default URL (`sslmode=require`) → `…: the URL must set sslmode=verify-full`
+3. `verify-full` without a trust root → libpq `root certificate file "…/.postgresql/root.crt" does not exist`
+4. No `billie_release.target` marker → `relation "billie_release.target" does not exist`
+5. Runtime URL uses the owner role (e.g. `neondb_owner`) → `Runtime database role has schema or target-marker write privileges`
+6. Migrations not applied → `ActiveRecord::PendingMigrationError` (`20261123000100`, `20261124000100`, `20261125000100`; all additive)
+7. `BILLIE_SECRET_KEY_BASE` missing and no `SECRET_KEY_BASE` → `Unsafe production settings: BILLIE_SECRET_KEY_BASE is missing`
+
+None of these checks may be relaxed to get a deploy through; fix the settings instead.
+
+### Render web service (`web`, Ruby) — Settings
+
+| Setting | Value |
+| --- | --- |
+| Build Command | `./bin/render-build.sh` |
+| Start Command | `./bin/render-start.sh` |
+| Health Check Path | `/up` |
+| Auto-Deploy | On Commit (pushing `main` deploys production) |
+
+If the service was created by hand rather than from the Blueprint, Render ignores `render.yaml`: set the
+commands above in the dashboard.
+
+### Render web service — Environment (names only; values from the Neon console / generated)
+
+| Variable | Value |
+| --- | --- |
+| `RAILS_ENV` | `production` |
+| `DATABASE_URL` | `postgresql://<runtime_role>@<ep-id>-pooler.<region>.aws.neon.tech/<db>?sslmode=verify-full&sslrootcert=/etc/ssl/certs/ca-certificates.crt`, with the role's password after the role name, as in Neon's copy button (the CA bundle path is Ubuntu's, as on Render's native runtime; `sslrootcert=system` is the alternative. `channel_binding=require` and `connect_timeout` may be added; any other option, e.g. `options=`, is refused) |
+| `BILLIE_DB_ENV` | `production` |
+| `BILLIE_DB_HOST` | `<ep-id>.<region>.aws.neon.tech` (direct host, without `-pooler`) |
+| `BILLIE_DB_NAME` | `<db>` (same as in the URL) |
+| `BILLIE_DB_TARGET_ID` | the identifier stored in `billie_release.target` (12–128 of `A-Z a-z 0-9 _ -`; not a secret) |
+| `BILLIE_SECRET_KEY_BASE` | at least 64 characters (`openssl rand -hex 64`). An environment group created before this release does **not** get it from `generateValue`; add it by hand |
+| `REDIS_URL` | from the Key Value service (optional; without it a warning only) |
+| `WEB_CONCURRENCY` / `RAILS_MAX_THREADS` | `0` / `3` |
+| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`, `POSTMARK_API_TOKEN` + `MAIL_FROM` | optional, but each pair complete or absent |
+| `BASE_URL` | optional `https://…`; Render's `RENDER_EXTERNAL_URL` is used otherwise |
+
+Must **not** be set on the service: `SECRET_KEY_BASE_DUMMY`, `BILLIE_ASSET_BUILD`, `PGSERVICE`,
+`PGSERVICEFILE`, `PGHOSTADDR`, `PGOPTIONS`, `DATABASE_URL_UNPOOLED` and any owner/DDL URL, `RUN_MIGRATIONS`
+(now ignored; remove). `SECRET_KEY_BASE` may stay for the first deploy (warning only); delete it after the
+smoke test ("Close the rollback fence" below).
+
+### Neon (once, as the owner, on the direct endpoint) — then deploy
+
+1. Confirm the PostgreSQL major version in the Neon console (CI and local development use 18).
+2. Create a runtime role (e.g. `billie_rails_runtime`) with `LOGIN` only, no `CREATEDB/CREATEROLE`; grant
+   `USAGE` on schema `public`, `SELECT, INSERT, UPDATE, DELETE` on its tables and `USAGE, SELECT` on its
+   sequences (plus `ALTER DEFAULT PRIVILEGES` for future tables), and make sure `PUBLIC` has no `CREATE`
+   on the database or `public` schema.
+3. Create the `billie_release.target` marker (SQL below) with `target_environment=production`.
+4. From a trusted Mac with a checkout of the exact commit: inject `DATABASE_URL_UNPOOLED` (owner, direct
+   host, `verify-full`), `BILLIE_RELEASE_APPROVAL`, and the four `BILLIE_DB_*`; run `bin/billie-release rails`.
+   Take a Neon branch/restore point first. Withdraw the owner credential afterwards.
+5. Set the Render settings above, then *Manual Deploy → Deploy latest commit*. Check `/up` and a synthetic
+   sign-in.
+
+The identity API has no Render service yet (GitHub shows only the `main - web` environment). When it is
+created from `services/identity-api/render.yaml`, it needs the same four `BILLIE_DB_*`, its own runtime
+role on the same database, and `bin/billie-release identity` once.
+
 ## Prepare the target
 
 1. Verify the Neon project, branch ID, database name, direct endpoint, and pooled endpoint in the control plane. Both Render services must use the same approved branch and database. Use an approved branch with synthetic data for staging.
