@@ -51,6 +51,16 @@ class Finance::ImportFollowUpTest < ActiveSupport::TestCase
     refute Finance::StatementDraft.exists?(draft.id)
   end
 
+  test "inside a caller's own transaction the follow-up error still rolls that file back, as an ImportError" do
+    importer = Finance::StatementImporter.new(user: @user, file: upload("Date,Description,Amount\n2026-11-05,Synthetic gift,-9.00\n"), currency: "USD")
+    error = assert_no_difference ["Finance::Statement.count", "Finance::Transaction.count"] do
+      with_failing(Finance::BalanceSync, :call) do
+        assert_raises(Finance::StatementImporter::ImportError) { Finance::Statement.transaction { importer.call } }
+      end
+    end
+    assert_match(/import/i, error.message)
+  end
+
   test "an ordinary import reports no follow-up failure" do
     importer = Finance::StatementImporter.new(user: @user, file: upload("Date,Description,Amount\n2026-11-04,Synthetic fuel,-30.00\n"), currency: "USD")
     importer.call

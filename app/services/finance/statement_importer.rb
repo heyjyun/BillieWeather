@@ -155,12 +155,25 @@ module Finance
     end
 
     # Clean up older Uncategorized rows with the latest rules and remembered merchants, then the balance.
+    # A caller that wraps the import in its own transaction (BatchStatementImport: each file's rows and
+    # their categorization together) has not committed yet, so the error goes to it and rolls the file back.
     def finish_after_import
       Categorizer.recategorize_uncategorized!(user: @user)
       BalanceSync.call(user: @user)
     rescue => error
+      raise follow_up_error(error) if ActiveRecord::Base.connection.current_transaction.joinable?
       @follow_up_failed = true
       Rails.logger.error("Statement import saved; follow-up failed (#{error.class}).")
+    end
+
+    # The same messages the import itself reports, for a caller that rolls the file back.
+    def follow_up_error(error)
+      case error
+      when ImportError then error
+      when ActiveRecord::RecordNotUnique then ImportError.new(I18n.t("billie.backend.statement_duplicate"))
+      when ActiveRecord::RecordInvalid then ImportError.new(I18n.t("billie.backend.statement_import_failed", errors: error.record.errors.full_messages.join(", ")))
+      else error
+      end
     end
 
     def refresh_missing_details(existing)
