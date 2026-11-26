@@ -24,6 +24,17 @@ describe("schema version gate", () => {
     await expect(checkSchemaVersion(answer(LOCAL_SCHEMA_VERSION - 1, LOCAL_SCHEMA_VERSION - 1))).rejects.toThrow(/incomplete/);
     await expect(checkSchemaVersion(answer(LOCAL_SCHEMA_VERSION, LOCAL_SCHEMA_VERSION - 1))).rejects.toThrow(/incomplete/);
     await expect(checkSchemaVersion(async () => [])).rejects.toThrow(/incomplete/);
+    const error = await checkSchemaVersion(answer(LOCAL_SCHEMA_VERSION - 1, LOCAL_SCHEMA_VERSION - 1)).catch((caught: Error) => caught);
+    expect(openFailure((error as Error).message)).toBe("incomplete");
+  });
+
+  it("every app language explains an incomplete book and points to an automatic copy", async () => {
+    const { MESSAGES: messages } = await import("../src/i18n");
+    for (const [locale, copy] of Object.entries(messages)) {
+      const text = (copy as { boot: { failure: Record<string, string> } }).boot.failure.incomplete;
+      expect(text, locale).toBeTruthy();
+      expect(text, locale).not.toBe((copy as { boot: { failure: Record<string, string> } }).boot.failure.other);
+    }
   });
 });
 
