@@ -32,6 +32,22 @@ class BillieDatabaseTargetTest < ActiveSupport::TestCase
     end
   end
 
+  test "release verifies a database-owned marker instead of a session setting" do
+    ActiveRecord::Base.with_connection do |connection|
+      connection.execute("CREATE SCHEMA billie_release")
+      connection.execute("CREATE TABLE billie_release.target (singleton boolean, target_id text, environment text)")
+      connection.execute("INSERT INTO billie_release.target VALUES (true, 'synthetic_target_51', 'staging')")
+      target = {"dbname" => connection.select_value("SELECT current_database()"), "user" => connection.select_value("SELECT current_user")}
+      with_release_target do
+        assert_nothing_raised { BillieDatabaseTarget.verify!(connection, target, migration: true) }
+        connection.execute("UPDATE billie_release.target SET target_id = 'wrong_target_51'")
+        connection.execute("SET LOCAL billie.target_id = 'synthetic_target_51'")
+        error = assert_raises(RuntimeError) { BillieDatabaseTarget.verify!(connection, target, migration: true) }
+        assert_match "did not confirm the approved database target", error.message
+      end
+    end
+  end
+
   private
 
   def with_release_target(&block)

@@ -3,10 +3,29 @@
 ## Prepare the target
 
 1. Verify the Neon project, branch ID, database name, direct endpoint, and pooled endpoint in the control plane. Both Render services must use the same approved branch and database. Use an approved branch with synthetic data for staging.
-2. Ask the database administrator to set database-level defaults for `billie.environment` and `billie.target_id`. Use `staging` or `production` for the environment and a distinct, non-secret identifier of 12–128 letters, numbers, underscores, or hyphens. Set fresh values after a branch copy so the clone has its own identity.
+2. Have the database owner provision the read-only `billie_release.target` marker using the SQL below. Give each branch its own non-secret identifier after a copy.
 3. Set each service's `DATABASE_URL` to the pooled URL for its dedicated runtime role. Set `BILLIE_DB_ENV`, `BILLIE_DB_HOST` (the direct hostname), `BILLIE_DB_NAME`, and `BILLIE_DB_TARGET_ID`. Remote URLs require `sslmode=verify-full` and a usable trust root. Check the effective environment groups and commands in Render for both services. The startup checks compare the database, role, environment, and identifier returned by PostgreSQL.
 4. Manage schema ownership and release credentials separately from runtime credentials. Grant each runtime role only its required DML, sequence, and schema usage privileges. Review grants to `PUBLIC`, object and schema ownership, members of privileged roles, and default grants on future objects. Rails needs to read its migration history. Identity needs access to its own data and migration history, plus the Rails account tables and sequences it uses.
 5. Verify the effective Auto-Deploy and Blueprint sync settings for both services. Complete the approved migration and startup configuration before pushing to any branch that triggers a production deploy. Remove any stored DDL credentials and old migration variables from the service environments. Remove production URLs from existing development configurations and verify those services use local databases after restart. Use `bin/billie-local` for isolated development. For the development container, run `./bin/rails db:prepare` explicitly against the configured local database before starting `./bin/dev`. The `local` release label is for a local PostgreSQL rehearsal and is rejected on Render.
+
+Run as the owner on the verified direct endpoint. Supply the psql variables `target_id`, `target_environment`, `rails_runtime`, and `identity_runtime`. On a cloned branch with an existing marker, update its single row as the owner before allowing either service to connect.
+
+```sql
+BEGIN;
+CREATE SCHEMA billie_release;
+REVOKE ALL ON SCHEMA billie_release FROM PUBLIC;
+CREATE TABLE billie_release.target (
+  singleton boolean PRIMARY KEY DEFAULT true CHECK (singleton),
+  environment text NOT NULL CHECK (environment IN ('local', 'staging', 'production')),
+  target_id text NOT NULL CHECK (target_id ~ '^[a-zA-Z0-9_-]{12,128}$')
+);
+INSERT INTO billie_release.target (environment, target_id)
+VALUES (:'target_environment', :'target_id');
+REVOKE ALL ON billie_release.target FROM PUBLIC;
+GRANT USAGE ON SCHEMA billie_release TO :"rails_runtime", :"identity_runtime";
+GRANT SELECT ON billie_release.target TO :"rails_runtime", :"identity_runtime";
+COMMIT;
+```
 
 ## Apply an approved database change
 

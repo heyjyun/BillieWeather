@@ -64,8 +64,9 @@ def release_target(url: str, *, migration: bool) -> dict[str, str]:
 def verify_target(conn: psycopg.Connection, target: dict[str, str], *, migration: bool) -> None:
     actual = conn.execute("""
         SELECT current_database() AS database_name, current_user AS database_role,
-               current_setting('billie.target_id', true) AS target_id,
-               current_setting('billie.environment', true) AS environment
+               target_id, environment
+        FROM billie_release.target
+        WHERE singleton
     """).fetchone()
     if actual is None or tuple(actual.values()) != (
         target["dbname"], target["user"], os.environ["BILLIE_DB_TARGET_ID"], os.environ["BILLIE_DB_ENV"]
@@ -75,19 +76,21 @@ def verify_target(conn: psycopg.Connection, target: dict[str, str], *, migration
         return
     row = conn.execute("""
         SELECT has_database_privilege(current_database(), 'CREATE')
+          OR has_table_privilege('billie_release.target', 'INSERT, UPDATE, DELETE, TRUNCATE, TRIGGER')
+          OR has_any_column_privilege('billie_release.target', 'INSERT, UPDATE')
           OR EXISTS (
             SELECT 1 FROM pg_roles r
             WHERE (r.rolsuper OR r.rolcreaterole OR r.rolcreatedb OR r.rolreplication OR r.rolbypassrls)
               AND pg_has_role(current_user, r.oid, 'MEMBER')
           )
           OR EXISTS (
-            SELECT 1 FROM pg_namespace n WHERE n.nspname IN ('public', 'identity')
+            SELECT 1 FROM pg_namespace n WHERE n.nspname IN ('public', 'identity', 'billie_release')
               AND (has_schema_privilege(n.oid, 'CREATE') OR pg_has_role(current_user, n.nspowner, 'MEMBER'))
           )
           OR EXISTS (
             SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-            WHERE n.nspname IN ('public', 'identity') AND pg_has_role(current_user, c.relowner, 'MEMBER')
+            WHERE n.nspname IN ('public', 'identity', 'billie_release') AND pg_has_role(current_user, c.relowner, 'MEMBER')
           ) AS writable_schema
     """).fetchone()
     if row is None or row["writable_schema"]:
-        raise RuntimeError("Runtime database role has schema privileges")
+        raise RuntimeError("Runtime database role has schema or target-marker write privileges")

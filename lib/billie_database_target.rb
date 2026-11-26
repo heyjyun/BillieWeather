@@ -73,10 +73,11 @@ module BillieDatabaseTarget
   def self.verify!(connection, target, migration:)
     actual = connection.select_one(<<~SQL)
       SELECT current_database() AS database_name, current_user AS database_role,
-             current_setting('billie.target_id', true) AS target_id,
-             current_setting('billie.environment', true) AS environment
+             target_id, environment
+      FROM billie_release.target
+      WHERE singleton
     SQL
-    unless actual.values_at("database_name", "database_role", "target_id", "environment") ==
+    unless actual&.values_at("database_name", "database_role", "target_id", "environment") ==
         [target.fetch("dbname"), target.fetch("user"), ENV.fetch("BILLIE_DB_TARGET_ID"), ENV.fetch("BILLIE_DB_ENV")]
       raise "Connected PostgreSQL server did not confirm the approved database target"
     end
@@ -86,20 +87,22 @@ module BillieDatabaseTarget
     # an owning/privileged role. PostgreSQL 14 may grant CREATE on public to PUBLIC by default.
     writable_schema = connection.select_value(<<~SQL)
       SELECT has_database_privilege(current_database(), 'CREATE')
+        OR has_table_privilege('billie_release.target', 'INSERT, UPDATE, DELETE, TRUNCATE, TRIGGER')
+        OR has_any_column_privilege('billie_release.target', 'INSERT, UPDATE')
         OR EXISTS (
           SELECT 1 FROM pg_roles r
           WHERE (r.rolsuper OR r.rolcreaterole OR r.rolcreatedb OR r.rolreplication OR r.rolbypassrls)
             AND pg_has_role(current_user, r.oid, 'MEMBER')
         )
         OR EXISTS (
-          SELECT 1 FROM pg_namespace n WHERE n.nspname IN ('public', 'identity')
+          SELECT 1 FROM pg_namespace n WHERE n.nspname IN ('public', 'identity', 'billie_release')
             AND (has_schema_privilege(n.oid, 'CREATE') OR pg_has_role(current_user, n.nspowner, 'MEMBER'))
         )
         OR EXISTS (
           SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-          WHERE n.nspname IN ('public', 'identity') AND pg_has_role(current_user, c.relowner, 'MEMBER')
+          WHERE n.nspname IN ('public', 'identity', 'billie_release') AND pg_has_role(current_user, c.relowner, 'MEMBER')
         )
     SQL
-    raise "Runtime database role has schema privileges" if writable_schema
+    raise "Runtime database role has schema or target-marker write privileges" if writable_schema
   end
 end
