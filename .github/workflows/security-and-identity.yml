@@ -53,7 +53,7 @@ jobs:
 
   audits:
     name: Dependency and static security audits
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Ruby 4.0.3 (.ruby-version) has no prebuilt for ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
