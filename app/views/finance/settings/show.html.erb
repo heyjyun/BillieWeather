@@ -155,7 +155,7 @@
     <p class="bw-caption bw-db-devices"><%= t("billie.database.devices") %> <%= link_to t("billie.database.get_apps"), billie_download_path, class: "bw-text-link" %></p>
     <div class="bw-db-actions">
       <%= link_to t("billie.database.manage_statements"), finance_statements_path, class: "bw-button bw-button-outline" %>
-      <%= link_to t("billie.export.button"), finance_report_path, class: "bw-button bw-button-outline" %>
+      <%= render "finance/shared/export_link", css: "bw-button bw-button-outline" %>
     </div>
     </div>
 
@@ -373,7 +373,7 @@
         </ul>
         <p class="bw-caption"><%= t("billie.privacy.data.kept") %></p>
         <p class="bw-caption"><%= t("billie.privacy.data.devices") %></p>
-        <p class="bw-modal-note"><%= t("billie.privacy.export_first") %> <%= link_to t("billie.export.button"), finance_report_path, class: "bw-text-link" %></p>
+        <div class="bw-modal-note"><%= t("billie.privacy.export_first") %> <%= render "finance/shared/export_link", css: "bw-text-link" %></div>
         <%= form_with url: finance_financial_data_path, method: :delete, scope: :financial_data, data: {turbo: false}, class: "bw-form" do |form| %>
           <div class="bw-field">
             <%= form.label :confirm_email, t("billie.privacy.type_email", email: @user.email) %>
@@ -396,7 +396,7 @@
           <% end %>
         </ul>
         <p class="bw-caption"><%= t("billie.privacy.backups_note") %></p>
-        <p class="bw-modal-note"><%= t("billie.privacy.export_first") %> <%= link_to t("billie.export.button"), finance_report_path, class: "bw-text-link" %></p>
+        <div class="bw-modal-note"><%= t("billie.privacy.export_first") %> <%= render "finance/shared/export_link", css: "bw-text-link" %></div>
         <% blockers = @account_deletion.blockers %>
         <% if blockers.any? %>
           <div class="bw-flash bw-flash-error" role="alert" id="privacy-account-blocked">

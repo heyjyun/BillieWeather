@@ -88,14 +88,36 @@ const SHELL_ROUTES: Record<string, string[]> = {
   导入: ["交易", "添加与同步", "导入账单"],
 };
 
+/** Which Feature Library module (packages/shared-types/schema/module-catalog.json) shows each page. */
+const SHELL_MODULES: Record<string, string> = {
+  Import: "transactions", Receipts: "transactions", Dashboard: "transactions", "All Transactions": "transactions", "Manual home": "transactions",
+  导入: "transactions", Categories: "categories", "Merchants & tags": "categories", Accounts: "accounts", "Budgets & schedules": "budgets",
+  Reports: "reports",
+};
+
+/**
+ * Thrown when a test tries to open a page whose module is turned off for the test account. A
+ * hidden module is not a missing feature: the page exists, the account just has not turned it on.
+ */
+export class ModuleDisabledInTest extends Error {
+  constructor(readonly label: string, readonly moduleId: string) {
+    super(`openInShell: "${label}" belongs to the "${moduleId}" module, which is turned off for this test account `
+      + `(optional modules are off by default). Call enableAllModulesByDefault() in beforeEach, or turn it on in the Feature Library first.`);
+    this.name = "ModuleDisabledInTest";
+  }
+}
+
 export async function openInShell(label: string): Promise<void> {
   const { fireEvent, screen, within } = await import("@testing-library/react");
-  const sidebar = within(await screen.findByRole("navigation"));
+  const navigation = await screen.findByRole("navigation");
+  const sidebar = within(navigation);
   const direct = sidebar.queryByRole("button", { name: label });
   if (direct) {
     fireEvent.click(direct);
     return;
   }
+  const moduleId = SHELL_MODULES[label];
+  if (moduleId && !navigation.querySelector(`[data-module="${moduleId}"]`)) throw new ModuleDisabledInTest(label, moduleId);
   const route = SHELL_ROUTES[label];
   if (!route) throw new Error(`openInShell: no route to "${label}"`);
   const [first, ...rest] = route;

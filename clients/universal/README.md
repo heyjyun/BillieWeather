@@ -1,6 +1,7 @@
 # BillieWeather Universal Client
 
-One React + TypeScript codebase, packaged with **Tauri 2** for **macOS, Windows, iOS and Android**.
+One React + TypeScript codebase, packaged with **Tauri 2** and written for **macOS, Windows, iOS and Android**.
+Only the macOS Apple Silicon build has been produced and tested so far; see *Building each platform*.
 Financial data is stored **only on the device**, in SQLite. The Rails web app at the repository root
 is not touched by anything in this folder.
 
@@ -51,12 +52,16 @@ installs never mix.
 
 ## Building each platform
 
-| Platform | Command | Needs | Status on the dev Mac (2026-11-08) |
+| Platform | Command | Needs | Status (evidence, 2026-11-25) |
 |---|---|---|---|
-| macOS | `npm run desktop:build` → `.app` + `.dmg` in `src-tauri/target/release/bundle/` | Rust, Xcode Command Line Tools | **Built and launched** |
-| Windows | `npx tauri build --bundles nsis,msi` on Windows | Rust (MSVC), WebView2 | Not built here (needs Windows); configured in CI |
-| iOS | `npm run ios:init` once, then `npx tauri ios build --target aarch64-sim` | Full **Xcode**, `rustup target add aarch64-apple-ios-sim`, Apple team for devices | Not built: Xcode and rustup missing |
-| Android | `npm run android:init` once, then `npx tauri android build --apk` | JDK 17, Android SDK + NDK, rustup Android targets | Not built: Java/SDK/NDK missing |
+| macOS, Apple Silicon | `npm run desktop:build` → `.app` + `.dmg` in `src-tauri/target/release/bundle/` | Rust, Xcode Command Line Tools | **Built and tested.** 0.9.0-beta.1 arm64 DMG, ad hoc signed, not notarized (Gatekeeper rejects it); native QA in `docs/audits/phase6.3-*.md` |
+| macOS, Intel | `npx tauri build --target x86_64-apple-darwin` (or `universal-apple-darwin`) | rustup with the `x86_64-apple-darwin` target | **Never built.** No x86_64 or universal artifact exists; CI's `macos-latest` runner is arm64 |
+| Windows | `npx tauri build --bundles nsis,msi` on Windows | Rust (MSVC), WebView2 | **Never built.** The CI job had failed on every run before the PostCSS fix in `vite.config.ts` (run 45253715553); no Windows artifact has been produced or tested yet |
+| iOS | `npm run ios:init` once, then `npx tauri ios build --target aarch64-sim` | Full **Xcode**, `rustup target add aarch64-apple-ios-sim`, Apple team for devices | **Never compiled.** No `src-tauri/gen/apple`; the OCR plugin's Swift code and the App Intents are unverified |
+| Android | `npm run android:init` once, then `npx tauri android build --apk` | JDK 17, Android SDK + NDK, rustup Android targets | **Never compiled.** No `src-tauri/gen/android`; the ML Kit OCR plugin is unverified |
+
+The shared UI and storage are tested in `npm test` (jsdom and sql.js), which does not prove any
+platform build. Nothing here goes beyond "the code exists" for Intel Macs, Windows, iOS or Android.
 
 The Mac uses Homebrew's Rust, which cannot add cross-compile targets. Install Rust with
 [rustup](https://rustup.rs) before trying the mobile builds.
@@ -65,9 +70,10 @@ The Mac uses Homebrew's Rust, which cannot add cross-compile targets. Install Ru
 
 `.github/workflows/universal-client.yml` runs only when `clients/**` or `packages/**` change:
 
-- **Every PR and push to main**: type check and all tests, then **unsigned** macOS and Windows
-  builds uploaded as workflow artifacts.
-- **Manual run with "mobile" ticked**: experimental Android debug APK and iOS simulator builds.
+- **Every PR and push to main**: type check and all tests, then **unsigned** macOS (arm64) and Windows
+  builds uploaded as workflow artifacts. The Windows job has not passed yet (see the table above).
+- **Manual run with "mobile" ticked**: experimental Android debug APK and iOS simulator builds. They
+  have never been run.
 - **Nothing is published** to any app store, and the Rails/Render pipeline is untouched.
 
 Signing (Apple Developer ID and notarization, Windows code signing, Play/App Store) is deliberately

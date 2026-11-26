@@ -66,6 +66,10 @@ export default defineConfig({
     // this folder; always use this app's copy.
     dedupe: ["react", "react-dom", "@testing-library/react"],
   },
+  // No PostCSS plugins, given inline so Vite never searches for a config file. The search can climb
+  // to the repository root, whose postcss.config.js belongs to the Rails site and runs
+  // `bundle exec bin/theme`. That broke the Windows CI build, where the search does not stop here.
+  css: { postcss: { plugins: [] } },
   clearScreen: false,
   server: {
     port: 1420,

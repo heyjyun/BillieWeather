@@ -1,0 +1,11 @@
+<%# The way to export the person's data, e.g. before deleting it. Export lives in Reports, an optional
+    module: while it is off, one press turns it on and opens the export (no "turned off" detour). %>
+<% css = local_assigns.fetch(:css, "bw-text-link") %>
+<% if module_enabled?("reports") %>
+  <%= link_to t("billie.export.button"), finance_report_path, class: css, data: {export_link: "report"} %>
+<% else %>
+  <%= button_to t("billie.modules.disabled.turn_on", name: t("billie.modules.names.reports")), finance_feature_library_module_path("reports"),
+        method: :patch, params: {enabled: "1", expected_revision: module_revision("reports"), return_to: finance_report_path},
+        class: css, style: (css.include?("bw-button") ? nil : "background: none; border: 0; padding: 0; cursor: pointer;"),
+        form: {style: "display: inline;", data: {turbo: false, export_link: "turn-on"}} %>
+<% end %>

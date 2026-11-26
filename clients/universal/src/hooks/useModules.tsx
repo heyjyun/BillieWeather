@@ -1,5 +1,5 @@
 // Feature Library state is independent of the interface mode and the active ledger.
-import { enabledModules, isModuleEnabled, MODULES, type ModuleDefinition, type ModulePreferences } from "@billie/shared-types";
+import { enabledModules, isModuleEnabled, type ModuleDefinition, type ModulePreferences } from "@billie/shared-types";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { ModulePreferenceRequestError, fetchModulePreferences, putModulePreferences } from "../services/modulePreferenceApi";
 import { chooseModule, loadModulePreferences, saveModulePreferences } from "../services/modulePreferences";
@@ -30,9 +30,12 @@ interface Props {
 }
 
 const ModulesContext = createContext<ModulesContextValue | null>(null);
+// Outside a provider (a page rendered on its own, e.g. in a test) the catalog defaults apply, exactly
+// as for a person with no stored choice. "Everything on" here used to hide whether a page works for a
+// default account.
 const fallback: ModulesContextValue = {
-  preferences: { format: 1, modules: {} }, enabled: () => true, enabledList: [...MODULES],
-  setEnabled: () => undefined, status: "local", conflicts: {}, serverEnabled: () => false, resolve: () => undefined,
+  preferences: { format: 1, modules: {} }, enabled: (id) => isModuleEnabled(id, null, "app"), enabledList: enabledModules(null, "app"),
+  setEnabled: () => undefined, status: "local", conflicts: {}, serverEnabled: (id) => isModuleEnabled(id, null, "app"), resolve: () => undefined,
 };
 const noToken = () => null;
 const SYNC_BUILD_ENABLED = import.meta.env.VITE_BILLIE_MODULE_SYNC !== "0";
