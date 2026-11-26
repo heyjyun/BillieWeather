@@ -3,7 +3,6 @@ module Finance
   # by hand with the same model imports use. Deleting moves an entry to the trash (回收站), from where
   # it can be restored or, for manual entries, removed for good.
   class EntriesController < BaseController
-
     PERMITTED = %i[kind amount booked_on occurred_at_time account_id to_account_id category merchant_id merchant_name project_id
       tag_names note description refund_of_id excluded tax_review].freeze
 
@@ -12,7 +11,7 @@ module Finance
     def new
       source = params[:copy_from].present? ? current_user.finance_transactions.find(params[:copy_from]) : nil
       @form = source ? copy_form(source) : {kind: params[:kind].presence_in(Ledger::MANUAL_KINDS) || "expense", booked_on: finance_today.iso8601,
-        account_id: params[:account_id], refund_of_id: params[:refund_of_id]}
+                                            account_id: params[:account_id], refund_of_id: params[:refund_of_id]}
       if @form[:refund_of_id].present?
         original = current_user.finance_transactions.live.find(@form[:refund_of_id])
         @form = @form.merge(kind: "refund", account_id: original.bank_account_id, category: original.category)

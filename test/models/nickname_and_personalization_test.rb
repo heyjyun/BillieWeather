@@ -4,7 +4,7 @@ require "test_helper"
 class NicknameAndPersonalizationTest < ActiveSupport::TestCase
   def new_user(**attributes)
     User.new({email: "nick-#{SecureRandom.hex(4)}@example.com", password: "Gr33nCloud!Rain&2026",
-      password_confirmation: "Gr33nCloud!Rain&2026", usage_region: "US"}.merge(attributes))
+              password_confirmation: "Gr33nCloud!Rain&2026", usage_region: "US"}.merge(attributes))
   end
 
   def nickname_errors(user)
@@ -115,9 +115,9 @@ class NicknameAndPersonalizationTest < ActiveSupport::TestCase
     point = ->(day, balance, lower = nil) { {date: today + day, balance: BigDecimal(balance.to_s), lower: lower && BigDecimal(lower.to_s)}.compact }
     assert_nil Personalization.forecast_outlook({balance_available: false, points: []})
     assert_nil Personalization.forecast_outlook(nil)
-    assert_equal({kind: :stable}, Personalization.forecast_outlook({balance_available: true, points: [point.(0, 500), point.(30, 450)]}))
-    assert_equal({kind: :range_dips}, Personalization.forecast_outlook({balance_available: true, points: [point.(0, 500, 500), point.(30, 200, -40)]}))
-    assert_equal({kind: :gap, date: today + 12}, Personalization.forecast_outlook({balance_available: true, points: [point.(0, 100), point.(12, -5), point.(30, -80)]}))
+    assert_equal({kind: :stable}, Personalization.forecast_outlook({balance_available: true, points: [point.call(0, 500), point.call(30, 450)]}))
+    assert_equal({kind: :range_dips}, Personalization.forecast_outlook({balance_available: true, points: [point.call(0, 500, 500), point.call(30, 200, -40)]}))
+    assert_equal({kind: :gap, date: today + 12}, Personalization.forecast_outlook({balance_available: true, points: [point.call(0, 100), point.call(12, -5), point.call(30, -80)]}))
   end
 
   test "the apps' copy (personal.json) is generated from these translations and is up to date" do

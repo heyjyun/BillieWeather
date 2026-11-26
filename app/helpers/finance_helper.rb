@@ -45,7 +45,7 @@ module FinanceHelper
   end
 
   def finance_count(count, noun, plural = nil)
-    t("billie.helpers.counts.#{noun.to_s.tr(' ', '_')}", count: count, default: pluralize(count, noun, plural))
+    t("billie.helpers.counts.#{noun.to_s.tr(" ", "_")}", count: count, default: pluralize(count, noun, plural))
   end
 
   def finance_balance_available?(profile, summary = @balance_summary)
@@ -65,12 +65,12 @@ module FinanceHelper
     return unless as_of
     days = (today - as_of.to_date).to_i
     return t("billie.helpers.balance_today") if days <= 0
-    t("billie.helpers.#{days > 1 ? 'balance_aged' : 'balance_dated'}", date: finance_date(as_of), days: finance_count(days, "day"))
+    t("billie.helpers.#{(days > 1) ? "balance_aged" : "balance_dated"}", date: finance_date(as_of), days: finance_count(days, "day"))
   end
 
   def finance_balance_note(profile, summary = @balance_summary)
     if profile.balance_source == "manual" || (profile.balance_source.blank? && profile.current_balance.to_d.nonzero?)
-      return t("billie.helpers.#{profile.balance_as_of ? 'manual_dated' : 'manual'}", date: finance_date(profile.balance_as_of))
+      return t("billie.helpers.#{profile.balance_as_of ? "manual_dated" : "manual"}", date: finance_date(profile.balance_as_of))
     end
     return finance_balance_setup_message(summary) unless summary&.dig(:total).present?
 

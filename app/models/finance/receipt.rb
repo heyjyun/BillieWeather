@@ -103,7 +103,7 @@ module Finance
         book_currency = Profile.find_by(user_id: user_id)&.currency
         return "foreign_currency" if currency && book_currency && currency != book_currency
         return "amount_mismatch" if total.nil? || entries.sum { |entry| entry.amount.abs } != total
-        return confirmed.all? { |match| match.decided_by == "user" } ? "verified" : "auto_matched"
+        return (confirmed.all? { |match| match.decided_by == "user" }) ? "verified" : "auto_matched"
       end
       return "needs_review" if suggested_matches.any? || status == "needs_review"
       return "cash" if status == "cash"

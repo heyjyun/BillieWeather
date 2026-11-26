@@ -98,7 +98,7 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     switch_to("manual")
     switch_to("default")
     assert_equal before, record_counts
-    assert_equal BigDecimal("87"), wallet.reload.balance
+    assert_equal BigDecimal(87), wallet.reload.balance
   end
 
   test "switching workflows keeps the current page and rejects unsafe destinations" do

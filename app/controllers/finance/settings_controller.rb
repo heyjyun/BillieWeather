@@ -98,7 +98,7 @@ module Finance
 
     private
 
-    def current_module_id = action_name == "data" ? "data_management" : super
+    def current_module_id = (action_name == "data") ? "data_management" : super
 
     def load_user
       @user = current_user

@@ -235,7 +235,11 @@ module Finance
     def self.create_for!(user, name:, parent: nil, kind: nil)
       ensure_seeded!(user)
       user_id = user_id_of(user)
-      parent_row = parent.is_a?(Category) ? parent : (parent.present? ? where(user_id: user_id).where("lower(name) = lower(?)", parent.to_s).first : nil)
+      parent_row = if parent.is_a?(Category)
+        parent
+      else
+        (parent.present? ? where(user_id: user_id).where("lower(name) = lower(?)", parent.to_s).first : nil)
+      end
       record = new(user_id: user_id, name: name, parent: parent_row, category_kind: parent_row&.category_kind || (CREATABLE_ROOT_KINDS.include?(kind.to_s) ? kind.to_s : "expense"),
         sort_order: next_sort_order(user_id, parent_row&.id))
       if parent.present? && parent_row.nil?

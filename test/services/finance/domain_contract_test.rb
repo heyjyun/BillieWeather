@@ -58,7 +58,7 @@ class Finance::DomainContractTest < ActiveSupport::TestCase
     assert_equal ["account_required"], Finance::Domain.entry_problems(**base, account_id: nil)
     assert_equal ["category_kind"], Finance::Domain.entry_problems(**base, category_kind: "income")
     assert_equal ["accounts_same"], Finance::Domain.entry_problems(**base, kind: "transfer", to_account_id: 1, category_kind: nil)
-    assert_equal ["refund_too_large"], Finance::Domain.entry_problems(**base, kind: "refund", amount: "60", refund_of: {amount: BigDecimal("-80"), refunded: BigDecimal("30")})
+    assert_equal ["refund_too_large"], Finance::Domain.entry_problems(**base, kind: "refund", amount: "60", refund_of: {amount: BigDecimal("-80"), refunded: BigDecimal(30)})
     assert_equal ["refund_target_required"], Finance::Domain.entry_problems(**base, kind: "refund", refund_of: nil)
     assert_equal [], Finance::Domain.entry_problems(**base, kind: "adjustment", amount: "0", category_kind: nil)
     assert_equal ["kind_invalid"], Finance::Domain.entry_problems(**base, kind: "bogus")

@@ -246,16 +246,16 @@ class Finance::CategoryTest < ActiveSupport::TestCase
 
     report = Finance::LedgerReport.new(user: @user)
     roots = report.by("category")
-    assert_equal BigDecimal("32"), roots["Food & dining"][:expense]
-    assert_equal BigDecimal("100"), roots["Shopping"][:expense]
+    assert_equal BigDecimal(32), roots["Food & dining"][:expense]
+    assert_equal BigDecimal(100), roots["Shopping"][:expense]
     refute roots.key?("Groceries")
     drill = report.by("category", node: "Food & dining")
-    assert_equal BigDecimal("27"), drill["Groceries"][:expense]
+    assert_equal BigDecimal(27), drill["Groceries"][:expense]
     assert drill["Groceries"][:drill]
     assert drill["Food & dining"][:direct]
-    assert_equal BigDecimal("5"), drill["Food & dining"][:expense]
+    assert_equal BigDecimal(5), drill["Food & dining"][:expense]
     leaf = report.by("category", node: "Farmers market")
-    assert_equal({"Farmers market" => BigDecimal("7")}, leaf.transform_values { |row| row[:expense] })
+    assert_equal({"Farmers market" => BigDecimal(7)}, leaf.transform_values { |row| row[:expense] })
     refute leaf["Farmers market"][:direct]
 
     breakdown = Finance::SpendingBreakdown.new(user: @user)

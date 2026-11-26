@@ -52,7 +52,13 @@ module Finance
         reference_match = number.length >= 4 && number == normalize_id(candidate[:reference])
         last4_match = card.present? && candidate[:account_last4].present? && card == candidate[:account_last4]
         reasons = []
-        day_reason = if offset.zero? then "same_day" elsif offset.positive? then "posted_later" else "posted_earlier" end
+        day_reason = if offset.zero?
+          "same_day"
+        elsif offset.positive?
+          "posted_later"
+        else
+          "posted_earlier"
+        end
 
         unless same_currency
           next if similarity.nil? || similarity < 0.8
@@ -69,7 +75,15 @@ module Finance
         next if tip_like && (similarity.nil? || similarity < 0.8)
 
         reasons << (amount_equal ? "amount_equal" : "amount_differs_tip")
-        reasons << if similarity.nil? then "merchant_unknown" elsif similarity == 1 then "merchant_same" elsif similarity >= 0.8 then "merchant_similar" else "merchant_weak" end
+        reasons << if similarity.nil?
+          "merchant_unknown"
+        elsif similarity == 1
+          "merchant_same"
+        elsif similarity >= 0.8
+          "merchant_similar"
+        else
+          "merchant_weak"
+        end
         reasons << day_reason
         reasons << "card_last4_match" if last4_match
         reasons << "receipt_number_match" if reference_match

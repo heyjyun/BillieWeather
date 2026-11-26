@@ -162,7 +162,7 @@ class ClientApiFinanceTest < ActionDispatch::IntegrationTest
     assert_equal @user.id, statement.user_id
     assert_equal 2, statement.transaction_count
     assert_equal BigDecimal("90.50"), statement.closing_balance
-    assert_equal [BigDecimal("-4.5"), BigDecimal("95")], statement.transactions.order(:booked_on).pluck(:amount)
+    assert_equal [BigDecimal("-4.5"), BigDecimal(95)], statement.transactions.order(:booked_on).pluck(:amount)
     assert statement.transactions.find_by(description: "Pay").excluded
 
     assert_no_difference -> { Finance::Statement.count } do
@@ -230,7 +230,7 @@ class ClientApiFinanceTest < ActionDispatch::IntegrationTest
   # Synthetic statements. The device names the account (bank, last four digits, kind).
   def card_upload(sha, rows, account: {institution: "Capital One", last4: "9876", kind: "credit_card"})
     post "/api/client/v1/finance/statements", headers: @auth, as: :json, params: {statement: {filename: "card.csv", currency: "USD", sha256: sha,
-      account: account, transactions: rows.map { |date, description, amount| {booked_on: date, description: description, amount: amount, category: "Uncategorized"} }}.compact}
+                                                                                              account: account, transactions: rows.map { |date, description, amount| {booked_on: date, description: description, amount: amount, category: "Uncategorized"} }}.compact}
   end
 
   test "an uploaded statement is filed under the account the device identified, shared with website imports of it" do
@@ -241,7 +241,7 @@ class ClientApiFinanceTest < ActionDispatch::IntegrationTest
     assert_equal ["Capital One", "9876", "credit_card", @user.id], [account.bank_name, account.last4, account.account_type, account.user_id]
     assert_equal [account.id], statement.transactions.pluck(:bank_account_id).uniq
     # Money in on a card is a refund, never income.
-    assert_equal({BigDecimal("-80") => "expense", BigDecimal("30") => "refund"}, statement.transactions.pluck(:amount, :kind).to_h)
+    assert_equal({BigDecimal("-80") => "expense", BigDecimal(30) => "refund"}, statement.transactions.pluck(:amount, :kind).to_h)
     # The website's own detector gives the same account for the same card.
     identity = Finance::StatementAccountIdentity.from_pdf(text: "Capital One\nCredit card statement\nAccount ending in 9876\n")
     assert_equal account, Finance::BankAccount.resolve(user: @user, identity: identity)
@@ -272,5 +272,4 @@ class ClientApiFinanceTest < ActionDispatch::IntegrationTest
     assert_response :created
     assert_nil Finance::Statement.find(response.parsed_body["id"]).bank_account_id
   end
-
 end

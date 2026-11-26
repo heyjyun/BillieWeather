@@ -13,12 +13,20 @@ results = input.fetch("accounts").map do |account|
 
   session.post "/api/client/v1/session", params: {email: account["email"].upcase, password: account["password"]}, as: :json
   login = session.response
-  body = JSON.parse(login.body) rescue {}
+  body = begin
+    JSON.parse(login.body)
+  rescue
+    {}
+  end
   token = body["token"]
   me = nil
   if token
     session.get "/api/client/v1/account", headers: {"Authorization" => "Bearer #{token}"}
-    me = JSON.parse(session.response.body)["account"] rescue nil
+    me = begin
+      JSON.parse(session.response.body)["account"]
+    rescue
+      nil
+    end
   end
   token_authenticates = token ? ClientApi::SessionToken.authenticate(token)&.id == user.id : false
   # Sign out: the server revokes the token for account and financial endpoints. Then sign in again.

@@ -54,7 +54,7 @@ class Finance::ReceiptContractTest < ActiveSupport::TestCase
     test "match: #{c["name"]}" do
       r = c["receipt"]
       receipt = {amount_minor: r["amountMinor"], direction: r["direction"], currency: r["currency"], date: r["date"], merchant: r["merchant"],
-        card_last4: r["cardLast4"], receipt_number: r["receiptNumber"], tip_minor: r["tipMinor"], confident: r["confident"]}
+                 card_last4: r["cardLast4"], receipt_number: r["receiptNumber"], tip_minor: r["tipMinor"], confident: r["confident"]}
       candidates = c["candidates"].map do |x|
         {id: x["id"], amount_minor: x["amountMinor"], currency: x["currency"], date: x["date"], description: x["description"], kind: x["kind"],
          account_last4: x["accountLast4"], reference: x["reference"], has_receipt: x["hasReceipt"], rejected: x["rejected"]}

@@ -178,13 +178,13 @@ module Finance
 
     def build
       by_id = @rows.to_h { |row| [row[0], row] }
-      children = @rows.group_by { |row| row[2] && by_id.key?(row[2]) ? row[2] : nil }
+      children = @rows.group_by { |row| (row[2] && by_id.key?(row[2])) ? row[2] : nil }
       @by_key = @rows.select { |row| row[3] }.to_h { |row| [row[3], row[1]] }
       visited = Set.new
       make = lambda do |row, depth|
         visited << row[0]
         kids = (children[row[0]] || []).reject { |kid| visited.include?(kid[0]) }.map { |kid| make.call(kid, depth + 1) }
-        parent = row[2] && by_id[row[2]] ? by_id[row[2]][1] : nil
+        parent = (row[2] && by_id[row[2]]) ? by_id[row[2]][1] : nil
         Node.new(id: row[0], name: row[1], kind: row[4], key: row[3], parent: parent, hidden: row[6], expanded: row[7],
           sort_order: row[5], depth: depth, children: kids)
       end

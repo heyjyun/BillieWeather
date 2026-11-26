@@ -59,7 +59,7 @@ class FinanceSchemaIntegrityTest < ActiveSupport::TestCase
   test "values the models refuse are refused by the database too" do
     refused(ActiveRecord::StatementInvalid) { Finance::Transaction.where(id: @entry.id).update_all(category: "") }
     refused(ActiveRecord::StatementInvalid) { Finance::Transaction.where(id: @entry.id).update_all(category_source: "guess") }
-    refused(ActiveRecord::StatementInvalid) { Finance::Transaction.where(id: @entry.id).update_all(amount: BigDecimal("10000000000000")) }
+    refused(ActiveRecord::StatementInvalid) { Finance::Transaction.where(id: @entry.id).update_all(amount: BigDecimal(10000000000000)) }
     refused(ActiveRecord::StatementInvalid) { Finance::Transaction.where(id: @entry.id).update_all(original_description: "") }
     refused(ActiveRecord::StatementInvalid) { Finance::Transaction.where(id: @entry.id).update_all("user_locked_fields = '{}'::jsonb") }
     refused(ActiveRecord::StatementInvalid) { @statement.update_columns(transaction_count: 0) }

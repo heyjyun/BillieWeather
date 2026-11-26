@@ -2,6 +2,7 @@ require "test_helper"
 
 class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+
   PATH = "/api/client/v1/module_preferences"
   DEVICE_A = "1d7f90b9-bd34-4a5c-aa09-6ff7fe4ccc63"
   DEVICE_B = "2b58246f-e134-4b39-8a7a-fa2677174365"

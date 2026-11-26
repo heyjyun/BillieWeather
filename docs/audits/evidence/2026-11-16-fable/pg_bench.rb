@@ -9,7 +9,6 @@ module Bench
 end
 abort "refusing: not the disposable test database" unless ActiveRecord::Base.connection.current_database == "billieweather_codex_audit_test" && Rails.env.test?
 conn = ActiveRecord::Base.connection
-median = ->(runs, &block) { runs.times.map { Bench.realtime(&block) }.sort[runs / 2] }
 out = {}
 ActiveRecord::Base.transaction do
   users = 2.times.map { |n| User.create!(email: "bench-#{SecureRandom.hex(6)}@example.com", password: "08h4f78hrc0ohw9f8heso", password_confirmation: "08h4f78hrc0ohw9f8heso", usage_region: "US", time_zone: "UTC") }

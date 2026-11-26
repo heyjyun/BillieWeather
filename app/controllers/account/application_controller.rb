@@ -1,5 +1,6 @@
 class Account::ApplicationController < ApplicationController
   include Account::Controllers::Base
+
   before_action :require_usage_region
 
   def ensure_onboarding_is_complete

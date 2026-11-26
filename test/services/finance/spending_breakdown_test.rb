@@ -24,7 +24,7 @@ class Finance::SpendingBreakdownTest < ActiveSupport::TestCase
     assert_equal "uncategorized", @breakdown.tone("Uncategorized")
 
     february = @breakdown.mix(start_date: Date.new(2026, 2, 1), end_date: Date.new(2026, 2, 28))
-    assert_equal BigDecimal("55"), february[:total]
+    assert_equal BigDecimal(55), february[:total]
     assert_equal [Finance::SpendingBreakdown::OTHER, "Uncategorized"], february[:parts].map { |part| part[:key] }
     assert_equal ["Pets"], february[:parts].first[:members]
     assert_in_delta 5 / 55.0, february[:parts].first[:share]
@@ -42,9 +42,9 @@ class Finance::SpendingBreakdownTest < ActiveSupport::TestCase
     months = @breakdown.monthly(months: 3)
     assert_equal [Date.new(2026, 1, 1), Date.new(2026, 2, 1), Date.new(2026, 3, 1)], months.map { |month| month[:month] }
     assert_equal ["Housing", "Food & dining"], months.first[:segments].map { |segment| segment[:key] }
-    assert_equal BigDecimal("50"), months.first[:total]
+    assert_equal BigDecimal(50), months.first[:total]
     assert_empty months.second[:segments]
-    assert_equal BigDecimal("20"), months.last[:total]
+    assert_equal BigDecimal(20), months.last[:total]
   end
 
   test "a category trend averages from its first month and lists its biggest merchants" do
@@ -56,12 +56,12 @@ class Finance::SpendingBreakdownTest < ActiveSupport::TestCase
     trend = @breakdown.trend("Food & dining", months: 12)
     assert_equal 12, trend[:months].size
     assert_equal Date.new(2026, 3, 1), trend[:latest][:month]
-    assert_equal BigDecimal("50"), trend[:latest][:amount]
+    assert_equal BigDecimal(50), trend[:latest][:amount]
     # January, February (nothing) and March: 60 / 3.
-    assert_equal BigDecimal("20"), trend[:average]
+    assert_equal BigDecimal(20), trend[:average]
 
     merchants = @breakdown.top_merchants("Food & dining")
-    assert_equal [{name: "Starbucks Store", amount: BigDecimal("40"), count: 2}, {name: "Chipotle", amount: BigDecimal("20"), count: 1}], merchants
+    assert_equal [{name: "Starbucks Store", amount: BigDecimal(40), count: 2}, {name: "Chipotle", amount: BigDecimal(20), count: 1}], merchants
   end
 
   test "no transactions means empty charts" do

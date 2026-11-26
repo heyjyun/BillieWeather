@@ -68,7 +68,13 @@ module Finance
     end
 
     def audit_values(record, fields)
-      record.attributes.slice(*fields).transform_values { |value| value.is_a?(BigDecimal) ? value.to_s("F") : (value.respond_to?(:iso8601) ? value.iso8601 : value) }
+      record.attributes.slice(*fields).transform_values { |value|
+        if value.is_a?(BigDecimal)
+          value.to_s("F")
+        else
+          (value.respond_to?(:iso8601) ? value.iso8601 : value)
+        end
+      }
     end
 
     # Counts for the manual workspace's review lists (income to check, possible duplicates, trash).

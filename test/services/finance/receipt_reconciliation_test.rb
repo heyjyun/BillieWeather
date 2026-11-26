@@ -46,7 +46,7 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
     # Confident and complete, but with no bank row yet: it waits for the person, nothing is counted.
     assert_equal ["needs_review", "needs_review"], [receipt.status, receipt.verification]
     assert_nil receipt.entry
-    assert_equal BigDecimal("0"), spending
+    assert_equal BigDecimal(0), spending
     reconciler.record!(receipt)
     receipt.reload
     assert_equal "pending_bank_match", receipt.status
@@ -96,7 +96,7 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
     assert_equal "duplicate", cropped.status
     assert_equal first.receipt.id, cropped.duplicate_of_id
     assert_nil cropped.entry
-    assert_equal BigDecimal("0"), spending, "nothing counts until a person confirms an entry"
+    assert_equal BigDecimal(0), spending, "nothing counts until a person confirms an entry"
     reconciler.record!(first.receipt)
     reconciler.record!(a.receipt)
     assert_raises(Finance::Ledger::Invalid) { reconciler.record!(retry_result.receipt) }
@@ -194,7 +194,7 @@ class Finance::ReceiptReconciliationTest < ActiveSupport::TestCase
     assert_equal "refund", receipt.direction
     refund = @user.finance_transactions.find_by!(amount: BigDecimal("21.64"))
     assert_equal [refund.id], receipt.matched_entries.map(&:id)
-    assert_equal BigDecimal("0"), spending
+    assert_equal BigDecimal(0), spending
   end
 
   test "transfers are never matched to a receipt" do

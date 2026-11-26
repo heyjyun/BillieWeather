@@ -104,7 +104,10 @@ class SettingsDatabaseTest < ActionDispatch::IntegrationTest
 
   def report_local(user, name: "Personal Finance 2026", database_id: SecureRandom.uuid, size: 19_293_798, reported_at: Time.current, device_name: "Jyun's MacBook",
     device_id: DEVICE_ID, status: "active", status_reason: nil, synced_at: nil, platform: "macos")
-    Finance::LocalDevice.find_or_create_by!(user: user, device_id: device_id) { |device| device.name = device_name; device.platform = platform }
+    Finance::LocalDevice.find_or_create_by!(user: user, device_id: device_id) { |device|
+      device.name = device_name
+      device.platform = platform
+    }
     Finance::LocalDatabaseReport.create!(user: user, device_id: device_id, database_id: database_id, name: name, size_bytes: size, statement_count: 24,
       transaction_count: 1240, rule_count: 36, period_start: Date.new(2026, 1, 2), period_end: Date.new(2026, 10, 30),
       modified_at: Time.utc(2026, 11, 9, 22, 0), opened_at: Time.utc(2026, 11, 9, 22, 25), sequence: 1, reported_at: reported_at,

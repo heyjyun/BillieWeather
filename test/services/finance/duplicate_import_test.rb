@@ -58,7 +58,11 @@ class Finance::DuplicateImportTest < ActiveSupport::TestCase
     import("a.csv", "Date,Description,Amount\n2026-10-31,ZELLE TO SAM Q,-60.00\n")
     entry = @user.finance_transactions.sole
     entry.update!(description: "Dinner split with Sam")
-    entry.update(original_description: "tampered") rescue nil
+    begin
+      entry.update(original_description: "tampered")
+    rescue
+      nil
+    end
     assert_equal "ZELLE TO SAM Q", entry.reload.original_description
     assert_equal "Dinner split with Sam", entry.description
   end

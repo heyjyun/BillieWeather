@@ -172,7 +172,7 @@ class FinanceLocalizedWorkflowTest < ActionDispatch::IntegrationTest
       end
       assert_response :unprocessable_entity
       assert_select "html[lang='#{locale}']"
-      assert_select "[role='alert']", text: locale == "ja" ? /[\p{Hiragana}\p{Katakana}]/ : /\p{Hangul}/
+      assert_select "[role='alert']", text: (locale == "ja") ? /[\p{Hiragana}\p{Katakana}]/ : /\p{Hangul}/
 
       clear_pdf = finance_statement_pdf(["Statement Period: 10/01/2025 - 10/31/2025", "10/05 Salary +1,000.00", "10/20 Grocery market -25.50"])
       with_upload(clear_pdf, "international.pdf", "application/pdf") do |file|

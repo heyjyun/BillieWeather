@@ -59,7 +59,7 @@ module Finance
     def dice(a, b)
       left = bigrams(a)
       right = bigrams(b)
-      return (a == b ? 1.0 : 0.0) if left.empty? || right.empty?
+      return ((a == b) ? 1.0 : 0.0) if left.empty? || right.empty?
       counts = left.tally
       overlap = right.count do |gram|
         next false unless counts[gram].to_i.positive?

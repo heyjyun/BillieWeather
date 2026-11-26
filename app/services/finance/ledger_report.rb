@@ -44,7 +44,7 @@ module Finance
       rows = Hash.new { |hash, label| hash[label] = {income: BigDecimal(0), expense: BigDecimal(0)} }
       scope.group(key, :kind).sum(:amount).each do |(id, kind), amount|
         label = id && names[id]
-        if Domain.counts_as(kind) == "income" then rows[label][:income] += amount else rows[label][:expense] -= amount end
+        (Domain.counts_as(kind) == "income") ? (rows[label][:income] += amount) : (rows[label][:expense] -= amount)
       end
       rows.sort_by { |label, row| [-row[:expense], -row[:income], label.to_s] }.to_h
     end
@@ -82,7 +82,7 @@ module Finance
         row = rows[label]
         row[:direct] = direct
         row[:drill] = !direct && tree.node(label)&.children&.any? || false
-        if Domain.counts_as(kind) == "income" then row[:income] += amount else row[:expense] -= amount end
+        (Domain.counts_as(kind) == "income") ? (row[:income] += amount) : (row[:expense] -= amount)
       end
       rows.sort_by { |label, row| [row[:direct] ? 1 : 0, -row[:expense], -row[:income], label.to_s] }.to_h
     end

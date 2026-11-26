@@ -86,7 +86,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     sign_in user
     get finance_forecast_path, params: {locale: "zh-CN", engine: "invalid"}
     assert_response :unprocessable_entity
-    assert_select "[role='alert']", text: /[\p{Han}]/
+    assert_select "[role='alert']", text: /\p{Han}/
     I18n.with_locale(:"zh-CN") do
       profile = Finance::Profile.new(user: user, current_balance: "1.234")
       assert_not profile.valid?
@@ -156,7 +156,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
       assert_select "html[lang='#{locale}']"
       assert_select "[role='alert']", text: I18n.t("devise.failure.invalid", locale: locale,
         authentication_keys: I18n.t("activerecord.attributes.user.email", locale: locale))
-      assert_select ".bw-language-switcher a[lang='en'][href='#{new_user_session_path(locale: 'en')}']"
+      assert_select ".bw-language-switcher a[lang='en'][href='#{new_user_session_path(locale: "en")}']"
     end
 
     test "#{locale} finance pages reports and validation use localized text with canonical data" do
@@ -175,7 +175,7 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
       assert_includes response.body, I18n.t("billie.helpers.labels.checking", locale: locale)
 
       [finance_statements_path, finance_transactions_path, finance_forecast_path(engine: "linear"), finance_insights_path, finance_tax_preparation_path,
-       edit_finance_transaction_path(transaction)].each do |path|
+        edit_finance_transaction_path(transaction)].each do |path|
         get path
         assert_response :success
         assert_select "html[lang='#{locale}']"

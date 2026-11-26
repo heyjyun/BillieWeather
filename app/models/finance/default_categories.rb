@@ -57,7 +57,11 @@ module Finance
     # Every way a default's name may be written in the supported languages (for typed commands).
     def names_in_all_locales(name)
       entry = (name == UNCATEGORIZED) ? nil : BY_NAME[name.to_s.downcase]
-      labels = (name == UNCATEGORIZED) ? UNCATEGORIZED_LABELS : (entry && entry.name == name ? entry.labels : {})
+      labels = if name == UNCATEGORIZED
+        UNCATEGORIZED_LABELS
+      else
+        ((entry && entry.name == name) ? entry.labels : {})
+      end
       ([name] + labels.values).uniq
     end
   end

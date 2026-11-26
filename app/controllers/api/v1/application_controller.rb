@@ -1,5 +1,6 @@
 class Api::V1::ApplicationController < ActionController::API
   include Api::Controllers::Base
+
   before_action :require_usage_region
 
   private

@@ -86,7 +86,7 @@ class FinanceManualBookkeepingTest < ActionDispatch::IntegrationTest
     end
     assert_difference -> { @user.finance_transactions.count }, 1 do
       post finance_entries_path, params: {entry: {kind: "income", amount: "12.34", description: "合成工资",
-        booked_on: "2026-11-24", account_id: checking.id, category: "Income"}}
+                                                  booked_on: "2026-11-24", account_id: checking.id, category: "Income"}}
       assert_response :redirect
     end
     assert_equal BigDecimal("12.34"), @user.finance_transactions.last.amount
@@ -254,7 +254,7 @@ class FinanceManualBookkeepingTest < ActionDispatch::IntegrationTest
     assert_select "#budget-table .bw-budget-ok", 1
 
     post finance_recurring_rules_path, params: {recurring_rule: {name: "Rent", frequency: "monthly", interval: "1", start_on: (today << 2).iso8601,
-      template: {kind: "expense", amount: "12.34", account_id: cash.id, category: "Housing"}}}
+                                                                 template: {kind: "expense", amount: "12.34", account_id: cash.id, category: "Housing"}}}
     assert_redirected_to finance_recurring_rules_path
     rule = @user.finance_recurring_rules.sole
     get finance_recurring_rules_path

@@ -41,7 +41,7 @@ class GoogleUsageRegionTest < ActionDispatch::IntegrationTest
     get user_google_oauth2_omniauth_callback_path
     assert_difference ["User.count", "Team.count", "Membership.count"], 1 do
       post google_region_path, params: {user: {usage_region: "jp", nickname: "Gigi", email: "forged@example.com", google_uid: "forged"},
-        uid: "forged", email: "forged@example.com"}
+                                        uid: "forged", email: "forged@example.com"}
     end
     assert_redirected_to finance_dashboard_path
     user = User.find_by!(google_uid: "region-google-subject")

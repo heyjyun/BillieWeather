@@ -141,7 +141,7 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
     assert_equal "US", user.reload.usage_region
 
     patch finance_settings_path, params: {user_id: other.id,
-      user: {id: other.id, usage_region: "DE", usage_region_pending: true, email: "changed-region@example.com", first_name: "Changed"}}
+                                          user: {id: other.id, usage_region: "DE", usage_region_pending: true, email: "changed-region@example.com", first_name: "Changed"}}
     assert_redirected_to finance_settings_path
     assert_equal "DE", user.reload.usage_region
     assert_not user.usage_region_pending?
@@ -198,6 +198,6 @@ class UserUsageRegionIntegrationTest < ActionDispatch::IntegrationTest
 
   def registration_params(email, **attributes)
     {user: {email: email, nickname: "Maple",
-      password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}.merge(attributes)}
+            password: "Gr33nCloud!Rain&2026", password_confirmation: "Gr33nCloud!Rain&2026"}.merge(attributes)}
   end
 end

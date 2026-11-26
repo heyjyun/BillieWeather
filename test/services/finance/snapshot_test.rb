@@ -79,9 +79,9 @@ class Finance::SnapshotTest < ActiveSupport::TestCase
 
     result = Finance::Snapshot.new(user: @user).to_h
     assert_equal [
-      {month: Date.new(2025, 12, 1), income: BigDecimal("100.10"), expenses: BigDecimal("0"), net: BigDecimal("100.10")},
-      {month: Date.new(2026, 1, 1), income: BigDecimal("0"), expenses: BigDecimal("20.05"), net: BigDecimal("-20.05")},
-      {month: Date.new(2026, 2, 1), income: BigDecimal("0"), expenses: BigDecimal("-12.50"), net: BigDecimal("12.50")}
+      {month: Date.new(2025, 12, 1), income: BigDecimal("100.10"), expenses: BigDecimal(0), net: BigDecimal("100.10")},
+      {month: Date.new(2026, 1, 1), income: BigDecimal(0), expenses: BigDecimal("20.05"), net: BigDecimal("-20.05")},
+      {month: Date.new(2026, 2, 1), income: BigDecimal(0), expenses: BigDecimal("-12.50"), net: BigDecimal("12.50")}
     ], result[:monthly]
     assert_equal BigDecimal("7.55"), result[:expenses]
   end
