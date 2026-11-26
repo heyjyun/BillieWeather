@@ -1,7 +1,7 @@
 # Dual-Mac architecture
 
 Two computers, one shared Git branch. Source moves only through GitHub (`origin/main`); release
-folders move separately. The only shared service is the **Neon development branch** (synthetic data),
+folders move separately. The only shared service is the **Neon Development project** (synthetic data),
 which each Mac reaches with its own Neon sign-in. No `.env` file, Keychain item or real database is shared.
 
 | | Mac mini — main development | MacBook Air — daily use + occasional development |

@@ -46,14 +46,31 @@ The mini gets its own copy of the credential from Neon; nothing is copied from t
 
 ```sh
 npm i -g neonctl && neon auth       # 👤 browser sign-in (same Neon account as the MacBook)
-ops/neon-dev-env.sh                 # verifies the branch in Neon, writes .env.local + services/identity-api/.env (600)
+ops/neon-dev-env.sh                 # verifies the independent Development project in Neon, writes .env.local + services/identity-api/.env (600)
 bin/billie-dev-db                   # expect: no "down" migrations; otherwise bin/billie-dev-db db:migrate
 ```
 
 Schema changes made on one Mac are visible to the other at once. Run `bin/billie-dev-db db:migrate` only
 after `ops/git-sync.sh pull`, so both Macs have the migration files. Do not run `db:rollback`, `db:reset` or
 `db:schema:load` against the shared branch (`bin/billie-dev-db` refuses them). See
-[DATABASE_ISOLATION.md](DATABASE_ISOLATION.md#shared-neon-development-branch-since-2026-11-26).
+[DATABASE_ISOLATION.md](DATABASE_ISOLATION.md#independent-neon-projects).
+
+### Installed Dev app (both Macs)
+
+```sh
+ops/install-dev.sh            # builds and installs /Applications/BillieWeather Dev.app (com.billieweather.client.dev)
+ops/install-dev.sh --status   # both apps, and each one's data folder, WebView storage and keychain entry
+```
+
+The Dev app talks only to `localhost:3000` / `localhost:8100` (independent Neon Development project); the build refuses a
+hosted server. It never replaces or opens `/Applications/BillieWeather.app` (Stable) or its data. Sign in
+only with synthetic accounts (`~/.billieweather-dev/`).
+
+### One-command sync after setup
+
+Run `ops/sync-dev-mac.sh` from your clean `main` checkout. It fast-forwards from GitHub, installs
+the pinned dependencies, validates the independent Development database, and rebuilds the Dev app.
+Each Mac retrieves its own Development credentials through its authorized Neon CLI session.
 
 ## 3. Verify independence
 

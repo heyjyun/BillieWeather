@@ -63,7 +63,7 @@ class BillieDatabaseTargetTest < ActiveSupport::TestCase
 
   test "a development connection must find the development marker" do
     config = ActiveRecord::Base.connection_db_config.configuration_hash
-    params = {dbname: config[:database], host: config[:host], port: config[:port], user: config[:username], password: config[:password]}.compact
+    params = {dbname: config[:database], host: config[:host], port: config[:port], user: config[:username] || config[:user], password: config[:password]}.compact
     ActiveRecord::Base.with_connection do |connection|
       connection.execute("CREATE SCHEMA billie_release")
       connection.execute("CREATE TABLE billie_release.target (singleton boolean, target_id text, environment text)")

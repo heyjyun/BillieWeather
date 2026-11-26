@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Runs a Rails database task on the Neon development branch's DIRECT endpoint (DATABASE_URL_UNPOOLED in
+# Runs a Rails database task on the Neon Development project's DIRECT endpoint (DATABASE_URL_UNPOOLED in
 # .env.local): migrations need session-level advisory locks, which the -pooler endpoint does not keep.
 #
 #   bin/billie-dev-db                 # db:migrate:status
@@ -20,4 +20,5 @@ env = File.exist?(".env.local") ? Dotenv.parse(".env.local") : {}
 unless env["BILLIE_DB_ENV"] == "development" && !env["DATABASE_URL_UNPOOLED"].to_s.empty?
   abort ".env.local must set BILLIE_DB_ENV=development and DATABASE_URL_UNPOOLED (see docs/dual-mac/DATABASE_ISOLATION.md)"
 end
-exec({"RAILS_ENV" => "development", "DATABASE_URL" => env.fetch("DATABASE_URL_UNPOOLED")}, "bin/rails", *tasks)
+pins = env.slice("BILLIE_DB_ENV", "BILLIE_DB_HOST", "BILLIE_DB_NAME", "BILLIE_DB_TARGET_ID", "DATABASE_URL_UNPOOLED")
+exec(pins.merge("RAILS_ENV" => "development", "DATABASE_URL" => env.fetch("DATABASE_URL_UNPOOLED")), "bin/rails", *tasks)

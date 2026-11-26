@@ -8,7 +8,7 @@
 // local-only development app on purpose.
 // It allows exactly those two origins in the app's Content Security Policy and passes them to the
 // frontend as VITE_BILLIE_API_URL and VITE_BILLIE_IDENTITY_URL. Nothing else may reach the network.
-// `dev` runs as com.billieweather.client.dev with its own data folder; the app refuses to start as a
+// `dev` and BILLIE_VARIANT=dev builds run as com.billieweather.client.dev with their own data folder; the app refuses to start as a
 // debug build of the shipped app (src-tauri/src/variant.rs). QA builds: scripts/qa.mjs.
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -31,6 +31,28 @@ export function identityOrigin(value) {
 }
 
 const isLocal = (origin) => /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+
+/** Which app a build is: "stable" (the shipped identifier) or "dev" (BillieWeather Dev.app). */
+export function buildVariant(value) {
+  const variant = (value || "stable").trim();
+  if (variant !== "stable" && variant !== "dev") throw new Error(`BILLIE_VARIANT must be "stable" or "dev": ${value}`);
+  return variant;
+}
+
+/**
+ * The Dev app talks only to the development servers on this computer (and through them to the Neon
+ * Development project). Pointing it at a hosted server would sign test accounts into production.
+ */
+export function assertVariantOrigins(variant, origins) {
+  if (variant !== "dev") return;
+  const remote = Object.entries(origins).filter(([, origin]) => !isLocal(origin));
+  if (!remote.length) return;
+  throw new Error(
+    `Refusing to build BillieWeather Dev against a non-local server:\n` +
+    remote.map(([name, origin]) => `  ${name} → ${origin}`).join("\n") +
+    `\nThe Dev app uses http://localhost:3000 and http://localhost:8100 only (Neon development).`,
+  );
+}
 
 /** Throws when a release build would bake in a localhost server without an explicit opt-in. */
 export function assertReleaseOrigins(command, origins, allowLocal = false) {
@@ -59,25 +81,32 @@ export const commitCount = (cwd) => buildNumber(spawnSync("git", ["rev-list", "-
 /** Release builds carry the commit's build number; `dev` keeps the version. */
 export const bundleVersion = (number) => ({ macOS: { bundleVersion: number } });
 
-/** `dev` never shares the shipped app's identity, and with it the real ledgers and sign-in. */
-export function developmentIdentity(command) {
-  if (command !== "dev") return {};
+/**
+ * `dev`, and a `build` with BILLIE_VARIANT=dev (the installed "BillieWeather Dev.app"), never share the
+ * shipped app's identity, and with it the real ledgers, keychain entry, WebView storage and sign-in.
+ */
+export function developmentIdentity(command, variant) {
+  if (command !== "dev" && variant !== "dev") return {};
   return { identifier: "com.billieweather.client.dev", productName: "BillieWeather Dev", plugins: { "deep-link": { desktop: { schemes: ["billieweather-dev"] }, mobile: [{ scheme: ["billieweather-dev"], appLink: false }] } } };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const origin = apiOrigin(process.env.BILLIE_API_URL);
   const identity = identityOrigin(process.env.BILLIE_IDENTITY_URL);
+  let variant;
   try {
-    assertReleaseOrigins(process.argv[2], { BILLIE_API_URL: origin, BILLIE_IDENTITY_URL: identity }, process.env.BILLIE_ALLOW_LOCAL_SERVERS === "1");
+    variant = buildVariant(process.env.BILLIE_VARIANT);
+    const origins = { BILLIE_API_URL: origin, BILLIE_IDENTITY_URL: identity };
+    assertVariantOrigins(variant, origins);
+    assertReleaseOrigins(process.argv[2], origins, variant === "dev" || process.env.BILLIE_ALLOW_LOCAL_SERVERS === "1");
   } catch (error) {
     console.error(`\n${error.message}\n`);
     process.exit(1);
   }
-  console.log(`BillieWeather servers for this ${process.argv[2] ?? "run"}: API ${origin}, identity ${identity}`);
+  console.log(`BillieWeather${variant === "dev" ? " Dev" : ""} servers for this ${process.argv[2] ?? "run"}: API ${origin}, identity ${identity}`);
   const base = JSON.parse(readFileSync(join(root, "src-tauri/tauri.conf.json"), "utf8"));
   const overridePath = join(root, "src-tauri/tauri.api.conf.json");
-  writeFileSync(overridePath, JSON.stringify({ ...developmentIdentity(process.argv[2]), ...(process.argv[2] === "build" ? { bundle: bundleVersion(commitCount(root)) } : {}), app: { security: { csp: cspWithOrigin(base.app.security.csp, origin, identity) } } }, null, 2) + "\n");
+  writeFileSync(overridePath, JSON.stringify({ ...developmentIdentity(process.argv[2], variant), ...(process.argv[2] === "build" ? { bundle: bundleVersion(commitCount(root)) } : {}), app: { ...(developmentIdentity(process.argv[2], variant).identifier ? { windows: base.app.windows.map((window) => ({ ...window, title: "BillieWeather Dev" })) } : {}), security: { csp: cspWithOrigin(base.app.security.csp, origin, identity) } } }, null, 2) + "\n");
   const result = spawnSync("npx", ["tauri", ...process.argv.slice(2), "--config", overridePath], {
     cwd: root,
     stdio: "inherit",
