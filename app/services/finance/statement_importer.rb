@@ -59,8 +59,9 @@ module Finance
       @given_observed_on = balance_observed_on
     end
 
-    # True when the statement was saved but the clean-up after it (recategorizing older rows, the
-    # balance) failed. The import itself succeeded; the next import or page load repeats the clean-up.
+    # True when the statement was saved but the clean-up after it failed. The import itself succeeded.
+    # Recategorizing older Uncategorized rows runs again after the next import; BalanceSync runs again on
+    # the next finance page (Finance::BaseController#load_account_balances) and after the next import.
     def follow_up_failed?
       !!@follow_up_failed
     end
@@ -163,7 +164,8 @@ module Finance
     rescue => error
       raise follow_up_error(error) if ActiveRecord::Base.connection.current_transaction.joinable?
       @follow_up_failed = true
-      Rails.logger.error("Statement import saved; follow-up failed (#{error.class}).")
+      # The first line of the message only: PostgreSQL puts row values ("Failing row contains") in DETAIL lines.
+      Rails.logger.error("Statement import saved; follow-up failed (#{error.class}: #{error.message.to_s.lines.first.to_s.strip.truncate(200)}).")
     end
 
     # The same messages the import itself reports, for a caller that rolls the file back.

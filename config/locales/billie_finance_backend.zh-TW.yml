@@ -53,6 +53,7 @@
         "statement_duplicate": "此帳單已匯入過。",
         "statement_all_duplicates": "此檔案中的所有交易（%{count} 筆）已從其他檔案記錄過，沒有匯入新內容。",
         "import_duplicates_notice": "已略過 %{skipped} 筆已從其他檔案記錄的交易；%{flagged} 筆疑似重複已列出待確認。",
+        "import_follow_up_failed": "較早的未分類交易或餘額暫時未能更新；下次匯入或開啟頁面時會再次進行。",
         "pdf_existing_review": "此 PDF 已在等待核對，請開啟下方已有草稿。",
         "pdf_review_unclear": "請先核對不明確的日期或金額再匯入。",
         "pdf_auto_imported": "PDF 已自動匯入，請對照帳單核對交易筆數。",
