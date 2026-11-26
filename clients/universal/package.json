@@ -1,6 +1,6 @@
 {
   "name": "billieweather-universal",
-  "version": "0.9.0-beta.1",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "description": "BillieWeather for macOS, Windows, iOS and Android: one React + Tauri 2 codebase with local-first SQLite storage.",

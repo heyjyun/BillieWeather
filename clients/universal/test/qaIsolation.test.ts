@@ -64,6 +64,8 @@ describe("QA build configuration", () => {
     expect(developmentIdentity("build", "dev")).toMatchObject({ identifier: "com.billieweather.client.dev", productName: "BillieWeather Dev" });
     expect(developmentIdentity("build", "stable")).toEqual({});
     expect(buildVariant(undefined)).toBe("stable");
+    expect(buildVariant(undefined, "dev")).toBe("dev");
+    expect(buildVariant("stable", "dev")).toBe("dev");
     expect(() => buildVariant("prod")).toThrow(/BILLIE_VARIANT/);
     const local = { BILLIE_API_URL: "http://localhost:3000", BILLIE_IDENTITY_URL: "http://localhost:8100" };
     expect(() => assertVariantOrigins("dev", local)).not.toThrow();

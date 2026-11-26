@@ -8,8 +8,9 @@ fail() { printf 'sync-dev-mac: %s\n' "$*" >&2; exit 1; }
 [[ -z "$(git status --porcelain)" ]] || fail "save your working changes before syncing"
 git fetch origin main
 git merge --ff-only FETCH_HEAD
+[[ "$(git rev-parse HEAD)" == "$(git rev-parse FETCH_HEAD)" ]] || fail "local main has commits that are absent from GitHub"
 
-for tool in mise uv neon npm; do
+for tool in mise uv neon; do
   command -v "$tool" >/dev/null || fail "install $tool using ops/bootstrap-mac-mini.sh"
 done
 # mise pins the toolchain from the checkout without sourcing dotenv files.

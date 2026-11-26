@@ -44,6 +44,7 @@ commands above in the dashboard.
 | `BILLIE_DB_TARGET_ID` | the identifier stored in `billie_release.target` (12–128 of `A-Z a-z 0-9 _ -`; not a secret) |
 | `BILLIE_SECRET_KEY_BASE` | at least 64 characters (`openssl rand -hex 64`). An environment group created before this release does **not** get it from `generateValue`; add it by hand |
 | `REDIS_URL` | from the Key Value service (optional; without it a warning only) |
+| `BILLIE_MODULE_SYNC` | `1` to serve `/api/client/v1/module_preferences` (feature-library sync). Unset, that route answers 404 and the apps keep their choices on the device only |
 | `WEB_CONCURRENCY` / `RAILS_MAX_THREADS` | `0` / `3` |
 | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`, `POSTMARK_API_TOKEN` + `MAIL_FROM` | optional, but each pair complete or absent |
 | `BASE_URL` | optional `https://…`; Render's `RENDER_EXTERNAL_URL` is used otherwise |
@@ -98,6 +99,22 @@ GRANT SELECT ON billie_release.target TO :"rails_runtime", :"identity_runtime";
 COMMIT;
 ```
 
+### Provision the marker and runtime roles separately
+
+Connect to the verified direct endpoint using a release-only owner credential. Pass
+`target_database`, `target_owner`, `target_environment`, and `target_id` as psql variables
+to `ops/neon-release-provision.sql`.
+
+1. Before the very first G2, the target has no marker. Use `ops/infrastructure.py backup
+   --before-marker` with a recoverable GPG recipient. It checks the exact Production host,
+   owner, database and PostgreSQL read-only setting before starting the dump.
+2. Run the provisioning script with `phase=marker`, then the separately approved
+   `bin/billie-release rails` and `bin/billie-release identity` migrations.
+3. Run the same script with `phase=roles`. Inject separate randomly generated values into
+   `BILLIE_RAILS_RUNTIME_PASSWORD` and `BILLIE_IDENTITY_RUNTIME_PASSWORD` through the operator
+   process. Existing runtime roles make this step fail, so credentials are never changed as a
+   side effect of resuming a release. Verify both logins and grants before updating Render.
+
 ## Apply an approved database change
 
 1. Record the exact Git commit, approved target, change reference, and database and application owners. Review compatibility with the currently running code and decide whether the writes involved in the change must be paused.
@@ -112,13 +129,13 @@ Releases before server-side sign-ins accept signed tokens that cannot be revoked
 1. Create `BILLIE_SECRET_KEY_BASE` with a fresh value (`openssl rand -hex 64`, or let the blueprint generate it). Everyone has to sign in once anyway; outstanding password-reset links and unfinished command plans stop working too.
 2. Deploy, run the smoke test, then delete `SECRET_KEY_BASE` from the service **and** the environment group. The start-up check warns while it still holds the same value.
 3. From then on a rollback to an older release either refuses to boot (key missing) or accepts no earlier credential (another value). Rehearsed: [evidence](evidence/2026-11-25-overnight/rollback-rehearsal.txt).
-4. If the application must be rolled back, deploy commit `dbd85e7` (formerly the branch `rollback/session-safe`; it is in `main`'s history through a content-free merge): the previous release plus server-side sign-ins, on the current schema. It keeps revoked sign-ins revoked. Never put the old `SECRET_KEY_BASE` value back.
+4. If the application must be rolled back, deploy commit `dbd85e7` (formerly the branch `rollback/session-safe`; it is in `main`'s history through a content-free merge): the previous release plus server-side sign-ins, on the current schema. It keeps revoked sign-ins revoked. Never put the old `SECRET_KEY_BASE` value back. `dbd85e7` has no `bin/render-start.sh` and no module-preference routes: set the Start Command to `bundle exec puma -C config/puma.rb` for that deploy and back to `./bin/render-start.sh` when rolling forward (rehearsed 2026-11-26).
 
 ## Roll back
 
 - Consider disabling `BILLIE_MODULE_SYNC` or pausing affected writes. Preserve transactions, imports, transfer and refund links, preference replay records, and audit data.
 - Prefer redeploying the last application version that can read and write the current schema. A Render Dashboard rollback can reuse the old start command and environment variables. If an old artifact has an implicit schema or seed step, rebuild the prior application with the verified release startup path before deploying it. Render artifact rollback leaves PostgreSQL as it is.
-- If data recovery is necessary, isolate the affected branch and backups first. Account for writes after the restore point. Restore into an isolated target and reconcile missing writes, replays, and account balances before the approved cutover. Use a down migration only after review of the specific migration and its data effects.
+- If data recovery is necessary, isolate the affected branch and backups first. On Neon, every branch created from or restored on a provisioned branch gets the runtime role re-created by Neon as a `neon_superuser` member, which the owner cannot alter: delete it with `neon roles delete <role> --branch <id>` and run `ops/neon-release-provision.sql` again before any service connects (rehearsed 2026-11-26). Neon `pg_dump` output carries `SET (pg_attver=…)`; strip those lines (`pg_restore -f - … | grep -v "SET (pg_attver="`) to restore into a vanilla PostgreSQL. Account for writes after the restore point. Restore into an isolated target and reconcile missing writes, replays, and account balances before the approved cutover. Use a down migration only after review of the specific migration and its data effects.
 - Confirm the app versions, service targets, both migration histories, role grants, and transaction, refund, transfer, and import invariants. Revoke temporary privileges and retain the audit evidence.
 
 See [Render Blueprints](https://render.com/docs/blueprint-spec), [Render rollbacks](https://render.com/docs/rollbacks), [Neon connection methods](https://neon.com/docs/connect/choose-connection), and [Neon restore](https://neon.com/docs/introduction/branch-restore).

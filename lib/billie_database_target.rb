@@ -6,6 +6,7 @@ module BillieDatabaseTarget
   LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1"].freeze
   URL_OPTIONS = %w[host port dbname user password sslmode sslrootcert channel_binding connect_timeout].freeze
   OVERRIDES = %w[PGSERVICE PGSERVICEFILE PGHOSTADDR PGOPTIONS].freeze
+  REMOTE_HOST = /\A(?=.{1,253}\z)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]*\z/
   NEON_HOST = /\Aep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech\z/
   # Neon endpoints of the production branch. Development and tests refuse them (direct or -pooler)
   # whatever else is configured. BILLIE_PRODUCTION_DB_ENDPOINTS (comma-separated) can add more.
@@ -118,16 +119,24 @@ module BillieDatabaseTarget
     name = ENV.fetch("BILLIE_DB_NAME", "")
     identity = ENV.fetch("BILLIE_DB_TARGET_ID", "")
     target_host = target["host"]
+    provider = ENV.fetch("BILLIE_DB_PROVIDER", "neon")
     expected_neon = pinned_host.match?(NEON_HOST) && !pinned_host.split(".").first.end_with?("-pooler")
     # Each failed condition is named (never a value), so a refused start says what to fix.
     problems = []
     case environment
     when "production", "staging"
       pooled_host = pinned_host.sub(".", "-pooler.")
-      problems << "BILLIE_DB_HOST must be the direct Neon endpoint hostname (without -pooler)" unless expected_neon
+      case provider
+      when "neon"
+        problems << "BILLIE_DB_HOST must be the direct Neon endpoint hostname (without -pooler)" unless expected_neon
+      when "postgres"
+        problems << "BILLIE_DB_HOST must be a remote PostgreSQL DNS name" unless pinned_host.match?(REMOTE_HOST) && !pinned_host.end_with?(".localhost")
+      else
+        problems << "BILLIE_DB_PROVIDER must be neon or postgres"
+      end
       problems << "the URL must set sslmode=verify-full" unless target["sslmode"] == "verify-full"
-      if target_host != pinned_host && (migration || target_host != pooled_host)
-        problems << (migration ? "the URL host must equal BILLIE_DB_HOST" : "the URL host must be BILLIE_DB_HOST or its -pooler form")
+      if target_host != pinned_host && (provider != "neon" || migration || target_host != pooled_host)
+        problems << ((migration || provider != "neon") ? "the URL host must equal BILLIE_DB_HOST" : "the URL host must be BILLIE_DB_HOST or its -pooler form")
       end
     when "local"
       problems << "BILLIE_DB_ENV=local is refused on Render" if ENV["RENDER"] == "true"

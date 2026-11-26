@@ -14,6 +14,15 @@ def test_safe_production_settings_pass():
     Settings(**SAFE).validate_for_runtime()
 
 
+def test_assigned_public_origin_keeps_google_optional():
+    values = {**SAFE, "public_url": "", "render_external_url": "https://assigned.example.com/"}
+    settings = Settings(**values)
+    settings.validate_for_runtime()
+    assert settings.public_origin == "https://assigned.example.com"
+    assert not settings.google_configured
+    assert Settings(**{**values, "public_url": "https://custom.example.com"}).public_origin == "https://custom.example.com"
+
+
 @pytest.mark.parametrize("change", [
     {"public_url": "http://identity.example.com"},
     {"token_hmac_key": ""},

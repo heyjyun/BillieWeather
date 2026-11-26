@@ -19,20 +19,38 @@ eval "$(mise activate bash 2>/dev/null)" || true
 TAG="$(git describe --tags --exact-match 2>/dev/null)" || die "HEAD is not at a release tag (git tag -a v<version>)"
 VERSION="${TAG#v}"
 CARGO_V="$(sed -nE 's/^version = "(.*)"/\1/p' clients/universal/src-tauri/Cargo.toml | head -1)"
-TAURI_V="$(node -p "require('./clients/universal/src-tauri/tauri.conf.json').version")"
+TAURI_V="$(node - <<'JS'
+const path = require("node:path");
+const config = path.resolve("clients/universal/src-tauri/tauri.conf.json");
+const version = require(config).version;
+console.log(version.endsWith(".json") ? require(path.resolve(path.dirname(config), version)).version : version);
+JS
+)"
 [[ "$VERSION" == "$CARGO_V" && "$VERSION" == "$TAURI_V" ]] || die "tag $VERSION, Cargo $CARGO_V, tauri.conf $TAURI_V disagree"
 NOTES="docs/releases/$VERSION.md"; [[ -f "$NOTES" ]] || die "missing $NOTES"
 REV="$(git rev-parse HEAD)"
 
 # 2. servers the installed app will talk to
 : "${BILLIE_API_URL:?set BILLIE_API_URL (the stable account server)}"
-: "${BILLIE_IDENTITY_URL:?set BILLIE_IDENTITY_URL}"
-case "$BILLIE_API_URL$BILLIE_IDENTITY_URL" in
-  *localhost*|*127.0.0.1*)
-    [[ "${BILLIE_ALLOW_LOCAL_SERVERS:-}" == 1 ]] || die "local servers baked into a stable build: the MacBook would depend on a dev stack. Set BILLIE_ALLOW_LOCAL_SERVERS=1 only on purpose."
-    echo "WARNING: this release needs servers at $BILLIE_API_URL / $BILLIE_IDENTITY_URL on the computer that runs it." ;;
-esac
-case "$BILLIE_API_URL$BILLIE_IDENTITY_URL" in *:38530*|*:38531*) die "those are the isolated QA ports" ;; esac
+: "${BILLIE_IDENTITY_URL:?set BILLIE_IDENTITY_URL to the verified hosted Identity URL}"
+node - "$BILLIE_API_URL" "$BILLIE_IDENTITY_URL" <<'JS' || die "Stable requires two verified HTTPS service origins"
+for (const value of process.argv.slice(2)) {
+  const url = new URL(value);
+  if (url.protocol !== "https:" || url.username || url.password || url.pathname !== "/" ||
+      url.search || url.hash || ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)) process.exit(1);
+}
+const [api, identity] = process.argv.slice(2);
+(async () => {
+  const request = (origin, path) => fetch(new URL(path, origin), { redirect: "error", signal: AbortSignal.timeout(90000) });
+  const [apiHealth, identityHealth] = await Promise.all([request(api, "/up"), request(identity, "/health")]);
+  if (!apiHealth.ok || !identityHealth.ok) throw new Error("service health check failed");
+  const result = await request(identity, "/v1/config");
+  if (!result.ok) throw new Error("Identity configuration is unavailable");
+  const config = await result.json();
+  if (!config.registration_open || config.email_verification !== "required" || config.mail_delivery !== "postmark")
+    throw new Error("Identity is not ready for verified email registration");
+})().catch(error => { console.error(error.message); process.exitCode = 1; });
+JS
 
 # 3. tests
 if [[ "${1:-}" != --skip-tests ]]; then ops/doctor.sh --tests || die "tests failed"; fi
@@ -56,13 +74,15 @@ mkdir -p "$OUT"
 set +e; (cd clients/universal && node scripts/package.mjs "$APP" "$WORK/pkg"); PKG=$?; set -e
 [[ $PKG == 0 || $PKG == 2 ]] || die "packaging failed"
 cp "$WORK"/pkg/*.dmg "$OUT/BillieWeather-$VERSION.dmg"; cp "$WORK"/pkg/*.dmg.json "$OUT/manifest.json"
+PACKAGED_SHA="$(node -e 'console.log(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).executableSha256)' "$OUT/manifest.json")"
+[[ "$PACKAGED_SHA" =~ ^[a-f0-9]{64}$ ]] || die "packaged executable checksum missing"
 cp "$NOTES" "$OUT/RELEASE_NOTES.md"
 SCHEMA="$(ls clients/universal/src-tauri/migrations | sed -nE 's/^0*([0-9]+)_.*/\1/p' | sort -n | tail -1)"
 cat >"$OUT/compat.json" <<JSON
 { "version": "$VERSION", "tag": "$TAG", "sourceRevision": "$REV",
   "databaseSchema": $SCHEMA, "upgradesFromSchemaAtLeast": 1,
   "olderAppsCanOpenAfterUpgrade": false,
-  "executableSha256": "${SUMS[0]}", "apiUrl": "$BILLIE_API_URL", "identityUrl": "$BILLIE_IDENTITY_URL",
+  "executableSha256": "$PACKAGED_SHA", "apiUrl": "$BILLIE_API_URL", "identityUrl": "$BILLIE_IDENTITY_URL",
   "builtOn": "$(scutil --get LocalHostName 2>/dev/null || hostname -s)", "builtAt": "$(date -u +%FT%TZ)" }
 JSON
 (cd "$OUT" && shasum -a 256 "BillieWeather-$VERSION.dmg" manifest.json compat.json RELEASE_NOTES.md > SHA256SUMS)

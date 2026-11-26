@@ -11,6 +11,7 @@ from psycopg.conninfo import conninfo_to_dict
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 URL_OPTIONS = {"host", "port", "dbname", "user", "password", "sslmode", "sslrootcert", "channel_binding", "connect_timeout"}
 OVERRIDES = ("PGSERVICE", "PGSERVICEFILE", "PGHOSTADDR", "PGOPTIONS")
+REMOTE_HOST = r"(?=.{1,253}\Z)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]*"
 NEON_HOST = r"ep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech"
 # Neon endpoints of the production branch. Development and tests refuse them (direct or -pooler)
 # whatever else is configured. BILLIE_PRODUCTION_DB_ENDPOINTS (comma-separated) can add more.
@@ -107,14 +108,21 @@ def release_target(url: str, *, migration: bool) -> dict[str, str]:
     problems: list[str] = []
     if environment in {"staging", "production"}:
         endpoint, _, suffix = pinned_host.partition(".")
-        expected_neon = re.fullmatch(r"ep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech", pinned_host) and not endpoint.endswith("-pooler")
-        allowed_hosts = {pinned_host} if migration else {pinned_host, f"{endpoint}-pooler.{suffix}"}
-        if not expected_neon:
-            problems.append("BILLIE_DB_HOST must be the direct Neon endpoint hostname (without -pooler)")
+        provider = os.getenv("BILLIE_DB_PROVIDER", "neon")
+        direct_only = migration or provider != "neon"
+        allowed_hosts = {pinned_host} if direct_only else {pinned_host, f"{endpoint}-pooler.{suffix}"}
+        if provider == "neon":
+            if not re.fullmatch(NEON_HOST, pinned_host) or endpoint.endswith("-pooler"):
+                problems.append("BILLIE_DB_HOST must be the direct Neon endpoint hostname (without -pooler)")
+        elif provider == "postgres":
+            if not re.fullmatch(REMOTE_HOST, pinned_host) or pinned_host.endswith(".localhost"):
+                problems.append("BILLIE_DB_HOST must be a remote PostgreSQL DNS name")
+        else:
+            problems.append("BILLIE_DB_PROVIDER must be neon or postgres")
         if target.get("sslmode") != "verify-full":
             problems.append("the URL must set sslmode=verify-full")
         if target.get("host") not in allowed_hosts:
-            problems.append("the URL host must equal BILLIE_DB_HOST" if migration
+            problems.append("the URL host must equal BILLIE_DB_HOST" if direct_only
                             else "the URL host must be BILLIE_DB_HOST or its -pooler form")
     elif environment == "local":
         if os.getenv("RENDER") == "true":

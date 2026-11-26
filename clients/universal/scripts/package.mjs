@@ -49,6 +49,8 @@ function main(path, folder) {
     mkdirSync(dirname(copy));
     must("Copy", run("ditto", [app, copy]));
     if (identity && !qa) must("Signing", run("codesign", ["--force", "--options", "runtime", "--timestamp", "--sign", identity, "--identifier", identifier, copy]));
+    if (!identity && !qa && !run("codesign", ["--verify", "--deep", "--strict", copy]).ok)
+      must("Local signature", run("codesign", ["--force", "--sign", "-", "--timestamp=none", copy]));
     must("Signature", run("codesign", ["--verify", "--deep", "--strict", copy]));
     const details = run("codesign", ["-dvvv", copy]).text;
     const entitlements = run("codesign", ["-d", "--entitlements", "-", "--xml", copy]).text;

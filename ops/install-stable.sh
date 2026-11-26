@@ -3,6 +3,7 @@
 # Uses only what macOS ships with: no Homebrew, Ruby, Node or Rust needed.
 #   install-stable.sh <release folder>        verify, back up, install
 #   install-stable.sh --check <release folder> verify only (checksums, compatibility); changes nothing
+#   install-stable.sh --initialize-empty-ledger  verify, back up and move the empty legacy ledger
 #   install-stable.sh --status                installed version, database schema and backups
 #   install-stable.sh --rollback [backup]     restore the app and data from a backup (default: newest)
 # The release folder is what ops/release-build.sh produced (DMG, manifest.json, compat.json, SHA256SUMS).
@@ -50,6 +51,36 @@ backup_now() {  # app bundle + entire data folder, taken while the app is closed
   echo "$b"
 }
 
+archive_empty_ledger() {
+  local ledger="$DATA/billieweather.db" b table count tables
+  [[ -f "$ledger" && ! -L "$ledger" ]] || die "the legacy ledger is absent or is a symbolic link"
+  running && die "quit Stable before initializing the ledger"
+  if /usr/sbin/lsof -t "$ledger" >/dev/null 2>&1; then die "the ledger is in use"; fi
+  tables="$(/usr/bin/sqlite3 -readonly "$ledger" "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT IN ('settings','_sqlx_migrations')")"
+  while IFS= read -r table; do
+    [[ -z "$table" ]] && continue
+    [[ "$table" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || die "unrecognized ledger table name"
+    count="$(/usr/bin/sqlite3 -readonly "$ledger" "SELECT count(*) FROM \"$table\"")"
+    [[ "$count" == 0 ]] || die "the legacy ledger contains business rows"
+  done <<< "$tables"
+  [[ "$(/usr/bin/sqlite3 -readonly "$ledger" 'PRAGMA integrity_check')" == ok ]] || die "legacy ledger integrity check failed"
+  b="$(backup_now legacy-ledger)"
+  [[ "$(/usr/bin/sqlite3 -readonly "$b/data/billieweather.db" 'PRAGMA integrity_check')" == ok ]] || die "backup integrity check failed"
+  mkdir "$b/original-ledger"
+  local suffix
+  for suffix in '' -wal -shm; do
+    [[ -e "$ledger$suffix" ]] || continue
+    [[ ! -L "$ledger$suffix" ]] || die "legacy ledger has a linked companion file"
+    cmp -s "$ledger$suffix" "$b/data/billieweather.db$suffix" || die "ledger differs from the verified backup"
+  done
+  # Keep the original and its sidecars together. Rollback still has the verified full data copy.
+  for suffix in '' -wal -shm; do
+    [[ -e "$ledger$suffix" ]] || continue
+    mv "$ledger$suffix" "$b/original-ledger/"
+  done
+  say "legacy ledger preserved in $b"
+}
+
 case "${1:-}" in
   --status)
     say "app:      $(installed_version)  ($APP)"
@@ -57,6 +88,8 @@ case "${1:-}" in
     say "backups:"; ls -1t "$BACKUPS" 2>/dev/null | head -10 | sed 's/^/            /' || true ;;
   --check)
     verify_release "${2:?release folder}"; say "ready to install (nothing was changed)" ;;
+  --initialize-empty-ledger)
+    archive_empty_ledger ;;
   --rollback)
     b="${2:-$BACKUPS/$(ls -1t "$BACKUPS" 2>/dev/null | grep -v -- '-replaced-by-rollback$' | head -1)}"
     [[ -d "$b/BillieWeather.app" ]] || die "no app in backup $b"
@@ -64,7 +97,10 @@ case "${1:-}" in
     say "restoring $(basename "$b")"
     aside="$(backup_now replaced-by-rollback)"; say "current state kept in $aside"
     rm -rf "$APP"; ditto "$b/BillieWeather.app" "$APP"
-    if [[ -d "$b/data" ]]; then rm -rf "$DATA"; ditto "$b/data" "$DATA"; fi
+    if [[ -d "$b/data" ]]; then
+      [[ ! -e "$DATA" ]] || mv "$DATA" "$aside/data-before-rollback"
+      ditto "$b/data" "$DATA"
+    fi
     say "rolled back to $(installed_version), database schema $(schema_of "$DATA/billieweather.db")" ;;
   ""|-*) sed -n 2,9p "$0"; exit 2 ;;
   *)

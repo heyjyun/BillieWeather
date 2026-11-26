@@ -33,7 +33,8 @@ export function identityOrigin(value) {
 const isLocal = (origin) => /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
 /** Which app a build is: "stable" (the shipped identifier) or "dev" (BillieWeather Dev.app). */
-export function buildVariant(value) {
+export function buildVariant(value, command) {
+  if (command === "dev") return "dev";
   const variant = (value || "stable").trim();
   if (variant !== "stable" && variant !== "dev") throw new Error(`BILLIE_VARIANT must be "stable" or "dev": ${value}`);
   return variant;
@@ -95,7 +96,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const identity = identityOrigin(process.env.BILLIE_IDENTITY_URL);
   let variant;
   try {
-    variant = buildVariant(process.env.BILLIE_VARIANT);
+    variant = buildVariant(process.env.BILLIE_VARIANT, process.argv[2]);
     const origins = { BILLIE_API_URL: origin, BILLIE_IDENTITY_URL: identity };
     assertVariantOrigins(variant, origins);
     assertReleaseOrigins(process.argv[2], origins, variant === "dev" || process.env.BILLIE_ALLOW_LOCAL_SERVERS === "1");

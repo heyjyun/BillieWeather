@@ -69,6 +69,36 @@ Rebuild Development from Rails migrations and the identity schema migrations if 
 needed. Use an independently provisioned project and a new role and marker. The old Development branch
 inside the Production project is historical and has no role in the Dev setup.
 
+## Infrastructure operations
+
+`ops/infrastructure.py db-check` verifies the configured endpoint, role, database and marker with
+read-only PostgreSQL defaults. Inject `DATABASE_URL_UNPOOLED`, `BILLIE_DB_ENV`, `BILLIE_DB_HOST`,
+`BILLIE_DB_NAME` and `BILLIE_DB_TARGET_ID` through the operator environment. Match the version of
+`pg_dump` and `pg_restore` to the server. For production migrations use the separately approved
+`bin/billie-release` workflow.
+
+- `backup <archive.gpg> --recipient <GPG-fingerprint>` streams a PostgreSQL custom-format dump into
+  GPG and excludes the target marker. Use a verified encryption key with a recoverable private key.
+- `restore <archive.gpg>` verifies GPG decryption and the source environment before a single transaction
+  into an empty, premarked local or Development database. Decryption uses an unlinked temporary file.
+  An approved Production restore follows the release runbook.
+- `quota` reads the two Neon projects and flags 80 percent of the compute, branch count or largest-branch storage
+  limits. It also reports metered transfer. Monitor the JSON output from a
+  scheduler that already has a Neon CLI session. Render exposes service metrics through its API,
+  but publishes the workspace's included free hours, build minutes and bandwidth consumption
+  through the Billing dashboard and usage notifications.
+- `diagnose` classifies recent failed Render deploys without displaying raw log lines. `health` checks
+  the public API and verifies the unauthenticated account endpoint returns 401.
+- `deploy <full-main-SHA>` and `rollback <full-main-SHA>` require `BILLIE_RELEASE_APPROVAL`, confirm
+  Auto-Deploy is Off, verify the Production database marker and watch the selected deploy to completion. Rollback redeploys a compatible
+  commit using current service settings. For the historical session-safe rollback, follow the
+  Start Command and session-key instructions in the release runbook.
+
+The Rails and identity release guards support AWS RDS and other standard PostgreSQL hosts via
+`BILLIE_DB_PROVIDER=postgres`. Pin the provider DNS name, use `sslmode=verify-full` and its trusted
+CA, and provision the same marker and least-privilege runtime grants. The application schema and
+backup format use PostgreSQL. Project metadata, quota monitoring and project bootstrap use Neon APIs.
+
 ## Leftover QA folders on the MacBook
 
 These hold synthetic data only and can be deleted once Phase 6.3 is closed (the installed app never reads

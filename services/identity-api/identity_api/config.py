@@ -33,7 +33,9 @@ class Settings(BaseSettings):
     billie_production_db_endpoints: str = ""
 
     # Public https origin of this service (Google redirect URI and links in emails).
-    public_url: str = "http://localhost:8100"
+    public_url: str = ""
+    # Render supplies the assigned HTTPS origin when no explicit public origin is configured.
+    render_external_url: str = ""
 
     # Comma-separated origins of the Universal Client (Tauri WebViews and the dev server).
     cors_allowed_origins: str = DEV_ORIGINS
@@ -100,7 +102,7 @@ class Settings(BaseSettings):
 
     @property
     def public_origin(self) -> str:
-        return self.public_url.rstrip("/")
+        return (self.public_url or (self.render_external_url if self.production else "") or "http://localhost:8100").rstrip("/")
 
     @property
     def google_redirect_uri(self) -> str:
@@ -151,7 +153,10 @@ class Settings(BaseSettings):
     def validate_for_runtime(self) -> None:
         problems: list[str] = []
         if self.production:
-            if urlparse(self.public_url).scheme != "https":
+            origin = urlparse(self.public_origin)
+            if (origin.scheme != "https" or not origin.hostname or origin.username or origin.password
+                    or origin.path or origin.query or origin.fragment
+                    or origin.hostname in {"localhost", "127.0.0.1", "::1"}):
                 problems.append("PUBLIC_URL must be https in production")
             if len(self.token_hmac_key) < 32:
                 problems.append("TOKEN_HMAC_KEY must be at least 32 characters in production")

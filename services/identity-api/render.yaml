@@ -27,8 +27,7 @@ services:
         sync: false
       - key: BILLIE_DB_TARGET_ID
         sync: false
-      - key: PUBLIC_URL            # https://billieweather-identity-api.onrender.com
-        sync: false
+      # Render provides RENDER_EXTERNAL_URL at startup. Set PUBLIC_URL only for a verified custom domain.
       - key: CORS_ALLOWED_ORIGINS
         value: "tauri://localhost,http://tauri.localhost,https://tauri.localhost"
       - key: TOKEN_HMAC_KEY
@@ -39,10 +38,9 @@ services:
         sync: false
       - key: MAIL_FROM
         sync: false
-      - key: GOOGLE_CLIENT_ID
-        sync: false
-      - key: GOOGLE_CLIENT_SECRET
-        sync: false
+      - key: EMAIL_VERIFICATION_REQUIRED
+        value: "true"
+      # Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET manually to enable optional Google sign-in.
       - key: TRUSTED_PROXY_HOPS
         value: "1"
       - key: DB_POOL_MAX
