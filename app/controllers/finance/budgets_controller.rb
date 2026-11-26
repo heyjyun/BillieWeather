@@ -2,13 +2,20 @@ module Finance
   # Budgets (预算): a monthly or yearly limit for all spending, one category (with its subcategories)
   # or one project. Progress counts spending net of refunds; 90% (by default) shows a warning.
   class BudgetsController < BaseController
-
     def index
       @tree = CategoryTree.new(current_user)
       @projects = current_user.finance_projects.active.ordered.to_a
       @budgets = current_user.finance_budgets.includes(:project).order(:period, :category, :id).to_a
       @month_start = Book.default_for(current_user).month_start_day
-      @on = params[:on].present? ? (Date.iso8601(params[:on]) rescue finance_today) : finance_today
+      @on = if params[:on].present?
+        begin
+          Date.iso8601(params[:on])
+        rescue
+          finance_today
+        end
+      else
+        finance_today
+      end
       @statuses = @budgets.to_h { |budget| [budget.id, status_for(budget)] }
     end
 

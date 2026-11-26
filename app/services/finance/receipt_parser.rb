@@ -186,7 +186,11 @@ module Finance
           end
         end
         if currency["value"].nil? && all_text.match?(/¥|￥/)
-          iso = all_text.match?(/[぀-ヿ]/) ? "JPY" : (all_text.match?(/[一-鿿]/) ? "CNY" : "JPY")
+          iso = if all_text.match?(/[぀-ヿ]/)
+            "JPY"
+          else
+            (all_text.match?(/[一-鿿]/) ? "CNY" : "JPY")
+          end
           currency = field(iso, 0.7, nil)
         end
         if currency["value"].nil? && default_currency.present?
@@ -266,7 +270,7 @@ module Finance
         end
       end
 
-      positive = ->(entries) { entries.any? { |entry| entry.minor.positive? } ? entries.select { |entry| entry.minor.positive? } : entries }
+      positive = ->(entries) { (entries.any? { |entry| entry.minor.positive? }) ? entries.select { |entry| entry.minor.positive? } : entries }
       pool = (positive.call(strong_totals).any? && strong_totals.any? { |entry| entry.minor.positive? }) ? positive.call(strong_totals) : positive.call(totals)
       total = empty
       total_negative = false
@@ -310,7 +314,8 @@ module Finance
         tip_minor = parse_minor(tip["value"]) || 0
         candidates = [subtotal_minor + tax_minor + tip_minor - discount_minor, subtotal_minor + tax_minor + tip_minor, subtotal_minor + tax_minor - discount_minor, subtotal_minor + tax_minor]
         total = if candidates.include?(total_minor)
-          field(total["value"], [total["confidence"], [0.98, total["confidence"] + 0.1].min].max, total["line"])
+          boosted = [0.98, total["confidence"] + 0.1].min
+          field(total["value"], [total["confidence"], boosted].max, total["line"])
         else
           issues << "totals_inconsistent"
           field(total["value"], total["confidence"] * 0.6, total["line"])
@@ -369,10 +374,10 @@ module Finance
         description = text[0, tokens.first.index].sub(/\s+(\d+\s*(?:x|@|×))\s*\z/i, "").sub(/\A\d+\s*(?:x|@|×)\s*/i, "").strip
         next if letter_count(description) < 2
         quantity_match = text.match(/(?:\A|\s)(\d{1,3})\s*(?:x|@|×)\s*/i) || text.match(R[/\bqty\s*[:.]?\s*(\d{1,3})\b/i])
-        quantity = quantity_match && quantity_match[1]
+        quantity = quantity_match&.[](1)
         amount = tokens.last
         unit = if tokens.length >= 2 then tokens[-2].minor
-        elsif quantity && quantity.to_i.positive? && (amount.minor % quantity.to_i).zero? then amount.minor / quantity.to_i
+        elsif quantity&.to_i&.positive? && (amount.minor % quantity.to_i).zero? then amount.minor / quantity.to_i
         end
         line_items << {
           "description" => description.gsub(/\s+/, " "), "quantity" => quantity, "unitPrice" => unit && format_minor(unit),

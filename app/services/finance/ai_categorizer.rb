@@ -192,7 +192,7 @@ module Finance
       text = result["output"].filter_map do |output|
         next unless output.is_a?(Hash) && output["type"] == "message" && output["content"].is_a?(Array)
         output["content"].filter_map { |part| part["text"] if part.is_a?(Hash) && part["type"] == "output_text" && part["text"].is_a?(String) }
-      end.flatten.join
+      end.join
       parsed = JSON.parse(text)
       assignments = parsed["assignments"]
       proposals = parsed["proposals"] || []

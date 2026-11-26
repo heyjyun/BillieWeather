@@ -89,7 +89,7 @@ module Finance
       liabilities = BigDecimal(0)
       where(user_id: user.id, include_in_net_worth: true).find_each do |account|
         balance = balances[account.id] || 0
-        if account.liability? then liabilities -= balance else assets += balance end
+        account.liability? ? (liabilities -= balance) : (assets += balance)
       end
       {assets: assets, liabilities: liabilities, net_worth: assets - liabilities}
     end
@@ -101,7 +101,8 @@ module Finance
       return unless will_save_change_to_account_type? || new_record?
       self.kind = if Domain.liability?(account_type) then "credit"
       elsif %w[checking savings].include?(account_type) then "cash"
-      else (manual? ? "unknown" : kind.presence || "unknown")
+      else
+        manual? ? "unknown" : kind.presence || "unknown"
       end
     end
   end

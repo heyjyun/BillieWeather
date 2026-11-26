@@ -16,13 +16,23 @@ module Finance
         cleaned[name.to_sym] = case name
         when "merchant_name" then value&.to_s&.squish&.first(200)
         when "purchased_on"
-          value.nil? ? nil : (Date.iso8601(value.to_s) rescue errors << "purchased_on_invalid")
+          unless value.nil?
+            begin
+              Date.iso8601(value.to_s)
+            rescue
+              errors << "purchased_on_invalid"
+            end
+          end
         when "purchased_at_time"
           (value.nil? || value.to_s.match?(/\A[0-2]\d:[0-5]\d\z/)) ? value : errors << "purchased_at_time_invalid"
         when *MONEY
           next cleaned[name.to_sym] = nil if value.nil?
           amount = BigDecimal(value.to_s.delete(",").delete_prefix("$"), exception: false)
-          (amount&.finite? && amount == amount.round(2) && amount.abs < 10**13) ? ((%w[total tip discount].include?(name)) ? amount.abs : amount) : errors << "#{name}_invalid"
+          if amount&.finite? && amount == amount.round(2) && amount.abs < 10**13
+            %w[total tip discount].include?(name) ? amount.abs : amount
+          else
+            errors << "#{name}_invalid"
+          end
         when "currency"
           (value.nil? || value.to_s.upcase.match?(/\A[A-Z]{3}\z/)) ? value&.to_s&.upcase : errors << "currency_invalid"
         when "direction" then Receipt::DIRECTIONS.include?(value) ? value : errors << "direction_invalid"

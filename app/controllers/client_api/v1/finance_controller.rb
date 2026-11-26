@@ -135,8 +135,10 @@ module ClientApi
         details = value.to_unsafe_h.slice("institution", "last4", "kind")
         institution = details["institution"]
         return :invalid unless details["last4"].is_a?(String) && details["last4"].match?(/\A\d{4}\z/)
-        return :invalid unless institution.nil? || (institution.is_a?(String) && institution.length <= 100 && !institution.match?(/[\x00-\x1f]/))
-        return :invalid unless details["kind"].is_a?(String) && (UPLOAD_ACCOUNT_KINDS.key?(details["kind"]) || details["kind"] == "unknown")
+        institution_ok = institution.nil? || (institution.is_a?(String) && institution.length <= 100 && !institution.match?(/[\x00-\x1f]/))
+        return :invalid unless institution_ok
+        kind_ok = details["kind"].is_a?(String) && (UPLOAD_ACCOUNT_KINDS.key?(details["kind"]) || details["kind"] == "unknown")
+        return :invalid unless kind_ok
         details.symbolize_keys
       end
 
@@ -289,9 +291,10 @@ module ClientApi
           name = item[:name]
           parent = item[:parent]
           kind = item[:kind]
-          return :invalid unless name.is_a?(String) && (parent.nil? || parent.is_a?(String)) && (kind.nil? || Finance::Category::KINDS.include?(kind))
+          shape_ok = name.is_a?(String) && (parent.nil? || parent.is_a?(String)) && (kind.nil? || Finance::Category::KINDS.include?(kind))
+          return :invalid unless shape_ok
           name = Finance::Category.normalize_name(name)
-          parent = parent && Finance::Category.normalize_name(parent).presence
+          parent &&= Finance::Category.normalize_name(parent).presence
           return :invalid if name.empty? || name.length > Finance::Category::MAX_LENGTH || (parent && parent.length > Finance::Category::MAX_LENGTH)
           {name: name, parent: parent, kind: kind}
         end

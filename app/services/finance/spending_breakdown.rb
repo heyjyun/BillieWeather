@@ -43,7 +43,7 @@ module Finance
       scope = account_id ? spending.where(bank_account_id: account_id) : spending
       totals = totals_by_category(within(scope, start_date, end_date))
       total = totals.values.sum(BigDecimal(0))
-      named = totals.select { |name, _amount| palette.include?(name) }
+      named = totals.slice(*palette)
         .sort_by { |name, amount| [-amount, name] }
         .map { |name, amount| part(name, tone(name), amount, total) }
       rest = totals.reject { |name, _amount| palette.include?(name) || name == UNCATEGORIZED }
@@ -64,7 +64,11 @@ module Finance
       sums = Hash.new { |hash, key| hash[key] = Hash.new(BigDecimal(0)) }
       within(spending, window.first, window.last.end_of_month).pluck(:booked_on, :category, :amount).each do |date, stored, amount|
         category = tree.root_of(stored)
-        key = palette.include?(category) ? category : ((category == UNCATEGORIZED) ? UNCATEGORIZED : OTHER)
+        key = if palette.include?(category)
+          category
+        else
+          ((category == UNCATEGORIZED) ? UNCATEGORIZED : OTHER)
+        end
         sums[date.beginning_of_month][key] -= amount
       end
       order = palette + [OTHER, UNCATEGORIZED]

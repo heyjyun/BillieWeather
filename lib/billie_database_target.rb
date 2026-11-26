@@ -66,7 +66,8 @@ module BillieDatabaseTarget
     hosts = [target["host"], ENV["PGHOST"], ENV["DATABASE_HOST"]]
     name = target["dbname"]
     suffix = (environment == "test") ? /_(?:test|compat)(?:\d+|_[a-zA-Z0-9_]+)?\z/ : /_development\z/
-    unless hosts.all? { |host| local_host?(host) } && (!url || name&.match?(suffix))
+    allowed = hosts.all? { |host| local_host?(host) } && (!url || name&.match?(suffix))
+    unless allowed
       raise "Refusing a non-local or incorrectly named #{environment} database"
     end
     nil

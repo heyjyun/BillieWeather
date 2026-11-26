@@ -77,15 +77,27 @@ module Community
     def qr_upload=(upload)
       @qr_upload_error = nil
       return if upload.blank?
-      return @qr_upload_error = :invalid unless upload.respond_to?(:read)
-      return @qr_upload_error = :too_large if upload.respond_to?(:size) && upload.size > MAX_BYTES
+      unless upload.respond_to?(:read)
+        @qr_upload_error = :invalid
+        return
+      end
+      if upload.respond_to?(:size) && upload.size > MAX_BYTES
+        @qr_upload_error = :too_large
+        return
+      end
 
       data = upload.read(MAX_BYTES + 1).to_s.b
       upload.rewind if upload.respond_to?(:rewind)
-      return @qr_upload_error = :too_large if data.bytesize > MAX_BYTES
+      if data.bytesize > MAX_BYTES
+        @qr_upload_error = :too_large
+        return
+      end
 
       content_type = Marcel::MimeType.for(StringIO.new(data))
-      return @qr_upload_error = :wrong_type unless ALLOWED_CONTENT_TYPES.include?(content_type)
+      unless ALLOWED_CONTENT_TYPES.include?(content_type)
+        @qr_upload_error = :wrong_type
+        return
+      end
 
       # identify: false keeps the content type detected above; analyzed: true skips the
       # background analysis job (no worker in production, and nothing to learn from it).

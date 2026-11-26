@@ -26,8 +26,10 @@ module Finance
     def update
       old_name = @category.name
       if @category.rename!(params.dig(:category, :name))
-        AuditEvent.record!(user: current_user, action: "update", subject: ["Category", @category.name], summary: @category.name,
-          changes: {"before" => {"name" => old_name}, "after" => {"name" => @category.name}}) if old_name != @category.name
+        if old_name != @category.name
+          AuditEvent.record!(user: current_user, action: "update", subject: ["Category", @category.name], summary: @category.name,
+            changes: {"before" => {"name" => old_name}, "after" => {"name" => @category.name}})
+        end
         redirect_to finance_categories_path(name: @category.name), notice: I18n.t("billie.categories.renamed", old: old_name, name: @category.name)
       else
         fail_with(@category)
@@ -195,7 +197,7 @@ module Finance
       end
       @direct_stats = direct
       transfer_names = @tree.transfer_names.to_set
-      counted_spending = direct.reject { |name, _row| transfer_names.include?(name) }.sum { |_name, row| row[:spent] }
+      counted_spending = direct.except(*transfer_names).sum { |_name, row| row[:spent] }
       @category_rows = names.map do |name|
         row = stats.fetch(name)
         share = (!transfer_names.include?(name) && counted_spending.positive? && row[:spent].positive?) ? (row[:spent] / counted_spending) : nil

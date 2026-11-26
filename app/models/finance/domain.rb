@@ -153,7 +153,7 @@ module Finance
     def entry_problems(kind:, amount:, occurred_on:, account_id:, to_account_id: nil, category_kind: nil, refund_of: :unset)
       return ["kind_invalid"] unless TRANSACTION_KINDS.include?(kind.to_s)
       problems = []
-      value = amount.nil? || amount.to_s.strip.empty? ? nil : BigDecimal(amount.to_s, exception: false)
+      value = (amount.nil? || amount.to_s.strip.empty?) ? nil : BigDecimal(amount.to_s, exception: false)
       if value.nil? || !value.finite?
         problems << "amount_required"
       else
@@ -161,7 +161,15 @@ module Finance
         problems << "amount_too_large" if value.abs >= 10**13
         problems << "amount_zero" if value.zero? && kind.to_s != "adjustment"
       end
-      date = occurred_on.is_a?(Date) ? occurred_on : (Date.iso8601(occurred_on.to_s) rescue nil)
+      date = if occurred_on.is_a?(Date)
+        occurred_on
+      else
+        begin
+          Date.iso8601(occurred_on.to_s)
+        rescue
+          nil
+        end
+      end
       problems << "date_invalid" unless date
       problems << "account_required" if account_id.blank?
       if %w[transfer card_payment].include?(kind.to_s)
@@ -220,13 +228,23 @@ module Finance
       start = month_start_day.to_i.clamp(1, 28)
       return [Date.new(on.year, 1, 1), Date.new(on.year, 12, 31)] if period.to_s == "year"
       first = Date.new(on.year, on.month, start)
-      first = first << 1 if on.day < start
+      first <<= 1 if on.day < start
       [first, (first >> 1) - 1]
     end
 
     def budget_status(spent, limit, alert_percent = 90)
-      ratio = limit.positive? ? (spent / limit) : (spent.positive? ? Float::INFINITY : 0)
-      level = if ratio > 1 then "over" elsif ratio * 100 >= alert_percent then "warning" else "ok" end
+      ratio = if limit.positive?
+        spent / limit
+      else
+        (spent.positive? ? Float::INFINITY : 0)
+      end
+      level = if ratio > 1
+        "over"
+      elsif ratio * 100 >= alert_percent
+        "warning"
+      else
+        "ok"
+      end
       {spent: spent, limit: limit, remaining: limit - spent, ratio: ratio.to_f, level: level}
     end
   end

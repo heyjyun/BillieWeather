@@ -42,11 +42,12 @@ module ReceiptsHelper
     if entry.from_receipt?
       return "superseded" if entry.superseded?
       receipt = entry.recorded_receipt
-      return receipt&.cash? ? "cash" : (receipt&.suggested_matches&.any? ? "needs_review" : "pending_bank_match")
+      return "cash" if receipt&.cash?
+      return receipt&.suggested_matches&.any? ? "needs_review" : "pending_bank_match"
     end
     return confirmed.first.receipt.verification if confirmed.any?
     return "needs_review" if matches.any? { |match| match.status == "suggested" }
-    return(entry.tax_review? && entry.kind == "expense" ? "missing_receipt" : "bank_record") if entry.statement_id
+    return ((entry.tax_review? && entry.kind == "expense") ? "missing_receipt" : "bank_record") if entry.statement_id
     "unverified_manual"
   end
 end

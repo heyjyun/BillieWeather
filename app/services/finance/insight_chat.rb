@@ -160,7 +160,7 @@ module Finance
       result["output"].filter_map do |output|
         next unless output.is_a?(Hash) && output["type"] == "message" && output["content"].is_a?(Array)
         output["content"].filter_map { |part| part["text"] if part.is_a?(Hash) && part["type"] == "output_text" && part["text"].is_a?(String) }
-      end.flatten.join.strip
+      end.join.strip
     rescue JSON::ParserError
       raise Error, I18n.t("billie.insight_chat.errors.failed")
     end

@@ -2,7 +2,6 @@ module Finance
   # Merchants (商家), projects (项目) and tags: create, rename, order, archive (hidden from pickers,
   # history kept), merge into another, delete (entries lose the reference). Every change is audited.
   class DimensionsController < BaseController
-
     MODELS = {"merchants" => Merchant, "projects" => Project, "tags" => Tag}.freeze
 
     before_action :load_model
@@ -32,7 +31,12 @@ module Finance
       attrs[:archived_at] = Time.current if params[:archive] == "1"
       attrs[:archived_at] = nil if params[:archive] == "0"
       if @record.update(attrs)
-        audit!(attrs.key?(:archived_at) ? (attrs[:archived_at] ? "archive" : "unarchive") : "update", @record, before, audit_values(@record, %w[name note archived_at sort_order]))
+        audit_action = if attrs.key?(:archived_at)
+          attrs[:archived_at] ? "archive" : "unarchive"
+        else
+          "update"
+        end
+        audit!(audit_action, @record, before, audit_values(@record, %w[name note archived_at sort_order]))
         redirect_to finance_dimension_index_path(@dimension), notice: I18n.t("billie.ledger.lists.updated", name: @record.name)
       else
         redirect_to finance_dimension_index_path(@dimension), alert: @record.errors.full_messages.to_sentence
@@ -52,7 +56,7 @@ module Finance
           TransactionTag.where(tag_id: @record.id).delete_all
         else
           column = (@model == Merchant) ? :merchant_id : :project_id
-          moved = Transaction.where(user_id: current_user.id, column => @record.id).update_all(column => target.id, updated_at: Time.current)
+          moved = Transaction.where(:user_id => current_user.id, column => @record.id).update_all(column => target.id, :updated_at => Time.current)
           Budget.where(user_id: current_user.id, project_id: @record.id).update_all(project_id: target.id) if @model == Project
         end
         audit!("merge", @record, {"name" => @record.name}, {"into" => target.name, "entries" => moved})

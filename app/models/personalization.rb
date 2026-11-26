@@ -49,7 +49,7 @@ module Personalization
     points = forecast[:points]
     first_gap = points.find { |point| point[:balance].to_d.negative? }
     return {kind: :gap, date: first_gap[:date]} if first_gap
-    return {kind: :range_dips} if points.any? { |point| point[:lower] && point[:lower].to_d.negative? }
+    return {kind: :range_dips} if points.any? { |point| point[:lower]&.to_d&.negative? }
     {kind: :stable}
   end
 end

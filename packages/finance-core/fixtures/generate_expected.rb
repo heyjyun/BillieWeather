@@ -8,8 +8,19 @@ out = File.join(root, "expected")
 Dir.mkdir(out) unless Dir.exist?(out)
 
 # Report error keys instead of translated text. Only affects this script's process.
+# Variables are dropped until keep_variables is switched on (PDF statements, below).
 module I18n
-  def self.t(key, **) = key.to_s.delete_prefix("billie.backend.")
+  @keep_variables = false
+
+  class << self
+    attr_writer :keep_variables
+
+    def t(key, **vars)
+      code = key.to_s.delete_prefix("billie.backend.")
+      return code if !@keep_variables || vars.empty?
+      [code, vars.transform_values { |value| value.is_a?(Date) ? value.iso8601 : value }]
+    end
+  end
 end
 
 def categorizer_without_rules
@@ -65,12 +76,7 @@ File.write(File.join(out, "errors.json"), JSON.pretty_generate(errors) + "\n")
 # PDF statements: pdf/*.txt is the text of each page (pages separated by form feeds),
 # which is what pdf-reader hands to PdfStatementExtractor. Warnings keep their
 # variables so the TypeScript port can be compared message by message.
-module I18n
-  def self.t(key, **vars)
-    code = key.to_s.delete_prefix("billie.backend.")
-    vars.empty? ? code : [code, vars.transform_values { |value| value.is_a?(Date) ? value.iso8601 : value }]
-  end
-end
+I18n.keep_variables = true
 
 def pdf_extract(pages)
   extractor = Finance::PdfStatementExtractor.new(user: OpenStruct.new(id: 0), file: nil, currency: "USD")

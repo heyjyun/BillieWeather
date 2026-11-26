@@ -236,7 +236,7 @@ class NicknamePersonalizationTest < ActionDispatch::IntegrationTest
     user = create(:onboarded_user, nickname: "Jyun")
     sign_in user
     gap = {balance_available: true, days: 30, method: :linear, current_balance: 100, projected_balance: -50, history_days: 60,
-           daily_income: 0, daily_expenses: 5, points: [{date: Date.current, balance: BigDecimal("100")}, {date: Date.current + 21, balance: BigDecimal("-5")}]}
+           daily_income: 0, daily_expenses: 5, points: [{date: Date.current, balance: BigDecimal(100)}, {date: Date.current + 21, balance: BigDecimal("-5")}]}
     forecast = Finance::CashFlowForecast.new(user: user)
     projected = forecast.to_h.merge(gap)
     stub_method(Finance::CashFlowForecast, :new, forecast) do
@@ -253,7 +253,7 @@ class NicknamePersonalizationTest < ActionDispatch::IntegrationTest
   test "the welcome email is in the sign-up language and greets by nickname" do
     post user_registration_path(locale: "es"), params: registration_params("welcome-mail@example.com", nickname: "Lluvia")
     assert_redirected_to finance_dashboard_path
-    mail = ActionMailer::Base.deliveries.reverse.find { |message| message.to.include?("welcome-mail@example.com") }
+    mail = ActionMailer::Base.deliveries.rfind { |message| message.to.include?("welcome-mail@example.com") }
     assert mail, "no welcome email was delivered"
     assert_equal "¡Te damos la bienvenida a BillieWeather!", mail.subject
     assert_includes mail.html_part.body.to_s, "¡Te damos la bienvenida a BillieWeather, Lluvia!"
