@@ -247,7 +247,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_000300) do
     t.index ["id", "user_id"], name: "index_finance_categories_on_id_and_user", unique: true
     t.index ["user_id", "parent_id"], name: "index_finance_categories_on_user_and_parent"
     t.index ["user_id", "system_key"], name: "index_finance_categories_on_user_and_system_key", unique: true, where: "(system_key IS NOT NULL)"
-    t.check_constraint "category_kind::text = ANY (ARRAY['income'::character varying, 'expense'::character varying, 'transfer'::character varying]::text[])", name: "finance_categories_kind"
+    t.check_constraint "category_kind::text = ANY (ARRAY['income'::character varying::text, 'expense'::character varying::text, 'transfer'::character varying::text])", name: "finance_categories_kind"
     t.check_constraint "parent_id IS NULL OR parent_id <> id", name: "finance_categories_not_own_parent"
   end
 
@@ -260,7 +260,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_000300) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id", "status"], name: "index_finance_category_proposals_on_user_and_status"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'dismissed'::character varying]::text[])", name: "finance_category_proposals_status"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'approved'::character varying::text, 'dismissed'::character varying::text])", name: "finance_category_proposals_status"
   end
 
   create_table "finance_category_settings", force: :cascade do |t|
@@ -873,7 +873,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_000300) do
     t.check_constraint "(revoked_at IS NULL) = (revoke_reason IS NULL)", name: "user_sessions_revocation"
     t.check_constraint "credential_fingerprint::text ~ '^[0-9a-f]{64}$'::text", name: "user_sessions_fingerprint"
     t.check_constraint "expires_at > created_at", name: "user_sessions_expiry"
-    t.check_constraint "kind::text = ANY (ARRAY['app'::character varying, 'web'::character varying]::text[])", name: "user_sessions_kind"
+    t.check_constraint "kind::text = ANY (ARRAY['app'::character varying::text, 'web'::character varying::text])", name: "user_sessions_kind"
     t.check_constraint "token_digest::text ~ '^[0-9a-f]{64}$'::text", name: "user_sessions_digest"
   end
 
