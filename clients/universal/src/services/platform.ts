@@ -3,6 +3,7 @@
 // private directory. In a plain browser (`npm run dev`) an in-memory database is used
 // and nothing is persisted.
 import type { SqlDriver, SqlStatement } from "./store";
+import { LOCAL_SCHEMA_VERSION } from "./backup";
 
 export const isTauri = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -11,6 +12,13 @@ export async function openDatabase(file = "billieweather.db"): Promise<{ driver:
     const { default: Database } = await import("@tauri-apps/plugin-sql");
     const url = `sqlite:${file}`;
     const db = await Database.load(url);
+    // Defence in depth for audit A-01: never hand the app a book whose schema is not exactly this build's.
+    try {
+      await checkSchemaVersion((sql) => db.select(sql));
+    } catch (error) {
+      await db.close(url).catch(() => undefined);
+      throw error;
+    }
     const { invoke } = await import("@tauri-apps/api/core");
     const batch = (statements: readonly SqlStatement[]) => statements.map((statement) => ({ sql: statement.sql, params: statement.params ?? [] }));
     return {
@@ -38,6 +46,20 @@ export async function openDatabase(file = "billieweather.db"): Promise<{ driver:
   const migrations = import.meta.glob("../../src-tauri/migrations/*.sql", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
   for (const path of Object.keys(migrations).sort()) db.exec(migrations[path]);
   return { driver: sqljsDriver(db), persistent: false };
+}
+
+/**
+ * Refuses a book whose recorded migrations are not exactly versions 1..LOCAL_SCHEMA_VERSION (the native
+ * plugin migrates on load; this check makes a skipped or partial migration visible instead of letting
+ * the app read or write a schema it was not built for). A newer book reports the same phrase as the
+ * migrator ("previously applied but is missing"), so the person sees the "made by a newer version" message.
+ */
+export async function checkSchemaVersion(select: (sql: string) => Promise<unknown[]>, expected = LOCAL_SCHEMA_VERSION): Promise<void> {
+  const [row] = (await select("SELECT COALESCE(MAX(version), 0) AS version, COUNT(*) AS applied FROM _sqlx_migrations WHERE success = 1")) as Array<{ version?: unknown; applied?: unknown }>;
+  const version = Number(row?.version ?? 0);
+  const applied = Number(row?.applied ?? 0);
+  if (version > expected) throw new Error(`migration ${version} was previously applied but is missing in the resolved migrations`);
+  if (version !== expected || applied !== expected) throw new Error(`the local database schema is incomplete (version ${version}, ${applied} of ${expected} migrations)`);
 }
 
 /**

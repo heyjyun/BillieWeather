@@ -4,6 +4,7 @@
 import type { Category, Currency, MerchantRule, ParsedStatement, Statement, Transaction } from "@billie/shared-types";
 import { CURRENCIES } from "@billie/shared-types";
 import { accountKey, accountTypeFromLegacy, isAccountType, kindForCategorized, legacyKind, isTransactionKind, type AccountKind, type AccountRef, type AccountType } from "@billie/finance-core";
+import { detectDuplicates } from "@billie/finance-core";
 import { aiGroups, Categorizer, categoryNameProblem, CUSTOM_CATEGORY_MAX, isBuiltInCategory, merchantKey, normalizeCategoryName, normalizeRegion, normalizeRegionSource, parseDetection, recategorizeUncategorized, serializeDetection, type RegionDetection, type RegionSource, ruleFor, titleizeMerchant, transactionsMatchingRule, type AiGroup, type CategoryNameProblem, type ExistingTransaction, type ImportReport, type ImportTemplate, type PlannedRow, type PlannedStatement } from "@billie/finance-core";
 import { randomId } from "./ids";
 import { CLEAR_HISTORY, History, recordingDriver, type HistoryAction } from "./history/history";
@@ -110,6 +111,8 @@ export interface WebSyncResult {
   transactionsUpdated: number;
   transactionsRemoved: number;
   skippedDuplicates: number;
+  /** Website rows not added because the same row is already stored from a file imported on this device (finance-core detectDuplicates). */
+  duplicateTransactionsSkipped: number;
 }
 
 /** One statement with all its transactions, as it travels between databases. */
@@ -323,14 +326,17 @@ export class FinanceStore {
    * here as a custom category, so those transactions keep their category. Unusable names and
    * names past the limit are left out; their rows are filed as Uncategorized by `knownCategory`.
    */
-  private async ensureCategories(names: Iterable<string>): Promise<Set<string>> {
+  private async ensureCategories(names: Iterable<string>, into?: SqlStatement[]): Promise<Set<string>> {
     const existing = await this.customCategories();
     const known = new Map(existing.map((name) => [name.toLowerCase(), name]));
     for (const raw of names) {
       const name = normalizeCategoryName(raw);
       if (!name || isBuiltInCategory(name) || known.has(name.toLowerCase())) continue;
       if (known.size >= CUSTOM_CATEGORY_MAX || categoryNameProblem(name, [...known.values()]) !== null) continue;
-      await this.db.execute("INSERT INTO custom_categories (name, created_at) VALUES ($1, $2) ON CONFLICT DO NOTHING", [name, now()]);
+      const insert = { sql: "INSERT INTO custom_categories (name, created_at) VALUES ($1, $2) ON CONFLICT DO NOTHING", params: [name, now()] };
+      // `into`: the caller's batch, so the categories arrive together with the rows that use them, or not at all.
+      if (into) into.push(insert);
+      else await this.db.execute(insert.sql, insert.params);
       known.set(name.toLowerCase(), name);
     }
     return new Set(known.values());
@@ -501,9 +507,10 @@ export class FinanceStore {
     const region = normalizeRegion(input.region);
     const detection = input.regionMeta?.detection ?? null;
     const stamp = now();
-    const accountId = await this.ledger.accountForImport({ key: input.account?.key ?? null, institution: input.account?.institution, last4: input.account?.last4, kind: input.account?.kind, currency: input.currency });
+    // The account is created inside the same batch as the import (audit A-05): a failed import leaves no account.
+    const account = await this.ledger.accountStatementsForImport({ key: input.account?.key ?? null, institution: input.account?.institution, last4: input.account?.last4, kind: input.account?.kind, currency: input.currency });
     // Rows left by an app version that staged outside a transaction are cleared here.
-    const statements: SqlStatement[] = [{ sql: "DELETE FROM import_staging_rows WHERE staging_key = $1 OR staged_at < $2", params: [input.sha256, new Date(Date.now() - 3_600_000).toISOString()] }];
+    const statements: SqlStatement[] = [...account.statements, { sql: "DELETE FROM import_staging_rows WHERE staging_key = $1 OR staged_at < $2", params: [input.sha256, new Date(Date.now() - 3_600_000).toISOString()] }];
     const columns = 25;
     for (let start = 0; start < input.rows.length; start += 50) {
       const batch = input.rows.slice(start, start + 50);
@@ -512,7 +519,7 @@ export class FinanceStore {
         const base = params.length;
         params.push(input.sha256, start + offset, row.bookedOn, row.description, row.amountCents, row.category, row.taxReview ? 1 : 0, row.postedOn, row.normalizedMerchant,
           row.currency, row.direction, row.balanceCents, row.bankReference, row.accountKey, row.categorySource, row.pending ? 1 : 0, row.kindHints || null, row.sourceRef,
-          row.confidence, row.validationStatus, row.raw, stamp, row.kind, accountId, row.description);
+          row.confidence, row.validationStatus, row.raw, stamp, row.kind, null, row.description); // account: the statement's (commit trigger)
         return `(${Array.from({ length: columns }, (_, i) => `$${base + i + 1}`).join(", ")})`;
       });
       statements.push({
@@ -524,11 +531,11 @@ export class FinanceStore {
     statements.push({
       sql: `INSERT INTO statements (filename, currency, sha256, transaction_count, closing_balance_cents, closing_balance_on, imported_at, import_batch_id, source_sha256, source_format,
         account_key, institution, account_last4, account_kind, opening_balance_cents, opening_balance_on, import_report, region,
-        region_source, detected_region, region_confidence, region_evidence, account_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
+        region_source, detected_region, region_confidence, region_evidence, account_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, (SELECT id FROM accounts WHERE account_key = $23))`,
       params: [input.filename, input.currency, input.sha256, input.rows.length, input.closingBalanceCents, input.closingBalanceOn, stamp, input.batchId, input.sourceSha256,
         input.format ?? null, input.account?.key ?? null, input.account?.institution ?? null, input.account?.last4 ?? null, input.account?.kind ?? "unknown",
         input.openingBalanceCents ?? null, input.openingBalanceOn ?? null, input.report ? JSON.stringify(input.report) : null, region,
-        regionSourceFor(region, input.regionMeta?.source), detection?.detectedRegion ?? null, detection?.confidence ?? null, detection ? serializeDetection(detection) : null, accountId],
+        regionSourceFor(region, input.regionMeta?.source), detection?.detectedRegion ?? null, detection?.confidence ?? null, detection ? serializeDetection(detection) : null, account.key],
     });
     return statements;
   }
@@ -1188,13 +1195,13 @@ export class FinanceStore {
     if (deviceCurrency && web.currency && deviceCurrency !== web.currency && web.statements.length > 0) {
       throw new StoreError("currency_mismatch", `Website data is in ${web.currency}; this device uses ${deviceCurrency}.`, { currency: deviceCurrency, web: web.currency });
     }
-    const result: WebSyncResult = { statementsAdded: 0, statementsRemoved: 0, transactionsAdded: 0, transactionsUpdated: 0, transactionsRemoved: 0, skippedDuplicates: 0 };
+    const result: WebSyncResult = { statementsAdded: 0, statementsRemoved: 0, transactionsAdded: 0, transactionsUpdated: 0, transactionsRemoved: 0, skippedDuplicates: 0, duplicateTransactionsSkipped: 0 };
     const stamp = now();
-    const custom = await this.ensureCategories([...(web.categories ?? []), ...web.transactions.map((transaction) => transaction.category), ...web.rules.map((rule) => rule.category)]);
 
-    // The whole download is ONE transaction: statements, rows, removals and rules arrive together, or the
-    // book is left exactly as it was.
+    // The whole download is ONE transaction: categories, the account, statements, rows, removals and rules
+    // arrive together, or the book is left exactly as it was (audit A-05).
     const statements: SqlStatement[] = [];
+    const custom = await this.ensureCategories([...(web.categories ?? []), ...web.transactions.map((transaction) => transaction.category), ...web.rules.map((rule) => rule.category)], statements);
 
     // Statements.
     const localRows = await this.db.select<Row>("SELECT id, sha256, source, remote_id FROM statements");
@@ -1225,19 +1232,37 @@ export class FinanceStore {
     }
 
     // Transactions belonging to the website copies (kept in the "no account" account until web accounts travel too).
-    const webAccountId = web.transactions.length > 0 ? await this.ledger.unassignedAccountId(web.currency ?? deviceCurrency ?? "USD") : 0;
+    const webAccount = web.transactions.length > 0 ? await this.ledger.accountStatementsForImport({ key: null, currency: web.currency ?? deviceCurrency ?? "USD" }) : null;
+    if (webAccount) statements.push(...webAccount.statements);
     const existingTx = new Map((await this.db.select<Row>("SELECT * FROM transactions WHERE remote_id IS NOT NULL")).map((row) => [Number(row.remote_id), row]));
     const incoming = web.transactions.filter((transaction) => statementIdFor.has(transaction.remoteStatementId));
+    // New website rows that are already stored from a file imported on this device (another file of the
+    // same statement, an overlapping export) are not added a second time (audit A-04). The decision is
+    // finance-core's detectDuplicates, the rule every import path and Rails share: only automatic
+    // duplicates are left out; possible duplicates and genuine identical purchases are kept.
+    const fresh = incoming.filter((transaction) => !existingTx.has(transaction.remoteId));
+    const storedHere = fresh.length > 0
+      ? await this.db.select<Row>("SELECT id, booked_on, amount_cents, COALESCE(original_description, description) AS description, account_key, bank_reference FROM transactions WHERE remote_id IS NULL AND deleted_at IS NULL AND entry_origin <> 'manual'")
+      : [];
+    const verdicts = detectDuplicates(
+      storedHere.map((row) => ({ id: Number(row.id), account: (row.account_key as string | null) ?? null, date: String(row.booked_on), amountMinor: Number(row.amount_cents), description: String(row.description), reference: (row.bank_reference as string | null) ?? null })),
+      fresh.map((transaction) => ({ account: null, date: transaction.bookedOn, amountMinor: transaction.amountCents, description: transaction.originalDescription ?? transaction.description, reference: null })),
+    );
+    const alreadyStored = new Set(fresh.filter((_, index) => verdicts[index].result === "duplicate").map((transaction) => transaction.remoteId));
     const seen = new Set<number>();
     const inserts: unknown[][] = [];
     for (const transaction of incoming) {
       seen.add(transaction.remoteId);
       const row = existingTx.get(transaction.remoteId);
+      if (!row && alreadyStored.has(transaction.remoteId)) {
+        result.duplicateTransactionsSkipped += 1;
+        continue;
+      }
       if (!row) {
         const category = FinanceStore.knownCategory(transaction.category, custom);
         const kind = transaction.kind && isTransactionKind(transaction.kind) ? transaction.kind : legacyKind({ amountMinor: transaction.amountCents, category });
         inserts.push([transaction.remoteStatementId, transaction.bookedOn, transaction.description, transaction.amountCents, category, transaction.taxReview ? 1 : 0, transaction.excluded ? 1 : 0, stamp, transaction.remoteId,
-          kind, webAccountId, "web_copy", transaction.originalDescription ?? transaction.description]);
+          kind, webAccount?.key ?? null, "web_copy", transaction.originalDescription ?? transaction.description]);
         continue;
       }
       const keepLocal = Number(row.locally_modified) === 1;
@@ -1260,7 +1285,8 @@ export class FinanceStore {
     }
     for (let start = 0; start < inserts.length; start += 100) {
       const batch = inserts.slice(start, start + 100);
-      const values = batch.map((_, i) => `((SELECT id FROM statements WHERE remote_id = $${i * 13 + 1}), ${Array.from({ length: 12 }, (_, j) => `$${i * 13 + j + 2}`).join(", ")})`);
+      // account_id (the 10th value after statement_id) is the account's key, resolved inside the batch that may create it.
+      const values = batch.map((_, i) => `((SELECT id FROM statements WHERE remote_id = $${i * 13 + 1}), ${Array.from({ length: 12 }, (_, j) => j === 9 ? `(SELECT id FROM accounts WHERE account_key = $${i * 13 + j + 2})` : `$${i * 13 + j + 2}`).join(", ")})`);
       statements.push({
         sql: `INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, tax_review, excluded, updated_at, remote_id, kind, account_id, entry_origin, original_description) VALUES ${values.join(", ")}`,
         params: batch.flat(),

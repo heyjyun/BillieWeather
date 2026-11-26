@@ -90,6 +90,8 @@ impl DbPool {
         {
             #[cfg(feature = "sqlite")]
             "sqlite" => {
+                // BillieWeather patch (audit A-14): only a plain file name inside the app's own folder.
+                sqlite_file_name(conn_url)?;
                 let app_path = _app
                     .path()
                     .app_config_dir()
@@ -362,6 +364,20 @@ fn redact_password(conn_url: &str) -> String {
     }
 }
 
+/// The file name of a `sqlite:<name>` connection string, when it is a plain file name: no folder,
+/// no parent or absolute path, no drive, no URL options. Anything else is refused, so a connection
+/// string can never reach a file outside the app's config folder.
+#[cfg(feature = "sqlite")]
+pub(crate) fn sqlite_file_name(conn_url: &str) -> Result<&str, crate::Error> {
+    let name = conn_url.strip_prefix("sqlite:").unwrap_or("");
+    let plain = !name.is_empty()
+        && name != "."
+        && name != ".."
+        && !name.contains(['/', '\\', ':', '?', '\0'])
+        && !name.starts_with('.');
+    if plain { Ok(name) } else { Err(crate::Error::InvalidDbUrl(conn_url.to_string())) }
+}
+
 #[cfg(feature = "sqlite")]
 /// Maps the user supplied DB connection string to a connection string
 /// with a fully qualified file path to the App's designed "app_path"
@@ -383,6 +399,19 @@ fn path_mapper(mut app_path: std::path::PathBuf, connection_string: &str) -> Str
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "sqlite")]
+    #[test]
+    fn only_plain_file_names_in_the_app_folder_are_accepted() {
+        use super::sqlite_file_name;
+        for good in ["sqlite:billieweather.db", "sqlite:billieweather-8.db"] {
+            assert!(sqlite_file_name(good).is_ok(), "{good}");
+        }
+        for bad in ["sqlite:", "sqlite:../billieweather.db", "sqlite:..", "sqlite:/tmp/other.db", "sqlite:sub/x.db",
+            "sqlite:..\\x.db", "sqlite:C:\\x.db", "sqlite:x.db?mode=memory", "sqlite::memory:", "sqlite:.hidden.db", "postgres:x"] {
+            assert!(sqlite_file_name(bad).is_err(), "{bad}");
+        }
+    }
+
     #[cfg(feature = "sqlite")]
     #[test]
     fn ensure_database_respects_auto_create() {

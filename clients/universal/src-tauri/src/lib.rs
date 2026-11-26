@@ -410,6 +410,29 @@ mod tests {
         let _ = std::fs::remove_file(path);
     }
 
+    /// Downgrade fence (audit A-01): a schema-10 book is refused by a build that only knows versions
+    /// 1-9, on every attempt, and keeps its rows. The SQL plugin now runs the migrator on every load
+    /// (vendor/tauri-plugin-sql/src/commands.rs), so a retry meets this same refusal.
+    #[test]
+    fn an_older_build_refuses_a_current_book_on_every_attempt() {
+        let path = book("downgrade-fence");
+        tauri::async_runtime::block_on(async {
+            let pool = filled(&path).await;
+            let older = Migrator { migrations: migrator().migrations.iter().filter(|migration| migration.version < super::migrations().len() as i64).cloned().collect::<Vec<_>>().into(), ..Migrator::DEFAULT };
+            let before = schema(&pool).await;
+            for _ in 0..3 {
+                let refused = older.run(&pool).await.unwrap_err().to_string();
+                assert!(refused.contains("previously applied but is missing"), "{refused}");
+            }
+            assert_eq!(schema(&pool).await, before);
+            let (rows,): (i64,) = sqlx::query_as("SELECT count(*) FROM transactions WHERE amount_cents = -1025").fetch_one(&pool).await.unwrap();
+            assert_eq!(rows, 1);
+            migrator().run(&pool).await.unwrap();
+            pool.close().await;
+        });
+        let _ = std::fs::remove_file(path);
+    }
+
     /// A damaged file is reported, never replaced by an empty book.
     #[test]
     fn a_damaged_file_is_reported_and_left_untouched() {

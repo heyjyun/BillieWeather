@@ -59,7 +59,23 @@ module Finance
       @given_observed_on = balance_observed_on
     end
 
+    # True when the statement was saved but the clean-up after it (recategorizing older rows, the
+    # balance) failed. The import itself succeeded; the next import or page load repeats the clean-up.
+    def follow_up_failed?
+      !!@follow_up_failed
+    end
+
     def call
+      statement = import!
+      # Runs after the import committed: a failure here must not report the saved import as failed
+      # (the person would retry and be told the file was already imported).
+      finish_after_import
+      statement
+    end
+
+    private
+
+    def import!
       raise ImportError, I18n.t("billie.backend.choose_csv") unless @file.respond_to?(:read)
       unless Profile::CURRENCIES.include?(@currency)
         raise ImportError, I18n.t("billie.backend.unsupported_currency")
@@ -130,10 +146,6 @@ module Finance
         plan.insert!(statement)
         statement
       end
-      # Clean up older Uncategorized rows with the latest rules and remembered merchants.
-      Categorizer.recategorize_uncategorized!(user: @user)
-      BalanceSync.call(user: @user)
-      statement
     rescue CSV::MalformedCSVError
       raise ImportError, I18n.t("billie.backend.csv_unreadable")
     rescue ActiveRecord::RecordNotUnique
@@ -142,7 +154,27 @@ module Finance
       raise ImportError, I18n.t("billie.backend.statement_import_failed", errors: error.record.errors.full_messages.join(", "))
     end
 
-    private
+    # Clean up older Uncategorized rows with the latest rules and remembered merchants, then the balance.
+    # A caller that wraps the import in its own transaction (BatchStatementImport: each file's rows and
+    # their categorization together) has not committed yet, so the error goes to it and rolls the file back.
+    def finish_after_import
+      Categorizer.recategorize_uncategorized!(user: @user)
+      BalanceSync.call(user: @user)
+    rescue => error
+      raise follow_up_error(error) if ActiveRecord::Base.connection.current_transaction.joinable?
+      @follow_up_failed = true
+      Rails.logger.error("Statement import saved; follow-up failed (#{error.class}).")
+    end
+
+    # The same messages the import itself reports, for a caller that rolls the file back.
+    def follow_up_error(error)
+      case error
+      when ImportError then error
+      when ActiveRecord::RecordNotUnique then ImportError.new(I18n.t("billie.backend.statement_duplicate"))
+      when ActiveRecord::RecordInvalid then ImportError.new(I18n.t("billie.backend.statement_import_failed", errors: error.record.errors.full_messages.join(", ")))
+      else error
+      end
+    end
 
     def refresh_missing_details(existing)
       updates = {}
