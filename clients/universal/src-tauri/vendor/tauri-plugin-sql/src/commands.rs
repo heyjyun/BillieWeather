@@ -40,13 +40,44 @@ pub(crate) async fn load<R: Runtime>(
     // migrating, so two loads never migrate the same file at the same time.
     let registered = migrations.0.lock().await;
     let list = registered_migrations(&registered, &db)?;
-    let pool = DbPool::connect(&db, &app, options.auto_create).await?;
-    migrate_registered(&pool, list).await?;
+    open_registered(&db_instances, &db, list, DbPool::connect(&db, &app, options.auto_create)).await?;
     drop(registered);
 
-    db_instances.0.write().await.insert(db.clone(), pool);
-
     Ok(db)
+}
+
+/// Makes `db` usable: a database that is already open keeps its pool (it is migrated and checked again,
+/// and dropped if that fails); otherwise `connect` opens a new pool, which is registered only after the
+/// migrations succeeded and is closed when they fail. So a second load never leaves an orphaned pool
+/// with open connections next to the registered one (audit S4). `connect` is awaited only when needed.
+pub(crate) async fn open_registered(
+    instances: &DbInstances,
+    db: &str,
+    list: &MigrationList,
+    connect: impl std::future::Future<Output = Result<DbPool, crate::Error>>,
+) -> Result<(), crate::Error> {
+    {
+        let pools = instances.0.read().await;
+        if let Some(existing) = pools.get(db) {
+            if let Err(error) = migrate_registered(existing, list).await {
+                drop(pools);
+                if let Some(pool) = instances.0.write().await.remove(db) {
+                    pool.close().await;
+                }
+                return Err(error);
+            }
+            return Ok(());
+        }
+    }
+    let pool = connect.await?;
+    if let Err(error) = migrate_registered(&pool, list).await {
+        pool.close().await;
+        return Err(error);
+    }
+    if let Some(previous) = instances.0.write().await.insert(db.to_string(), pool) {
+        previous.close().await;
+    }
+    Ok(())
 }
 
 /// The migrations registered for `db`, or an error when it was never registered (the app may only open
@@ -128,8 +159,8 @@ pub(crate) async fn select(
 
 #[cfg(all(test, feature = "sqlite"))]
 mod tests {
-    use super::{migrate_registered, registered_migrations};
-    use crate::{DbPool, Migration, MigrationKind, MigrationList};
+    use super::{migrate_registered, open_registered, registered_migrations};
+    use crate::{DbInstances, DbPool, Migration, MigrationKind, MigrationList};
     use std::collections::HashMap;
 
     fn up(version: i64, sql: &'static str) -> Migration {
@@ -194,5 +225,48 @@ mod tests {
             sqlite.close().await;
         });
         let _ = std::fs::remove_file(path);
+    }
+
+    /// S4: a second load of an open database reuses its pool instead of registering a new one next to it
+    /// (the old one would keep its connections open), and a failed open closes the pool it made.
+    #[test]
+    fn a_second_load_reuses_the_open_pool_and_a_failed_open_closes_its_own() {
+        let list = MigrationList(vec![up(1, "CREATE TABLE t (id INTEGER);")]);
+        let instances = DbInstances::default();
+        let (path, pool) = temp_pool("reuse");
+        let DbPool::Sqlite(first) = &pool;
+        let first = first.clone();
+        let (broken_path, broken) = temp_pool("reuse-broken");
+        let DbPool::Sqlite(handle) = &broken;
+        let handle = handle.clone();
+        tauri::async_runtime::block_on(async {
+            open_registered(&instances, "sqlite:a.db", &list, async { Ok(pool) }).await.unwrap();
+            let connected = std::sync::atomic::AtomicUsize::new(0);
+            for _ in 0..2 {
+                open_registered(&instances, "sqlite:a.db", &list, async {
+                    connected.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    Err(crate::Error::InvalidDbUrl("must not connect again".into()))
+                }).await.unwrap();
+            }
+            assert_eq!(connected.load(std::sync::atomic::Ordering::SeqCst), 0, "the open pool is reused");
+            assert_eq!(instances.0.read().await.len(), 1);
+            assert!(!first.is_closed());
+
+            // A failed migration on a new pool: nothing registered, the new pool closed.
+            let failing = MigrationList(vec![up(1, "INSERT INTO no_such_table VALUES (1);")]);
+            assert!(open_registered(&instances, "sqlite:b.db", &failing, async { Ok(broken) }).await.is_err());
+            assert!(handle.is_closed());
+            assert!(!instances.0.read().await.contains_key("sqlite:b.db"));
+
+            // The open book refused on a later load (a newer build migrated it meanwhile): its pool is dropped and closed.
+            let older = MigrationList(vec![]);
+            let newer = MigrationList(vec![up(1, "CREATE TABLE t (id INTEGER);"), up(2, "CREATE TABLE u (id INTEGER);")]);
+            open_registered(&instances, "sqlite:a.db", &newer, async { Err(crate::Error::InvalidDbUrl("unused".into())) }).await.unwrap();
+            assert!(open_registered(&instances, "sqlite:a.db", &older, async { Err(crate::Error::InvalidDbUrl("unused".into())) }).await.is_err());
+            assert!(first.is_closed());
+            assert!(instances.0.read().await.is_empty());
+        });
+        let _ = std::fs::remove_file(path);
+        let _ = std::fs::remove_file(broken_path);
     }
 }
