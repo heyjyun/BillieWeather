@@ -76,7 +76,7 @@ class MaterializeFinanceCategories < ActiveRecord::Migration[8.1]
         parent_id = parent_key ? ids.fetch(parent_key) : nil
         ids[node[:name].downcase] = select_value(<<~SQL).to_i
           INSERT INTO finance_categories (user_id, name, parent_id, system_key, category_kind, sort_order, hidden, expanded, created_at, updated_at)
-          VALUES (#{user_id}, #{quote(node[:name])}, #{parent_id ? parent_id : "NULL"}, #{quote(node[:key])}, #{quote(node[:kind])}, #{index},
+          VALUES (#{user_id}, #{quote(node[:name])}, #{parent_id || "NULL"}, #{quote(node[:key])}, #{quote(node[:kind])}, #{index},
                   #{quote(node[:hidden])}, FALSE, #{quote(now)}, #{quote(now)})
           RETURNING id
         SQL
