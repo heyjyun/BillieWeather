@@ -5,7 +5,7 @@ require "stringio"
 # an explicit list (Finance::ReceiptsController::DECISIONS), never a method named by the request (C-06).
 class FinanceReceiptDecisionsTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
-  include BillieModules::SignInWithAllModules
+  include BillieModules::SignInWithFullSidebar
 
   LINES = ["WHOLE FOODS MARKET", "2525 Lamar Blvd", "Austin, TX 78705", "11/16/2026 6:42 PM", "ORGANIC BANANAS 1.98", "SUBTOTAL 44.94", "TAX 3.66",
     "TOTAL 48.60", "VISA **** 4821 48.60", "TRANS# 004512"].freeze

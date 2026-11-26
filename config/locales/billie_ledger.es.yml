@@ -436,8 +436,8 @@ es:
         empty: No hay ingresos ni gastos en este periodo.
       mode:
         label: "Modo de la interfaz"
-        default: "Predeterminado"
-        manual: "Manual"
+        default: "Contabilidad automática con IA"
+        manual: "Contabilidad manual"
         default_help: "Vista sencilla y automática"
         manual_help: "El espacio completo de contabilidad manual"
         manual_on: "Modo manual"

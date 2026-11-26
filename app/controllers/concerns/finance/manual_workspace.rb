@@ -12,10 +12,7 @@ module Finance
     MODES = %w[default manual].freeze
 
     # Controllers whose pages belong only to the manual workspace.
-    CONTROLLERS = %w[
-      finance/manual finance/accounts finance/entries finance/audit_events finance/reviews
-      finance/dimensions finance/budgets finance/recurring_rules finance/ledger_reports
-    ].freeze
+    CONTROLLERS = %w[finance/manual].freeze
 
     included do
       before_action :enter_manual_mode

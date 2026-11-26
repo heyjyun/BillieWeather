@@ -616,7 +616,8 @@ html:is([lang="zh-CN"], [lang="zh-TW"], [lang="ja"], [lang="ko"]) .bw-welcome h1
 }
 
 /* ---------------------------------------------------------------- Feature Library (Phase 1a) */
-.bw-nav-divider { display: block; height: 1px; margin: 8px 12px; background: var(--bw-color-sidebar-border); }
+.bw-nav #module-nav { min-height: 0; overflow-y: auto; margin-inline: -12px; padding-inline: 12px; scrollbar-width: thin; }
+.bw-nav-divider { display: block; height: 1px; flex-shrink: 0; margin: 8px 12px; background: var(--bw-color-sidebar-border); }
 .bw-section-tabs { display: grid; gap: 8px; margin: 0 0 20px; }
 .bw-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: none; }
 .bw-tabs::-webkit-scrollbar { display: none; }
@@ -661,16 +662,26 @@ button.bw-subtab.is-active { color: var(--accent-soft-text); border-color: var(-
 .bw-capability-grid { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
 .bw-capability-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: auto; padding-top: 6px; }
 .bw-module-disabled { display: grid; justify-items: center; gap: 10px; padding: 40px 24px; text-align: center; }
+/* Settings hub (pages/Settings.tsx, settings/registry.tsx) */
+.bw-settings-index { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 16px; font-size: var(--bw-font-size-sm); }
+.bw-settings-area { display: grid; gap: 16px; margin-bottom: 16px; scroll-margin-top: 16px; }
+.bw-settings-capabilities { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.bw-settings-capabilities > li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--bw-border, rgba(127, 127, 127, 0.2)); }
+.bw-settings-capabilities > li strong { margin-right: 8px; }
+.bw-settings-capabilities > li .bw-caption { margin: 4px 0 0; }
+.bw-settings-module-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 12px; }
+.bw-settings-module { margin: 0; }
+.bw-settings-module h3 { margin: 0 0 4px; }
+.bw-inline-links { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; margin: 0 0 12px; padding: 0; }
 .bw-module-disabled h1 { font-size: var(--bw-font-size-xl); margin: 0; }
 .bw-module-disabled p { max-width: 460px; }
 @media (max-width: 760px) { .bw-library-toolbar { flex-direction: column; align-items: stretch; } }
 /* Phone bottom bar: the enabled modules share the bar, Settings stays at the end; scrolls when many modules are on. */
 @media (max-width: 760px) {
-  .bw-nav { overflow-x: auto; scrollbar-width: none; }
-  .bw-nav::-webkit-scrollbar { display: none; }
+  .bw-app .bw-nav { overflow: visible; }
   .bw-nav-divider { display: none; }
-  .bw-nav #module-nav { flex: 1 1 auto; width: auto; grid-auto-columns: minmax(72px, 1fr); }
-  .bw-nav #module-nav + .bw-nav-divider + ul { flex: 0 0 auto; width: auto; grid-auto-columns: minmax(72px, 1fr); }
+  .bw-nav #module-nav { flex: 2 1 0; min-width: 0; width: auto; grid-auto-columns: minmax(72px, 1fr); overflow: auto hidden; margin: 0; padding: 0; scrollbar-width: none; }
+  .bw-nav #module-nav + .bw-nav-divider + ul { flex: 1 0 72px; width: auto; grid-auto-columns: minmax(72px, 1fr); }
 }
 
 .bw-module-conflict {

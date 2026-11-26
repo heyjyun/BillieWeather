@@ -3,7 +3,6 @@ module Finance
   # when the person presses "Post due entries" (or automatically for rules with auto-post when the
   # Transactions page opens); each date is posted once.
   class RecurringRulesController < BaseController
-    include ManualWorkspace
 
     before_action :load_rule, only: [:edit, :update, :destroy, :toggle]
     before_action :load_form_data, only: [:new, :create, :edit, :update]

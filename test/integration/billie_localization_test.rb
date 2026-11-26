@@ -3,7 +3,7 @@ require "test_helper"
 class BillieLocalizationTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
-  include BillieModules::SignInWithAllModules
+  include BillieModules::SignInWithFullSidebar
 
   test "browser language selects Simplified Chinese and explicit choice survives navigation" do
     get root_path, headers: {"HTTP_ACCEPT_LANGUAGE" => "zh-CN,zh;q=0.9,en;q=0.8"}

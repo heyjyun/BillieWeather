@@ -15,8 +15,12 @@ zh-TW:
         reconciliation: 對帳
         review_history: 複核與歷史
       names:
+        overview: "財務總覽"
+        import: "匯入"
+        receipts: "收據"
+        data_management: "資料管理"
         transactions: 交易
-        ai_assistant: AI 助理
+        ai_assistant: "AI 洞察"
         ledgers: 帳本
         accounts: 帳戶與資產
         categories: 類別與標籤
@@ -28,6 +32,10 @@ zh-TW:
         forecast: 現金流預測
         multi_currency: 多幣種
       descriptions:
+        overview: "查看餘額及支出趨勢。"
+        import: "匯入並核對銀行對帳單。"
+        receipts: "擷取收據並核對比對結果。"
+        data_management: "管理本機資料庫、備份及傳輸。"
         transactions: 總覽、每一筆交易，以及新增或匯入新交易。
         ai_assistant: 洞察分析、關於你財務的提問、報稅準備，以及整理紀錄的協助。
         ledgers: 為個人、生意或共同開支分開記帳。
@@ -41,44 +49,43 @@ zh-TW:
         forecast: 未來 30、60 或 90 天的預估餘額。
         multi_currency: 多種貨幣的帳戶，在報表中換算。
       status:
-        available: 可用
-        coming_soon: 即將推出
-        enabled: 已開啟
-        disabled: 已關閉
-        core: 核心
+        available: "可用"
+        coming_soon: "即將推出"
+        unsupported: "目前平台不支援"
+        in_sidebar: "在側邊欄"
+        hidden: "已隱藏"
+        core: "核心"
       library:
+        reset: "恢復預設側邊欄"
+        reset_saved: "已恢復預設側邊欄。"
         stale: 其他裝置已更改此偏好。這裡顯示最新選擇，你可以再次更改。
         synced_note: 模組選擇會在已登入的 BillieWeather 裝置之間同步。
         nav: 功能庫
         eyebrow: 設定
         title: 功能庫
-        intro: 選擇側邊欄中顯示的內容。從簡單開始，需要時再加入工具。
+        intro: "BillieWeather 的所有功能。所有可用功能都能直接使用；你可以選擇哪些顯示在側邊欄。"
         filters_label: 顯示模組
         filters:
-          all: 全部
-          enabled: 已開啟
-          available: 可用
-          coming_soon: 即將推出
-        toggle_label: 在側邊欄顯示%{name}
-        turn_on: 開啟
-        turn_off: 關閉
+          all: "全部"
+          sidebar: "在側邊欄"
+          hidden: "已隱藏"
+          unavailable: "暫不可用"
+        toggle_label: "在側邊欄顯示%{name}"
         open: 開啟頁面
-        saved_on: "%{name}已開啟，並顯示在側邊欄。"
-        saved_off: "%{name}已關閉。資料會保留，隨時可以重新開啟。"
-        coming_soon_note: 尚未推出。在功能可用之前無法開啟。
-        settings_note: 設定始終顯示在側邊欄，無法關閉。
-        data_note: 關閉模組只會隱藏它。不會刪除任何資料，自動執行的功能（如週期記帳和收據比對）也會照常執行。
+        saved_shown: "%{name}已顯示在側邊欄。"
+        saved_hidden: "%{name}已從側邊欄隱藏。功能照常可用，可從功能庫開啟。"
+        coming_soon_note: "仍在開發中。完成後會出現在這裡。"
+        unsupported_note: "已在 BillieWeather 應用程式中提供，網站暫不支援。"
+        hidden_still_works: "未顯示在側邊欄，功能照常可用"
+        settings_note: "設定始終顯示在側邊欄。"
+        data_note: "隱藏功能只會移除它的側邊欄入口。功能照常可用，不會刪除任何資料，自動執行的功能（如週期記帳和收據配對）也會照常執行。"
         sync_note: 這些選擇儲存在你在本網站的帳號中。BillieWeather 應用程式暫時各自保存自己的選擇。
         empty: 沒有符合此篩選的模組。
         open_library: 開啟功能庫
         errors:
-          coming_soon: "%{name}尚未推出。"
+          not_available: "%{name}在此處暫不可用。"
+          invalid: "請選擇是否在側邊欄顯示%{name}。"
           unknown: 該模組不存在。
-      disabled:
-        eyebrow: 功能庫
-        title: "%{name}已關閉"
-        body: 此模組已從側邊欄隱藏。你的資料仍在，沒有任何變動。開啟後即可再次使用此頁面。
-        turn_on: 開啟%{name}
       add_sync:
         title: 新增與同步
         intro: 匯入交易的所有方式。所有來源都經過同樣的檢查，不會重複計算。
@@ -104,3 +111,14 @@ zh-TW:
           open: 新增一筆
           manual: 手動記帳
           later: 語音記帳、自然語言記帳和 Siri 捷徑即將推出。
+    settings_hub:
+      appearance: "外觀與語言"
+      automation: "AI 與自動化"
+      data_tools: "匯入、匯出與資料"
+      sync_backup: "同步與備份"
+      rules: "交易分類規則"
+      remove_rule: "移除"
+      index_label: "設定分區"
+      database: "資料庫"
+      in_sidebar: "側邊欄中"
+      hidden_intro: "可用但未顯示在側邊欄，可直接開啟："

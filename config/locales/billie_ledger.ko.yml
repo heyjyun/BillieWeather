@@ -436,7 +436,7 @@ ko:
         empty: 이 기간에는 수입이나 지출이 없습니다.
       mode:
         label: "화면 모드"
-        default: "기본"
+        default: "AI 자동 기록"
         manual: "수동 기록"
         default_help: "간단하고 자동화 중심의 화면"
         manual_help: "수동 가계부의 모든 기능"

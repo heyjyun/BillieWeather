@@ -16,7 +16,7 @@ export function Dashboard({ go }: { go: (page: Page, part?: string | null) => vo
   const { m, locale, t } = useI18n();
   const finance = useFinance();
   const { transactions, statements, currency, ownerKey, accounts, activeDatabaseId, databaseIds, databaseName, openStore, switchDatabase } = finance;
-  const { enabled } = useModules();
+  const { usable } = useModules();
   const [period, setPeriod] = useState(() => resolvePeriod("all_time", { today: localToday() }));
   const [dates, setDates] = useState({ startDate: "", endDate: "" });
   const [dateError, setDateError] = useState(false);
@@ -136,10 +136,10 @@ export function Dashboard({ go }: { go: (page: Page, part?: string | null) => vo
                 <section className="bw-panel" aria-labelledby="categories-heading" id="dashboard-spending-mix">
                   <div className="bw-panel-top">
                     <h2 id="categories-heading">{copy.spendingByCategory}</h2>
-                    {enabled("categories") && <button type="button" className="bw-link-button" onClick={() => go("categories")}>{m.spending.allCategories}</button>}
+                    {usable("categories") && <button type="button" className="bw-link-button" onClick={() => go("categories")}>{m.spending.allCategories}</button>}
                   </div>
                   <SpendingMixChart mix={mix} currency={cur} emptyText={d.noSpending}
-                    onOpen={enabled("categories") ? (category) => go("categories", category) : undefined} />
+                    onOpen={usable("categories") ? (category) => go("categories", category) : undefined} />
                 </section>
                 <IncomeMix categories={snap.incomeCategories} currency={cur} />
               </div>

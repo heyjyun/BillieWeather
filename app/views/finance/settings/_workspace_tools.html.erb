@@ -1,0 +1,42 @@
+<section class="bw-panel" id="settings-automation" aria-labelledby="settings-automation-heading">
+  <h2 id="settings-automation-heading"><%= t("billie.settings_hub.automation") %></h2>
+  <ul class="bw-inline-links">
+    <li><%= link_to t("billie.modules.names.ai_assistant"), finance_insights_path, class: "bw-text-link" %></li>
+    <li><%= link_to t("billie.modules.names.categories"), finance_categories_path, class: "bw-text-link" %></li>
+    <li><%= link_to t("billie.modules.names.recurring"), finance_recurring_rules_path, class: "bw-text-link" %></li>
+  </ul>
+</section>
+
+<section class="bw-panel" id="settings-rules" aria-labelledby="settings-rules-heading">
+  <h2 id="settings-rules-heading"><%= t("billie.settings_hub.rules") %></h2>
+  <%= link_to t("billie.modules.names.categories"), finance_categories_path, class: "bw-text-link" %>
+  <% if @merchant_rules.any? %>
+    <ul class="bw-settings-capabilities">
+      <% @merchant_rules.each do |rule| %>
+        <li>
+          <span><strong><%= rule.merchant_key %></strong> · <%= rule.income? ? t("billie.ledger.kinds.income") : t("billie.ledger.kinds.expense") %> → <%= finance_label(rule.category) %></span>
+          <%= button_to t("billie.settings_hub.remove_rule"), remove_rule_finance_settings_path(rule_id: rule.id), method: :delete, class: "bw-button bw-button-outline bw-button-small", form: {data: {turbo: false}} %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>
+
+<section class="bw-panel" id="settings-data-tools" aria-labelledby="settings-data-tools-heading">
+  <h2 id="settings-data-tools-heading"><%= t("billie.settings_hub.data_tools") %></h2>
+  <ul class="bw-inline-links">
+    <li><%= link_to t("billie.modules.names.import"), finance_statements_path, class: "bw-text-link" %></li>
+    <li><%= link_to t("billie.modules.names.receipts"), finance_receipts_path, class: "bw-text-link" %></li>
+    <li><%= link_to t("billie.modules.sections.reconciliation"), finance_reconciliation_path, class: "bw-text-link" %></li>
+    <li><%= link_to t("billie.modules.names.accounts"), finance_accounts_path, class: "bw-text-link" %></li>
+    <li><%= link_to t("billie.export.button"), finance_report_path, class: "bw-text-link" %></li>
+  </ul>
+</section>
+
+<section class="bw-panel" id="settings-appearance" aria-labelledby="settings-appearance-heading">
+  <h2 id="settings-appearance-heading"><%= t("billie.settings_hub.appearance") %></h2>
+  <div class="bw-inline-actions">
+    <%= render "shared/billie_theme_switcher" %>
+    <%= render "shared/billie_language_switcher" %>
+  </div>
+</section>

@@ -6,7 +6,7 @@ import { findFileInput } from "./uiHelpers";
 // The account API is mocked and a fake server answers the read-only website-data download.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { fixtureBytes, migrate, openInShell, enableAllModulesByDefault } from "./helpers";
+import { fixtureBytes, migrate, openInShell, showAllModulesInSidebar } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { unzipStored } from "@billie/reporting";
 import { REPORT_FIELDS } from "../src/services/localReport";
@@ -59,7 +59,7 @@ function upload(input: HTMLInputElement, name: string, bytes: Uint8Array) {
 
 const nav = (label: string) => openInShell(label);
 
-beforeEach(() => { enableAllModulesByDefault(); localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
+beforeEach(() => { showAllModulesInSidebar(); localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
 afterEach(cleanup);
 
 it("signs in, works with local data, switches language, and signs out", async () => {

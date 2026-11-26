@@ -1,8 +1,13 @@
 require "digest"
 
 module Finance
-  # Serialize web and API preference writes with the same user lock. Module revisions are
-  # independent. The sum of all explicit row revisions is the monotonic account revision.
+  # Cross-device sync of sidebar choices (Settings › Feature Library). Serialize web and API
+  # preference writes with the same user lock. Module revisions are independent. The sum of all
+  # explicit row revisions is the monotonic account revision.
+  #
+  # Wire contract (format 2): a choice is `sidebar_visible`. Apps released before 2026-11-26 send and
+  # read the same value under the legacy name `enabled`, so both names are accepted and both are
+  # returned; they always carry the same value. Neither name ever means "the feature is switched off".
   class ModulePreferenceSync
     FORMAT = 2
     MAX_CHANGES = 20
@@ -36,14 +41,15 @@ module Finance
         rows = choices
         applied = []
         conflicts = []
-        changes.each do |id, enabled, expected|
+        changes.each do |id, visible, expected|
           record = rows[id]
           if (record&.revision || 0) == expected
             rows[id] = ModulePreference.write_choice!(user: @user, record: record, module_key: id,
-              enabled: enabled, device_id: device)
+              sidebar_visible: visible, device_id: device)
             applied << id
           else
-            conflicts << {module_key: id, proposed_enabled: enabled, current: record ? choice(record) : default_choice(id)}
+            conflicts << {module_key: id, proposed_sidebar_visible: visible, proposed_enabled: visible,
+                          current: record ? choice(record) : default_choice(id)}
           end
         end
 
@@ -67,11 +73,13 @@ module Finance
     end
 
     def choice(record)
-      {enabled: record.enabled, revision: record.revision, changed_at: record.changed_at.utc.iso8601(6), updated_by_device_id: record.updated_by_device_id}
+      {sidebar_visible: record.sidebar_visible, enabled: record.sidebar_visible, revision: record.revision,
+       changed_at: record.changed_at.utc.iso8601(6), updated_by_device_id: record.updated_by_device_id}
     end
 
     def default_choice(id)
-      {enabled: ModuleCatalog.find(id).default_enabled, revision: 0, changed_at: nil, updated_by_device_id: nil}
+      visible = ModuleCatalog.find(id).default_sidebar_visible
+      {sidebar_visible: visible, enabled: visible, revision: 0, changed_at: nil, updated_by_device_id: nil}
     end
 
     def parse(request)
@@ -84,13 +92,23 @@ module Finance
 
       changes = raw.map do |item|
         raise Invalid unless item.is_a?(Hash)
-        id, enabled, expected = item.values_at("module_key", "enabled", "expected_revision")
+        id, expected = item.values_at("module_key", "expected_revision")
         raise Invalid unless id.is_a?(String) && ModuleCatalog.find(id)&.available?("app")
-        raise Invalid unless [true, false].include?(enabled) && revision?(expected)
-        [id, enabled, expected]
+        visible = sidebar_choice(item)
+        raise Invalid unless [true, false].include?(visible) && revision?(expected)
+        [id, visible, expected]
       end
       raise Invalid unless changes.map(&:first).uniq.length == changes.length
       [device, mutation, base_revision, changes.sort_by(&:first)]
+    end
+
+    # `sidebar_visible`, or the legacy `enabled` from older apps. Both present and different: invalid.
+    def sidebar_choice(item)
+      current, legacy = item.values_at("sidebar_visible", "enabled")
+      return current if legacy.nil?
+      return legacy if current.nil?
+      raise Invalid unless current == legacy
+      current
     end
 
     def uuid?(value) = value.is_a?(String) && UUID.match?(value)

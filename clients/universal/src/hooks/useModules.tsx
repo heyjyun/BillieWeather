@@ -1,23 +1,33 @@
-// Feature Library state is independent of the interface mode and the active ledger.
-import { enabledModules, isModuleEnabled, type ModuleDefinition, type ModulePreferences } from "@billie/shared-types";
+// Feature Library state: which modules are in the sidebar. Whether a module can be used never depends
+// on it (isModuleEnabled: every module available in the app works). Independent of the interface mode
+// and the active ledger.
+import { enabledModules, hiddenModules, isInSidebar, isModuleEnabled, sidebarModules, type ModuleDefinition, type ModulePreferences } from "@billie/shared-types";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { ModulePreferenceRequestError, fetchModulePreferences, putModulePreferences } from "../services/modulePreferenceApi";
-import { chooseModule, loadModulePreferences, saveModulePreferences } from "../services/modulePreferences";
+import { chooseSidebar, loadModulePreferences, saveModulePreferences } from "../services/modulePreferences";
 import {
-  acknowledgeMutation, displayedPreferences, enqueuePreference, freezeMutation, isSnapshot, loadReplica,
-  observeSnapshot, resolvePreference, saveReplica, type ModuleConflict, type ModuleReplica,
+  acknowledgeMutation, canSyncChoice, displayedPreferences, enqueuePreference, freezeMutation, isSnapshot, loadReplica,
+  observeSnapshot, resolvePreference, restoreReplicaDefaults, saveReplica, serverVisible, type ModuleConflict, type ModuleReplica,
 } from "../services/moduleSync";
 
 type SyncStatus = "local" | "synced" | "pending" | "error" | "storage_error";
 
 interface ModulesContextValue {
   preferences: ModulePreferences;
-  enabled: (id: string) => boolean;
-  enabledList: ModuleDefinition[];
-  setEnabled: (id: string, on: boolean) => void;
+  /** Whether the module can be used in the app. Never depends on the sidebar. */
+  usable: (id: string) => boolean;
+  /** Whether the module has a sidebar entry. */
+  inSidebar: (id: string) => boolean;
+  /** The sidebar entries, in catalog order (Settings follows them, always). */
+  sidebarList: ModuleDefinition[];
+  /** Usable modules without a sidebar entry (opened from Settings or the Feature Library). */
+  hiddenList: ModuleDefinition[];
+  setSidebarVisible: (id: string, visible: boolean) => void;
+  restoreSidebarDefaults: () => void;
   status: SyncStatus;
   conflicts: Record<string, ModuleConflict>;
-  serverEnabled: (id: string) => boolean;
+  /** The account's sidebar choice, for a conflict. */
+  serverInSidebar: (id: string) => boolean;
   resolve: (id: string, keepLocal: boolean) => void;
 }
 
@@ -33,9 +43,11 @@ const ModulesContext = createContext<ModulesContextValue | null>(null);
 // Outside a provider (a page rendered on its own, e.g. in a test) the catalog defaults apply, exactly
 // as for a person with no stored choice. "Everything on" here used to hide whether a page works for a
 // default account.
+const usable = (id: string) => isModuleEnabled(id, "app");
 const fallback: ModulesContextValue = {
-  preferences: { format: 1, modules: {} }, enabled: (id) => isModuleEnabled(id, null, "app"), enabledList: enabledModules(null, "app"),
-  setEnabled: () => undefined, status: "local", conflicts: {}, serverEnabled: (id) => isModuleEnabled(id, null, "app"), resolve: () => undefined,
+  preferences: { format: 1, modules: {} }, usable, inSidebar: (id) => isInSidebar(id, null, "app"),
+  sidebarList: sidebarModules(null, "app"), hiddenList: hiddenModules(null, "app"),
+  setSidebarVisible: () => undefined, restoreSidebarDefaults: () => undefined, status: "local", conflicts: {}, serverInSidebar: (id) => isInSidebar(id, null, "app"), resolve: () => undefined,
 };
 const noToken = () => null;
 const SYNC_BUILD_ENABLED = import.meta.env.VITE_BILLIE_MODULE_SYNC !== "0";
@@ -60,10 +72,27 @@ export function ModulesProvider({ ownerKey, accountId, getToken = noToken, offli
     return saved;
   }, [ownerKey]);
 
-  const setEnabled = (id: string, on: boolean) => {
+  const setSidebarVisible = (id: string, visible: boolean) => {
     const state = current.current;
-    if (!state) return setLocal((previous) => chooseModule(ownerKey, previous, id, on));
-    const next = enqueuePreference(state, id, on);
+    if (!state) return setLocal((previous) => chooseSidebar(ownerKey, previous, id, visible));
+    const next = enqueuePreference(state, id, visible);
+    if (next !== state && commit(next)) setStatus("pending");
+    wake.current?.();
+  };
+
+  const restoreSidebarDefaults = () => {
+    const state = current.current;
+    if (!state) {
+      setLocal((previous) => {
+        const choices = { ...previous.modules };
+        for (const module of enabledModules("app")) delete choices[module.id];
+        const next = { ...previous, modules: choices };
+        saveModulePreferences(ownerKey, next);
+        return next;
+      });
+      return;
+    }
+    const next = restoreReplicaDefaults(state);
     if (next !== state && commit(next)) setStatus("pending");
     wake.current?.();
   };
@@ -118,7 +147,7 @@ export function ModulesProvider({ ownerKey, accountId, getToken = noToken, offli
             return;
           }
         }
-        while (state.pending.length && active()) {
+        while (state.pending.some((item) => canSyncChoice(item.moduleKey)) && active()) {
           state = freezeMutation(state);
           const item = state.pending[0];
           if (!item?.request || !commit(state)) return;
@@ -168,12 +197,15 @@ export function ModulesProvider({ ownerKey, accountId, getToken = noToken, offli
   }, [accountId, commit, getToken, offline, ownerKey]);
 
   const preferences = replica ? displayedPreferences(replica) : local;
-  const enabled = (id: string) => isModuleEnabled(id, preferences, "app");
-  const serverEnabled = (id: string) => replica?.snapshot?.modules[id]?.enabled ?? isModuleEnabled(id, null, "app");
+  const inSidebar = (id: string) => isInSidebar(id, preferences, "app");
+  const serverInSidebar = (id: string) => {
+    const choice = replica?.snapshot?.modules[id];
+    return choice ? serverVisible(choice) : isInSidebar(id, null, "app");
+  };
   return (
     <ModulesContext.Provider value={{
-      preferences, enabled, enabledList: enabledModules(preferences, "app"), setEnabled, status,
-      conflicts: replica?.conflicts ?? {}, resolve, serverEnabled,
+      preferences, usable, inSidebar, sidebarList: sidebarModules(preferences, "app"), hiddenList: hiddenModules(preferences, "app"),
+      setSidebarVisible, restoreSidebarDefaults, status, conflicts: replica?.conflicts ?? {}, resolve, serverInSidebar,
     }}>
       {children}
     </ModulesContext.Provider>

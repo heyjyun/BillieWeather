@@ -6,6 +6,7 @@ import { universalZhCN } from "./universal";
 import { commandZhCN } from "./command";
 import { receiptZhCN } from "./receipt";
 import { modulesZhCN } from "./modules";
+import { settingsHubZhCN } from "./settingsHub";
 import { welcomeZhCN } from "./welcome";
 import { registerZhCN } from "./register";
 
@@ -291,6 +292,7 @@ export const zhCN: Messages = {
   command: commandZhCN,
   receipt: receiptZhCN,
   modules: modulesZhCN,
+  settingsHub: settingsHubZhCN,
   welcome: welcomeZhCN,
   register: registerZhCN,
   personal: personal["zh-CN"],

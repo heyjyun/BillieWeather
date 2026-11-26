@@ -6,6 +6,7 @@ import { universalKo } from "./universal";
 import { commandKo } from "./command";
 import { receiptKo } from "./receipt";
 import { modulesKo } from "./modules";
+import { settingsHubKo } from "./settingsHub";
 import { welcomeKo } from "./welcome";
 import { registerKo } from "./register";
 
@@ -291,6 +292,7 @@ export const ko: Messages = {
   command: commandKo,
   receipt: receiptKo,
   modules: modulesKo,
+  settingsHub: settingsHubKo,
   welcome: welcomeKo,
   register: registerKo,
   personal: personal["ko"],

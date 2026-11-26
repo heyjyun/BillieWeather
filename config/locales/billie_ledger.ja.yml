@@ -436,7 +436,7 @@ ja:
         empty: この期間の収入・支出はありません。
       mode:
         label: "表示モード"
-        default: "標準"
+        default: "AI 自動記帳"
         manual: "手動記帳"
         default_help: "シンプルで自動化中心の表示"
         manual_help: "手動記帳のすべての機能"

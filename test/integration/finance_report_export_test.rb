@@ -5,7 +5,7 @@ require_relative "../support/xlsx_reader"
 class FinanceReportExportTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
-  include BillieModules::SignInWithAllModules
+  include BillieModules::SignInWithFullSidebar
 
   setup do
     @user = create(:user)

@@ -36,7 +36,7 @@
       "minimumSystemVersion": "11.0"
     },
     "windows": {
-      "wix": { "version": "0.9.0.1" }
+      "wix": { "version": "0.9.0" }
     }
   },
   "plugins": {

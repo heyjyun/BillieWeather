@@ -120,8 +120,8 @@ export async function signOutOthers(token: string): Promise<number> {
   return (await request<{ revoked: number }>("/sessions", { method: "DELETE", token })).revoked;
 }
 
-/** Pages on the BillieWeather website (password reset, account settings). Sign-up happens in the app (pages/Register.tsx). */
-export function websiteUrl(path: "/users/password/new" | "/app/settings" | "/app/insights", locale?: string): string {
+/** Pages on the BillieWeather website (password reset, account settings, website-only features). Sign-up happens in the app (pages/Register.tsx). */
+export function websiteUrl(path: "/users/password/new" | "/app/settings" | "/app/insights" | "/app/forecast", locale?: string): string {
   const url = new URL(path, API_ORIGIN);
   if (locale) url.searchParams.set("locale", locale);
   return url.toString();

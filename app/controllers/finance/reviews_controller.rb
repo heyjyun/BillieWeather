@@ -4,7 +4,6 @@ module Finance
   #   existed, P0-2); one click reclassifies, nothing changes on its own;
   # - possible duplicates found while importing (P0-3): keep both, or move the copy to the trash.
   class ReviewsController < BaseController
-    include ManualWorkspace
 
     def income
       @suspects = suspect_income.first(300)

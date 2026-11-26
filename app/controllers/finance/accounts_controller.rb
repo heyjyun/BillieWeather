@@ -4,7 +4,6 @@ module Finance
   # edited, reordered, archived (history kept), deleted when nothing uses them, and set to the balance
   # the person sees with an adjustment entry.
   class AccountsController < BaseController
-    include ManualWorkspace
 
     FIELDS = %w[custom_name name account_type opening_balance opening_balance_on credit_limit statement_day due_day include_in_net_worth note archived_at sort_order].freeze
 

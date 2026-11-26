@@ -19,7 +19,7 @@ import { subscribeDeepLinks, type DeepLinkRoute } from "./services/deepLink";
 import { markWelcomeDone, shouldShowWelcome } from "./services/onboarding";
 import { Welcome } from "./pages/Welcome";
 import { BrandMark } from "./components/BrandMark";
-import { ModuleDisabled } from "./components/ModuleDisabled";
+import { ModuleUnavailable } from "./components/ModuleUnavailable";
 import { ModuleIcon } from "./components/ModuleIcon";
 import { ModulesProvider, useModules } from "./hooks/useModules";
 import { moduleById, type ModuleDefinition, type ModuleId } from "@billie/shared-types";
@@ -44,13 +44,13 @@ export type Page = "dashboard" | "manual" | "transactions" | "accounts" | "categ
 
 /**
  * Which Feature Library module each page belongs to (packages/shared-types/schema/module-catalog.json).
- * A page opens when one of its modules is on; otherwise the "turned off" state shows instead (nothing is
- * changed). Settings, Data and the Feature Library itself are system pages and always open.
+ * A page opens when one of its modules is usable in the app (available), whatever the sidebar shows; the
+ * sidebar is navigation only. Settings and the Feature Library itself are system pages and always open.
  */
 export const PAGE_MODULES: Record<Page, readonly ModuleId[]> = {
-  dashboard: ["transactions"], transactions: ["transactions"], manual: ["transactions"], import: ["transactions"], receipt: ["transactions"], addSync: ["transactions"],
+  dashboard: ["overview"], transactions: ["transactions"], manual: ["transactions"], import: ["import"], receipt: ["receipts"], addSync: ["transactions"],
   assistant: ["ai_assistant"], accounts: ["accounts"], categories: ["categories"], lists: ["categories"], planning: ["budgets", "recurring"], reports: ["reports"],
-  data: [], settings: [], features: [],
+  data: ["data_management"], settings: [], features: [],
 };
 
 /** Transactions › Overview / All Transactions / Add & Sync, and the pages under each. */
@@ -61,8 +61,8 @@ const TRANSACTION_SECTIONS: Array<{ key: "overview" | "allTransactions" | "addSy
 ];
 const ADD_SYNC_TABS: Array<{ key: "import" | "receipt" | "manual"; page: Page }> = [{ key: "import", page: "import" }, { key: "receipt", page: "receipt" }, { key: "manual", page: "manual" }];
 
-/** Pages that exist only in Manual Mode; opening one (e.g. from a typed command) turns Manual Mode on. */
-export const MANUAL_PAGES: ReadonlySet<Page> = new Set<Page>(["manual", "accounts", "planning", "lists"]);
+/** Opening the dedicated manual workspace selects Manual Accounting. */
+export const MANUAL_PAGES: ReadonlySet<Page> = new Set<Page>(["manual"]);
 
 /** What to open on the Transactions page: a new entry of a kind, or the trash / review list. */
 export interface TransactionIntent { entryKind?: TransactionKind; entryDraft?: QuickEntry; view?: "trash" | "review" | "organize" }
@@ -71,7 +71,7 @@ function Icon({ d }: { d: string }) {
   return <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
 }
 
-/** The Default / Manual switch. Switching keeps every record and any unfinished form input. */
+/** The accounting mode switch. Switching keeps every record and any unfinished form input. */
 function ModeSwitch({ mode, onChange }: { mode: Mode; onChange: (mode: Mode) => void }) {
   const { m } = useI18n();
   const x = m.ledger.mode;
@@ -98,12 +98,12 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
     setFocus(part);
     setTransactionFilter(filter ? { key: Date.now(), filter } : null);
     setTransactionIntent(intent ? { key: Date.now(), intent } : null);
-    // A hidden module's page does not switch Manual Mode on (it shows "turned off" instead).
-    if ((MANUAL_PAGES.has(next) || intent) && pageOpen(next)) setMode("manual");
+    // A page that cannot open here (not built for the app) does not switch Manual Mode on.
+    if ((MANUAL_PAGES.has(next) || intent?.entryKind) && pageOpen(next)) setMode("manual");
     setPage(next);
   };
-  const pageOpen = (target: Page) => PAGE_MODULES[target].length === 0 || PAGE_MODULES[target].some((id) => modules.enabled(id));
-  // The module whose page this is, when every module that shows it is off.
+  const pageOpen = (target: Page) => PAGE_MODULES[target].length === 0 || PAGE_MODULES[target].some((id) => modules.usable(id));
+  // The module whose page this is, when none of its modules is built for the app (a guard: today every mapped module is).
   const blocked: ModuleDefinition | null = pageOpen(page) ? null : moduleById(PAGE_MODULES[page][0]) ?? null;
   const openModule = (module: ModuleDefinition) => {
     const target = module.destination.app as Page | null;
@@ -111,20 +111,21 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   };
   // Budgets and Recurring & Bills both live on the Planning page; the highlighted one follows the section opened.
   const moduleActive = (module: ModuleDefinition) => {
+    if (module.id === "transactions" && section && PAGE_MODULES[page].every((id) => !modules.inSidebar(id))) return true;
     if (!PAGE_MODULES[page].includes(module.id)) return false;
     if (page !== "planning") return true;
-    const both = modules.enabled("budgets") && modules.enabled("recurring");
+    const both = modules.inSidebar("budgets") && modules.inSidebar("recurring");
     return !both || (module.id === "recurring") === (focus === "schedules");
   };
-  const settingsActive = page === "settings" || page === "data" || page === "features";
-  const section = PAGE_MODULES[page][0] === "transactions" && !blocked ? TRANSACTION_SECTIONS.find((item) => item.pages.includes(page)) ?? null : null;
-  // Manual opens the manual workspace; Default stays on the page when it exists in Default Mode.
+  const settingsActive = page === "settings" || page === "features" || (page === "data" && !modules.inSidebar("data_management"));
+  const section = blocked ? null : TRANSACTION_SECTIONS.find((item) => item.pages.includes(page)) ?? null;
+  // Keep Settings open when switching accounting workflows.
   const switchMode = (next: Mode) => {
     if (next === mode) return;
     setMode(next);
     setTransactionIntent(null);
-    if (next === "manual") setPage("manual");
-    else if (MANUAL_PAGES.has(page)) setPage("dashboard");
+    if (next === "manual" && !settingsActive) setPage("manual");
+    else if (next === "default" && MANUAL_PAGES.has(page)) setPage("dashboard");
   };
   const { persistent } = useFinance();
   // billieweather:// links and #/capture/… open one screen; they never save or send anything.
@@ -172,8 +173,9 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
           </button>
         </div>
         {manual && <p className="bw-mode-badge" id="manual-mode-badge"><Icon d={icons.transactions} /><span>{m.ledger.mode.manualOn}</span></p>}
-        {/* Feature Library navigation: enabled modules, then Settings (always). The same in both modes. */}
-        <ul id="module-nav">{modules.enabledList.map(moduleButton)}</ul>
+        {/* Sidebar: the modules the person shows (Feature Library), then Settings (always). The same in both modes.
+            Modules not listed here still work; they open from Settings and the Feature Library. */}
+        <ul id="module-nav">{modules.sidebarList.map(moduleButton)}</ul>
         <span className="bw-nav-divider" role="separator" />
         <ul>
           <li>
@@ -219,7 +221,7 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
             </div>
           </div>
         )}
-        {blocked ? <ModuleDisabled module={blocked} openLibrary={() => go("features")} /> : (
+        {blocked ? <ModuleUnavailable module={blocked} openLibrary={() => go("features")} /> : (
         <>
         {page === "dashboard" && <Dashboard go={go} />}
         {page === "manual" && <Manual go={go} />}
@@ -232,7 +234,7 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
         {page === "receipt" && <Receipt />}
         {page === "reports" && <Reports />}
         {page === "data" && <Data focus={focus} />}
-        {page === "settings" && <Settings openLibrary={() => go("features")} openData={() => go("data")} />}
+        {page === "settings" && <Settings go={go} openModule={openModule} />}
         {page === "features" && <FeatureLibrary open={openModule} />}
         {page === "addSync" && <AddSync openImport={() => go("import")} openReceipt={() => go("receipt")} openEntry={(entryDraft) => go("transactions", null, undefined, { entryKind: entryDraft?.kind ?? "expense", entryDraft })} openManual={() => go("manual")} />}
         {page === "assistant" && <Assistant />}

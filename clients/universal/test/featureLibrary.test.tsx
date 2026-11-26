@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-// Feature Library through the real app shell (Phase 1a), with synthetic data only: the default sidebar,
-// turning modules on and off, persistence across a restart, safe "turned off" pages, Coming soon modules,
-// Add & Sync, and the guarantee that none of it changes a financial record or Manual Mode.
+// Feature Library and Settings through the real app shell, with synthetic data only: the minimal default
+// sidebar, every built module usable without changing anything, showing and hiding modules in the
+// sidebar, persistence across a restart, platform status (coming soon / website only), Add & Sync, and
+// the guarantee that none of it changes a financial record or Manual Mode.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
 import { fixtureBytes, migrate } from "./helpers";
@@ -54,18 +55,38 @@ async function openLibrary() {
   await click(await screen.findByRole("button", { name: "Open Feature Library" }));
   await screen.findByRole("heading", { name: "Feature Library", level: 1 });
 }
-const switchFor = (name: string) => screen.getByRole("switch", { name });
+const switchFor = (name: string) => screen.getByRole("switch", { name: `Show ${name} in the sidebar` });
+const choicesSaved = () => Object.keys(localStorage).filter((key) => key.startsWith("billie.modules.v1:")).map((key) => localStorage.getItem(key));
 
-it("a new person sees Transactions, AI Assistant and Settings; the tabs are Overview, All Transactions, Add & Sync", async () => {
+it("a new person sees Transactions, AI Insight and Settings; the tabs are Overview, All Transactions, Add & Sync", async () => {
   mockAccount();
   render(<App />);
-  await waitFor(async () => expect((await labels()).filter((label) => label !== "Collapse sidebar")).toEqual(["Transactions", "AI Assistant", "Settings"]));
+  await waitFor(async () => expect((await labels()).filter((label) => label !== "Collapse sidebar")).toEqual(["Transactions", "AI Insight", "Settings"]));
   expect(screen.getByRole("button", { name: "Overview" }).getAttribute("aria-current")).toBe("page");
   expect(screen.getByRole("button", { name: "All Transactions" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Add & Sync" })).toBeTruthy();
 });
 
-it("turns a module on and off from the library, keeps it after a restart, and never touches records", async () => {
+it("every built module opens for a new person from Settings, without changing the sidebar or any record", async () => {
+  mockAccount();
+  render(<App />);
+  await screen.findByRole("navigation");
+  const before = await fingerprint();
+  const pages: Array<[string, string]> = [["Accounts & Assets", "Accounts"], ["Categories & Tags", "Categories"], ["Reports", "Reports"]];
+  for (const [name, heading] of pages) {
+    await click((await sidebar()).getByRole("button", { name: "Settings" }));
+    await screen.findByRole("heading", { name: "Settings & privacy", level: 1 });
+    const hidden = await waitFor(() => { const list = document.getElementById("settings-hidden-modules"); if (!list) throw new Error("not yet"); return list; });
+    await click(within(hidden).getByRole("button", { name }));
+    expect(await screen.findByRole("heading", { name: heading, level: 1 })).toBeTruthy();
+    expect(document.getElementById("module-unavailable")).toBeNull();
+  }
+  expect((await labels()).filter((label) => label !== "Collapse sidebar" && label !== "Settings")).toEqual(["Transactions", "AI Insight"]);
+  expect(choicesSaved().every((value) => !value || !value.includes("sidebarVisible\":true"))).toBe(true);
+  expect(await fingerprint()).toBe(before);
+});
+
+it("shows and hides a module in the sidebar, keeps the choice after a restart, and never touches records", async () => {
   mockAccount();
   const view = render(<App />);
   await screen.findByRole("navigation");
@@ -84,51 +105,110 @@ it("turns a module on and off from the library, keeps it after a restart, and ne
   render(<App />);
   await waitFor(async () => expect((await sidebar()).getByRole("button", { name: "Reports" })).toBeTruthy());
 
-  // Off again: hidden, data unchanged; Default/Manual is not affected.
+  // Hidden again: not in the sidebar, still opens from the library; data and Default/Manual unchanged.
   await openLibrary();
   await click(switchFor("Reports"));
   await waitFor(async () => expect((await sidebar()).queryByRole("button", { name: "Reports" })).toBeNull());
-  expect(screen.getByRole("button", { name: "Default" }).getAttribute("aria-pressed")).toBe("true");
+  expect(screen.getByRole("button", { name: "AI Automatic" }).getAttribute("aria-pressed")).toBe("true");
+  const card = document.querySelector<HTMLElement>('[data-module="reports"]')!;
+  expect(within(card).getByText(/still fully usable/)).toBeTruthy();
+  await click(within(card).getByRole("button", { name: "Open Reports" }));
+  expect(await screen.findByRole("heading", { name: "Reports", level: 1 })).toBeTruthy();
   expect(await fingerprint()).toBe(before);
 });
 
-it("Coming soon modules are shown but cannot be turned on; Settings is always there", async () => {
+it("modules that are not built for the app say so, have no switch, and Settings is always there", async () => {
   mockAccount();
   render(<App />);
   await openLibrary();
   for (const name of ["Ledgers", "Goals & Planning", "Household", "Multi-Currency", "Cash Flow Forecast"]) {
-    const control = switchFor(name);
-    expect((control as HTMLButtonElement).disabled).toBe(true);
-    expect(control.getAttribute("aria-checked")).toBe("false");
+    expect(screen.queryByRole("switch", { name: `Show ${name} in the sidebar` }), name).toBeNull();
   }
-  fireEvent.click(screen.getByRole("button", { name: "Coming soon" }));
-  expect(screen.getAllByRole("switch").length).toBe(5);
-  expect(screen.getByText("Settings is always in the sidebar and can't be turned off.")).toBeTruthy();
-  // Turning off both core modules still leaves Settings.
+  const forecast = document.querySelector<HTMLElement>('[data-module="forecast"]')!;
+  expect(forecast.dataset.availability).toBe("unsupported");
+  expect(within(forecast).getByText("Not in the app yet")).toBeTruthy();
+  expect(within(forecast).getByRole("button", { name: /Open on the website/ })).toBeTruthy();
+  const goals = document.querySelector<HTMLElement>('[data-module="goals"]')!;
+  expect(within(goals).getByText("Coming soon")).toBeTruthy();
+  expect(within(goals).queryAllByRole("button")).toHaveLength(0);
+  fireEvent.click(screen.getByRole("button", { name: "Not available yet" }));
+  expect(document.querySelectorAll("#feature-library > li")).toHaveLength(5);
+  fireEvent.click(screen.getByRole("button", { name: "Hidden" }));
+  expect([...document.querySelectorAll<HTMLElement>("#feature-library > li")].map((item) => item.dataset.module)).toEqual(["overview", "import", "receipts", "data_management", "accounts", "categories", "budgets", "reports", "recurring"]);
+  expect(screen.getByText("Settings is always in the sidebar.")).toBeTruthy();
+  // Hiding both core modules still leaves Settings.
   fireEvent.click(screen.getByRole("button", { name: "All" }));
   await click(switchFor("Transactions"));
-  await click(switchFor("AI Assistant"));
+  await click(switchFor("AI Insight"));
   await waitFor(async () => expect((await labels()).filter((label) => label !== "Collapse sidebar")).toEqual(["Settings"]));
 });
 
-it("a page of a hidden module shows a safe 'turned off' page that can turn it on, without switching Manual Mode on", async () => {
+it("keeps Settings open in both modes and restores the sidebar without changing records", async () => {
+  mockAccount();
+  render(<App />);
+  const navigation = await sidebar();
+  const before = await fingerprint();
+  await click(navigation.getByRole("button", { name: "Settings" }));
+  await screen.findByRole("button", { name: "Open Feature Library" });
+  const sectionIds = () => [...document.querySelectorAll("#settings-index button")].map((item) => item.textContent);
+  const initial = sectionIds();
+  expect(document.getElementById("settings-automation")).toBeTruthy();
+  await click(screen.getByRole("button", { name: "Manual Accounting" }));
+  expect(sectionIds()).toEqual(initial);
+  await openLibrary();
+  await click(switchFor("Data Management"));
+  await click(switchFor("AI Insight"));
+  expect(navigation.getByRole("button", { name: "Data Management" })).toBeTruthy();
+  expect(navigation.queryByRole("button", { name: "AI Insight" })).toBeNull();
+  await click(screen.getByRole("button", { name: "Restore default sidebar" }));
+  expect(navigation.queryByRole("button", { name: "Data Management" })).toBeNull();
+  expect(navigation.getByRole("button", { name: "AI Insight" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Manual Accounting" }).getAttribute("aria-pressed")).toBe("true");
+  expect(await fingerprint()).toEqual(before);
+});
+
+it("a module hidden from the sidebar still answers deep links, without a 'turned off' page", async () => {
   mockAccount();
   render(<App />);
   await screen.findByRole("navigation");
   const before = await fingerprint();
   await openLibrary();
   await click(switchFor("Transactions"));
-  // A Siri / Shortcuts deep link still targets a Transactions page (new expense = Manual Mode intent).
+  await waitFor(async () => expect((await sidebar()).queryByRole("button", { name: "Transactions" })).toBeNull());
+  // A Siri / Shortcuts deep link targets a Transactions page.
   await act(async () => { window.location.hash = "#/capture/expense"; window.dispatchEvent(new HashChangeEvent("hashchange")); });
-  await screen.findByRole("heading", { name: "Transactions is turned off", level: 1 });
-  expect(screen.getByRole("button", { name: "Default" }).getAttribute("aria-pressed")).toBe("true"); // mode unchanged
-  expect(screen.queryByRole("button", { name: "Overview" })).toBeNull();
+  expect(await screen.findByRole("heading", { name: "Transactions", level: 1 })).toBeTruthy();
+  expect(document.getElementById("module-unavailable")).toBeNull();
+  expect(screen.queryByText(/turned off/)).toBeNull();
   expect(await fingerprint()).toBe(before);
-  // Turning it on from here opens the page; the data is all there.
-  await click(screen.getByRole("button", { name: "Turn on Transactions" }));
-  await waitFor(() => expect(screen.queryByRole("heading", { name: "Transactions is turned off" })).toBeNull());
-  expect((await sidebar()).getByRole("button", { name: "Transactions" })).toBeTruthy();
+});
+
+it("Settings is a registry of sections, with database management and an integrity check that changes nothing", async () => {
+  mockAccount();
+  render(<App />);
+  await click((await sidebar()).getByRole("button", { name: "Settings" }));
+  const index = await screen.findByRole("group", { name: "Settings sections" });
+  expect(within(index).getAllByRole("button").map((button) => button.dataset.settingsArea))
+    .toEqual(["features", "database", "data", "sync", "account", "appearance", "rules", "modules"]);
+  for (const area of ["features", "database", "data", "sync", "account", "appearance", "rules", "modules"]) expect(document.getElementById(`settings-area-${area}`), area).toBeTruthy();
+  const database = document.getElementById("settings-database")!;
+  expect(within(database).getByText("Library book")).toBeTruthy();
+  const before = await fingerprint();
+  await click(within(database).getByRole("button", { name: "Check integrity" }));
+  await waitFor(() => expect(database.querySelector("[data-integrity]")?.getAttribute("data-integrity")).toBe("ok"));
   expect(await fingerprint()).toBe(before);
+  // Capabilities that do not exist yet are labelled and have no button.
+  for (const key of ["scheduled", "repair"]) {
+    const item = database.querySelector<HTMLElement>(`[data-capability="${key}"]`)!;
+    expect(item.dataset.status).toBe("not_yet");
+    expect(within(item).queryAllByRole("button")).toHaveLength(0);
+  }
+  // Backup & restore opens the database manager at the backup panel.
+  await click(within(database.querySelector<HTMLElement>('[data-capability="backup"]')!).getByRole("button", { name: "Open" }));
+  expect(await screen.findByRole("heading", { name: "Data", level: 1 })).toBeTruthy();
+  // Feature settings are listed for usable modules even though they are not in the sidebar.
+  await click((await sidebar()).getByRole("button", { name: "Settings" }));
+  expect([...document.querySelectorAll<HTMLElement>("[data-settings-module]")].map((item) => item.dataset.settingsModule)).toEqual(["accounts", "categories", "budgets", "recurring"]);
 });
 
 it("Add & Sync lists four capabilities, marks bank connections as Coming soon and opens the existing tools", async () => {
@@ -146,11 +226,11 @@ it("Add & Sync lists four capabilities, marks bank connections as Coming soon an
   await waitFor(() => expect(screen.getAllByRole("button", { name: "Import statements" })[0].getAttribute("aria-current")).toBe("page"));
 });
 
-it("AI Assistant is usable by default and offers AI categorization without the Categories module", async () => {
+it("AI Insight is usable by default and offers AI categorization without the Categories module", async () => {
   mockAccount();
   render(<App />);
-  await click((await sidebar()).getByRole("button", { name: "AI Assistant" }));
-  await screen.findByRole("heading", { name: "AI Assistant", level: 1 });
+  await click((await sidebar()).getByRole("button", { name: "AI Insight" }));
+  await screen.findByRole("heading", { name: "AI Insight", level: 1 });
   expect(screen.getByRole("heading", { name: "Categorize with AI" })).toBeTruthy();
   expect(screen.getByRole("heading", { name: "Ask in plain words" })).toBeTruthy();
   expect(screen.getByText(/on the BillieWeather website for now/)).toBeTruthy();

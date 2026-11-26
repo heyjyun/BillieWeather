@@ -5,7 +5,7 @@ import { findFileInput } from "./uiHelpers";
 // open the category's details, rename it and delete it.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { fixtureBytes, migrate, openInShell, enableAllModulesByDefault } from "./helpers";
+import { fixtureBytes, migrate, openInShell, showAllModulesInSidebar } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { API_ORIGIN } from "../src/services/account";
 
@@ -38,7 +38,7 @@ const { default: App } = await import("../src/App");
 
 const nav = (label: string) => openInShell(label);
 
-beforeEach(() => { enableAllModulesByDefault(); localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
+beforeEach(() => { showAllModulesInSidebar(); localStorage.clear(); sessionStorage.clear(); localStorage.setItem("billie.locale", "en"); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 it("adds a category, categorizes with AI after consent, and manages the category", async () => {

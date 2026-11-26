@@ -2,10 +2,10 @@ module Finance
   class BaseController < ApplicationController
     layout "billie"
     before_action :authenticate_user!
-    before_action :require_usage_region, unless: -> { controller_name == "settings" }
+    before_action :require_usage_region, unless: -> { %w[settings feature_library].include?(controller_name) }
     before_action :load_finance_profile
-    before_action :require_enabled_module
-    helper_method :finance_today, :manual_mode?, :module_enabled?, :enabled_modules, :current_module_id, :module_revision
+    before_action :require_available_module
+    helper_method :finance_today, :manual_mode?, :module_enabled?, :module_in_sidebar?, :sidebar_modules, :hidden_modules, :current_module_id, :module_revision
     after_action :prevent_financial_page_caching
     after_action :preserve_flash_for_turbo_reload
 
@@ -17,31 +17,33 @@ module Finance
       session[ManualWorkspace::SESSION_KEY] == "manual"
     end
 
-    # Feature Library (Finance::ModuleCatalog). Hidden modules are a view preference, not a permission:
-    # the person's own data stays reachable by re-enabling, and every authorization check still runs.
+    # Feature Library (Finance::ModuleCatalog). The sidebar is navigation, not permission: a module
+    # hidden from the sidebar still opens, saves and processes exactly as before.
     def module_choices
       @module_choices ||= ModuleCatalog.choices_for(current_user)
     end
 
-    def module_enabled?(id) = ModuleCatalog.enabled?(id, module_choices)
+    # Whether the module can be used on the website (it is available here). Independent of the sidebar.
+    def module_enabled?(id) = ModuleCatalog.enabled?(id)
+
+    def module_in_sidebar?(id) = ModuleCatalog.sidebar_visible?(id, module_choices)
 
     def module_revision(id) = module_choices.dig(id, "revision") || 0
 
-    def enabled_modules = ModuleCatalog.enabled_modules(module_choices)
+    def sidebar_modules = ModuleCatalog.sidebar_modules(module_choices)
+
+    def hidden_modules = ModuleCatalog.hidden_modules(module_choices)
 
     def current_module_id = ModuleCatalog.module_for_controller(controller_name)
 
-    # Opening a page of a hidden module shows "this module is off" with a way to turn it on, instead of
-    # the page (or a 404). Nothing is changed or deleted, and it is checked before Manual Mode is
-    # switched on, so a hidden page does not change the mode either. Writes are refused the same way.
-    def require_enabled_module
+    # Only a module that is not built for the website (coming soon / app only) is refused. Every route
+    # in CONTROLLER_MODULES belongs to an available module today, so this guards future catalog edits.
+    def require_available_module
       id = current_module_id
       return if id.nil? || module_enabled?(id)
-      @disabled_module = ModuleCatalog.find(id)
       respond_to do |format|
-        format.html { render "finance/feature_library/disabled", status: request.get? ? :ok : :forbidden }
-        format.json { render json: {error: "module_disabled", module: id}, status: :forbidden }
-        format.any { head :forbidden }
+        format.json { render json: {error: "module_not_available", module: id}, status: :not_found }
+        format.any { head :not_found }
       end
     end
 

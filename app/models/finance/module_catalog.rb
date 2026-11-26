@@ -4,15 +4,18 @@ module Finance
   # The Feature Library catalog (Settings › Feature Library), read from
   # packages/shared-types/schema/module-catalog.json — the same file the apps import
   # (packages/shared-types/src/modules.ts). Both sides resolve preferences with the same rules and
-  # replay packages/shared-types/fixtures/module-preference-cases.json:
+  # replay packages/shared-types/fixtures/module-preference-cases.json. Three separate questions:
   #
-  # - A module can be on only when it is "available" on the website; "coming_soon" modules are listed
-  #   but never enabled, whatever was stored.
-  # - Without a stored choice a module uses its default (Transactions and AI Assistant on, the rest off),
-  #   for new and existing accounts alike (product decision 1, 2026-11-23).
-  # - Settings is a system entry, not a module: always shown, never stored.
-  # - Hiding a module only hides it: data, processing (recurring posting, receipt matching, balance
-  #   sync) and permissions are unchanged.
+  # - Availability per surface: "available" (built, works here), "coming_soon" (not built yet) or
+  #   "unsupported" (built on another surface only).
+  # - Enabled = can be used. Derived, never stored: every module available on the website is enabled
+  #   for every account, new or existing. No personal choice disables a feature.
+  # - Sidebar visibility: the only personal choice. Without one, the catalog default applies
+  #   (Transactions and AI Insight shown, product decision 2026-11-26).
+  #
+  # Settings is a system entry, not a module: always shown, never stored. Hiding a module from the
+  # sidebar never blocks its pages, changes data or stops processing (recurring posting, receipt
+  # matching, balance sync); every authorization check still runs.
   module ModuleCatalog
     PATH = Rails.root.join("packages/shared-types/schema/module-catalog.json")
     SCHEMA = JSON.parse(File.read(PATH)).freeze
@@ -20,17 +23,25 @@ module Finance
     PREFERENCE_FORMAT = SCHEMA.fetch("preference_format")
     ID_FORMAT = /\A[a-z_]{2,40}\z/
 
-    Definition = Data.define(:id, :core, :default_enabled, :order, :icon, :availability, :destination, :depends_on) do
-      def available?(surface = SURFACE) = availability.fetch(surface) == "available"
+    Definition = Data.define(:id, :core, :default_sidebar_visible, :order, :icon, :availability, :destination, :depends_on) do
+      def availability_on(surface = SURFACE) = availability.fetch(surface)
 
-      def coming_soon?(surface = SURFACE) = !available?(surface)
+      def available?(surface = SURFACE) = availability_on(surface) == "available"
+
+      # Can be used here. Same as available?: there is no personal "off" switch for a feature.
+      def enabled?(surface = SURFACE) = available?(surface)
+
+      def coming_soon?(surface = SURFACE) = availability_on(surface) == "coming_soon"
+
+      # Built, but only on another surface (e.g. Forecast is website-only for now).
+      def unsupported?(surface = SURFACE) = availability_on(surface) == "unsupported"
 
       # The website route helper name, or nil when the module has no page here.
       def route = destination[SURFACE]
     end
 
     MODULES = SCHEMA.fetch("modules").map do |raw|
-      Definition.new(id: raw.fetch("id"), core: raw.fetch("core"), default_enabled: raw.fetch("default_enabled"), order: raw.fetch("order"),
+      Definition.new(id: raw.fetch("id"), core: raw.fetch("core"), default_sidebar_visible: raw.fetch("default_sidebar_visible"), order: raw.fetch("order"),
         icon: raw.fetch("icon"), availability: raw.fetch("availability").freeze, destination: raw.fetch("destination").freeze, depends_on: raw.fetch("depends_on").freeze)
     end.sort_by(&:order).freeze
     IDS = MODULES.map(&:id).freeze
@@ -38,9 +49,11 @@ module Finance
     # Which module each finance controller belongs to. Controllers not listed are system pages
     # (settings, profile, mode switch, command bar, device metadata, financial data deletion) and are
     # never hidden. A test checks every Finance controller is either here or in SYSTEM_CONTROLLERS.
+    TRANSACTION_MODULES = %w[transactions overview import receipts].freeze
+
     CONTROLLER_MODULES = {
-      "dashboard" => "transactions", "transactions" => "transactions", "statements" => "transactions",
-      "statement_drafts" => "transactions", "receipts" => "transactions", "reconciliation" => "transactions",
+      "dashboard" => "overview", "transactions" => "transactions", "statements" => "import",
+      "statement_drafts" => "import", "receipts" => "receipts", "reconciliation" => "receipts",
       "manual" => "transactions", "entries" => "transactions", "audit_events" => "transactions",
       "reviews" => "transactions", "add_sync" => "transactions",
       "insights" => "ai_assistant", "tax_preparation" => "ai_assistant",
@@ -66,27 +79,40 @@ module Finance
 
     def module_for_controller(controller_name) = CONTROLLER_MODULES[controller_name.to_s]
 
-    # Stored choices for a person: {"budgets" => {"enabled" => true, "changedAt" => "..."}}.
+    # Stored sidebar choices for a person: {"budgets" => {"sidebar_visible" => true, "changedAt" => "...", "revision" => 2}}.
     def choices_for(user)
-      ModulePreference.where(user_id: user.id).to_h { |row| [row.module_key, {"enabled" => row.enabled, "changedAt" => row.changed_at&.utc&.iso8601(3).to_s, "revision" => row.revision}] }
+      ModulePreference.where(user_id: user.id).to_h { |row| [row.module_key, {"sidebar_visible" => row.sidebar_visible, "changedAt" => row.changed_at&.utc&.iso8601(3).to_s, "revision" => row.revision}] }
     end
 
     # Same contract as normalizePreferences in modules.ts: bad data means "no choice", never an error.
+    # The legacy key "enabled" is read as the sidebar choice it always was.
     def normalize(preferences)
       return {} unless preferences.is_a?(Hash) && preferences["format"] == PREFERENCE_FORMAT && preferences["modules"].is_a?(Hash)
       preferences["modules"].each_with_object({}) do |(id, choice), result|
-        next unless id.is_a?(String) && id.match?(ID_FORMAT) && choice.is_a?(Hash) && [true, false].include?(choice["enabled"])
-        result[id] = {"enabled" => choice["enabled"], "changedAt" => choice["changedAt"].is_a?(String) ? choice["changedAt"] : ""}
+        next unless id.is_a?(String) && id.match?(ID_FORMAT) && choice.is_a?(Hash)
+        visible = choice["sidebarVisible"]
+        visible = choice["enabled"] unless [true, false].include?(visible)
+        next unless [true, false].include?(visible)
+        result[id] = {"sidebar_visible" => visible, "changedAt" => choice["changedAt"].is_a?(String) ? choice["changedAt"] : ""}
       end
     end
 
-    def enabled?(id, choices, surface: SURFACE)
+    # Whether the module can be used on this surface. Independent of the sidebar.
+    def enabled?(id, surface: SURFACE) = find(id)&.enabled?(surface) == true
+
+    def enabled_modules(surface: SURFACE) = MODULES.select { |definition| definition.enabled?(surface) }
+
+    # Whether the module has a sidebar entry for this person.
+    def sidebar_visible?(id, choices, surface: SURFACE)
       definition = find(id)
       return false unless definition&.available?(surface)
       choice = choices[definition.id]
-      choice ? choice["enabled"] == true : definition.default_enabled
+      choice ? choice["sidebar_visible"] == true : definition.default_sidebar_visible
     end
 
-    def enabled_modules(choices, surface: SURFACE) = MODULES.select { |definition| enabled?(definition.id, choices, surface: surface) }
+    def sidebar_modules(choices, surface: SURFACE) = MODULES.select { |definition| sidebar_visible?(definition.id, choices, surface: surface) }
+
+    # Usable modules that are not in the sidebar (opened from the Feature Library).
+    def hidden_modules(choices, surface: SURFACE) = MODULES.select { |definition| definition.available?(surface) && !sidebar_visible?(definition.id, choices, surface: surface) }
   end
 end

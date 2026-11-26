@@ -15,8 +15,12 @@ en:
         reconciliation: Reconciliation
         review_history: Review & history
       names:
+        overview: "Financial Overview"
+        import: "Import"
+        receipts: "Receipts"
+        data_management: "Data Management"
         transactions: Transactions
-        ai_assistant: AI Assistant
+        ai_assistant: "AI Insight"
         ledgers: Ledgers
         accounts: Accounts & Assets
         categories: Categories & Tags
@@ -28,6 +32,10 @@ en:
         forecast: Cash Flow Forecast
         multi_currency: Multi-Currency
       descriptions:
+        overview: "View balances and spending trends."
+        import: "Import and review bank statements."
+        receipts: "Capture receipts and review matches."
+        data_management: "Manage local databases, backups and transfers."
         transactions: Your overview, every transaction, and adding or importing new ones.
         ai_assistant: Insights, questions about your money, tax preparation and help organizing your records.
         ledgers: Separate books for personal, business or shared spending.
@@ -41,44 +49,43 @@ en:
         forecast: Your expected balance over the next 30, 60 or 90 days.
         multi_currency: Accounts in several currencies, converted for reports.
       status:
-        available: Available
-        coming_soon: Coming soon
-        enabled: "On"
-        disabled: "Off"
-        core: Core
+        available: "Available"
+        coming_soon: "Coming soon"
+        unsupported: "Not on this platform"
+        in_sidebar: "In sidebar"
+        hidden: "Hidden"
+        core: "Core"
       library:
+        reset: "Restore default sidebar"
+        reset_saved: "Default sidebar restored."
         stale: This choice changed on another device. The current choice is shown. You can change it again here.
         synced_note: Module choices are shared with your signed-in BillieWeather devices.
         nav: Feature Library
         eyebrow: Settings
         title: Feature Library
-        intro: Choose what appears in your sidebar. Start simple and add tools when you need them.
+        intro: "Everything BillieWeather can do. Every available feature works right away; choose which ones appear in your sidebar."
         filters_label: Show modules
         filters:
-          all: All
-          enabled: Enabled
-          available: Available
-          coming_soon: Coming soon
-        toggle_label: Show %{name} in the sidebar
-        turn_on: Turn on
-        turn_off: Turn off
+          all: "All"
+          sidebar: "In sidebar"
+          hidden: "Hidden"
+          unavailable: "Not available yet"
+        toggle_label: "Show %{name} in the sidebar"
         open: Open
-        saved_on: "%{name} is on and in your sidebar."
-        saved_off: "%{name} is off. Its data is kept; turn it on again any time."
-        coming_soon_note: Not available yet. It can't be turned on until it works.
-        settings_note: Settings is always in the sidebar and can't be turned off.
-        data_note: Turning a module off only hides it. Nothing is deleted, and everything that runs automatically (such as recurring entries and receipt matching) keeps running.
+        saved_shown: "%{name} now appears in your sidebar."
+        saved_hidden: "%{name} is hidden from your sidebar. It still works: open it from the Feature Library."
+        coming_soon_note: "Not built yet. It will appear here when it works."
+        unsupported_note: "Available in the BillieWeather app; the website does not support it yet."
+        hidden_still_works: "Not in your sidebar, still fully usable"
+        settings_note: "Settings is always in the sidebar."
+        data_note: "Hiding a feature only removes its sidebar entry. It keeps working, nothing is deleted, and everything that runs automatically (such as recurring entries and receipt matching) keeps running."
         sync_note: These choices are saved for your account on this website. The BillieWeather apps keep their own choices for now.
         empty: No modules match this filter.
         open_library: Open Feature Library
         errors:
-          coming_soon: "%{name} is not available yet."
+          not_available: "%{name} is not available here yet."
+          invalid: "Choose whether to show %{name} in the sidebar."
           unknown: That module doesn't exist.
-      disabled:
-        eyebrow: Feature Library
-        title: "%{name} is turned off"
-        body: This module is hidden from your sidebar. Your data is still here and nothing was changed. Turn it on to use this page again.
-        turn_on: Turn on %{name}
       add_sync:
         title: Add & Sync
         intro: Every way to bring transactions in. Everything goes through the same checks, so nothing is counted twice.
@@ -104,3 +111,14 @@ en:
           open: Add an entry
           manual: Manual bookkeeping
           later: Voice entry, natural-language entry and Siri Shortcuts are coming later.
+    settings_hub:
+      appearance: "Appearance & language"
+      automation: "AI & automation"
+      data_tools: "Import, export & data"
+      sync_backup: "Sync & backup"
+      rules: "Transaction classification rules"
+      remove_rule: "Remove"
+      index_label: "Settings sections"
+      database: "Database"
+      in_sidebar: "In your sidebar"
+      hidden_intro: "Available but not in your sidebar. Open them directly:"

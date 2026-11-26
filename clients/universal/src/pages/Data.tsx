@@ -42,16 +42,9 @@ const readCloudSynced = (email: string): string | null => {
   try { return localStorage.getItem(cloudSyncKey(email)); } catch { return null; }
 };
 
-export function formatBytes(bytes: number, locale: string): string {
-  const units = ["B", "KB", "MB", "GB"];
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: unit === 0 ? 0 : 1 }).format(value)} ${units[unit]}`;
-}
+import { formatBytes } from "../services/bytes";
+// Kept in services/bytes.ts so Settings can show sizes without loading this page.
+export { formatBytes } from "../services/bytes";
 
 const endpointOf = (target: Target): Endpoint => (target === "cloud" ? { kind: "cloud" } : { kind: "local", id: target });
 
@@ -119,6 +112,10 @@ export function Data({ focus = null }: { focus?: string | null } = {}) {
   };
   useEffect(() => {
     if (focus === "sync") showSyncPanel("from");
+    // Settings › Database / Data link straight to these panels.
+    else if (focus === "backup" || focus === "statements") {
+      document.getElementById(focus === "backup" ? "backup-heading" : "list-device")?.closest("section")?.scrollIntoView?.({ block: "start" });
+    }
   }, [focus]);
   // A card's "Sync Now to…": that database becomes the source; the person still picks the destination and confirms.
   const syncFromCard = (target: Target) => {

@@ -1,82 +1,106 @@
 {
-  "$comment": "The Feature Library's single source of truth, read by the website (app/models/finance/module_catalog.rb) and the apps (packages/shared-types/src/modules.ts). Names and descriptions are translation keys (config/locales/billie_modules.*.yml, clients/universal/src/i18n/modules.ts). Availability is per surface: 'web' is the Rails website; 'app' is the universal client (clients/universal) on macOS, Windows, iOS and Android. A module is 'available' on a surface only when its essential journey works there; otherwise 'coming_soon' (shown, never enabled). Hiding a module never changes or deletes data, and never stops processing (e.g. recurring entries still post). Settings is a system entry, not a module, and cannot be hidden.",
-  "version": 1,
+  "$comment": "The Feature Library's single source of truth, read by the website (app/models/finance/module_catalog.rb) and the apps (packages/shared-types/src/modules.ts). Names and descriptions are translation keys (config/locales/billie_modules.*.yml, clients/universal/src/i18n/modules.ts). Three separate questions, never mixed: (1) AVAILABILITY, per surface ('web' is the Rails website; 'app' is the universal client on macOS, Windows, iOS and Android): 'available' = built and its essential journey works there; 'coming_soon' = not built yet; 'unsupported' = built on another surface but not on this one. (2) ENABLED = can be used. It is derived, not stored: every module that is available on a surface is enabled there, for every account, new or old. There is no per-person switch that disables a feature. (3) SIDEBAR VISIBILITY = whether the module has a sidebar entry. Only this is a personal choice (Settings > Feature Library); 'default_sidebar_visible' applies until the person chooses. Hiding a module from the sidebar never blocks its pages, never changes or deletes data, and never stops processing (e.g. recurring entries still post). Settings is a system entry, not a module: always in the sidebar, never stored. Financial services removed from the product scope are not listed here and must not be added back.",
+  "version": 2,
   "preference_format": 1,
   "surfaces": ["web", "app"],
-  "availability_states": ["available", "coming_soon"],
+  "availability_states": ["available", "coming_soon", "unsupported"],
   "system_entries": [
     { "id": "settings", "icon": "settings", "destination": { "web": "finance_settings", "app": "settings" } }
   ],
   "modules": [
     {
-      "id": "transactions", "core": true, "default_enabled": true, "order": 10, "icon": "transactions",
+      "id": "transactions", "core": true, "default_sidebar_visible": true, "order": 10, "icon": "transactions",
       "availability": { "web": "available", "app": "available" },
-      "destination": { "web": "finance_dashboard", "app": "dashboard" },
+      "destination": { "web": "finance_transactions", "app": "transactions" },
       "sections": ["overview", "all_transactions", "add_sync"],
       "depends_on": []
     },
     {
-      "id": "ai_assistant", "core": true, "default_enabled": true, "order": 20, "icon": "insights",
+      "id": "ai_assistant", "core": true, "default_sidebar_visible": true, "order": 20, "icon": "insights",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_insights", "app": "assistant" },
       "depends_on": []
     },
     {
-      "id": "ledgers", "core": false, "default_enabled": false, "order": 30, "icon": "layers",
+      "id": "overview", "core": false, "default_sidebar_visible": false, "order": 21, "icon": "chart",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_dashboard", "app": "dashboard" },
+      "depends_on": []
+    },
+    {
+      "id": "import", "core": false, "default_sidebar_visible": false, "order": 22, "icon": "upload",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_statements", "app": "import" },
+      "depends_on": []
+    },
+    {
+      "id": "receipts", "core": false, "default_sidebar_visible": false, "order": 23, "icon": "camera",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_receipts", "app": "receipt" },
+      "depends_on": []
+    },
+    {
+      "id": "data_management", "core": false, "default_sidebar_visible": false, "order": 24, "icon": "layers",
+      "availability": { "web": "unsupported", "app": "available" },
+      "destination": { "web": null, "app": "data" },
+      "depends_on": []
+    },
+    {
+      "id": "ledgers", "core": false, "default_sidebar_visible": false, "order": 30, "icon": "layers",
       "availability": { "web": "coming_soon", "app": "coming_soon" },
       "destination": { "web": null, "app": null },
       "depends_on": []
     },
     {
-      "id": "accounts", "core": false, "default_enabled": false, "order": 40, "icon": "wallet",
+      "id": "accounts", "core": false, "default_sidebar_visible": false, "order": 40, "icon": "wallet",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_accounts", "app": "accounts" },
       "depends_on": []
     },
     {
-      "id": "categories", "core": false, "default_enabled": false, "order": 50, "icon": "tag",
+      "id": "categories", "core": false, "default_sidebar_visible": false, "order": 50, "icon": "tag",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_categories", "app": "categories" },
       "depends_on": []
     },
     {
-      "id": "budgets", "core": false, "default_enabled": false, "order": 60, "icon": "check",
+      "id": "budgets", "core": false, "default_sidebar_visible": false, "order": 60, "icon": "check",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_budgets", "app": "planning" },
       "depends_on": []
     },
     {
-      "id": "reports", "core": false, "default_enabled": false, "order": 70, "icon": "chart",
+      "id": "reports", "core": false, "default_sidebar_visible": false, "order": 70, "icon": "chart",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_ledger_report", "app": "reports" },
       "depends_on": []
     },
     {
-      "id": "recurring", "core": false, "default_enabled": false, "order": 80, "icon": "repeat",
+      "id": "recurring", "core": false, "default_sidebar_visible": false, "order": 80, "icon": "repeat",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_recurring_rules", "app": "planning" },
       "depends_on": []
     },
     {
-      "id": "goals", "core": false, "default_enabled": false, "order": 90, "icon": "target",
+      "id": "goals", "core": false, "default_sidebar_visible": false, "order": 90, "icon": "target",
       "availability": { "web": "coming_soon", "app": "coming_soon" },
       "destination": { "web": null, "app": null },
       "depends_on": []
     },
     {
-      "id": "household", "core": false, "default_enabled": false, "order": 100, "icon": "home",
+      "id": "household", "core": false, "default_sidebar_visible": false, "order": 100, "icon": "home",
       "availability": { "web": "coming_soon", "app": "coming_soon" },
       "destination": { "web": null, "app": null },
       "depends_on": []
     },
     {
-      "id": "forecast", "core": false, "default_enabled": false, "order": 110, "icon": "forecast",
-      "availability": { "web": "available", "app": "coming_soon" },
+      "id": "forecast", "core": false, "default_sidebar_visible": false, "order": 110, "icon": "forecast",
+      "availability": { "web": "available", "app": "unsupported" },
       "destination": { "web": "finance_forecast", "app": null },
       "depends_on": []
     },
     {
-      "id": "multi_currency", "core": false, "default_enabled": false, "order": 120, "icon": "globe",
+      "id": "multi_currency", "core": false, "default_sidebar_visible": false, "order": 120, "icon": "globe",
       "availability": { "web": "coming_soon", "app": "coming_soon" },
       "destination": { "web": null, "app": null },
       "depends_on": []

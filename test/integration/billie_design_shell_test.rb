@@ -23,7 +23,7 @@ class BillieDesignShellTest < ActionDispatch::IntegrationTest
     sign_in @user
     get finance_statements_path
     assert_response :success
-    assert_select ".bw-sidebar .bw-nav a.bw-nav-link.is-active[aria-current='page'][href='#{finance_dashboard_path}']", text: "Transactions"
+    assert_select ".bw-sidebar .bw-nav a.bw-nav-link.is-active[aria-current='page'][href='#{finance_transactions_path}']", text: "Transactions"
     assert_select "#transactions-tabs a.bw-tab.is-active[aria-current='page'][href='#{finance_add_sync_path}']", text: "Add & Sync"
     assert_select "#transactions-tabs a.bw-subtab.is-active[aria-current='page'][href='#{finance_statements_path}']", text: "Statements"
     assert_select "#transactions-tabs a.bw-tab[href='#{finance_transactions_path}']", text: "All Transactions"
@@ -44,7 +44,7 @@ class BillieDesignShellTest < ActionDispatch::IntegrationTest
     {"zh-CN" => ["对账单", "收起侧边栏", "深色", "交易"], "zh-TW" => ["對帳單", "收合側邊欄", "深色", "交易"], "en" => ["Statements", "Collapse sidebar", "Dark", "Transactions"]}.each do |locale, (statements, collapse, dark, transactions)|
       get finance_statements_path(locale: locale)
       assert_select "#transactions-tabs a[href='#{finance_statements_path}']", text: statements
-      assert_select ".bw-nav a[href='#{finance_dashboard_path}']", text: transactions
+      assert_select ".bw-nav a[href='#{finance_transactions_path}']", text: transactions
       assert_select "button.bw-sidebar-toggle[aria-label='#{collapse}']"
       assert_select "button[data-theme-choice='dark']", text: dark
     end

@@ -1,11 +1,12 @@
 /**
- * Feature Library choices in the apps, kept on this device per account (localStorage, like the theme
- * and the database registry), so they survive restarts and do not depend on which local database is
- * open. Versioned format: packages/shared-types/src/modules.ts (`ModulePreferences`, format 1). Only
- * explicit choices are stored; everything else uses the catalog defaults. Nothing here is sent anywhere
- * (cross-device sync is Phase 1b) and nothing here touches financial data.
+ * Sidebar choices from the Feature Library, kept on this device per account (localStorage, like the
+ * theme and the database registry), so they survive restarts and do not depend on which local database
+ * is open. Versioned format: packages/shared-types/src/modules.ts (`ModulePreferences`, format 1;
+ * choices saved with the older key `enabled` are read as the same sidebar choice). Only explicit
+ * choices are stored; everything else uses the catalog defaults. These choices never decide whether a
+ * feature works, and nothing here touches financial data. Cross-device sync: services/moduleSync.ts.
  */
-import { normalizePreferences, setModuleEnabled, type ModulePreferences } from "@billie/shared-types";
+import { normalizePreferences, setSidebarVisible, type ModulePreferences } from "@billie/shared-types";
 
 const PREFIX = "billie.modules.v1:";
 
@@ -30,9 +31,9 @@ export function saveModulePreferences(ownerKey: string | null, preferences: Modu
   }
 }
 
-/** Records one explicit choice for this account and returns the new preferences. */
-export function chooseModule(ownerKey: string | null, current: ModulePreferences, id: string, enabled: boolean): ModulePreferences {
-  const next = setModuleEnabled(current, id, enabled, "app");
+/** Records one explicit sidebar choice for this account and returns the new preferences. */
+export function chooseSidebar(ownerKey: string | null, current: ModulePreferences, id: string, visible: boolean): ModulePreferences {
+  const next = setSidebarVisible(current, id, visible, "app");
   saveModulePreferences(ownerKey, next);
   return next;
 }

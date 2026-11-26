@@ -21,8 +21,13 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
     {"Authorization" => "Bearer #{token}"}
   end
 
-  def change(key, enabled, revision = 0)
-    {module_key: key, enabled: enabled, expected_revision: revision}
+  def change(key, visible, revision = 0)
+    {module_key: key, sidebar_visible: visible, expected_revision: revision}
+  end
+
+  # What apps released before 2026-11-26 send: the same choice under the legacy name.
+  def legacy_change(key, visible, revision = 0)
+    {module_key: key, enabled: visible, expected_revision: revision}
   end
 
   def request_body(*changes, device: DEVICE_A, id: SecureRandom.uuid, version: 0)
@@ -55,16 +60,31 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
   end
 
   test "an explicit legacy value belongs to its account and another account keeps its defaults" do
-    Finance::ModulePreference.set!(user: @user, module_key: "budgets", enabled: true)
+    Finance::ModulePreference.set!(user: @user, module_key: "budgets", sidebar_visible: true)
     get PATH, headers: @auth
     assert_response :ok
     assert_equal @user.finance_owner_uid, response.parsed_body["account_id"]
     assert_equal 1, response.parsed_body["server_revision"]
-    assert_equal [["budgets", true]], response.parsed_body.fetch("modules").map { |key, choice| [key, choice.fetch("enabled")] }
+    assert_equal [["budgets", true, true]], response.parsed_body.fetch("modules").map { |key, choice| [key, choice.fetch("sidebar_visible"), choice.fetch("enabled")] },
+      "both names carry the sidebar choice, for current and older apps"
     assert_equal "no-store", response.headers["Cache-Control"]
     get PATH, params: {account_id: @user.finance_owner_uid}, headers: headers_for(@other)
     assert_equal @other.finance_owner_uid, response.parsed_body["account_id"]
     assert_empty response.parsed_body["modules"]
+  end
+
+  test "a website reset preserves app-only choices and a second device sees the restored defaults" do
+    sign_in @user
+    send_update(request_body(change("data_management", true), change("ai_assistant", false), change("import", true)))
+    assert_response :ok
+    assert_equal %w[ai_assistant data_management import], response.parsed_body.fetch("applied")
+    post finance_reset_feature_library_path
+    assert_redirected_to finance_feature_library_path
+    get PATH, headers: headers_for(@user)
+    assert_response :ok
+    assert_equal [true, 1], response.parsed_body.dig("modules", "data_management").values_at("sidebar_visible", "revision")
+    assert_equal [true, 2], response.parsed_body.dig("modules", "ai_assistant").values_at("sidebar_visible", "revision")
+    assert_equal [false, 2], response.parsed_body.dig("modules", "import").values_at("sidebar_visible", "revision")
   end
 
   test "idempotent replay is scoped to the account and does not overwrite later changes" do
@@ -78,14 +98,14 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
       assert_equal original, send_update(first)
     end
     assert_equal 2, @user.finance_module_preferences.sole.revision
-    assert_equal false, @user.finance_module_preferences.sole.enabled
+    assert_equal false, @user.finance_module_preferences.sole.sidebar_visible
     send_update(first.merge(changes: [change("budgets", false)]))
     assert_response :conflict
     assert_equal "mutation_reused", response.parsed_body["error"]
     send_update(first.merge(account_id: @user.finance_owner_uid), headers: headers_for(@other))
     assert_response :ok
-    assert_equal true, @other.finance_module_preferences.sole.enabled
-    assert_equal false, @user.finance_module_preferences.sole.enabled
+    assert_equal true, @other.finance_module_preferences.sole.sidebar_visible
+    assert_equal false, @user.finance_module_preferences.sole.sidebar_visible
   end
 
   test "partial conflicts preserve both different module edits and latest revision ordering" do
@@ -94,13 +114,27 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal ["budgets"], reply["applied"]
     assert_equal 2, reply["server_revision"]
+    assert_equal false, reply.dig("conflicts", 0, "proposed_sidebar_visible")
     assert_equal false, reply.dig("conflicts", 0, "proposed_enabled")
-    assert_equal true, reply.dig("conflicts", 0, "current", "enabled")
+    assert_equal true, reply.dig("conflicts", 0, "current", "sidebar_visible")
     assert_equal DEVICE_A, reply.dig("modules", "reports", "updated_by_device_id")
     assert_equal DEVICE_B, reply.dig("modules", "budgets", "updated_by_device_id")
     resolved = send_update(request_body(change("reports", false, 1), device: DEVICE_B, version: 2))
     assert_equal 3, resolved["server_revision"]
-    assert_equal false, resolved.dig("modules", "reports", "enabled")
+    assert_equal false, resolved.dig("modules", "reports", "sidebar_visible")
+  end
+
+  test "older apps that send `enabled` still sync; the same mutation replays under either name" do
+    id = SecureRandom.uuid
+    legacy = send_update(request_body(legacy_change("budgets", true), id: id))
+    assert_response :ok
+    assert_equal ["budgets"], legacy["applied"]
+    assert_equal true, @user.finance_module_preferences.sole.sidebar_visible
+    assert_equal legacy, send_update(request_body(change("budgets", true), id: id)), "same choice, same digest"
+    send_update(request_body({module_key: "budgets", sidebar_visible: false, enabled: true, expected_revision: 1}, version: 1))
+    assert_response :unprocessable_entity, "the two names disagreeing is refused"
+    send_update(request_body({module_key: "budgets", expected_revision: 1}, version: 1))
+    assert_response :unprocessable_entity
   end
 
   test "bad payload and modules unavailable on the app write nothing" do
@@ -129,14 +163,14 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
     get finance_feature_library_path
     assert_select "#module-budgets input[name=expected_revision][value='0']"
     send_update(request_body(change("budgets", true)))
-    patch finance_feature_library_module_path("budgets"), params: {enabled: "0", expected_revision: 0}, as: :json
+    patch finance_feature_library_module_path("budgets"), params: {sidebar_visible: "0", expected_revision: 0}, as: :json
     assert_response :conflict
-    assert_equal true, response.parsed_body["enabled"]
+    assert_equal true, response.parsed_body["sidebar_visible"]
     assert_equal 1, response.parsed_body["revision"]
-    patch finance_feature_library_module_path("budgets"), params: {enabled: "0", expected_revision: 1}, as: :json
+    patch finance_feature_library_module_path("budgets"), params: {sidebar_visible: "0", expected_revision: 1}, as: :json
     assert_response :ok
     get PATH, headers: @auth
-    assert_equal false, response.parsed_body.dig("modules", "budgets", "enabled")
+    assert_equal false, response.parsed_body.dig("modules", "budgets", "sidebar_visible")
     assert_nil response.parsed_body.dig("modules", "budgets", "updated_by_device_id")
   end
 

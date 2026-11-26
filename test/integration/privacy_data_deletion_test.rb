@@ -68,7 +68,7 @@ class PrivacyDataDeletionTest < ActionDispatch::IntegrationTest
   end
 
   test "settings explain both actions, warn to export first and link to the export" do
-    enable_modules!(@user, "reports") # the export lives in Reports, an optional module
+    show_in_sidebar!(@user, "reports") # the export lives in Reports, an optional module
     sign_in @user
     get finance_settings_path
     assert_response :success

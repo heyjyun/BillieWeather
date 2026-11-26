@@ -503,6 +503,10 @@ form.bw-inline-edit :is(input, select) { max-width: 100%; }
 .bw-region-picker select[size] option { padding: 6px 8px; border-radius: var(--bw-radius-sm); }
 .bw-region-picker [data-region-search-empty] { color: var(--bw-color-negative-text); }
 .bw-settings-stack { display: grid; gap: 20px; max-width: 720px; }
+.bw-settings-index { max-width: 720px; margin: 0 0 16px; }
+.bw-settings-index ul { display: flex; flex-wrap: wrap; gap: 6px 14px; list-style: none; margin: 0; padding: 0; font-size: var(--bw-font-size-sm); }
+.bw-settings-index a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.bw-inline-links { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; margin: 0 0 16px; padding: 0; }
 .bw-settings-stack .bw-panel h2 { margin-bottom: 4px; }
 .bw-settings-stack .bw-panel > p { margin-bottom: 16px; font-size: var(--bw-font-size-sm); }
 .bw-export-fieldset { border: 0; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; }
@@ -1194,7 +1198,9 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 @media (max-width: 760px) { .bw-chat-message { max-width: 100%; } .bw-chat-input-row textarea { font-size: 16px; } }
 
 /* ---------------------------------------------------------------- Feature Library (Phase 1a) */
-.bw-module-nav { display: grid; gap: 2px; }
+.bw-module-nav { display: flex; flex-direction: column; min-height: 0; gap: 2px; }
+.bw-business-nav { display: grid; min-height: 0; gap: 2px; overflow-y: auto; margin-inline: -12px; padding-inline: 12px; scrollbar-width: thin; }
+.bw-module-nav > .bw-nav-link, .bw-module-nav > .bw-nav-divider { flex-shrink: 0; }
 .bw-nav-divider { display: block; height: 1px; margin: 10px 12px; background: var(--bw-color-sidebar-border); }
 .bw-section-tabs { display: grid; gap: 8px; margin: -4px 0 22px; }
 .bw-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--bw-color-border); scrollbar-width: none; }
@@ -1255,7 +1261,9 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-empty-actions form { margin: 0; }
 @media (max-width: 760px) {
   /* Phone: the module list is the fixed bottom bar (see .bw-nav above), one row, Settings last. */
-  .bw-module-nav { display: flex; }
+  .bw-module-nav { flex-direction: row; overflow: visible; }
+  .bw-business-nav { display: flex; flex: 2 1 0; min-width: 0; overflow: auto hidden; margin: 0; padding: 0; scrollbar-width: none; }
+  .bw-module-nav > .bw-nav-link { flex: 1 0 78px; }
   .bw-nav-divider { display: none; }
   .bw-capability-grid { grid-template-columns: minmax(0, 1fr); }
   .bw-library-toolbar { flex-direction: column; align-items: stretch; }

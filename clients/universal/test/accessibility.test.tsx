@@ -5,7 +5,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { migrate, openInShell, enableAllModulesByDefault } from "./helpers";
+import { migrate, openInShell, showAllModulesInSidebar } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 
 const files = new Map<string, ReturnType<typeof sqljsDriver>>();
@@ -35,7 +35,7 @@ const { I18nProvider, MESSAGES } = await import("../src/i18n");
 const { Login } = await import("../src/pages/Login");
 const { AccountProvider } = await import("../src/hooks/useAccount");
 
-beforeEach(() => { enableAllModulesByDefault();
+beforeEach(() => { showAllModulesInSidebar();
   localStorage.clear(); sessionStorage.clear(); files.clear();
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => String(input).endsWith("/account")
     ? new Response(JSON.stringify({ account: { email: "m@example.com", nickname: null, locale: "en", time_zone: null, usage_region: "US", registered_at: null, badges: [], owner_id: "12345678-1234-4123-8123-123456789abc" } }), { status: 200 })
@@ -55,7 +55,7 @@ async function openBook() {
   sessionStorage.setItem("billie.token", "tok");
   render(<App />);
   await screen.findByRole("navigation");
-  await click(screen.getByRole("button", { name: "Manual" }));
+  await click(screen.getByRole("button", { name: "Manual Accounting" }));
   await nav("Accounts");
   await screen.findByRole("heading", { name: "Accounts" });
   fireEvent.change(screen.getByLabelText(/^Book currency/), { target: { value: "USD" } });

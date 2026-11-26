@@ -112,6 +112,7 @@ Rails.application.routes.draw do
     resource :profile, only: :update
     # Feature Library (Settings › Feature Library): which modules the sidebar shows. View preferences only.
     get "settings/features", to: "feature_library#show", as: :feature_library
+    post "settings/features/reset", to: "feature_library#reset", as: :reset_feature_library
     patch "settings/features/:id", to: "feature_library#update", as: :feature_library_module, constraints: {id: /[a-z_]{2,40}/}
     # Transactions › Add & Sync: every way to bring transactions in (links to the existing tools).
     get "add", to: "add_sync#show", as: :add_sync
@@ -121,6 +122,7 @@ Rails.application.routes.draw do
       patch :database_name
       patch :password
       delete :sessions
+      delete "rules/:rule_id", action: :remove_rule, as: :remove_rule
       patch :supporter_recognition
       post :password_reset
     end

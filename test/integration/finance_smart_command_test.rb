@@ -178,10 +178,8 @@ class FinanceSmartCommandTest < ActionDispatch::IntegrationTest
       execute(key)
       assert_equal path, response.parsed_body.dig("data", "redirect"), key
     end
-    # The redirect target must be a working page, not a "turned off" one. Forecast is optional.
-    get finance_forecast_path
-    assert_module_disabled("forecast")
-    enable_modules!(@user, "forecast")
+    # The redirect target is a working page for every account, whether or not Forecast is in the sidebar.
+    refute Finance::ModuleCatalog.sidebar_visible?("forecast", Finance::ModuleCatalog.choices_for(@user))
     get finance_forecast_path
     assert_module_page("forecast")
     elsewhere = plan(:open_transactions)

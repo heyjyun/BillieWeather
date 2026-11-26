@@ -6,6 +6,7 @@ import { universalEs } from "./universal";
 import { commandEs } from "./command";
 import { receiptEs } from "./receipt";
 import { modulesEs } from "./modules";
+import { settingsHubEs } from "./settingsHub";
 import { welcomeEs } from "./welcome";
 import { registerEs } from "./register";
 
@@ -291,6 +292,7 @@ export const es: Messages = {
   command: commandEs,
   receipt: receiptEs,
   modules: modulesEs,
+  settingsHub: settingsHubEs,
   welcome: welcomeEs,
   register: registerEs,
   personal: personal["es"],

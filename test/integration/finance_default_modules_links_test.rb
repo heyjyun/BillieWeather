@@ -1,8 +1,7 @@
 require "test_helper"
 
-# A person with the default Feature Library (only Transactions and AI Assistant on) never meets a
-# link that ends on a "module is turned off" page. Export, which lives in the optional Reports
-# module, is still one press away from Settings and the deletion dialogs.
+# A person with the default sidebar (Transactions and AI Insight) can still use every built module:
+# links on the dashboard and in Settings lead to real pages, and export is one link away.
 class FinanceDefaultModulesLinksTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
@@ -17,8 +16,8 @@ class FinanceDefaultModulesLinksTest < ActionDispatch::IntegrationTest
     sign_in @user
   end
 
-  test "no link on the dashboard or in settings opens a turned-off module" do
-    assert_equal %w[transactions ai_assistant], Finance::ModuleCatalog.enabled_modules(Finance::ModuleCatalog.choices_for(@user)).map(&:id)
+  test "every link on the dashboard and in settings opens a working page for a default account" do
+    assert_equal %w[transactions ai_assistant], Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user)).map(&:id)
     hrefs = [finance_dashboard_path, finance_settings_path].flat_map do |page|
       get page
       assert_module_page("transactions") if page == finance_dashboard_path
@@ -27,32 +26,22 @@ class FinanceDefaultModulesLinksTest < ActionDispatch::IntegrationTest
     assert_operator hrefs.size, :>, 5, "the crawl found the pages' links"
     hrefs.each do |href|
       get href
-      next unless response.media_type == "text/html" && response.successful?
-      disabled = css_select("#module-disabled").first
-      assert_nil disabled, "#{href} opens the turned-off \"#{disabled && disabled["data-module"]}\" module for a default account"
+      next unless response.media_type == "text/html"
+      refute_equal 403, response.status, href
+      refute_equal 404, response.status, href
+      assert_select "#module-disabled", {count: 0}, href
     end
   end
 
-  test "export before deleting: one press turns Reports on and opens the export" do
+  test "export before deleting is a plain link to the export, whatever the sidebar shows" do
     get finance_settings_path
-    forms = css_select("form[data-export-link='turn-on']")
-    assert_equal 3, forms.size, "settings and both deletion dialogs offer the export"
-    assert_select "a[href='#{finance_report_path}']", count: 0
-    form = forms.first
-    params = css_select(form, "input[type=hidden]").to_h { |input| [input["name"], input["value"]] }
-    assert_equal finance_report_path, params["return_to"]
-    patch form["action"], params: params.except("_method", "authenticity_token")
-    assert_redirected_to finance_report_path
-    follow_redirect!
-    assert_module_page("reports")
-
-    get finance_settings_path
-    assert_select "#settings-privacy a[href='#{finance_report_path}']"
+    assert_select "a[data-export-link='report'][href='#{finance_report_path}']", count: 3
     assert_select "form[data-export-link='turn-on']", count: 0
+    get finance_report_path
+    assert_module_page("reports")
   end
 
-  test "when the optional modules are on, the dashboard links to them as before" do
-    enable_modules!(@user, %w[reports forecast categories])
+  test "the dashboard links to Reports, Forecast and Categories for a default account" do
     get finance_dashboard_path
     assert_select "#dashboard-export-report"
     assert_select "a[href=?]", finance_forecast_path(edit: "1", anchor: "balance")
@@ -60,11 +49,11 @@ class FinanceDefaultModulesLinksTest < ActionDispatch::IntegrationTest
     assert_select "#dashboard-spending-mix .bw-mix-list a"
   end
 
-  test "with them off, the dashboard shows the same figures without those links" do
+  test "showing those modules in the sidebar changes only the sidebar" do
     get finance_dashboard_path
-    assert_select "#dashboard-export-report", count: 0
-    assert_select "a[href^='#{finance_forecast_path}']", count: 0
-    assert_select "#dashboard-spending-mix a", count: 0
-    assert_select "#dashboard-spending-mix .bw-mix-name", minimum: 1
+    before = css_select("main a").map { |link| link["href"] }.sort
+    show_in_sidebar!(@user, %w[reports forecast categories])
+    get finance_dashboard_path
+    assert_equal before, css_select("main a").map { |link| link["href"] }.sort
   end
 end

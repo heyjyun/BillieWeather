@@ -1,6 +1,6 @@
 module Finance
   class SettingsController < BaseController
-    before_action :load_user
+    before_action :load_user, except: :remove_rule
 
     def show
     end
@@ -88,10 +88,16 @@ module Finance
       redirect_to finance_settings_path, status: :see_other, alert: t("billie.account.password_reset_failed")
     end
 
+    def remove_rule
+      MerchantRule.where(user_id: current_user.id).find(params[:rule_id]).destroy!
+      redirect_to finance_settings_path(anchor: "settings-rules"), status: :see_other
+    end
+
     private
 
     def load_user
       @user = current_user
+      @merchant_rules = MerchantRule.where(user_id: @user.id).order(:merchant_key, :income)
       @account_deletion = AccountDeletion.new(@user)
       @database = DatabaseOverview.new(@user)
       # What the person's apps reported about their local databases (display only).

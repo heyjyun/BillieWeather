@@ -68,9 +68,10 @@ export function makePdf(pages: Array<Array<string | Array<[number, string]>>>): 
 }
 
 /**
- * Opens a page from the app shell the way a person would since the Feature Library (Phase 1a):
- * a sidebar module when it is there, otherwise through Transactions › Add & Sync or Settings.
- * Labels are the English (or Simplified Chinese) names tests used before the change.
+ * Opens a page from the app shell the way a person would: a sidebar entry when it is there, otherwise
+ * through Transactions › Add & Sync or Settings. A module that is not in the sidebar still works; it is
+ * opened from Settings › Feature Library. Labels are the English (or Simplified Chinese) names tests
+ * used before the Feature Library.
  */
 const SHELL_ROUTES: Record<string, string[]> = {
   Import: ["Transactions", "Add & Sync", "Import statements"],
@@ -83,8 +84,8 @@ const SHELL_ROUTES: Record<string, string[]> = {
   "Budgets & schedules": ["Budgets"],
   "Merchants & tags": ["Categories & Tags", "Merchants & tags"],
   "Manual home": ["Transactions", "Add & Sync", "Manual bookkeeping"],
-  Data: ["Settings", "Data, sync & backups"],
-  数据管理: ["设置", "数据、同步与备份"],
+  Data: ["Settings", "Open database manager"],
+  数据管理: ["设置", "打开数据库管理"],
   导入: ["交易", "添加与同步", "导入账单"],
 };
 
@@ -95,20 +96,8 @@ const SHELL_MODULES: Record<string, string> = {
   Reports: "reports",
 };
 
-/**
- * Thrown when a test tries to open a page whose module is turned off for the test account. A
- * hidden module is not a missing feature: the page exists, the account just has not turned it on.
- */
-export class ModuleDisabledInTest extends Error {
-  constructor(readonly label: string, readonly moduleId: string) {
-    super(`openInShell: "${label}" belongs to the "${moduleId}" module, which is turned off for this test account `
-      + `(optional modules are off by default). Call enableAllModulesByDefault() in beforeEach, or turn it on in the Feature Library first.`);
-    this.name = "ModuleDisabledInTest";
-  }
-}
-
 export async function openInShell(label: string): Promise<void> {
-  const { fireEvent, screen, within } = await import("@testing-library/react");
+  const { act, fireEvent, screen, waitFor, within } = await import("@testing-library/react");
   const navigation = await screen.findByRole("navigation");
   const sidebar = within(navigation);
   const direct = sidebar.queryByRole("button", { name: label });
@@ -116,25 +105,37 @@ export async function openInShell(label: string): Promise<void> {
     fireEvent.click(direct);
     return;
   }
+  const route = SHELL_ROUTES[label] ?? [];
   const moduleId = SHELL_MODULES[label];
-  if (moduleId && !navigation.querySelector(`[data-module="${moduleId}"]`)) throw new ModuleDisabledInTest(label, moduleId);
-  const route = SHELL_ROUTES[label];
-  if (!route) throw new Error(`openInShell: no route to "${label}"`);
-  const [first, ...rest] = route;
-  fireEvent.click(sidebar.getByRole("button", { name: first }));
+  let steps = route;
+  if (moduleId && !navigation.querySelector(`[data-module="${moduleId}"]`)) {
+    // Not in the sidebar: Settings › Open Feature Library › the module's Open button.
+    await act(async () => { fireEvent.click(sidebar.getByRole("button", { name: "Settings" })); });
+    // Settings and the library are loaded on first use, which can take a moment in a cold test run.
+    const library = await screen.findByRole("button", { name: "Open Feature Library" }, { timeout: 5000 }); // waited outside act() so the page can render
+    await act(async () => { fireEvent.click(library); });
+    const card = await waitFor(() => { const found = document.querySelector<HTMLElement>(`#feature-library [data-module="${moduleId}"]`); if (!found) throw new Error("no card"); return found; }, { timeout: 5000 });
+    await act(async () => { fireEvent.click(within(card).getByRole("button", { name: /^Open / })); });
+    steps = route.slice(1);
+  } else {
+    if (!route.length) throw new Error(`openInShell: no route to "${label}"`);
+    fireEvent.click(sidebar.getByRole("button", { name: route[0] }));
+    steps = route.slice(1);
+  }
   // The shell's tabs come before the page in the document, so the first match is the tab.
-  for (const step of rest) fireEvent.click((await screen.findAllByRole("button", { name: step }))[0]);
+  for (const step of steps) fireEvent.click((await screen.findAllByRole("button", { name: step }))[0]);
 }
 
 /**
- * Optional modules are off by default in the app. Tests that exercise them (Accounts, Categories,
- * Planning, Reports…) call this in beforeEach: an account with no stored choice gets every available
- * module on, as if the person had turned them on in Settings › Feature Library. Stored choices win.
+ * Every available module works in the app for every account; only the sidebar starts minimal. Tests
+ * that navigate by sidebar buttons (Accounts, Categories, Planning, Reports…) call this in beforeEach:
+ * an account with no stored choice gets every available module in its sidebar, as if the person had
+ * chosen them in Settings › Feature Library. Stored choices win.
  */
 const realGetItem = typeof Storage === "undefined" ? null : Storage.prototype.getItem;
 
-export function enableAllModulesByDefault(): void {
-  const allOn = JSON.stringify({ format: 1, modules: Object.fromEntries(MODULES.filter((module) => isAvailable(module, "app")).map((module) => [module.id, { enabled: true, changedAt: "2026-11-23T00:00:00.000Z" }])) });
+export function showAllModulesInSidebar(): void {
+  const allOn = JSON.stringify({ format: 1, modules: Object.fromEntries(MODULES.filter((module) => isAvailable(module, "app")).map((module) => [module.id, { sidebarVisible: true, changedAt: "2026-11-23T00:00:00.000Z" }])) });
   vi.spyOn(Storage.prototype, "getItem").mockImplementation(function (this: Storage, key: string) {
     const value = realGetItem!.call(this, key);
     return value === null && key.startsWith("billie.modules.v1:") ? allOn : value;

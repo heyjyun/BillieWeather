@@ -15,8 +15,12 @@ zh-CN:
         reconciliation: 对账
         review_history: 复核与历史
       names:
+        overview: "财务概览"
+        import: "导入"
+        receipts: "收据"
+        data_management: "数据管理"
         transactions: 交易
-        ai_assistant: AI 助手
+        ai_assistant: "AI 洞察"
         ledgers: 账本
         accounts: 账户与资产
         categories: 类别与标签
@@ -28,6 +32,10 @@ zh-CN:
         forecast: 现金流预测
         multi_currency: 多币种
       descriptions:
+        overview: "查看余额和支出趋势。"
+        import: "导入并核对银行账单。"
+        receipts: "采集收据并核对匹配结果。"
+        data_management: "管理本地数据库、备份和传输。"
         transactions: 总览、每一笔交易，以及添加或导入新交易。
         ai_assistant: 洞察分析、关于你财务的提问、报税准备，以及整理记录的帮助。
         ledgers: 为个人、生意或共同开支分开记账。
@@ -41,44 +49,43 @@ zh-CN:
         forecast: 未来 30、60 或 90 天的预计余额。
         multi_currency: 多种货币的账户，在报表中换算。
       status:
-        available: 可用
-        coming_soon: 即将推出
-        enabled: 已开启
-        disabled: 已关闭
-        core: 核心
+        available: "可用"
+        coming_soon: "即将推出"
+        unsupported: "当前平台不支持"
+        in_sidebar: "在侧边栏"
+        hidden: "已隐藏"
+        core: "核心"
       library:
+        reset: "恢复默认侧边栏"
+        reset_saved: "已恢复默认侧边栏。"
         stale: 其他设备已更改此偏好。这里显示最新选择，你可以再次更改。
         synced_note: 模块选择将在已登录的 BillieWeather 设备之间同步。
         nav: 功能库
         eyebrow: 设置
         title: 功能库
-        intro: 选择侧边栏中显示的内容。从简单开始，需要时再添加工具。
+        intro: "BillieWeather 的全部功能。所有可用功能都能直接使用；你可以选择哪些显示在侧边栏。"
         filters_label: 显示模块
         filters:
-          all: 全部
-          enabled: 已开启
-          available: 可用
-          coming_soon: 即将推出
-        toggle_label: 在侧边栏显示%{name}
-        turn_on: 开启
-        turn_off: 关闭
+          all: "全部"
+          sidebar: "在侧边栏"
+          hidden: "已隐藏"
+          unavailable: "暂不可用"
+        toggle_label: "在侧边栏显示%{name}"
         open: 打开
-        saved_on: "%{name}已开启，并显示在侧边栏。"
-        saved_off: "%{name}已关闭。数据会保留，随时可以重新开启。"
-        coming_soon_note: 尚未推出。在功能可用之前无法开启。
-        settings_note: 设置始终显示在侧边栏，无法关闭。
-        data_note: 关闭模块只会隐藏它。不会删除任何数据，自动运行的功能（如周期记账和小票匹配）也会照常运行。
+        saved_shown: "%{name}已显示在侧边栏。"
+        saved_hidden: "%{name}已从侧边栏隐藏。功能照常可用，可从功能库打开。"
+        coming_soon_note: "尚在开发中。完成后会出现在这里。"
+        unsupported_note: "已在 BillieWeather 应用中提供，网站暂不支持。"
+        hidden_still_works: "未显示在侧边栏，功能照常可用"
+        settings_note: "设置始终显示在侧边栏。"
+        data_note: "隐藏功能只会移除它的侧边栏入口。功能照常可用，不会删除任何数据，自动运行的功能（如周期记账和小票匹配）也会照常运行。"
         sync_note: 这些选择保存在你在本网站的账户中。BillieWeather 应用暂时各自保存自己的选择。
         empty: 没有符合此筛选的模块。
         open_library: 打开功能库
         errors:
-          coming_soon: "%{name}尚未推出。"
+          not_available: "%{name}在此处暂不可用。"
+          invalid: "请选择是否在侧边栏显示%{name}。"
           unknown: 该模块不存在。
-      disabled:
-        eyebrow: 功能库
-        title: "%{name}已关闭"
-        body: 此模块已从侧边栏隐藏。你的数据仍在，没有任何改动。开启后即可再次使用此页面。
-        turn_on: 开启%{name}
       add_sync:
         title: 添加与同步
         intro: 导入交易的所有方式。所有来源都经过同样的检查，不会重复计算。
@@ -104,3 +111,14 @@ zh-CN:
           open: 添加一笔
           manual: 手动记账
           later: 语音记账、自然语言记账和 Siri 快捷指令即将推出。
+    settings_hub:
+      appearance: "外观与语言"
+      automation: "AI 与自动化"
+      data_tools: "导入、导出与数据"
+      sync_backup: "同步与备份"
+      rules: "交易分类规则"
+      remove_rule: "移除"
+      index_label: "设置分区"
+      database: "数据库"
+      in_sidebar: "侧边栏中"
+      hidden_intro: "可用但未显示在侧边栏，可直接打开："

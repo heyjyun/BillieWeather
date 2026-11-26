@@ -15,8 +15,12 @@ es:
         reconciliation: Conciliación
         review_history: Revisión e historial
       names:
+        overview: "Resumen financiero"
+        import: "Importar"
+        receipts: "Recibos"
+        data_management: "Gestión de datos"
         transactions: Movimientos
-        ai_assistant: Asistente de IA
+        ai_assistant: "Perspectiva de IA"
         ledgers: Libros
         accounts: Cuentas y activos
         categories: Categorías y etiquetas
@@ -28,6 +32,10 @@ es:
         forecast: Previsión de flujo de caja
         multi_currency: Varias monedas
       descriptions:
+        overview: "Consulta los saldos y las tendencias de gasto."
+        import: "Importa y revisa extractos bancarios."
+        receipts: "Captura recibos y revisa las coincidencias."
+        data_management: "Administra bases de datos locales, copias y transferencias."
         transactions: Tu resumen, todos tus movimientos y cómo añadir o importar nuevos.
         ai_assistant: Análisis, preguntas sobre tu dinero, preparación de impuestos y ayuda para ordenar tus registros.
         ledgers: Libros separados para gastos personales, de negocio o compartidos.
@@ -41,44 +49,43 @@ es:
         forecast: Tu saldo previsto para los próximos 30, 60 o 90 días.
         multi_currency: Cuentas en varias monedas, convertidas para los informes.
       status:
-        available: Disponible
-        coming_soon: Próximamente
-        enabled: Activado
-        disabled: Desactivado
-        core: Básico
+        available: "Disponible"
+        coming_soon: "Próximamente"
+        unsupported: "No disponible en esta plataforma"
+        in_sidebar: "En la barra lateral"
+        hidden: "Oculto"
+        core: "Básico"
       library:
+        reset: "Restaurar la barra lateral predeterminada"
+        reset_saved: "Se restauró la barra lateral predeterminada."
         stale: Este ajuste cambió en otro dispositivo. Se muestra la opción actual. Puedes volver a cambiarla aquí.
         synced_note: Las opciones de módulos se sincronizan con tus dispositivos que tienen la sesión iniciada en BillieWeather.
         nav: Biblioteca de funciones
         eyebrow: Ajustes
         title: Biblioteca de funciones
-        intro: Elige qué aparece en tu barra lateral. Empieza con lo sencillo y añade herramientas cuando las necesites.
+        intro: "Todo lo que BillieWeather puede hacer. Cada función disponible funciona desde el primer momento; elige cuáles aparecen en tu barra lateral."
         filters_label: Mostrar módulos
         filters:
-          all: Todos
-          enabled: Activados
-          available: Disponibles
-          coming_soon: Próximamente
-        toggle_label: Mostrar %{name} en la barra lateral
-        turn_on: Activar
-        turn_off: Desactivar
+          all: "Todos"
+          sidebar: "En la barra lateral"
+          hidden: "Ocultos"
+          unavailable: "Aún no disponibles"
+        toggle_label: "Mostrar %{name} en la barra lateral"
         open: Abrir
-        saved_on: "%{name} está activado y en tu barra lateral."
-        saved_off: "%{name} está desactivado. Sus datos se conservan; puedes activarlo cuando quieras."
-        coming_soon_note: Aún no está disponible. No se puede activar hasta que funcione.
-        settings_note: Ajustes siempre está en la barra lateral y no se puede desactivar.
-        data_note: Desactivar un módulo solo lo oculta. No se borra nada, y lo que funciona de forma automática (como los movimientos recurrentes y la conciliación de recibos) sigue funcionando.
+        saved_shown: "%{name} ahora aparece en tu barra lateral."
+        saved_hidden: "%{name} está oculto en tu barra lateral. Sigue funcionando: ábrelo desde la biblioteca de funciones."
+        coming_soon_note: "Aún en desarrollo. Aparecerá aquí cuando funcione."
+        unsupported_note: "Disponible en la aplicación BillieWeather; el sitio web aún no lo admite."
+        hidden_still_works: "No está en tu barra lateral, pero funciona con normalidad"
+        settings_note: "Ajustes siempre está en la barra lateral."
+        data_note: "Ocultar una función solo quita su entrada de la barra lateral. Sigue funcionando, no se borra nada y lo que funciona de forma automática (como los movimientos recurrentes y la conciliación de recibos) sigue funcionando."
         sync_note: Estas opciones se guardan en tu cuenta de este sitio web. Las aplicaciones de BillieWeather guardan sus propias opciones por ahora.
         empty: Ningún módulo coincide con este filtro.
         open_library: Abrir la biblioteca de funciones
         errors:
-          coming_soon: "%{name} aún no está disponible."
+          not_available: "%{name} aún no está disponible aquí."
+          invalid: "Elige si mostrar %{name} en la barra lateral."
           unknown: Ese módulo no existe.
-      disabled:
-        eyebrow: Biblioteca de funciones
-        title: "%{name} está desactivado"
-        body: Este módulo está oculto en tu barra lateral. Tus datos siguen aquí y no se ha cambiado nada. Actívalo para volver a usar esta página.
-        turn_on: Activar %{name}
       add_sync:
         title: Añadir y sincronizar
         intro: Todas las formas de incorporar movimientos. Todo pasa por las mismas comprobaciones, así que nada se cuenta dos veces.
@@ -104,3 +111,14 @@ es:
           open: Añadir un movimiento
           manual: Contabilidad manual
           later: La entrada por voz, en lenguaje natural y los Atajos de Siri llegarán más adelante.
+    settings_hub:
+      appearance: "Apariencia e idioma"
+      automation: "IA y automatización"
+      data_tools: "Importación, exportación y datos"
+      sync_backup: "Sincronización y copias de seguridad"
+      rules: "Reglas de clasificación de movimientos"
+      remove_rule: "Quitar"
+      index_label: "Secciones de ajustes"
+      database: "Base de datos"
+      in_sidebar: "En tu barra lateral"
+      hidden_intro: "Disponibles pero no en tu barra lateral. Ábrelas directamente:"

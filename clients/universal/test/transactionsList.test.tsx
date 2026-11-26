@@ -2,7 +2,7 @@
 // A long ledger opens quickly: rows are added in steps, while counts, search and "select all" cover everything.
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { migrate, openInShell, enableAllModulesByDefault } from "./helpers";
+import { migrate, openInShell, showAllModulesInSidebar } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 
 const ROWS = Number(process.env.BENCH_ROWS ?? 450);
@@ -30,7 +30,7 @@ vi.mock("../src/services/platform", async () => {
 const { default: App } = await import("../src/App");
 
 beforeEach(() => {
-  enableAllModulesByDefault(); localStorage.clear(); sessionStorage.clear(); files.clear();
+  showAllModulesInSidebar(); localStorage.clear(); sessionStorage.clear(); files.clear();
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => String(input).endsWith("/account")
     ? new Response(JSON.stringify({ account: { email: "m@example.com", nickname: null, locale: "en", time_zone: null, usage_region: "US", registered_at: null, badges: [], owner_id: "12345678-1234-4123-8123-123456789abc" } }), { status: 200 })
     : new Response(JSON.stringify({ currency: null, version: "0", statement_count: 0, transaction_count: 0, statements: [], transactions: [], next_after_id: null, rules: [], categories: [] }), { status: 200 }));
@@ -43,7 +43,7 @@ it("shows a long list in steps and still searches and selects all of it", async 
   sessionStorage.setItem("billie.token", "tok");
   render(<App />);
   await screen.findByRole("navigation");
-  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Manual" })); });
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Manual Accounting" })); });
   const start = performance.now();
   await openInShell("All Transactions");
   await screen.findByText(`${ROWS} of ${ROWS} transactions`, { exact: false });
@@ -65,7 +65,7 @@ it("says so when a category change or an exclusion could not be saved", async ()
   sessionStorage.setItem("billie.token", "tok");
   render(<App />);
   await screen.findByRole("navigation");
-  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Manual" })); });
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Manual Accounting" })); });
   await openInShell("All Transactions");
   await screen.findByText(`${ROWS} of ${ROWS} transactions`, { exact: false });
   const driver = files.get("billieweather.db")!;

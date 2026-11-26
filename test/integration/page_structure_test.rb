@@ -3,7 +3,7 @@ require "test_helper"
 # Every signed-in page: one main heading, and no id used twice (labels and scripts would pick the wrong one).
 class PageStructureTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
-  include BillieModules::SignInWithAllModules
+  include BillieModules::SignInWithFullSidebar
 
   PAGES = %w[/app /app/accounts /app/accounts/new /app/activity /app/add /app/budgets /app/categories /app/entries/new
     /app/forecast /app/insights /app/manual /app/receipts /app/reconciliation /app/recurring /app/recurring/new /app/report

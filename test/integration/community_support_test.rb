@@ -272,7 +272,9 @@ class CommunitySupportTest < ActionDispatch::IntegrationTest
       [@stranger, @admin].each do |user|
         sign_in user
         get finance_settings_path, params: {locale: "en"}
-        assert_select ".bw-nav a[href='#{finance_dashboard_path}']"
+        assert_select "#module-nav a[href='#{finance_transactions_path}']", text: "Transactions"
+        assert_select "#module-nav a[href='#{finance_insights_path}']", text: "AI Insight"
+        assert_select "#module-nav a[href='#{finance_settings_path}']", text: "Settings"
         assert_select ".bw-nav a[href='#{billie_features_path}']", count: 0
         assert_select ".bw-nav a[href='#{admin_community_path}']", count: 0
         assert_select ".bw-nav a[href='#{admin_payment_methods_path}']", count: 0

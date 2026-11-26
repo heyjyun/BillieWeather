@@ -3,7 +3,7 @@
 // accounts -> new expense -> edit -> trash -> restore -> transfer -> budget -> backup button. Synthetic data only.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { migrate, openInShell, enableAllModulesByDefault } from "./helpers";
+import { migrate, openInShell, showAllModulesInSidebar } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 
 const files = new Map<string, ReturnType<typeof sqljsDriver>>();
@@ -30,7 +30,7 @@ vi.mock("../src/services/platform", async () => {
 
 const { default: App } = await import("../src/App");
 
-beforeEach(() => { enableAllModulesByDefault();
+beforeEach(() => { showAllModulesInSidebar();
   localStorage.clear(); sessionStorage.clear(); files.clear();
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => String(input).endsWith("/account")
     ? new Response(JSON.stringify({ account: { email: "m@example.com", nickname: null, locale: "en", time_zone: null, usage_region: "US", registered_at: null, badges: [], owner_id: "12345678-1234-4123-8123-123456789abc" } }), { status: 200 })
@@ -47,7 +47,7 @@ it("keeps a complete book by hand: accounts, an expense, edit, trash and restore
   render(<App />);
   await screen.findByRole("navigation");
   // The manual bookkeeping tools live in Manual Mode (see manualMode.test.tsx).
-  await click(screen.getByRole("button", { name: "Manual" }));
+  await click(screen.getByRole("button", { name: "Manual Accounting" }));
 
   // Accounts: choose the book currency, add checking and a card.
   await nav("Accounts");
@@ -145,6 +145,7 @@ it("waits for Save after a typed entry preview and opens a blank manual form by 
 
   await nav("Import");
   await click((await screen.findAllByRole("button", { name: "Add & Sync" }))[0]);
+  await screen.findByLabelText("Describe an expense or income");
   type("Describe an expense or income", "Spent 12.34 on Synthetic lunch");
   await click(screen.getByRole("button", { name: "Review typed entry" }));
   const form = await screen.findByRole("form", { name: "New entry" });

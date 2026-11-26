@@ -6,7 +6,7 @@ require_relative "../support/finance_pdf_fixture"
 class FinanceAccountBalancesTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
-  include BillieModules::SignInWithAllModules
+  include BillieModules::SignInWithFullSidebar
   include FinancePdfFixture
 
   setup do

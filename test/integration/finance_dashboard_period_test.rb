@@ -30,7 +30,7 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
 
   test "dashboard defaults to all imported dates and preserves the saved current balance" do
     # The spending-mix rows link to Categories & Tags, an optional module: turn it on like a person would.
-    enable_modules!(@user, "categories")
+    show_in_sidebar!(@user, "categories")
     get finance_dashboard_path
 
     assert_response :success

@@ -6,6 +6,8 @@
     <p><%= t("billie.modules.library.intro") %></p>
   </div>
 </div>
+<%# Every module, whether it works here, a way to open it, and whether it is in the sidebar. The switch
+    only changes the sidebar: an available module always opens, shown or hidden. %>
 <section class="bw-library" id="feature-library" data-feature-library data-filter="<%= @filter %>">
   <div class="bw-library-toolbar">
     <nav class="bw-segmented bw-library-filters" aria-label="<%= t("billie.modules.library.filters_label") %>">
@@ -13,42 +15,41 @@
         <%= link_to t("billie.modules.library.filters.#{filter}"), finance_feature_library_path(filter: (filter unless filter == "all")), class: (filter == @filter ? "is-active" : nil), "aria-current": ("true" if filter == @filter), data: {library_filter: filter} %>
       <% end %>
     </nav>
+    <%= button_to t("billie.modules.library.reset"), finance_reset_feature_library_path, form: {data: {turbo: false}}, class: "bw-button bw-button-outline bw-button-small" %>
     <p class="bw-sr-status" role="status" aria-live="polite" data-library-status></p>
   </div>
   <ul class="bw-library-grid" role="list">
     <% @modules.each do |definition| %>
       <% available = definition.available? %>
-      <% on = module_enabled?(definition.id) %>
+      <% state = definition.availability_on %>
+      <% shown = module_in_sidebar?(definition.id) %>
       <% name = t("billie.modules.names.#{definition.id}") %>
-      <% hidden = (@filter == "enabled" && !on) || (@filter == "available" && !available) || (@filter == "coming_soon" && available) %>
-      <li class="bw-library-card<%= ' is-on' if on %><%= ' is-coming-soon' unless available %>" id="module-<%= definition.id %>" data-module="<%= definition.id %>" data-available="<%= available %>" data-enabled="<%= on %>"<%= ' hidden' if hidden %>>
+      <% hidden = (@filter == "sidebar" && !shown) || (@filter == "hidden" && (!available || shown)) || (@filter == "unavailable" && available) %>
+      <li class="bw-library-card<%= ' is-on' if shown %><%= ' is-coming-soon' unless available %>" id="module-<%= definition.id %>" data-module="<%= definition.id %>" data-availability="<%= state %>" data-available="<%= available %>" data-sidebar="<%= shown %>"<%= ' hidden' if hidden %>>
         <div class="bw-library-card-head">
           <span class="bw-library-icon"><%= finance_icon definition.icon, size: 22 %></span>
           <div class="bw-library-title">
             <h2 id="module-<%= definition.id %>-name"><%= name %></h2>
             <span class="bw-library-badges">
               <% if definition.core %><span class="bw-badge bw-badge-quiet"><%= t("billie.modules.status.core") %></span><% end %>
-              <span class="bw-badge <%= available ? 'bw-badge-available' : 'bw-badge-soon' %>"><%= t("billie.modules.status.#{available ? 'available' : 'coming_soon'}") %></span>
+              <span class="bw-badge <%= available ? 'bw-badge-available' : 'bw-badge-soon' %>" data-availability-badge><%= t("billie.modules.status.#{state}") %></span>
             </span>
           </div>
           <% if available %>
             <%= form_with url: finance_feature_library_module_path(definition.id), method: :patch, class: "bw-library-toggle", data: {turbo: false, library_toggle: definition.id} do |form| %>
               <%= hidden_field_tag :filter, @filter, id: nil %>
-              <%= hidden_field_tag :enabled, on ? "0" : "1", id: nil %>
+              <%= hidden_field_tag :sidebar_visible, shown ? "0" : "1", id: nil %>
               <%= hidden_field_tag :expected_revision, module_revision(definition.id), id: nil %>
-              <button type="submit" class="bw-switch" role="switch" aria-checked="<%= on %>" aria-labelledby="module-<%= definition.id %>-name" aria-describedby="module-<%= definition.id %>-desc" title="<%= t("billie.modules.library.toggle_label", name: name) %>">
+              <button type="submit" class="bw-switch" role="switch" aria-checked="<%= shown %>" aria-labelledby="module-<%= definition.id %>-toggle" aria-describedby="module-<%= definition.id %>-desc" title="<%= t("billie.modules.library.toggle_label", name: name) %>">
+                <span class="bw-sr-only" id="module-<%= definition.id %>-toggle"><%= t("billie.modules.library.toggle_label", name: name) %></span>
                 <span class="bw-switch-track" aria-hidden="true"><span class="bw-switch-thumb"></span></span>
-                <span class="bw-switch-text" data-on="<%= t("billie.modules.status.enabled") %>" data-off="<%= t("billie.modules.status.disabled") %>"><%= t("billie.modules.status.#{on ? 'enabled' : 'disabled'}") %></span>
+                <span class="bw-switch-text" data-on="<%= t("billie.modules.status.in_sidebar") %>" data-off="<%= t("billie.modules.status.hidden") %>"><%= t("billie.modules.status.#{shown ? 'in_sidebar' : 'hidden'}") %></span>
               </button>
             <% end %>
-          <% else %>
-            <span class="bw-switch is-disabled" role="switch" aria-checked="false" aria-disabled="true" aria-labelledby="module-<%= definition.id %>-name" aria-describedby="module-<%= definition.id %>-desc">
-              <span class="bw-switch-track" aria-hidden="true"><span class="bw-switch-thumb"></span></span>
-            </span>
           <% end %>
         </div>
-        <p id="module-<%= definition.id %>-desc" class="bw-library-desc"><%= t("billie.modules.descriptions.#{definition.id}") %><% unless available %> <span class="bw-library-note"><%= t("billie.modules.library.coming_soon_note") %></span><% end %></p>
-        <% if available %><p class="bw-library-open"<%= ' hidden' unless on %> data-library-open><%= link_to t("billie.modules.library.open"), public_send("#{definition.route}_path"), class: "bw-text-link" %></p><% end %>
+        <p id="module-<%= definition.id %>-desc" class="bw-library-desc"><%= t("billie.modules.descriptions.#{definition.id}") %><% unless available %> <span class="bw-library-note"><%= t("billie.modules.library.#{state}_note") %></span><% end %></p>
+        <% if available %><p class="bw-library-open" data-library-open><%= link_to t("billie.modules.library.open"), public_send("#{definition.route}_path"), class: "bw-text-link" %><span class="bw-caption" data-hidden-note<%= ' hidden' if shown %>> · <%= t("billie.modules.library.hidden_still_works") %></span></p><% end %>
       </li>
     <% end %>
   </ul>

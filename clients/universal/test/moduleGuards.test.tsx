@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
-// A module that is turned off is not a missing feature. Tests must be able to tell the two apart:
-// openInShell says so explicitly, and a page rendered without the app shell sees the catalog
-// defaults (as a new person does), not "everything on".
+// A module that is not in the sidebar still works: openInShell reaches it through Settings › Feature
+// Library, the way a person would, and a page rendered without the app shell sees the catalog
+// defaults (as a new person does): a minimal sidebar, every available module usable.
 import { cleanup, render, screen } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { enableAllModulesByDefault, migrate, ModuleDisabledInTest, openInShell } from "./helpers";
+import { showAllModulesInSidebar, migrate, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { I18nProvider } from "../src/i18n";
 import { useModules } from "../src/hooks/useModules";
@@ -38,28 +38,30 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
-it("openInShell reports a turned-off module instead of a missing button", async () => {
+it("openInShell opens a module that is not in the sidebar through the Feature Library", async () => {
   render(<App />);
   await screen.findByRole("navigation");
-  const attempt = openInShell("Categories");
-  await expect(attempt).rejects.toBeInstanceOf(ModuleDisabledInTest);
-  await expect(openInShell("Reports")).rejects.toThrow(/"reports" module, which is turned off for this test account/);
-  // Pages of default modules still open.
+  await openInShell("Categories");
+  expect(await screen.findByRole("heading", { name: "Categories", level: 1 })).toBeTruthy();
+  await openInShell("Reports");
+  expect(await screen.findByRole("heading", { name: "Reports", level: 1 })).toBeTruthy();
+  // Pages of sidebar modules open directly.
   await openInShell("All Transactions");
+  expect(document.getElementById("module-unavailable")).toBeNull();
 });
 
-it("with the optional modules turned on, the same page opens", async () => {
-  enableAllModulesByDefault();
+it("with every module in the sidebar, the same page opens from the sidebar", async () => {
+  showAllModulesInSidebar();
   render(<App />);
   await openInShell("Categories");
   expect(await screen.findByRole("heading", { name: "Categories", level: 1 })).toBeTruthy();
 });
 
-it("outside the app shell, pages see the catalog defaults, not every module", () => {
+it("outside the app shell, pages see the catalog defaults: a minimal sidebar, every built module usable", () => {
   function Probe() {
-    const { enabled, enabledList } = useModules();
-    return <p data-testid="probe">{enabledList.map((module) => module.id).join(",")}|{String(enabled("categories"))}|{String(enabled("ledgers"))}</p>;
+    const { usable, inSidebar, sidebarList } = useModules();
+    return <p data-testid="probe">{sidebarList.map((module) => module.id).join(",")}|{String(inSidebar("categories"))}|{String(usable("categories"))}|{String(usable("ledgers"))}</p>;
   }
   render(<I18nProvider initial="en"><Probe /></I18nProvider>);
-  expect(screen.getByTestId("probe").textContent).toBe("transactions,ai_assistant|false|false");
+  expect(screen.getByTestId("probe").textContent).toBe("transactions,ai_assistant|false|true|false");
 });

@@ -15,8 +15,12 @@ ko:
         reconciliation: 대사
         review_history: 검토 및 기록
       names:
+        overview: "재무 개요"
+        import: "가져오기"
+        receipts: "영수증"
+        data_management: "데이터 관리"
         transactions: 거래
-        ai_assistant: AI 도우미
+        ai_assistant: "AI 인사이트"
         ledgers: 장부
         accounts: 계좌 및 자산
         categories: 카테고리 및 태그
@@ -28,6 +32,10 @@ ko:
         forecast: 현금 흐름 예측
         multi_currency: 다중 통화
       descriptions:
+        overview: "잔액과 지출 추이를 확인합니다."
+        import: "은행 명세서를 가져와 검토합니다."
+        receipts: "영수증을 촬영하고 일치 결과를 검토합니다."
+        data_management: "로컬 데이터베이스, 백업 및 전송을 관리합니다."
         transactions: 개요, 모든 거래, 새 거래 추가 및 가져오기.
         ai_assistant: 분석, 내 돈에 대한 질문, 세금 준비, 기록 정리 도움.
         ledgers: 개인, 사업, 공동 지출을 위한 별도의 장부.
@@ -41,44 +49,43 @@ ko:
         forecast: 앞으로 30, 60, 90일의 예상 잔액.
         multi_currency: 여러 통화의 계좌를 보고서용으로 환산.
       status:
-        available: 사용 가능
-        coming_soon: 출시 예정
-        enabled: 켜짐
-        disabled: 꺼짐
-        core: 기본
+        available: "사용 가능"
+        coming_soon: "출시 예정"
+        unsupported: "이 플랫폼 미지원"
+        in_sidebar: "사이드바에 표시"
+        hidden: "숨김"
+        core: "기본"
       library:
+        reset: "기본 사이드바 복원"
+        reset_saved: "기본 사이드바를 복원했습니다."
         stale: 다른 기기에서 이 설정을 변경했습니다. 현재 설정을 표시합니다. 여기에서 다시 변경할 수 있습니다.
         synced_note: 모듈 설정은 BillieWeather에 로그인한 기기와 동기화됩니다.
         nav: 기능 라이브러리
         eyebrow: 설정
         title: 기능 라이브러리
-        intro: 사이드바에 표시할 항목을 고르세요. 간단하게 시작하고 필요할 때 도구를 추가하세요.
+        intro: "BillieWeather의 모든 기능입니다. 사용 가능한 기능은 바로 쓸 수 있으며, 사이드바에 표시할 항목을 선택하세요."
         filters_label: 모듈 표시
         filters:
-          all: 전체
-          enabled: 켜짐
-          available: 사용 가능
-          coming_soon: 출시 예정
-        toggle_label: 사이드바에 %{name} 표시
-        turn_on: 켜기
-        turn_off: 끄기
+          all: "전체"
+          sidebar: "사이드바"
+          hidden: "숨김"
+          unavailable: "아직 사용 불가"
+        toggle_label: "사이드바에 %{name} 표시"
         open: 열기
-        saved_on: "%{name}을(를) 켰고 사이드바에 표시됩니다."
-        saved_off: "%{name}을(를) 껐습니다. 데이터는 그대로이며 언제든 다시 켤 수 있습니다."
-        coming_soon_note: 아직 사용할 수 없습니다. 작동하기 전까지는 켤 수 없습니다.
-        settings_note: 설정은 항상 사이드바에 있으며 끌 수 없습니다.
-        data_note: 모듈을 끄면 숨겨지기만 합니다. 아무것도 삭제되지 않으며 자동으로 실행되는 작업(정기 거래 기록, 영수증 대조 등)도 계속 실행됩니다.
+        saved_shown: "%{name}이(가) 사이드바에 표시됩니다."
+        saved_hidden: "%{name}을(를) 사이드바에서 숨겼습니다. 기능은 그대로 작동하며 기능 라이브러리에서 열 수 있습니다."
+        coming_soon_note: "개발 중입니다. 작동하게 되면 여기에 표시됩니다."
+        unsupported_note: "BillieWeather 앱에서 사용할 수 있습니다. 웹사이트는 아직 지원하지 않습니다."
+        hidden_still_works: "사이드바에는 없지만 기능은 그대로 사용 가능"
+        settings_note: "설정은 항상 사이드바에 있습니다."
+        data_note: "기능을 숨기면 사이드바 항목만 사라집니다. 기능은 그대로 작동하고 아무것도 삭제되지 않으며, 자동으로 실행되는 작업(반복 기록, 영수증 매칭 등)도 계속 실행됩니다."
         sync_note: 이 선택은 이 웹사이트의 계정에 저장됩니다. BillieWeather 앱은 당분간 각자의 선택을 저장합니다.
         empty: 이 필터에 맞는 모듈이 없습니다.
         open_library: 기능 라이브러리 열기
         errors:
-          coming_soon: "%{name}은(는) 아직 사용할 수 없습니다."
+          not_available: "%{name}은(는) 여기에서 아직 사용할 수 없습니다."
+          invalid: "사이드바에 %{name}을(를) 표시할지 선택하세요."
           unknown: 해당 모듈이 없습니다.
-      disabled:
-        eyebrow: 기능 라이브러리
-        title: "%{name}이(가) 꺼져 있습니다"
-        body: 이 모듈은 사이드바에서 숨겨져 있습니다. 데이터는 그대로이며 아무것도 변경되지 않았습니다. 켜면 이 페이지를 다시 사용할 수 있습니다.
-        turn_on: "%{name} 켜기"
       add_sync:
         title: 추가 및 동기화
         intro: 거래를 가져오는 모든 방법. 모든 방법이 같은 확인을 거치므로 두 번 계산되지 않습니다.
@@ -104,3 +111,14 @@ ko:
           open: 항목 추가
           manual: 직접 기록
           later: 음성 입력, 자연어 입력, Siri 단축어는 출시 예정입니다.
+    settings_hub:
+      appearance: "화면 및 언어"
+      automation: "AI 및 자동화"
+      data_tools: "가져오기, 내보내기 및 데이터"
+      sync_backup: "동기화 및 백업"
+      rules: "거래 분류 규칙"
+      remove_rule: "삭제"
+      index_label: "설정 섹션"
+      database: "데이터베이스"
+      in_sidebar: "사이드바 항목"
+      hidden_intro: "사용 가능하지만 사이드바에 없는 기능(바로 열기):"

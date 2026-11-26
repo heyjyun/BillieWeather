@@ -6,7 +6,7 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
   # Manual Mode itself is unchanged (product decision 2); its marker in the shell is #manual-mode-badge.
-  include BillieModules::SignInWithAllModules
+  include BillieModules::SignInWithFullSidebar
 
   setup do
     @user = create(:onboarded_user, usage_region: "US")
@@ -100,8 +100,8 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
   test "leaving Manual Mode from a manual-only page returns to the dashboard; unsafe destinations are ignored" do
     switch_to("manual")
     switch_to("default", return_to: finance_accounts_path)
-    assert_redirected_to finance_dashboard_path
-    switch_to("default", return_to: new_finance_entry_path(kind: "income"))
+    assert_redirected_to finance_accounts_path
+    switch_to("default", return_to: finance_manual_path)
     assert_redirected_to finance_dashboard_path
     switch_to("default", return_to: "https://example.com/app")
     assert_redirected_to finance_dashboard_path
@@ -114,11 +114,11 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_select "#manual-mode-badge", 0
   end
 
-  test "opening a manual page directly turns Manual Mode on" do
+  test "opening an account page keeps the mode; opening manual home selects Manual Accounting" do
     get finance_accounts_path
     assert_response :success
-    assert_select "#manual-mode-badge"
-    get finance_dashboard_path
+    assert_select "#manual-mode-badge", 0
+    get finance_manual_path
     assert_select "#mode-switch button[value=manual][aria-pressed=true]"
   end
 
@@ -131,7 +131,7 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     assert_select "#manual-mode-badge"
     get finance_manual_path, params: {locale: "zh-TW"}
     assert_select "h1", "手動記帳"
-    assert_select "#mode-switch button[value=default]", /預設/
+    assert_select "#mode-switch button[value=default]", /AI 自動記帳/
     post finance_accounts_path, params: {finance_bank_account: {custom_name: "ZXQ 现金", account_type: "cash", opening_balance: "0"}}
     get new_finance_entry_path, params: {locale: "zh-TW"}
     assert_select "form#entry-form[data-draft-key='entry-new-expense']"

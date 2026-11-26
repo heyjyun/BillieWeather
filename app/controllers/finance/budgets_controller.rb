@@ -2,7 +2,6 @@ module Finance
   # Budgets (预算): a monthly or yearly limit for all spending, one category (with its subcategories)
   # or one project. Progress counts spending net of refunds; 90% (by default) shows a warning.
   class BudgetsController < BaseController
-    include ManualWorkspace
 
     def index
       @tree = CategoryTree.new(current_user)

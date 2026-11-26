@@ -635,8 +635,9 @@
     refresh();
   }
 
-  // Settings › Feature Library: switches save without a page reload and swap in the new sidebar the
-  // server rendered; filters show and hide cards in place. Without JavaScript the forms and filter
+  // Settings › Feature Library: "show in sidebar" switches save without a page reload and swap in the
+  // new sidebar the server rendered; filters show and hide cards in place. A switch only changes the
+  // sidebar; every available module keeps its Open link. Without JavaScript the forms and filter
   // links work as ordinary requests.
   function setupFeatureLibrary(root) {
     if (root.dataset.libraryReady) return;
@@ -645,10 +646,11 @@
     var empty = root.querySelector("[data-library-empty]");
     var cards = Array.prototype.slice.call(root.querySelectorAll("[data-module]"));
     var filter = root.dataset.filter || "all";
+    var navRevision = -1;
     function visible(card) {
-      if (filter === "enabled") return card.dataset.enabled === "true";
-      if (filter === "available") return card.dataset.available === "true";
-      if (filter === "coming_soon") return card.dataset.available !== "true";
+      if (filter === "sidebar") return card.dataset.sidebar === "true";
+      if (filter === "hidden") return card.dataset.available === "true" && card.dataset.sidebar !== "true";
+      if (filter === "unavailable") return card.dataset.available !== "true";
       return true;
     }
     function applyFilter() {
@@ -678,14 +680,14 @@
         var button = form.querySelector(".bw-switch");
         var card = form.closest("[data-module]");
         if (button.getAttribute("aria-busy") === "true") return;
-        var input = form.querySelector("input[name=enabled]");
+        var input = form.querySelector("input[name=sidebar_visible]");
         var revision = form.querySelector("input[name=expected_revision]");
         var token = document.querySelector('meta[name="csrf-token"]');
         button.setAttribute("aria-busy", "true");
         fetch(form.action, {
           method: "PATCH",
           headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded", "X-CSRF-Token": token ? token.content : "" },
-          body: new URLSearchParams({ enabled: input.value, expected_revision: revision.value }).toString(),
+          body: new URLSearchParams({ sidebar_visible: input.value, expected_revision: revision.value }).toString(),
           credentials: "same-origin"
         }).then(function (response) {
           return response.json().then(function (data) { return { ok: response.ok || response.status === 409, data: data }; });
@@ -693,17 +695,18 @@
           button.removeAttribute("aria-busy");
           if (!result.ok) { if (status) status.textContent = result.data.message || ""; return; }
           revision.value = String(result.data.revision);
-          var on = result.data.enabled === true;
-          card.dataset.enabled = on ? "true" : "false";
+          var on = result.data.sidebar_visible === true;
+          card.dataset.sidebar = on ? "true" : "false";
           card.classList.toggle("is-on", on);
           button.setAttribute("aria-checked", on ? "true" : "false");
           var text = button.querySelector(".bw-switch-text");
           if (text) text.textContent = on ? text.dataset.on : text.dataset.off;
           input.value = on ? "0" : "1";
-          var open = card.querySelector("[data-library-open]");
-          if (open) open.hidden = !on;
+          var note = card.querySelector("[data-hidden-note]");
+          if (note) note.hidden = on;
           var nav = document.getElementById("module-nav");
-          if (nav && result.data.nav) {
+          if (nav && result.data.nav && result.data.sidebar_revision >= navRevision) {
+            navRevision = result.data.sidebar_revision;
             var holder = document.createElement("div");
             holder.innerHTML = result.data.nav;
             var fresh = holder.querySelector("#module-nav");

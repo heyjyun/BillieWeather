@@ -6,7 +6,7 @@ require "test_helper"
 class FinanceAccountDeletionTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
-  include BillieModules::SignInWithAllModules
+  include BillieModules::SignInWithFullSidebar
 
   setup do
     @user = create(:onboarded_user, usage_region: "US")

@@ -1,18 +1,38 @@
-<% content_for :title, t("billie.region.heading") %>
+<% content_for :title, t("billie.modules.nav.settings") %>
 <% errors_for = ->(section) { (@failed_section == section && @user.errors.any?) ? tag.div(@user.errors.full_messages.to_sentence, class: "bw-flash bw-flash-error", role: "alert") : nil } %>
 <div class="bw-page-heading">
   <div>
     <span class="bw-eyebrow"><%= t("billie.region.nav") %></span>
-    <h1><%= t("billie.region.heading") %></h1>
+    <h1><%= t("billie.modules.nav.settings") %></h1>
     <p><%= t("billie.account.intro") %></p>
   </div>
 </div>
+<nav class="bw-settings-index" id="settings-index" aria-label="<%= t("billie.settings_hub.index_label") %>">
+  <ul>
+    <% Finance::SettingsSections.visible.each do |section| %>
+      <li><a href="#<%= section.anchor %>" data-settings-section="<%= section.id %>"><%= t(section.title_key) %></a></li>
+    <% end %>
+  </ul>
+</nav>
 <div class="bw-settings-stack">
+  <%# Feature Library: what shows in the sidebar, and a direct way into every usable module that is hidden. %>
   <section class="bw-panel bw-settings-library" id="settings-feature-library" aria-labelledby="settings-feature-library-heading">
     <div class="bw-panel-heading"><div><h2 id="settings-feature-library-heading"><%= t("billie.modules.library.title") %></h2><p><%= t("billie.modules.library.intro") %></p></div><span class="bw-library-icon"><%= finance_icon "library", size: 22 %></span></div>
-    <p class="bw-muted"><%= safe_join(enabled_modules.map { |definition| t("billie.modules.names.#{definition.id}") }, " · ") %></p>
+    <dl class="bw-db-facts">
+      <div><dt><%= t("billie.settings_hub.in_sidebar") %></dt><dd data-sidebar-list><%= safe_join(sidebar_modules.map { |definition| t("billie.modules.names.#{definition.id}") } + [t("billie.modules.nav.settings")], " · ") %></dd></div>
+    </dl>
+    <% hidden = hidden_modules %>
+    <% if hidden.any? %>
+      <p class="bw-caption"><%= t("billie.settings_hub.hidden_intro") %></p>
+      <ul class="bw-inline-links" id="settings-hidden-modules">
+        <% hidden.each do |definition| %>
+          <li><%= link_to t("billie.modules.names.#{definition.id}"), public_send("#{definition.route}_path"), class: "bw-text-link", data: {hidden_module: definition.id} %></li>
+        <% end %>
+      </ul>
+    <% end %>
     <%= link_to t("billie.modules.library.open_library"), finance_feature_library_path, class: "bw-button bw-button-dark", id: "open-feature-library" %>
   </section>
+  <%= render "finance/settings/workspace_tools" %>
   <section class="bw-panel" id="settings-profile" aria-labelledby="settings-profile-heading">
     <h2 id="settings-profile-heading"><%= t("billie.account.profile_heading") %></h2>
     <%= errors_for.call(:nickname) %>
@@ -95,6 +115,14 @@
   <%# Your database: what the cloud holds, managed one statement at a time. Sits right above
       the "delete everything" buttons so smaller clean-ups are found first. %>
   <% database = @database %>
+  <section class="bw-panel" id="settings-sync-backup" aria-labelledby="settings-sync-backup-heading">
+    <h2 id="settings-sync-backup-heading"><%= t("billie.settings_hub.sync_backup") %></h2>
+    <p><%= t(Finance::ModulePreferenceSync.enabled? ? "billie.modules.library.synced_note" : "billie.modules.library.sync_note") %></p>
+    <div class="bw-inline-actions">
+      <%= link_to t("billie.settings_hub.database"), "#settings-database", class: "bw-text-link" %>
+      <%= link_to t("billie.export.button"), finance_report_path, class: "bw-text-link" %>
+    </div>
+  </section>
   <section class="bw-panel" id="settings-database" aria-labelledby="settings-database-heading">
     <div id="settings-web-database" data-section="web">
     <p class="bw-eyebrow"><%= t("billie.database.web_section") %></p>

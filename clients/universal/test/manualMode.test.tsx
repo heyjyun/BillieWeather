@@ -4,7 +4,7 @@
 // it without changing records; unfinished input survives a switch; Chinese labels are present.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
-import { migrate, enableAllModulesByDefault, openInShell } from "./helpers";
+import { migrate, showAllModulesInSidebar, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 
 const files = new Map<string, ReturnType<typeof sqljsDriver>>();
@@ -37,7 +37,7 @@ function mockAccount(locale = "en") {
     : new Response(JSON.stringify({ currency: null, version: "0", statement_count: 0, transaction_count: 0, statements: [], transactions: [], next_after_id: null, rules: [], categories: [] }), { status: 200 }));
 }
 
-beforeEach(() => { enableAllModulesByDefault(); localStorage.clear(); sessionStorage.clear(); files.clear(); sessionStorage.setItem("billie.token", "tok"); });
+beforeEach(() => { showAllModulesInSidebar(); localStorage.clear(); sessionStorage.clear(); files.clear(); sessionStorage.setItem("billie.token", "tok"); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 const navigation = () => within(screen.getByRole("navigation"));
@@ -55,9 +55,9 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
   await screen.findByRole("navigation");
 
   // 1–2. The first screen is the simple interface: a Manual button, no manual tools in the navigation.
-  const manualButton = screen.getByRole("button", { name: "Manual" });
+  const manualButton = screen.getByRole("button", { name: "Manual Accounting" });
   expect(manualButton.getAttribute("aria-pressed")).toBe("false");
-  expect(screen.getByRole("button", { name: "Default" }).getAttribute("aria-pressed")).toBe("true");
+  expect(screen.getByRole("button", { name: "AI Automatic" }).getAttribute("aria-pressed")).toBe("true");
   // Since the Feature Library (Phase 1a) the sidebar follows the person's modules (all on in this test),
   // not the mode; the mode decides the tools on each page, and its marker is the "Manual Mode" badge.
   expect(badge()).toBeNull();
@@ -71,9 +71,9 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
   // 3. Manual opens the manual workspace with grouped navigation.
   await click(manualButton);
   await screen.findByRole("heading", { name: "Manual bookkeeping" });
-  expect(screen.getByRole("button", { name: "Manual" }).getAttribute("aria-pressed")).toBe("true");
+  expect(screen.getByRole("button", { name: "Manual Accounting" }).getAttribute("aria-pressed")).toBe("true");
   expect(badge()).toBeTruthy();
-  for (const shown of ["Transactions", "AI Assistant", "Accounts & Assets", "Categories & Tags", "Budgets", "Recurring & Bills", "Reports", "Settings"]) expect(navigation().getByRole("button", { name: shown })).toBeTruthy();
+  for (const shown of ["Transactions", "AI Insight", "Accounts & Assets", "Categories & Tags", "Budgets", "Recurring & Bills", "Reports", "Settings"]) expect(navigation().getByRole("button", { name: shown })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Manual bookkeeping" }).getAttribute("aria-current")).toBe("page"); // Transactions › Add & Sync › Manual bookkeeping
 
   // 4. Create an account and an expense through the workspace.
@@ -99,7 +99,7 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
 
   // 5. Back to Default Mode on the same page: the entry is there, the manual controls are not.
   const before = await counts();
-  await click(screen.getByRole("button", { name: "Default" }));
+  await click(screen.getByRole("button", { name: "AI Automatic" }));
   await waitFor(() => expect(badge()).toBeNull());
   expect(screen.getByText("ZXQ Cafe")).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
@@ -107,22 +107,22 @@ it("starts simple, reveals the manual workspace on Manual, and hides it again wi
   expect(await counts()).toEqual(before);
 
   // 6. Both modes report the same balance.
-  await click(screen.getByRole("button", { name: "Manual" }));
+  await click(screen.getByRole("button", { name: "Manual Accounting" }));
   await nav("Accounts & Assets");
   await screen.findByText("ZXQ Wallet");
   expect(screen.getAllByText("$87.50").length).toBeGreaterThan(0);
   expect(await counts()).toEqual(before);
 
-  // Leaving Manual Mode from a manual-only page returns to the dashboard.
-  await click(screen.getByRole("button", { name: "Default" }));
-  await waitFor(() => expect(screen.getByRole("button", { name: "Overview" }).getAttribute("aria-current")).toBe("page"));
+  await click(screen.getByRole("button", { name: "AI Automatic" }));
+  expect(screen.getByRole("heading", { name: "Accounts" })).toBeTruthy();
+  expect(badge()).toBeNull();
 });
 
 it("keeps unfinished input when switching modes, and can discard it", async () => {
   mockAccount();
   render(<App />);
   await screen.findByRole("navigation");
-  await click(screen.getByRole("button", { name: "Manual" }));
+  await click(screen.getByRole("button", { name: "Manual Accounting" }));
   await nav("Accounts & Assets");
   await screen.findByRole("heading", { name: "Accounts" });
   fireEvent.change(screen.getByLabelText(/^Book currency/), { target: { value: "USD" } });
@@ -131,11 +131,12 @@ it("keeps unfinished input when switching modes, and can discard it", async () =
   type("Name", "ZXQ Half-typed", form);
   const before = await counts();
 
-  await click(screen.getByRole("button", { name: "Default" }));
+  await click(screen.getByRole("button", { name: "AI Automatic" }));
+  await nav("Dashboard");
   await waitFor(() => expect(screen.queryByRole("form", { name: "New account" })).toBeNull());
   expect(await counts()).toEqual(before); // nothing was saved by switching
 
-  await click(screen.getByRole("button", { name: "Manual" }));
+  await click(screen.getByRole("button", { name: "Manual Accounting" }));
   await nav("Accounts & Assets");
   form = await screen.findByRole("form", { name: "New account" });
   expect((within(form).getByLabelText("Name") as HTMLInputElement).value).toBe("ZXQ Half-typed");
@@ -144,7 +145,7 @@ it("keeps unfinished input when switching modes, and can discard it", async () =
   expect((within(form).getByLabelText("Name") as HTMLInputElement).value).toBe("");
 });
 
-it.each([["zh-CN", "手动记账", "默认"], ["zh-TW", "手動記帳", "預設"]])("labels the switch and workspace in %s", async (locale, manual, plain) => {
+it.each([["zh-CN", "手动记账", "AI 自动记账"], ["zh-TW", "手動記帳", "AI 自動記帳"]])("labels the switch and workspace in %s", async (locale, manual, plain) => {
   localStorage.setItem("billie.locale", locale);
   mockAccount(locale);
   render(<App />);

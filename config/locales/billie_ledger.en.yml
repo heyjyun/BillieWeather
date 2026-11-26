@@ -436,8 +436,8 @@ en:
         empty: No income or spending in this period.
       mode:
         label: "Interface mode"
-        default: "Default"
-        manual: "Manual"
+        default: "AI Automatic"
+        manual: "Manual Accounting"
         default_help: "Simple, automation-first view"
         manual_help: "The complete manual bookkeeping workspace"
         manual_on: "Manual Mode"

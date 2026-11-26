@@ -5,7 +5,7 @@ require "tempfile"
 # and the log names the error without row contents. Synthetic data only.
 class FinanceImportFollowUpNoticeTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
-  include BillieModules::SignInWithAllModules
+  include BillieModules::SignInWithFullSidebar
 
   setup do
     @user = create(:user)
