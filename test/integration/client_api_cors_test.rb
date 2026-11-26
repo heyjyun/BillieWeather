@@ -53,4 +53,29 @@ class ClientApiCorsTest < ActionDispatch::IntegrationTest
     preflight("/api/v1/teams", "GET", "https://integration.example")
     assert_equal "*", response.headers["Access-Control-Allow-Origin"]
   end
+
+  test "each shipped app origin passes the preflight" do
+    ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost", "http://localhost:1420"].each do |origin|
+      assert_includes preflight("/api/client/v1/finance", "GET", origin), "GET", origin
+      assert_equal origin, response.headers["Access-Control-Allow-Origin"], origin
+      assert_includes response.headers["Access-Control-Allow-Headers"].to_s.downcase, "authorization", origin
+    end
+  end
+
+  test "development and test also allow the 127.0.0.1 dev server and the isolated diagnostic build on 1430" do
+    BillieCors::DEV_APP_ORIGINS.each do |origin|
+      assert_includes preflight("/api/client/v1/session", "POST", origin), "POST", origin
+      assert_equal origin, response.headers["Access-Control-Allow-Origin"], origin
+    end
+    preflight("/api/client/v1/session", "POST", "http://localhost:1431")
+    assert_nil response.headers["Access-Control-Allow-Origin"]
+  end
+
+  test "production allows exactly the shipped app origins, without the development extras" do
+    assert_equal ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost", "http://localhost:1420"], BillieCors.app_origins("production")
+    assert_equal BillieCors::APP_ORIGINS, BillieCors.app_origins(ActiveSupport::StringInquirer.new("production"))
+    assert_empty BillieCors.app_origins("production") & BillieCors::DEV_APP_ORIGINS
+    assert_equal BillieCors::APP_ORIGINS + BillieCors::DEV_APP_ORIGINS, BillieCors.app_origins("development")
+    assert_equal BillieCors::APP_ORIGINS, BillieCors.app_origins("staging")
+  end
 end
