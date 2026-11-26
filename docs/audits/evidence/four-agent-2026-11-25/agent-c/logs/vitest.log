@@ -1,0 +1,9 @@
+
+ RUN  v4.1.12 $SCRATCH/... (path truncated in the original log)
+ Test Files  85 passed | 1 skipped (86)
+      Tests  116
+ Test Files  85 passed | 1 skipped (86)
+      Tests  1165 passed | 13 skipped (1178)
+   Start at  17:25:47
+   Duration  105.73s (transform 4.12s, setup 4.25s, import 14.70s, tests 173.30s, environment 9.81s)
+

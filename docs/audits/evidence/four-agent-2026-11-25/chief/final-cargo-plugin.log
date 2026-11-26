@@ -1,0 +1,22 @@
+   Compiling tauri-plugin-sql v2.6.0 ($WORKSPACE/billieweather-audit/clients/universal/src-tauri/vendor/tauri-plugin-sql)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.75s
+     Running unittests src/lib.rs ($SCRATCH/chief/cargo-target/debug/deps/tauri_plugin_sql-21c998bc636a9c0d)
+
+running 6 tests
+test commands::tests::unregistered_databases_are_refused ... ok
+test wrapper::tests::only_plain_file_names_in_the_app_folder_are_accepted ... ok
+test wrapper::tests::ensure_database_respects_auto_create ... ok
+test commands::tests::an_older_build_refuses_a_newer_book_on_every_load ... ok
+test commands::tests::a_second_load_after_a_failed_migration_still_migrates ... ok
+test commands::tests::a_second_load_reuses_the_open_pool_and_a_failed_open_closes_its_own ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests tauri_plugin_sql
+
+running 1 test
+test vendor/tauri-plugin-sql/src/lib.rs - Builder::build (line 186) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.39s; merged doctests compilation took 0.31s

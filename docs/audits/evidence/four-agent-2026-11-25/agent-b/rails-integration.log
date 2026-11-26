@@ -1,0 +1,611 @@
+DEPRECATION WARNING: ActiveSupport::Configurable is deprecated without replacement, and will be removed in Rails 8.2.
+
+The previous behavior can be emulated with `attr_accessor`s, `class_attribute`s, or combinations of `class_attribute` and `InheritableOptions` depending on requirements.
+ (called from <top (required)> at $SCRATCH/repo/config/application.rb:12)
+🌱 Generating global seeds.
+🌱 Generating test environment seeds.
+[0;33;49mNot requiring Knapsack Pro.[0m
+[0;33;49mIf you'd like to use Knapsack Pro make sure that you've set the environment variable KNAPSACK_PRO_CI_NODE_INDEX[0m
+⛔️ `require "sidekiq/testing"` is deprecated and will be removed in Sidekiq 9.0. See https://sidekiq.org/wiki/Testing#new-api
+Started with run options --seed 42620
+
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from block (2 levels) in ActionDispatch::Routing::Mapper::Resources#draw at $SCRATCH/repo/config/routes/api/v1.rb:8)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from block (2 levels) in ActionDispatch::Routing::Mapper::Resources#draw at $SCRATCH/repo/config/routes/api/v1.rb:17)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from block (3 levels) in ActionDispatch::Routing::Mapper::Resources#draw at $SCRATCH/repo/config/routes/api/v1.rb:22)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from block (3 levels) in ActionDispatch::Routing::Mapper::Resources#draw at $SCRATCH/repo/config/routes/api/v1.rb:26)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from block (3 levels) in <top (required)> at $SCRATCH/repo/config/routes.rb:226)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from block (3 levels) in <top (required)> at $SCRATCH/repo/config/routes.rb:235)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from block (4 levels) in <top (required)> at $SCRATCH/repo/config/routes.rb:240)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from block (4 levels) in <top (required)> at $SCRATCH/repo/config/routes.rb:244)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from Hash#each at $HOME/.local/share/mise/installs/ruby/4.0.3/lib/ruby/gems/4.0.0/gems/actionpack-8.1.4.1/lib/action_dispatch/routing/mapper.rb:677)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from Hash#each at $HOME/.local/share/mise/installs/ruby/4.0.3/lib/ruby/gems/4.0.0/gems/actionpack-8.1.4.1/lib/action_dispatch/routing/mapper.rb:677)
+DEPRECATION WARNING: resources received a hash argument only. Please use a keyword instead. Support to hash argument will be removed in Rails 8.2. (called from Hash#each at $HOME/.local/share/mise/installs/ruby/4.0.3/lib/ruby/gems/4.0.0/gems/actionpack-8.1.4.1/lib/action_dispatch/routing/mapper.rb:677)
+SessionRevocationTest
+  test_resetting_the_password_by_email_signs_out_everything       PASS (1.20s)
+  test_cookies_from_before_server-side_sessions_are_refused_without_breaking_public_pages PASS (0.40s)
+  test_another_person_signing_in_with_the_same_browser_replaces_the_previous_session PASS (0.37s)
+  test_the_app_can_sign_out_every_other_session_and_stays_signed_in_itself PASS (0.42s)
+  test_a_sign-out_made_offline_is_completed_later_from_the_token's_digest_alone PASS (0.30s)
+  test_open_page_connections_are_closed,_and_a_broker_failure_does_not_stop_the_sign-out PASS (0.47s)
+  test_sign-out_is_idempotent,_and_safe_with_garbage,_another_purpose's_secret,_or_no_token PASS (0.24s)
+  test_long-dead_sessions_are_pruned_at_sign-in,_recent_revocations_are_kept_for_audit PASS (0.32s)
+  test_a_session_nobody_used_ends_early,_for_apps_and_browsers,_and_use_keeps_it_alive PASS (0.42s)
+  test_refreshing_a_browser's_credentials_keeps_its_one_session,_and_sign-out_still_ends_every_copy PASS (0.39s)
+  test_tokens_from_before_server-side_sessions_are_refused        PASS (0.32s)
+  test_every_client_API_route_is_covered_by_the_revocation_check  PASS (0.20s)
+  test_expired_tokens_are_refused                                 PASS (0.34s)
+  test_the_website_can_sign_out_every_other_session_and_stays_signed_in_itself PASS (0.62s)
+  test_changing_other_account_details_keeps_every_session         PASS (0.46s)
+  test_a_website_session_secret_is_not_an_app_token_and_the_other_way_round PASS (0.38s)
+  test_a_password_written_outside_Rails_still_invalidates_every_session PASS (0.40s)
+  test_revocation_survives_a_restart_because_it_is_stored,_and_only_digests_are_stored PASS (0.22s)
+  test_digest_revocation_reveals_nothing_and_reaches_only_the_named_app_session PASS (0.44s)
+  test_signing_out_of_the_app_revokes_exactly_that_token,_everywhere PASS (0.26s)
+  test_a_sign-in_that_raced_a_password_change_does_not_outlive_it PASS (0.50s)
+  test_tokens_and_digests_are_filtered_from_logs                  PASS (0.40s)
+  test_changing_the_password_on_the_website_signs_out_everything_else_and_keeps_this_browser PASS (0.75s)
+  test_a_locked_or_deleted_account's_token_stops_working          PASS (0.32s)
+  test_signing_out_of_the_website_makes_a_copied_cookie_useless   PASS (0.53s)
+  test_last_use_is_recorded_without_writing_on_every_request      PASS (0.31s)
+
+LocalDatabaseConcurrentReportTest
+  test_concurrent_reports_for_the_same_device_and_database_never_create_duplicates PASS (0.20s)
+
+RegistrationRedirectTest
+  test_ordinary_signup_opens_the_finance_dashboard                PASS (0.38s)
+  test_signup_from_a_team_invitation_returns_to_the_invitation_and_accepts_its_membership PASS (0.62s)
+
+PageStructureTest
+  test_pages_cannot_be_framed,_rebased_or_host_plugins            PASS (0.01s)
+  test_pages_have_one_main_heading_and_unique_ids                 PASS (0.59s)
+
+FinanceAccountDeletionTest
+  test_a_foreign-key_race_is_turned_into_the_in-use_message_instead_of_a_500 PASS (0.27s)
+  test_an_unused_account_is_still_deleted_and_audited             PASS (0.23s)
+  test_an_account_with_a_receipt_is_refused,_not_a_500,_and_the_receipt_and_account_stay PASS (0.13s)
+
+AccountDashboardRedirectTest
+  test_a_Turbo_invitation_error_remains_visible_after_the_finance_layout_reload PASS (0.41s)
+  test_a_canceled_invitation_resend_alert_survives_the_dashboard_redirect PASS (0.25s)
+  test_an_accepted_invitation_notice_survives_the_dashboard_redirect PASS (0.37s)
+  test_a_Turbo_invitation_notice_remains_visible_after_the_finance_layout_reload PASS (0.46s)
+
+SettingsDatabaseTest
+  test_renaming_a_card_is_website-only,_audited,_and_scoped_to_the_owner PASS (0.46s)
+  test_times_are_shown_in_the_person's_own_time_zone,_with_the_zone_named PASS (0.37s)
+  test_deleting_a_statement_from_settings_removes_it_from_the_cloud_and_returns_to_the_section PASS (0.28s)
+  test_database_and_device_names_are_shown_as_plain_text,_never_as_HTML PASS (0.32s)
+  test_the_cloud_database_can_be_named_on_the_website,_and_the_name_is_the_section's_title PASS (0.33s)
+  test_a_reported_Sync_Now_time_is_shown;_without_one_the_card_says_Not_synced PASS (0.29s)
+  test_two_devices_show_exactly_two_cards;_a_device_with_two_databases_is_still_one_card PASS (0.35s)
+  test_the_section_is_translated_in_every_language                PASS (0.42s)
+  test_review_and_archived_records_are_never_shown_as_cards,_and_can_be_reviewed_safely PASS (0.34s)
+  test_storage_keeps_cloud_and_local_separate_and_never_counts_local_bytes_as_cloud_storage PASS (0.55s)
+  test_local_databases_appear_as_read-only_cards,_clearly_separate_from_the_cloud_database PASS (0.53s)
+  test_with_nothing_reported_the_section_says_local_databases_appear_once_the_app_is_opened PASS (0.34s)
+  test_statements_page_deletion_still_returns_to_the_statements_page,_and_nobody_can_delete_someone_else's_statement PASS (0.30s)
+  test_deleted_(tombstoned)_local_databases_do_not_appear         PASS (0.24s)
+  test_local_database_cards_are_translated_in_every_language      PASS (0.46s)
+  test_reports_older_than_30_days_are_marked_as_possibly_outdated,_with_the_server's_timestamp PASS (0.28s)
+  test_a_different_account_never_sees_this_account's_local_database_inventory PASS (0.39s)
+  test_the_database_section_sits_directly_above_Privacy_&_data_and_shows_only_this_person's_data PASS (0.43s)
+
+FinanceParameterLoggingTest
+  test_financial_form_and_automation_payloads_are_redacted_without_hiding_operational_metadata PASS (0.00s)
+
+ClientApiLocalDatabasesTest
+  test_requires_authentication_on_every_operation                 PASS (0.53s)
+  test_an_older_report_arriving_late_is_ignored                   PASS (0.24s)
+  test_names_are_cleaned_of_control_characters_and_stored_as_plain_text PASS (0.26s)
+  test_stores_only_the_allowlisted_metadata_and_stamps_the_server's_own_receive_time PASS (0.23s)
+  test_purging_a_device_removes_all_its_reports,_keeps_other_devices,_and_refuses_older_reports PASS (0.35s)
+  test_rejects_any_field_that_is_not_on_the_allowlist,_and_stores_nothing PASS (0.33s)
+  test_deleting_something_never_reported_is_harmless              PASS (0.23s)
+  test_deleting_the_account_removes_its_reports                   PASS (0.30s)
+  test_the_same_report_twice_is_one_record,_a_rename_keeps_the_id,_and_the_server_never_trusts_a_user_id PASS (0.25s)
+  test_rejects_malformed_values                                   PASS (0.35s)
+  test_a_deleted_database_stays_deleted_even_if_an_older_report_arrives_afterwards PASS (0.25s)
+  test_reporting_does_not_touch_the_cloud_database                PASS (0.38s)
+  test_one_person_cannot_see,_change_or_delete_another_person's_reports PASS (0.34s)
+  test_there_is_no_way_for_the_server_to_command_a_device         PASS (0.22s)
+
+ClientApiFinanceTest
+  test_the_summary_includes_counts,_the_date_range,_and_approximate_storage PASS (0.33s)
+  test_requires_a_valid_token                                     PASS (0.25s)
+  test_apps_still_cannot_edit_or_replace_individual_transactions  PASS (0.35s)
+  test_an_overlapping_upload_of_the_same_account_adds_only_new_rows;_the_same_rows_on_another_account_are_kept PASS (0.26s)
+  test_invalid_transferred_classification_or_evidence_is_rejected_without_inserting_anything PASS (0.33s)
+  test_returns_only_the_signed-in_person's_statements,_transactions,_and_rules,_with_exact_amounts PASS (0.37s)
+  test_an_upload_is_rejected_when_it_would_mix_currencies_or_contains_bad_rows PASS (0.29s)
+  test_deleting_the_whole_cloud_database_needs_the_typed_confirmation_and_only_touches_this_person PASS (0.36s)
+  test_uploads_one_statement_from_a_local_database,_once          PASS (0.26s)
+  test_an_uploaded_statement_is_filed_under_the_account_the_device_identified,_shared_with_website_imports_of_it PASS (0.40s)
+  test_uploaded_statements_preserve_explicit_kinds_and_original_bank_descriptions PASS (0.36s)
+  test_names_the_cloud_database,_and_the_summary_returns_the_name PASS (0.28s)
+  test_an_account_identity_that_is_malformed_or_carries_a_full_number_is_rejected_without_storing_anything PASS (0.34s)
+  test_pages_transactions_by_id                                   PASS (0.32s)
+  test_deletes_one_cloud_statement_at_a_time,_only_the_person's_own PASS (0.30s)
+  test_the_version_changes_when_web_data_is_edited,_added,_or_deleted,_and_not_otherwise PASS (0.36s)
+
+AboutPageTest
+  test_about_us_is_public,_linked_beside_Features,_and_localized  PASS (0.03s)
+  test_signed-in_visitors_are_pointed_to_their_dashboard          PASS (0.11s)
+
+FinanceWorkflowTest
+  test_non-file_statement_and_receipt_uploads_leave_both_the_ledger_and_capture_inbox_untouched PASS (0.14s)
+  test_deleting_a_statement_removes_the_balance_that_came_from_it PASS (0.16s)
+  test_PDF_upload_requires_review_then_imports_corrected_rows_and_prevents_duplicates PASS (0.18s)
+  test_CSV_with_transaction_date_and_posted_date_imports_automatically_on_the_first_attempt PASS (0.12s)
+  test_the_balance_fills_itself_in_from_a_statement,_can_be_edited,_and_can_go_back_to_the_statement PASS (0.36s)
+  test_a_PDF_with_an_unclear_amount_or_year_still_goes_to_review  PASS (0.11s)
+  test_Billie_tax_preparation_insights_are_separate_from_general_insights_and_require_AI_consent PASS (0.40s)
+  test_transaction_search_words_are_filtered_from_the_logs        PASS (0.10s)
+  test_accounts_cannot_inspect_modify_or_delete_another_users_financial_data PASS (0.57s)
+  test_transactions_CSV_neutralizes_formulas_in_custom_category_names PASS (0.24s)
+  test_exports_preserve_exact_amounts_and_neutralize_spreadsheet_formulas PASS (0.16s)
+  test_asking_for_the_statement_balance_when_none_exists_explains_and_keeps_the_entered_balance PASS (0.13s)
+  test_landing_and_authentication_forms_are_public_and_finance_pages_require_login PASS (0.21s)
+  test_sample_CSV_import_runs_through_transactions_forecast_and_insights PASS (0.46s)
+  test_correcting_one_category_teaches_future_imports_and_is_private_to_the_account PASS (0.42s)
+  test_a_clear_PDF_imports_automatically_without_asking_for_a_year_or_a_review PASS (0.24s)
+  test_sign_up_creates_a_real_account_and_login_returns_to_the_dashboard PASS (0.63s)
+  test_PDF_review_drafts_are_scoped_to_owner_and_expired_drafts_cannot_be_confirmed PASS (0.43s)
+  test_another_user's_tax_insights_never_appear_on_this_account   PASS (0.27s)
+  test_AI_consent_names_OpenAI_as_the_service                     PASS (0.26s)
+  test_invalid_forecast_inputs_fail_visibly_without_changing_the_saved_balance PASS (0.14s)
+
+FinanceLocalizedWorkflowTest
+  test_ja_CSV_and_PDF_imports_keep_canonical_data_and_localize_errors PASS (0.19s)
+  test_new_AI_analysis_requests_the_selected_language_with_unchanged_schema_keys_and_aggregate_categories PASS (0.16s)
+  test_ko_CSV_and_PDF_imports_keep_canonical_data_and_localize_errors PASS (0.21s)
+  test_Chinese_CSV_import_localizes_notices_and_errors_while_preserving_canonical_data_and_export_headers PASS (0.27s)
+  test_Chinese_PDF_extraction_keeps_automatic_import_classification_and_review_confirmation_intact_across_languages PASS (0.18s)
+  test_new_basic_analysis_follows_the_current_language_and_retains_saved_report_content PASS (0.16s)
+
+AccountSettingsTest
+  test_region_search_terms_include_the_English_name_in_every_language PASS (0.22s)
+  test_nickname_can_be_changed_and_shown_in_the_sidebar           PASS (0.20s)
+  test_sign_up_asks_for_a_required_nickname_instead_of_a_legal_name PASS (0.61s)
+  test_settings_actions_require_sign_in                           PASS (0.22s)
+  test_Google_accounts_can_request_a_link_to_choose_their_own_password PASS (0.28s)
+  test_changing_the_password_requires_the_current_password_and_keeps_the_user_signed_in PASS (1.26s)
+  test_the_privacy_promise_lives_on_the_home_page,_not_inside_the_app PASS (0.17s)
+  test_settings_page_offers_nickname,_password_and_searchable_region_sections PASS (0.12s)
+
+FinanceReportExportTest
+  test_the_export_page_and_workbook_are_fully_translated          PASS (0.27s)
+  test_Excel_download_uses_real_data,_matches_the_dashboard_and_keeps_corrected_categories PASS (0.15s)
+  test_dashboard_offers_Export_report_for_the_period_on_screen    PASS (0.15s)
+  test_people_with_no_data_can_still_export_both_formats          PASS (0.33s)
+  test_exports_never_contain_another_person's_data                PASS (0.22s)
+  test_a_report_CSV_statement_without_an_identified_account_falls_back_to_the_file_name PASS (0.20s)
+  test_dashboard_figures_shown_on_screen_equal_the_exported_ones  PASS (0.16s)
+  test_worksheet_selection_is_honored_and_an_empty_selection_is_refused PASS (0.15s)
+  test_signed-out_visitors_cannot_export_and_bad_input_fails_safely PASS (0.24s)
+  test_CSV_download_has_escaped,_UTF-8,_formula-safe_rows_with_corrected_categories PASS (0.15s)
+  test_the_Transactions_page_CSV_keeps_its_original_columns_and_uses_the_stronger_formula_escaping PASS (0.13s)
+  test_export_page_defaults_to_Excel_with_every_worksheet_selected PASS (0.24s)
+
+FinanceDashboardPeriodTest
+  test_a_transfer-only_period_retains_its_transactions_while_totals_stay_zero PASS (0.24s)
+  test_invalid_transaction_date_filters_cannot_display_or_export_an_unfiltered_list PASS (0.39s)
+  test_dashboard_defaults_to_all_imported_dates_and_preserves_the_saved_current_balance PASS (0.25s)
+  test_invalid_incomplete_reversed_and_out-of-bounds_custom_dates_fail_visibly_and_retain_their_fields PASS (0.55s)
+  test_account_and_date_scope_control_all_figures_and_drill-down_without_counting_a_card_payment PASS (0.44s)
+  test_an_empty_selected_period_offers_a_reset_without_showing_first-upload_onboarding PASS (0.37s)
+  test_the_heading_shows_the_requested_period_even_when_transactions_cover_fewer_days PASS (0.32s)
+  test_last_month_resolves_to_the_entire_previous_calendar_month  PASS (0.26s)
+  test_a_bookmarkable_custom_range_filters_all_dashboard_figures_and_transactions_inclusively_without_changing_records PASS (0.41s)
+  test_last_year_resolves_to_the_previous_calendar_year_rather_than_a_rolling_year PASS (0.24s)
+  test_invalid_account_scopes_never_expose_a_broader_overview     PASS (0.42s)
+
+DownloadsPageTest
+  test_non-https_or_malformed_links_are_ignored                   PASS (0.01s)
+  test_the_section_is_translated_in_every_language                PASS (0.02s)
+  test_the_header_links_to_a_separate_Download_page;_the_homepage_itself_has_no_download_section PASS (0.02s)
+  test_iOS_and_Android_always_say_coming_soon,_like_the_desktop_cards_without_an_installer PASS (0.01s)
+  test_macOS_and_Windows_link_to_the_configured_https_installers  PASS (0.00s)
+  test_without_a_hosted_installer,_desktop_buttons_say_coming_soon_instead_of_linking_nowhere PASS (0.00s)
+
+PaymentMethodsAdminTest
+  test_the_page_lists_all_four_methods_with_upload,_enable,_and_preview_controls,_even_before_any_upload PASS (0.32s)
+  test_upload,_enable,_preview,_replace,_disable,_and_remove_a_QR_code_without_touching_code_or_public_files PASS (0.55s)
+  test_bad_uploads_are_refused_and_a_method_cannot_be_enabled_without_a_QR_code PASS (0.21s)
+  test_Save_image_downloads_the_file;_inline_view_is_the_default  PASS (0.50s)
+  test_Support_us_in_the_header_opens_the_same_support_modal_on_every_public_page PASS (0.34s)
+  test_the_no-note-field_help_shows_the_contact_email_when_SUPPORT_CONTACT_EMAIL_is_set PASS (0.22s)
+  test_/supportadmin_is_a_separate_admin_area:_admins_only_after_sign-in,_its_own_sidebar,_and_no_public_or_app_links_to_it PASS (0.41s)
+  test_Active_Storage's_own_blob_URLs_refuse_private_QR_blobs,_even_with_a_valid_signed_id PASS (0.29s)
+  test_only_enabled_methods_reach_the_modal,_and_disabled_ones_are_refused_by_the_image_endpoint PASS (0.26s)
+
+FinanceManualModeTest
+  test_leaving_Manual_Mode_from_a_manual-only_page_returns_to_the_dashboard;_unsafe_destinations_are_ignored PASS (0.25s)
+  test_opening_a_manual_page_directly_turns_Manual_Mode_on        PASS (0.15s)
+  test_manual_edits_reach_the_AI_command_context_and_reports_in_either_mode PASS (0.18s)
+  test_Manual_opens_the_complete_workspace;_Default_hides_it_again_without_touching_records PASS (0.36s)
+  test_book_settings:_rename_the_book_from_the_manual_workspace   PASS (0.18s)
+  test_the_manual_workspace_and_its_forms_keep_drafts_and_work_in_Simplified_and_Traditional_Chinese PASS (0.30s)
+  test_the_first_visit_shows_the_simple_interface_with_a_Manual_button_and_no_manual_controls PASS (0.24s)
+
+UserUsageRegionIntegrationTest
+  test_account_profile_editing_uses_the_same_required_region_list PASS (0.29s)
+  test_registration_requires_a_fixed_region_selection_and_saves_its_code PASS (0.30s)
+  test_region_labels,_including_Mainland_China_and_Global_Citizen,_are_localized_in_all_six_languages PASS (0.30s)
+  test_registration_rejects_missing_and_empty_regions             PASS (0.28s)
+  test_legacy_region_completion_rejects_missing_and_malformed_region_selections PASS (0.18s)
+  test_legacy_users_must_complete_region_selection_before_finance_activity PASS (0.16s)
+  test_users_can_change_their_selected_region_but_cannot_clear_it PASS (0.23s)
+  test_settings_reject_invented_regions_and_update_only_the_signed_in_user_region PASS (0.25s)
+  test_Global_Citizen_can_be_selected_at_signup_and_saved_by_an_existing_user PASS (0.47s)
+  test_settings_require_authentication_for_both_viewing_and_updating_the_region PASS (0.00s)
+  test_registration_rejects_a_region_outside_the_list_instead_of_ignoring_it PASS (0.09s)
+
+SessionCsrfTest
+  test_a_token_from_another_browser_is_rejected_and_a_fresh_form_can_then_sign_in PASS (0.34s)
+  test_a_missing_CSRF_token_is_rejected_before_valid_credentials_authenticate_the_user PASS (0.12s)
+  test_an_invalid_CSRF_token_is_rejected_before_valid_credentials_authenticate_the_user PASS (0.12s)
+  test_a_valid_form_token_does_not_authenticate_an_incorrect_password PASS (0.23s)
+D, [2026-11-25T17:33:06.623661 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_Google_linking_can_finish_with_a_genuine_password_form_while_CSRF_is_enabled PASS (0.24s)
+  test_a_fresh_password_form_authenticates_with_its_real_CSRF_token_and_cookie PASS (0.29s)
+  test_rejecting_an_invalid_token_does_not_sign_out_an_already_authenticated_browser PASS (0.24s)
+  test_an_expired_Chinese_sign-in_page_keeps_its_language_without_authenticating_rejected_credentials PASS (0.18s)
+
+NicknamePersonalizationTest::GoogleSignUp
+D, [2026-11-25T17:33:07.468475 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_a_new_Google_account_completes_a_nickname_step;_the_Google_profile_name_is_never_used PASS (0.26s)
+
+FinanceFeatureLibraryTest
+  test_coming-soon_modules_cannot_be_turned_on_and_have_no_page;_unknown_modules_are_refused PASS (0.14s)
+  test_return_to_only_goes_to_this_app's_own_pages                PASS (0.22s)
+  test_Settings_links_to_the_Feature_Library_and_the_library_shows_every_module_with_a_filter PASS (0.17s)
+  test_the_switch_answers_JSON_with_the_new_sidebar,_without_a_reload PASS (0.12s)
+  test_hidden_pages_stay_protected_by_sign-in_and_by_ownership    PASS (0.42s)
+  test_no_dead_ends:_pages_that_had_their_own_sidebar_link_are_reachable_from_their_module's_tabs PASS (0.19s)
+  test_recurring_entries_still_post_while_Recurring_&_Bills_is_hidden PASS (0.13s)
+  test_a_new_person_sees_Transactions,_AI_Assistant_and_Settings_only,_in_both_modes PASS (0.14s)
+  test_an_existing_person_with_data_gets_the_same_new_default_sidebar_and_keeps_every_record PASS (0.16s)
+  test_writes_to_a_hidden_module_are_refused_without_changing_anything PASS (0.22s)
+  test_opening_a_hidden_module's_page_shows_a_safe_'turned_off'_page_that_can_turn_it_on PASS (0.30s)
+  test_Add_&_Sync_lists_the_four_capabilities_and_marks_bank_connections_as_coming_soon PASS (0.25s)
+  test_preferences_persist_across_sessions                        PASS (0.14s)
+  test_core_modules_can_be_turned_off;_Settings_always_stays      PASS (0.15s)
+  test_turning_a_module_on_adds_it_to_the_sidebar;_off_removes_it;_data_is_untouched_and_comes_back PASS (0.31s)
+
+Finance::ModuleCatalogTest
+  test_shared_case:_optional_modules_turned_on                    PASS (0.00s)
+  test_shared_case:_new_person_in_the_app:_defaults_only          PASS (0.00s)
+  test_preferences_are_per_person_and_go_away_with_the_account,_not_with_'delete_my_financial_data' PASS (0.36s)
+  test_every_finance_controller_belongs_to_a_module_or_is_a_system_page PASS (0.26s)
+  test_shared_case:_coming-soon_modules_never_turn_on,_whatever_was_stored PASS (0.00s)
+  test_shared_case:_new_person_on_the_website:_defaults_only      PASS (0.00s)
+  test_every_module_icon_is_drawn_by_the_website_helper           PASS (0.00s)
+  test_shared_case:_an_unknown_format_falls_back_to_the_defaults  PASS (0.00s)
+  test_the_catalog_lists_the_approved_modules;_only_Transactions_and_AI_Assistant_start_on PASS (0.00s)
+  test_preferences:_an_explicit_choice_wins,_coming_soon_is_refused,_revision_grows PASS (0.12s)
+  test_shared_case:_unknown_ids_and_malformed_choices_are_ignored PASS (0.00s)
+  test_shared_case:_forecast_is_available_on_the_website          PASS (0.00s)
+  test_coming-soon_modules_have_no_website_page;_available_ones_name_a_real_route PASS (0.00s)
+  test_shared_case:_forecast_is_coming_soon_in_the_app            PASS (0.00s)
+  test_shared_case:_a_core_module_turned_off                      PASS (0.00s)
+  test_shared_case:_settings_is_not_a_module_and_cannot_be_stored PASS (0.00s)
+
+FinanceBatchUploadTest
+  test_more_than_ten_MB_total_rejects_the_whole_batch_even_when_individual_files_fit PASS (0.22s)
+  test_mixed_CSV_and_PDF_uploads_import_clear_files_while_retaining_unclear_PDF_rows_for_review PASS (0.18s)
+  test_multiple_pending_PDF_reviews_remain_available_after_refresh_and_only_belong_to_the_current_account PASS (0.39s)
+  test_more_than_ten_files_rejects_the_whole_batch_before_importing_anything PASS (0.11s)
+  test_a_valid_CSV_still_imports_when_other_files_are_malformed_or_already_imported PASS (0.20s)
+  test_legacy_single_file_submissions_retain_their_transactions_redirect PASS (0.15s)
+  test_repeated_pending_PDFs_reuse_one_review_draft_without_importing_transactions PASS (0.16s)
+  test_multiple_CSV_files_import_on_the_first_submission_using_each_file's_date_headers PASS (0.31s)
+
+FinanceCategoriesTest
+  test_AI_categorization_sends_only_cleaned_merchant_text_and_updates_only_Uncategorized_rows PASS (0.56s)
+  test_deleting_financial_data_removes_custom_categories_too      PASS (0.23s)
+  test_category_details_chart_its_months_and_biggest_merchants    PASS (0.33s)
+  test_custom_categories_can_be_added,_used,_renamed_and_deleted  PASS (0.34s)
+  test_CSV_imports_accept_the_person's_own_category_names_in_any_letter_case PASS (0.28s)
+  test_built-in,_duplicate,_blank_and_other_people's_category_names_are_refused PASS (0.39s)
+  test_the_categories_page_lists_totals_for_every_category        PASS (0.26s)
+  test_statements_uploaded_from_an_app_bring_their_custom_categories_to_the_cloud PASS (0.34s)
+  test_AI_categorization_needs_consent_and_has_a_short_cooldown   PASS (0.27s)
+  test_the_apps'_categorize_endpoint_answers_with_category_names_and_stores_nothing PASS (0.33s)
+  test_clean_text_keeps_merchant_words_and_drops_numbers_and_email_addresses PASS (0.21s)
+
+CommunitySupportTest
+  test_signed-in_people_who_were_not_invited_see_no_QR_codes_and_get_404_from_the_image_endpoint PASS (0.42s)
+  test_a_service_without_a_note_field_tells_people_how_to_get_their_payment_matched_by_hand PASS (0.39s)
+  test_admins_invite_friends_to_see_QR_codes                      PASS (0.39s)
+  test_signed-out_visitors_are_asked_to_sign_in_and_cannot_load_QR_images PASS (0.53s)
+  test_invited_friends_without_a_nickname_are_sent_to_set_one_instead_of_falling_back_to_their_email PASS (0.27s)
+  test_only_Founding_Patrons_who_opt_in_are_listed_publicly,_by_nickname_only PASS (0.45s)
+  test_admin_pages_and_actions_are_refused_on_the_server_for_non-admins_and_signed-out_visitors PASS (0.37s)
+  test_admins_find_people_by_nickname,_grant_stacked_badges,_record_confirmation_details,_and_revoke_mistakes PASS (0.59s)
+  test_the_app_sidebar_keeps_only_core_features:_no_Membership_or_admin_links,_even_for_admins PASS (0.33s)
+  test_opening_the_support_modal_never_upgrades_anyone's_badges   PASS (0.34s)
+  test_Features_&_Membership_is_public,_linked_in_the_header,_localized,_and_shows_the_benefits_table PASS (0.50s)
+  test_payments_are_off_by_default:_everyone,_even_invited_friends,_sees_Coming_Soon_and_no_QR_codes PASS (0.42s)
+  test_invited_friends_see_four_QR_cards,_the_encouragement,_how-to_steps,_and_one_read-only_nickname_note_with_Copy_Note PASS (0.41s)
+
+BillieDesignShellTest
+  test_pages_load_the_generated_design_tokens_before_the_site_stylesheet PASS (0.11s)
+  test_the_sidebar_marks_the_current_module_and_Statements_is_marked_in_the_Transactions_tabs PASS (0.12s)
+  test_the_theme_menu_offers_System,_Light_and_Dark_and_stays_hidden_until_its_script_runs PASS (0.11s)
+  test_shell_controls_are_translated                              PASS (0.23s)
+
+FinanceForecastEnginesTest
+  test_prophet_short-history_fallback_remains_visible_with_prophet_selected PASS (0.13s)
+  test_unsupported_engine_is_rejected_without_contacting_the_python_service PASS (0.14s)
+  test_successful_chronos_response_shows_selected_and_actual_model PASS (0.21s)
+  test_chronos_connection_failure_retains_selection_and_displays_actual_fallback PASS (0.11s)
+  test_linear_can_be_selected_and_forecast_GET_leaves_stored_financial_records_unchanged PASS (0.13s)
+
+FinanceAccountBalancesTest
+  test_older_imports_with_no_saved_balances_explain_both_missing_inputs_and_keep_transactions PASS (0.24s)
+  test_a_credit-only_account_explains_why_its_debt_is_not_a_cash_balance PASS (0.16s)
+  test_an_unidentified_statement_is_shown_for_assignment_instead_of_claiming_zero_cash PASS (0.21s)
+  test_credit_card_balances_never_inflate_cash_available_for_forecasting PASS (0.27s)
+  test_cash_balances_from_two_banks_are_added_automatically_and_start_the_forecast PASS (0.22s)
+  test_a_newer_statement_missing_its_balance_makes_the_cash_total_visibly_incomplete PASS (0.27s)
+  test_a_person_can_separate_different_accounts_with_the_same_bank_and_last_four_digits PASS (0.18s)
+  test_statement_assignment_cannot_use_another_user's_account_or_statement PASS (0.47s)
+  test_deleting_the_latest_statement_falls_back_within_that_account_and_recomputes_the_sum PASS (0.18s)
+  test_a_PDF_and_CSV_for_one_account_share_the_same_balance_contribution PASS (0.22s)
+  test_each_account_contributes_only_its_latest_statement_regardless_of_upload_order PASS (0.21s)
+  test_assigning_statements_updates_ledger_accounts_while_preserving_bank_evidence PASS (0.32s)
+
+GoogleSignInTest
+D, [2026-11-25T17:33:26.442899 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:26.442930 #46911] DEBUG -- omniauth: (google_oauth2) Request phase initiated.
+W, [2026-11-25T17:33:26.442946 #46911]  WARN -- omniauth: (google_oauth2)   OmniAuth is building callback URLs from the request's host, which comes
+  from the Host or X-Forwarded-Host header and can be forged unless your
+  app or a proxy in front of it checks it. To fix this, set either:
+  OmniAuth.config.full_host = 'https://example.com'
+  OmniAuth.config.allowed_hosts = ['example.com']
+
+E, [2026-11-25T17:33:26.443040 #46911] ERROR -- omniauth: (google_oauth2) Authentication failure! ActionController::InvalidAuthenticityToken: ActionController::InvalidAuthenticityToken, ActionController::InvalidAuthenticityToken
+D, [2026-11-25T17:33:26.531595 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:26.531623 #46911] DEBUG -- omniauth: (google_oauth2) Request phase initiated.
+W, [2026-11-25T17:33:26.531632 #46911]  WARN -- omniauth: (google_oauth2)   OmniAuth is building callback URLs from the request's host, which comes
+  from the Host or X-Forwarded-Host header and can be forged unless your
+  app or a proxy in front of it checks it. To fix this, set either:
+  OmniAuth.config.full_host = 'https://example.com'
+  OmniAuth.config.allowed_hosts = ['example.com']
+
+D, [2026-11-25T17:33:26.533834 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:26.533852 #46911] DEBUG -- omniauth: (google_oauth2) Callback phase initiated.
+E, [2026-11-25T17:33:26.533957 #46911] ERROR -- omniauth: (google_oauth2) Authentication failure! csrf_detected: OmniAuth::Strategies::OAuth2::CallbackError, csrf_detected | CSRF detected
+  test_real_Google_initiation_requires_CSRF_and_sends_state_PKCE_and_only_identity_scopes PASS (0.10s)
+  test_missing_configuration_leaves_email_usable_and_never_advertises_a_working_Google_form PASS (0.01s)
+D, [2026-11-25T17:33:26.670120 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_an_expired_pending_Google_connection_cannot_be_completed_by_a_later_password_login PASS (0.32s)
+D, [2026-11-25T17:33:26.981495 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_Google_login_cannot_bypass_a_local_authentication_code_requirement PASS (0.12s)
+D, [2026-11-25T17:33:27.096632 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_locked_accounts_cannot_bypass_their_lock_through_Google    PASS (0.12s)
+D, [2026-11-25T17:33:27.102742 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+E, [2026-11-25T17:33:27.102786 #46911] ERROR -- omniauth: (google_oauth2) Authentication failure! Google sign-in is currently unavailable.: OmniAuth::Error, Google sign-in is currently unavailable.
+  test_missing_configuration_rejects_direct_Google_callbacks_without_creating_an_account PASS (0.00s)
+D, [2026-11-25T17:33:27.224702 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_a_failed_password_confirmation_does_not_bind_the_pending_Google_identity PASS (0.13s)
+D, [2026-11-25T17:33:27.476186 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:27.482494 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_invitation-only_mode_blocks_Google_signup_but_permits_an_already_linked_identity PASS (0.25s)
+D, [2026-11-25T17:33:27.493682 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:27.497410 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:27.500689 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:27.503921 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:27.506973 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:27.510251 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_unverified_and_mismatched_Google_claims_never_create_accounts PASS (0.02s)
+D, [2026-11-25T17:33:27.514380 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_a_verified_new_Google_identity_creates_one_user_and_a_usable_Bullet_Train_workspace PASS (0.25s)
+D, [2026-11-25T17:33:27.988160 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_repeat_Google_login_uses_the_UID_and_preserves_names_workspace_and_finance_data PASS (0.25s)
+D, [2026-11-25T17:33:28.264501 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_logging_into_a_different_local_account_cannot_claim_a_pending_Google_identity PASS (0.45s)
+  test_GET_requests_cannot_initiate_Google_authentication         PASS (0.06s)
+D, [2026-11-25T17:33:28.745492 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+D, [2026-11-25T17:33:28.962781 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_matching_an_existing_email_requires_its_password_before_connecting_Google PASS (0.45s)
+D, [2026-11-25T17:33:28.972774 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+E, [2026-11-25T17:33:28.972883 #46911] ERROR -- omniauth: (google_oauth2) Authentication failure! access_denied encountered.
+  test_canceling_Google_authorization_returns_a_generic_message_without_provider_secrets PASS (0.00s)
+  test_registration_and_login_expose_a_separate_POST_Google_form_when_configured PASS (0.01s)
+
+ClientApiModulePreferencesTest
+  test_bad_payload_and_modules_unavailable_on_the_app_write_nothing PASS (0.24s)
+  test_authorization_and_rollout_flag                             PASS (0.30s)
+  test_preflight_allows_the_native_WebView_origin_and_excludes_arbitrary_origins PASS (0.33s)
+  test_idempotent_replay_is_scoped_to_the_account_and_does_not_overwrite_later_changes PASS (0.39s)
+  test_a_visibility_change_leaves_representative_financial_records_in_place PASS (0.31s)
+  test_an_explicit_legacy_value_belongs_to_its_account_and_another_account_keeps_its_defaults PASS (0.22s)
+  test_web_reads_native_preferences_and_rejects_an_older_rendered_revision PASS (0.32s)
+  test_partial_conflicts_preserve_both_different_module_edits_and_latest_revision_ordering PASS (0.21s)
+
+FinanceInsightChatTest
+  test_chat_requires_sign_in                                      PASS (0.10s)
+  test_chat_without_consent_is_rejected_without_contacting_the_AI PASS (0.18s)
+  test_insights_page_shows_the_chat_box_when_AI_is_configured_and_a_notice_otherwise PASS (0.15s)
+  test_chat_returns_the_AI_answer_as_JSON                         PASS (0.11s)
+
+NicknamePersonalizationTest
+  test_the_dashboard_greets_by_nickname_for_the_person's_own_time_of_day_and_language PASS (0.17s)
+  test_a_successful_import_is_acknowledged_by_name                PASS (0.20s)
+  test_email_sign-up_keeps_a_Unicode_nickname_and_welcomes_the_person_by_it PASS (0.30s)
+  test_the_sign-up_error_for_a_blank_nickname_is_localized        PASS (0.19s)
+  test_nobody_sees_another_person's_nickname,_and_signed-out_visitors_are_sent_to_sign_in PASS (0.32s)
+  test_saving_from_the_suggestion_returns_to_the_dashboard_and_greets_by_the_new_nickname PASS (0.28s)
+  test_an_older_account_without_a_nickname_keeps_working_in_the_apps PASS (0.10s)
+  test_an_older_account_without_a_nickname_still_signs_in_and_sees_a_dismissible_suggestion,_not_a_block PASS (0.38s)
+  test_the_sign-up_form_asks_for_a_required_nickname_with_a_friendly_explanation PASS (0.01s)
+  test_settings_can_change_the_nickname_but_not_clear_it          PASS (0.18s)
+  test_a_forecast_with_a_projected_gap_is_described_calmly,_with_the_date_and_what_to_try PASS (0.12s)
+  test_the_apps_can_update_the_nickname_with_the_same_rules,_and_only_for_the_signed-in_account PASS (0.34s)
+  test_email_sign-up_refuses_a_missing_or_whitespace-only_nickname_and_creates_nothing PASS (0.50s)
+  test_the_welcome_email_is_in_the_sign-up_language_and_greets_by_nickname PASS (0.28s)
+
+BillieLocalizationTest
+  test_ko_finance_pages_reports_and_validation_use_localized_text_with_canonical_data PASS (0.30s)
+  test_Chinese_validation_and_forecast_errors_are_localized       PASS (0.12s)
+  test_browser_language_selects_Simplified_Chinese_and_explicit_choice_survives_navigation PASS (0.02s)
+  test_unsupported_and_malformed_locale_values_are_ignored_and_request_locale_is_restored PASS (0.01s)
+  test_es_finance_pages_reports_and_validation_use_localized_text_with_canonical_data PASS (0.35s)
+  test_ja_browser_detection_authentication_and_language_menu_work PASS (0.01s)
+  test_application_translation_catalogs_have_matching_keys_and_interpolation_variables PASS (0.07s)
+  test_browser_detects_Traditional_Chinese_regions_and_scripts_without_selecting_Simplified_Chinese PASS (0.01s)
+  test_zh-TW_browser_detection_authentication_and_language_menu_work PASS (0.01s)
+  test_ja_finance_pages_reports_and_validation_use_localized_text_with_canonical_data PASS (0.36s)
+  test_Chinese_finance_pages_retain_canonical_categories_and_language_selection_preserves_filters PASS (0.21s)
+  test_ko_browser_detection_authentication_and_language_menu_work PASS (0.01s)
+  test_es_browser_detection_authentication_and_language_menu_work PASS (0.01s)
+  test_zh-TW_finance_pages_reports_and_validation_use_localized_text_with_canonical_data PASS (0.38s)
+
+FinanceSmartCommandTest
+  test_navigation_opens_only_the_website's_own_pages              PASS (0.37s)
+  test_categories_are_listed_in_the_interface_language,_with_this_person's_own PASS (0.24s)
+  test_another_person_cannot_use_an_undo_token                    PASS (0.38s)
+  test_the_layout_mounts_the_command_bar_only_on_signed-in_finance_pages PASS (0.25s)
+  test_an_unready_plan_cannot_be_forced_through_execute           PASS (0.30s)
+  test_last_week_means_the_person's_calendar_week,_like_the_pages PASS (0.35s)
+  test_search_phrases_are_matched_literally,_never_as_SQL_patterns PASS (0.25s)
+  test_finding_transactions_counts_them_and_opens_the_Transactions_page_with_the_same_filter PASS (0.38s)
+  test_a_plan_made_for_another_account_is_refused,_and_nothing_of_theirs_is_counted PASS (0.45s)
+  test_malformed,_unready,_unknown_and_oversized_requests_are_refused_without_running_anything PASS (0.27s)
+  test_undo_restores_the_previous_state_once,_and_only_within_its_time PASS (0.37s)
+  test_deleting_financial_data_also_removes_command_history       PASS (0.25s)
+  test_every_endpoint_requires_a_signed-in_person                 PASS (0.29s)
+  test_the_manifest_the_executor_trusts_is_the_generated_web_registry,_and_only_reads_skip_confirmation PASS (0.33s)
+  test_balances_are_the_dashboard's,_and_unknown_until_there_is_one PASS (0.23s)
+  test_another_person's_category_name_is_not_a_valid_argument     PASS (0.31s)
+  test_a_failure_part-way_rolls_every_row_back_and_keeps_no_record PASS (0.25s)
+  test_read-only_previews_need_no_confirmation_and_change_nothing PASS (0.32s)
+  test_deleting_categories_and_unknown_actions_are_not_available_from_the_website's_bar PASS (0.21s)
+  test_repeated_submissions_run_a_change_once_and_replay_the_first_result PASS (0.35s)
+  test_the_context_has_category_names_and_the_plan_scope,_never_transactions_or_amounts PASS (0.23s)
+  test_a_preview_made_stale_by_another_change_is_refused_and_nothing_changes PASS (0.37s)
+  test_undo_refuses_when_anything_it_would_restore_changed_since,_and_changes_nothing PASS (0.26s)
+  test_categories_are_created_and_renamed_under_the_website's_own_rules,_and_undone_safely PASS (0.35s)
+  test_a_change_needs_a_preview_and_an_explicit_confirmation,_whatever_the_browser_claims PASS (0.33s)
+  test_the_preview_lists_exactly_the_rows_the_change_then_makes,_and_only_this_person's PASS (0.26s)
+  test_spending_and_income_totals_count_exactly_what_the_dashboard_counts PASS (0.31s)
+  test_excluding_and_including_change_the_totals_exactly_as_the_dashboard_counts_them PASS (0.26s)
+
+GoogleUsageRegionTest
+D, [2026-11-25T17:33:45.581595 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_Google_signup_accepts_Global_Citizen_as_the_selected_region PASS (0.30s)
+D, [2026-11-25T17:33:46.075991 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_deferred_Google_signup_accepts_its_pending_invitation_without_creating_an_extra_workspace PASS (0.47s)
+D, [2026-11-25T17:33:46.356737 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_blank_and_invented_regions_cannot_complete_Google_signup_and_may_be_corrected PASS (0.25s)
+D, [2026-11-25T17:33:46.607923 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_completion_rechecks_whether_Google_signup_is_still_enabled PASS (0.01s)
+D, [2026-11-25T17:33:46.780833 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_a_linked_legacy_Google_account_must_choose_a_region_in_settings_before_using_the_app PASS (0.23s)
+D, [2026-11-25T17:33:47.029604 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_an_invitation_for_another_email_requires_explicit_confirmation_after_Google_signup PASS (0.41s)
+D, [2026-11-25T17:33:47.249145 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_verified_Google_signup_creates_an_account_only_with_a_valid_selected_region_and_ignores_submitted_identities PASS (0.24s)
+D, [2026-11-25T17:33:47.488643 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_expired_and_missing_verified_identities_cannot_complete_Google_signup PASS (0.01s)
+D, [2026-11-25T17:33:47.492611 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_Google_region_completion_requires_its_browser_CSRF_token   PASS (0.29s)
+D, [2026-11-25T17:33:47.787071 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_new_Google_identity_waits_for_a_required_region_without_saving_a_partial_account PASS (0.01s)
+D, [2026-11-25T17:33:47.795321 #46911] DEBUG -- omniauth: (google_oauth2) Setup endpoint detected, running now.
+  test_completion_rechecks_email_ownership_instead_of_merging_a_newly_created_password_account PASS (0.10s)
+
+FinanceAccountsOverviewTest
+  test_cash_on_hand_rejects_negative_and_sub-cent_amounts         PASS (0.30s)
+  test_names_are_shown_as_text,_never_as_markup                   PASS (0.27s)
+  test_names_are_limited_and_checked,_and_one_account_cannot_be_renamed_by_another_user PASS (0.50s)
+  test_a_name_you_type_always_wins,_everywhere,_and_survives_later_statements PASS (0.27s)
+  test_cash_on_hand_is_typed_in,_is_added_to_the_total,_and_is_not_a_bank_balance PASS (0.28s)
+  test_total_cash_counts_cash_on_hand_even_before_any_statement_balance_is_known PASS (0.55s)
+  test_the_dashboard_groups_cash_accounts_and_credit_cards_with_totals PASS (0.21s)
+
+ClientApiTest
+  test_wrong_password,_unknown_email,_and_missing_fields_are_refused PASS (0.21s)
+  test_wrong_two-factor_codes_count_toward_the_lockout,_and_a_complete_sign-in_resets_the_count PASS (0.24s)
+  test_sign_out_succeeds_(the_app_discards_its_token)             PASS (0.10s)
+  test_missing,_tampered,_or_stale_tokens_are_refused             PASS (0.40s)
+  test_reads_and_updates_language,_nickname,_and_time_zone_with_the_token PASS (0.14s)
+  test_the_apps'_origins_may_call_the_API_across_origins          PASS (0.21s)
+  test_an_account_Devise_reports_as_unconfirmed_gets_no_token     PASS (0.18s)
+  test_failed_attempts_count_toward_the_normal_account_lockout    PASS (0.20s)
+  test_signs_in_with_email_and_password_and_returns_a_token_plus_account_info_only PASS (0.17s)
+
+ClientApiUploadValidationTest
+  test_malformed_hashes_are_refused_as_invalid_sha256_and_nothing_is_stored PASS (0.15s)
+  test_malformed_statement_shapes_and_values_are_422,_not_500     PASS (0.17s)
+  test_malformed_receipt_payloads_are_422,_not_500                PASS (0.22s)
+  test_a_missing_hash_is_refused                                  PASS (0.10s)
+  test_a_well-formed_upload_still_works                           PASS (0.11s)
+
+QuickLoginRemovalTest
+  test_guessable_demo_credentials_cannot_authenticate_on_the_website_or_the_app_API PASS (0.42s)
+  test_the_removed_shortcut_routes_no_longer_exist_and_sign_nobody_in PASS (0.34s)
+  test_standard_registration_still_works                          PASS (0.45s)
+  test_the_quick-login_implementation_is_gone_from_the_application PASS (0.22s)
+  test_password_reset_still_sends_instructions_for_a_normal_account PASS (0.21s)
+  test_standard_email_and_password_sign-in_still_works_and_keeps_the_session PASS (0.37s)
+  test_there_is_no_passwordless_bypass,_even_with_the_old_development_flags_set PASS (0.12s)
+  test_the_sign-in_page_has_no_quick-login_controls,_only_the_standard_options PASS (0.18s)
+  test_existing_accounts_and_their_financial_records_are_untouched PASS (0.22s)
+  test_switch_account_signs_out_and_returns_to_the_sign-in_page   PASS (0.14s)
+
+ClientApiCorsTest
+  test_every_method_the_apps_use_is_allowed_from_every_app_origin PASS (0.01s)
+  test_other_websites_are_not_allowed                             PASS (0.00s)
+
+PrivacyDataDeletionTest
+  test_Google_sign-up_accounts_confirm_with_their_email_because_they_never_saw_a_password PASS (0.44s)
+  test_financial_data_is_not_deleted_without_the_typed_email      PASS (0.55s)
+  test_deleting_financial_data_removes_every_finance_record_but_keeps_the_login_and_other_people's_data PASS (0.35s)
+  test_financial_data_deletion_is_all_or_nothing                  PASS (0.42s)
+  test_account_deletion_needs_the_typed_email_and_the_current_password PASS (0.25s)
+  test_accounts_sharing_a_team_with_someone_else_are_not_deleted  PASS (0.36s)
+  test_signed-out_visitors_cannot_delete_anything                 PASS (0.24s)
+  test_settings_explain_both_actions,_warn_to_export_first_and_link_to_the_export PASS (0.39s)
+  test_Bullet_Train's_user_and_team_endpoints_cannot_delete_someone_else PASS (0.34s)
+  test_settings_show_just_two_buttons;_the_explanations_and_forms_live_in_dialogs_that_start_closed PASS (0.26s)
+  test_deleting_the_account_removes_the_user,_their_finance_data_and_personal_team,_then_signs_out PASS (0.49s)
+
+LocalDatabaseRemovalTest
+  test_removing_never_touches_the_cloud_database                  PASS (0.50s)
+  test_removing_several_records_at_once,_and_the_device_card_goes_away_when_nothing_is_left PASS (0.33s)
+  test_removing_one_record_tombstones_only_that_record_and_leaves_an_audit_entry PASS (0.23s)
+  test_an_old_retry_cannot_bring_a_removed_record_back,_but_a_newer_report_from_the_app_does PASS (0.29s)
+  test_another_account's_records_cannot_be_removed,_and_junk_ids_are_ignored PASS (0.24s)
+  test_settings_lists_every_record_with_a_checkbox,_a_single_remove_button_and_one_confirmation_dialog PASS (0.32s)
+
+LocalDatabaseIdentityTest
+  test_a_reported_sync_time_is_the_app's_explicit_Sync_Now,_nothing_else PASS (0.24s)
+  test_the_same_database_seen_from_a_new_device_id_moves_the_card_and_keeps_the_old_association_in_the_audit PASS (0.32s)
+  test_metadata_reports_never_carry_or_store_financial_content    PASS (0.25s)
+  test_reporting_leaves_the_web_database_untouched                PASS (0.34s)
+  test_an_incomplete_identity_(no_platform:_browser_preview_or_old_build)_is_refused_and_stores_nothing PASS (0.23s)
+  test_different_non-empty_databases_on_one_device_are_kept_apart,_with_an_audit_entry PASS (0.29s)
+  test_two_live_devices_reporting_the_same_database_are_never_silently_combined:_both_go_to_review PASS (0.23s)
+  test_two_accounts_on_one_device_stay_isolated                   PASS (0.31s)
+  test_a_device_name_change_updates_the_same_card_instead_of_creating_a_new_one PASS (0.23s)
+  test_two_devices_create_exactly_two_device_records              PASS (0.29s)
+  test_reopening_the_same_app_20_times_keeps_exactly_one_record,_updated_in_place PASS (0.30s)
+
+FinanceManualBookkeepingTest
+  test_batch_change_and_undo_from_the_activity_log                PASS (0.35s)
+  test_reports_by_kind_and_dimension,_with_net_worth              PASS (0.45s)
+  test_entries:_expense,_income,_transfer,_card_payment,_refund;_edit,_copy,_delete,_restore,_purge PASS (0.71s)
+  test_merchants,_projects_and_tags:_create,_rename,_archive,_merge,_delete PASS (0.49s)
+  test_budgets_warn_at_90%_and_recurring_entries_post_each_date_once PASS (0.46s)
+  test_categories:_two_levels,_income_tree,_hide,_merge           PASS (0.49s)
+  test_typed_Quick_Add_only_prefills_the_usual_form_and_requires_explicit_save PASS (0.34s)
+  test_review_lists:_suspect_income_and_possible_duplicates       PASS (0.32s)
+  test_accounts:_create_every_type,_edit,_reorder,_adjust_balance,_archive,_delete_only_when_unused PASS (0.55s)
+  test_imported_entries_keep_the_bank's_amount_and_original_text_when_edited PASS (0.34s)
+
+Finished in 118.41322s
+439 tests, 28801 assertions, 0 failures, 0 errors, 0 skips
+Coverage report generated for test to $SCRATCH/repo/coverage.
+Line Coverage: 81.52% (6468 / 7934)

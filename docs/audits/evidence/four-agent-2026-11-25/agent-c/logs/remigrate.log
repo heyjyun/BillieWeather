@@ -1,0 +1,621 @@
+DEPRECATION WARNING: ActiveSupport::Configurable is deprecated without replacement, and will be removed in Rails 8.2.
+
+The previous behavior can be emulated with `attr_accessor`s, `class_attribute`s, or combinations of `class_attribute` and `InheritableOptions` depending on requirements.
+ (called from <compiled> at $WORKSPACE/billieweather-audit/config/application.rb:12)
+== 20251111175505 UpdateMembershipsEmailToMatchUsers: migrating ===============
+== 20251111175505 UpdateMembershipsEmailToMatchUsers: migrated (0.1297s) ======
+
+== 20261107000000 CreateFinanceWorkspace: migrating ===========================
+-- create_table(:finance_profiles)
+   -> 0.0052s
+-- create_table(:finance_statements)
+   -> 0.0016s
+-- add_index(:finance_statements, [:user_id, :sha256], {unique: true})
+   -> 0.0003s
+-- create_table(:finance_transactions)
+   -> 0.0018s
+-- add_index(:finance_transactions, [:user_id, :booked_on])
+   -> 0.0003s
+== 20261107000000 CreateFinanceWorkspace: migrated (0.0091s) ==================
+
+== 20261107000200 CreateFinanceInsights: migrating ============================
+-- create_table(:finance_insights)
+   -> 0.0018s
+-- add_index(:finance_insights, [:user_id, :generated_at])
+   -> 0.0003s
+== 20261107000200 CreateFinanceInsights: migrated (0.0021s) ===================
+
+== 20261107000300 CreateFinanceStatementDrafts: migrating =====================
+-- create_table(:finance_statement_drafts)
+   -> 0.0015s
+-- add_index(:finance_statement_drafts, :expires_at)
+   -> 0.0003s
+-- change_column_default(:finance_profiles, :tax_country, {from: nil, to: "United States"})
+   -> 0.0035s
+-- change_column_default(:finance_profiles, :tax_profile, {from: nil, to: "personal"})
+   -> 0.0007s
+-- execute("UPDATE finance_profiles SET tax_country = 'United States' WHERE tax_country IS NULL OR tax_country = ''")
+   -> 0.0002s
+-- execute("UPDATE finance_profiles SET tax_profile = 'personal' WHERE tax_profile IS NULL OR tax_profile = ''")
+   -> 0.0001s
+== 20261107000300 CreateFinanceStatementDrafts: migrated (0.0064s) ============
+
+== 20261107000900 AddKindToFinanceInsights: migrating =========================
+-- add_column(:finance_insights, :kind, :string, {null: false, default: "general"})
+   -> 0.0012s
+-- add_index(:finance_insights, [:user_id, :kind, :generated_at])
+   -> 0.0003s
+== 20261107000900 AddKindToFinanceInsights: migrated (0.0015s) ================
+
+== 20261107001000 CreateFinanceMerchantRules: migrating =======================
+-- create_table(:finance_merchant_rules)
+   -> 0.0019s
+-- add_index(:finance_merchant_rules, [:user_id, :merchant_key, :income], {unique: true, name: "index_finance_merchant_rules_on_user_merchant_direction"})
+   -> 0.0003s
+== 20261107001000 CreateFinanceMerchantRules: migrated (0.0022s) ==============
+
+== 20261107001100 AddBalanceTracking: migrating ===============================
+-- add_column(:finance_statements, :closing_balance, :decimal, {precision: 15, scale: 2})
+   -> 0.0003s
+-- add_column(:finance_statements, :closing_balance_on, :date)
+   -> 0.0002s
+-- add_column(:finance_statement_drafts, :closing_balance, :decimal, {precision: 15, scale: 2})
+   -> 0.0001s
+-- add_column(:finance_statement_drafts, :closing_balance_on, :date)
+   -> 0.0001s
+-- add_column(:finance_profiles, :balance_source, :string)
+   -> 0.0001s
+-- add_column(:finance_profiles, :balance_as_of, :date)
+   -> 0.0001s
+== 20261107001100 AddBalanceTracking: migrated (0.0011s) ======================
+
+== 20261107001200 AddFinanceBankAccounts: migrating ===========================
+-- create_table(:finance_bank_accounts)
+   -> 0.0014s
+-- add_index(:finance_bank_accounts, [:user_id, :identity_key], {unique: true})
+   -> 0.0002s
+-- add_reference(:finance_statements, :bank_account, {foreign_key: {to_table: :finance_bank_accounts}})
+   -> 0.0040s
+-- add_reference(:finance_statement_drafts, :bank_account, {foreign_key: {to_table: :finance_bank_accounts}})
+   -> 0.0071s
+-- add_column(:finance_statements, :balance_observed_on, :date)
+   -> 0.0001s
+-- add_column(:finance_statement_drafts, :balance_observed_on, :date)
+   -> 0.0001s
+-- execute("UPDATE finance_statements SET balance_observed_on = GREATEST(closing_balance_on,\n  (SELECT MAX(booked_on) FROM finance_transactions WHERE statement_id = finance_statements.id))\n")
+   -> 0.0003s
+== 20261107001200 AddFinanceBankAccounts: migrated (0.0134s) ==================
+
+== 20261107001300 AddGoogleUidToUsers: migrating ==============================
+-- add_column(:users, :google_uid, :string)
+   -> 0.0003s
+-- add_index(:users, :google_uid, {unique: true, where: "google_uid IS NOT NULL"})
+   -> 0.0029s
+== 20261107001300 AddGoogleUidToUsers: migrated (0.0032s) =====================
+
+== 20261107001400 AddAccountOverviewFields: migrating =========================
+-- add_column(:finance_bank_accounts, :custom_name, :string)
+   -> 0.0003s
+-- add_column(:finance_profiles, :cash_on_hand, :decimal, {precision: 15, scale: 2, null: false, default: 0})
+   -> 0.0010s
+-- add_column(:finance_profiles, :cash_on_hand_on, :date)
+   -> 0.0001s
+== 20261107001400 AddAccountOverviewFields: migrated (0.0014s) ================
+
+== 20261108000000 AddUsageRegionToUsers: migrating ============================
+-- add_column(:users, :usage_region, :string, {limit: 2})
+   -> 0.0054s
+-- add_check_constraint(:users, "usage_region IS NULL OR usage_region IN ('AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW')", {name: "users_usage_region_allowed"})
+   -> 0.0031s
+== 20261108000000 AddUsageRegionToUsers: migrated (0.0086s) ===================
+
+== 20261108000100 RequireUsageRegionForUsers: migrating =======================
+-- add_column(:users, :usage_region_pending, :boolean, {default: false, null: false})
+   -> 0.0007s
+-- execute("UPDATE users SET usage_region_pending = TRUE WHERE usage_region IS NULL")
+   -> 0.0003s
+-- add_check_constraint(:users, "usage_region IS NOT NULL OR usage_region_pending", {name: "users_usage_region_required"})
+   -> 0.0002s
+== 20261108000100 RequireUsageRegionForUsers: migrated (0.0013s) ==============
+
+== 20261108000200 KeepUsageRegionRequiredForHumanUsers: migrating =============
+-- remove_check_constraint(:users, {name: "users_usage_region_required"})
+   -> 0.0012s
+-- add_check_constraint(:users, "usage_region IS NOT NULL OR usage_region_pending OR platform_agent_of_id IS NOT NULL", {name: "users_usage_region_required"})
+   -> 0.0003s
+-- execute("UPDATE users SET usage_region_pending = FALSE WHERE platform_agent_of_id IS NOT NULL")
+   -> 0.0001s
+== 20261108000200 KeepUsageRegionRequiredForHumanUsers: migrated (0.0017s) ====
+
+== 20261108000300 AddGlobalCitizenRegion: migrating ===========================
+-- remove_check_constraint(:users, {name: "users_usage_region_allowed"})
+   -> 0.0008s
+-- add_check_constraint(:users, "usage_region IS NULL OR usage_region IN ('AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'XG', 'YE', 'YT', 'ZA', 'ZM', 'ZW')", {name: "users_usage_region_allowed"})
+   -> 0.0005s
+== 20261108000300 AddGlobalCitizenRegion: migrated (0.0014s) ==================
+
+== 20261109000000 AddNicknameToUsers: migrating ===============================
+-- add_column(:users, :nickname, :string, {limit: 40})
+   -> 0.0020s
+== 20261109000000 AddNicknameToUsers: migrated (0.0020s) ======================
+
+== 20261109000100 CreateCommunitySupport: migrating ===========================
+-- create_table(:community_honors)
+   -> 0.0082s
+-- create_table(:community_support_accesses)
+   -> 0.0025s
+-- create_table(:community_payment_methods)
+   -> 0.0020s
+-- add_column(:users, :supporter_recognition_public, :boolean, {null: false, default: false})
+   -> 0.0003s
+== 20261109000100 CreateCommunitySupport: migrated (0.0131s) ==================
+
+== 20261109000200 MovePaymentQrCodesToActiveStorage: migrating ================
+-- select_value("SELECT COUNT(*) FROM community_payment_methods WHERE qr_image IS NOT NULL")
+   -> 0.0005s
+   -> 0 rows
+-- create_table(:private_storage_files)
+   -> 0.0011s
+-- add_column(:community_payment_methods, :enabled, :boolean, {null: false, default: false})
+   -> 0.0002s
+-- remove_column(:community_payment_methods, :qr_image)
+   -> 0.0001s
+-- remove_column(:community_payment_methods, :qr_content_type)
+   -> 0.0001s
+-- remove_column(:community_payment_methods, :qr_byte_size)
+   -> 0.0001s
+== 20261109000200 MovePaymentQrCodesToActiveStorage: migrated (0.0022s) =======
+
+== 20261109000300 AddCloudDatabaseNameToUsers: migrating ======================
+-- add_column(:users, :cloud_database_name, :string, {limit: 60})
+   -> 0.0003s
+== 20261109000300 AddCloudDatabaseNameToUsers: migrated (0.0003s) =============
+
+== 20261109000400 CreateLocalDatabaseReports: migrating =======================
+-- create_table(:finance_local_devices)
+   -> 0.0051s
+-- create_table(:finance_local_database_reports)
+   -> 0.0033s
+== 20261109000400 CreateLocalDatabaseReports: migrated (0.0084s) ==============
+
+== 20261109000500 CreateFinanceCustomCategories: migrating ====================
+-- create_table(:finance_custom_categories)
+   -> 0.0013s
+-- add_index(:finance_custom_categories, "user_id, lower(name)", {unique: true, name: "index_finance_custom_categories_on_user_and_lower_name"})
+   -> 0.0003s
+-- add_column(:users, :finance_ai_categorized_at, :datetime)
+   -> 0.0001s
+== 20261109000500 CreateFinanceCustomCategories: migrated (0.0020s) ===========
+
+== 20261111000100 CreateFinanceCommandExecutions: migrating ===================
+-- create_table(:finance_command_executions)
+   -> 0.0016s
+-- add_index(:finance_command_executions, [:user_id, :idempotency_key], {unique: true, name: "index_finance_command_executions_on_user_and_key"})
+   -> 0.0003s
+-- add_index(:finance_command_executions, :undo_token_digest, {unique: true, where: "undo_token_digest IS NOT NULL"})
+   -> 0.0043s
+-- add_index(:finance_command_executions, [:user_id, :created_at])
+   -> 0.0003s
+== 20261111000100 CreateFinanceCommandExecutions: migrated (0.0065s) ==========
+
+== 20261113000100 AddIdentityAndReviewToLocalDatabases: migrating =============
+-- change_table(:finance_local_devices, {bulk: true})
+   -> 0.0019s
+-- change_table(:finance_local_database_reports, {bulk: true})
+   -> 0.0004s
+-- add_index(:finance_local_database_reports, [:user_id, :database_id], {name: "index_local_database_reports_on_owner_database"})
+   -> 0.0003s
+-- create_table(:finance_local_database_audits)
+   -> 0.0021s
+== 20261113000100 AddIdentityAndReviewToLocalDatabases: migrated (0.0047s) ====
+
+== 20261115000100 AddFinanceOwnerUidToUsers: migrating ========================
+-- extension_enabled?("pgcrypto")
+   -> 0.0017s
+-- add_column(:users, :finance_owner_uid, :uuid, {null: false, default: #<Proc:0x000000012f2acd50 $WORKSPACE/billieweather-audit/db/migrate/20261115000100_add_finance_owner_uid_to_users.rb:6 (lambda)>})
+   -> 0.0021s
+-- add_index(:users, :finance_owner_uid, {unique: true})
+   -> 0.0005s
+== 20261115000100 AddFinanceOwnerUidToUsers: migrated (0.0044s) ===============
+
+== 20261115000200 AddLedgerColumnsToFinanceTransactions: migrating ============
+-- change_table(:finance_transactions, {bulk: true})
+   -> 0.0026s
+-- execute("UPDATE finance_transactions SET\n  kind = CASE WHEN category = 'Transfers' THEN 'transfer' WHEN amount > 0 THEN 'income' ELSE 'expense' END,\n  original_description = description\n")
+   -> 0.0003s
+-- execute("UPDATE finance_transactions t SET bank_account_id = s.bank_account_id\nFROM finance_statements s WHERE s.id = t.statement_id AND s.bank_account_id IS NOT NULL\n")
+   -> 0.0002s
+-- change_column_null(:finance_transactions, :original_description, false)
+   -> 0.0001s
+-- change_column_null(:finance_transactions, :statement_id, true)
+   -> 0.0001s
+-- add_check_constraint(:finance_transactions, "kind IN ('expense', 'income', 'refund', 'transfer', 'card_payment', 'opening_balance', 'adjustment', 'ignored')", {name: "finance_transactions_kind"})
+   -> 0.0002s
+-- add_check_constraint(:finance_transactions, "entry_origin IN ('import', 'manual', 'web_copy', 'upload', 'recurring', 'legacy')", {name: "finance_transactions_entry_origin"})
+   -> 0.0002s
+-- add_check_constraint(:finance_transactions, "statement_id IS NOT NULL OR entry_origin IN ('manual', 'recurring')", {name: "finance_transactions_statement_or_manual"})
+   -> 0.0002s
+-- add_check_constraint(:finance_transactions, "occurred_at_time IS NULL OR occurred_at_time ~ '^[0-2][0-9]:[0-5][0-9]$'", {name: "finance_transactions_time"})
+   -> 0.0002s
+-- add_index(:finance_transactions, :uuid, {unique: true})
+   -> 0.0003s
+-- add_index(:finance_transactions, [:user_id, :kind])
+   -> 0.0004s
+-- add_index(:finance_transactions, [:bank_account_id, :booked_on, :amount], {name: "index_finance_transactions_on_account_date_amount"})
+   -> 0.0003s
+-- add_index(:finance_transactions, [:user_id, :deleted_at])
+   -> 0.0004s
+-- add_index(:finance_transactions, :fingerprint)
+   -> 0.0002s
+-- add_index(:finance_transactions, [:recurring_rule_id, :recurring_on, :bank_account_id], {unique: true, where: "recurring_rule_id IS NOT NULL", name: "index_finance_transactions_recurring_once"})
+   -> 0.0029s
+-- add_foreign_key(:finance_transactions, :finance_bank_accounts, {column: :bank_account_id})
+   -> 0.0005s
+== 20261115000200 AddLedgerColumnsToFinanceTransactions: migrated (0.0094s) ===
+
+== 20261115000300 ExtendFinanceBankAccounts: migrating ========================
+-- change_table(:finance_bank_accounts, {bulk: true})
+   -> 0.0036s
+-- execute("UPDATE finance_bank_accounts SET account_type = CASE kind WHEN 'cash' THEN 'checking' WHEN 'credit' THEN 'credit_card' ELSE 'other' END")
+   -> 0.0002s
+-- change_column_null(:finance_bank_accounts, :identity_key, true)
+   -> 0.0001s
+-- change_column_null(:finance_bank_accounts, :last4, true)
+   -> 0.0001s
+-- change_column_null(:finance_bank_accounts, :bank_name, true)
+   -> 0.0004s
+-- add_check_constraint(:finance_bank_accounts, "account_type IN ('checking', 'savings', 'cash', 'payment_app', 'investment', 'receivable', 'credit_card', 'loan', 'other')", {name: "finance_bank_accounts_type"})
+   -> 0.0013s
+-- add_check_constraint(:finance_bank_accounts, "statement_day IS NULL OR statement_day BETWEEN 1 AND 31", {name: "finance_bank_accounts_statement_day"})
+   -> 0.0002s
+-- add_check_constraint(:finance_bank_accounts, "due_day IS NULL OR due_day BETWEEN 1 AND 31", {name: "finance_bank_accounts_due_day"})
+   -> 0.0002s
+-- add_check_constraint(:finance_bank_accounts, "manual OR identity_key IS NOT NULL", {name: "finance_bank_accounts_identity_or_manual"})
+   -> 0.0001s
+-- add_index(:finance_bank_accounts, :uuid, {unique: true})
+   -> 0.0003s
+== 20261115000300 ExtendFinanceBankAccounts: migrated (0.0068s) ===============
+
+== 20261115000400 CreateFinanceLedgerTables: migrating ========================
+-- create_table(:finance_books)
+   -> 0.0038s
+-- add_index(:finance_books, :user_id, {unique: true, where: "default_book", name: "index_finance_books_one_default"})
+   -> 0.0010s
+-- create_table(:finance_transaction_links)
+   -> 0.0028s
+-- add_index(:finance_transaction_links, [:link_type, :from_transaction_id, :to_transaction_id], {unique: true, name: "index_finance_links_unique"})
+   -> 0.0003s
+-- create_table(:finance_audit_events)
+   -> 0.0018s
+-- add_index(:finance_audit_events, [:user_id, :created_at])
+   -> 0.0002s
+-- add_index(:finance_audit_events, :batch_id)
+   -> 0.0003s
+-- create_table(:finance_merchants)
+   -> 0.0017s
+-- add_index(:finance_merchants, "user_id, lower((name)::text)", {unique: true, name: "index_finance_merchants_on_user_and_lower_name"})
+   -> 0.0003s
+-- create_table(:finance_projects)
+   -> 0.0016s
+-- add_index(:finance_projects, "user_id, lower((name)::text)", {unique: true, name: "index_finance_projects_on_user_and_lower_name"})
+   -> 0.0002s
+-- create_table(:finance_tags)
+   -> 0.0017s
+-- add_index(:finance_tags, "user_id, lower((name)::text)", {unique: true, name: "index_finance_tags_on_user_and_lower_name"})
+   -> 0.0002s
+-- create_table(:finance_transaction_tags, {primary_key: [:transaction_id, :tag_id]})
+   -> 0.0017s
+-- create_table(:finance_budgets)
+   -> 0.0022s
+-- create_table(:finance_recurring_rules)
+   -> 0.0033s
+-- create_table(:finance_category_settings)
+   -> 0.0018s
+-- add_index(:finance_category_settings, "user_id, lower((name)::text)", {unique: true, name: "index_finance_category_settings_on_user_and_lower_name"})
+   -> 0.0003s
+-- create_table(:finance_organize_runs)
+   -> 0.0018s
+-- add_foreign_key(:finance_transactions, :finance_merchants, {column: :merchant_id, on_delete: :nullify})
+   -> 0.0007s
+-- add_foreign_key(:finance_transactions, :finance_projects, {column: :project_id, on_delete: :nullify})
+   -> 0.0006s
+-- add_foreign_key(:finance_transactions, :finance_recurring_rules, {column: :recurring_rule_id, on_delete: :nullify})
+   -> 0.0003s
+== 20261115000400 CreateFinanceLedgerTables: migrated (0.0314s) ===============
+
+== 20261116000100 EnforceFinanceIntegrity: migrating ==========================
+-- add_column(:finance_transaction_tags, :user_id, :bigint)
+   -> 0.0006s
+-- execute("UPDATE finance_transaction_tags SET user_id = t.user_id FROM finance_transactions t WHERE t.id = finance_transaction_tags.transaction_id")
+   -> 0.0005s
+-- change_column_null(:finance_transaction_tags, :user_id, false)
+   -> 0.0001s
+-- add_foreign_key(:finance_transaction_tags, :users)
+   -> 0.0006s
+-- add_index(:finance_statements, [:id, :user_id], {unique: true, name: "index_finance_statements_on_id_and_owner"})
+   -> 0.0003s
+-- add_index(:finance_bank_accounts, [:id, :user_id], {unique: true, name: "index_finance_bank_accounts_on_id_and_owner"})
+   -> 0.0003s
+-- add_index(:finance_transactions, [:id, :user_id], {unique: true, name: "index_finance_transactions_on_id_and_owner"})
+   -> 0.0004s
+-- add_index(:finance_merchants, [:id, :user_id], {unique: true, name: "index_finance_merchants_on_id_and_owner"})
+   -> 0.0003s
+-- add_index(:finance_projects, [:id, :user_id], {unique: true, name: "index_finance_projects_on_id_and_owner"})
+   -> 0.0003s
+-- add_index(:finance_recurring_rules, [:id, :user_id], {unique: true, name: "index_finance_recurring_rules_on_id_and_owner"})
+   -> 0.0003s
+-- add_index(:finance_tags, [:id, :user_id], {unique: true, name: "index_finance_tags_on_id_and_owner"})
+   -> 0.0002s
+-- remove_foreign_key(:finance_transactions, :finance_statements, {column: :statement_id})
+   -> 0.0014s
+-- add_foreign_key(:finance_transactions, :finance_statements, {column: [:statement_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_transactions_statement_owner"})
+   -> 0.0004s
+-- remove_foreign_key(:finance_transactions, :finance_bank_accounts, {column: :bank_account_id})
+   -> 0.0008s
+-- add_foreign_key(:finance_transactions, :finance_bank_accounts, {column: [:bank_account_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_transactions_bank_account_owner"})
+   -> 0.0005s
+-- add_foreign_key(:finance_transactions, :finance_merchants, {column: [:merchant_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_transactions_merchant_owner"})
+   -> 0.0004s
+-- add_foreign_key(:finance_transactions, :finance_projects, {column: [:project_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_transactions_project_owner"})
+   -> 0.0004s
+-- add_foreign_key(:finance_transactions, :finance_recurring_rules, {column: [:recurring_rule_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_transactions_recurring_rule_owner"})
+   -> 0.0004s
+-- remove_foreign_key(:finance_statements, :finance_bank_accounts, {column: :bank_account_id})
+   -> 0.0005s
+-- add_foreign_key(:finance_statements, :finance_bank_accounts, {column: [:bank_account_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_statements_bank_account_owner"})
+   -> 0.0010s
+-- remove_foreign_key(:finance_statement_drafts, :finance_bank_accounts, {column: :bank_account_id})
+   -> 0.0008s
+-- add_foreign_key(:finance_statement_drafts, :finance_bank_accounts, {column: [:bank_account_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_statement_drafts_bank_account_owner"})
+   -> 0.0003s
+-- remove_foreign_key(:finance_transaction_links, :finance_transactions, {column: :from_transaction_id})
+   -> 0.0005s
+-- add_foreign_key(:finance_transaction_links, :finance_transactions, {column: [:from_transaction_id, :user_id], primary_key: [:id, :user_id], on_delete: :cascade, name: "fk_transaction_links_from_transaction_owner"})
+   -> 0.0005s
+-- remove_foreign_key(:finance_transaction_links, :finance_transactions, {column: :to_transaction_id})
+   -> 0.0005s
+-- add_foreign_key(:finance_transaction_links, :finance_transactions, {column: [:to_transaction_id, :user_id], primary_key: [:id, :user_id], on_delete: :cascade, name: "fk_transaction_links_to_transaction_owner"})
+   -> 0.0003s
+-- remove_foreign_key(:finance_budgets, :finance_projects, {column: :project_id})
+   -> 0.0005s
+-- add_foreign_key(:finance_budgets, :finance_projects, {column: [:project_id, :user_id], primary_key: [:id, :user_id], on_delete: :cascade, name: "fk_budgets_project_owner"})
+   -> 0.0004s
+-- remove_foreign_key(:finance_transaction_tags, :finance_transactions, {column: :transaction_id})
+   -> 0.0005s
+-- add_foreign_key(:finance_transaction_tags, :finance_transactions, {column: [:transaction_id, :user_id], primary_key: [:id, :user_id], on_delete: :cascade, name: "fk_transaction_tags_transaction_owner"})
+   -> 0.0003s
+-- remove_foreign_key(:finance_transaction_tags, :finance_tags, {column: :tag_id})
+   -> 0.0005s
+-- add_foreign_key(:finance_transaction_tags, :finance_tags, {column: [:tag_id, :user_id], primary_key: [:id, :user_id], on_delete: :cascade, name: "fk_transaction_tags_tag_owner"})
+   -> 0.0005s
+-- add_check_constraint(:finance_transactions, "category <> ''", {name: "finance_transactions_category_present"})
+   -> 0.0002s
+-- add_check_constraint(:finance_transactions, "category_source IN ('user', 'rule', 'file', 'auto', 'region', 'ai', 'legacy')", {name: "finance_transactions_category_source"})
+   -> 0.0002s
+-- add_check_constraint(:finance_transactions, "amount > -10000000000000 AND amount < 10000000000000", {name: "finance_transactions_amount_range"})
+   -> 0.0002s
+-- add_check_constraint(:finance_transactions, "jsonb_typeof(user_locked_fields) = 'array'", {name: "finance_transactions_locked_fields_array"})
+   -> 0.0002s
+-- add_check_constraint(:finance_transactions, "original_description <> ''", {name: "finance_transactions_original_present"})
+   -> 0.0001s
+-- add_check_constraint(:finance_transaction_links, "to_transaction_id IS NULL OR to_transaction_id <> from_transaction_id", {name: "finance_links_two_entries"})
+   -> 0.0001s
+-- add_check_constraint(:finance_transaction_links, "amount IS NULL OR amount >= 0", {name: "finance_links_amount"})
+   -> 0.0002s
+-- add_check_constraint(:finance_statements, "transaction_count > 0", {name: "finance_statements_rows"})
+   -> 0.0001s
+-- add_check_constraint(:finance_statements, "sha256 ~ '^[0-9a-f]{64}$'", {name: "finance_statements_sha256"})
+   -> 0.0001s
+-- remove_column(:finance_transactions, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_bank_accounts, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_audit_events, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_budgets, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_category_settings, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_merchants, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_organize_runs, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_projects, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_recurring_rules, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_tags, :book_id)
+   -> 0.0001s
+-- remove_column(:finance_transaction_links, :book_id)
+   -> 0.0001s
+-- remove_index(:finance_transactions, {name: "index_finance_transactions_on_fingerprint"})
+   -> 0.0005s
+-- remove_column(:finance_transactions, :fingerprint)
+   -> 0.0001s
+-- remove_column(:finance_statements, :status)
+   -> 0.0001s
+-- remove_index(:finance_transactions, {name: "index_finance_transactions_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_statements, {name: "index_finance_statements_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_bank_accounts, {name: "index_finance_bank_accounts_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_audit_events, {name: "index_finance_audit_events_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_insights, {name: "index_finance_insights_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_merchant_rules, {name: "index_finance_merchant_rules_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_custom_categories, {name: "index_finance_custom_categories_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_category_settings, {name: "index_finance_category_settings_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_merchants, {name: "index_finance_merchants_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_projects, {name: "index_finance_projects_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_tags, {name: "index_finance_tags_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_local_devices, {name: "index_finance_local_devices_on_user_id"})
+   -> 0.0001s
+-- remove_index(:finance_local_database_reports, {name: "index_finance_local_database_reports_on_user_id"})
+   -> 0.0001s
+-- add_index(:finance_transactions, :merchant_id, {where: "merchant_id IS NOT NULL", name: "index_finance_transactions_on_merchant"})
+   -> 0.0014s
+-- add_index(:finance_transactions, :project_id, {where: "project_id IS NOT NULL", name: "index_finance_transactions_on_project"})
+   -> 0.0009s
+-- remove_index(:finance_transactions, {name: "index_finance_transactions_on_user_id_and_deleted_at"})
+   -> 0.0001s
+-- add_index(:finance_transactions, [:user_id, :deleted_at], {where: "deleted_at IS NOT NULL", name: "index_finance_transactions_on_trash"})
+   -> 0.0048s
+-- remove_index(:finance_transactions, {name: "index_finance_transactions_on_user_id_and_booked_on"})
+   -> 0.0001s
+-- add_index(:finance_transactions, [:user_id, :booked_on, :id], {order: {booked_on: :desc, id: :desc}, where: "deleted_at IS NULL", name: "index_finance_transactions_on_live_recent"})
+   -> 0.0011s
+-- add_index(:finance_transaction_tags, [:user_id, :tag_id], {name: "index_finance_transaction_tags_on_owner_tag"})
+   -> 0.0006s
+== 20261116000100 EnforceFinanceIntegrity: migrated (0.0307s) =================
+
+== 20261117000100 AddReceiptCaptureAndReconciliation: migrating ===============
+-- create_table(:finance_receipts)
+   -> 0.0023s
+-- add_foreign_key(:finance_receipts, :users)
+   -> 0.0005s
+-- add_index(:finance_receipts, :uuid, {unique: true})
+   -> 0.0003s
+-- add_index(:finance_receipts, [:id, :user_id], {unique: true, name: "index_finance_receipts_on_id_and_owner"})
+   -> 0.0003s
+-- add_index(:finance_receipts, [:user_id, :sha256], {unique: true, where: "sha256 IS NOT NULL", name: "index_finance_receipts_one_file"})
+   -> 0.0010s
+-- add_index(:finance_receipts, [:user_id, :client_request_id], {unique: true, where: "client_request_id IS NOT NULL", name: "index_finance_receipts_idempotency"})
+   -> 0.0009s
+-- add_index(:finance_receipts, [:user_id, :status, :purchased_on], {name: "index_finance_receipts_on_owner_status_date"})
+   -> 0.0003s
+-- add_index(:finance_receipts, :transaction_id, {unique: true, where: "transaction_id IS NOT NULL", name: "index_finance_receipts_one_entry"})
+   -> 0.0010s
+-- add_index(:finance_receipts, :duplicate_of_id, {where: "duplicate_of_id IS NOT NULL"})
+   -> 0.0009s
+-- add_check_constraint(:finance_receipts, "status IN ('needs_review', 'possible_duplicate', 'duplicate', 'pending_bank_match', 'cash', 'matched', 'dismissed')", {name: "finance_receipts_status"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipts, "source IN ('camera', 'upload', 'shortcut', 'app', 'email', 'manual')", {name: "finance_receipts_source"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipts, "direction IN ('purchase', 'refund')", {name: "finance_receipts_direction"})
+   -> 0.0001s
+-- add_check_constraint(:finance_receipts, "payment_method IS NULL OR payment_method IN ('card', 'cash', 'mobile', 'other')", {name: "finance_receipts_payment_method"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipts, "sha256 IS NULL OR sha256 ~ '^[0-9a-f]{64}$'", {name: "finance_receipts_sha256"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipts, "(total IS NULL OR (total >= 0 AND total < 10000000000000)) AND (subtotal IS NULL OR abs(subtotal) < 10000000000000) AND (tax IS NULL OR abs(tax) < 10000000000000) AND (tip IS NULL OR (tip >= 0 AND tip < 10000000000000)) AND (discount IS NULL OR (discount >= 0 AND discount < 10000000000000))", {name: "finance_receipts_money"})
+   -> 0.0003s
+-- add_check_constraint(:finance_receipts, "currency IS NULL OR currency ~ '^[A-Z]{3}$'", {name: "finance_receipts_currency"})
+   -> 0.0001s
+-- add_check_constraint(:finance_receipts, "card_last4 IS NULL OR card_last4 ~ '^[0-9]{4}$'", {name: "finance_receipts_card_last4"})
+   -> 0.0001s
+-- add_check_constraint(:finance_receipts, "purchased_at_time IS NULL OR purchased_at_time ~ '^[0-2][0-9]:[0-5][0-9]$'", {name: "finance_receipts_time"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipts, "jsonb_typeof(extraction) = 'object' AND jsonb_typeof(issues) = 'array' AND jsonb_typeof(line_items) = 'array' AND jsonb_typeof(confirmed_fields) = 'array'", {name: "finance_receipts_json_shapes"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipts, "duplicate_of_id IS NULL OR duplicate_of_id <> id", {name: "finance_receipts_not_own_duplicate"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipts, "(status IN ('duplicate', 'possible_duplicate')) = (duplicate_of_id IS NOT NULL)", {name: "finance_receipts_duplicate_status"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipts, "byte_size IS NULL OR (byte_size > 0 AND byte_size <= 10485760)", {name: "finance_receipts_byte_size"})
+   -> 0.0002s
+-- add_foreign_key(:finance_receipts, :finance_bank_accounts, {column: [:bank_account_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_finance_receipts_bank_account_id_owner"})
+   -> 0.0006s
+-- add_foreign_key(:finance_receipts, :finance_transactions, {column: [:transaction_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_finance_receipts_transaction_id_owner"})
+   -> 0.0005s
+-- add_foreign_key(:finance_receipts, :finance_receipts, {column: [:duplicate_of_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_finance_receipts_duplicate_of_id_owner"})
+   -> 0.0003s
+-- create_table(:finance_receipt_matches)
+   -> 0.0014s
+-- add_foreign_key(:finance_receipt_matches, :users)
+   -> 0.0004s
+-- add_index(:finance_receipt_matches, :uuid, {unique: true})
+   -> 0.0003s
+-- add_index(:finance_receipt_matches, [:receipt_id, :transaction_id], {unique: true, name: "index_finance_receipt_matches_pair"})
+   -> 0.0003s
+-- add_index(:finance_receipt_matches, :transaction_id, {unique: true, where: "status = 'confirmed'", name: "index_finance_receipt_matches_one_receipt"})
+   -> 0.0011s
+-- add_index(:finance_receipt_matches, [:user_id, :status], {name: "index_finance_receipt_matches_on_owner_status"})
+   -> 0.0003s
+-- add_check_constraint(:finance_receipt_matches, "status IN ('suggested', 'confirmed', 'rejected')", {name: "finance_receipt_matches_status"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipt_matches, "level IN ('exact', 'probable', 'ambiguous', 'manual')", {name: "finance_receipt_matches_level"})
+   -> 0.0001s
+-- add_check_constraint(:finance_receipt_matches, "decided_by IN ('user', 'auto')", {name: "finance_receipt_matches_decided_by"})
+   -> 0.0001s
+-- add_check_constraint(:finance_receipt_matches, "score >= 0 AND score <= 100", {name: "finance_receipt_matches_score"})
+   -> 0.0001s
+-- add_check_constraint(:finance_receipt_matches, "jsonb_typeof(reasons) = 'array'", {name: "finance_receipt_matches_reasons"})
+   -> 0.0001s
+-- add_check_constraint(:finance_receipt_matches, "status = 'suggested' OR decided_at IS NOT NULL", {name: "finance_receipt_matches_decided"})
+   -> 0.0002s
+-- add_check_constraint(:finance_receipt_matches, "NOT (status = 'confirmed' AND decided_by = 'auto' AND level <> 'exact')", {name: "finance_receipt_matches_auto_exact"})
+   -> 0.0002s
+-- add_foreign_key(:finance_receipt_matches, :finance_receipts, {column: [:receipt_id, :user_id], primary_key: [:id, :user_id], on_delete: :cascade, name: "fk_finance_receipt_matches_receipt_id_owner"})
+   -> 0.0004s
+-- add_foreign_key(:finance_receipt_matches, :finance_transactions, {column: [:transaction_id, :user_id], primary_key: [:id, :user_id], on_delete: :cascade, name: "fk_finance_receipt_matches_transaction_id_owner"})
+   -> 0.0003s
+-- add_column(:finance_transactions, :superseded_by_id, :bigint)
+   -> 0.0001s
+-- add_index(:finance_transactions, :superseded_by_id, {where: "superseded_by_id IS NOT NULL", name: "index_finance_transactions_on_superseded_by"})
+   -> 0.0010s
+-- add_foreign_key(:finance_transactions, :finance_transactions, {column: [:superseded_by_id, :user_id], primary_key: [:id, :user_id], on_delete: nil, name: "fk_finance_transactions_superseded_by_id_owner"})
+   -> 0.0004s
+-- remove_check_constraint(:finance_transactions, {name: "finance_transactions_entry_origin"})
+   -> 0.0004s
+-- add_check_constraint(:finance_transactions, "entry_origin IN ('import', 'manual', 'web_copy', 'upload', 'recurring', 'legacy', 'receipt')", {name: "finance_transactions_entry_origin"})
+   -> 0.0002s
+-- remove_check_constraint(:finance_transactions, {name: "finance_transactions_statement_or_manual"})
+   -> 0.0004s
+-- add_check_constraint(:finance_transactions, "statement_id IS NOT NULL OR entry_origin IN ('manual', 'recurring', 'receipt')", {name: "finance_transactions_statement_or_manual"})
+   -> 0.0002s
+-- add_check_constraint(:finance_transactions, "superseded_by_id IS NULL OR (superseded_by_id <> id AND entry_origin = 'receipt')", {name: "finance_transactions_superseded_receipt_only"})
+   -> 0.0002s
+-- create_table(:finance_capture_tokens)
+   -> 0.0007s
+-- add_foreign_key(:finance_capture_tokens, :users)
+   -> 0.0005s
+-- add_index(:finance_capture_tokens, :token_digest, {unique: true})
+   -> 0.0003s
+-- add_index(:finance_capture_tokens, [:user_id, :revoked_at])
+   -> 0.0003s
+-- add_check_constraint(:finance_capture_tokens, "token_digest ~ '^[0-9a-f]{64}$'", {name: "finance_capture_tokens_digest"})
+   -> 0.0002s
+== 20261117000100 AddReceiptCaptureAndReconciliation: migrated (0.0224s) ======
+
+== 20261122000100 TrimUsageRegions: migrating =================================
+-- execute("UPDATE users SET usage_region = 'XO' WHERE usage_region IS NOT NULL AND usage_region NOT IN ('AE', 'AR', 'AT', 'AU', 'BD', 'BE', 'BG', 'BR', 'CA', 'CH', 'CL', 'CN', 'CO', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EG', 'ES', 'FI', 'FR', 'GB', 'GR', 'HK', 'HR', 'HU', 'ID', 'IE', 'IL', 'IN', 'IT', 'JP', 'KE', 'KR', 'KW', 'LK', 'LT', 'LU', 'LV', 'MA', 'MO', 'MT', 'MX', 'MY', 'NG', 'NL', 'NO', 'NZ', 'PE', 'PH', 'PK', 'PL', 'PR', 'PT', 'QA', 'RO', 'RU', 'SA', 'SE', 'SG', 'SI', 'SK', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA', 'XG', 'XO')")
+   -> 0.0005s
+-- table_exists?("identity.pending_registrations")
+   -> 0.0006s
+-- remove_check_constraint(:users, {name: "users_usage_region_allowed"})
+   -> 0.0005s
+-- add_check_constraint(:users, "usage_region IS NULL OR usage_region IN ('AE', 'AR', 'AT', 'AU', 'BD', 'BE', 'BG', 'BR', 'CA', 'CH', 'CL', 'CN', 'CO', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EG', 'ES', 'FI', 'FR', 'GB', 'GR', 'HK', 'HR', 'HU', 'ID', 'IE', 'IL', 'IN', 'IT', 'JP', 'KE', 'KR', 'KW', 'LK', 'LT', 'LU', 'LV', 'MA', 'MO', 'MT', 'MX', 'MY', 'NG', 'NL', 'NO', 'NZ', 'PE', 'PH', 'PK', 'PL', 'PR', 'PT', 'QA', 'RO', 'RU', 'SA', 'SE', 'SG', 'SI', 'SK', 'TH', 'TR', 'TW', 'UA', 'US', 'VN', 'ZA', 'XG', 'XO')", {name: "users_usage_region_allowed"})
+   -> 0.0003s
+== 20261122000100 TrimUsageRegions: migrated (0.0024s) ========================
+
+== 20261123000100 CreateFinanceModulePreferences: migrating ===================
+-- create_table(:finance_module_preferences)
+   -> 0.0015s
+-- add_index(:finance_module_preferences, [:user_id, :module_key], {unique: true, name: "index_finance_module_preferences_one_per_module"})
+   -> 0.0003s
+-- add_check_constraint(:finance_module_preferences, "module_key ~ '^[a-z_]{2,40}$'", {name: "finance_module_preferences_key_format"})
+   -> 0.0002s
+-- add_check_constraint(:finance_module_preferences, "revision > 0", {name: "finance_module_preferences_revision"})
+   -> 0.0002s
+== 20261123000100 CreateFinanceModulePreferences: migrated (0.0025s) ==========
+
+== 20261124000100 AddModulePreferenceSync: migrating ==========================
+-- add_column(:finance_module_preferences, :updated_by_device_id, :uuid)
+   -> 0.0003s
+-- create_table(:finance_module_preference_mutations)
+   -> 0.0013s
+== 20261124000100 AddModulePreferenceSync: migrated (0.0022s) =================
+
+== 20261125000100 CreateUserSessions: migrating ===============================
+-- create_table(:user_sessions)
+   -> 0.0017s
+== 20261125000100 CreateUserSessions: migrated (0.0017s) ======================
+
