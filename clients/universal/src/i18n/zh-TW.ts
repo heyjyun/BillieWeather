@@ -86,6 +86,7 @@ export const zhTW: Messages = {
     checking: "正在檢查你在 BillieWeather 網頁版的資料…",
     upToDate: "本機的網頁版資料已是最新。",
     updated: "已從網頁版帳戶下載：新增 {statements} 個帳單、新增 {added} 筆交易、更新 {updated} 筆、移除 {removed} 筆。",
+    skippedDuplicates: "網頁版的 {count} 筆交易沒有重複新增：它們已在本機匯入的檔案中。",
     offline: "目前離線，無法檢查網頁版資料。正在使用本機已有的資料。",
     failed: "無法下載網頁版資料，請稍後再試。",
     currencyMismatch: "你的網頁版資料使用 {web}，而本機使用 {device}，因此沒有下載網頁版資料。",

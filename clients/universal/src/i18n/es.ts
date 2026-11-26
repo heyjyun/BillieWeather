@@ -86,6 +86,7 @@ export const es: Messages = {
     checking: "Comprobando tus datos del sitio web de BillieWeather…",
     upToDate: "Tus datos del sitio web están al día en este dispositivo.",
     updated: "Descargado de tu cuenta web: {statements} extracto(s) nuevo(s), {added} movimiento(s) nuevo(s), {updated} actualizado(s) y {removed} eliminado(s).",
+    skippedDuplicates: "{count} movimiento(s) del sitio web no se añadieron de nuevo: ya están en este dispositivo desde un archivo importado aquí.",
     offline: "No se pudieron comprobar tus datos web (sin conexión). Se usan los datos que ya hay en este dispositivo.",
     failed: "No se pudieron descargar tus datos web. Inténtalo más tarde.",
     currencyMismatch: "Tus datos web están en {web}, pero este dispositivo usa {device}. No se descargaron los datos web.",

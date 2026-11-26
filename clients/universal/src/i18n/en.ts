@@ -87,6 +87,7 @@ export const en = {
     checking: "Checking your BillieWeather website data…",
     upToDate: "Your website data is up to date on this device.",
     updated: "Downloaded from your website account: {statements} new statement(s), {added} new and {updated} updated transaction(s), {removed} removed.",
+    skippedDuplicates: "{count} transaction(s) from the website were not added again: they are already on this device from a file imported here.",
     offline: "Couldn't check your website data (offline). Using what's already on this device.",
     failed: "Couldn't download your website data. Try again later.",
     currencyMismatch: "Your website data is in {web}, but this device uses {device}. Website data was not downloaded.",

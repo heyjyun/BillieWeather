@@ -86,6 +86,7 @@ export const zhCN: Messages = {
     checking: "正在检查你在 BillieWeather 网页版的数据…",
     upToDate: "本机的网页版数据已是最新。",
     updated: "已从网页版账户下载：新增 {statements} 个账单、新增 {added} 笔交易、更新 {updated} 笔、移除 {removed} 笔。",
+    skippedDuplicates: "网页版的 {count} 笔交易没有重复添加：它们已在本机导入的文件中。",
     offline: "当前离线，无法检查网页版数据。正在使用本机已有的数据。",
     failed: "无法下载网页版数据，请稍后再试。",
     currencyMismatch: "你的网页版数据使用 {web}，而本机使用 {device}，因此没有下载网页版数据。",

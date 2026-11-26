@@ -86,6 +86,7 @@ export const ko: Messages = {
     checking: "BillieWeather 웹 데이터를 확인하는 중…",
     upToDate: "이 기기의 웹 데이터가 최신 상태입니다.",
     updated: "웹 계정에서 다운로드했습니다: 새 명세서 {statements}개, 새 거래 {added}건, 업데이트 {updated}건, 삭제 {removed}건.",
+    skippedDuplicates: "웹의 거래 {count}건은 다시 추가하지 않았습니다. 이 기기에서 가져온 파일에 이미 있습니다.",
     offline: "오프라인이라 웹 데이터를 확인할 수 없습니다. 이 기기에 있는 데이터를 사용합니다.",
     failed: "웹 데이터를 다운로드하지 못했습니다. 나중에 다시 시도하세요.",
     currencyMismatch: "웹 데이터는 {web}, 이 기기는 {device}을(를) 사용하므로 웹 데이터를 다운로드하지 않았습니다.",

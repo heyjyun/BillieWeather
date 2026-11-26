@@ -86,6 +86,7 @@ export const ja: Messages = {
     checking: "BillieWeather ウェブ版のデータを確認しています…",
     upToDate: "この端末のウェブ版データは最新です。",
     updated: "ウェブ版アカウントからダウンロードしました：新しい明細 {statements} 件、新しい取引 {added} 件、更新 {updated} 件、削除 {removed} 件。",
+    skippedDuplicates: "ウェブ版の取引 {count} 件は追加しませんでした。この端末で取り込んだファイルにすでに含まれています。",
     offline: "オフラインのため、ウェブ版のデータを確認できませんでした。この端末のデータを使っています。",
     failed: "ウェブ版のデータをダウンロードできませんでした。しばらくしてからお試しください。",
     currencyMismatch: "ウェブ版のデータは {web}、この端末は {device} のため、ウェブ版のデータはダウンロードしませんでした。",
