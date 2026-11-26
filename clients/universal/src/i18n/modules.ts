@@ -447,7 +447,7 @@ export const modulesEs: ModulesMessages = {
   },
   automation: "IA y automatización",
   assistant: {
-    eyebrow: "ASISTENTE DE IA", title: "Perspectiva de IA", intro: "Pregunta con tus propias palabras y deja que BillieWeather te ayude a ordenar tus registros. Tú apruebas cada cambio, y cada cambio se puede deshacer.",
+    eyebrow: "PERSPECTIVA DE IA", title: "Perspectiva de IA", intro: "Pregunta con tus propias palabras y deja que BillieWeather te ayude a ordenar tus registros. Tú apruebas cada cambio, y cada cambio se puede deshacer.",
     commandsTitle: "Pregunta con tus palabras",
     commandsBody: "Usa la barra de comandos de la parte superior de cada página: «muestra el café del mes pasado», «cuánto gasté en comida este año», «clasifica Starbucks como Comida». Funciona en este dispositivo; los cambios se previsualizan antes y se pueden deshacer.",
     insightsTitle: "Análisis y chat", insightsBody: "Los análisis escritos, la preparación de impuestos y el chat sobre tu dinero están por ahora en el sitio web de BillieWeather.", insightsOpen: "Abrir en el sitio web",

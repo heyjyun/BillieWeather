@@ -1,0 +1,5 @@
+# The app embeds these files with include_str! and sqlx stores a SHA-384 checksum of their exact
+# bytes in every ledger (_sqlx_migrations). A CRLF checkout (Windows, core.autocrlf=true) would change
+# that checksum, and an app built that way would refuse every ledger created by an LF build
+# (VersionMismatch). Keep the bytes identical on every platform.
+*.sql text eol=lf

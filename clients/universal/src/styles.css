@@ -731,3 +731,9 @@ button.bw-dropzone { width: 100%; font: inherit; }
 .bw-feature-reset, .bw-feature-reset button { width: 100%; }
 
 .bw-nav-bottom > .bw-account-shortcut { border-top: 1px solid var(--bw-color-sidebar-border); }
+
+/* Where a module opened from Settings is, when it is not in the sidebar (App.tsx). */
+.bw-page-context { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 12px; color: var(--muted); font-size: var(--bw-font-size-sm); }
+.bw-page-context .bw-link-button { padding: 0 4px; margin-left: -4px; }
+.bw-page-context strong { color: var(--ink); font-weight: var(--bw-font-weight-semibold); }
+.bw-page-context .bw-caption::before { content: "·"; margin-right: 8px; }

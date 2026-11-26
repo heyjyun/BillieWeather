@@ -2,7 +2,7 @@
 // A module that is not in the sidebar still works: openInShell reaches it through Settings › Feature
 // Library, the way a person would, and a page rendered without the app shell sees the catalog
 // defaults (as a new person does): a minimal sidebar, every available module usable.
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
 import { showAllModulesInSidebar, migrate, openInShell } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
@@ -45,9 +45,18 @@ it("openInShell opens a module that is not in the sidebar through the Feature Li
   expect(await screen.findByRole("heading", { name: "Categories", level: 1 })).toBeTruthy();
   await openInShell("Reports");
   expect(await screen.findByRole("heading", { name: "Reports", level: 1 })).toBeTruthy();
+  // Nothing in the sidebar is highlighted for a hidden module, so the page says where it is, and the
+  // sidebar is left as it was.
+  const context = document.getElementById("page-context")!;
+  expect(context.dataset.module).toBe("reports");
+  expect(context.textContent).toContain("Not in your sidebar, still fully usable");
+  expect(document.querySelector('#module-nav [data-module="reports"]')).toBeNull();
+  fireEvent.click(within(context).getByRole("button", { name: "Settings" }));
+  expect(document.getElementById("page-context")).toBeNull();
   // Pages of sidebar modules open directly.
   await openInShell("All Transactions");
   expect(document.getElementById("module-unavailable")).toBeNull();
+  expect(document.getElementById("page-context")).toBeNull();
 });
 
 it("with every module in the sidebar, the same page opens from the sidebar", async () => {
@@ -55,6 +64,7 @@ it("with every module in the sidebar, the same page opens from the sidebar", asy
   render(<App />);
   await openInShell("Categories");
   expect(await screen.findByRole("heading", { name: "Categories", level: 1 })).toBeTruthy();
+  expect(document.getElementById("page-context")).toBeNull();
 });
 
 it("outside the app shell, pages see the catalog defaults: a minimal sidebar, every built module usable", () => {

@@ -114,6 +114,11 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   };
   const settingsActive = page === "settings" || page === "features" || (page === "data" && !modules.inSidebar("data_management"));
   const section = blocked ? null : TRANSACTION_SECTIONS.find((item) => item.pages.includes(page)) ?? null;
+  // A module opened while it is not in the sidebar (from Settings or the Feature Library): nothing in the
+  // sidebar is highlighted, so say where this is and lead back. The sidebar itself is never changed.
+  // Pages under Transactions keep their section tabs instead.
+  const offSidebar: ModuleDefinition | null = blocked || section || PAGE_MODULES[page].length === 0 || PAGE_MODULES[page].some((id) => modules.inSidebar(id)) ? null
+    : moduleById(page === "planning" && focus === "schedules" ? "recurring" : PAGE_MODULES[page][0]) ?? null;
   const { persistent } = useFinance();
   // billieweather:// links and #/capture/… open one screen; they never save or send anything.
   const goRef = useRef(go);
@@ -207,6 +212,13 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
               ))}
             </div>
           </div>
+        )}
+        {offSidebar && (
+          <p className="bw-page-context" id="page-context" data-module={offSidebar.id}>
+            <button type="button" className="bw-link-button" onClick={() => go("settings")}>{m.modules.nav.settings}</button>
+            <span aria-hidden="true">/</span><strong>{m.modules.names[offSidebar.id]}</strong>
+            <span className="bw-caption">{m.modules.library.hiddenStillWorks}</span>
+          </p>
         )}
         {blocked ? <ModuleUnavailable module={blocked} openLibrary={() => go("features")} /> : (
         <>
