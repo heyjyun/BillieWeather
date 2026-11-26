@@ -1,5 +1,7 @@
 # Mac mini setup (development machine)
 
+Short version for any second Mac: [DEVELOPMENT_QUICKSTART.md](DEVELOPMENT_QUICKSTART.md).
+
 Time: about an hour, most of it downloads. Steps marked 👤 need a person at the Mac or an approval.
 
 ## 1. macOS
@@ -17,21 +19,21 @@ Time: about an hour, most of it downloads. Steps marked 👤 need a person at th
 ## 2. Bootstrap
 
 ```sh
-# 👤 GitHub access first (the repository is private)
+# The repository is PUBLIC: clone needs no sign-in; gh is for pushing. Never commit .env files or real data.
 brew install gh && gh auth login            # browser sign-in
 mkdir -p ~/Developer && cd ~/Developer
 gh repo clone heyjyun/BillieWeather BillieWeather && cd BillieWeather
-git switch autonomous-development           # after it has been pushed from the MacBook (GIT_SYNC.md)
+git switch main                             # consolidated on 2026-11-25; feature branches start here
 ops/bootstrap-mac-mini.sh --check           # what is missing
 ops/bootstrap-mac-mini.sh                   # install tools, dependencies, isolated databases
 echo devbox > ~/.billieweather-dev/role     # marks this Mac as the development machine
 cp ops/env/mac-mini.env.example ~/.billieweather-dev/env && echo 'source ~/.billieweather-dev/env' >> ~/.zshrc
 ```
 
-The bootstrap installs: Homebrew packages (`git gh mise uv rust postgresql@14 vips redis overmind
-graphviz sqlite tmux jq`), Ruby 4.0.3 and Node 24 through mise, gems (`vendor/bundle`), root JS (yarn 4
+The bootstrap installs: Homebrew packages (`git gh mise uv rust postgresql@18 vips redis overmind
+graphviz sqlite tmux jq`; PostgreSQL 18 = CI and production), Ruby 4.0.3 and Node 24 through mise, gems (`vendor/bundle`), root JS (yarn 4
 via corepack), `clients/universal` (npm ci), identity-api (`uv sync --frozen`), Rust crates, and an
-isolated PostgreSQL cluster with development and test schemas loaded. OCR uses `tesseract.js` from npm:
+isolated PostgreSQL cluster with development and test schemas and the identity schema loaded. OCR uses `tesseract.js` from npm:
 nothing extra.
 
 It does **not** copy anything from the MacBook: no databases, `.env` files, Keychain items, statements,

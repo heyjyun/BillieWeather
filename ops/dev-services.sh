@@ -17,6 +17,9 @@ root() {
     BILLIE_LOCAL_ROOT="$r" bin/billie-local test-db db:schema:load >/dev/null
     echo "new isolated cluster: $r" >&2
   fi
+  # identity-api keeps its own additive schema; without it /health stays 503. Idempotent.
+  BILLIE_LOCAL_ROOT="$r" bin/billie-local start >/dev/null 2>&1 || true
+  BILLIE_LOCAL_ROOT="$r" bin/billie-local identity -m identity_api.schema migrate >/dev/null
   echo "$r"
 }
 up() { curl -fsS -o /dev/null "http://127.0.0.1:$1$2" 2>/dev/null; }

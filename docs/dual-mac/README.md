@@ -5,6 +5,7 @@ Mac mini = development, tests, native QA, builds, overnight agents. MacBook Air 
 | Document | For |
 | --- | --- |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | roles, branches, isolation, **the stable-server decision** |
+| [DEVELOPMENT_QUICKSTART.md](DEVELOPMENT_QUICKSTART.md) | **exact commands** to clone `main`, set up and run on an isolated database |
 | [MAC_MINI_SETUP.md](MAC_MINI_SETUP.md) | setting up the mini from scratch |
 | [MACBOOK_STABLE.md](MACBOOK_STABLE.md) | installing, upgrading and rolling back the stable app |
 | [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md) | development → tests → native QA → release build → DMG → install |

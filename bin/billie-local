@@ -5,7 +5,11 @@ cd "$(dirname "$0")/.."
 umask 077
 port=35531
 role=billie_isolated
-pg_bin="${BILLIE_PG_BIN:-$(dirname "$(command -v pg_ctl)")}"
+# PostgreSQL 18 (as in CI and production) when Homebrew has it, else whatever pg_ctl is on PATH.
+pg18=/opt/homebrew/opt/postgresql@18/bin
+if [[ -n "${BILLIE_PG_BIN:-}" ]]; then pg_bin="$BILLIE_PG_BIN"
+elif [[ -x "$pg18/pg_ctl" ]]; then pg_bin="$pg18"
+else pg_bin="$(dirname "$(command -v pg_ctl)")"; fi
 export PATH="$pg_bin:$PATH"
 
 fail() { printf '%s\n' "$*" >&2; exit 1; }

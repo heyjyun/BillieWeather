@@ -10,7 +10,7 @@ set -euo pipefail
 
 REPO_URL="${BILLIE_REPO_URL:-https://github.com/heyjyun/BillieWeather.git}"
 DEV_ROOT="${BILLIE_DEV_ROOT:-$HOME/Developer/BillieWeather}"
-BRANCH="${BILLIE_DEV_BRANCH:-autonomous-development}"
+BRANCH="${BILLIE_DEV_BRANCH:-main}"
 CHECK_ONLY=0; [[ "${1:-}" == "--check" ]] && CHECK_ONLY=1
 
 ok()   { printf '  \033[32mok\033[0m   %s\n' "$*"; }
@@ -30,15 +30,16 @@ if command -v brew >/dev/null; then ok "$(brew --version | head -1)"; else
   miss 'Homebrew — run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  (asks for the admin password)'; fi
 
 step "Homebrew packages"
-# postgresql@14: the version bin/billie-local clusters are tested with. vips: ruby-vips. tmux: long jobs
+# postgresql@18: the major version CI and production (Neon) use; bin/billie-local takes pg_ctl from PATH
+# or BILLIE_PG_BIN. vips: ruby-vips. tmux: long jobs
 # survive a closed SSH/Screen Sharing session. Nothing here runs as a background service by default.
-BREWS=(git gh mise uv rust postgresql@14 vips redis overmind graphviz sqlite tmux jq)
+BREWS=(git gh mise uv rust postgresql@18 vips redis overmind graphviz sqlite tmux jq)
 if command -v brew >/dev/null; then
   for f in "${BREWS[@]}"; do
-    bin="$f"; case "$f" in postgresql@14) bin=pg_ctl;; rust) bin=rustc;; vips) bin=vips;; esac
+    bin="$f"; case "$f" in postgresql@18) bin=pg_ctl;; rust) bin=rustc;; vips) bin=vips;; esac
     if brew list --formula "$f" >/dev/null 2>&1 || command -v "$bin" >/dev/null 2>&1; then ok "$f"; else act "$f" "brew install $f"; fi
   done
-  if ! command -v pg_ctl >/dev/null; then act "pg_ctl on PATH" "brew link --force postgresql@14"; fi
+  if ! command -v pg_ctl >/dev/null; then act "pg_ctl on PATH" "brew link --force postgresql@18"; fi
 fi
 
 step "Source"
@@ -85,7 +86,8 @@ if [[ -e "$DEV_ROOT/.git" ]]; then
     root="$("$DEV_ROOT/bin/billie-local" init)"; echo "$root" > "$state"
     BILLIE_LOCAL_ROOT="$root" "$DEV_ROOT/bin/billie-local" test-db db:schema:load >/dev/null
     BILLIE_LOCAL_ROOT="$root" "$DEV_ROOT/bin/billie-local" rails db:schema:load >/dev/null
-    ok "cluster $root (development + test schemas loaded)"
+    BILLIE_LOCAL_ROOT="$root" "$DEV_ROOT/bin/billie-local" identity -m identity_api.schema migrate >/dev/null
+    ok "cluster $root (development + test schemas, identity schema)"
   else miss "isolated cluster (would run: bin/billie-local init)"; fi
   echo "  note: /tmp is cleared at reboot; ops/dev-services.sh start re-creates the cluster when it is gone."
 fi

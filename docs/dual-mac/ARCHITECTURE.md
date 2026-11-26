@@ -25,7 +25,7 @@ between them. No database, `.env`, Keychain item or service is shared.
 ## Branches and tags
 
 - `main` — verified stable source. Only fast-forwarded from `autonomous-development` after native QA.
-- `autonomous-development` — integration branch for active work (today: 67 commits ahead of `origin/main`, none pushed).
+- `autonomous-development` — former integration branch; fully merged into `main` on 2026-11-25. New work branches from `main`.
 - `feature/*`, `fix/*`, `infra/*` — one task each, usually in its own worktree.
 - `rollback/*` — kept fallbacks (e.g. `rollback/session-safe`).
 - `vX.Y.Z[-pre]` annotated tags — a release; `ops/release-build.sh` only builds at a tag.

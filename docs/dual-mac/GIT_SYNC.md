@@ -1,3 +1,6 @@
+> **2026-11-25:** `autonomous-development`, `infra/dual-mac` and the audit branches are consolidated into `main`.
+> The branch table below is historical. Clone or pull `main`; see [DEVELOPMENT_QUICKSTART.md](DEVELOPMENT_QUICKSTART.md).
+
 # Git synchronization
 
 GitHub (`heyjyun/BillieWeather`) is the only channel for source between the Macs.
