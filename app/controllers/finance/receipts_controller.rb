@@ -3,6 +3,8 @@ module Finance
   # Every query is scoped to current_user; decisions go through Finance::ReceiptReconciler (locked, audited).
   class ReceiptsController < BaseController
     MAX_FILES = 10
+    # The only reconciler methods a match decision may call (also the route's constraint, config/routes.rb).
+    DECISIONS = {"confirm" => :confirm, "reject" => :reject, "undo" => :undo, "reconsider" => :reconsider}.freeze
     before_action :find_receipt, except: [:index, :create, :decide]
 
     def index
@@ -84,9 +86,11 @@ module Finance
 
     # Confirm match / Keep separate / Undo / Reconsider.
     def decide
+      decision = params[:decision].to_s
+      action = DECISIONS[decision]
+      return head(:not_found) unless action
       match = current_user.finance_receipt_matches.find(params[:match_id])
-      decision = params[:decision]
-      reconciler.public_send(decision, match)
+      reconciler.public_send(action, match)
       back = (params[:from] == "reconciliation") ? finance_reconciliation_path : finance_receipt_path(match.receipt_id)
       redirect_to back, notice: t("billie.receipts.flash.decision.#{decision}")
     rescue Ledger::Invalid => error

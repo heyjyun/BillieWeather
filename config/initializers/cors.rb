@@ -24,10 +24,13 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     resource "/api/client/v1/*", headers: ["Authorization", "Content-Type", "Accept"], methods: [:get, :post, :put, :patch, :delete, :options], max_age: 600
   end
 
+  # The Bullet Train REST API (/api/v1, OAuth bearer tokens) stays open to any origin, as before.
+  # The apps' API (/api/client/...) never is: rack-cors uses the first matching rule, so without this
+  # exclusion any website got "Access-Control-Allow-Origin: *" for GET requests with an Authorization header there.
   allow do
     origins "*"
     resource "/api/*", headers: :any, if: ->(env) {
-      !env.fetch("PATH_INFO", "").match?(%r{\A/api/client/v1/module_preferences(?:[./]|\z)})
+      !env.fetch("PATH_INFO", "").match?(%r{\A/api/client(?:[./]|\z)})
     }
   end
 end

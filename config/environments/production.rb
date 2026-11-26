@@ -164,6 +164,13 @@ Rails.application.configure do
   # Free Render has no always-on worker. The first release processes short jobs inline.
   config.active_job.queue_adapter = :inline
   config.cache_store = ENV["REDIS_URL"].present? ? [:redis_cache_store, {url: ENV["REDIS_URL"], namespace: "billieweather:cache"}] : :memory_store
+  # Rate limits (sign-in, the apps' API) count in this cache. Without Redis each process counts on its own and
+  # a restart forgets every count. Say so in the log; booting is deliberately unchanged.
+  if ENV["REDIS_URL"].blank? && ENV["BILLIE_ASSET_BUILD"] != "1"
+    config.after_initialize do
+      Rails.logger.warn("REDIS_URL is not set: the cache and rate limits use per-process memory and reset on every restart")
+    end
+  end
   # If you need to customize your application's configuration, this is the place to do it. This helps avoid merge
   # conflicts in the future when Rails or Bullet Train update their own default settings.
 end

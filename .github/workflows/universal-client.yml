@@ -64,6 +64,11 @@ jobs:
         with:
           workspaces: clients/universal/src-tauri
       - run: npm ci
+      # Native tests: SQLite migrations and transactions, undo history, snapshots, token storage, and on
+      # macOS the Apple Vision worker. Debug build, before the release build reuses the cache.
+      - name: Rust tests
+        run: cargo test --locked
+        working-directory: clients/universal/src-tauri
       - run: npx tauri build --bundles ${{ matrix.bundles }}
       - uses: actions/upload-artifact@v4
         with:
