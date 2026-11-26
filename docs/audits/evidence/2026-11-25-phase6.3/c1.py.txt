@@ -1,0 +1,52 @@
+from accept import *
+def row(desc="ZXQ MANUAL 24"): return q(f"select amount_cents,booked_on,description,category,note,account_id,merchant_id,user_locked_fields,category_source from transactions where description like '{desc}%' order by id limit 1")[0]
+def opened():
+    manual_home(); press("~Transactions Search, filter"); wait("New entry")
+def edit(desc, **f):
+    press("Edit"); wait("Note ( optional )")
+    for k,v in f.items(): fill({"amount":"Amount","note":"Note ( optional )","desc":"Description ( optional )","tags":"Tags ( optional ) Separate with commas.","merchant":"Merchant ( optional )"}[k],v)
+    press("Save"); time.sleep(1.5)
+def whole():
+    opened(); x=book(); wait("ZXQ MANUAL 24"); return x
+BASE=[None]
+def e1():
+    BASE[0]=whole(); t0=BASE[0]["transactions"]; edit("",note="undo note",desc="UNDO EDITED",tags="undo-tag"); expect(q("select count(*) from transactions where description='UNDO EDITED' and note='undo note'")[0][0]==1,"not saved"); l=undo_label(); expect("UNDO EDITED" in l and "edit" in l,l)
+    press("~Undo: "); wait("Undone:"); b=book(); expect(b["transactions"][0:]==b["transactions"]); expect(q("select count(*) from transactions where description='UNDO EDITED'")[0][0]==0); cmp(BASE[0],b); sound(); d("shot",S+"/shots/undo-button.png"); return l
+def cmp(a,b):
+    strip=lambda rows,i: sorted([r[:i]+r[i+1:] for r in rows],key=repr)
+    names=[r[1] for r in q("pragma table_info(transactions)")]; i=names.index("updated_at")
+    expect(strip(a["transactions"],i)==strip(b["transactions"],i),"transactions differ")
+    for t in ("transaction_tags","transaction_links","tags","accounts","budgets","statements","merchant_rules","custom_categories","category_meta"): 
+        n=[r[1] for r in q(f"pragma table_info({t})")]
+        A,B=(strip(a[t],n.index("updated_at")),strip(b[t],n.index("updated_at"))) if "updated_at" in n else (a[t],b[t]); expect(A==B,t+" differs")
+step("edit text, note and tag; Undo button restores the book exactly", e1)
+def e2(): press("~Redo: "); wait("Redone:"); expect(q("select note from transactions where description='UNDO EDITED'")==[("undo note",)]); sound(); return redo_label()
+step("Redo button repeats it", e2)
+def e3(): key(6,"cmd"); expect(q("select count(*) from transactions where description='UNDO EDITED'")[0][0]==0,"Cmd+Z did nothing"); key(6,"cmd","shift"); expect(q("select count(*) from transactions where description='UNDO EDITED'")[0][0]==1,"Shift+Cmd+Z did nothing"); key(6,"cmd"); cmp(BASE[0],book()); return "Cmd+Z, Shift+Cmd+Z, Cmd+Z"
+step("keyboard shortcuts", e3)
+def amt():
+    press("Edit"); wait("Note ( optional )"); x=dump(); lab=re.search(r"AXTextField '(Amount[^']*)'",x).group(1); before=q("select sum(amount_cents) from transactions")[0][0]; fill(lab,"98.76"); press("Save"); time.sleep(1.5); expect(q("select count(*) from transactions where amount_cents=-9876")[0][0]==1,"amount not saved"); key(6,"cmd"); expect(q("select sum(amount_cents) from transactions")[0][0]==before); cmp(BASE[0],book()); sound(); return lab
+step("amount edit undone", amt)
+def typing():
+    press("Edit"); wait("Note ( optional )"); g=q("select count(*) from history_groups where undone_at is null")[0][0]; r=q("select count(*) from history_groups")[0][0]; fill("Note ( optional )","typed text"); key(6,"cmd"); expect(q("select count(*) from history_groups")[0][0]==r and q("select count(*) from history_groups where undone_at is null")[0][0]==g,"book changed while typing"); press("Cancel"); return "Cmd+Z in a text field leaves the book alone"
+step("typing keeps its own undo", typing)
+def cat():
+    press("Default"); all_tx(); label="Category for QA SYNTHETIC CAFE"; fill("Search","QA SYNTHETIC CAFE") if "AXTextField 'Search" in dump() else None
+    time.sleep(1); f=lambda: q("select category,category_source,user_locked_fields from transactions where description='QA SYNTHETIC CAFE'")[0]; b=f(); sel(label,"Health"); expect(f()[0]=="Health"); press("~Undo: "); wait("Undone:"); expect(f()==b,str(f())); press("~Redo: "); wait("Redone:"); expect(f()[0]=="Health" and "category" in f()[2]); press("~Undo: "); wait("Undone:"); expect(f()==b); return str(b)
+step("category choice undone and redone; the person's protection kept", cat)
+def imported():
+    press("Add & Sync"); press("Import statements"); press("Import statements",1) if "Choose statement files" not in dump() else None
+    open(S+"/fx/undo.csv","w").write("Date,Description,Amount\n"+"\n".join(f"2026-11-{1+i%24:02d},UNDO IMPORT {i},-{i+1}.00" for i in range(40))+"\n"); b=book(); press("Choose statement files"); time.sleep(1); pick(S+"/fx/undo.csv"); wait("Import 40 transactions"); press("Import 40 transactions"); wait("40 transactions imported"); n=q("select count(*) from transactions")[0][0]; l=undo_label(); expect("40 entries" in l,l)
+    press("~Undo: "); wait("You can redo it"); d("shot",S+"/shots/undo-confirm.png"); f=d("focused"); expect("Cancel" in f,f); key(53); expect(q("select count(*) from transactions")[0][0]==n,"Escape undid it"); press("~Undo: "); wait("You can redo it"); press("Undo"); wait("Undone:"); expect(q("select count(*) from transactions")[0][0]==n-40); cmp(b,book()); sound()
+    press("~Redo: "); wait("Redo “"); press("Redo"); wait("Redone:"); expect(q("select count(*) from transactions")[0][0]==n); sound(); return l
+step("import of 40 rows: asked first, Escape keeps, undo and redo exact", imported)
+def restart():
+    n=q("select count(*) from transactions")[0][0]; quit(); launch(NEW); wait("AXButton 'All Transactions'",20); l=undo_label(); expect("40 entries" in l,str(l)); press("~Undo: "); wait("You can redo it"); press("Undo"); wait("Undone:"); expect(q("select count(*) from transactions")[0][0]==n-40); quit(); launch(NEW); wait("AXButton 'All Transactions'",20); r=redo_label(); expect("40 entries" in r,str(r)); sound(); return "undo after a restart, redo offered after another"
+step("history survives restarts", restart)
+def newedit():
+    opened(); press("Delete"); wait("Moved to the trash."); expect(redo_label()=="Nothing to redo",str(redo_label())); n=q("select count(*) from transactions where deleted_at is not null")[0][0]; key(6,"cmd"); expect(q("select count(*) from transactions where deleted_at is not null")[0][0]==n-1); key(6,"cmd","shift"); expect(q("select count(*) from transactions where deleted_at is not null")[0][0]==n); return "a new edit ended redo; trash undone and redone"
+step("new edit ends redo; trash and restore", newedit)
+def purge():
+    manual_home(); press("~Review & trash"); wait("Empty trash"); t=q("select id,description from transactions where deleted_at is not null order by deleted_at desc limit 1")[0]; n=q("select count(*) from transactions")[0][0]; press("Delete for good"); wait("cannot be undone"); press("Cancel"); expect(q("select count(*) from transactions")[0][0]==n); press("Delete for good"); press("Delete for good"); wait("deleted for good"); expect(q("select count(*) from transactions")[0][0]<n); expect(q(f"select count(*) from history_changes where table_name='transactions' and row_key='[{t[0]}]'")==[(0,)]); left=undo_label(); key(6,"cmd"); time.sleep(1); expect(q(f"select count(*) from transactions where id={t[0]}")==[(0,)],"came back"); sound(); return "no copy in the history, Cmd+Z does not bring it back"
+step("permanent deletion stays permanent", purge)
+finish()

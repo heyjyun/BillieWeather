@@ -1,0 +1,22 @@
+[
+ [
+  "a migration that fails: explained on screen, schema 9 and every row untouched",
+  "FAIL",
+  "['BillieWeather QA p63']"
+ ],
+ [
+  "after the cause is removed the same version upgrades the book",
+  "PASS",
+  "1334 rows in 17 tables identical"
+ ],
+ [
+  "an edit in 0.9, then sign out and quit",
+  "PASS",
+  ""
+ ],
+ [
+  "rollback: 0.1.0 refuses the schema 10 book and changes nothing",
+  "STOPPED",
+  "LOCKED"
+ ]
+]

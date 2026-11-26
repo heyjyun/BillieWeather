@@ -1,0 +1,32 @@
+[
+ [
+  "edit text, note and tag; Undo button restores the book exactly",
+  "PASS",
+  "Undo: edit “UNDO EDITED”"
+ ],
+ [
+  "Redo button repeats it",
+  "PASS",
+  "Nothing to redo"
+ ],
+ [
+  "keyboard shortcuts",
+  "PASS",
+  "Cmd+Z, Shift+Cmd+Z, Cmd+Z"
+ ],
+ [
+  "amount edit undone, redone, undone",
+  "PASS",
+  ""
+ ],
+ [
+  "typing keeps its own undo",
+  "PASS",
+  "Cmd+Z in a text field leaves the book alone"
+ ],
+ [
+  "categories on screen after the upgrade",
+  "FAIL",
+  "('press', 'Categories', '0'): NOT FOUND: Categories"
+ ]
+]

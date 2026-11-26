@@ -1,0 +1,11 @@
+PASS edit text, note and tag; Undo button restores the book exactly Undo: edit “UNDO EDITED”
+PASS Redo button repeats it Nothing to redo
+PASS keyboard shortcuts Cmd+Z, Shift+Cmd+Z, Cmd+Z
+FIELDS AXTextField 'Amount' = 10.10 FOCUSED; AXTextField 'Merchant / payee ( optional )' = ZXQ Cafe; AXTextField 'Project ( optional )' = ZXQ Trip; AXTextField 'Tags ( optional ) Separate with commas.' = work; AXTextField 'Description ( optional )' = ZXQ MANUAL 10; AXTextArea 'Note ( optional )' = synthetic note; AXTextField 'Search' = ZXQ MANUAL 10; AXTextField 'Merchant / Project / Tag'
+PASS amount edit undone, redone, undone 
+PASS typing keeps its own undo Cmd+Z in a text field leaves the book alone
+FAIL categories on screen after the upgrade ('press', 'Categories', '0'): NOT FOUND: Categories
+FAIL a migration that fails: explained on screen, schema 9 and every row untouched ['BillieWeather QA p63']
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical
+PASS an edit in 0.9, then sign out and quit 
+STOPPED rollback: 0.1.0 refuses the schema 10 book and changes nothing LOCKED

@@ -1,0 +1,142 @@
+# Phase 6.3 completion run on the rc2 QA candidate (apps/new2, executable 186f5483...).
+# Reruns: categories on screen (module enabled first — it was off for this person, so the earlier
+# exact "Categories" press found nothing), the failed-migration screen (waits for the WebView's
+# accessibility tree instead of reading it after a fixed 4 s), and the rollback chain that stopped
+# on a screen lock.
+import accept
+from accept import *
+NEW = S + "/apps/new2/BillieWeather QA p63.app"
+accept.NEW = NEW
+
+def front_guard():
+    f = subprocess.run([S + "/idle"], capture_output=True, text=True).stdout
+    if "front BillieWeather QA p63" not in f: raise Stop("PAUSED: " + f.strip())
+def signin_or_home(t=20):
+    end = time.time() + t
+    while time.time() < end:
+        x = dump()
+        if "AXButton 'All Transactions'" in x: return "still signed in"
+        if "Sign in to BillieWeather" in x: login(); return "signed in again"
+        time.sleep(.5)
+    front_guard(); raise RuntimeError("neither home nor sign-in shown")
+
+def open_new():
+    quit() if running() else None
+    expect(q("select max(version) from _sqlx_migrations") == [(10,)])
+    launch2(NEW); return signin_or_home()
+
+def cats():
+    rules = q("select count(*) from merchant_rules")[0][0]; own = q("select count(*) from custom_categories")[0][0]
+    press("Settings"); press("Open Feature Library"); wait("Coming soon")
+    x = d("dump", "full"); hits = [l.strip() for l in x.splitlines() if "ategor" in l]
+    for cand in ("~Show Categories & Tags", "~Categories & Tags"):
+        try: press(cand); break
+        except RuntimeError: pass
+    else: raise RuntimeError("switch not found: " + " | ".join(hits)[:250])
+    time.sleep(1.5); press("~Categories", 0); x = wait("ZXQ Hobby")
+    d("shot", S + "/shots/e2-categories.png")
+    expect(q("select count(*) from merchant_rules")[0][0] == rules); expect(q("select count(*) from custom_categories")[0][0] == own)
+    return f"own category shown; {rules} rule(s), {own} own categor(ies) unchanged"
+
+def undo_smoke():
+    manual_home(); press("~Transactions Search, filter"); wait("New entry")
+    before = q("select id,note from transactions where note is not null or 1 order by id limit 1")
+    press("Edit"); wait("Note ( optional )"); fill("Note ( optional )", "rc2 undo check"); press("Save"); time.sleep(1.5)
+    expect(q("select count(*) from transactions where note='rc2 undo check'") == [(1,)], "edit not saved")
+    lab = undo_label(); expect(lab and lab.startswith("Undo:"), str(lab)); press("~Undo:"); time.sleep(1.5)
+    expect(q("select count(*) from transactions where note='rc2 undo check'") == [(0,)], "undo did not restore")
+    d("shot", S + "/shots/e2-undo-bar.png"); return lab
+
+def soft_quit():
+    if not running(): return
+    subprocess.run(["osascript", "-e", 'tell application id "com.billieweather.client.qa.p63" to quit'], capture_output=True)
+    for _ in range(20):
+        if not running(): return
+        time.sleep(.5)
+    for pid in running(): os.kill(pid, 15)   # QA bundles from this scratchpad only (pgrep "QA p63.app")
+    time.sleep(3)
+    if running(): raise RuntimeError("QA app did not quit")
+def launch2(app):
+    soft_quit(); launch(app)
+def manual_home():
+    if "AXButton 'Add & Sync'" not in dump(): press("~Manual"); time.sleep(1)
+    press("Add & Sync"); press("Manual bookkeeping"); time.sleep(.8)
+def fail():
+    soft_quit()
+    for f in glob.glob(QD + "/billieweather.db*"):
+        if not f.endswith(".bak"): os.remove(f)
+    shutil.copy(S + "/v9-book.db", DB()); c = sqlite3.connect(DB()); c.execute("CREATE TRIGGER history_budgets_delete BEFORE DELETE ON budgets BEGIN SELECT 1; END"); c.commit(); c.close(); b = book()
+    launch2(NEW)
+    end = time.time() + 25; x = ""
+    while time.time() < end:
+        x = dump()
+        if "Try again" in x or "could not be opened" in x or "Sign in to BillieWeather" in x: break
+        time.sleep(1)
+    if "Sign in to BillieWeather" in x and "could not" not in x:
+        login() if False else None
+        fill("Email", EMAIL); fill("Password", PW); press("Sign in"); x = wait("could not be opened", 20)
+    if not x.strip(): front_guard()
+    d("shot", S + "/shots/e2-migration-failed.png")
+    texts = re.findall(r"AXStaticText = ([^\n]*)", x)
+    expect("Try again" in x and "has not been changed" in x, str(texts)[:250])
+    expect(q("select max(version) from _sqlx_migrations") == [(9,)])
+    expect(q("select count(*) from sqlite_master where name like 'history%' and name<>'history_budgets_delete'") == [(0,)])
+    return same(b, book()) + " | " + " / ".join(texts)[:200]
+CK = S + "/ckpt-e2-after-edit"   # QA data folder as it stood right after step 5 passed
+RESUME = os.path.exists(CK + "/ok")
+if RESUME:
+    soft_quit(); shutil.rmtree(QD); shutil.copytree(CK + "/data", QD)
+    print("RESUMED from the post-edit checkpoint", open(CK + "/ok").read().strip(), flush=True)
+if not RESUME: step("a migration that fails: explained on screen, schema 9 and every row untouched", fail)
+
+def recover():
+    quit(); c = sqlite3.connect(DB()); c.execute("DROP TRIGGER history_budgets_delete"); c.commit(); c.close(); b = book()
+    launch2(NEW); r = signin_or_home(); expect(q("select max(version) from _sqlx_migrations") == [(10,)]); sound(); return same(b, book()) + "; " + r
+if not RESUME: step("after the cause is removed the same version upgrades the book", recover)
+if not RESUME: step("categories and remembered rules on screen after the upgrade", cats)
+if not RESUME: step("rc2 undo bar: edit then Undo restores the row", undo_smoke)
+
+def edit():
+    manual_home(); press("~Transactions Search, filter"); wait("New entry"); press("Edit"); wait("Note ( optional )"); fill("Note ( optional )", "made in 0.9"); press("Save"); time.sleep(1.5)
+    expect(q("select count(*) from transactions where note='made in 0.9'") == [(1,)]); press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); time.sleep(1); quit()
+if not RESUME:
+    step("an edit in 0.9, then sign out and quit", edit)
+    if results[-1][1] == "PASS":
+        shutil.rmtree(CK, ignore_errors=True); shutil.copytree(QD, CK + "/data")
+        open(CK + "/ok", "w").write(time.strftime("%F %T") + " after steps 1-5 passed\n")
+
+def oldrefuses():
+    rows = book(); launch2(OLD); end = time.time() + 25; x = ""
+    while time.time() < end:   # 0.1.0 may refuse before or after the sign-in screen
+        x = dump()
+        if "could not be opened" in x or "Sign in to BillieWeather" in x: break
+        time.sleep(1)
+    if "could not be opened" not in x and "Sign in to BillieWeather" in x:
+        fill("Email", EMAIL); fill("Password", PW); press("Sign in"); time.sleep(5)
+    if not x.strip(): front_guard()
+    x = dump(); expect("could not be opened" in x and "newer version" in x, "no refusal shown"); d("shot", S + "/shots/e2-old-refuses.png"); expect("AXButton 'All Transactions'" not in x, "opened")
+    texts = re.findall(r"AXStaticText = ([^\n]*)", x); r = same(rows, book()); expect(q("select max(version) from _sqlx_migrations") == [(10,)])
+    return r + " | " + " / ".join(texts)[:250]
+step("rollback: 0.1.0 refuses the schema 10 book and changes nothing", oldrefuses)
+
+def back():
+    quit(); bak = sorted(glob.glob(QD + "/billieweather.db.pre-v10-*.bak"), key=os.path.getmtime)[-1]; aside = S + "/v10-aside-e2"; os.makedirs(aside, exist_ok=True)
+    for s in ("", "-wal", "-shm"):
+        if os.path.exists(DB() + s): shutil.move(DB() + s, aside + "/billieweather.db" + s)
+    shutil.copy(bak, DB()); os.path.exists(bak + "-wal") and shutil.copy(bak + "-wal", DB() + "-wal"); os.path.exists(DB() + ".schema") and os.remove(DB() + ".schema")
+    launch2(OLD); time.sleep(4); x = dump(); login() if "Sign in to BillieWeather" in x else wait("AXButton 'All Transactions'", 20)
+    expect(q("select max(version) from _sqlx_migrations") == [(9,)]); expect(q("select count(*) from transactions where note='made in 0.9'") == [(0,)])
+    return same(book(S + "/v9-book.db"), book()) + f" (from {os.path.basename(bak)})"
+step("rollback as documented: the automatic copy opens in 0.1.0 with every row", back)
+
+def forward():
+    press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); time.sleep(1); soft_quit()
+    # The only pre-v10 copy was taken at the first (deliberately failing) upgrade, so it still carries
+    # the injected trigger. Remove the cause again exactly as in step 2, then upgrade.
+    c = sqlite3.connect(DB()); injected = c.execute("select count(*) from sqlite_master where name='history_budgets_delete'").fetchone()[0]
+    c.execute("DROP TRIGGER IF EXISTS history_budgets_delete"); c.commit(); c.close()
+    launch2(NEW); wait("Sign in to BillieWeather", 20); login()
+    expect(q("select max(version) from _sqlx_migrations") == [(10,)]); sound(); r = same(book(S + "/v9-book.db"), book()); soft_quit()
+    return r + f"; injected trigger removed from the restored copy first: {bool(injected)}"
+step("and forward again", forward)
+finish()

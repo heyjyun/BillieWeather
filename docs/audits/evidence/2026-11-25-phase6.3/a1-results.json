@@ -1,0 +1,32 @@
+[
+ [
+  "old 0.1.0: registration",
+  "PASS",
+  ""
+ ],
+ [
+  "old: database created",
+  "PASS",
+  ""
+ ],
+ [
+  "old: statement imported on screen",
+  "PASS",
+  ""
+ ],
+ [
+  "old: category chosen by the person",
+  "PASS",
+  ""
+ ],
+ [
+  "old: preferences (dark, Budgets module)",
+  "PASS",
+  ""
+ ],
+ [
+  "old: signed out and quit",
+  "PASS",
+  "schema 9, quit"
+ ]
+]

@@ -1,0 +1,22 @@
+from accept import *
+BEFORE=book(); json.dump({k:len(v) for k,v in BEFORE.items()},open(S+"/before-counts.json","w")); BYTES=hashlib.sha256(open(DB(),"rb").read()).hexdigest(); shutil.copy(DB(),S+"/v9-book.db")
+def up(): launch(NEW); wait("Sign in to BillieWeather",20); return "no system prompt"
+step("new 0.9.0-beta.1 opens over the schema 9 installation", up)
+def data():
+    login(); wait("Upgrade Book"); expect(q("select max(version) from _sqlx_migrations")==[(10,)],"schema"); r=same(BEFORE,book()); sound(); return r
+step("schema 9 to 10: every row of every table identical, integrity and foreign keys ok", data)
+def copy():
+    b=glob.glob(QD+"/billieweather.db.pre-v10-*.bak"); expect(len(b)==1,str(b)); expect(hashlib.sha256(open(b[0],"rb").read()).hexdigest()==BYTES,"copy differs"); return "byte-identical automatic copy"
+step("automatic copy made before the migration", copy)
+def screen():
+    all_tx(); x=wait("transactions"); n=q("select count(*) from transactions where deleted_at is null")[0][0]; expect(str(n) in x.replace(",","") ,f"{n} not shown"); wait("AXButton 'Budgets'"); press("Settings"); wait("'Dark' = 1"); return f"{n} entries shown; dark theme and Budgets module kept"
+step("entries and preferences on screen", screen)
+def rules():
+    press("Categories"); x=wait("ZXQ Hobby"); d("shot",S+"/shots/up-categories.png"); expect(q("select count(*) from merchant_rules")[0][0]==len(BEFORE["merchant_rules"])); return f"{len(BEFORE['merchant_rules'])} rule, {len(BEFORE['custom_categories'])} own category"
+step("categories and remembered rules", rules)
+def empty(): expect(undo_label()=="Nothing to undo",str(undo_label())); expect(redo_label()=="Nothing to redo"); return "history starts empty"
+step("history after the upgrade", empty)
+def again():
+    quit(); launch(NEW); wait("AXButton 'All Transactions'",20); same(BEFORE,book()); sound(); expect(len(glob.glob(QD+"/billieweather.db.pre-v10-*.bak"))==1,"copied again"); return "still signed in, no second copy"
+step("quit and reopen", again)
+finish()

@@ -1,0 +1,99 @@
+FAIL rc2 opens the schema 10 book neither home nor sign-in shown
+STOPPED categories and remembered rules on screen after the upgrade PAUSED: QA app is not frontmost
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+FAIL rc2 undo bar: edit then Undo restores the row ('press', 'Add & Sync', '0'): NOT FOUND: Add & Sync
+FAIL an edit in 0.9, then sign out and quit ('press', 'Add & Sync', '0'): NOT FOUND: Add & Sync
+STOPPED rollback: 0.1.0 refuses the schema 10 book and changes nothing IN USE: hardware input 0 s ago
+STOPPED a migration that fails: explained on screen, schema 9 and every row untouched IN USE: hardware input 1 s ago
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+FAIL rc2 undo bar: edit then Undo restores the row ('press', 'Add & Sync', '0'): NOT FOUND: Add & Sync
+FAIL an edit in 0.9, then sign out and quit ('press', 'Add & Sync', '0'): NOT FOUND: Add & Sync
+FAIL rollback: 0.1.0 refuses the schema 10 book and changes nothing not shown: Sign in to BillieWeather
+STOPPED rollback as documented: the automatic copy opens in 0.1.0 with every row PAUSED: QA app is not frontmost
+FAIL a migration that fails: explained on screen, schema 9 and every row untouched QA app did not quit
+STOPPED after the cause is removed the same version upgrades the book PAUSED: QA app is not frontmost
+FAIL a migration that fails: explained on screen, schema 9 and every row untouched QA app did not quit
+STOPPED after the cause is removed the same version upgrades the book PAUSED: QA app is not frontmost
+FAIL a migration that fails: explained on screen, schema 9 and every row untouched QA app did not quit
+STOPPED after the cause is removed the same version upgrades the book PAUSED: QA app is not frontmost
+FAIL a migration that fails: explained on screen, schema 9 and every row untouched QA app did not quit
+STOPPED after the cause is removed the same version upgrades the book PAUSED: QA app is not frontmost
+FAIL a migration that fails: explained on screen, schema 9 and every row untouched QA app did not quit
+STOPPED after the cause is removed the same version upgrades the book PAUSED: QA app is not frontmost
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+PASS rc2 undo bar: edit then Undo restores the row Undo: edit “QA SYNTHETIC CAFE”
+STOPPED an edit in 0.9, then sign out and quit LOCKED
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+PASS rc2 undo bar: edit then Undo restores the row Undo: edit “QA SYNTHETIC CAFE”
+PASS an edit in 0.9, then sign out and quit 
+STOPPED rollback: 0.1.0 refuses the schema 10 book and changes nothing LOCKED
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+PASS rc2 undo bar: edit then Undo restores the row Undo: edit “QA SYNTHETIC CAFE”
+STOPPED an edit in 0.9, then sign out and quit IN USE: hardware input 0 s ago
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+PASS rc2 undo bar: edit then Undo restores the row Undo: edit “QA SYNTHETIC CAFE”
+PASS an edit in 0.9, then sign out and quit 
+STOPPED rollback: 0.1.0 refuses the schema 10 book and changes nothing LOCKED
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+PASS rc2 undo bar: edit then Undo restores the row Undo: edit “QA SYNTHETIC CAFE”
+STOPPED an edit in 0.9, then sign out and quit IN USE: hardware input 0 s ago
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+PASS rc2 undo bar: edit then Undo restores the row Undo: edit “QA SYNTHETIC CAFE”
+STOPPED an edit in 0.9, then sign out and quit PAUSED: QA app is not frontmost
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+PASS rc2 undo bar: edit then Undo restores the row Undo: edit “QA SYNTHETIC CAFE”
+PASS an edit in 0.9, then sign out and quit 
+STOPPED rollback: 0.1.0 refuses the schema 10 book and changes nothing LOCKED
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+STOPPED after the cause is removed the same version upgrades the book IN USE: hardware input 0 s ago
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+PASS rc2 undo bar: edit then Undo restores the row Undo: edit “QA SYNTHETIC CAFE”
+STOPPED an edit in 0.9, then sign out and quit IN USE: hardware input 0 s ago
+PASS a migration that fails: explained on screen, schema 9 and every row untouched 1334 rows in 17 tables identical | The local database could not be opened. / Your data has not been changed. Try again, or restart the app. / while executing migration 10: error returned from database: (code: 1) trigger history_budgets
+PASS after the cause is removed the same version upgrades the book 1334 rows in 17 tables identical; still signed in
+PASS categories and remembered rules on screen after the upgrade own category shown; 2 rule(s), 1 own categor(ies) unchanged
+PASS rc2 undo bar: edit then Undo restores the row Undo: edit “QA SYNTHETIC CAFE”
+PASS an edit in 0.9, then sign out and quit 
+STOPPED rollback: 0.1.0 refuses the schema 10 book and changes nothing LOCKED
+RESUMED from the post-edit checkpoint 2026-11-25 20:31:33 after steps 1-5 passed
+PASS rollback: 0.1.0 refuses the schema 10 book and changes nothing 1337 rows in 17 tables identical | The local database could not be opened. / It was last opened by a newer version of BillieWeather. Install the latest version to open it. Your data is unchanged. / migration 10 was previously applied but is missing in the resolved migrations / BillieW
+PASS rollback as documented: the automatic copy opens in 0.1.0 with every row 1334 rows in 17 tables identical (from billieweather.db.pre-v10-1795660207.bak)
+FAIL and forward again not shown: AXButton 'All Transactions'
+RESUMED from the post-edit checkpoint 2026-11-25 20:31:33 after steps 1-5 passed
+FAIL rollback: 0.1.0 refuses the schema 10 book and changes nothing idle 106 s, locked false, front SecurityAgent, trusted true
+
+STOPPED rollback as documented: the automatic copy opens in 0.1.0 with every row PAUSED: QA app is not frontmost
+RESUMED from the post-edit checkpoint 2026-11-25 20:31:33 after steps 1-5 passed
+FAIL rollback: 0.1.0 refuses the schema 10 book and changes nothing not shown: Sign in to BillieWeather
+PASS rollback as documented: the automatic copy opens in 0.1.0 with every row 1334 rows in 17 tables identical (from billieweather.db.pre-v10-1795660207.bak)
+PASS and forward again 1334 rows in 17 tables identical; injected trigger removed from the restored copy first: True
+RESUMED from the post-edit checkpoint 2026-11-25 20:31:33 after steps 1-5 passed
+FAIL rollback: 0.1.0 refuses the schema 10 book and changes nothing idle 106 s, locked false, front SecurityAgent, trusted true
+
+STOPPED rollback as documented: the automatic copy opens in 0.1.0 with every row PAUSED: QA app is not frontmost
+RESUMED from the post-edit checkpoint 2026-11-25 20:31:33 after steps 1-5 passed
+STOPPED rollback: 0.1.0 refuses the schema 10 book and changes nothing IN USE: hardware input 0 s ago
+RESUMED from the post-edit checkpoint 2026-11-25 20:31:33 after steps 1-5 passed
+PASS rollback: 0.1.0 refuses the schema 10 book and changes nothing 1337 rows in 17 tables identical | The local database could not be opened. / It was last opened by a newer version of BillieWeather. Install the latest version to open it. Your data is unchanged. / migration 10 was previously applied but is missing in the resolved migrations / BillieW
+PASS rollback as documented: the automatic copy opens in 0.1.0 with every row 1334 rows in 17 tables identical (from billieweather.db.pre-v10-1795660207.bak)
+PASS and forward again 1334 rows in 17 tables identical; injected trigger removed from the restored copy first: True

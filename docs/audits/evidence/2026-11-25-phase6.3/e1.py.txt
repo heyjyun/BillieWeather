@@ -1,0 +1,27 @@
+from accept import *
+def fail():
+    quit() if running() else None
+    for f in glob.glob(QD+"/billieweather.db*"): os.remove(f)
+    shutil.copy(S+"/v9-book.db",DB()); c=sqlite3.connect(DB()); c.execute("CREATE TRIGGER history_budgets_delete BEFORE DELETE ON budgets BEGIN SELECT 1; END"); c.commit(); c.close(); b=book()
+    launch(NEW); x=wait("could not",20) if False else None; time.sleep(4); x=dump(); d("shot",S+"/shots/migration-failed.png"); texts=re.findall(r"AXStaticText = ([^\n]*)",x); expect("AXButton 'Retry'" in x or "AXButton 'Try again'" in x,str(texts)[:250]); expect(q("select max(version) from _sqlx_migrations")==[(9,)]); expect(q("select count(*) from sqlite_master where name like 'history%' and name<>'history_budgets_delete'")==[(0,)]); r=same(b,book()); return r+" | "+" / ".join(texts)[:200]
+step("a migration that fails: explained on screen, schema 9 and every row untouched", fail)
+def recover():
+    quit(); c=sqlite3.connect(DB()); c.execute("DROP TRIGGER history_budgets_delete"); c.commit(); c.close(); b=book(); launch(NEW); wait("AXButton 'All Transactions'",20); expect(q("select max(version) from _sqlx_migrations")==[(10,)]); sound(); return same(b,book())
+step("after the cause is removed the same version upgrades the book", recover)
+def edit():
+    manual_home(); press("~Transactions Search, filter"); wait("New entry"); press("Edit"); wait("Note ( optional )"); fill("Note ( optional )","made in 0.9"); press("Save"); time.sleep(1.5); expect(q("select count(*) from transactions where note='made in 0.9'")==[(1,)]); press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); time.sleep(1); quit()
+step("an edit in 0.9, then sign out and quit", edit)
+def oldrefuses():
+    b=hashlib.sha256(b"".join(open(f,"rb").read() for f in sorted(glob.glob(DB()+"*")) if not f.endswith(("-shm",".schema",".bak")))).hexdigest(); rows=book(); launch(OLD); wait("Sign in to BillieWeather",20); fill("Email",EMAIL); fill("Password",PW); press("Sign in"); time.sleep(5); x=dump(); d("shot",S+"/shots/old-refuses.png"); expect("AXButton 'All Transactions'" not in x,"opened"); texts=re.findall(r"AXStaticText = ([^\n]*)",x); r=same(rows,book()); expect(q("select max(version) from _sqlx_migrations")==[(10,)]); return r+" | "+" / ".join(texts)[:250]
+step("rollback: 0.1.0 refuses the schema 10 book and changes nothing", oldrefuses)
+def back():
+    quit(); bak=sorted(glob.glob(QD+"/billieweather.db.pre-v10-*.bak"))[-1]; aside=S+"/v10-aside"; os.makedirs(aside,exist_ok=True)
+    for s in ("","-wal","-shm"):
+        if os.path.exists(DB()+s): shutil.move(DB()+s,aside+"/billieweather.db"+s)
+    shutil.copy(bak,DB()); os.path.exists(bak+"-wal") and shutil.copy(bak+"-wal",DB()+"-wal"); os.path.exists(DB()+".schema") and os.remove(DB()+".schema")
+    launch(OLD); time.sleep(4); x=dump(); login() if "Sign in to BillieWeather" in x else wait("AXButton 'All Transactions'",20); expect(q("select max(version) from _sqlx_migrations")==[(9,)]); expect(q("select count(*) from transactions where note='made in 0.9'")==[(0,)]); r=same(book(S+"/v9-book.db"),book()); return r
+step("rollback as documented: the automatic copy opens in 0.1.0 with every row", back)
+def forward():
+    press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); time.sleep(1); quit(); launch(NEW); wait("Sign in to BillieWeather",20); login(); expect(q("select max(version) from _sqlx_migrations")==[(10,)]); sound(); return same(book(S+"/v9-book.db"),book())
+step("and forward again", forward)
+finish()

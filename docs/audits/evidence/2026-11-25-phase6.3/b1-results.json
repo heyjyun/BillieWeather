@@ -1,0 +1,37 @@
+[
+ [
+  "new 0.9.0-beta.1 opens over the schema 9 installation",
+  "PASS",
+  "no system prompt"
+ ],
+ [
+  "schema 9 to 10: every row of every table identical, integrity and foreign keys ok",
+  "PASS",
+  "1334 rows in 17 tables identical"
+ ],
+ [
+  "automatic copy made before the migration",
+  "PASS",
+  "byte-identical automatic copy"
+ ],
+ [
+  "entries and preferences on screen",
+  "PASS",
+  "1231 entries shown; dark theme and Budgets module kept"
+ ],
+ [
+  "categories and remembered rules",
+  "FAIL",
+  "('press', 'Categories', '0'): NOT FOUND: Categories"
+ ],
+ [
+  "history after the upgrade",
+  "PASS",
+  "history starts empty"
+ ],
+ [
+  "quit and reopen",
+  "PASS",
+  "still signed in, no second copy"
+ ]
+]

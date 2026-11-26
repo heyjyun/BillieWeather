@@ -1,0 +1,9 @@
+
+ RUN  v4.1.12 $WORKSPACE/billieweather-audit/clients/universal
+
+
+ Test Files  90 passed | 1 skipped (91)
+      Tests  1190 passed | 13 skipped (1203)
+   Start at  18:20:48
+   Duration  81.18s (transform 2.16s, setup 3.14s, import 11.18s, tests 131.36s, environment 7.89s)
+

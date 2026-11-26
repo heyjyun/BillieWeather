@@ -1,0 +1,74 @@
+import subprocess, sys, time, re, json, glob, os, sqlite3, shutil, hashlib
+S="$SCRATCH"; D=S+"/drv"; R=open(S+"/cluster").read().strip(); QD=os.path.expanduser("~/Library/Application Support/com.billieweather.client.qa.p63")
+RM="~/Documents/Developer/Developping/BillieWeather/billieweather-roadmap"
+OLD=S+"/apps/old/BillieWeather QA p63.app"; NEW=S+"/apps/new/BillieWeather QA p63.app"
+API="http://127.0.0.1:38530"
+EMAIL=open(S+"/email").read().strip(); PW="Violet-Harbor-Lantern-92"
+results=[]; NAME=os.path.basename(sys.argv[0]).replace(".py","")
+class Stop(Exception): pass
+def d(*a, ok=False):
+    r=subprocess.run([D,*a],capture_output=True,text=True)
+    if r.returncode in (3,4,5,6,9): raise Stop(r.stderr.strip())
+    if r.returncode and not ok: raise RuntimeError(f"{a}: {r.stderr.strip() or r.stdout.strip()}")
+    return r.stdout
+def dump(): return d("dump")
+def wait(text, t=12):
+    end=time.time()+t
+    while time.time()<end:
+        x=dump()
+        if text in x: return x
+        time.sleep(.5)
+    raise RuntimeError("not shown: "+text)
+def gone(text,t=8):
+    end=time.time()+t
+    while time.time()<end:
+        if text not in dump(): return
+        time.sleep(.5)
+    raise RuntimeError("still shown: "+text)
+def press(n,i=0): d("press",n,str(i)); time.sleep(1.2)
+def fill(n,v,i=0): d("fill",n,v,str(i)); time.sleep(.3)
+def sel(n,v): d("select",n,v); time.sleep(1.5)
+def pick(f): d("pickfile",f); time.sleep(2.5)
+def key(code,*mods): d("key",str(code),*mods); time.sleep(1.2)
+def step(name, f):
+    try: r=f(); results.append((name,"PASS",str(r) if r else "")); print("PASS",name,r or "",flush=True)
+    except Stop as e: print("STOPPED",name,e,flush=True); results.append((name,"STOPPED",str(e))); finish()
+    except Exception as e: results.append((name,"FAIL",str(e)[:300])); print("FAIL",name,str(e)[:300],flush=True); d("shot",f"{S}/shots/{NAME}-fail-{len(results)}.png",ok=True)
+def finish(): json.dump(results,open(f"{S}/{NAME}-results.json","w"),indent=1,ensure_ascii=False); sys.exit(0)
+def DB(n=""): return f"{QD}/billieweather{n}.db"
+def q(sql, db=None):
+    c=sqlite3.connect(f"file:{db or DB()}?mode=ro",uri=True); r=c.execute(sql).fetchall(); c.close(); return r
+def psql(sql): return subprocess.run(["psql","-X","-At","-h",R+"/socket","-p","35531","-U","billie_isolated","-d","billie_isolated_development","-c",sql],capture_output=True,text=True).stdout.strip()
+def expect(c,m="unexpected"):
+    if not c: raise RuntimeError(m)
+def code():
+    t=json.load(open(sorted(glob.glob(R+"/identity/outbox/*"))[-1])); text=t.get("text") or t.get("text_body") or json.dumps(t)
+    return re.sub(r"\D","",re.search(r"(?<!\d)(\d{4}[ -]?\d{4})(?!\d)",text).group(1))
+def running(app=None): return [int(x) for x in subprocess.run(["pgrep","-f","QA p63.app/Contents/MacOS"],capture_output=True,text=True).stdout.split()]
+def launch(app):
+    r=subprocess.run(["node",RM+"/clients/universal/scripts/qa.mjs","launch",app],capture_output=True,text=True,cwd=RM); expect("LAUNCHED" in r.stdout,(r.stderr or r.stdout)[-300:])
+    time.sleep(3)
+    front=subprocess.run([S+"/idle"],capture_output=True,text=True).stdout
+    expect("SecurityAgent" not in front,front)
+    d("activate"); time.sleep(2)
+def quit():
+    d("key","12","cmd"); time.sleep(3); expect(not running(),"still running")
+def login(): fill("Email",EMAIL); fill("Password",PW); press("Sign in"); wait("AXButton 'All Transactions'",15)
+TABLES=["settings","accounts","merchants","projects","tags","recurring_rules","statements","transactions","transaction_tags","transaction_links","custom_categories","category_meta","merchant_rules","budgets","import_templates","organize_runs","audit_events"]
+DEVICE="('report_id','web_sync_version','web_sync_checked_at','last_synced_at','web_sync_enabled')"
+def book(db=None):
+    out={}
+    for t in TABLES:
+        where=f" where key not in {DEVICE}" if t=="settings" else ""
+        out[t]=sorted(q(f"select * from {t}{where}",db),key=repr)
+    return out
+def same(a,b):
+    diff=[t for t in TABLES if a[t]!=b[t]]; expect(not diff,"differs: "+",".join(diff)); return f"{sum(len(v) for v in a.values())} rows in {len(TABLES)} tables identical"
+def sound(db=None):
+    expect(q("pragma integrity_check",db)==[("ok",)]); expect(q("pragma foreign_key_check",db)==[]); expect(q("select group_id,replaying,conflict from history_state",db)==[(None,0,0)])
+def all_tx(): press("All Transactions"); wait("AXHeading")
+def manual_home(): press("Add & Sync"); press("Manual bookkeeping"); time.sleep(.8)
+def undo_label():
+    m=re.search(r"AXButton '(Undo: [^\n]*|Nothing to undo)'",dump()); return m.group(1) if m else None
+def redo_label():
+    m=re.search(r"AXButton '(Redo: [^\n]*|Nothing to redo)'",dump()); return m.group(1) if m else None

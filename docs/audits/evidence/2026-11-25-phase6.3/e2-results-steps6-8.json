@@ -1,0 +1,17 @@
+[
+ [
+  "rollback: 0.1.0 refuses the schema 10 book and changes nothing",
+  "PASS",
+  "1337 rows in 17 tables identical | The local database could not be opened. / It was last opened by a newer version of BillieWeather. Install the latest version to open it. Your data is unchanged. / migration 10 was previously applied but is missing in the resolved migrations / BillieW"
+ ],
+ [
+  "rollback as documented: the automatic copy opens in 0.1.0 with every row",
+  "PASS",
+  "1334 rows in 17 tables identical (from billieweather.db.pre-v10-1795660207.bak)"
+ ],
+ [
+  "and forward again",
+  "PASS",
+  "1334 rows in 17 tables identical; injected trigger removed from the restored copy first: True"
+ ]
+]

@@ -1,0 +1,44 @@
+from accept import *
+def row(desc="ZXQ MANUAL 24"): return q(f"select amount_cents,booked_on,description,category,note,account_id,merchant_id,user_locked_fields,category_source from transactions where description like '{desc}%' order by id limit 1")[0]
+def opened():
+    manual_home(); press("~Transactions Search, filter"); wait("New entry")
+    try: fill("Search","ZXQ MANUAL 10")
+    except RuntimeError: fill("Merchant or description","ZXQ MANUAL 10")
+    time.sleep(1); wait("ZXQ MANUAL 10")
+def edit(_, **f):
+    press("Edit"); wait("Note ( optional )")
+    for k,v in f.items(): fill({"amount":"Amount","note":"Note ( optional )","desc":"Description ( optional )","tags":"Tags ( optional ) Separate with commas.","merchant":"Merchant ( optional )"}[k],v)
+    press("Save"); time.sleep(1.5)
+
+def shown(x): print("FIELDS","; ".join(l.strip() for l in x.splitlines() if re.search("AXTextField|AXTextArea",l))[:700],flush=True)
+BASE=[None]
+def cmp(a,b):
+    strip=lambda rows,i: sorted([r[:i]+r[i+1:] for r in rows],key=repr)
+    for t in ("transactions","transaction_tags","transaction_links","tags","accounts","budgets","statements","merchant_rules","custom_categories","category_meta"):
+        n=[r[1] for r in q(f"pragma table_info({t})")]
+        A,B=(strip(a[t],n.index("updated_at")),strip(b[t],n.index("updated_at"))) if "updated_at" in n else (a[t],b[t]); expect(A==B,t+" differs")
+def e1():
+    if not running(): launch(NEW); wait("AXButton 'All Transactions'",20)
+    else: d("activate"); time.sleep(2)
+    opened(); BASE[0]=book(); edit("",note="undo note",desc="UNDO EDITED",tags="undo-tag"); expect(q("select count(*) from transactions where description='UNDO EDITED' and note='undo note'")[0][0]==1,"not saved"); l=undo_label(); expect("UNDO EDITED" in l and "edit" in l,l)
+    press("~Undo: "); wait("Undone:"); expect(q("select count(*) from transactions where description='UNDO EDITED'")[0][0]==0); cmp(BASE[0],book()); sound(); d("shot",S+"/shots/undo-button.png"); return l
+step("edit text, note and tag; Undo button restores the book exactly", e1)
+def e2(): press("~Redo: "); wait("Redone:"); expect(q("select note from transactions where description='UNDO EDITED'")==[("undo note",)]); sound(); return redo_label()
+step("Redo button repeats it", e2)
+def e3(): key(6,"cmd"); expect(q("select count(*) from transactions where description='UNDO EDITED'")[0][0]==0,"Cmd+Z did nothing"); key(6,"cmd","shift"); expect(q("select count(*) from transactions where description='UNDO EDITED'")[0][0]==1,"Shift+Cmd+Z did nothing"); key(6,"cmd"); cmp(BASE[0],book()); return "Cmd+Z, Shift+Cmd+Z, Cmd+Z"
+step("keyboard shortcuts", e3)
+def amt():
+    opened(); press("Edit"); x=wait("Note ( optional )"); shown(x); before=q("select sum(amount_cents) from transactions")[0][0]
+    for lab in ("Amount","~Amount"):
+        try: fill(lab,"98.76"); break
+        except RuntimeError as e: last=e
+    else: raise last
+    press("Save"); time.sleep(1.5); expect(q("select count(*) from transactions where amount_cents=-9876")[0][0]==1,"amount not saved"); press("~Undo: "); wait("Undone:"); expect(q("select sum(amount_cents) from transactions")[0][0]==before); cmp(BASE[0],book()); sound(); press("~Redo: "); wait("Redone:"); expect(q("select count(*) from transactions where amount_cents=-9876")[0][0]==1); press("~Undo: "); wait("Undone:"); cmp(BASE[0],book())
+step("amount edit undone, redone, undone", amt)
+def typing():
+    opened(); press("Edit"); wait("Note ( optional )"); g=q("select count(*),sum(undone_at is null) from history_groups"); fill("Note ( optional )","typed text"); key(6,"cmd"); expect(q("select count(*),sum(undone_at is null) from history_groups")==g,"book changed while typing"); press("Cancel"); return "Cmd+Z in a text field leaves the book alone"
+step("typing keeps its own undo", typing)
+def cats():
+    press("Settings"); press("Open Feature Library"); wait("Coming soon"); press("Categories"); time.sleep(1.5); press("Categories",0); x=wait("ZXQ Hobby"); d("shot",S+"/shots/up-categories.png"); return "own category and its place in the tree on screen"
+step("categories on screen after the upgrade", cats)
+finish()

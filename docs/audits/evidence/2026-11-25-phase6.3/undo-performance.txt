@@ -1,0 +1,12 @@
+import 5000 #0 515 ms
+import 5000 #1 490 ms
+import 5000 #2 583 ms
+import 5000 #3 631 ms
+edit 2 ms
+undo edit 17 ms
+redo edit 36 ms
+undo edit 17 ms
+state, import on top 12 ms
+undo import 5000 93 ms
+redo import 5000 218 ms
+db MB 30 20007,16

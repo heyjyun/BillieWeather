@@ -1,0 +1,52 @@
+[
+ [
+  "edit text, note and tag; Undo button restores the book exactly",
+  "FAIL",
+  "edit() got multiple values for argument 'desc'"
+ ],
+ [
+  "Redo button repeats it",
+  "FAIL",
+  "('press', '~Redo: ', '0'): NOT FOUND: ~Redo:"
+ ],
+ [
+  "keyboard shortcuts",
+  "FAIL",
+  "Shift+Cmd+Z did nothing"
+ ],
+ [
+  "amount edit undone",
+  "FAIL",
+  "'NoneType' object has no attribute 'group'"
+ ],
+ [
+  "typing keeps its own undo",
+  "PASS",
+  "Cmd+Z in a text field leaves the book alone"
+ ],
+ [
+  "category choice undone and redone; the person's protection kept",
+  "PASS",
+  "('Shopping', 'user', '[\"category\"]')"
+ ],
+ [
+  "import of 40 rows: asked first, Escape keeps, undo and redo exact",
+  "PASS",
+  "Undo: import (40 entries)"
+ ],
+ [
+  "history survives restarts",
+  "PASS",
+  "undo after a restart, redo offered after another"
+ ],
+ [
+  "new edit ends redo; trash and restore",
+  "PASS",
+  "a new edit ended redo; trash undone and redone"
+ ],
+ [
+  "permanent deletion stays permanent",
+  "PASS",
+  "no copy in the history, Cmd+Z does not bring it back"
+ ]
+]

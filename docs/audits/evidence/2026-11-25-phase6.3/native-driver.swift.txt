@@ -1,0 +1,99 @@
+// Drives only a QA BillieWeather process by Accessibility actions and keys. Acts only while that app is in front; "activate" was used once, with permission.
+import Cocoa
+import ApplicationServices
+let args = Array(CommandLine.arguments.dropFirst())
+func die(_ s: String, _ c: Int32 = 1) -> Never { FileHandle.standardError.write((s+"\n").data(using:.utf8)!); exit(c) }
+// target
+guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == "com.billieweather.client.qa.p63" }) else { die("QA app not running", 3) }
+if app.bundleIdentifier == "com.billieweather.client" { die("refuse production", 9) }
+// guard: lock
+if let d = CGSessionCopyCurrentDictionary() as? [String:Any], (d["CGSSessionScreenIsLocked"] as? Int ?? 0) == 1 { die("LOCKED", 4) }
+let acting = ["pickfile","savefile","click","fill","press","set","setn","focus","select","key","type"]
+if acting.contains(args.first ?? "") && NSWorkspace.shared.frontmostApplication?.processIdentifier != app.processIdentifier { die("PAUSED: QA app is not frontmost", 5) }
+// The desktop belongs to whoever is using it: no acting and no activation while there is hardware input.
+let hidIdle = [CGEventType.keyDown,.mouseMoved,.leftMouseDown,.scrollWheel,.rightMouseDown].map { CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: $0) }.min()!
+if args.first == "idle" { print(Int(hidIdle)); exit(0) }
+if args.first == "activate" && hidIdle < 60 { die("IN USE: hardware input \(Int(hidIdle)) s ago", 6) }
+if acting.contains(args.first ?? "") && hidIdle < 20 { die("IN USE: hardware input \(Int(hidIdle)) s ago", 6) }
+let root = AXUIElementCreateApplication(app.processIdentifier)
+AXUIElementSetAttributeValue(root, "AXManualAccessibility" as CFString, kCFBooleanTrue)
+AXUIElementSetAttributeValue(root, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
+func attr(_ e: AXUIElement, _ n: String) -> AnyObject? { var v: AnyObject?; return AXUIElementCopyAttributeValue(e, n as CFString, &v) == .success ? v : nil }
+func str(_ e: AXUIElement, _ n: String) -> String { if let v = attr(e,n) { if let s = v as? String { return s }; if let x = v as? NSNumber { return x.stringValue } }; return "" }
+func kids(_ e: AXUIElement) -> [AXUIElement] { (attr(e, kAXChildrenAttribute) as? [AXUIElement]) ?? [] }
+func name(_ e: AXUIElement) -> String { for n in [kAXTitleAttribute, kAXDescriptionAttribute, "AXPlaceholderValue"] { let s = str(e,n); if !s.isEmpty { return s } }; return "" }
+func text(_ e: AXUIElement) -> String { let n = name(e); if !n.isEmpty { return n }
+  var out = ""; func rec(_ x: AXUIElement, _ d: Int) { if d>6 {return}; if str(x,kAXRoleAttribute)=="AXStaticText" { out += str(x,kAXValueAttribute)+" " }; for k in kids(x) { rec(k,d+1) } }; rec(e,0); return out.trimmingCharacters(in:.whitespaces) }
+func frame(_ e: AXUIElement) -> CGRect { var p = CGPoint.zero, s = CGSize.zero; if let v = attr(e,kAXPositionAttribute) { AXValueGetValue(v as! AXValue,.cgPoint,&p) }; if let v = attr(e,kAXSizeAttribute) { AXValueGetValue(v as! AXValue,.cgSize,&s) }; return CGRect(origin:p,size:s) }
+func dump(_ e: AXUIElement, _ d: Int, _ full: Bool) {
+  let r = str(e,kAXRoleAttribute); let n = name(e); let v = str(e,kAXValueAttribute)
+  let interesting = r != "AXSheet" && (full || ["AXButton","AXLink","AXTextField","AXTextArea","AXCheckBox","AXRadioButton","AXPopUpButton","AXStaticText","AXHeading","AXMenuItem","AXImage","AXTable","AXRow","AXComboBox","AXDialog","AXWindow","AXSheet","AXMenuButton","AXList"].contains(r))
+  if interesting && (r != "AXStaticText" || !v.isEmpty) && r != "AXRow" {
+    let en = (attr(e,kAXEnabledAttribute) as? Bool) == false ? " DISABLED" : ""
+    let fo = (attr(e,kAXFocusedAttribute) as? Bool) == true ? " FOCUSED" : ""
+    let sub = str(e,kAXSubroleAttribute); print(String(repeating:" ",count:min(d,24))+r+(sub.isEmpty || !full ? "" : "/"+sub)+(n.isEmpty ? "" : " '\(n)'")+(v.isEmpty ? "" : " = \(v.prefix(160))")+en+fo) }
+  if r == "AXMenuBar" || r == "AXSheet" || str(e,"AXIdentifier") == "open-panel" || str(e,"AXIdentifier") == "save-panel" { if r != "AXMenuBar" { print("(a system panel is open; not read)") }; return }
+  for k in kids(e) { dump(k,d+1,full) } }
+func find(_ e: AXUIElement, _ roles: [String], _ needle: String, _ exact: Bool, _ out: inout [AXUIElement]) {
+  let r = str(e,kAXRoleAttribute); if r == "AXMenuBar" || r == "AXSheet" { return }
+  if roles.isEmpty || roles.contains(r) { let t = text(e); let all = [t, str(e,kAXDescriptionAttribute), str(e,"AXPlaceholderValue"), str(e,kAXTitleAttribute), roles.contains("AXStaticText") ? str(e,kAXValueAttribute) : ""]; if all.contains(where: { exact ? $0 == needle : $0.localizedCaseInsensitiveContains(needle) }) { out.append(e) } }
+  for k in kids(e) { find(k,roles,needle,exact,&out) } }
+func pick(_ needle: String, _ roles: [String], _ idx: Int) -> AXUIElement {
+  var o: [AXUIElement] = []; let loose = needle.hasPrefix("~"); let wanted = loose ? String(needle.dropFirst()) : needle; find(root, roles, wanted, !loose, &o)
+  if o.count <= idx { die("NOT FOUND: \(needle)", 2) }; return o[idx] }
+let btn = ["AXButton","AXLink","AXCheckBox","AXRadioButton","AXMenuItem","AXPopUpButton","AXMenuButton","AXTab","AXDisclosureTriangle"]
+let fld = ["AXTextField","AXTextArea","AXComboBox","AXSearchField"]
+func mainWindow() -> CGWindowID? { let l = CGWindowListCopyWindowInfo([.optionAll], kCGNullWindowID) as! [[String:Any]]
+  return l.filter { ($0[kCGWindowOwnerPID as String] as? pid_t) == app.processIdentifier && ($0[kCGWindowLayer as String] as? Int) == 0 }.max(by: { a,b in let h = { (x:[String:Any]) in ((x[kCGWindowBounds as String] as? [String:Any])?["Height"] as? Double) ?? 0 }; return h(a)<h(b) })?[kCGWindowNumber as String] as? CGWindowID }
+let idx = args.count > 2 ? (Int(args.last!) ?? 0) : 0
+switch args.first ?? "" {
+case "dump": dump(root,0,args.contains("full"))
+case "press": let e = pick(args[1], btn, Int(args.count>2 ? args[2] : "0") ?? 0); let r = AXUIElementPerformAction(e, kAXPressAction as CFString); print(r == .success ? "pressed '\(text(e))'" : "press failed \(r.rawValue)"); if r != .success { exit(1) }
+case "set": let e = pick(args[1], fld, Int(args.count>3 ? args[3] : "0") ?? 0); let r = AXUIElementSetAttributeValue(e, kAXValueAttribute as CFString, args[2] as CFString); print(r == .success ? "set '\(args[1])' -> now '\(str(e,kAXValueAttribute))'" : "set failed \(r.rawValue)"); if r != .success { exit(1) }
+case "setn": var o: [AXUIElement] = []; find(root, fld, "", false, &o); var all: [AXUIElement] = []; func g(_ e: AXUIElement) { if fld.contains(str(e,kAXRoleAttribute)) { all.append(e) }; if str(e,kAXRoleAttribute)=="AXMenuBar" {return}; for k in kids(e) { g(k) } }; g(root); let i = Int(args[1])!; if i >= all.count { die("only \(all.count) fields",2) }; let r = AXUIElementSetAttributeValue(all[i], kAXValueAttribute as CFString, args[2] as CFString); print("setn \(i): \(r.rawValue) now '\(str(all[i],kAXValueAttribute))'")
+case "focus": let e = pick(args[1], args.count>2 ? [] : btn+fld, 0); let r = AXUIElementSetAttributeValue(e, kAXFocusedAttribute as CFString, kCFBooleanTrue); print("focus \(r.rawValue)")
+case "select": // popup: press then choose menu item
+  let e = pick(args[1], ["AXPopUpButton","AXComboBox"], 0); AXUIElementPerformAction(e, kAXPressAction as CFString); usleep(600000)
+  var o: [AXUIElement] = []; find(root, ["AXMenuItem"], args[2], true, &o); if o.isEmpty { die("no option \(args[2])",2) }; print("select \(AXUIElementPerformAction(o[0], kAXPressAction as CFString).rawValue)")
+case "key": // posted to the QA process only
+  let code = CGKeyCode(args[1])!; var fl: CGEventFlags = []; for f in args.dropFirst(2) { if f=="shift" {fl.insert(.maskShift)}; if f=="cmd" {fl.insert(.maskCommand)}; if f=="alt" {fl.insert(.maskAlternate)} }
+  for down in [true,false] { let ev = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down)!; ev.flags = fl; ev.postToPid(app.processIdentifier); usleep(30000) }; print("key \(code)")
+case "type": for ch in args[1].utf16 { for down in [true,false] { let ev = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: down)!; var c = ch; ev.keyboardSetUnicodeString(stringLength:1, unicodeString:&c); ev.postToPid(app.processIdentifier); usleep(8000) } }; print("typed")
+case "shot": guard let w = mainWindow() else { die("no window") }; let p = Process(); p.executableURL = URL(fileURLWithPath:"/usr/sbin/screencapture"); p.arguments = ["-x","-o","-l","\(w)",args[1]]; try! p.run(); p.waitUntilExit(); print("shot \(args[1])")
+case "fill": let e = pick(args[1], fld, Int(args.count>3 ? args[3] : "0") ?? 0)
+  AXUIElementSetAttributeValue(e, kAXFocusedAttribute as CFString, kCFBooleanTrue); usleep(250000)
+  if (attr(e,kAXFocusedAttribute) as? Bool) != true { die("focus did not move to \(args[1])", 7) }
+  func k(_ code: CGKeyCode, _ fl: CGEventFlags) { for down in [true,false] { let ev = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down)!; ev.flags = fl; ev.postToPid(app.processIdentifier); usleep(20000) } }
+  k(0, .maskCommand); usleep(100000); k(51, []); usleep(100000)
+  for ch in args[2].utf16 { for down in [true,false] { let ev = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: down)!; ev.flags = []; var c = ch; ev.keyboardSetUnicodeString(stringLength:1, unicodeString:&c); ev.postToPid(app.processIdentifier); usleep(9000) } }
+  usleep(200000); print("filled '\(args[1])' -> '\(str(e,kAXValueAttribute))'")
+case "panel": // only whether a file panel is there, and the state of its two buttons; never its file list
+  var found: [String] = []
+  func scan(_ e: AXUIElement, _ d: Int) { if d > 12 { return }; let id = str(e,"AXIdentifier"); let r = str(e,kAXRoleAttribute)
+    if id == "open-panel" || id == "save-panel" || id == "OKButton" || id == "CancelButton" || id == "PathTextField" || id == "GoToWindow" { found.append("\(r)/\(id) enabled=\((attr(e,kAXEnabledAttribute) as? Bool) ?? true)") }
+    if r == "AXOutline" || r == "AXBrowser" || r == "AXTable" || r == "AXList" || r == "AXWebArea" || r == "AXMenuBar" { return }
+    for k in kids(e) { scan(k, d+1) } }
+  scan(root,0); print(found.isEmpty ? "no panel" : found.joined(separator:"; "))
+case "pickfile":
+  func byId(_ want: String) -> AXUIElement? { var hit: AXUIElement?; func scan(_ e: AXUIElement, _ d: Int) { if d > 12 || hit != nil { return }; if str(e,"AXIdentifier") == want { hit = e; return }; let r = str(e,kAXRoleAttribute); if ["AXOutline","AXBrowser","AXTable","AXList","AXWebArea","AXMenuBar"].contains(r) { return }; for k in kids(e) { scan(k, d+1) } }; scan(root,0); return hit }
+  guard byId("open-panel") != nil else { die("no open panel", 8) }
+  func k(_ code: CGKeyCode, _ fl: CGEventFlags) { for down in [true,false] { let ev = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down)!; ev.flags = fl; if NSWorkspace.shared.frontmostApplication?.processIdentifier != app.processIdentifier { die("PAUSED: QA lost the front", 5) }; ev.post(tap: .cgSessionEventTap); usleep(30000) } }
+  k(5, [.maskCommand,.maskShift]); usleep(900000)
+  if let f = byId("PathTextField") { AXUIElementSetAttributeValue(f, kAXValueAttribute as CFString, args[1] as CFString); usleep(700000) ; k(36, []); usleep(900000) } else { die("no path field", 8) }
+  guard let ok = byId("OKButton") else { die("no OK button", 8) }
+  let r = AXUIElementPerformAction(ok, kAXPressAction as CFString); print("open pressed \(r.rawValue)")
+case "savefile": // folder, name
+  func byId(_ want: String) -> AXUIElement? { var hit: AXUIElement?; func scan(_ e: AXUIElement, _ d: Int) { if d > 12 || hit != nil { return }; if str(e,"AXIdentifier") == want { hit = e; return }; let r = str(e,kAXRoleAttribute); if ["AXOutline","AXBrowser","AXTable","AXList","AXWebArea","AXMenuBar"].contains(r) { return }; for k in kids(e) { scan(k, d+1) } }; scan(root,0); return hit }
+  guard byId("save-panel") != nil else { die("no save panel", 8) }
+  func k(_ code: CGKeyCode, _ fl: CGEventFlags) { for down in [true,false] { let ev = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down)!; ev.flags = fl; if NSWorkspace.shared.frontmostApplication?.processIdentifier != app.processIdentifier { die("PAUSED: QA lost the front", 5) }; ev.post(tap: .cgSessionEventTap); usleep(30000) } }
+  k(5, [.maskCommand,.maskShift]); usleep(900000)
+  if let f = byId("PathTextField") { AXUIElementSetAttributeValue(f, kAXValueAttribute as CFString, args[1] as CFString); usleep(700000) ; k(36, []); usleep(900000) } else { die("no path field", 8) }
+  if let n = byId("saveAsNameTextField") { AXUIElementSetAttributeValue(n, kAXValueAttribute as CFString, args[2] as CFString); usleep(300000) } else { die("no name field", 8) }
+  guard let ok = byId("OKButton") else { die("no OK button", 8) }
+  let r = AXUIElementPerformAction(ok, kAXPressAction as CFString); print("save pressed \(r.rawValue)")
+case "frames": func fr(_ e: AXUIElement) { let r = str(e,kAXRoleAttribute); if r == "AXMenuBar" || r == "AXSheet" { return }; if ["AXPopUpButton","AXTextField","AXButton","AXWindow"].contains(r) { let f = frame(e); print(r, name(e), Int(f.minX), Int(f.maxX)) }; for k in kids(e) { fr(k) } }; fr(root)
+case "focused": if let f = attr(root,kAXFocusedUIElementAttribute) { let e = f as! AXUIElement; print(str(e,kAXRoleAttribute)+" '"+text(e)+"' = "+str(e,kAXValueAttribute)) } else { print("none") }
+case "activate": print(app.activate(options: []))
+case "front": print(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "?")
+default: die("usage")
+}

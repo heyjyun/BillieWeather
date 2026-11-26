@@ -1,0 +1,49 @@
+
+== Brakeman Report ==
+
+Application Path: $WORKSPACE/billieweather-audit
+Rails Version: 8.1.4.1
+Brakeman Version: 8.1.0
+Scan Date: 2026-11-25 17:29:47 -0600
+Duration: 2.486856 seconds
+Checks Run: BasicAuth, BasicAuthTimingAttack, CSRFTokenForgeryCVE, ContentTag, CookieSerialization, CreateWith, CrossSiteScripting, DefaultRoutes, Deserialize, DetailedExceptions, DigestDoS, DynamicFinders, EOLRails, EOLRuby, EscapeFunction, Evaluation, Execute, FileAccess, FileDisclosure, FilterSkipping, ForgerySetting, HeaderDoS, I18nXSS, JRubyXML, JSONEncoding, JSONEntityEscape, JSONParsing, LinkTo, LinkToHref, MailTo, MassAssignment, MimeTypeDoS, ModelAttrAccessible, ModelAttributes, ModelSerialize, NestedAttributes, NestedAttributesBypass, NumberToCurrency, PageCachingCVE, Pathname, PermitAttributes, QuoteTableName, Ransack, Redirect, RegexDoS, Render, RenderDoS, RenderInline, RenderRCE, ResponseSplitting, RouteDoS, SQL, SQLCVEs, SSLVerify, SafeBufferManipulation, SanitizeConfigCve, SanitizeMethods, SelectTag, SelectVulnerability, Send, SendFile, SessionManipulation, SessionSettings, SimpleFormat, SingleQuotes, SkipBeforeFilter, SprocketsPathTraversal, StripTags, SymbolDoSCVE, TemplateInjection, TranslateBug, UnsafeReflection, UnsafeReflectionMethods, ValidationRegex, VerbConfusion, WeakRSAKey, WithoutProtection, XMLDoS, YAMLParsing
+
+== Overview ==
+
+Controllers: 69
+Models: 48
+Templates: 86
+Errors: 0
+Security Warnings: 3
+
+== Warning Types ==
+
+Dangerous Send: 1
+HTTP Verb Confusion: 2
+
+== Warnings ==
+
+Confidence: High
+Category: Dangerous Send
+Check: Send
+Message: User controlled method execution
+Code: reconciler.public_send(params[:decision], current_user.finance_receipt_matches.find(params[:match_id]))
+File: app/controllers/finance/receipts_controller.rb
+Line: 89
+
+Confidence: Weak
+Category: HTTP Verb Confusion
+Check: VerbConfusion
+Message: Potential HTTP verb confusion. `HEAD` is routed like `GET` but `request.get?` will return `false`
+Code: request.get? ? (:ok) : (:forbidden)
+File: app/controllers/finance/base_controller.rb
+Line: 42
+
+Confidence: Weak
+Category: HTTP Verb Confusion
+Check: VerbConfusion
+Message: Potential HTTP verb confusion. `HEAD` is routed like `GET` but `request.get?` will return `false`
+Code: request.get? ? (request.query_parameters) : ({})
+File: app/helpers/application_helper.rb
+Line: 47
+

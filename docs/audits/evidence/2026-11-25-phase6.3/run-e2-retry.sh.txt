@@ -1,0 +1,13 @@
+# Waits for an unlocked, idle desktop (>=90 s without keyboard/mouse), runs e2, and on a pause
+# (lock, user input, app not in front) waits for the next idle window. Up to 8 attempts / 8 hours.
+S=$SCRATCH
+cd $S/n
+for attempt in $(seq 1 20); do
+  for i in $(seq 1 8640); do o=$($S/idle); n=$(echo "$o" | sed -E 's/idle ([0-9]+) s.*/\1/')
+    case "$o" in *"locked true"*) ;; *) [ "$n" -ge 90 ] && break;; esac; sleep 5; done
+  echo "attempt $attempt start $(date +%T): $o"
+  python3 e2.py > $S/out-e2.txt 2>&1; cat $S/out-e2.txt; cat $S/out-e2.txt >> $S/native-e2.txt
+  grep -q ^STOPPED $S/out-e2.txt || { echo "end $(date +%T)"; exit 0; }
+  osascript -e 'tell application id "com.billieweather.client.qa.p63" to quit' >/dev/null 2>&1
+  echo "paused $(date +%T); waiting for the next idle window"; sleep 30
+done; echo "gave up after 20 attempts"

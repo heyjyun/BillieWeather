@@ -1,0 +1,15 @@
+after sign-in url => "http://127.0.0.1:3212/app"
+nav modules => ["Transactions","AI Assistant","Settings","English","简体中文","繁體中文","日本語","한국어","Español","Overview","All Transactions","Add & Sync","All time","This month","Last month","Last 30 days","This year","Last year"]
+dashboard links => [["Overview","/app"],["All Transactions","/app/transactions"],["Add & Sync","/app/add"],["Export report","/app/report?preset=all_time"],["Upload statement","/app/statements"],["All time","/app?preset=all_time"],["This month","/app?preset=this_month"],["Last month","/app?preset=last_month"],["Last 30 days","/app?preset=last_30_days"],["This year","/app?preset=this_year"],["Last year","/app?preset=last_year"],["View account balances →","/app/forecast#account-balances"],["✎ Enter or edit balance","/app/forecast?edit=1#balance"],["Upload your first statement","/app/statements"],["Download sample CSV","/app/statements/sample.csv"],["View all →","/app/transactions"],["Explore insights","/app/insights"]]
+follow Export report /app/report?preset=all_time => {"status":200,"disabledPage":true,"h1":"Reports is turned off"}
+follow View account balances → /app/forecast#account-balances => {"status":200,"disabledPage":true,"h1":"Cash Flow Forecast is turned off"}
+follow ✎ Enter or edit balance /app/forecast?edit=1#balance => {"status":200,"disabledPage":true,"h1":"Cash Flow Forecast is turned off"}
+settings export links => [["Export report","/app/report"],["Export report","/app/report"],["Export report","/app/report"]]
+follow settings Export report => {"status":200,"disabledPage":true}
+add-sync url/status => "http://127.0.0.1:3212/app/add-sync"
+add-sync connect card => "absent"
+connect card interactive elements => 0
+add 200 Connect Financial AccountsComing soon Read-only connections to banks and credit cards through an authorized financial-data provider, with your consent. Not available yet. BillieWeather does not connect to banks today and never asks for your bank password. 0
+insights 200 A fresh perspective on your finances. disabled: false
+tax 404 http://127.0.0.1:3212/app/tax-preparation Routing Error
+dark bg rgb(23, 19, 28) theme attr null

@@ -1,0 +1,3 @@
+from accept import *
+manual_home(); press("~Transactions Search, filter"); wait("New entry"); x=dump()
+i=x.index("New entry"); print(x[i-200:i+1800]); press("Edit"); wait("Note ( optional )"); x=dump(); i=x.index("Note ( optional )"); print("-----"); print("\n".join(l.strip() for l in x[:i+200].splitlines() if re.search("AXTextField|AXTextArea|AXComboBox|AXPopUp",l))); press("Cancel")

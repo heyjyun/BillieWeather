@@ -1,0 +1,88 @@
+from accept import *
+def login2(): login()
+def imp_page():
+    press("Transactions") if "AXButton 'Add & Sync'" not in dump() else None
+    press("Add & Sync"); press("Import statements")
+    if "Choose statement files" not in dump(): press("Import statements",1)
+    wait("Choose statement files")
+def sess(): return psql("select s.id||':'||kind||':'||coalesce(revoke_reason,'live') from user_sessions s join users u on u.id=s.user_id where u.email='%s' order by s.id"%EMAIL).split()
+N=lambda: q("select count(*) from transactions")[0][0]
+def start():
+    if not running(): launch(NEW)
+    else: d("activate"); time.sleep(2)
+    x=dump(); login() if "Sign in to BillieWeather" in x else wait("AXButton 'All Transactions'",20)
+step("candidate in front, signed in", start)
+def pdf():
+    imp_page(); n=N(); press("Choose statement files"); time.sleep(1); pick(S+"/fx/scanned-statement.pdf"); x=wait("apple-vision",40); press("Apply suggestions to rows still to decide"); x=wait("Import "); m=re.search(r"AXButton 'Import (\d+) transactions'",x).group(1); d("shot",S+"/shots/pdf.png"); press(f"Import {m} transactions"); wait(f"{m} transactions imported"); expect(N()==n+int(m)); sound(); return m+" rows"
+step("scanned PDF (Apple Vision), review, import", pdf)
+def csv(): imp_page(); n=N(); press("Choose statement files"); time.sleep(1); pick(S+"/fx/qa-sample.csv"); wait("already imported"); expect(N()==n)
+step("repeated CSV refused", csv)
+def cancel(): imp_page(); n=N(); open(S+"/fx/c.csv","w").write("Date,Description,Amount\n2026-11-04,CANCEL ME,-1.00\n"); press("Choose statement files"); time.sleep(1); pick(S+"/fx/c.csv"); wait("Import 1 transaction"); press("Cancel"); wait("Nothing was saved"); expect(N()==n)
+step("import cancelled", cancel)
+def rcpt():
+    press("Scan & Capture"); wait("Upload receipt"); n=N(); press("Upload receipt"); time.sleep(1); pick(S+"/fx/receipt-new.jpg"); wait("Read on this device by apple-vision",30); press("Check for duplicates and save"); wait("Saved as an expense"); expect(N()==n+1); l=undo_label(); press("~Undo: "); wait("Undone:"); expect(N()==n); press("~Redo: "); wait("Redone:"); expect(N()==n+1); return l
+step("receipt read, saved, undone, redone", rcpt)
+def bad(): press("Capture another receipt"); press("Upload receipt"); time.sleep(1); n=N(); pick(S+"/fx/receipt-corrupt.png"); wait("couldn't be read",30); expect(N()==n)
+step("damaged receipt refused", bad)
+def org():
+    press("Default"); press("All Transactions"); press("Organize with AI"); wait("Analyze"); h=lambda: q("select id,category,category_source,kind,merchant_id,user_locked_fields from transactions order by id"); b=h(); press("Analyze"); time.sleep(4); press("Select all"); press("~Apply "); time.sleep(3); a=h(); expect(a!=b,"nothing applied"); l=undo_label(); press("~Undo: "); time.sleep(1)
+    if "You can redo it" in dump(): press("Undo")
+    wait("Undone:"); expect(h()==b,"not restored"); press("~Redo: "); time.sleep(1)
+    if "AXButton 'Cancel'" in dump(): press("Redo")
+    wait("Redone:"); expect(h()==a,"redo differs"); sound(); press("Undo all"); wait("Undone."); expect(h()==b,"Undo all differs"); return l
+step("organize run: Undo, Redo, and its own Undo all", org)
+def backup():
+    press("Manual"); manual_home(); press("~Books, backup"); wait("Backup & restore"); f=S+"/fx/accept.bwbackup"; os.path.exists(f) and os.remove(f); press("Back up now"); time.sleep(1.2); d("savefile",S+"/fx","accept.bwbackup"); wait("Backup saved"); t=open(f).read(); expect("history_" not in t,"history in backup"); press("Choose backup file"); time.sleep(1); pick(f); wait("verified: every row and total matches the backup",30)
+    expect(q("select count(*),sum(amount_cents) from transactions",DB("-2"))==q("select count(*),sum(amount_cents) from transactions")); expect(q("select count(*) from history_groups",DB("-2"))==[(0,)]); sound(DB("-2")); return "restored copy starts with an empty history"
+step("backup and verified restore", backup)
+def switch():
+    press("Transactions"); wait("'Ledger'"); sel("Ledger","Upgrade Book (restored)"); wait("= Upgrade Book (restored)"); l=undo_label(); sel("Ledger","Upgrade Book"); gone("'Ledger' = Upgrade Book (restored)"); time.sleep(1); l2=undo_label(); expect(l=="Nothing to undo" and l2!="Nothing to undo",f"{l} / {l2}"); return "each database has its own history"
+step("database selection", switch)
+def lang():
+    press("Settings"); wait("Appearance"); label="Language"; seen=[]
+    for l,h,u in (("简体中文","功能库","撤销"),("繁體中文","功能庫","復原"),("日本語","機能ライブラリ","取り消す"),("한국어","기능 라이브러리","실행 취소"),("Español","Biblioteca de funciones","Deshacer"),("English","Feature Library","Undo")):
+        sel(label,l); x=wait(f"AXHeading '{h}'"); expect(u in x,u); label=re.search(r"AXPopUpButton '(.*?)' = ",x[x.index("AXHeading '"+h):]).group(1); seen.append(l)
+    return f"{len(seen)} languages, Undo named in each"
+step("languages", lang)
+def theme():
+    press("Light"); wait("'Light' = 1"); press("Match system"); wait("'Match system' = 1")
+step("themes", theme)
+def online():
+    press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); time.sleep(1); expect(sess()[-1].endswith("signed_out"),str(sess())); fill("Email",EMAIL); fill("Password","wrong-password-1"); press("Sign in"); wait("don't match"); login(); expect(sess()[-1].endswith("live")); return " ".join(sess()[-2:])
+step("sign out, wrong password, sign in", online)
+def offline():
+    p=subprocess.run(["lsof","-nP","-tiTCP:38530","-sTCP:LISTEN"],capture_output=True,text=True).stdout.split()[0]; cmd=subprocess.run(["ps","-o","command=","-p",p],capture_output=True,text=True).stdout; expect("38530" in cmd,cmd[:80]); os.kill(int(p),15); time.sleep(4)
+    press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); expect(sess()[-1].endswith("live"),"server knew")
+    if os.path.exists(S+"/rails.pid"): os.remove(S+"/rails.pid")
+    env={**os.environ,"BILLIE_LOCAL_ROOT":R,"BILLIE_MODULE_SYNC":"1","PATH":os.path.expanduser("~/.local/share/mise/installs/ruby/4.0.3/bin")+":"+os.environ["PATH"]}; log=open(S+"/server.log","a")
+    subprocess.Popen(["bin/billie-local","rails","server","-p","38530","-b","127.0.0.1","-P",S+"/rails.pid"],cwd=RM,env=env,stdout=log,stderr=log,start_new_session=True); t=time.time()
+    while time.time()-t<120 and not sess()[-1].endswith("signed_out"): time.sleep(3)
+    expect(sess()[-1].endswith("signed_out"),str(sess())); n=int(time.time()-t); login(); return f"server told {n} s after its restart began"
+step("offline sign-out finished automatically", offline)
+def keyboard():
+    press("Overview") if "AXButton 'Overview'" in dump() else press("Transactions"); seen=[]
+    for i in range(14): d("key","48"); time.sleep(.25); seen.append(d("focused").strip().split(" = ")[0])
+    u=[x for k,x in enumerate(seen) if k==0 or x!=seen[k-1]]; expect(len(set(u))>=6,str(u)); return f"{len(set(u))} distinct stops; Undo among them: {any('ndo' in x for x in u)}"
+step("Tab moves through controls", keyboard)
+def crash(delay):
+    rows="\n".join(f"2026-{1+i%9:02d}-{1+i%28:02d},KILL {delay} {i},-{1+i%90}.{i%100:02d}" for i in range(1500)); f=S+f"/fx/kill{delay}.csv"; open(f,"w").write("Date,Description,Amount\n"+rows+"\n")
+    imp_page(); b=N(); g=q("select count(*) from history_groups")[0][0]; press("Choose statement files"); time.sleep(1); pick(f); wait("AXButton 'Import 1500",30)
+    main=[p for p in running() if "worker" not in subprocess.run(["ps","-o","command=","-p",str(p)],capture_output=True,text=True).stdout][0]; d("press","~Import 1500"); time.sleep(delay); os.kill(main,9); time.sleep(1.5)
+    mode="mode=ro" if os.path.exists(DB()+"-shm") else "immutable=1"; c=sqlite3.connect(f"file:{DB().replace(' ','%20')}?{mode}",uri=True); a=c.execute("select count(*) from transactions").fetchone()[0]; i=c.execute("pragma integrity_check").fetchall(); k=c.execute("pragma foreign_key_check").fetchall(); h=c.execute("select group_id,replaying,conflict from history_state").fetchone(); c.close()
+    expect(i==[("ok",)] and not k and h==(None,0,0),f"{i}{k}{h}"); done=a-b; expect(done in (0,1500),f"partial {done}"); launch(NEW); wait("AXButton 'All Transactions'",20); l=undo_label()
+    if done: expect("import" in l and "1500" in l,l); press("~Undo: "); wait("You can redo it"); press("Undo"); wait("Undone:",30); expect(N()==b,f"{N()}"); sound(); return f"1500 saved; undone after the crash to {b}"
+    return f"none of 1500 saved; {l}"
+for delay in (0.0,0.08,0.4): step(f"killed {delay} s after Import of 1500 rows", lambda: crash(delay))
+def second():
+    r=subprocess.run(["node",RM+"/clients/universal/scripts/qa.mjs","launch",NEW],capture_output=True,text=True,cwd=RM); expect("already running" in r.stderr,r.stderr[-120:]); return "refused by qa.mjs; the lock itself is covered by its Rust test"
+step("second copy", second)
+def install():
+    quit(); dmg="~/Documents/Developer/Developping/BillieWeather/ClaudeGenerated/phase6.3-rc1/qa/BillieWeather QA p63-0.9.0-beta.1.dmg"; mnt=S+"/mnt"; os.makedirs(mnt,exist_ok=True); subprocess.run(["hdiutil","attach",dmg,"-nobrowse","-readonly","-mountpoint",mnt],check=True,capture_output=True)
+    dest=os.path.realpath(S)+"/installed"; tgt=dest+"/BillieWeather QA p63.app"
+    try: os.makedirs(dest,exist_ok=True); expect(not os.path.exists(tgt)); subprocess.run(["ditto",mnt+"/BillieWeather QA p63.app",tgt],check=True)
+    finally: subprocess.run(["hdiutil","detach",mnt],capture_output=True)
+    n=N(); launch(tgt); x=wait("AXButton 'All Transactions'",20); expect(N()==n); return f"copied from the DMG, opened signed in, {n} rows"
+step("installed from the DMG", install)
+def end(): press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); time.sleep(1); quit()
+step("sign out and quit", end)
+finish()

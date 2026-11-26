@@ -1,0 +1,32 @@
+// Fills the closed schema 9 book through version 0.1.0's own code (worktree 79ab6c9). Synthetic data only.
+import { readFileSync, writeFileSync } from "node:fs";
+import initSqlJs from "sql.js";
+import { sqljsDriver } from "../src/services/sqljsDriver";
+import { FinanceStore } from "../src/services/store";
+import { importFile } from "../src/services/importFile";
+it("seed", async () => {
+  const file = process.env.SEED_DB!;
+  const SQL = await initSqlJs();
+  const db = new SQL.Database(readFileSync(file));
+  db.run("PRAGMA foreign_keys = ON");
+  const store = new FinanceStore(sqljsDriver(db)); const L = store.ledger;
+  const chk = await L.createAccount({ name: "ZXQ Checking", type: "checking", openingBalanceCents: 250000, openingBalanceOn: "2026-01-01" });
+  const card = await L.createAccount({ name: "ZXQ Card", type: "credit_card", creditLimitCents: 500000, statementDay: 5, dueDay: 25 });
+  await L.createAccount({ name: "ZXQ Old", type: "cash" }); 
+  await store.addCategory("ZXQ Hobby"); await L.setCategoryMeta("ZXQ Hobby", { parent: "Shopping" }, await store.customCategories());
+  const rows = Array.from({ length: 1200 }, (_, i) => `2026-${String(1 + (i % 9)).padStart(2, "0")}-${String(1 + (i % 28)).padStart(2, "0")},ZXQ BULK MERCHANT ${i % 40} ${i},${i % 10 === 0 ? "" : "-"}${1 + (i % 90)}.${String(i % 100).padStart(2, "0")}`);
+  await importFile(store, new TextEncoder().encode(`Date,Description,Amount\n${rows.join("\n")}\n`), "zxq-bulk.csv", "USD");
+  for (let i = 0; i < 25; i += 1) await L.createEntry({ kind: "expense", amountCents: 1000 + i, occurredOn: `2026-10-${String(1 + i).padStart(2, "0")}`, accountId: i % 2 ? chk.id : card.id, category: "Food & dining", description: `ZXQ MANUAL ${i}`, merchant: "ZXQ Cafe", project: "ZXQ Trip", tags: i % 3 ? ["work"] : ["food", "家"], note: i % 5 ? null : "synthetic note" });
+  await L.createEntry({ kind: "card_payment", amountCents: 50000, occurredOn: "2026-10-06", accountId: chk.id, toAccountId: card.id });
+  const [shoes] = await L.createEntry({ kind: "expense", amountCents: 8000, occurredOn: "2026-10-07", accountId: card.id, category: "Shopping", description: "ZXQ SHOES" });
+  await L.createEntry({ kind: "refund", amountCents: 3000, occurredOn: "2026-10-12", accountId: card.id, refundOf: shoes, description: "ZXQ SHOES RETURN" });
+  const [bulk] = (await store.transactions()).filter((t) => t.description.includes("BULK MERCHANT 7 "));
+  await store.setCategory(bulk.id, "ZXQ Hobby", true);
+  await store.setExcluded(shoes, true);
+  const [gone] = await L.createEntry({ kind: "expense", amountCents: 1, occurredOn: "2026-10-30", accountId: chk.id, description: "ZXQ TRASHED" });
+  await L.deleteEntries([gone]);
+  await L.saveBudget({ period: "month", category: "Food & dining", amountCents: 40000 });
+  await L.saveRecurringRule({ name: "ZXQ Rent", template: { kind: "expense", amountCents: 90000, accountId: chk.id, category: "Housing", description: "ZXQ RENT" }, frequency: "monthly", startOn: "2027-01-01" });
+  await L.setMonthStartDay(5);
+  writeFileSync(file, db.export());
+});

@@ -1,0 +1,15 @@
+from accept import *
+def reg():
+    launch(OLD); wait("Create an account",20); press("Create an account"); wait("Create your account"); fill("Nickname ( required )","Upgrade QA"); fill("Email",EMAIL); fill("Password",PW); fill("Confirm password",PW); press("Create account"); wait("Check your email"); fill("Verification code",code()); press("Verify and continue"); wait("Name this device's database",15)
+step("old 0.1.0: registration", reg)
+def create(): fill("Database name","Upgrade Book"); press("Create database"); wait("Welcome to BillieWeather",12); press("Explore Dashboard"); wait("No statements yet")
+step("old: database created", create)
+def imp(): press("Add & Sync"); press("Import statements"); press("Import statements",1) if "Choose statement files" not in dump() else None; press("Choose statement files"); time.sleep(1); pick(S+"/fx/qa-sample.csv"); wait("Import 2 transactions"); press("Import 2 transactions"); wait("2 transactions imported")
+step("old: statement imported on screen", imp)
+def cat(): all_tx(); sel("Category for QA SYNTHETIC CAFE","Shopping"); expect(q("select category_source from transactions where description='QA SYNTHETIC CAFE'")==[("user",)])
+step("old: category chosen by the person", cat)
+def prefs(): press("Settings"); wait("Appearance"); press("Dark"); wait("'Dark' = 1"); press("Open Feature Library"); wait("Coming soon"); press("Budgets"); time.sleep(1.5); wait("AXButton 'Budgets'")
+step("old: preferences (dark, Budgets module)", prefs)
+def out(): press("Settings"); press("Sign out"); wait("Sign in to BillieWeather"); time.sleep(1); quit(); expect(q("select max(version) from _sqlx_migrations")==[(9,)]); return "schema 9, quit"
+step("old: signed out and quit", out)
+finish()
