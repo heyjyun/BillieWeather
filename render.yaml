@@ -13,7 +13,6 @@ services:
     buildCommand: ./bin/render-build.sh
     startCommand: ./bin/render-start.sh
     healthCheckPath: /up
-    autoDeployTrigger: "off"
     envVars:
       # Pooled Neon URL for a dedicated runtime role. DDL credentials are release-only.
       - key: DATABASE_URL

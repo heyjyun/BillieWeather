@@ -11,7 +11,6 @@ services:
     # The startup health check verifies the Rails and identity schema before serving writes.
     startCommand: "uv run --no-sync uvicorn identity_api.main:app --host 0.0.0.0 --port $PORT --no-access-log"
     healthCheckPath: /health
-    autoDeployTrigger: "off"
     envVars:
       - key: IDENTITY_ENV
         value: production

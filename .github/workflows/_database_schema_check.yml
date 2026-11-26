@@ -13,7 +13,7 @@ jobs:
       postgres:
         # Same major version as the Neon database (schema.rb's dump format and SQL behaviour depend on it).
         # Unverified here: confirm with `SHOW server_version` on Neon and update together with the other workflows.
-        image: postgres:17-alpine
+        image: postgres:18-alpine
         ports:
           - "5432:5432"
         env:
