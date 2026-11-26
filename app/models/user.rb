@@ -2,6 +2,18 @@ class User < ApplicationRecord
   include Users::Base
   include Roles::User
 
+  attr_readonly :finance_owner_uid
+
+  # Privileged routes require an operator grant for an existing account identity.
+  # Email addresses can be submitted at signup and changed later.
+  def developer?
+    return false unless persisted? && platform_agent_of_id.nil? && finance_owner_uid.present?
+
+    ENV.fetch("BILLIE_ADMIN_OWNER_IDS", "").split(",").any? do |owner_id|
+      owner_id.strip.downcase == finance_owner_uid
+    end
+  end
+
   # The one place the nickname rules live on the server. services/identity-api/identity_api/validation.py
   # and clients/universal/src/services/profile.ts mirror them (same limit, same normalization).
   NICKNAME_MAX = 40

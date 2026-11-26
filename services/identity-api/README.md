@@ -72,23 +72,49 @@ Rails row is created **only after** the emailed code is confirmed. Until then th
 - Only HMAC-SHA256 digests of secrets and codes are stored; the password hash is erased when the
   registration ends; `purge()` deletes old rows.
 
-### Temporary bypass: `EMAIL_VERIFICATION_REQUIRED`
+### Verification by environment
 
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `EMAIL_VERIFICATION_REQUIRED` | `true` | `false` = eligible sign-ups get the account at once (`201 {status: created, email_verified: false}`), no email, no pending registration |
-| `EMAIL_VERIFICATION_BYPASS_EMAILS` | empty | With `false`: only these addresses (`@domain` = whole domain) skip verification, in every environment. Empty = every address in development/test; **production refuses to start** |
-| `DEVELOPER_EMAILS` | empty | Never eligible (Rails grants these addresses admin), always verified by email |
+Development creates email/password accounts immediately and returns `201 created` with
+`email_verified: false`. The account can sign in through Rails. Identity records the address as
+`unverified` in `identity.email_verifications` without generating or sending a verification code.
+The automated test environment defaults to the code flow.
 
-- Authenticated account ≠ verified address: `identity.email_verifications` records `unverified` for
-  bypass accounts; `verified` only after the emailed code (`email_code`) or Google `email_verified`
-  (`google`, including linking, which also needs the account password). Nothing marks an address verified otherwise.
-- Ownership-sensitive actions stay proof-based: password reset and unlock are emailed links (Rails),
-  Google linking needs the password, and a taken address is refused (`409 email_taken`).
-- The code flow (`202`, confirm, resend) is unchanged and returns for everyone when the flag is `true`.
-  A pending code sign-up for an address that the bypass then creates is marked `superseded` (`410` on confirm).
-- `GET /v1/config` reports `email_verification: required | allowlist | disabled` (never the list). The app
-  decides its next screen from the register response only.
+- To test the code flow in Dev, set `EMAIL_VERIFICATION_REQUIRED=true` and use `MAIL_DELIVERY=outbox`
+  (see the configured outbox directory). Tests may use the in-memory mailer. Both modes are
+  local and the app reports that no email was sent. With the real provider, the app prompts
+  for a code without claiming inbox delivery.
+- To limit non-production immediate signup, set `EMAIL_VERIFICATION_REQUIRED=false` and specify
+  `EMAIL_VERIFICATION_BYPASS_EMAILS` as addresses or whole domains prefixed with `@`.
+- Production requires email verification for email/password signup. It refuses to start with
+  `EMAIL_VERIFICATION_REQUIRED=false`, including when an allowlist is supplied. Its real mail adapter
+  must be configured. Google is optional and the China mainland (`CN`) region accepts ordinary
+  email/password registration. Delivery and network reachability from mainland China still require
+  end-to-end acceptance with the live service.
+- An authenticated account and a verified address are separate. The state is attached to the user and
+  normalized address. The code flow or verified Google linking can establish proof of mailbox ownership.
+  A pending code signup for an address created immediately in Dev is superseded.
+- Rails operator privileges require `BILLIE_ADMIN_OWNER_IDS`, a comma-separated list of existing
+  account owner UUIDs administered outside registration. Both login credentials and this explicit grant
+  are required. Before deploying this code, confirm which existing administrators should receive grants.
+  The previous email-based setting has no effect under this code.
+
+### Proposed Stable experience before mailbox verification
+
+Offer an explicitly selected, device-only SQLite ledger before sign-in. Generate a local identifier
+unrelated to the entered email and keep that ledger isolated from every account-owned ledger.
+Allow local manual bookkeeping and import. Require a verified account before attaching the ledger
+to an account, enabling sync and cloud features, or using the email as a recovery credential.
+
+On successful verification and subsequent sign-in, offer a one-time, explicit backup and claim of
+the device-only ledger into the account's immutable owner ID. Separately verify any change to the
+mailbox while the current user re-authenticates. Reuse expiring, single-use, rate-limited proof tied
+to the exact address for a future existing-account verification flow. Keep administrator grants
+outside that flow. The desktop currently gates the ledger behind sign-in, so this needs its own
+device-only mode and owner-binding tests. Review the separate legacy Rails web registration route
+before treating Identity's verification policy as platform-wide.
+
+[OWASP email verification guidance](https://cheatsheetseries.owasp.org/cheatsheets/Email_Validation_and_Verification_Cheat_Sheet.html)
+and [OWASP authorization guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html).
 
 ## Google design
 

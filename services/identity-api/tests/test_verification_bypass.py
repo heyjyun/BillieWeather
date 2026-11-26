@@ -2,8 +2,7 @@
 
 The account is created immediately and signs in like any other, but its address is recorded as
 UNVERIFIED (identity.email_verifications). Only Google (email_verified) or the emailed code can
-make it verified. The bypass is limited to development/test or allowlisted test addresses, and
-never covers DEVELOPER_EMAILS (Rails grants those admin by address).
+make it verified. Non-production environments can limit immediate signup to specific test addresses.
 """
 from __future__ import annotations
 
@@ -158,21 +157,26 @@ def test_allowlist_limits_who_skips_verification(make_client, mail, sql):
     assert {u["email"] for u in users(sql)} == {"jyun.test@example.org", "someone@qa.example.org"}
 
 
-def test_developer_emails_must_always_prove_ownership(make_client, mail, sql):
-    client = make_client(**BYPASS, developer_emails="Admin@Example.org", email_verification_bypass_emails="admin@example.org")
-    response = register(client, email="admin@example.org")
-    assert response.status_code == 202 and users(sql) == [] and len(mail.sent) == 1
+def test_development_default_creates_an_unverified_account_without_google_or_mail(make_client, mail, sql):
+    client = make_client(identity_env="development", google_client_id="", google_client_secret="")
+    response = register(client, email="mainland@example.org", usage_region="CN", locale="zh-CN")
+    assert response.status_code == 201 and response.json()["email_verified"] is False
+    [user] = users(sql)
+    assert verification(sql, user["id"])["status"] == "unverified"
+    assert mail.sent == []
 
 
-def test_production_refuses_unrestricted_unverified_registration():
+def test_production_requires_verification_even_with_an_allowlist():
     base = dict(identity_env="production", database_url="postgresql://x/y", public_url="https://id.example.org", token_hmac_key="k" * 40,
                 cors_allowed_origins="tauri://localhost", mail_delivery="postmark", postmark_api_token="t", mail_from="BW <a@example.org>")
-    Settings(**base).validate_for_runtime()
-    with pytest.raises(RuntimeError, match="EMAIL_VERIFICATION_BYPASS_EMAILS"):
-        Settings(**base, email_verification_required=False).validate_for_runtime()
-    limited = Settings(**base, email_verification_required=False, email_verification_bypass_emails="tester@example.org")
-    limited.validate_for_runtime()
-    assert limited.skips_email_verification("tester@example.org") and not limited.skips_email_verification("public@example.org")
+    default = Settings(**base)
+    default.validate_for_runtime()
+    assert default.email_verification_mode == "required"
+    for allowlist in ("", "tester@example.org"):
+        settings = Settings(**base, email_verification_required=False, email_verification_bypass_emails=allowlist)
+        with pytest.raises(RuntimeError, match="EMAIL_VERIFICATION_REQUIRED=false"):
+            settings.validate_for_runtime()
+        assert not settings.skips_email_verification("tester@example.org")
 
 
 def test_flag_is_read_from_the_environment(monkeypatch):
@@ -181,7 +185,9 @@ def test_flag_is_read_from_the_environment(monkeypatch):
     settings = Settings(database_url="postgresql://x/y", _env_file=None)
     assert settings.email_verification_mode == "allowlist" and settings.skips_email_verification("a@example.org")
     monkeypatch.delenv("EMAIL_VERIFICATION_REQUIRED")
-    assert Settings(database_url="postgresql://x/y", _env_file=None).email_verification_mode == "required"  # safe default
+    monkeypatch.delenv("EMAIL_VERIFICATION_BYPASS_EMAILS")
+    assert Settings(identity_env="development", database_url="postgresql://x/y", _env_file=None).email_verification_mode == "disabled"
+    assert Settings(identity_env="test", database_url="postgresql://x/y", _env_file=None).email_verification_mode == "required"
 
 
 # Accounts without verified email ownership --------------------------------------------------

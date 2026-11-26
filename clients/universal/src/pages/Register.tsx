@@ -84,7 +84,7 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
   // person fills in the form; the form still works and re-checks on submit.
   const [service, setService] = useState<"checking" | "ready" | RegistrationError>("checking");
   // "outbox"/"memory" only on a development identity service: the code is NOT emailed, so say so.
-  const [delivery, setDelivery] = useState<MailDelivery>("postmark");
+  const [delivery, setDelivery] = useState<MailDelivery | null>(null);
   const checkService = useCallback(() => {
     let cancelled = false;
     setService("checking");
@@ -173,8 +173,7 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
         usageRegion: values.region, nickname: normalizeNickname(values.nickname) ?? "", locale,
       });
       if (started.kind === "created") {
-        // Email verification is switched off on the identity service: the account already exists,
-        // so go straight to signing in (then the app shows the personalized Welcome). No code screen.
+        // An account created without verification can sign in immediately.
         await finish(started.account.email, values.password);
         return;
       }
@@ -385,7 +384,7 @@ export function Register({ onBack }: { onBack: (email?: string) => void }) {
       <>
         <h1 ref={heading} tabIndex={-1}>{r.verify.heading}</h1>
         <p className="bw-muted">{interpolate(r.verify.intro, { email: pending.email, length: pending.codeLength })}</p>
-        {delivery !== "postmark" && <p className="bw-register-dev-notice" role="note">{r.verify.devOutbox}</p>}
+        {(delivery === "outbox" || delivery === "memory") && <p className="bw-register-dev-notice" role="note">{r.verify.devOutbox}</p>}
         <form ref={formRef} onSubmit={(event) => void submitCode(event, pending)} className="bw-login-form" noValidate>
           {messages}
           <TextField label={r.verify.code} help={r.verify.codeHelp} value={code} onChange={setCode} autoComplete="one-time-code" inputMode="numeric"

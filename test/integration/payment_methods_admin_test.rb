@@ -15,7 +15,19 @@ class PaymentMethodsAdminTest < ActionDispatch::IntegrationTest
   end
 
   def with_admin(&block)
-    with_env("DEVELOPER_EMAILS" => @admin.email, &block)
+    with_env("BILLIE_ADMIN_OWNER_IDS" => @admin.finance_owner_uid, &block)
+  end
+
+  test "a recognized email has no admin access without an operator grant" do
+    with_env("DEVELOPER_EMAILS" => @admin.email, "BILLIE_ADMIN_OWNER_IDS" => "") do
+      sign_in @admin
+      get admin_root_path
+      assert_response :not_found
+    end
+    with_admin do
+      get admin_root_path
+      assert_response :success
+    end
   end
 
   def upload(bytes = PNG_BYTES, name: "qr.png", type: "image/png")

@@ -66,12 +66,12 @@ async function call<T>(path: string, method: "GET" | "POST", body?: Record<strin
 
 /** How the identity service delivers codes: "postmark" really emails; "outbox"/"memory" (development) never do. */
 export type MailDelivery = "postmark" | "outbox" | "memory";
-export interface IdentityConfig { registrationOpen: boolean; googleAvailable: boolean; passwordMin: number; passwordMax: number; mailDelivery: MailDelivery }
+export interface IdentityConfig { registrationOpen: boolean; googleAvailable: boolean; passwordMin: number; passwordMax: number; mailDelivery: MailDelivery | null }
 
 export async function fetchIdentityConfig(): Promise<IdentityConfig> {
   const json = await call<{ registration_open: boolean; google_available: boolean; password: { min: number; max: number }; mail_delivery?: MailDelivery }>("/config", "GET");
   return { registrationOpen: json.registration_open, googleAvailable: json.google_available, passwordMin: json.password.min, passwordMax: json.password.max,
-    mailDelivery: json.mail_delivery ?? "postmark" };
+    mailDelivery: json.mail_delivery ?? null };
 }
 
 // --- email + password ------------------------------------------------------------------------

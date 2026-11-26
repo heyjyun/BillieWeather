@@ -126,7 +126,7 @@ def create_app(settings: Settings | None = None, services: Services | None = Non
     settings = settings or (services.settings if services else get_settings())
     settings.validate_for_runtime()
     logs.configure(settings.log_level)
-    if not settings.email_verification_required:
+    if not settings.requires_email_verification:
         log.warning("verification_bypass_on mode=%s env=%s allowlisted=%d (accounts are created with UNVERIFIED email)",
                     settings.email_verification_mode, settings.identity_env, len(settings.bypass_allowlist))
 

@@ -9,7 +9,7 @@ Lifecycle:
                   /api/client/v1/session endpoint.
   3. resend    -> a new code (spaced and capped).
 
-Temporary testing bypass (EMAIL_VERIFICATION_REQUIRED=false, see config.py): for eligible
+Development default (see config.py): for eligible
 addresses, register creates the account immediately (201, no email, no pending registration) and
 records its address as `unverified` in identity.email_verifications. Steps 1-3 stay unchanged for
 everyone else and come back for everyone when the flag is true again.
@@ -165,7 +165,7 @@ class RegistrationService:
         }
 
     def _create_unverified(self, email: str, encrypted: str, nickname: str | None, region: str, locale: str | None) -> dict:
-        """EMAIL_VERIFICATION_REQUIRED=false (testing bypass, see config.py): the account is created
+        """Development signup without verification: the account is created
         now, in the same transaction as the record saying its address is NOT verified. No email is
         sent and no pending registration is left behind. A taken address is reported (409): this
         mode is limited to development or allowlisted test addresses, where enumeration-safe

@@ -1,6 +1,6 @@
 module Admin
   # Admin pages for manual community management. Access is checked on the server for
-  # every request: only accounts listed in DEVELOPER_EMAILS (the same rule that guards
+  # every request: only accounts granted via BILLIE_ADMIN_OWNER_IDS (the same rule that guards
   # /admin/avo) get through; everyone else receives a 404.
   class BaseController < ApplicationController
     layout "billie"

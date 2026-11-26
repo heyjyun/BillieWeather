@@ -13,7 +13,7 @@ class CommunitySupportTest < ActionDispatch::IntegrationTest
   end
 
   def with_admin(&block)
-    with_env("DEVELOPER_EMAILS" => @admin.email, &block)
+    with_env("BILLIE_ADMIN_OWNER_IDS" => @admin.finance_owner_uid, &block)
   end
 
   def assert_no_qr_codes
