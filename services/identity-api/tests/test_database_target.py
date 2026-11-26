@@ -1,6 +1,6 @@
 import pytest
 
-from identity_api.database_target import local_target, release_target, verify_target
+from identity_api.database_target import PRODUCTION_ENDPOINTS, local_target, release_target, verify_development, verify_target
 
 ENDPOINT = "ep-synthetic.us-east-2.aws.neon.tech"
 DIRECT = f"postgresql://identity@{ENDPOINT}/finance?sslmode=verify-full"
@@ -63,3 +63,47 @@ def test_refused_release_target_names_what_is_wrong_without_values(monkeypatch):
         release_target(url, migration=False)
     with pytest.raises(RuntimeError, match="must equal BILLIE_DB_HOST"):
         release_target(POOLED, migration=True)
+
+
+DEV_HOST = "ep-devsynthetic.us-east-2.aws.neon.tech"
+DEV_POOLED = f"postgresql://dev@ep-devsynthetic-pooler.us-east-2.aws.neon.tech/neondb?sslmode=verify-full"
+PROD_HOST = f"{PRODUCTION_ENDPOINTS[0]}.c-8.us-east-2.aws.neon.tech"
+DEV_ENV = {"BILLIE_DB_ENV": "development", "BILLIE_DB_HOST": DEV_HOST, "BILLIE_DB_NAME": "neondb",
+           "BILLIE_DB_TARGET_ID": "synthetic_dev_target"}
+
+
+def test_development_may_use_the_pinned_neon_development_branch():
+    assert local_target(DEV_POOLED, "development", DEV_ENV) == {"environment": "development", "target_id": "synthetic_dev_target"}
+    assert local_target(DEV_POOLED.replace("-pooler", ""), "development", DEV_ENV)["target_id"] == "synthetic_dev_target"
+    for invalid in (DEV_POOLED.replace("ep-devsynthetic", "ep-other"), DEV_POOLED.replace("verify-full", "require"),
+                    DEV_POOLED.replace("/neondb", "/other")):
+        with pytest.raises(RuntimeError, match="development target"):
+            local_target(invalid, "development", DEV_ENV)
+    with pytest.raises(RuntimeError, match="non-local"):
+        local_target(DEV_POOLED, "test", DEV_ENV)
+
+
+@pytest.mark.parametrize("url", [
+    f"postgresql://owner@{PROD_HOST}/neondb?sslmode=verify-full",
+    f"postgresql://owner@{PROD_HOST.replace('.c-8', '-pooler.c-8')}/neondb?sslmode=verify-full",
+])
+@pytest.mark.parametrize("environment", ["development", "test"])
+def test_development_and_tests_refuse_the_production_endpoint(url, environment):
+    with pytest.raises(RuntimeError, match="production database"):
+        local_target(url, environment, {**DEV_ENV, "BILLIE_DB_HOST": PROD_HOST})
+    with pytest.raises(RuntimeError, match="production database"):
+        local_target(url, environment, DEV_ENV)
+    with pytest.raises(RuntimeError, match="production database"):
+        local_target(DEV_POOLED, environment, {**DEV_ENV, "BILLIE_PRODUCTION_DB_ENDPOINTS": "ep-devsynthetic"})
+
+
+def test_development_connection_requires_the_development_marker(sql):
+    target = {"environment": "development", "target_id": "synthetic_dev_target"}
+    with sql.transaction(force_rollback=True):
+        sql.execute("CREATE SCHEMA billie_release")
+        sql.execute("CREATE TABLE billie_release.target (singleton boolean, environment text, target_id text)")
+        sql.execute("INSERT INTO billie_release.target VALUES (true, 'development', 'synthetic_dev_target')")
+        verify_development(sql, target)
+        sql.execute("UPDATE billie_release.target SET environment = 'production'")
+        with pytest.raises(RuntimeError, match="did not confirm the approved development database"):
+            verify_development(sql, target)

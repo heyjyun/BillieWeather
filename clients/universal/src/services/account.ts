@@ -26,7 +26,7 @@ export interface AccountPreferences {
 }
 
 export type AccountErrorCode = "invalid_credentials" | "locked" | "otp_required" | "invalid_otp" | "rate_limited" | "unconfirmed" | "unauthorized" | "invalid"
-  | "offline" | "unreachable" | "local_server_down" | "unknown";
+  | "offline" | "unreachable" | "local_server_down" | "server_error" | "unknown";
 
 /** True when this build talks to a development server on this computer (never a release build; see scripts/tauri.mjs). */
 export const USES_LOCAL_SERVER = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(API_ORIGIN);
@@ -78,6 +78,7 @@ async function request<T>(path: string, init: { method: string; token?: string; 
   } catch {
     throw new AccountError(networkFailure());
   }
+  if (response.status >= 500) throw new AccountError("server_error");
   if (response.status === 204) return undefined as T;
   const json = (await response.json().catch(() => ({}))) as Record<string, unknown>;
   if (!response.ok) {

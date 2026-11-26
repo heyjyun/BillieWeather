@@ -92,6 +92,10 @@ Personal builds are ad hoc signed, hardened, not notarized (`manifest.json` list
 
 ### Production database safeguards (unchanged; never relax to get a deploy through)
 
+- The Neon branch `development` is never a release target: it has a `development` marker, which
+  `billie:release:check` refuses (`BILLIE_DB_ENV` must be production/staging/local), and development
+  configuration refuses the production endpoint. A release is built, migrated and deployed exactly as before.
+
 - The build (`bin/render-build.sh`) never touches a database: it unsets every database variable and
   compiles assets against an unreachable dummy URL.
 - The start (`bin/render-start.sh`) runs the verify-only `billie:release:check` first. It refuses to boot

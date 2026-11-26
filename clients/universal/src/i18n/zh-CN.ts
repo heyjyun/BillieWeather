@@ -35,6 +35,7 @@ export const zhCN: Messages = {
       otp_required: "请输入两步验证码。", invalid_otp: "两步验证码不正确。", rate_limited: "尝试次数过多，请稍等一分钟再试。", unconfirmed: "请先验证邮箱：打开我们发给你的邮件中的链接，然后重新登录。",
       offline: "无法连接 BillieWeather。请检查网络连接，首次登录需要联网。", unknown: "出了点问题，请重试。",
       unreachable: "网络连接正常，但 BillieWeather 服务器（{host}）没有响应。它可能已停机或正在启动，请稍后再试。",
+      server_error: "BillieWeather 服务器暂时无法完成登录，请稍后重试。",
       local_server_down: "这个 BillieWeather 是开发版本，通过本机上的服务器（{host}）登录，但该服务器没有运行。请启动它，或安装正式版本。",
     },
   },

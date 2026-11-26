@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     # users/teams/memberships rows of a new account and its own `identity` schema.
     database_url: str = Field(..., repr=False)
     db_pool_max: int = 5
+    # Database pinning (read here so values in .env count too). Production: see docs/audits/
+    # render-neon-release-runbook.md. Development on the Neon development branch: BILLIE_DB_ENV=development.
+    billie_db_env: str = ""
+    billie_db_host: str = ""
+    billie_db_name: str = ""
+    billie_db_target_id: str = ""
+    billie_production_db_endpoints: str = ""
 
     # Public https origin of this service (Google redirect URI and links in emails).
     public_url: str = "http://localhost:8100"
@@ -77,6 +84,11 @@ class Settings(BaseSettings):
     @classmethod
     def _strip(cls, value: str) -> str:
         return value.strip()
+
+    @property
+    def database_target_env(self) -> dict[str, str]:
+        return {"BILLIE_DB_ENV": self.billie_db_env, "BILLIE_DB_HOST": self.billie_db_host, "BILLIE_DB_NAME": self.billie_db_name,
+                "BILLIE_DB_TARGET_ID": self.billie_db_target_id, "BILLIE_PRODUCTION_DB_ENDPOINTS": self.billie_production_db_endpoints}
 
     @property
     def production(self) -> bool:

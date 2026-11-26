@@ -4,18 +4,18 @@
 """
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 
 import psycopg
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-from .database_target import local_target, release_target, verify_target
+from .database_target import local_target, release_target, verify_development, verify_target
 
 
 class Database:
-    def __init__(self, url: str, max_size: int = 5, *, environment: str = "test"):
+    def __init__(self, url: str, max_size: int = 5, *, environment: str = "test", env: Mapping[str, str] | None = None):
         configure = None
         if environment == "production":
             target = release_target(url, migration=False)
@@ -23,7 +23,10 @@ class Database:
             def configure(conn: psycopg.Connection) -> None:
                 verify_target(conn, target, migration=False)
         else:
-            local_target(url, environment)
+            development = local_target(url, environment, env)
+            if development is not None:
+                def configure(conn: psycopg.Connection) -> None:
+                    verify_development(conn, development)
         self.pool = ConnectionPool(
             url,
             min_size=0,

@@ -44,7 +44,7 @@ class Services:
 
 def build_services(settings: Settings, *, mail: Mailer | None = None, pwned: PwnedChecker | None = None,
                    google_client: GoogleClient | None = None, db: Database | None = None) -> Services:
-    db = db or Database(settings.database_url, settings.db_pool_max, environment=settings.identity_env)
+    db = db or Database(settings.database_url, settings.db_pool_max, environment=settings.identity_env, env=settings.database_target_env)
     pwned = pwned or PwnedChecker(settings.pwned_enabled, timeout=settings.pwned_timeout_seconds)
     if google_client is None and settings.google_configured:
         google_client = GoogleClient(settings.google_client_id, settings.google_client_secret, settings.google_redirect_uri)

@@ -114,13 +114,14 @@ def main(argv: list[str]) -> int:
     from psycopg.rows import dict_row
 
     from .config import get_settings
-    from .database_target import local_target, release_target, verify_target
+    from .database_target import local_target, release_target, verify_development, verify_target
 
     command = argv[1] if len(argv) > 1 else "check"
     if command not in {"check", "migrate", "release-migrate"}:
         print("Use check, migrate (local) or release-migrate")
         return 2
     target = None
+    development = None
     release_migration = command == "release-migrate"
     if release_migration:
         if os.getenv("IDENTITY_ENV") != "production" or not os.getenv("BILLIE_RELEASE_APPROVAL", "").strip():
@@ -135,10 +136,12 @@ def main(argv: list[str]) -> int:
                 raise RuntimeError("Production schema changes require the release-migrate command")
             target = release_target(url, migration=False)
         else:
-            local_target(url, settings.identity_env)
+            development = local_target(url, settings.identity_env, settings.database_target_env)
     with psycopg.connect(url, row_factory=dict_row, prepare_threshold=None, autocommit=True) as conn:
         if target is not None:
             verify_target(conn, target, migration=release_migration)
+        if development is not None:
+            verify_development(conn, development)
         problems = compatibility_problems(conn)
         if problems:
             print("Rails schema is NOT compatible:\n  " + "\n  ".join(problems))

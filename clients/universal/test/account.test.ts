@@ -40,10 +40,19 @@ describe("account service", () => {
     [401, { error: "locked" }, "locked"],
     [429, { error: "rate_limited" }, "rate_limited"],
     [401, {}, "unauthorized"],
-    [500, {}, "unknown"],
+    [500, {}, "server_error"],
+    [503, { error: "invalid_credentials", message: "Internal server details" }, "server_error"],
   ])("maps HTTP %s %j to %s", async (status, body, code) => {
     mockFetch(status, body);
     await expect(fetchAccount("tok")).rejects.toMatchObject({ code });
+  });
+
+  it("discards internal details from JSON server errors", async () => {
+    mockFetch(500, { error: "invalid_credentials", message: "Private server details" });
+    await expect(signIn("a@example.com", "secret")).rejects.toMatchObject({
+      code: "server_error",
+      message: "server_error",
+    });
   });
 
   it("says WHY the server cannot be reached instead of always blaming the internet", async () => {

@@ -21,7 +21,7 @@ chk "frontend dependencies"               test -d clients/universal/node_modules
 chk "gems"                                bundle check
 
 echo "== Independence (nothing from the MacBook)"
-chk "no .env files in the checkout"       bash -c '! ls .env .env.* 2>/dev/null | grep -v example'
+chk "dotenv files absent or Neon development branch only (ops/neon-dev-env.sh --check)" ops/neon-dev-env.sh --check
 chk "no database URL in the shell"        bash -c '[[ -z "${DATABASE_URL:-}${DATABASE_URL_UNPOOLED:-}${PRIMARY_DATABASE_URL:-}" ]]'
 chk "no Neon host in shell environment"   bash -c '! env | grep -qi "neon.tech"'
 chk "no MacBook hostnames in config"      bash -c '! git grep -nIE "MacBook[A-Za-z0-9-]*\.local|\.local:[0-9]+|100\.[0-9]+\.[0-9]+\.[0-9]+:" -- config clients/universal/src clients/universal/scripts ops bin'

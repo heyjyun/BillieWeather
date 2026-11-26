@@ -35,6 +35,7 @@ export const es: Messages = {
       otp_required: "Escribe tu código de verificación en dos pasos.", invalid_otp: "El código de verificación no es válido.", rate_limited: "Demasiados intentos. Espera un minuto y vuelve a intentarlo.", unconfirmed: "Primero confirma tu correo: abre el enlace del correo que te enviamos y vuelve a iniciar sesión.",
       offline: "No se puede conectar con BillieWeather. Revisa tu conexión a internet: iniciar sesión la necesita una vez.", unknown: "Algo salió mal. Inténtalo de nuevo.",
       unreachable: "Tu conexión a internet funciona, pero el servidor de BillieWeather ({host}) no responde. Puede estar caído o iniciándose: inténtalo de nuevo en un minuto.",
+      server_error: "El servidor de BillieWeather no pudo completar el inicio de sesión. Inténtalo de nuevo en unos minutos.",
       local_server_down: "Esta copia de BillieWeather es una versión de desarrollo que inicia sesión mediante un servidor en este ordenador ({host}), y ese servidor no está en marcha. Inícialo o instala una versión publicada.",
     },
   },

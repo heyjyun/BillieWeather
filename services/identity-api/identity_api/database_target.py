@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Mapping
 
 import psycopg
 from psycopg.conninfo import conninfo_to_dict
@@ -10,6 +11,10 @@ from psycopg.conninfo import conninfo_to_dict
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 URL_OPTIONS = {"host", "port", "dbname", "user", "password", "sslmode", "sslrootcert", "channel_binding", "connect_timeout"}
 OVERRIDES = ("PGSERVICE", "PGSERVICEFILE", "PGHOSTADDR", "PGOPTIONS")
+NEON_HOST = r"ep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech"
+# Neon endpoints of the production branch. Development and tests refuse them (direct or -pooler)
+# whatever else is configured. BILLIE_PRODUCTION_DB_ENDPOINTS (comma-separated) can add more.
+PRODUCTION_ENDPOINTS = ("ep-raspy-sound-bdlg3br7",)
 
 
 def local_host(host: str) -> bool:
@@ -30,14 +35,66 @@ def connection_options(url: str) -> dict[str, str]:
     return target
 
 
-def local_target(url: str, environment: str) -> None:
+def endpoint_id(host: str) -> str:
+    return host.split(".", 1)[0].removesuffix("-pooler")
+
+
+def refuse_production(hosts: tuple[str, ...], env: Mapping[str, str]) -> None:
+    extra = {entry.strip() for entry in env.get("BILLIE_PRODUCTION_DB_ENDPOINTS", "").split(",") if entry.strip()}
+    denied = set(PRODUCTION_ENDPOINTS) | extra
+    if any(endpoint_id(part) in denied for host in hosts for part in (host or "").split(",")):
+        raise RuntimeError("Refusing the production database outside production")
+
+
+def local_target(url: str, environment: str, env: Mapping[str, str] | None = None) -> dict[str, str] | None:
+    """None for a local database; the pinned target for the Neon development branch."""
+    env = os.environ if env is None else env
     target = connection_options(url)
+    refuse_production((target.get("host", ""), os.getenv("PGHOST", ""), env.get("BILLIE_DB_HOST", "")), env)
+    if environment == "development" and env.get("BILLIE_DB_ENV") == "development":
+        return development_target(target, env)
     hosts = (target.get("host", ""), os.getenv("PGHOST", ""))
     suffix = r"_(?:test|compat)" if environment == "test" else r"_development"
-    if (os.getenv("BILLIE_DB_ENV", "local") != "local"
-        or not all(not host or local_host(host) for host in hosts)
-        or not re.search(suffix + r"\Z", target.get("dbname", ""))):
+    if (env.get("BILLIE_DB_ENV") or "local") != "local" \
+        or not all(not host or local_host(host) for host in hosts) \
+        or not re.search(suffix + r"\Z", target.get("dbname", "")):
         raise RuntimeError(f"Refusing a non-local or incorrectly named {environment} database")
+    return None
+
+
+def development_target(target: dict[str, str], env: Mapping[str, str]) -> dict[str, str]:
+    """Development may use a dedicated Neon development branch, pinned like a release target."""
+    pinned_host = env.get("BILLIE_DB_HOST", "")
+    name = env.get("BILLIE_DB_NAME", "")
+    identity = env.get("BILLIE_DB_TARGET_ID", "")
+    endpoint, _, suffix = pinned_host.partition(".")
+    problems: list[str] = []
+    if not re.fullmatch(NEON_HOST, pinned_host) or endpoint.endswith("-pooler"):
+        problems.append("BILLIE_DB_HOST must be the direct Neon endpoint hostname (without -pooler)")
+    if target.get("host") not in {pinned_host, f"{endpoint}-pooler.{suffix}"}:
+        problems.append("the URL host must be BILLIE_DB_HOST or its -pooler form")
+    if target.get("sslmode") != "verify-full":
+        problems.append("the URL must set sslmode=verify-full")
+    if not name or target.get("dbname") != name:
+        problems.append("the URL database must equal BILLIE_DB_NAME")
+    if not target.get("user"):
+        problems.append("the URL has no user")
+    if not re.fullmatch(r"[a-zA-Z0-9_-]{12,128}", identity):
+        problems.append("BILLIE_DB_TARGET_ID must be 12-128 letters, digits, _ or -")
+    if problems:
+        raise RuntimeError("Development database does not match the approved development target: " + "; ".join(problems))
+    return {"environment": "development", "target_id": identity}
+
+
+def verify_development(conn: psycopg.Connection, target: dict[str, str]) -> None:
+    """Every development connection must reach the branch whose marker says 'development'."""
+    try:
+        row = conn.execute("SELECT environment, target_id FROM billie_release.target WHERE singleton").fetchone()
+    except psycopg.Error:
+        row = None
+    values = tuple(row.values()) if isinstance(row, dict) else row
+    if values is None or tuple(values) != ("development", target["target_id"]):
+        raise RuntimeError("Connected PostgreSQL server did not confirm the approved development database")
 
 
 def release_target(url: str, *, migration: bool) -> dict[str, str]:

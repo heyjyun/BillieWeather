@@ -39,6 +39,22 @@ nothing extra.
 It does **not** copy anything from the MacBook: no databases, `.env` files, Keychain items, statements,
 receipts or `ClaudeGenerated/` artifacts. Test fixtures come from the repository.
 
+## 2b. Shared Neon development database (same one as the MacBook)
+
+Both Macs run `bin/dev` (:3000) and identity-api (:8100) against the Neon branch `development`.
+The mini gets its own copy of the credential from Neon; nothing is copied from the MacBook.
+
+```sh
+npm i -g neonctl && neon auth       # 👤 browser sign-in (same Neon account as the MacBook)
+ops/neon-dev-env.sh                 # verifies the branch in Neon, writes .env.local + services/identity-api/.env (600)
+bin/billie-dev-db                   # expect: no "down" migrations; otherwise bin/billie-dev-db db:migrate
+```
+
+Schema changes made on one Mac are visible to the other at once. Run `bin/billie-dev-db db:migrate` only
+after `ops/git-sync.sh pull`, so both Macs have the migration files. Do not run `db:rollback`, `db:reset` or
+`db:schema:load` against the shared branch (`bin/billie-dev-db` refuses them). See
+[DATABASE_ISOLATION.md](DATABASE_ISOLATION.md#shared-neon-development-branch-since-2026-11-26).
+
 ## 3. Verify independence
 
 ```sh
@@ -87,7 +103,8 @@ flow: [GIT_SYNC.md](GIT_SYNC.md).
 Agents on the mini commit locally and never push. Pushing `main` does not deploy: Render Auto-Deploy
 is Off and production deploys are started by hand. Confirm it is still Off before pushing `main`; see
 [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md#render-deployment-separate-from-git-sync).
-No production credential (Neon owner/runtime URL, `BILLIE_RELEASE_APPROVAL`) is ever stored on the mini.
+No production credential (production Neon owner/runtime URL, `BILLIE_RELEASE_APPROVAL`) is ever stored on the
+mini. The development branch credential is not a production credential: its password exists only on that branch.
 
 ## 7. Releases
 

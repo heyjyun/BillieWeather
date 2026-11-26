@@ -6,6 +6,11 @@ module BillieDatabaseTarget
   LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1"].freeze
   URL_OPTIONS = %w[host port dbname user password sslmode sslrootcert channel_binding connect_timeout].freeze
   OVERRIDES = %w[PGSERVICE PGSERVICEFILE PGHOSTADDR PGOPTIONS].freeze
+  NEON_HOST = /\Aep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech\z/
+  # Neon endpoints of the production branch. Development and tests refuse them (direct or -pooler)
+  # whatever else is configured. BILLIE_PRODUCTION_DB_ENDPOINTS (comma-separated) can add more.
+  PRODUCTION_ENDPOINTS = %w[ep-raspy-sound-bdlg3br7].freeze
+  DEVELOPMENT_URLS = %w[DATABASE_URL DATABASE_URL_UNPOOLED].freeze
 
   def self.local_host?(host)
     host.to_s.empty? || LOCAL_HOSTS.include?(host) || (host.start_with?("/") && !host.include?(","))
@@ -30,8 +35,27 @@ module BillieDatabaseTarget
     raise "Invalid PostgreSQL connection URL", cause: nil
   end
 
+  def self.endpoint_id(host)
+    host.to_s.split(".").first.to_s.delete_suffix("-pooler")
+  end
+
+  def self.production_endpoints
+    PRODUCTION_ENDPOINTS + ENV.fetch("BILLIE_PRODUCTION_DB_ENDPOINTS", "").split(",").map(&:strip).reject(&:empty?)
+  end
+
+  def self.refuse_production!(hosts)
+    denied = production_endpoints
+    if hosts.compact.flat_map { |host| host.split(",") }.any? { |host| denied.include?(endpoint_id(host)) }
+      raise "Refusing the production database outside production"
+    end
+  end
+
   def self.local!(environment)
     reject_overrides!
+    urls = (["PRIMARY_DATABASE_URL"] + DEVELOPMENT_URLS).filter_map { |key| ENV[key] unless ENV[key].to_s.empty? }
+    refuse_production!(urls.map { |url| options(url)["host"] } + [ENV["PGHOST"], ENV["DATABASE_HOST"], ENV["BILLIE_DB_HOST"]])
+    return development_target! if environment == "development" && ENV["BILLIE_DB_ENV"] == "development"
+
     if !ENV["BILLIE_DB_ENV"].to_s.empty? && ENV["BILLIE_DB_ENV"] != "local"
       raise "Development and tests require a local database"
     end
@@ -44,6 +68,46 @@ module BillieDatabaseTarget
     unless hosts.all? { |host| local_host?(host) } && (!url || name&.match?(suffix))
       raise "Refusing a non-local or incorrectly named #{environment} database"
     end
+    nil
+  end
+
+  # Development may use a dedicated Neon development branch instead of a local server, pinned the same
+  # way as a release target. Every connection then has to confirm the branch's billie_release.target
+  # marker (environment 'development'), see verify_development_connection!.
+  def self.development_target!
+    pinned_host = ENV.fetch("BILLIE_DB_HOST", "")
+    name = ENV.fetch("BILLIE_DB_NAME", "")
+    identity = ENV.fetch("BILLIE_DB_TARGET_ID", "")
+    endpoint, suffix = pinned_host.split(".", 2)
+    problems = []
+    problems << "BILLIE_DB_HOST must be the direct Neon endpoint hostname (without -pooler)" unless pinned_host.match?(NEON_HOST) && !endpoint.end_with?("-pooler")
+    problems << "BILLIE_DB_TARGET_ID must be 12-128 letters, digits, _ or -" unless identity.match?(/\A[a-zA-Z0-9_-]{12,128}\z/)
+    problems << "BILLIE_DB_NAME is missing" if name.empty?
+    problems << "PRIMARY_DATABASE_URL must not be set" unless ENV["PRIMARY_DATABASE_URL"].to_s.empty?
+    problems << "DATABASE_URL is missing" if ENV["DATABASE_URL"].to_s.empty?
+    DEVELOPMENT_URLS.each do |key|
+      next if ENV[key].to_s.empty?
+      target = options(ENV[key])
+      problems << "#{key} host must be BILLIE_DB_HOST or its -pooler form" unless [pinned_host, "#{endpoint}-pooler.#{suffix}"].include?(target["host"])
+      problems << "#{key} must set sslmode=verify-full" unless target["sslmode"] == "verify-full"
+      problems << "#{key} database must equal BILLIE_DB_NAME" unless target["dbname"] == name
+      problems << "#{key} has no user" if target["user"].to_s.empty?
+    end
+    raise "Development database does not match the approved development target: #{problems.join("; ")}" if problems.any?
+    {"environment" => "development", "target_id" => identity}
+  end
+
+  # Runs on the raw PG::Connection right after Rails connects, before any application query.
+  def self.verify_development_connection!(raw_connection)
+    row = begin
+      raw_connection.exec("SELECT environment, target_id FROM billie_release.target WHERE singleton").first
+    rescue PG::Error
+      nil
+    end
+    unless row && row["environment"] == "development" && row["target_id"] == ENV.fetch("BILLIE_DB_TARGET_ID")
+      raw_connection.close
+      raise "Connected PostgreSQL server did not confirm the approved development database"
+    end
   end
 
   def self.release_url!(url, migration:)
@@ -54,7 +118,7 @@ module BillieDatabaseTarget
     name = ENV.fetch("BILLIE_DB_NAME", "")
     identity = ENV.fetch("BILLIE_DB_TARGET_ID", "")
     target_host = target["host"]
-    expected_neon = pinned_host.match?(/\Aep-[a-z0-9-]+\.[a-z0-9.-]+\.neon\.tech\z/) && !pinned_host.split(".").first.end_with?("-pooler")
+    expected_neon = pinned_host.match?(NEON_HOST) && !pinned_host.split(".").first.end_with?("-pooler")
     # Each failed condition is named (never a value), so a refused start says what to fix.
     problems = []
     case environment

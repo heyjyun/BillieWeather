@@ -6,11 +6,12 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { I18nProvider, LOCALES, MESSAGES } from "../src/i18n";
 import { Login } from "../src/pages/Login";
+import { signIn as requestSignIn } from "../src/services/account";
 
 const signIn = vi.fn();
 vi.mock("../src/hooks/useAccount", () => ({ useAccount: () => ({ signIn }) }));
 
-afterEach(() => { cleanup(); signIn.mockReset(); vi.unstubAllEnvs(); });
+afterEach(() => { cleanup(); signIn.mockReset(); vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -48,6 +49,18 @@ describe("login without quick sign-in", () => {
     fireEvent.change(screen.getByLabelText(MESSAGES.en.login.password), { target: { value: "typed-password" } });
     fireEvent.click(screen.getByRole("button", { name: MESSAGES.en.login.submit }));
     await waitFor(() => expect(signIn).toHaveBeenCalledWith("person@example.org", "typed-password", undefined));
+  });
+
+  it("shows a localized server error when sign-in receives an HTML 500 response", async () => {
+    signIn.mockImplementation(requestSignIn);
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("<html>Private server details</html>", {
+      status: 500,
+      headers: { "Content-Type": "text/html" },
+    }));
+    render(<I18nProvider initial="zh-CN"><Login initialEmail="person@example.org" /></I18nProvider>);
+    fireEvent.change(screen.getByLabelText(MESSAGES["zh-CN"].login.password), { target: { value: "typed-password" } });
+    fireEvent.click(screen.getByRole("button", { name: MESSAGES["zh-CN"].login.submit }));
+    expect((await screen.findByRole("alert")).textContent).toBe(MESSAGES["zh-CN"].login.errors.server_error);
   });
 
   it("has no quick sign-in strings in any interface language", () => {

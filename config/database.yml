@@ -16,7 +16,8 @@
 #
 <%
   require Rails.root.join("lib/billie_database_target").to_s
-  BillieDatabaseTarget.local!(Rails.env) if Rails.env.local?
+  # nil for a local database; the pinned target for the Neon development branch (BILLIE_DB_ENV=development).
+  development_target = BillieDatabaseTarget.local!(Rails.env) if Rails.env.local?
 %>
 default: &default
   adapter: postgresql
@@ -36,6 +37,10 @@ development:
   # the database. This workaround was suggested in this issue on `ruby-pg`:
   # https://github.com/ged/ruby-pg/issues/538
   <% if RUBY_PLATFORM =~ /darwin/ %>gssencmode: disable<% end %>
+  # Neon development branch through its PgBouncer pooler (transaction mode). bin/billie-dev-db runs
+  # migrations on the direct endpoint instead.
+  <% if development_target && ENV["DATABASE_URL"].to_s.include?("-pooler.") %>advisory_locks: false<% end %>
+  <% if development_target && ENV["DATABASE_URL"].to_s.include?("-pooler.") %>prepared_statements: false<% end %>
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.

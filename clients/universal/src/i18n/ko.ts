@@ -35,6 +35,7 @@ export const ko: Messages = {
       otp_required: "2단계 인증 코드를 입력하세요.", invalid_otp: "2단계 인증 코드가 올바르지 않습니다.", rate_limited: "시도 횟수가 너무 많습니다. 1분 후 다시 시도하세요.", unconfirmed: "먼저 이메일 주소를 인증하세요. 보내 드린 이메일의 링크를 연 다음 다시 로그인하세요.",
       offline: "BillieWeather에 연결할 수 없습니다. 인터넷 연결을 확인하세요(처음 로그인할 때 필요합니다).", unknown: "문제가 발생했습니다. 다시 시도하세요.",
       unreachable: "인터넷은 연결되어 있지만 BillieWeather 서버({host})가 응답하지 않습니다. 중단되었거나 시작 중일 수 있습니다. 잠시 후 다시 시도하세요.",
+      server_error: "BillieWeather 서버에서 로그인을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.",
       local_server_down: "이 BillieWeather는 이 컴퓨터의 서버({host})를 통해 로그인하는 개발용 빌드인데, 해당 서버가 실행 중이 아닙니다. 서버를 시작하거나 정식 빌드를 설치하세요.",
     },
   },

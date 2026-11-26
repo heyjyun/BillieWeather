@@ -20,9 +20,11 @@ echo 'source ~/.billieweather-dev/env' >> ~/.zshrc && source ~/.billieweather-de
 ```
 
 Do **not** copy `.env`, `.env.local`, `services/identity-api/.env`, any `billieweather.db` or Keychain
-items from the other Mac. `bin/billie-local` refuses to run while a `.env*` file is in the checkout, and
-`config/database.yml` refuses any development or test database that is not local and named
-`*_development` / `*_test` (so a Neon URL in the environment stops Rails instead of being used).
+items from the other Mac. For the shared Neon development branch, generate them on this Mac with
+`neon auth && ops/neon-dev-env.sh` ([details](DATABASE_ISOLATION.md#shared-neon-development-branch-since-2026-11-26)).
+`config/database.yml` refuses the production endpoint in development and test, accepts a remote development
+database only when it is the pinned `development` branch, and otherwise requires a local `*_development` /
+`*_test` database. `bin/billie-local` refuses to run while a `.env*` file is in the checkout.
 
 ## Every day
 
@@ -76,10 +78,10 @@ pg_ctl -D /tmp/bw-pg -o "-p 55432 -c listen_addresses=127.0.0.1" start`, then us
 
 | Thing | This Mac | Never |
 | --- | --- | --- |
-| Rails, identity-api | `bin/billie-local` → `billie_isolated_development` on a socket-only cluster | Neon, `bin/dev` with a live `.env.local` |
-| Schema changes | `bin/billie-local rails db:migrate` and `bin/billie-local identity -m identity_api.schema migrate` | `db:*` tasks in production (blocked); production uses `bin/billie-release` (runbook) |
+| Rails, identity-api | `bin/dev` + identity-api on the Neon branch `development` (`ops/neon-dev-env.sh`), or `bin/billie-local` → `billie_isolated_development` | the production Neon branch (refused) |
+| Schema changes | `bin/billie-dev-db db:migrate` (Neon development branch), `bin/billie-local rails db:migrate` and `bin/billie-local identity -m identity_api.schema migrate` | `db:*` tasks in production (blocked); production uses `bin/billie-release` (runbook) |
 | Mac app data | `~/Library/Application Support/com.billieweather.client.dev/` | `com.billieweather.client` (the stable app's real book) |
-| Pushing `main` | allowed; **every push to `main` deploys Render production** | `push --force` |
+| Pushing `main` | allowed; does not deploy (Render Auto-Deploy is Off since 2026-11-26) | `push --force` |
 
 See [DATABASE_ISOLATION.md](DATABASE_ISOLATION.md) and, for production, the
 [Render and Neon runbook](../audits/render-neon-release-runbook.md).

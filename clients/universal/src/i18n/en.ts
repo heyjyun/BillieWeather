@@ -36,6 +36,7 @@ export const en = {
       otp_required: "Enter your two-factor code.", invalid_otp: "That two-factor code is not valid.", rate_limited: "Too many attempts. Wait a minute and try again.", unconfirmed: "Confirm your email address first: open the link in the email we sent you, then sign in again.",
       offline: "Can't reach BillieWeather. Check your internet connection — signing in needs it once.", unknown: "Something went wrong. Please try again.",
       unreachable: "Your internet connection is working, but the BillieWeather server ({host}) isn't answering. It may be down or starting up — try again in a minute.",
+      server_error: "BillieWeather’s server couldn’t complete sign-in. Please try again in a few minutes.",
       local_server_down: "This copy of BillieWeather is a development build that signs in through a server on this computer ({host}), and that server isn't running. Start it, or install a release build.",
     },
   },
