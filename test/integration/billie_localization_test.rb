@@ -5,6 +5,16 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
   # Exercises optional modules (hidden by default since the Feature Library): sign people in with them on.
   include BillieModules::SignInWithFullSidebar
 
+  # The financial overview renders its figures in the browser from per-section JSON; the page itself
+  # carries the locale and account names in data-context, and the client formats dates with Intl.
+  def overview_context = JSON.parse(css_select("#financial-overview").first["data-context"])
+
+  def overview_section(section)
+    get finance_dashboard_path(format: :json), params: {section: section}
+    assert_response :success
+    response.parsed_body
+  end
+
   test "browser language selects Simplified Chinese and explicit choice survives navigation" do
     get root_path, headers: {"HTTP_ACCEPT_LANGUAGE" => "zh-CN,zh;q=0.9,en;q=0.8"}
     assert_response :success
@@ -51,10 +61,12 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
     get finance_dashboard_path, params: {locale: "zh-CN"}
     assert_response :success
     assert_select "html[lang='zh-CN']"
-    assert_includes response.body, "餐饮"
-    assert_includes response.body, "Original merchant 商户"
-    assert_includes response.body, Date.current.strftime("%Y年%-m月%-d日")
+    assert_equal "zh-CN", overview_context["locale"]
     assert_select ".bw-language-switcher a[aria-current='true']", text: "简体中文"
+    recent = overview_section("recent").sole
+    assert_equal "餐饮", recent["category"]
+    assert_equal "Original merchant 商户", recent["name"]
+    assert_equal Date.current.iso8601, recent["date"]
 
     get finance_transactions_path, params: {category: "Food & dining", search: "Original merchant"}
     assert_response :success
@@ -170,9 +182,12 @@ class BillieLocalizationTest < ActionDispatch::IntegrationTest
       get finance_dashboard_path, params: {locale: locale}
       assert_response :success
       assert_select "html[lang='#{locale}']"
-      assert_includes response.body, I18n.t("billie.helpers.labels.food", locale: locale)
-      assert_includes response.body, I18n.l(Date.current, locale: locale, format: I18n.t("billie.helpers.date_format", locale: locale))
-      assert_includes response.body, I18n.t("billie.helpers.labels.checking", locale: locale)
+      context = overview_context
+      assert_equal locale, context["locale"]
+      assert_includes context["accounts"].map { |a| a["name"] }.join, I18n.t("billie.helpers.labels.checking", locale: locale)
+      recent = overview_section("recent").sole
+      assert_equal I18n.t("billie.helpers.labels.food", locale: locale), recent["category"]
+      assert_equal Date.current.iso8601, recent["date"]
 
       [finance_statements_path, finance_transactions_path, finance_forecast_path(engine: "linear"), finance_insights_path, finance_tax_preparation_path,
         edit_finance_transaction_path(transaction)].each do |path|

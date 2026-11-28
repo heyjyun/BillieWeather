@@ -14,6 +14,7 @@ class SessionRevocationTest < ActionDispatch::IntegrationTest
     [:get, "/api/client/v1/finance/transactions"], [:get, "/api/client/v1/finance/rules"], [:get, "/api/client/v1/finance/categories"],
     [:post, "/api/client/v1/finance/categorize"], [:post, "/api/client/v1/finance/receipts"], [:get, "/api/client/v1/finance/receipts/1"],
     [:put, "/api/client/v1/devices/1/databases/1"], [:delete, "/api/client/v1/devices/1/databases/1"], [:delete, "/api/client/v1/devices/1"],
+    [:get, "/api/client/v1/assistant_preferences"], [:patch, "/api/client/v1/assistant_preferences"], [:put, "/api/client/v1/assistant_preferences"],
     [:delete, "/api/client/v1/sessions"]
   ].freeze
 

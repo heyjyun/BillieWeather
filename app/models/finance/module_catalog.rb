@@ -59,7 +59,7 @@ module Finance
       "manual" => "transactions", "entries" => "transactions", "audit_events" => "transactions",
       "reviews" => "transactions", "add_sync" => "transactions",
       "insights" => "ai_assistant", "tax_preparation" => "ai_assistant",
-      "accounts" => "accounts",
+      "accounts" => "accounts", "account_captures" => "accounts",
       "categories" => "categories", "category_proposals" => "categories", "dimensions" => "categories",
       "budgets" => "budgets",
       "ledger_reports" => "reports", "reports" => "reports",
@@ -73,7 +73,7 @@ module Finance
       "reports" => [["billie.ledger.report.title", "finance_ledger_report", %w[ledger_reports]], ["billie.export.title", "finance_report", %w[reports]]],
       "categories" => [["billie.categories.nav", "finance_categories", %w[categories]], ["billie.ledger.nav.lists", "finance_dimension_index", %w[dimensions]]]
     }.freeze
-    SYSTEM_CONTROLLERS = %w[base settings feature_library profiles financial_data local_devices modes commands bank_accounts capture_tokens].freeze
+    SYSTEM_CONTROLLERS = %w[base settings feature_library profiles financial_data local_devices modes commands bank_accounts capture_tokens next_steps].freeze
 
     module_function
 
