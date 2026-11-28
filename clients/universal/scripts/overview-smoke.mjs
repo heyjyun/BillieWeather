@@ -107,6 +107,10 @@ try {
     assert.equal(await amount.innerText(), "—");
   }
   assert.equal(await p.locator("[data-widget]").count(), 7);
+  if (process.env.OVERVIEW_SCREENSHOT) {
+    await p.getByRole("heading", { name: "Financial Overview", exact: true }).click();
+    await p.screenshot({ path: process.env.OVERVIEW_SCREENSHOT, fullPage: true });
+  }
   assert.equal(await p.locator("#transactions-tabs").count(), 0);
   await p.getByRole("button", { name: "Customize", exact: true }).click();
   await p.getByRole("checkbox", { name: "Net worth", exact: true }).uncheck();

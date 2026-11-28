@@ -1315,3 +1315,20 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-sidebar-order-actions form, .bw-sidebar-add form { display: inline; margin: 0; }
 .bw-drag-handle { display: inline-flex; color: var(--bw-color-text-muted); }
 .bw-sidebar-customization[aria-busy="true"] .bw-sidebar-order { opacity: 0.7; }
+
+/* Longer translated mode names must fit the overview shell at tablet and phone widths. */
+@media (max-width: 1100px) {
+  .billie-app:has(#financial-overview) .bw-topbar-actions {
+    max-width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .billie-app:has(#financial-overview) :is(.bw-mode-switch, .bw-mode-switch-group) {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .billie-app:has(#financial-overview) .bw-mode-option {
+    min-width: 0;
+    white-space: normal;
+  }
+}

@@ -15,6 +15,9 @@ try {
       timezoneId: "America/Chicago",
       reducedMotion: "reduce",
     });
+    await context.addInitScript(() => {
+      if (localStorage.getItem("billie.sidebar") === null) localStorage.setItem("billie.sidebar", "collapsed");
+    });
     let failBills = fixture === "populated";
     const errors = [];
     await context.route("**/*", async (route) => {
@@ -59,6 +62,40 @@ try {
       assert.equal(projections.size, 3);
       await widget("trend").getByRole("slider").press("ArrowLeft");
       assert(await widget("trend").locator("output").isVisible());
+      for (const theme of ["dark", "light"]) {
+        await page.locator("[data-theme-menu] summary").click();
+        await page.locator('[data-theme-choice="' + theme + '"]').click();
+        const ratios = await page.evaluate(() => {
+          const lum = (value) => {
+            const rgb = value
+              .match(/[\d.]+/g)
+              .slice(0, 3)
+              .map((s) => Number(s) / 255)
+              .map((n) => (n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4));
+            return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+          };
+          const style = (sel) => getComputedStyle(document.querySelector(sel));
+          const bg = lum(style(".fo-card").backgroundColor);
+          return [
+            ".fo-card h2",
+            ".fo-empty",
+            ".fo-card .fo-link",
+            ".fo-bar.income",
+            ".fo-bar.expenses",
+            ".fo-netline",
+          ].map((sel) => {
+            const css = style(sel),
+              paint = sel.includes("bar.") ? css.fill : sel === ".fo-netline" ? css.stroke : css.color;
+            const fg = lum(paint);
+            return [sel, (Math.max(bg, fg) + 0.05) / (Math.min(bg, fg) + 0.05)];
+          });
+        });
+        for (const [sel, ratio] of ratios)
+          assert(
+            ratio >= (sel.includes("bar.") || sel === ".fo-netline" ? 3 : 4.5),
+            theme + " " + sel + " contrast " + ratio,
+          );
+      }
       const preferenceSnapshot = () =>
         page.evaluate(() =>
           Object.fromEntries(

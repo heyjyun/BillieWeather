@@ -6,9 +6,9 @@
   --fo-soft: var(--bw-color-surface-muted, #f4f2f7);
   --fo-tone-0: #8863b7;
   --fo-tone-1: #ca6ca4;
-  --fo-tone-2: #9297cb;
-  --fo-tone-3: #6b9b96;
-  --fo-tone-4: #ba9361;
+  --fo-tone-2: #797fb6;
+  --fo-tone-3: #578a84;
+  --fo-tone-4: #a98452;
   color: var(--fo-ink);
   font-family: var(--bw-font-family);
   font-size: 14px;
@@ -246,7 +246,7 @@
   background: #8968b9;
 }
 .fo-key.expenses {
-  background: #d98ab5;
+  background: #bb6097;
 }
 .fo-key.net {
   background: #258779;
@@ -257,7 +257,7 @@
   fill: #8968b9;
 }
 .fo-bar.expenses {
-  fill: #d98ab5;
+  fill: #bb6097;
 }
 .fo-netline {
   fill: none;
