@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Isolated backend for development and QA on this Mac: a private PostgreSQL cluster (Unix socket
+# Isolated backend for development and disposable tests on this Mac: a private PostgreSQL cluster (Unix socket
 # only, no TCP), Rails on 127.0.0.1:38530 and identity-api on 127.0.0.1:38531.
 #   ops/dev-services.sh start|stop|status|reset
 # The browser preview (Vite on localhost:1420, clients/universal; in-memory database, keeps nothing):
@@ -249,8 +249,7 @@ case "${1:-status}" in
     r="$(cat "$STATE/local-root" 2>/dev/null || echo none)"; echo "cluster  $r"
     up $API_PORT /up     && echo "rails    http://127.0.0.1:$API_PORT  up" || echo "rails    down"
     up $ID_PORT /health  && echo "identity http://127.0.0.1:$ID_PORT  up" || echo "identity down"
-    preview status
-    echo "QA builds: BILLIE_QA_API_URL=http://127.0.0.1:$API_PORT BILLIE_QA_IDENTITY_URL=http://127.0.0.1:$ID_PORT" ;;
+    preview status ;;
   reset)  # throw the synthetic data away and start clean
     "$0" stop; r="$(cat "$STATE/local-root" 2>/dev/null || true)"
     [[ "$r" =~ ^(/private)?/tmp/billie-roadmap\.[[:alnum:]]+$ ]] && rm -rf "$r"; rm -f "$STATE/local-root"

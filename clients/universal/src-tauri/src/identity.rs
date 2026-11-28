@@ -13,7 +13,7 @@ use std::{fs, io::Write, path::Path};
 use tauri::Manager;
 
 const FILE: &str = "device-identity.json";
-/// Only the released app reports metadata. QA builds (other identifiers) and debug builds
+/// Only the released app reports metadata. Dev builds (other identifiers) and debug builds
 /// keep their own data and never appear as devices on the website.
 use crate::variant::PRODUCTION_IDENTIFIER;
 

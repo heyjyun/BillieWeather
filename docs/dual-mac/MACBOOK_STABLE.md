@@ -46,6 +46,6 @@ database a newer one has migrated; it shows an explanation and changes nothing (
 
 ## Do not
 
-- Install QA builds (`BillieWeather QA …`) here; the installer refuses them.
+- Install any build other than the Stable app (`com.billieweather.client`); the installer refuses them.
 - Replace the installed 0.1.0 before 0.9.0-beta.1 passes acceptance and the "Stable servers" decision
   in ARCHITECTURE.md is made — the candidate signs in through `localhost:3000/8100` like 0.1.0.

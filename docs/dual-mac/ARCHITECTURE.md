@@ -6,12 +6,12 @@ which each Mac reaches with its own Neon sign-in. No `.env` file, Keychain item 
 
 | | Mac mini — main development | MacBook Air — daily use + occasional development |
 | --- | --- | --- |
-| Purpose | engineering, full tests, native GUI QA, builds, DMG packaging, overnight agents | the stable BillieWeather app and the person's own books; small source changes |
+| Purpose | engineering, full tests, builds, DMG packaging, overnight agents | the stable BillieWeather app and the person's own books; small source changes |
 | Source | clone of `main` (main-only; no other branches) | clone of `main` (main-only; no other branches) |
 | Toolchain | Ruby 4.0.3, Node 24, Rust ≥1.94, uv/Python, PostgreSQL 18, CLT | whatever the change needs; the full suite runs on the mini |
-| Databases | Neon branch `development` (shared, synthetic) or the isolated cluster (`bin/billie-local`, socket only) + QA SQLite under `com.billieweather.client.qa.*` | the app's SQLite under `com.billieweather.client`; development servers on the Neon branch `development` |
-| Apps | QA builds only (`com.billieweather.client.qa.<suffix>`), dev builds (`…client.dev`) | `/Applications/BillieWeather.app` (`com.billieweather.client`) |
-| Servers | Rails :38530, identity-api :38531 on 127.0.0.1 (`ops/dev-services.sh`) | see "Stable servers" |
+| Databases | Neon branch `development` (shared, synthetic) or the isolated cluster (`bin/billie-local`, socket only) + Dev SQLite under `com.billieweather.client.dev` | the app's SQLite under `com.billieweather.client`; development servers on the Neon branch `development` |
+| Apps | the Dev app only (`com.billieweather.client.dev`) | `/Applications/BillieWeather.app` (`com.billieweather.client`) |
+| Servers | Development servers (Rails :3000, identity-api :8100) or the isolated cluster (Rails :38530, identity-api :38531, `ops/dev-services.sh`) | see "Stable servers" |
 | Agents | Claude Code / Codex via `ops/agent-run.sh`, tmux, launchd recovery; commit locally, never push | interactive sessions only |
 
 ```
@@ -40,7 +40,9 @@ Auto-Deploy is Off; a person starts each production deploy). See
 - Rollback targets are commits in `main`'s history, not branches: the session-safe rollback release
   `dbd85e7` is reachable from `main` through a content-free merge (see RELEASE_WORKFLOW.md).
 - `vX.Y.Z[-pre]` annotated tags on `main` — a release; `ops/release-build.sh` only builds at a tag.
-  Development, QA, Dev app, Stable app and production each run a specific `main` commit or tag.
+  Development (and the Dev app) and Production (and the Stable app) each run a specific `main`
+  commit or tag. There is no QA environment (removed 2026-11-28; see
+  [QA_DECOMMISSION_2026-11-28.md](QA_DECOMMISSION_2026-11-28.md)).
 - `archive/<date>/*` tags — local-only markers of retired branch tips (not on GitHub). New archive tags
   are not created: anything worth keeping is merged into `main` before a branch is deleted.
 - `checkpoint/*` tags — local safety points before risky work; not pushed unless asked.
@@ -49,10 +51,10 @@ Details and the current branch inventory: [GIT_SYNC.md](GIT_SYNC.md).
 
 ## Isolation guarantees (summary)
 
-1. **Bundle identifier separates data.** The shipped app owns `~/Library/Application Support/com.billieweather.client` and its Keychain service; every QA build has `…client.qa.<suffix>` and `qa.mjs preflight` refuses anything else. A debug build refuses to run as the shipped identifier (`src-tauri/src/variant.rs`).
+1. **Bundle identifier separates data.** The shipped app owns `~/Library/Application Support/com.billieweather.client` and its Keychain service; the Dev app has `…client.dev` with its own folder and Keychain item. A debug build refuses to run as the shipped identifier, and a bundle whose Info.plist and binary identifiers differ refuses to start (`src-tauri/src/variant.rs`).
 2. **The development Mac has no real data.** `ops/doctor.sh` fails if the shipped app's database exists there. On the MacBook, development never opens the shipped app's database.
 3. **Servers cannot reach production.** Development and tests refuse the production Neon endpoint outright; a remote development database must be the pinned `development` branch and prove it on every connection with its `billie_release.target` marker ([DATABASE_ISOLATION.md](DATABASE_ISOLATION.md#shared-neon-development-branch-since-2026-11-26)). `bin/billie-local` builds `DATABASE_URL` itself, verifies database name, data directory, socket-only listening and role, and refuses to run beside `.env` files. In production, `config/database.yml` and `billie:release:check` refuse any URL that is not the approved Neon target (see RELEASE_WORKFLOW.md).
-4. **The GUI driver acts only on a QA app**, only while it is frontmost, never within 20 s of keyboard/mouse input, never while the screen is locked, and exits with "refuse production" if pointed at `com.billieweather.client`.
+4. **No session drives a native app GUI.** Native-shell behavior is covered by `cargo test`; UI behavior by Vitest and the Vite client in a headless browser. No extra app bundle is built for testing.
 
 Details: [DATABASE_ISOLATION.md](DATABASE_ISOLATION.md).
 
@@ -74,6 +76,6 @@ sessions (and web data if synced). The options:
 | B. Mac mini serves the stable account servers over Tailscale (separate "stable" service, not the dev stack) | no | **no** — sign-in fails | free; MacBook depends on the mini |
 | C. Point localhost servers on the MacBook at production again | **yes** | yes | free; development would write to production again — refused by the guards since 2026-11-26 |
 
-`ops/release-build.sh` refuses localhost URLs unless `BILLIE_ALLOW_LOCAL_SERVERS=1` is set on purpose,
-and always refuses the QA ports. Recommendation: **A** for independence. Until you decide, keep the
+`ops/release-build.sh` accepts only HTTPS, non-loopback servers (a local Stable build needs
+`scripts/tauri.mjs build` with `BILLIE_ALLOW_LOCAL_SERVERS=1` on purpose). Recommendation: **A** for independence. Until you decide, keep the
 installed 0.1.0 and its servers untouched.

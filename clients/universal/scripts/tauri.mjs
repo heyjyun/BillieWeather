@@ -9,7 +9,7 @@
 // It allows exactly those two origins in the app's Content Security Policy and passes them to the
 // frontend as VITE_BILLIE_API_URL and VITE_BILLIE_IDENTITY_URL. Nothing else may reach the network.
 // `dev` and BILLIE_VARIANT=dev builds run as com.billieweather.client.dev with their own data folder; the app refuses to start as a
-// debug build of the shipped app (src-tauri/src/variant.rs). QA builds: scripts/qa.mjs.
+// debug build of the shipped app (src-tauri/src/variant.rs).
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

@@ -36,6 +36,12 @@ AI sessions are in [AGENTS.md](AGENTS.md).
 | Universal Client | `cd clients/universal && npx tsc --noEmit && npx vitest run && npx vite build` |
 | Native shell | `cd clients/universal/src-tauri && cargo test` |
 
+There is no QA environment, QA app, QA server, or QA database branch. Tests run against the current
+`main` code on disposable resources (the Rails test database, temporary local PostgreSQL clusters,
+synthetic fixtures, headless browsers, temporary SQLite files) and clean up after themselves. Two
+runtimes exist: Development (with the Dev app) and Production (with the Stable app). See
+[AGENTS.md](AGENTS.md).
+
 Migrations are append-only. Never edit or renumber a Rails or SQLite migration that is already on
 `main`.
 

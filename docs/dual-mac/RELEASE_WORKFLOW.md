@@ -2,7 +2,7 @@
 
 Two separate pipelines start from `main`:
 
-1. **Desktop app**: development → automated tests → native QA → release build → verified DMG →
+1. **Desktop app**: development → automated tests → release build → verified DMG →
    MacBook installation. Everything up to the DMG happens on the Mac mini.
 2. **Hosted web service (Render + Neon)**: deployed by Render from `main`. Its behavior is described
    separately below because it is **not** controlled by the Git workflow.
@@ -13,7 +13,7 @@ Two separate pipelines start from `main`:
 | --- | --- | --- |
 | 1. Develop | directly on `main` (main-only; [GIT_SYNC.md](GIT_SYNC.md), [AGENTS.md](../../AGENTS.md)) | commits only, reviewed; fetch and divergence check before any push |
 | 2. Automated tests | `ops/doctor.sh --tests` | Rails, vitest, typecheck, cargo test, identity-api pytest, all on the isolated cluster |
-| 3. Native QA | `node scripts/qa.mjs build <suffix>` + acceptance scripts (upgrade from the previous release's schema, undo/redo, failed migration, rollback) | evidence in `docs/audits/evidence/<date>-<phase>/`, report in `docs/audits/` |
+| 3. Native checks | `cargo test` (SQLite migrations on synthetic books in temporary directories: upgrade from the previous release's schema, failed migration, rollback) and a manual pass in the Dev app | no QA app or QA environment; evidence, if any, in `docs/audits/` |
 | 4. Version | bump `src-tauri/Cargo.toml` + `tauri.conf.json`; write `docs/releases/<version>.md`; commit on `main`; `git tag -a v<version>` | versions agree with the tag |
 | 5. Release build | `BILLIE_API_URL=… BILLIE_IDENTITY_URL=… ops/release-build.sh` | clean tree at a tag, tests pass, **two clean builds give the same executable**, identifier `com.billieweather.client` |
 | 6. Verified DMG | (same script) `scripts/package.mjs` | manifest with signature facts and distribution blockers; `SHA256SUMS`; `compat.json` with database schema |
@@ -42,8 +42,9 @@ rollback source for the app bundle (the installer also keeps a copy of the repla
 - Migrations are forward-only and additive. The app copies the database before migrating, and an older
   app refuses a newer schema without changing it.
 - The installer refuses to install a release whose schema is lower than the database's.
-- Native QA for every schema change: upgrade a synthetic book from the previous release, compare every row
-  of every table, force a failing migration, roll back with the automatic copy, and go forward again.
+- For every schema change, automated tests upgrade a synthetic book from the previous release, compare
+  every row of every table, force a failing migration, roll back with the automatic copy, and go forward
+  again, all on disposable SQLite files.
 
 ### Signing
 

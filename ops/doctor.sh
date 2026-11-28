@@ -3,7 +3,7 @@
 # real data.  ops/doctor.sh [--tests] [--build]
 #   (no flag)  tools, isolation and independence checks only (fast, read-only)
 #   --tests    + Rails, frontend, Rust and identity-api suites against the isolated cluster
-#   --build    + a QA app build (never the shipped identifier)
+#   --build    + a Dev app build into a temporary folder (never the shipped identifier, never installed)
 set -uo pipefail
 cd "$(dirname "$0")/.."
 FAIL=0; pass() { printf '  \033[32mPASS\033[0m %s\n' "$*"; }; bad() { printf '  \033[31mFAIL\033[0m %s\n' "$*"; FAIL=$((FAIL+1)); }
@@ -43,8 +43,8 @@ if [[ " $* " == *" --tests "* ]]; then
 fi
 
 if [[ " $* " == *" --build "* ]]; then
-  echo "== QA build (com.billieweather.client.qa.*, never the shipped app)"
-  chk "QA app builds and passes preflight" bash -c 'cd clients/universal && BILLIE_QA_API_URL=http://127.0.0.1:38530 BILLIE_QA_IDENTITY_URL=http://127.0.0.1:38531 node scripts/qa.mjs build doctor'
+  echo "== Dev app build (com.billieweather.client.dev, into a temporary folder; nothing is installed)"
+  chk "Dev app builds with the Dev identifier" bash -c 'T="$(mktemp -d -t billie-doctor-build)"; trap "rm -rf \"$T\"" EXIT; cd clients/universal && CARGO_TARGET_DIR="$T" BILLIE_VARIANT=dev BILLIE_API_URL=http://localhost:3000 BILLIE_IDENTITY_URL=http://localhost:8100 node scripts/tauri.mjs build --bundles app >/dev/null && [[ "$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$T/release/bundle/macos/BillieWeather Dev.app/Contents/Info.plist")" == com.billieweather.client.dev ]]'
 fi
 
 echo; (( FAIL )) && { echo "$FAIL check(s) failed."; exit 1; } || echo "All checks passed."

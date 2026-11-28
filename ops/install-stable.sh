@@ -111,7 +111,7 @@ case "${1:-}" in
     MNT="$(mktemp -d /tmp/billie-dmg.XXXXXX)"; trap 'hdiutil detach -quiet "$MNT" 2>/dev/null || true; rmdir "$MNT" 2>/dev/null || true' EXIT
     hdiutil attach -quiet -nobrowse -readonly -mountpoint "$MNT" "$REL/BillieWeather-$VERSION.dmg"
     SRC="$MNT/BillieWeather.app"; [[ -d "$SRC" ]] || die "no BillieWeather.app in the DMG"
-    [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$SRC/Contents/Info.plist")" == "$APP_ID" ]] || die "the DMG holds a different app identifier (QA builds are never installed here)"
+    [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$SRC/Contents/Info.plist")" == "$APP_ID" ]] || die "the DMG holds a different app identifier (only the Stable app is installed here)"
     [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$SRC/Contents/Info.plist")" == "$VERSION" ]] || die "version inside the DMG differs"
     [[ "$(shasum -a 256 "$SRC/Contents/MacOS/billieweather" | cut -d' ' -f1)" == "$EXE_SHA" ]] || die "the executable differs from the verified build"
     codesign --verify --deep --strict "$SRC" || die "signature check failed"

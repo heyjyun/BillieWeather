@@ -1,7 +1,7 @@
 use std::{env, fs, path::PathBuf, process::Command};
 
 fn main() {
-    // The exact commit a release candidate was built from (scripts/qa.mjs), shown by --billie-identity.
+    // The exact commit a build was made from, shown by --billie-identity.
     println!("cargo:rerun-if-env-changed=BILLIE_SOURCE_REVISION");
     println!("cargo:rustc-env=BILLIE_SOURCE_REVISION={}", env::var("BILLIE_SOURCE_REVISION").unwrap_or_else(|_| "unrecorded".into()));
     // macOS: compile the shared Apple Vision OCR (Swift) into a static library and link it.

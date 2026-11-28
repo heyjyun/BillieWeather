@@ -76,19 +76,16 @@ Each Mac retrieves its own Development credentials through its authorized Neon C
 
 ```sh
 ops/dev-services.sh start          # Rails :38530, identity-api :38531, private cluster
-ops/doctor.sh --tests --build      # tools, isolation, all suites, a QA app build
+ops/doctor.sh --tests --build      # tools, isolation, all suites, a Dev app build
 ```
 
 All checks must pass with the MacBook switched off.
 
-## 4. Native GUI acceptance
+## 4. Native verification
 
-1. 👤 System Settings → Privacy & Security → **Accessibility** and **Screen Recording**: allow the app
-   that runs the tests (Terminal/iTerm, Claude Code, or Codex). macOS asks the first time.
-2. Build and launch only QA bundles: `cd clients/universal && node scripts/qa.mjs build <suffix>` then
-   `node scripts/qa.mjs launch <QA.app>`.
-3. GUI tests need an unlocked, idle session. They pause on keyboard/mouse input, a locked screen, or when
-   the QA app is not in front. See REMOTE_DEVELOPMENT.md for running them over Screen Sharing.
+There are no QA app bundles. Verify native behavior with `cd clients/universal/src-tauri && cargo test`,
+the client with Vitest and the Vite client in a headless browser, and by hand in the Dev app
+(`ops/install-dev.sh`). Never drive a native app's GUI while someone is using the Mac.
 
 ## 5. Agents
 

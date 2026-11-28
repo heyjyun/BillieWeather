@@ -49,7 +49,7 @@ fn context() -> tauri::Context {
     tauri::generate_context!()
 }
 
-/// For `--billie-identity` (scripts/qa.mjs): what this build would open, without opening it.
+/// For `--billie-identity` (ops/sync-dev-mac.sh): what this build would open, without opening it.
 pub fn identity_report() -> String {
     variant::report(context().config()).to_string() + "\n"
 }

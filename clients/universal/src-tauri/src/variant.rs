@@ -10,25 +10,17 @@ use std::path::Path;
 use tauri::{utils::config::Csp, Config};
 
 pub const PRODUCTION_IDENTIFIER: &str = "com.billieweather.client";
-/// Looked for by scripts/qa.mjs before it runs a binary at all: without it, `--billie-identity`
-/// would be an unknown argument to an older build.
+/// Looked for (ops/sync-dev-mac.sh) before a binary is asked for `--billie-identity`: without it,
+/// the flag would be an unknown argument to an older build.
 #[used]
 static MARKER: [u8; 28] = *b"billie-launch-guard-version1";
-/// Development servers that may hold a developer's own data. QA builds use other ports.
-const DEVELOPMENT_PORTS: [u16; 3] = [1420, 3000, 8100];
 pub const REFUSED: i32 = 78;
-
-fn is_qa(identifier: &str) -> bool {
-    identifier.split('.').any(|part| part == "qa")
-}
 
 /// What a build says about itself. `bundle` is the Info.plist identifier of the running bundle.
 pub struct Build<'a> {
     pub identifier: &'a str,
     pub bundle: Option<&'a str>,
     pub debug: bool,
-    pub connect: &'a [String],
-    pub dev_url: Option<&'a str>,
 }
 
 /// The reason this build must not open its data, if any.
@@ -43,26 +35,7 @@ pub fn refusal(build: &Build) -> Option<&'static str> {
             _ => {}
         }
     }
-    if is_qa(build.identifier) {
-        if build.debug || build.dev_url.is_some() {
-            return Some("a QA build must be a release build without a development server");
-        }
-        if !build.connect.iter().all(|source| is_isolated_source(source)) {
-            return Some("a QA build may connect only to isolated servers on this computer");
-        }
-    }
     None
-}
-
-/// `'self'`, the app's own IPC, or a loopback server that is not a development server.
-fn is_isolated_source(source: &str) -> bool {
-    if ["'self'", "ipc:", "http://ipc.localhost"].contains(&source) {
-        return true;
-    }
-    source
-        .strip_prefix("http://127.0.0.1:")
-        .and_then(|port| port.parse::<u16>().ok())
-        .is_some_and(|port| port != 0 && !DEVELOPMENT_PORTS.contains(&port))
 }
 
 /// The `connect-src` sources of the app's Content Security Policy.
@@ -106,9 +79,7 @@ pub fn enforce(config: &Config) {
         return;
     }
     let bundle = bundle_identifier();
-    let connect = connect_sources(config);
-    let dev_url = config.build.dev_url.as_ref().map(|url| url.as_str());
-    let build = Build { identifier: &config.identifier, bundle: bundle.as_deref(), debug: cfg!(debug_assertions), connect: &connect, dev_url };
+    let build = Build { identifier: &config.identifier, bundle: bundle.as_deref(), debug: cfg!(debug_assertions) };
     if let Some(reason) = refusal(&build) {
         use std::io::Write;
         // A fixed sentence only: no paths, names or data.
@@ -123,7 +94,7 @@ pub fn report(config: &Config) -> Value {
     let connect = connect_sources(config);
     let identifier = config.identifier.as_str();
     let dev_url = config.build.dev_url.as_ref().map(|url| url.to_string());
-    let build = Build { identifier, bundle: bundle.as_deref(), debug: cfg!(debug_assertions), connect: &connect, dev_url: dev_url.as_deref() };
+    let build = Build { identifier, bundle: bundle.as_deref(), debug: cfg!(debug_assertions) };
     let home = std::env::home_dir().unwrap_or_default();
     let webkit = bundle.as_deref().unwrap_or("");
     let library = |folder: &str, name: &str| home.join("Library").join(folder).join(name).to_string_lossy().into_owned();
@@ -181,44 +152,32 @@ fn bundle_identifier() -> Option<String> {
 mod tests {
     use super::*;
 
-    const QA: &str = "com.billieweather.client.qa";
+    const DEV: &str = "com.billieweather.client.dev";
 
-    fn connect(extra: &[&str]) -> Vec<String> {
-        ["'self'", "ipc:", "http://ipc.localhost"].iter().chain(extra).map(|source| source.to_string()).collect()
-    }
-
-    fn check(identifier: &str, bundle: Option<&str>, debug: bool, extra: &[&str]) -> bool {
-        refusal(&Build { identifier, bundle, debug, connect: &connect(extra), dev_url: None }).is_none()
+    fn check(identifier: &str, bundle: Option<&str>, debug: bool) -> bool {
+        refusal(&Build { identifier, bundle, debug }).is_none()
     }
 
     #[test]
     fn a_debug_build_never_runs_as_the_shipped_app() {
-        assert!(!check(PRODUCTION_IDENTIFIER, None, true, &[]));
-        assert!(!check(PRODUCTION_IDENTIFIER, Some(PRODUCTION_IDENTIFIER), true, &[]));
-        assert!(check("com.billieweather.client.dev", None, true, &["http://localhost:3000"]));
+        assert!(!check(PRODUCTION_IDENTIFIER, None, true));
+        assert!(!check(PRODUCTION_IDENTIFIER, Some(PRODUCTION_IDENTIFIER), true));
+        assert!(check("com.billieweather.client.dev", None, true));
     }
 
     #[cfg(target_os = "macos")]
     #[test]
     fn a_rewritten_bundle_is_refused() {
-        // The 2026-11-24 incident: a binary built as the shipped app inside a QA-named bundle.
-        assert!(!check(PRODUCTION_IDENTIFIER, Some("com.billieweather.roadmap.phase52"), false, &[]));
-        assert!(!check(QA, Some(PRODUCTION_IDENTIFIER), false, &[]));
-        assert!(!check(PRODUCTION_IDENTIFIER, None, false, &[]));
-        assert!(!check(QA, None, false, &[]));
-        assert!(check(PRODUCTION_IDENTIFIER, Some(PRODUCTION_IDENTIFIER), false, &["https://api.example.com"]));
-        assert!(check(QA, Some(QA), false, &["http://127.0.0.1:33557", "http://127.0.0.1:38557"]));
+        // The 2026-11-24 incident: a binary built as the shipped app inside a test-named bundle.
+        assert!(!check(PRODUCTION_IDENTIFIER, Some("com.billieweather.roadmap.phase52"), false));
+        assert!(!check(DEV, Some(PRODUCTION_IDENTIFIER), false));
+        assert!(!check(PRODUCTION_IDENTIFIER, Some(DEV), false));
+        assert!(!check(PRODUCTION_IDENTIFIER, None, false));
+        assert!(!check(DEV, None, false));
+        assert!(check(PRODUCTION_IDENTIFIER, Some(PRODUCTION_IDENTIFIER), false));
+        assert!(check(DEV, Some(DEV), false));
     }
 
-    #[test]
-    fn qa_builds_reach_only_isolated_local_servers() {
-        for source in ["https://api.example.com", "http://127.0.0.1:3000", "http://127.0.0.1:8100", "http://127.0.0.1:1420", "http://localhost:33557", "http://127.0.0.1:*", "*", "http://127.0.0.1:33557.evil.example", "https:"] {
-            assert!(!check(QA, Some(QA), false, &[source]), "{source}");
-        }
-        let build = Build { identifier: QA, bundle: Some(QA), debug: false, connect: &connect(&[]), dev_url: Some("http://localhost:1420") };
-        assert!(refusal(&build).is_some());
-        assert!(!check(QA, Some(QA), true, &[]));
-    }
 
     #[cfg(unix)]
     #[test]
@@ -229,21 +188,21 @@ mod tests {
         std::fs::create_dir_all(&other).unwrap();
         std::fs::write(other.join("billieweather.db"), "x").unwrap();
         let files = vec!["billieweather.db".to_string()];
-        let dir = root.join(QA);
-        assert_eq!(check_data_dir(&dir, QA, &files), Ok(()), "first launch: no folder yet");
-        assert!(check_data_dir(&other, QA, &files).is_err());
+        let dir = root.join(DEV);
+        assert_eq!(check_data_dir(&dir, DEV, &files), Ok(()), "first launch: no folder yet");
+        assert!(check_data_dir(&other, DEV, &files).is_err());
         std::os::unix::fs::symlink(&other, &dir).unwrap();
-        assert!(check_data_dir(&dir, QA, &files).is_err());
+        assert!(check_data_dir(&dir, DEV, &files).is_err());
         std::fs::remove_file(&dir).unwrap();
         std::fs::create_dir(&dir).unwrap();
         std::os::unix::fs::symlink(other.join("billieweather.db"), dir.join("billieweather.db")).unwrap();
-        assert!(check_data_dir(&dir, QA, &files).is_err());
+        assert!(check_data_dir(&dir, DEV, &files).is_err());
         std::fs::remove_file(dir.join("billieweather.db")).unwrap();
         std::fs::hard_link(other.join("billieweather.db"), dir.join("billieweather.db")).unwrap();
-        assert!(check_data_dir(&dir, QA, &files).is_err());
+        assert!(check_data_dir(&dir, DEV, &files).is_err());
         std::fs::remove_file(dir.join("billieweather.db")).unwrap();
         std::fs::write(dir.join("billieweather.db"), "x").unwrap();
-        assert_eq!(check_data_dir(&dir, QA, &files), Ok(()));
+        assert_eq!(check_data_dir(&dir, DEV, &files), Ok(()));
         std::fs::remove_dir_all(&root).unwrap();
     }
 }

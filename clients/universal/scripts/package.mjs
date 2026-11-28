@@ -2,16 +2,15 @@
 // Packages a built macOS app as a DMG and checks every distribution gate.
 //   node scripts/package.mjs <App.app> <output folder>
 // Signing: BILLIE_SIGN_IDENTITY ("Developer ID Application: …"). Notarization: BILLIE_NOTARY_PROFILE
-// (a profile stored with `xcrun notarytool store-credentials`). Without them the DMG is for QA only,
-// the manifest says BLOCKED and the exit code is 2. An ad hoc signature never counts as a release.
-// A QA build is packaged as it is. This script never starts or installs the app.
+// (a profile stored with `xcrun notarytool store-credentials`). Without them the DMG is for local
+// testing only, the manifest says BLOCKED and the exit code is 2. An ad hoc signature never counts as
+// a release. Only the Stable identifier is packaged. This script never starts or installs the app.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { QA_IDENTIFIER } from "./qa.mjs";
 
 const run = (command, args) => {
   const result = spawnSync(command, args, { encoding: "utf8" });
@@ -23,7 +22,7 @@ const sha256 = (file) => createHash("sha256").update(readFileSync(file)).digest(
 /** What distribution still needs, from the facts about a package. Empty only for a real release. */
 export function blockers({ identifier, authority, hardened, notarized, stapled, gatekeeper, getTaskAllow }) {
   const found = [];
-  if (identifier !== "com.billieweather.client") found.push("not the release identifier (QA builds are never distributed)");
+  if (identifier !== "com.billieweather.client") found.push("not the release identifier (only the Stable app is distributed)");
   if (!/^Developer ID Application: /.test(authority ?? "")) found.push("not signed with a Developer ID");
   if (!hardened) found.push("no hardened runtime");
   if (getTaskAllow) found.push("allows debugging (get-task-allow)");
@@ -38,8 +37,7 @@ function main(path, folder) {
   if (!app.endsWith(".app") || !existsSync(app) || lstatSync(app).isSymbolicLink() || realpathSync(app) !== app) throw new Error("Give the real path of an .app bundle");
   const plist = JSON.parse(must("Info.plist", run("plutil", ["-convert", "json", "-o", "-", join(app, "Contents/Info.plist")])).text);
   const identifier = plist.CFBundleIdentifier;
-  const qa = QA_IDENTIFIER.test(identifier);
-  if (!qa && identifier !== "com.billieweather.client") throw new Error("Unknown bundle identifier");
+  if (identifier !== "com.billieweather.client") throw new Error("Only the Stable app (com.billieweather.client) is packaged");
   if (existsSync(join(folder, `${basename(app, ".app")}-${plist.CFBundleShortVersionString}.dmg`))) throw new Error("The DMG already exists; nothing is overwritten");
   mkdirSync(folder, { recursive: true });
   const identity = process.env.BILLIE_SIGN_IDENTITY;
@@ -48,8 +46,8 @@ function main(path, folder) {
     const copy = join(work, "image", basename(app));
     mkdirSync(dirname(copy));
     must("Copy", run("ditto", [app, copy]));
-    if (identity && !qa) must("Signing", run("codesign", ["--force", "--options", "runtime", "--timestamp", "--sign", identity, "--identifier", identifier, copy]));
-    if (!identity && !qa && !run("codesign", ["--verify", "--deep", "--strict", copy]).ok)
+    if (identity) must("Signing", run("codesign", ["--force", "--options", "runtime", "--timestamp", "--sign", identity, "--identifier", identifier, copy]));
+    if (!identity && !run("codesign", ["--verify", "--deep", "--strict", copy]).ok)
       must("Local signature", run("codesign", ["--force", "--sign", "-", "--timestamp=none", copy]));
     must("Signature", run("codesign", ["--verify", "--deep", "--strict", copy]));
     const details = run("codesign", ["-dvvv", copy]).text;
@@ -57,9 +55,9 @@ function main(path, folder) {
     run("ln", ["-s", "/Applications", join(work, "image", "Applications")]);
     const dmg = join(resolve(folder), `${basename(app, ".app")}-${plist.CFBundleShortVersionString}.dmg`);
     must("DMG", run("hdiutil", ["create", "-volname", basename(app, ".app"), "-srcfolder", join(work, "image"), "-format", "UDZO", "-fs", "HFS+", dmg]));
-    if (identity && !qa) must("DMG signing", run("codesign", ["--timestamp", "--sign", identity, dmg]));
+    if (identity) must("DMG signing", run("codesign", ["--timestamp", "--sign", identity, dmg]));
     const profile = process.env.BILLIE_NOTARY_PROFILE;
-    const notarized = Boolean(identity && profile && !qa) && run("xcrun", ["notarytool", "submit", dmg, "--keychain-profile", profile, "--wait"]).text.includes("status: Accepted");
+    const notarized = Boolean(identity && profile) && run("xcrun", ["notarytool", "submit", dmg, "--keychain-profile", profile, "--wait"]).text.includes("status: Accepted");
     const stapled = notarized && run("xcrun", ["stapler", "staple", dmg]).ok;
     must("DMG check", run("hdiutil", ["verify", dmg]));
     const facts = {

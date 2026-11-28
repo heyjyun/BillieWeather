@@ -8,7 +8,7 @@
 //
 // Identity: the device id comes from a file the native app keeps next to its SQLite files
 // (see deviceIdentity in platform.ts), the database id from inside each SQLite file. Only the
-// released native app reports; a browser preview, a QA build or a debug build never does, and
+// released native app reports; a browser preview, a Dev build or a debug build never does, and
 // a database is only reported once it has a name (never as "Unnamed database").
 import { AccountError } from "./account";
 import { randomId } from "./ids";

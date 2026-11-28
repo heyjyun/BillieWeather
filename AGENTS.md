@@ -44,21 +44,33 @@ Several Codex and Claude Code sessions, and the owner, may edit the same checkou
    a migration that is already on `main`, because installed apps verify migration checksums.
 6. **When you finish**, release your claims: `ops/main-commit.sh release <session-label>`.
 
-## Environments derive from `main`, not from branches
+## Two environments, two apps, all from `main`
 
-One branch does not mean one runtime. Development, QA, production, the Dev app, and the Stable app
-each run a specific commit or tag of `main`:
+There is no dedicated QA environment, QA app, QA server, QA database branch, or QA checkout. Do not
+create one. Exactly two runtime environments exist, and each runs a specific commit or tag of `main`:
 
-| Environment | Source | Data |
-| --- | --- | --- |
-| Development servers | the working tree of `main` | the synthetic Neon `development` branch, or the isolated local cluster |
-| QA | a pinned `main` commit, in the QA bundle IDs `com.billieweather.client.qa.*` | the local test database and QA SQLite |
-| Dev app | a `main` build installed with `ops/install-dev.sh` | Dev data only |
-| Stable app | a `vX.Y.Z` tag on `main`, built by `ops/release-build.sh` and installed by the owner | the owner's real data. Never replace or modify it from a session |
-| Production (Render) | a tagged commit, deployed **manually** by the owner | real data. Auto-deploy is off; a push to `main` never deploys |
+| Environment | Source | App | Data |
+| --- | --- | --- | --- |
+| Development | the working tree of `main` (Rails :3000, identity-api :8100, Vite :1420, hot reload) | Dev app `com.billieweather.client.dev`, installed with `ops/install-dev.sh` | the synthetic Neon `development` branch, or the isolated local cluster; Dev SQLite only |
+| Production | an owner-approved `main` commit or `vX.Y.Z` tag, deployed **manually** by the owner | Stable app `com.billieweather.client`, built by `ops/release-build.sh` and installed by the owner | real data. Render auto-deploy is off, so a push to `main` never deploys |
 
 Never deploy to production, replace the installed Stable app, or touch real financial records from an
-AI session. Tests use the local test database, not Neon production.
+AI session.
+
+## Testing without a QA environment
+
+Testing stays mandatory: run the suites for what you changed (commands in
+[CONTRIBUTING.md](CONTRIBUTING.md)) against the current `main` implementation.
+
+- Use disposable resources only: the local Rails test database, temporary PostgreSQL clusters in a
+  scratch directory, synthetic fixtures, headless browsers, and temporary server processes on free
+  ports.
+- Stop every process you started and delete its temporary data when the run ends.
+- Never test against Neon production, the Stable app, or the owner's SQLite files. Never build or
+  launch an extra app bundle to test the native shell. Use `cargo test`, the Vitest suites, and the
+  Vite client in a browser.
+- To test exactly what is committed, export it with `git archive <sha> | tar -x` into a scratch
+  directory instead of creating a worktree.
 
 Details: [docs/dual-mac/GIT_SYNC.md](docs/dual-mac/GIT_SYNC.md),
 [docs/dual-mac/RELEASE_WORKFLOW.md](docs/dual-mac/RELEASE_WORKFLOW.md),

@@ -12,8 +12,9 @@ No port is opened to the internet; everything goes through the tailnet.
 
 ## GUI tests without disturbing anyone
 
-- They run only on the Mac mini, against QA bundles, in its own login session. The MacBook is never driven.
-- The driver pauses (exit codes 4/5/6) when the screen is locked, the QA app is not frontmost, or there was
+- There are no QA bundles any more (removed 2026-11-28). GUI checks are manual, in the Dev app, in the
+  Mac mini's own login session. The MacBook is never driven.
+- Historical note: the old driver paused (exit codes 4/5/6) when the screen was locked, the app was not frontmost, or there was
   keyboard/mouse input in the last 20 s (60 s before it brings a window forward). A Screen Sharing viewer
   that only watches does not count as input; moving the mouse in the viewer does.
 - Runners wait for an idle window and resume; see `ops/agent-run.sh` and the Phase 6.3 runner pattern.
