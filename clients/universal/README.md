@@ -104,6 +104,14 @@ A new writing method of `FinanceStore` or `LedgerStore` must be listed in `src/s
   is its own SQLite file: `billieweather.db`, `billieweather-2.db`, … `billieweather-8.db`, all with the
   same migrations (`src-tauri/src/lib.rs`; keep in step with `MAX_DATABASES` in `src/services/databases.ts`).
   The list and which one is in use are kept in `localStorage` (`billie.databases`, slot numbers only).
+- **Migrations**: a schema change is one new file, `src-tauri/migrations/NNNN_what_it_does.sql` with the
+  next number, and nothing else. `src-tauri/build.rs` registers every file in the folder with the native
+  SQL plugin, `src/services/migrations.ts` derives `LOCAL_SCHEMA_VERSION` from the same folder, and the
+  browser preview builds its database from it (a running dev server reloads the page when the folder
+  changes). The files must be numbered 1..n without gaps (the build and the tests refuse anything else).
+  Never edit a file that has shipped: sqlx stores each applied migration's checksum and refuses a book
+  whose applied migration changed. Tables the app cannot start without are listed in
+  `src/services/schemaChecks.ts`; add a new one there when the app starts depending on it at launch.
 - **Database name**: every database has a name the person chose (the first one is named on first run,
   pre-filled with the device's own name: macOS Computer Name, Windows computer name, Android model,
   iOS "iPhone"/"iPad"). The name is only a label kept in that database's `settings` table. The cloud

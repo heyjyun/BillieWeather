@@ -58,7 +58,7 @@ export default defineConfig({
     devServerSync({
       root: appRoot,
       migrationsDir: `${appRoot}src-tauri/migrations`,
-      importers: [`${appRoot}src/services/platform.ts`],
+      importers: [`${appRoot}src/services/migrations.ts`],
       dependencyFiles: [`${appRoot}package.json`, `${appRoot}package-lock.json`],
     }),
   ],

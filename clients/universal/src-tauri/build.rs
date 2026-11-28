@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf, process::Command};
+use std::{env, fs, path::PathBuf, process::Command};
 
 fn main() {
     // The exact commit a release candidate was built from (scripts/qa.mjs), shown by --billie-identity.
@@ -9,7 +9,39 @@ fn main() {
     if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
         build_apple_vision();
     }
+    generate_migrations();
     tauri_build::build()
+}
+
+/// Writes OUT_DIR/migrations.rs: one `Migration` per migrations/NNNN_name.sql, in version order, which
+/// src/lib.rs includes. Adding a migration file is the whole change (the TypeScript side derives its
+/// schema version from the same folder: src/services/migrations.ts). The files must be numbered 1..n
+/// without gaps or duplicates; anything else stops the build. sqlx compares only the version and the
+/// SQL checksum of applied migrations, so the description (taken from the file name) is informational.
+fn generate_migrations() {
+    let dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("migrations");
+    println!("cargo:rerun-if-changed={}", dir.display());
+    let mut files: Vec<(u32, String)> = fs::read_dir(&dir)
+        .expect("src-tauri/migrations is missing")
+        .filter_map(|entry| entry.ok()?.file_name().into_string().ok())
+        .filter(|name| name.len() > 9 && name.ends_with(".sql") && name.as_bytes()[4] == b'_' && name[..4].bytes().all(|b| b.is_ascii_digit()))
+        .map(|name| (name[..4].parse().unwrap(), name))
+        .collect();
+    files.sort();
+    let versions: Vec<u32> = files.iter().map(|(version, _)| *version).collect();
+    assert!(
+        !versions.is_empty() && versions.iter().enumerate().all(|(index, version)| *version == index as u32 + 1),
+        "src-tauri/migrations must be numbered 1, 2, 3 … without gaps or duplicates; found {versions:?}"
+    );
+    let mut code = String::from("vec![\n");
+    for (version, name) in &files {
+        println!("cargo:rerun-if-changed={}", dir.join(name).display());
+        let description = name[5..name.len() - 4].replace('_', " ");
+        let path = dir.join(name).display().to_string();
+        code += &format!("    Migration {{ version: {version}, description: {description:?}, sql: include_str!({path:?}), kind: MigrationKind::Up }},\n");
+    }
+    code += "]\n";
+    fs::write(PathBuf::from(env::var("OUT_DIR").unwrap()).join("migrations.rs"), code).unwrap();
 }
 
 fn build_apple_vision() {

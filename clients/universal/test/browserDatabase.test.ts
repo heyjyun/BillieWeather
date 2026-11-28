@@ -6,7 +6,8 @@ import { join } from "node:path";
 import initSqlJs, { type Database } from "sql.js";
 import { MIGRATIONS_DIR, migrate } from "./helpers";
 import { LOCAL_SCHEMA_VERSION } from "../src/services/backup";
-import { MIGRATION_FAILED, PREVIEW_STALE, openBrowserDatabase, orderedMigrations } from "../src/services/browserDatabase";
+import { MIGRATION_FAILED, PREVIEW_STALE, checkServedMigrations, openBrowserDatabase, orderedMigrations } from "../src/services/browserDatabase";
+import { MIGRATION_SOURCES, migrationVersions } from "../src/services/migrations";
 import { openFailure } from "../src/services/databases";
 import { checkRequiredTables, checkSchemaVersion } from "../src/services/platform";
 import { REQUIRED_TABLES, missingTables } from "../src/services/schemaChecks";
@@ -20,6 +21,7 @@ function globbed(filter: (name: string) => boolean = () => true): Record<string,
     .map((name) => [`../../src-tauri/migrations/${name}`, readFileSync(join(MIGRATIONS_DIR, name), "utf8")]));
 }
 const latest = String(LOCAL_SCHEMA_VERSION).padStart(4, "0");
+const all = globbed();
 const select = (db: Database) => async (sql: string) => {
   const [result] = db.exec(sql);
   return result ? result.values.map((values) => Object.fromEntries(result.columns.map((column, i) => [column, values[i]]))) : [];
@@ -33,6 +35,12 @@ describe("browser preview database", () => {
     const db = await openBrowserDatabase(SQL, globbed());
     expect(await missingTables(select(db))).toEqual([]);
     expect(REQUIRED_TABLES).toContain("categories");
+  });
+
+  it("bundles exactly the migration files on disk, and derives the schema version from them", () => {
+    expect(Object.fromEntries(Object.entries(MIGRATION_SOURCES).map(([path, sql]) => [path.split("/").pop(), sql])))
+      .toEqual(Object.fromEntries(Object.entries(all).map(([path, sql]) => [path.split("/").pop(), sql])));
+    expect(LOCAL_SCHEMA_VERSION).toBe(readdirSync(MIGRATIONS_DIR).filter((name) => /^\d{4}_.+\.sql$/.test(name)).length);
   });
 
   it("has exactly the schema of a native book migrated the same way", async () => {
@@ -57,28 +65,49 @@ describe("browser preview database", () => {
     const old = new SQL.Database();
     for (const path of Object.keys(stale).sort()) old.exec(stale[path]);
     expect(await missingTables(select(old))).toContain("categories");
-    // Now: refused before anything reads it, with a message that says what to do.
-    const error = await openBrowserDatabase(SQL, stale).catch((caught: unknown) => caught);
+    // Now, first: the page's list is compared with the dev server's reading of the folder.
+    const error = (() => { try { checkServedMigrations(stale, migrationVersions(all)); } catch (caught) { return caught; } })();
     expect(String((error as Error).message)).toContain(PREVIEW_STALE);
+    expect(String((error as Error).message)).toMatch(/has migration versions 1, .*10, but the migrations folder has 1, .*11/);
     expect(String((error as Error).message)).toMatch(/restart the development server/i);
     expect(failureOf(error)).toBe("previewStale");
+    // And even without that check, the required tables (a list in the code, not derived from the
+    // migrations) refuse the database before anything reads it.
+    const missing = await openBrowserDatabase(SQL, stale).catch((caught: unknown) => caught);
+    expect(String((missing as Error).message)).toMatch(/required tables are missing: categories/);
+    expect(failureOf(missing)).toBe("migrationFailed");
   });
 
-  it("refuses a gap, a duplicate version, or a migration newer than the code", () => {
-    const all = globbed();
+  it("compares the served migrations with the dev server's folder, and refuses a server that cannot tell", () => {
+    expect(() => checkServedMigrations(all, migrationVersions(all))).not.toThrow();
+    const withNext = [...migrationVersions(all), LOCAL_SCHEMA_VERSION + 1];
+    expect(() => checkServedMigrations(all, withNext)).toThrow(PREVIEW_STALE);
+    const old = (() => { try { checkServedMigrations(all, null); } catch (caught) { return caught as Error; } })();
+    expect(old?.message).toMatch(/does not report its migration files/);
+    expect(failureOf(old)).toBe("previewStale");
+  });
+
+  it("refuses a gap or a duplicate version, naming the versions", () => {
     const without3 = Object.fromEntries(Object.entries(all).filter(([path]) => !path.includes("/0003_")));
-    expect(() => orderedMigrations(without3)).toThrow(PREVIEW_STALE);
-    expect(() => orderedMigrations({ ...all, "../../src-tauri/migrations/0003_duplicate.sql": "SELECT 1;" })).toThrow(PREVIEW_STALE);
-    const next = String(LOCAL_SCHEMA_VERSION + 1).padStart(4, "0");
-    expect(() => orderedMigrations({ ...all, [`../../src-tauri/migrations/${next}_next.sql`]: "SELECT 1;" })).toThrow(PREVIEW_STALE);
-    expect(() => orderedMigrations({})).toThrow(/versions none/);
+    expect(() => orderedMigrations(without3)).toThrow(/without gaps or duplicates, but the versions are 1, 2, 4/);
+    expect(failureOf((() => { try { orderedMigrations(without3); } catch (caught) { return caught; } })())).toBe("migrationFailed");
+    expect(() => orderedMigrations({ ...all, "../../src-tauri/migrations/0003_duplicate.sql": "SELECT 1;" })).toThrow(/1, 2, 3, 3, 4/);
+    expect(() => orderedMigrations({})).toThrow(/versions are none/);
     // Files that are not migrations are ignored, and the order is by version, not by key.
     expect(orderedMigrations({ ...all, "../../src-tauri/migrations/README.md": "#" }).map((m) => m.version)).toEqual(Array.from({ length: LOCAL_SCHEMA_VERSION }, (_, i) => i + 1));
   });
 
+  it("takes a new migration file (the next number) with no other change", async () => {
+    const next = String(LOCAL_SCHEMA_VERSION + 1).padStart(4, "0");
+    const future = { ...all, [`../../src-tauri/migrations/${next}_future_feature.sql`]: "CREATE TABLE zxq_future (id INTEGER PRIMARY KEY);" };
+    expect(migrationVersions(future)).toEqual(Array.from({ length: LOCAL_SCHEMA_VERSION + 1 }, (_, i) => i + 1));
+    expect(() => checkServedMigrations(future, migrationVersions(future))).not.toThrow();
+    const db = await openBrowserDatabase(await initSqlJs(), future);
+    expect(db.exec("SELECT name FROM sqlite_master WHERE name = 'zxq_future'")[0].values).toEqual([["zxq_future"]]);
+  });
+
   it("names a failing migration instead of continuing, and opens again once the file is fixed", async () => {
     const SQL = await initSqlJs();
-    const all = globbed();
     const broken = Object.fromEntries(Object.entries(all).map(([path, sql]) => [path, path.includes(`/${latest}_`) ? `${sql}\nSELECT * FROM table_that_does_not_exist;` : sql]));
     const error = await openBrowserDatabase(SQL, broken).catch((caught: unknown) => caught);
     expect(String((error as Error).message)).toMatch(new RegExp(`migration ${latest}_.+\\.sql ${MIGRATION_FAILED}: .*no such table: table_that_does_not_exist`));
@@ -89,7 +118,6 @@ describe("browser preview database", () => {
 
   it("reports missing required tables as a failed migration, by name", async () => {
     const SQL = await initSqlJs();
-    const all = globbed();
     const dropping = Object.fromEntries(Object.entries(all).map(([path, sql]) => [path, path.includes(`/${latest}_`) ? `${sql}\nDROP TABLE budgets;` : sql]));
     const error = await openBrowserDatabase(SQL, dropping).catch((caught: unknown) => caught);
     expect(String((error as Error).message)).toMatch(/required tables are missing: budgets/);

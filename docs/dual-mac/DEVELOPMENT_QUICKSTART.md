@@ -63,6 +63,8 @@ ops/dev-services.sh preview restart   # only ever stops the Vite started from th
 
 A running server follows migration changes by itself: adding, changing, renaming or removing a file in
 `src-tauri/migrations` reloads the page, which rebuilds the database (`clients/universal/devServerSync.ts`).
+Before building it, the page compares its migration list with the server's own reading of the folder
+(`/__billie/dev-status`), so a server that missed a change is reported instead of used.
 What it cannot follow is new dependencies. `ops/git-sync.sh pull` and `ops/sync-dev-mac.sh` therefore run
 `ops/dev-services.sh preview check --restart-if-stale`, which restarts a stale preview (after `npm ci` if
 `node_modules` no longer matches `package-lock.json`). They also name any server on :38530, :38531, :3000

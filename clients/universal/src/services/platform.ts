@@ -3,7 +3,7 @@
 // private directory. In a plain browser (`npm run dev`) an in-memory database is used
 // and nothing is persisted.
 import type { SqlDriver, SqlStatement } from "./store";
-import { LOCAL_SCHEMA_VERSION } from "./backup";
+import { LOCAL_SCHEMA_VERSION, MIGRATION_SOURCES } from "./migrations";
 import { missingTables } from "./schemaChecks";
 
 export const isTauri = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -38,18 +38,19 @@ export async function openDatabase(file = "billieweather.db"): Promise<{ driver:
       },
     };
   }
-  const [{ default: initSqlJs }, { default: wasmUrl }, { sqljsDriver }, { openBrowserDatabase }] = await Promise.all([
+  const [{ default: initSqlJs }, { default: wasmUrl }, { sqljsDriver }, { openPreviewDatabase }, { devServerMigrations }] = await Promise.all([
     import("sql.js"),
     import("sql.js/dist/sql-wasm.wasm?url"),
     import("./sqljsDriver"),
     import("./browserDatabase"),
+    import("./devServerStatus"),
   ]);
+  // The dev server refreshes MIGRATION_SOURCES when a migration file is added, changed, renamed or
+  // removed, and reloads the page (devServerSync.ts). In case it did not (a server started before it
+  // could follow them), the list is compared with the server's own reading of the folder first.
+  const onDisk = import.meta.env.DEV ? await devServerMigrations() : undefined;
   const SQL = await initSqlJs({ locateFile: () => wasmUrl });
-  // The dev server refreshes this list when a migration file is added, changed, renamed or removed,
-  // and reloads the page (vite.config.ts, devServerSync.ts). openBrowserDatabase refuses a list that
-  // is not exactly 1..LOCAL_SCHEMA_VERSION and checks the required tables before anything reads them.
-  const migrations = import.meta.glob("../../src-tauri/migrations/*.sql", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
-  return { driver: sqljsDriver(await openBrowserDatabase(SQL, migrations)), persistent: false };
+  return { driver: sqljsDriver(await openPreviewDatabase(SQL, MIGRATION_SOURCES, onDisk)), persistent: false };
 }
 
 /** Refuses a book that lacks a table this build reads (named in the message, which openFailure() maps to "incomplete"). */

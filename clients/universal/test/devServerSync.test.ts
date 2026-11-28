@@ -119,6 +119,21 @@ describe("a dev server that is already running", () => {
     expect(await until(served, (names) => names.length === 1)).toEqual(["0001_initial.sql"]);
   }, 20_000);
 
+  it("still tells the page the truth when the watcher misses a file (the 2026-11-28 situation)", async () => {
+    await server.watcher.unwatch(migrations());
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    write("0003_category_hierarchy.sql");
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    // The page's list is stale (no event arrived) …
+    expect(await served()).toEqual(["0001_initial.sql", "0002_second.sql"]);
+    // … but the status the page compares it with reads the folder itself.
+    expect((await status()).migrations).toEqual([1, 2, 3]);
+    const { checkServedMigrations } = await import("../src/services/browserDatabase");
+    const page = Object.fromEntries((await served()).map((name) => [`../src-tauri/migrations/${name}`, ""]));
+    const onDisk = (await status()).migrations;
+    expect(() => checkServedMigrations(page, onDisk)).toThrow(/browser preview migrations are out of date/);
+  }, 20_000);
+
   it("ignores the rest of src-tauri (no reload for Rust build output)", async () => {
     writeFileSync(join(root, "src-tauri", "target", "build-output.sql"), "SELECT 1;");
     writeFileSync(join(root, "src-tauri", "lib.sql"), "SELECT 1;");

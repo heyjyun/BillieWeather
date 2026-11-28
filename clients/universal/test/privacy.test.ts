@@ -39,7 +39,19 @@ describe("data isolation", () => {
   // registration.ts: creating an account in the app, with the separate identity service (services/identity-api).
   const REGISTRATION = join(ROOT, "src/services/registration.ts");
   const MODULE_PREFS = join(ROOT, "src/services/modulePreferenceApi.ts");
-  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI, RECEIPT, REGISTRATION, MODULE_PREFS];
+  // devServerStatus.ts: development only, the browser preview asks its own dev server (same origin) which
+  // migration files exist, so a stale server is reported instead of used. GET, no body, imports nothing.
+  const DEV_STATUS = join(ROOT, "src/services/devServerStatus.ts");
+  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI, RECEIPT, REGISTRATION, MODULE_PREFS, DEV_STATUS];
+
+  it("the dev-server check stays local and read-only: one same-origin GET, development only, no body, no imports", () => {
+    const source = readFileSync(DEV_STATUS, "utf8");
+    expect(source.match(/^import .*$/gm) ?? []).toEqual([]);
+    expect(source.match(/\bfetch\s*\(/g)?.length).toBe(1);
+    expect(source).toMatch(/fetch\("\/__billie\/dev-status", \{ method: "GET", cache: "no-store", credentials: "omit" \}\)/);
+    expect(source).toMatch(/if \(!import\.meta\.env\.DEV\) return null;/);
+    expect(source).not.toMatch(/\bbody\s*:|https?:\/\/|API_ORIGIN/);
+  });
 
   it.each([
     ["fetch(", /\bfetch\s*\(/],

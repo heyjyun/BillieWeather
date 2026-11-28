@@ -72,7 +72,8 @@ preview_start() {
   local api="${1:-${BILLIE_PREVIEW_API_URL:-http://127.0.0.1:$API_PORT}}" identity="${2:-${BILLIE_PREVIEW_IDENTITY_URL:-http://127.0.0.1:$ID_PORT}}"
   [[ -z "$(pid_on $PREVIEW_PORT)" ]] || { echo "port $PREVIEW_PORT is in use (pid $(pid_on $PREVIEW_PORT))" >&2; return 1; }
   if deps_outdated; then echo "installing clients/universal dependencies (npm ci)…"; (cd "$APP" && npm ci --no-audit --no-fund >>"$STATE/logs/vite.log" 2>&1); fi
-  (cd "$APP" && VITE_BILLIE_API_URL="$api" VITE_BILLIE_IDENTITY_URL="$identity" nohup npx vite >>"$STATE/logs/vite.log" 2>&1 &)
+  # Detached from this script's stdin/stdout, so a caller that pipes the output (… | tail) is not held open.
+  (cd "$APP" && VITE_BILLIE_API_URL="$api" VITE_BILLIE_IDENTITY_URL="$identity" exec nohup npx vite) </dev/null >>"$STATE/logs/vite.log" 2>&1 &
   for _ in $(seq 1 60); do curl -fs -o /dev/null --max-time 2 "http://localhost:$PREVIEW_PORT/__billie/dev-status" && break; sleep 0.5; done
   echo "preview  http://localhost:$PREVIEW_PORT  api $api  identity $identity  (log $STATE/logs/vite.log)"
 }

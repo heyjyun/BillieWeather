@@ -13,11 +13,12 @@
 // database files byte for byte before a new migration runs.
 import type { SqlDriver, SqlStatement } from "./store";
 import { randomId } from "./ids";
+import { LOCAL_SCHEMA_VERSION } from "./migrations";
 
 export const BACKUP_FORMAT = "billieweather-backup";
 export const BACKUP_VERSION = 1;
-/** The local schema version these backups describe (the highest migration number). */
-export const LOCAL_SCHEMA_VERSION = 11;
+/** The local schema version these backups describe: derived from the migration files (migrations.ts). */
+export { LOCAL_SCHEMA_VERSION };
 
 type Row = Record<string, unknown>;
 type Cell = string | number | null;

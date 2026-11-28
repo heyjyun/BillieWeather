@@ -9,7 +9,8 @@ import { join } from "node:path";
 import initSqlJs from "sql.js";
 import { MIGRATIONS_DIR } from "./helpers";
 import { LOCAL_SCHEMA_VERSION } from "../src/services/backup";
-import { openBrowserDatabase } from "../src/services/browserDatabase";
+import { openPreviewDatabase } from "../src/services/browserDatabase";
+import { migrationVersions } from "../src/services/migrations";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 import { FinanceProvider, useFinance } from "../src/hooks/useFinance";
 import { I18nProvider, MESSAGES } from "../src/i18n";
@@ -27,7 +28,7 @@ vi.mock("../src/hooks/useAccount", () => {
   const account = { email: "zxq@example.test" };
   return { useAccount: () => ({ account, getToken, expire }) };
 });
-// platform.ts's browser branch, with the migration list the "dev server" serves.
+// platform.ts's browser branch on a dev server, with the migration list the page was given.
 vi.mock("../src/services/platform", async () => {
   const SQL = await initSqlJs();
   return {
@@ -35,7 +36,8 @@ vi.mock("../src/services/platform", async () => {
     deviceName: async () => "Synthetic Mac",
     deviceIdentity: async () => null,
     openDatabase: async () => {
-      if (!legacy) return { driver: sqljsDriver(await openBrowserDatabase(SQL, served)), persistent: false };
+      // The dev server's reading of the folder is always the full set; the page may have been given less.
+      if (!legacy) return { driver: sqljsDriver(await openPreviewDatabase(SQL, served, migrationVersions(all))), persistent: false };
       const db = new SQL.Database();
       for (const path of Object.keys(served).sort()) db.exec(served[path]);
       return { driver: sqljsDriver(db), persistent: false };

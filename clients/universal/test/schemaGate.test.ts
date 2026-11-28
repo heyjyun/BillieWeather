@@ -41,13 +41,18 @@ describe("schema version gate", () => {
 describe("Rust and TypeScript agree", () => {
   const lib = readFileSync(join(__dirname, "../src-tauri/src/lib.rs"), "utf8");
 
-  it("on the schema version: migration files, lib.rs migrations and LOCAL_SCHEMA_VERSION", () => {
+  it("on the schema version: both derive it from the migrations folder", () => {
     const files = readdirSync(MIGRATIONS_DIR).filter((name) => /^\d{4}_.*\.sql$/.test(name)).sort();
     expect(files.map((name) => Number(name.slice(0, 4)))).toEqual(Array.from({ length: files.length }, (_, i) => i + 1));
-    const versions = [...lib.matchAll(/version:\s*(\d+),/g)].map((match) => Number(match[1]));
-    expect(versions).toEqual(Array.from({ length: files.length }, (_, i) => i + 1));
-    for (const file of files) expect(lib).toContain(`../migrations/${file}`);
+    // TypeScript: the version is the number of files (src/services/migrations.ts).
     expect(LOCAL_SCHEMA_VERSION).toBe(files.length);
+    // Rust: build.rs generates the list from the same folder and lib.rs includes it; no hand-kept list
+    // (src-tauri/src/lib.rs test migrations_are_exactly_the_folder checks the generated list itself).
+    const build = readFileSync(join(__dirname, "../src-tauri/build.rs"), "utf8");
+    expect(build).toMatch(/fn generate_migrations\(\)/);
+    expect(build).toMatch(/join\("migrations"\)/);
+    expect(lib).toContain('include!(concat!(env!("OUT_DIR"), "/migrations.rs"))');
+    expect(lib).not.toMatch(/include_str!\("\.\.\/migrations\/\d{4}_[^"]+"\),\s*kind:/);
   });
 
   it("on the number of database slots", () => {

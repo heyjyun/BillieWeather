@@ -3,15 +3,16 @@
 //
 // Why: on 2026-11-28 a dev server started on 2026-11-23 kept serving migrations 0001–0010 after
 // 0011_category_hierarchy.sql arrived, so signing in failed with "no such table: categories". The
-// config ignored every path under src-tauri, the migrations included, so the import.meta.glob in
-// src/services/platform.ts never saw the new file.
+// config ignored every path under src-tauri, the migrations included, so the import.meta.glob (now in
+// src/services/migrations.ts) never saw the new file.
 //
 // - Migrations (add, change, rename, remove): the importer's glob is refreshed and the page is fully
 //   reloaded, because the preview builds its in-memory database once per page load.
 // - package.json / package-lock.json: new dependencies need `npm ci` and a restart, which a running
 //   server cannot do for itself. It says so in the terminal and as an overlay in the page.
-// - GET /__billie/dev-status: what this server started from and whether it is stale; read by
-//   `ops/dev-services.sh preview status` and after `ops/git-sync.sh pull`.
+// - GET /__billie/dev-status: what this server started from, the migration versions in the folder
+//   right now, and whether it is stale; read by the page before it builds its database
+//   (src/services/platform.ts), by `ops/dev-services.sh preview status` and after a pull.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
