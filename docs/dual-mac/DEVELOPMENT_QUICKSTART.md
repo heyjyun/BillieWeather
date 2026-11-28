@@ -51,6 +51,25 @@ VITE_BILLIE_API_URL=http://127.0.0.1:38530 VITE_BILLIE_IDENTITY_URL=http://127.0
 Vite uses port 1420 (strict); Rails and identity-api only accept the app from `localhost:1420` (and the
 1430 diag build) in development, so stop any other project that holds 1420.
 
+Browser preview (the same UI in a browser; its SQLite database lives in memory and is rebuilt from
+`src-tauri/migrations` on every page load, so it never touches a native, Neon or production database):
+
+```sh
+ops/dev-services.sh preview start     # Vite :1420 against the isolated stack, or set BILLIE_PREVIEW_API_URL /
+                                      # BILLIE_PREVIEW_IDENTITY_URL; a restart keeps the running server's URLs
+ops/dev-services.sh preview status    # up to date, or STALE with the reason
+ops/dev-services.sh preview restart   # only ever stops the Vite started from this checkout
+```
+
+A running server follows migration changes by itself: adding, changing, renaming or removing a file in
+`src-tauri/migrations` reloads the page, which rebuilds the database (`clients/universal/devServerSync.ts`).
+What it cannot follow is new dependencies. `ops/git-sync.sh pull` and `ops/sync-dev-mac.sh` therefore run
+`ops/dev-services.sh preview check --restart-if-stale`, which restarts a stale preview (after `npm ci` if
+`node_modules` no longer matches `package-lock.json`). They also name any server on :38530, :38531, :3000
+or :8100 that started before the checkout last changed commit; restart those by hand if the pull touched
+their code. If the page still says "browser preview migrations are out of date", the server predates
+this check: run `ops/dev-services.sh preview restart`.
+
 Stop or start clean:
 
 ```sh

@@ -145,10 +145,15 @@ export async function emailOwnerKey(email: string): Promise<string> {
   return `email:${[...digest].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
 }
 
-export type OpenFailure = "locked" | "damaged" | "newer" | "incomplete" | "full" | "permission" | "other";
+export type OpenFailure = "previewStale" | "migrationFailed" | "locked" | "damaged" | "newer" | "incomplete" | "full" | "permission" | "other";
 
 /** What to tell the person when SQLite (or a migration) refuses to open a book. Nothing was changed in any of these cases. */
 export function openFailure(reason: string): OpenFailure {
+  // Browser preview only: the dev server serves another set of migrations than this build needs (browserDatabase.ts).
+  if (/browser preview migrations are out of date/i.test(reason)) return "previewStale";
+  // One migration's SQL failed: in the preview (browserDatabase.ts), or in the native SQL plugin, where
+  // sqlx runs each migration in its own transaction, so the book stays at the previous version.
+  if (/failed while preparing the database|while executing migration/i.test(reason)) return "migrationFailed";
   if (/database is locked|database table is locked|\(code: (5|6|261|517)\)/i.test(reason)) return "locked";
   if (/not a database|malformed|\(code: (11|26)\)/i.test(reason)) return "damaged";
   if (/previously applied but is missing/i.test(reason)) return "newer";

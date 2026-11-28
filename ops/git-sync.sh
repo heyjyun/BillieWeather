@@ -46,6 +46,9 @@ case "${1:-status}" in
     git push origin "$b:$b" ;;
   pull)
     [[ -z "$(git status --porcelain --untracked-files=no)" ]] || die "commit or set aside local changes first"
-    git fetch origin && git merge --ff-only "origin/$(git branch --show-current)" ;;
+    git fetch origin && git merge --ff-only "origin/$(git branch --show-current)"
+    # A dev server started before the pull may now serve old code: report it, and restart the
+    # browser preview if it is stale (in-memory database only; never a persistent database).
+    ops/dev-services.sh preview check --restart-if-stale || true ;;
   *) sed -n 2,7p "$0"; exit 2 ;;
 esac

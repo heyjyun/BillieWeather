@@ -3,8 +3,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
+import { devServerSync, ignoreTauriExceptMigrations } from "./devServerSync";
 
 const modules = fileURLToPath(new URL("./node_modules", import.meta.url));
+const appRoot = fileURLToPath(new URL(".", import.meta.url));
 
 /**
  * On-device OCR assets, served from the app's own origin under /ocr/ (dev server) and copied into
@@ -50,7 +52,16 @@ const host = process.env.TAURI_DEV_HOST;
 
 // The shared packages are plain TypeScript source, resolved by alias (no build step).
 export default defineConfig({
-  plugins: [react(), ocrAssets()],
+  plugins: [
+    react(),
+    ocrAssets(),
+    devServerSync({
+      root: appRoot,
+      migrationsDir: `${appRoot}src-tauri/migrations`,
+      importers: [`${appRoot}src/services/platform.ts`],
+      dependencyFiles: [`${appRoot}package.json`, `${appRoot}package-lock.json`],
+    }),
+  ],
   resolve: {
     alias: {
       "@billie/shared-types": `${packages}/shared-types/src/index.ts`,
@@ -77,7 +88,9 @@ export default defineConfig({
     host: host || false,
     hmr: host ? { protocol: "ws", host, port: 1421 } : undefined,
     fs: { allow: [".", packages] },
-    watch: { ignored: ["**/src-tauri/**"] },
+    // All of src-tauri except its migrations, which the browser preview builds its database from:
+    // ignoring them too left a running server on an old migration list (devServerSync.ts).
+    watch: { ignored: [ignoreTauriExceptMigrations] },
   },
   envPrefix: ["VITE_", "TAURI_ENV_*"],
   build: {

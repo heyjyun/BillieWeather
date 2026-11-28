@@ -16,6 +16,8 @@ done
 # mise pins the toolchain from the checkout without sourcing dotenv files.
 mise install
 mise exec -- bash -c 'cd clients/universal && npm ci --no-audit --no-fund'
+# The browser preview (Vite :1420) does not pick up new dependencies by itself: restart it if stale.
+ops/dev-services.sh preview check --restart-if-stale || true
 (cd services/identity-api && uv sync --frozen)
 mise exec -- bundle check || mise exec -- bundle install --quiet
 ops/neon-dev-env.sh

@@ -17,6 +17,7 @@ Mac mini = development, tests, native QA, builds, overnight agents. MacBook Air 
 | --- | --- | --- |
 | `bootstrap-mac-mini.sh [--check]` | mini | tools, clone, dependencies, isolated databases |
 | `dev-services.sh start\|stop\|status\|reset` | mini | private PostgreSQL + Rails :38530 + identity-api :38531 |
+| `dev-services.sh preview start\|stop\|restart\|status\|check` | both | browser preview (Vite :1420); reports and restarts a stale one after a pull |
 | `doctor.sh [--tests] [--build]` | mini | independence/isolation checks, all suites, QA build |
 | `release-build.sh` | mini | tagged, tested, reproducible release folder with DMG and checksums |
 | `install-stable.sh` | MacBook | verify → back up → install; `--check`, `--status`, `--rollback` |

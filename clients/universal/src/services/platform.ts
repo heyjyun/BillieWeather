@@ -4,6 +4,7 @@
 // and nothing is persisted.
 import type { SqlDriver, SqlStatement } from "./store";
 import { LOCAL_SCHEMA_VERSION } from "./backup";
+import { missingTables } from "./schemaChecks";
 
 export const isTauri = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -15,6 +16,7 @@ export async function openDatabase(file = "billieweather.db"): Promise<{ driver:
     // Defence in depth for audit A-01: never hand the app a book whose schema is not exactly this build's.
     try {
       await checkSchemaVersion((sql) => db.select(sql));
+      await checkRequiredTables((sql) => db.select(sql));
     } catch (error) {
       await db.close(url).catch(() => undefined);
       throw error;
@@ -36,16 +38,24 @@ export async function openDatabase(file = "billieweather.db"): Promise<{ driver:
       },
     };
   }
-  const [{ default: initSqlJs }, { default: wasmUrl }, { sqljsDriver }] = await Promise.all([
+  const [{ default: initSqlJs }, { default: wasmUrl }, { sqljsDriver }, { openBrowserDatabase }] = await Promise.all([
     import("sql.js"),
     import("sql.js/dist/sql-wasm.wasm?url"),
     import("./sqljsDriver"),
+    import("./browserDatabase"),
   ]);
   const SQL = await initSqlJs({ locateFile: () => wasmUrl });
-  const db = new SQL.Database();
+  // The dev server refreshes this list when a migration file is added, changed, renamed or removed,
+  // and reloads the page (vite.config.ts, devServerSync.ts). openBrowserDatabase refuses a list that
+  // is not exactly 1..LOCAL_SCHEMA_VERSION and checks the required tables before anything reads them.
   const migrations = import.meta.glob("../../src-tauri/migrations/*.sql", { query: "?raw", import: "default", eager: true }) as Record<string, string>;
-  for (const path of Object.keys(migrations).sort()) db.exec(migrations[path]);
-  return { driver: sqljsDriver(db), persistent: false };
+  return { driver: sqljsDriver(await openBrowserDatabase(SQL, migrations)), persistent: false };
+}
+
+/** Refuses a book that lacks a table this build reads (named in the message, which openFailure() maps to "incomplete"). */
+export async function checkRequiredTables(select: (sql: string) => Promise<unknown[]>): Promise<void> {
+  const missing = await missingTables(select);
+  if (missing.length) throw new Error(`the local database schema is incomplete (missing tables: ${missing.join(", ")})`);
 }
 
 /**

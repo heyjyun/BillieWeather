@@ -48,7 +48,7 @@ rejects it if `main` moved in the meantime; fetch and repeat the table.
 ## Daily flow (either Mac)
 
 ```sh
-ops/git-sync.sh pull                              # fast-forward main to origin/main
+ops/git-sync.sh pull                              # fast-forward main to origin/main; restarts a stale browser preview
 git switch -c feature/x                           # optional; small changes may go straight on main
 #  … commit …
 ops/doctor.sh --tests                             # on the Mac mini (the MacBook may not have the full toolchain)
