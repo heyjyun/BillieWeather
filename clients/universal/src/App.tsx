@@ -266,7 +266,8 @@ function Shell() {
         </>}
         {page === "manual" && <Manual go={go} />}
         {page === "transactions" && <Transactions key={`${transactionFilter?.key ?? 0}-${transactionIntent?.key ?? 0}`} preset={transactionFilter?.filter} intent={transactionIntent?.intent} />}
-        {page === "accounts" && <Accounts suggestion={focus?.startsWith("discover-") ? focus.slice(9) : undefined} create={focus === "new"} adjustId={focus?.startsWith("adjust-") ? Number(focus.slice(7)) : undefined} onStatement={() => go("import")} />}
+        {page === "accounts" && <Accounts suggestion={focus?.startsWith("discover-") ? focus.slice(9) : undefined} create={focus === "new"} adjustId={focus?.startsWith("adjust-") ? Number(focus.slice(7)) : undefined} onStatement={() => go("import")}
+          navigate={(target, accountId) => go("transactions", null, { accountId }, target === "entry" ? { entryKind: "expense" } : undefined)} />}
         {page === "categories" && <Categories key={focus ?? ""} focus={focus} />}
         {page === "planning" && <Planning key={focus ?? ""} focus={focus} />}
         {page === "lists" && <Lists />}

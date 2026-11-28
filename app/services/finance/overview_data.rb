@@ -26,22 +26,9 @@ module Finance
     end
 
     def position
-      scoped = @accounts.select { |a| (@account.nil? || a == @account) && (a.currency.presence || @profile.currency) == @currency }
-      movements = rows.where(booked_on: ..@today).group(:bank_account_id).sum(:amount)
-      mixed_accounts = @user.finance_transactions.live.joins(:statement, :bank_account)
-        .where("finance_statements.currency <> COALESCE(finance_bank_accounts.currency, ?)", @profile.currency)
-        .distinct.pluck(:bank_account_id)
-      observed = (scoped.any? { |a| !a.manual? }) ? BalanceSync.summary(user: @user)[:accounts].index_by { |row| row[:account].id } : {}
-      holdings = scoped.map do |a|
-        amount = if (a.balance_pending? && a.manual?) || mixed_accounts.include?(a.id) || (a.opening_balance_on && a.opening_balance_on > @today)
-          nil
-        elsif a.balance_snapshot?
-          a.balance(as_of: @today)
-        elsif a.manual? || a.opening_balance_on.present?
-          a.opening_balance + movements.fetch(a.id, 0)
-        else
-          statement_balance(a, observed[a.id])
-        end
+      scoped = scoped_accounts
+      holdings = balances.map do |row|
+        a, amount = row.values_at(:account, :amount)
         {type: a.account_type, liability: a.liability?, included: a.include_in_net_worth, archived: a.archived?, balance: (cents(amount) unless amount.nil?)}
       end
       legacy_cash = !@account && @currency == @profile.currency
@@ -107,7 +94,38 @@ module Finance
       CashFlowForecast.linear_points(@today, 90, 0, daily).map { |p| {date: p[:date], balance: cents(p[:balance])} }
     end
 
+    # Each account in this currency with the balance the overview uses today (nil when unknown).
+    # `observation` is the latest statement row when the balance comes from a statement.
+    def balances
+      @balances ||= begin
+        scoped = scoped_accounts
+        movements = rows.where(booked_on: ..@today).group(:bank_account_id).sum(:amount)
+        mixed_accounts = @user.finance_transactions.live.joins(:statement, :bank_account)
+          .where("finance_statements.currency <> COALESCE(finance_bank_accounts.currency, ?)", @profile.currency)
+          .distinct.pluck(:bank_account_id)
+        observed = (scoped.any? { |a| !a.manual? }) ? BalanceSync.summary(user: @user)[:accounts].index_by { |row| row[:account].id } : {}
+        scoped.map do |a|
+          from_statement = false
+          amount = if (a.balance_pending? && a.manual?) || mixed_accounts.include?(a.id) || (a.opening_balance_on && a.opening_balance_on > @today)
+            nil
+          elsif a.balance_snapshot?
+            a.balance(as_of: @today)
+          elsif a.manual? || a.opening_balance_on.present?
+            a.opening_balance + movements.fetch(a.id, 0)
+          else
+            from_statement = true
+            statement_balance(a, observed[a.id])
+          end
+          {account: a, amount: amount, observation: (observed[a.id] if from_statement && !amount.nil?)}
+        end
+      end
+    end
+
     private
+
+    def scoped_accounts
+      @accounts.select { |a| (@account.nil? || a == @account) && (a.currency.presence || @profile.currency) == @currency }
+    end
 
     def cents(amount) = (amount.to_d * 100).round.to_i
 

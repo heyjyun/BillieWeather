@@ -1,5 +1,5 @@
 <% options = {copy: assistant_copy, types: Finance::BankAccount::TYPES.index_with { |type| t("billie.ledger.account_types.#{type}") }, currency: @profile.currency,
-  suggestion: params[:suggestion].to_s.first(60), region: current_user.usage_region, empty: @active.empty?, add: t("billie.ledger.accounts.new"), accounts: (@active + @archived).map { |a| {name: a.display_name, type: a.account_type, institution: a.bank_name, last4: a.last4} },
+  suggestion: params[:suggestion].to_s.first(60), region: current_user.usage_region, empty: @active.empty?, add: assistant_copy["ai"], accounts: (@active + @archived).map { |a| {name: a.display_name, type: a.account_type, institution: a.bank_name, last4: a.last4} },
   manualUrl: new_finance_account_path, importUrl: finance_statements_path(account_review: 1), createUrl: finance_account_capture_path,
   serverOcr: Finance::LocalOcr.available?, ocrUrl: (finance_account_screenshot_path if Finance::LocalOcr.available?) } %>
 <%= tag.div data: {capture_options: options.to_json} do %>

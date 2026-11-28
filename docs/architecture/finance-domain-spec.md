@@ -121,6 +121,34 @@ These are checked by the contract fixtures.
 3. Totals, balances and net worth: `fixtures/ledger/appendix2-scenario.json`.
 4. Manual entry validation codes: `entryProblems`.
 5. Recurrence dates (`nextOccurrence`, month-end clamping) and budget periods (custom month start).
+6. Accounts & Assets (2026-11-28): one shared table, `clients/universal/src/accounts`, rendered by the
+   local client and by Rails (`public/accounts-table.js`, data from `Finance::AccountTableData`).
+   - **Groups.** Liquid assets (checking, savings, cash, payment_app), financial assets (investment,
+     receivable), liabilities (credit_card, loan), other (other). These come from the overview's
+     `group()`. Fixed assets are not accounts: they belong to the separate Fixed Assets module and are
+     never listed or totaled here.
+   - **Archived accounts.** Archiving only hides an account. Net worth, total assets and total
+     liabilities count every account with "include in net worth" on, archived or not. Rails, the
+     shared `netWorth()`, the Manual page and the net-worth report already did this. The local
+     overview and the local Accounts page used to exclude archived accounts and now follow this rule.
+     Liquid assets count only active accounts.
+   - **Currencies.** Every total is per currency. Nothing is converted, because there is no exchange
+     rate source. The book currency is shown first, and other currencies are labeled "not converted".
+   - **Unknown balances.** These are `null`, never 0. Totals over known balances say how many they
+     leave out. A group with no known balance shows a dash.
+   - **Signs.** Liabilities keep the ledger sign in storage (owed is negative) and are shown as the
+     positive amount owed.
+   - **Balance as of.** This is the latest real confirmation: a dated opening balance or snapshot,
+     the latest `adjustment` entry, or the latest dated statement when it supplies the balance
+     (imported accounts) or equals the ledger on its date. A record's `updated_at` is never used.
+     The latest entry date is shown separately, in the status tooltip.
+   - **Status.** Unknown, differs from statement (existing reconciliation evidence), date not
+     recorded, update recommended (more than 30 days since a manual confirmation, or 45 days since a
+     statement), updated by hand, or matches statement. There is no bank sync, so no sync status is
+     shown.
+   - **Display preferences.** Columns, order, widths, density, collapsed groups, empty groups, the
+     archived view, hidden balances and sort are saved per signed-in owner, per device, in
+     `localStorage` under `billie.accounts.table.v1:<owner>`. They are not synced.
 
 ## 6. Migration strategy (both sides)
 

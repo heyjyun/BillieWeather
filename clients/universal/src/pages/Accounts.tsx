@@ -1,7 +1,7 @@
 // Accounts (账户): every place money is, grouped into assets and liabilities, with balances and net
 // worth. Create, edit, reorder, archive / restore, delete an unused account, and record the real
 // balance (余额) as one adjustment entry.
-import { ACCOUNT_TYPES, formatMoney, isLiability, type AccountType } from "@billie/finance-core";
+import { ACCOUNT_TYPES, formatMoney, isLiability, localToday, type AccountType } from "@billie/finance-core";
 import { CURRENCIES } from "@billie/shared-types";
 import { useEffect, useState, type FormEvent } from "react";
 import { useDraftState, useMode } from "../hooks/useMode";
@@ -10,8 +10,12 @@ import { AccountCapture } from "../components/AccountCapture";
 import copy from "../../../../packages/shared-types/schema/assistant-copy.json";
 import { institutions } from "../../../../public/account-capture.mjs";
 import { useAccount } from "../hooks/useAccount";
-import { statementObservations, type StatementObservation } from "../services/statementObservations";
-import { Money, PageHeading } from "../components/common";
+import { accountEvidence, statementObservations, type AccountEvidence, type StatementObservation } from "../services/statementObservations";
+import { AccountsTable, openCapture, type TableActions } from "../accounts/AccountTable";
+import { summarize, type AccountRow, type Summary } from "../accounts/model";
+import { localSources } from "../overview/local";
+import type { Period } from "@billie/shared-types";
+import { PageHeading } from "../components/common";
 import { parseAmount } from "../components/EntryForm";
 import { useFinance } from "../hooks/useFinance";
 import { useI18n } from "../i18n";
@@ -20,6 +24,8 @@ import { LedgerError, type Account, type AccountInput } from "../services/ledger
 const bookCurrencies = currencyOptions(CURRENCIES);
 
 const today = () => new Date().toISOString().slice(0, 10);
+// Position does not depend on a period; the overview's source still takes one.
+const ALL_TIME: Period = { preset: "all_time", startDate: null, endDate: null };
 
 type AccountFormProps = { account: Account | null; currency: string; onDone: (message: string) => void; onCancel: () => void };
 
@@ -159,27 +165,65 @@ function AdjustForm({ account, onDone, onCancel }: { account: Account; onDone: (
   );
 }
 
-export function Accounts({ create = false, onStatement, adjustId, suggestion }: { suggestion?: string; create?: boolean; onStatement?: () => void; adjustId?: number } = {}) {
+function toRow(account: Account, evidence: AccountEvidence | undefined, differs: boolean, today: string): AccountRow {
+  // A dated opening balance, the latest adjustment and a matching statement each confirm a balance on a day.
+  const candidates: Array<[string, "manual" | "statement"]> = [];
+  if (account.openingBalanceSource !== "unknown" && account.openingBalanceOn && account.openingBalanceOn <= today) {
+    candidates.push([account.openingBalanceOn, account.openingBalanceSource === "statement" ? "statement" : "manual"]);
+  }
+  if (evidence?.lastAdjustmentOn) candidates.push([evidence.lastAdjustmentOn, "manual"]);
+  if (evidence?.statementMatches && evidence.statementOn) candidates.push([evidence.statementOn, "statement"]);
+  const [confirmedOn, confirmedBy] = candidates.sort((a, b) => b[0].localeCompare(a[0]))[0] ?? [null, null];
+  return {
+    id: String(account.id), name: account.unassigned ? "" : account.name, institution: account.institution, last4: account.last4, type: account.type,
+    liability: isLiability(account.type), currency: account.currency,
+    balance: account.unassigned || account.openingBalanceSource === "unknown" ? null : account.balanceCents,
+    archived: account.archived, includeInNetWorth: account.includeInNetWorth, origin: evidence?.imported ? "imported" : "manual",
+    confirmedOn, confirmedBy, lastEntryOn: evidence?.lastEntryOn ?? null, statementDiffers: differs,
+    creditLimit: account.creditLimitCents, sortOrder: account.sortOrder, canDelete: account.entryCount === 0 && !account.unassigned,
+  };
+}
+
+export type AccountsNavigate = (target: "transactions" | "entry", accountId: number) => void;
+
+export function Accounts({ create = false, onStatement, adjustId, suggestion, navigate }: { suggestion?: string; create?: boolean; onStatement?: () => void; adjustId?: number; navigate?: AccountsNavigate } = {}) {
   const { m, locale } = useI18n();
   const x = m.ledger.accounts;
-  const { store, accounts, currency, refresh } = useFinance();
+  const finance = useFinance();
+  const { store, accounts, currency, refresh, ownerKey } = finance;
   // Which form is open is part of the draft too, so it reopens after a mode switch.
   const [editing, setEditing] = useDraftState<Account | "new" | null>("accounts-page", "editing", null);
   useEffect(() => { if (create) setEditing(old => old ?? "new"); }, [create, setEditing]);
   const [adjusting, setAdjusting] = useState<Account | null>(null);
   useEffect(() => { if (adjustId) setAdjusting(accounts.find(a => a.id === adjustId) ?? null); }, [adjustId, accounts]);
-  const [showArchived, setShowArchived] = useState(false);
   const [status, setStatus] = useState("");
   const [bookCurrency, setBookCurrency] = useState("USD");
-  const visible = accounts.filter((account) => showArchived || !account.archived);
-  const included = accounts.filter(a => !a.archived && a.includeInNetWorth);
-  const live = included.filter(a => a.openingBalanceSource !== "unknown");
-  const onlyUnknown = (group: Account[]) => group.length > 0 && group.every(a => a.openingBalanceSource === "unknown");
-  const assets = live.filter((account) => !isLiability(account.type)).reduce((sum, account) => sum + account.balanceCents, 0);
-  const liabilities = live.filter((account) => isLiability(account.type)).reduce((sum, account) => sum - account.balanceCents, 0);
+  const today = localToday();
   const cur = currency ?? accounts[0]?.currency ?? bookCurrency;
+  const [evidence, setEvidence] = useState<{ dates: Map<number, AccountEvidence>; differs: Set<number> }>({ dates: new Map(), differs: new Set() });
+  const [summaries, setSummaries] = useState<Summary[]>([]);
+  useEffect(() => {
+    let live = true;
+    void Promise.all([accountEvidence(store, today), statementObservations(store, today)]).then(([dates, observed]) => {
+      if (live) setEvidence({ dates, differs: new Set(observed.map((row) => Number(row.id))) });
+    }).catch(() => {});
+    return () => { live = false; };
+  }, [store, accounts, today]);
+  useEffect(() => {
+    let live = true;
+    // The dashboard's own position for each currency, so both pages always agree.
+    const codes = [...new Set([cur, ...accounts.map((a) => a.currency)])];
+    void Promise.all(codes.map(async (code) => summarize(code, await localSources(finance, { currency: code, account: "", period: ALL_TIME }, today, (name) => name).position())))
+      .then((rows) => { if (live) setSummaries(rows.filter((row) => row.currency === cur || accounts.some((a) => a.currency === row.currency))); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [finance, accounts, cur, today]);
+  const rows = accounts.map((account) => {
+    const row = toRow(account, evidence.dates.get(account.id), evidence.differs.has(account.id), today);
+    return account.unassigned ? { ...row, name: x.unassigned } : row;
+  });
+  const byId = new Map(accounts.map((a) => [String(a.id), a]));
   const done = (message: string) => { setEditing(null); setAdjusting(null); setStatus(message); };
-
   async function act(action: () => Promise<unknown>, message: string) {
     try {
       await action();
@@ -187,28 +231,25 @@ export function Accounts({ create = false, onStatement, adjustId, suggestion }: 
       setStatus(message);
     } catch (caught) {
       setStatus(caught instanceof LedgerError ? m.ledger.errors[caught.code] ?? m.ledger.errors.unknown : m.ledger.errors.unknown);
+      throw caught;
     }
   }
-  async function move(account: Account, step: -1 | 1) {
-    const order = accounts.filter((a) => !a.archived).map((a) => a.id);
-    const index = order.indexOf(account.id);
-    const swap = index + step;
-    if (index < 0 || swap < 0 || swap >= order.length) return;
-    [order[index], order[swap]] = [order[swap], order[index]];
-    await act(() => store.ledger.reorderAccounts(order), m.ledger.common.saved);
-  }
-
-  const groups: Array<{ title: string; items: Account[] }> = [
-    { title: x.assets, items: visible.filter((account) => !isLiability(account.type)) },
-    { title: x.liabilities, items: visible.filter((account) => isLiability(account.type)) },
-  ];
+  const account = (row: AccountRow) => byId.get(row.id)!;
+  const actions: TableActions = {
+    open: (row) => setEditing(account(row)),
+    edit: (row) => setEditing(account(row)),
+    transactions: (row) => navigate?.("transactions", Number(row.id)),
+    addTransaction: (row) => navigate?.("entry", Number(row.id)),
+    updateBalance: (row) => setAdjusting(account(row)),
+    importStatement: onStatement ? () => onStatement() : undefined,
+    archive: (row) => act(() => store.ledger.setAccountArchived(Number(row.id), true), x.archivedDone),
+    unarchive: (row) => act(() => store.ledger.setAccountArchived(Number(row.id), false), x.restoredDone),
+    remove: (row) => act(() => store.ledger.deleteAccount(Number(row.id)), x.deleted),
+    reorder: (ids) => act(() => store.ledger.reorderAccounts(ids.map(Number).filter((id) => !byId.get(String(id))?.archived)), m.ledger.common.saved),
+  };
   return (
     <>
-      <PageHeading eyebrow={x.eyebrow} title={x.title}>
-
-      </PageHeading>
-      <AccountCapture suggestion={suggestion} currency={cur} manual={() => setEditing("new")} statement={() => onStatement?.()} />
-      <div className="bw-next-slot" data-account-next-slot />
+      <PageHeading eyebrow={x.eyebrow} title={x.title} />
       <p className="bw-sr-status" role="status" aria-live="polite">{status}</p>
       {status && <p className="bw-message bw-message-ok">{status}</p>}
       {!currency && accounts.length === 0 && (
@@ -219,51 +260,16 @@ export function Accounts({ create = false, onStatement, adjustId, suggestion }: 
           <small id="accounts-book-currency-help">{x.currencyHelp}</small>
         </div>
       )}
-      {accounts.some(a => !a.archived && a.openingBalanceSource === "unknown") && <p className="bw-caption">{copy[locale].partial}</p>}
-      <div className="bw-metrics">
-        <div className="bw-metric"><span>{x.assets}</span><strong>{onlyUnknown(included.filter(a => !isLiability(a.type))) ? "—" : <Money cents={assets} currency={cur} />}</strong></div>
-        <div className="bw-metric"><span>{x.liabilities}</span><strong>{onlyUnknown(included.filter(a => isLiability(a.type))) ? "—" : <Money cents={liabilities} currency={cur} />}</strong></div>
-        <div className="bw-metric bw-metric-accent"><span>{x.netWorth}</span><strong>{onlyUnknown(included) ? "—" : <Money cents={assets - liabilities} currency={cur} />}</strong></div>
-      </div>
       {editing && (
         <AccountForm account={editing === "new" ? null : editing} currency={cur} onCancel={() => setEditing(null)} onDone={done} />
       )}
       {adjusting && <AdjustForm account={adjusting} onDone={done} onCancel={() => setAdjusting(null)} />}
-      {groups.map((group) => group.items.length > 0 && (
-        <section key={group.title} className="bw-panel" aria-label={group.title}>
-          <h2>{group.title}</h2>
-          <ul className="bw-tx-table bw-account-list">
-            {group.items.map((account) => (
-              <li key={account.id} className={account.archived ? "is-excluded" : ""}>
-                <div className="bw-tx-main">
-                  <strong>{account.unassigned ? x.unassigned : account.name}</strong>
-                  <small>
-                    {m.ledger.accountTypes[account.type]}{account.institution ? ` · ${account.institution}` : ""}{account.last4 ? ` …${account.last4}` : ""}
-                    {account.archived ? ` · ${x.archived}` : ""}{!account.includeInNetWorth ? ` · ${x.includeInNetWorth}: ${m.ledger.common.none}` : ""}
-                  </small>
-                  {account.openingBalanceSource === "statement" && <small className="bw-muted">{x.estimated}</small>}
-                  {account.openingBalanceSource === "unknown" && account.entryCount > 0 && <small className="bw-muted">{x.unknownBalance}</small>}
-                </div>
-                <div className="bw-account-balance">
-                  {account.openingBalanceSource === "unknown" ? copy[locale].unknown : isLiability(account.type) ? <><small>{x.owed}</small> <Money cents={-account.balanceCents} currency={account.currency} /></> : <Money cents={account.balanceCents} currency={account.currency} />}
-                  {account.openingBalanceSource !== "unknown" && account.creditLimitCents !== null && <small>{x.available}: {formatMoney(account.creditLimitCents + account.balanceCents, account.currency)}</small>}
-                </div>
-                <div className="bw-row-actions">
-                  {!account.archived && <button type="button" className="bw-link-button" onClick={() => setAdjusting(account)}>{x.adjust}</button>}
-                  <button type="button" className="bw-link-button" onClick={() => setEditing(account)}>{m.ledger.common.edit}</button>
-                  {!account.archived && <button type="button" className="bw-link-button" aria-label={`${m.ledger.common.moveUp}: ${account.name}`} onClick={() => move(account, -1)}>↑</button>}
-                  {!account.archived && <button type="button" className="bw-link-button" aria-label={`${m.ledger.common.moveDown}: ${account.name}`} onClick={() => move(account, 1)}>↓</button>}
-                  {account.archived
-                    ? <button type="button" className="bw-link-button" onClick={() => act(() => store.ledger.setAccountArchived(account.id, false), x.restoredDone)}>{m.ledger.common.unarchive}</button>
-                    : <button type="button" className="bw-link-button" onClick={() => act(() => store.ledger.setAccountArchived(account.id, true), x.archivedDone)}>{m.ledger.common.archive}</button>}
-                  {account.entryCount === 0 && <button type="button" className="bw-link-button bw-danger" onClick={() => act(() => store.ledger.deleteAccount(account.id), x.deleted)}>{m.ledger.common.delete}</button>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-      <label className="bw-check"><input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} /> {m.ledger.common.showArchived}</label>
+      <AccountsTable rows={rows} summaries={summaries} actions={actions}
+        context={{ locale, primary: cur, today, typeNames: m.ledger.accountTypes, typeOrder: ACCOUNT_TYPES, storageKey: `billie.accounts.table.v1:${ownerKey ?? "preview"}` }}
+        add={<button type="button" className="bw-button bw-button-dark bw-button-small" onClick={() => { if (!openCapture()) setEditing("new"); }}>{x.add}</button>}>
+        <AccountCapture suggestion={suggestion} currency={cur} manual={() => setEditing("new")} statement={() => onStatement?.()} />
+        <div className="bw-next-slot" data-account-next-slot />
+      </AccountsTable>
     </>
   );
 }

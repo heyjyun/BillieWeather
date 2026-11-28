@@ -72,6 +72,7 @@ Rails.application.routes.draw do
     post "accounts/capture", to: "account_captures#create", as: :account_capture
     post "accounts/screenshot", to: "account_captures#screenshot", as: :account_screenshot
     resources :accounts, only: [:index, :new, :create, :edit, :update, :destroy] do
+      patch :reorder, on: :collection
       member do
         patch :archive
         patch :unarchive

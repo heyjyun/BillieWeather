@@ -6,7 +6,7 @@ module Finance
   class AccountsController < BaseController
     FIELDS = %w[custom_name name account_type opening_balance opening_balance_on credit_limit statement_day due_day include_in_net_worth note archived_at sort_order].freeze
 
-    before_action :load_account, except: [:index, :new, :create]
+    before_action :load_account, except: [:index, :new, :create, :reorder]
 
     def index
       accounts = current_user.finance_bank_accounts.ordered.to_a
@@ -18,6 +18,7 @@ module Finance
       @groups = @active.group_by(&:account_type).sort_by { |type, _| BankAccount::TYPES.index(type) }
       @net_worth = BankAccount.net_worth_for(current_user)
       @entry_counts = current_user.finance_transactions.live.group(:bank_account_id).count
+      @table = AccountTableData.new(user: current_user, profile: @profile, today: finance_today)
     end
 
     def new
@@ -84,6 +85,24 @@ module Finance
         end
       end
       redirect_to finance_accounts_path
+    end
+
+    # Saves the order chosen by dragging in the accounts table. `ids` lists the person's accounts in
+    # their new order; accounts left out keep their place after the listed ones. Ids that are not the
+    # person's are refused, so nothing is changed.
+    def reorder
+      ids = Array(params[:ids]).map(&:to_s)
+      accounts = current_user.finance_bank_accounts.ordered.to_a
+      known = accounts.index_by { |a| a.id.to_s }
+      return head :unprocessable_entity if ids.empty? || ids.uniq.size != ids.size || ids.any? { |id| !known.key?(id) }
+      order = ids.map { |id| known[id] } + accounts.reject { |a| ids.include?(a.id.to_s) }
+      BankAccount.transaction do
+        order.each_with_index { |account, position| account.update_columns(sort_order: position) unless account.sort_order == position }
+      end
+      respond_to do |format|
+        format.json { head :no_content }
+        format.html { redirect_to finance_accounts_path }
+      end
     end
 
     # Records a balance adjustment (余额): the difference between the computed and the real balance.

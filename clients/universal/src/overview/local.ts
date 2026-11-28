@@ -68,7 +68,8 @@ export function localSources(
         .map((a) => ({
           type: a.type,
           liability: a.accountClass === "liability",
-          included: a.includeInNetWorth && !a.archived,
+          // Archiving only hides an account; inclusion follows "include in net worth" (same as Rails).
+          included: a.includeInNetWorth,
           archived: a.archived,
           balance:
             a.unassigned ||

@@ -19,7 +19,7 @@ export function AccountCapture({ currency, manual, statement, suggestion }: { su
   useEffect(() => {
     if (!root.current) return;
     return mountCapture(root.current, {
-      copy: copy[locale], types: m.ledger.accountTypes, add: m.ledger.accounts.add, empty: !accounts.some(a => !a.archived && !a.unassigned),
+      copy: copy[locale], types: m.ledger.accountTypes, add: copy[locale].ai, empty: !accounts.some(a => !a.archived && !a.unassigned),
       currency, region, accounts, suggestion, id: randomId, manual: () => callbacks.current.manual(), statement: () => callbacks.current.statement(),
       recognize: async file => {
         const { recognizeReceipt } = await import("../services/receipt");

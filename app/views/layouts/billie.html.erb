@@ -17,6 +17,7 @@
     <%= stylesheet_link_tag "/billie-overview.css" %>
     <%= stylesheet_link_tag "/finance-assistant.css" %>
     <%= stylesheet_link_tag "/financial-overview.css" if controller_path == "finance/dashboard" %>
+    <%= stylesheet_link_tag "/accounts-table.css" if controller_path == "finance/accounts" && action_name == "index" %>
     <script src="/billie-theme.js"></script>
     <script src="/billie.js" defer></script>
     <% if controller.is_a?(Finance::BaseController) %><script type="module" src="/finance-assistant-web.mjs"></script><% end %>

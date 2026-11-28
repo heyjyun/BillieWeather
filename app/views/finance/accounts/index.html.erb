@@ -1,67 +1,58 @@
 <% content_for :title, t("billie.ledger.accounts.title") %>
-<div class="bw-page-heading">
-  <div><span class="bw-eyebrow"><%= t("billie.ledger.accounts.eyebrow") %></span><h1><%= t("billie.ledger.accounts.title") %></h1><p><%= t("billie.ledger.accounts.intro") %></p></div>
+<%# Accounts & Assets: the shared grouped table (clients/universal/src/accounts), mounted by /accounts-table.js.
+    The plain table below is what people without JavaScript see, and what the script replaces. %>
+<div class="bw-page-heading bw-page-heading-compact">
+  <div><h1><%= t("billie.ledger.accounts.title") %></h1><p><%= t("billie.ledger.accounts.intro") %></p></div>
   <div class="bw-heading-actions">
-    <%= link_to t("billie.ledger.entries.add"), new_finance_entry_path, class: "bw-button bw-button-outline" %>
-
+    <%= link_to t("billie.ledger.entries.add"), new_finance_entry_path, class: "bw-button bw-button-outline bw-button-small" %>
   </div>
 </div>
 
-<%= render "capture" %>
-<% if @last_capture %>
-  <%= button_to assistant_copy["undoCapture"], finance_undo_account_capture_path, params: {key: @last_capture}, class: "bw-link-button" %>
-<% end %>
-<% if @active.any?(&:balance_pending?) %><p class="bw-caption"><%= assistant_copy["partial"] %></p><% end %>
-<% included = (@active + @archived).select(&:include_in_net_worth?) %>
-<% asset_accounts, debt_accounts = included.partition { |a| !a.liability? } %>
-<% total = ->(group, amount) { group.any? && group.all?(&:balance_pending?) ? "—" : finance_money(amount, @profile.currency) } %>
-<div class="bw-metrics bw-metrics-three" id="net-worth">
-  <div class="bw-metric"><span><%= t("billie.ledger.accounts.assets") %></span><strong><%= total.call(asset_accounts, @net_worth[:assets]) %></strong></div>
-  <div class="bw-metric"><span><%= t("billie.ledger.accounts.liabilities") %></span><strong><%= total.call(debt_accounts, @net_worth[:liabilities]) %></strong></div>
-  <div class="bw-metric bw-metric-mint"><span><%= t("billie.ledger.accounts.net_worth") %></span><strong><%= total.call(included, @net_worth[:net_worth]) %></strong></div>
+<div id="accounts-capture">
+  <%= render "capture" %>
+  <% if @last_capture %>
+    <%= button_to assistant_copy["undoCapture"], finance_undo_account_capture_path, params: {key: @last_capture}, class: "bw-link-button" %>
+  <% end %>
 </div>
 
-<% @groups.each do |type, accounts| %>
-  <section class="bw-panel bw-panel-flush bw-section-gap" aria-labelledby="group-<%= type %>">
-    <div class="bw-panel-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.accounts.#{Finance::Domain.account_class(type)}") %></span><h2 id="group-<%= type %>"><%= t("billie.ledger.account_types.#{type}") %></h2></div>
-      <strong class="bw-nowrap"><%= total.call(accounts, accounts.sum { |a| @balances[a.id] || 0 }) %></strong></div>
+<% rows = @table.rows %>
+<% table = {
+  context: {locale: I18n.locale.to_s, primary: @profile.currency, today: finance_today.iso8601,
+    typeNames: Finance::BankAccount::TYPES.index_with { |type| t("billie.ledger.account_types.#{type}") }, typeOrder: Finance::BankAccount::TYPES,
+    storageKey: "billie.accounts.table.v1:web:#{current_user.finance_owner_uid || current_user.id}"},
+  rows: rows, positions: @table.positions, addLabel: t("billie.ledger.accounts.new"),
+  links: {edit: edit_finance_account_path("__ID__"), transactions: finance_transactions_path(account_id: "__ID__"), entry: new_finance_entry_path(account_id: "__ID__"),
+    adjust: edit_finance_account_path("__ID__", anchor: "adjust-balance"), statements: finance_statements_path, archive: archive_finance_account_path("__ID__"),
+    unarchive: unarchive_finance_account_path("__ID__"), destroy: finance_account_path("__ID__"), reorder: reorder_finance_accounts_path, manual: new_finance_account_path}
+} %>
+<%= tag.div id: "accounts-table", class: "at-host", data: {table: table.to_json} do %>
+  <% main = @table.positions.find { |p| p[:currency] == @profile.currency } %>
+  <% known = ->(holdings) { holdings.reject { |h| h[:balance].nil? } } %>
+  <% included = main ? known.call(main[:position][:holdings]).select { |h| h[:included] } : [] %>
+  <% money = ->(cents) { finance_money(BigDecimal(cents) / 100, @profile.currency) } %>
+  <div class="bw-metrics bw-metrics-three" id="net-worth">
+    <div class="bw-metric"><span><%= t("billie.ledger.accounts.assets") %></span><strong><%= money.call(included.reject { |h| h[:liability] }.sum { |h| h[:balance] }) %></strong></div>
+    <div class="bw-metric"><span><%= t("billie.ledger.accounts.liabilities") %></span><strong><%= money.call(-included.select { |h| h[:liability] }.sum { |h| h[:balance] }) %></strong></div>
+    <div class="bw-metric"><span><%= t("billie.ledger.accounts.net_worth") %></span><strong><%= money.call(included.sum { |h| h[:balance] }) %></strong></div>
+  </div>
+  <% if rows.any? %>
     <div class="bw-table-scroll"><table class="bw-table">
-      <thead><tr><th scope="col"><%= t("billie.ledger.accounts.col_account") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.accounts.col_entries") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.accounts.col_balance") %></th><th scope="col"><span class="bw-sr-only"><%= t("billie.finance.ui.action") %></span></th></tr></thead>
+      <thead><tr><th scope="col"><%= t("billie.ledger.accounts.col_account") %></th><th scope="col"><%= t("billie.ledger.accounts.type") %></th><th scope="col" class="bw-text-right"><%= t("billie.ledger.accounts.col_balance") %></th></tr></thead>
       <tbody>
-        <% accounts.each do |account| %>
-          <tr id="account-<%= account.id %>">
-            <td><strong><%= account.display_name %></strong>
-              <small class="bw-muted"><%= account.manual? ? t("billie.ledger.accounts.manual") : t("billie.ledger.accounts.imported") %><%= " · #{t("billie.ledger.accounts.not_in_net_worth")}" unless account.include_in_net_worth %><%= " · #{t("billie.ledger.accounts.credit_limit_short", amount: finance_money(account.credit_limit, @profile.currency))}" if account.credit_limit %></small></td>
-            <td class="bw-text-right"><%= link_to number_with_delimiter(@entry_counts[account.id].to_i), finance_transactions_path(account_id: account.id), class: "bw-table-link" %></td>
-            <td class="bw-text-right bw-nowrap bw-amount <%= 'bw-negative' if (@balances[account.id] || 0).negative? %>"><%= account.balance_pending? ? assistant_copy["unknown"] : finance_money(@balances[account.id], @profile.currency) %></td>
-            <td class="bw-text-right bw-nowrap">
-              <%= button_to "↑", move_finance_account_path(account, direction: "up"), method: :patch, class: "bw-icon-button", form: {class: "bw-inline-edit", data: {turbo: false}}, "aria-label": t("billie.ledger.accounts.move_up", name: account.display_name) %>
-              <%= button_to "↓", move_finance_account_path(account, direction: "down"), method: :patch, class: "bw-icon-button", form: {class: "bw-inline-edit", data: {turbo: false}}, "aria-label": t("billie.ledger.accounts.move_down", name: account.display_name) %>
-              <%= link_to t("billie.ledger.entries.add_short"), new_finance_entry_path(account_id: account.id), class: "bw-table-link" %>
-              <%= link_to t("billie.ledger.accounts.edit"), edit_finance_account_path(account), class: "bw-table-link", "aria-label": t("billie.ledger.accounts.edit_label", name: account.display_name) %>
-            </td>
+        <% rows.reject { |r| r[:archived] }.each do |row| %>
+          <tr id="account-<%= row[:id] %>">
+            <td><%= link_to row[:name], edit_finance_account_path(row[:id]), class: "bw-table-link" %> <small class="bw-muted"><%= [row[:institution], (row[:last4] && "•••• #{row[:last4]}")].compact.join(" · ") %></small></td>
+            <td><%= t("billie.ledger.account_types.#{row[:type]}") %></td>
+            <td class="bw-text-right bw-nowrap"><%= row[:balance].nil? ? "—" : "#{row[:currency]} #{number_with_precision(BigDecimal(row[:liability] ? -row[:balance] : row[:balance]) / 100, precision: 2, delimiter: ",")}" %></td>
           </tr>
         <% end %>
       </tbody>
     </table></div>
-  </section>
+  <% end %>
 <% end %>
+<script src="/accounts-table.js" defer></script>
 
-<% if @archived.any? %>
-  <section class="bw-panel bw-panel-flush bw-section-gap" aria-labelledby="archived-heading">
-    <div class="bw-panel-heading"><div><h2 id="archived-heading"><%= t("billie.ledger.accounts.archived_title") %></h2><p><%= t("billie.ledger.accounts.archived_body") %></p></div></div>
-    <div class="bw-table-scroll"><table class="bw-table"><tbody>
-      <% @archived.each do |account| %>
-        <tr><td><%= account.display_name %> <small class="bw-muted"><%= t("billie.ledger.account_types.#{account.account_type}") %></small></td>
-          <td class="bw-text-right bw-nowrap"><%= account.balance_pending? ? assistant_copy["unknown"] : finance_money(@balances[account.id], @profile.currency) %></td>
-          <td class="bw-text-right"><%= button_to t("billie.ledger.accounts.unarchive"), unarchive_finance_account_path(account), method: :patch, class: "bw-button bw-button-small bw-button-outline", form: {data: {turbo: false}} %></td></tr>
-      <% end %>
-    </tbody></table></div>
-  </section>
-<% end %>
-<div class="bw-info-line"><%= finance_icon "file", size: 18 %><p><%= t("billie.ledger.accounts.balance_note") %></p></div>
-
-<details class="bw-panel" id="statement-account-details" <%= "open" if params[:statement_details] == "1" %>>
+<details class="bw-panel bw-section-gap" id="statement-account-details" <%= "open" if params[:statement_details] == "1" %>>
   <summary class="bw-text-link"><%= t("billie.finance.ui.cash_accounts") %> · <%= t("billie.finance.ui.cash_on_hand") %></summary>
   <%= render "finance/dashboard/accounts" %>
 </details>
