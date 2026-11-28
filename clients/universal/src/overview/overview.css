@@ -184,6 +184,9 @@
   padding: 18px 20px;
   min-width: 0;
 }
+.fo-card[data-widget="insight"] {
+  height: auto;
+}
 .fo-card > header {
   align-items: baseline;
   margin-bottom: 12px;

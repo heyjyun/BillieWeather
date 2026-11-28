@@ -600,7 +600,7 @@ export function Overview(host: Host) {
     <div className="fo-dashboard">
       <header className="fo-title">
         <div>
-          <h1 tabIndex={-1} ref={heading}>
+          <h1 tabIndex={host.switchLedger ? -1 : undefined} ref={host.switchLedger ? heading : undefined}>
             {c.title}
           </h1>
           <p>

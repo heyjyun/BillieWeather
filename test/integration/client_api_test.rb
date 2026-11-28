@@ -27,7 +27,7 @@ class ClientApiTest < ActionDispatch::IntegrationTest
     assert_equal @user.created_at.iso8601, account["registered_at"]
     assert_equal ["member"], account["badges"]
     # Never financial data.
-    assert_equal %w[badges email locale nickname owner_id registered_at time_zone usage_region], account.keys.sort
+    assert_equal %w[badges email iana_time_zone locale nickname owner_id registered_at time_zone usage_region], account.keys.sort
     # The immutable id each local database is bound to (I-13); never the integer user id.
     assert_equal @user.reload.finance_owner_uid, account["owner_id"]
     assert_match(/\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/, account["owner_id"])
@@ -101,6 +101,7 @@ class ClientApiTest < ActionDispatch::IntegrationTest
 
     patch "/api/client/v1/account", params: {account: {locale: "ja", nickname: "Billie Fan", time_zone: "Tokyo"}}, headers: auth(token), as: :json
     assert_response :success
+    assert_equal "Asia/Tokyo", JSON.parse(response.body).fetch("account").fetch("iana_time_zone")
     assert_equal ["ja", "Billie Fan", "Tokyo"], [@user.reload.locale, @user.nickname, @user.time_zone]
 
     patch "/api/client/v1/account", params: {account: {locale: "klingon"}}, headers: auth(token), as: :json

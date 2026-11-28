@@ -51,6 +51,19 @@ describe("dashboard financial definitions", () => {
     });
     expect(position({ ...p, holdings: [holding("cash", null)] })).toMatchObject({ worth: null, available: null });
   });
+  it("reconciles a declared cash snapshot with assets once, preserving excluded accounts", () => {
+    const holdings = [
+      holding("checking", 1000),
+      holding("investment", 8000),
+      holding("loan", -400, { liability: true }),
+    ];
+    const p = { cashOverride: 2200, extraCash: 200, holdings };
+    expect(position(p)).toMatchObject({ available: 2200, assets: 10200, worth: 9800 });
+    expect(groupBalance(p, "liquid")).toBe(2200);
+    const excluded = { ...p, holdings: [...holdings, holding("savings", 700, { included: false })] };
+    expect(position(excluded)).toMatchObject({ available: 2200, assets: 9200, worth: 8800 });
+    expect(groupBalance(excluded, "liquid")).toBe(1200);
+  });
   it("uses the previous calendar or equal-length period including across leap years", () => {
     expect(previous(resolvePeriod("this_month", { today: "2024-03-03" }))).toMatchObject({
       startDate: "2024-02-01",

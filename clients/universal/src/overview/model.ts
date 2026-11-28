@@ -166,9 +166,16 @@ export function group(h: Holding): Group {
 function balance(rows: Holding[]) {
   return rows.some((r) => r.balance === null) ? null : rows.reduce((s, r) => s + r.balance!, 0);
 }
+// A user-entered cash snapshot covers active liquid balances. Reuse it for net worth
+// only when those accounts have the same inclusion scope; it already includes extra cash.
+function netWorthCash(p: Position) {
+  if (p.holdings.some((h) => group(h) === "liquid" && (h.archived || !h.included))) return null;
+  return p.cashOverride;
+}
 export function groupBalance(p: Position, key: Group) {
   const rows = p.holdings.filter((h) => h.included && group(h) === key);
-  if (key === "liquid" && p.cashOverride !== null) return p.cashOverride;
+  const override = key === "liquid" ? netWorthCash(p) : null;
+  if (override !== null) return override;
   const extra = key === "liquid" ? p.extraCash : null;
   if (!rows.length && extra === null) return null;
   const value = balance(rows);
@@ -181,10 +188,14 @@ export function position(p: Position) {
   const available =
     p.cashOverride ??
     ((liquid.length || p.extraCash !== null) && cash !== null ? cash + (p.extraCash ?? 0) : null);
-  const assetBalance = balance(included.filter((h) => !h.liability));
-  const assets =
-    (included.length || p.extraCash !== null) && assetBalance !== null ? assetBalance + (p.extraCash ?? 0) : null;
-  const debts = included.length || p.extraCash !== null ? balance(included.filter((h) => h.liability)) : null;
+  const override = netWorthCash(p);
+  const extra = override ?? p.extraCash;
+  const hasPosition = included.length > 0 || extra !== null;
+  const assetBalance = balance(
+    included.filter((h) => !h.liability && (override === null || group(h) !== "liquid")),
+  );
+  const assets = hasPosition && assetBalance !== null ? assetBalance + (extra ?? 0) : null;
+  const debts = hasPosition ? balance(included.filter((h) => h.liability)) : null;
   const liabilities = debts === null ? null : -debts;
   const worth = assets === null || liabilities === null ? null : assets - liabilities;
   return { available, assets, liabilities, worth, fixed: null };
