@@ -92,4 +92,4 @@ it("says so when a category change or an exclusion could not be saved", async ()
   await act(async () => { fireEvent.change(select, { target: { value: "Health" } }); });
   await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
   expect(screen.getAllByRole("status").some((node) => /^Saved\./.test(node.textContent ?? ""))).toBe(true);
-});
+}, 60_000); // renders the whole App; 2 s alone, but over 10 s when the full suite loads both workers
