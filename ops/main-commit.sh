@@ -81,7 +81,7 @@ case "$cmd" in
     tmp="$CLAIMS.tmp.$$"
     if (( $# )); then
       keep="$(printf '%s\n' "$@" | while read -r p; do norm "$p"; done)"
-      awk -F'\t' -v o="$owner" -v k="$keep" 'BEGIN{n=split(k,a,"\n");for(i=1;i<=n;i++)r[a[i]]=1} !($2==o && ($1 in r))' "$CLAIMS" >"$tmp"
+      KEEP="$keep" awk -F'\t' -v o="$owner" 'BEGIN{n=split(ENVIRON["KEEP"],a,"\n");for(i=1;i<=n;i++)r[a[i]]=1} !($2==o && ($1 in r))' "$CLAIMS" >"$tmp"
     else
       awk -F'\t' -v o="$owner" '$2!=o' "$CLAIMS" >"$tmp"
     fi
