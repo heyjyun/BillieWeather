@@ -10,8 +10,10 @@ module Finance
   #   "unsupported" (built on another surface only).
   # - Enabled = can be used. Derived, never stored: every module available on the website is enabled
   #   for every account, new or existing. No personal choice disables a feature.
-  # - Sidebar visibility: the only personal choice. Without one, the catalog default applies
-  #   (Transactions and AI Insight shown, product decision 2026-11-26).
+  # - Sidebar visibility: a personal choice. Without one, the catalog default applies (Transactions,
+  #   AI Insight, Financial Overview, Categories, Accounts & Assets; catalog version 3, 2026-11-28).
+  # - Sidebar order: a personal choice too, one saved list per account (Finance::SidebarOrder). Entries
+  #   the list does not name follow it in catalog order (order_sidebar), as in modules.ts.
   #
   # Settings is a system entry, not a module: always shown, never stored. Hiding a module from the
   # sidebar never blocks its pages, changes data or stops processing (recurring posting, receipt
@@ -97,6 +99,12 @@ module Finance
       end
     end
 
+    # The saved order in a preferences document (format 1, optional "order"), as normalizeOrder does.
+    def normalize_preferences_order(preferences)
+      return [] unless preferences.is_a?(Hash) && preferences["format"] == PREFERENCE_FORMAT
+      normalize_order(preferences["order"])
+    end
+
     # Whether the module can be used on this surface. Independent of the sidebar.
     def enabled?(id, surface: SURFACE) = find(id)&.enabled?(surface) == true
 
@@ -110,7 +118,23 @@ module Finance
       choice ? choice["sidebar_visible"] == true : definition.default_sidebar_visible
     end
 
-    def sidebar_modules(choices, surface: SURFACE) = MODULES.select { |definition| sidebar_visible?(definition.id, choices, surface: surface) }
+    # The sidebar entries in the person's order: ids in `order` first (each once, only shown entries),
+    # then the other shown modules in catalog order. Same rules as sidebarModules in modules.ts.
+    def sidebar_modules(choices, surface: SURFACE, order: [])
+      order_sidebar(MODULES.select { |definition| sidebar_visible?(definition.id, choices, surface: surface) }, order)
+    end
+
+    def order_sidebar(definitions, order)
+      remaining = definitions.index_by(&:id)
+      placed = normalize_order(order).filter_map { |id| remaining.delete(id) }
+      placed + definitions.select { |definition| remaining.key?(definition.id) }
+    end
+
+    # Known module ids only, each once; anything else (not an array, unknown ids) is dropped.
+    def normalize_order(value)
+      return [] unless value.is_a?(Array)
+      value.select { |id| id.is_a?(String) && find(id) }.uniq
+    end
 
     # Usable modules that are not in the sidebar (opened from the Feature Library).
     def hidden_modules(choices, surface: SURFACE) = MODULES.select { |definition| definition.available?(surface) && !sidebar_visible?(definition.id, choices, surface: surface) }

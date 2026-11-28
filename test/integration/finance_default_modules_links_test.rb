@@ -17,7 +17,7 @@ class FinanceDefaultModulesLinksTest < ActionDispatch::IntegrationTest
   end
 
   test "every link on the dashboard and in settings opens a working page for a default account" do
-    assert_equal %w[transactions ai_assistant], Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user)).map(&:id)
+    assert_equal %w[transactions ai_assistant overview categories accounts], Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user)).map(&:id)
     hrefs = [finance_dashboard_path, finance_settings_path].flat_map do |page|
       get page
       assert_module_page("transactions") if page == finance_dashboard_path

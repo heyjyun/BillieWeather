@@ -121,10 +121,11 @@ export function FeatureManager({ open, openLibrary, embedded = false }: {
           <li><ModuleIcon name="settings" /> {x.nav.settings}</li>
         </ul>
       </section>
-      <button type="button" className="bw-button bw-button-outline bw-feature-reset" onClick={() => {
+      {/* In Settings, Restore defaults lives in Sidebar customization (one button per page). */}
+      {!embedded && <button type="button" className="bw-button bw-button-outline bw-feature-reset" onClick={() => {
         restoreSidebarDefaults();
         setStatus(x.library.resetSaved);
-      }}>{x.library.reset}</button>
+      }}>{x.library.reset}</button>}
       {openLibrary && <button type="button" className="bw-link-button" onClick={openLibrary}>{x.library.open}</button>}
       <p className="bw-caption" role="status">{syncStatus === "local" ? x.library.syncNote : x.sync[syncStatus]}</p>
     </section>

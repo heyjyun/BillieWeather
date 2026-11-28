@@ -38,6 +38,9 @@ module Finance
 
           write_choice!(user: user, record: record, module_key: definition.id, sidebar_visible: definition.default_sidebar_visible)
         end
+        # Default order too: an empty saved list means catalog order.
+        order = SidebarOrder.find_by(user_id: user.id)
+        SidebarOrder.write!(user: user, record: order, module_keys: []) if order&.module_keys.present?
       end
     end
 

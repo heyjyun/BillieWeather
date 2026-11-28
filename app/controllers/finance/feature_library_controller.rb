@@ -17,6 +17,22 @@ module Finance
       redirect_to library_path, status: :see_other, notice: t("billie.modules.library.reset_saved")
     end
 
+    # Settings › Sidebar customization: saves the order of the sidebar entries. Either the whole list
+    # (`module_keys[]`, from a drag) or one step (`move` + `direction`, the buttons that work without
+    # JavaScript). Ids must be modules available here, each once; entries left out keep their place
+    # after the named ones (ModuleCatalog.order_sidebar).
+    def reorder
+      current = sidebar_modules.map(&:id)
+      keys = params[:move].present? ? moved(current, params[:move].to_s, params[:direction].to_s) : Array(params[:module_keys]).map(&:to_s)
+      return refuse(:invalid, :unprocessable_entity) unless keys&.all? { |id| ModuleCatalog.find(id)&.available? } && keys.uniq.length == keys.length
+
+      expected = Integer(params[:expected_revision].to_s, exception: false) if params.key?(:expected_revision)
+      SidebarOrder.set!(user: current_user, module_keys: keys, expected_revision: expected)
+      render_order(t("billie.modules.sidebar.saved"))
+    rescue ModulePreferenceSync::StaleChoice
+      render_order(t("billie.modules.sidebar.stale"), conflict: true)
+    end
+
     def update
       definition = ModuleCatalog.find(params[:id])
       return refuse(:unknown, :not_found) unless definition
@@ -37,6 +53,7 @@ module Finance
     private
 
     def library_path
+      return finance_settings_path(anchor: "settings-sidebar") if params[:settings] == "sidebar"
       return finance_settings_path(anchor: "settings-feature-library") if params[:settings] == "1"
 
       finance_feature_library_path(filter: params[:filter].presence_in(FILTERS))
@@ -69,6 +86,29 @@ module Finance
             redirect_to return_path || path, status: :see_other, notice: message
           end
         end
+      end
+    end
+
+    # One step up or down in the current sidebar; nil for an id that is not in it or a bad direction.
+    def moved(current, id, direction)
+      index = current.index(id)
+      return nil unless index && %w[up down].include?(direction)
+      target = (direction == "up") ? index - 1 : index + 1
+      return current unless target.between?(0, current.length - 1)
+      current.dup.tap { |list| list[index], list[target] = list[target], list[index] }
+    end
+
+    def render_order(message, conflict: false)
+      @sidebar_order = nil
+      respond_to do |format|
+        format.json do
+          render json: {order: sidebar_modules.map(&:id), revision: sidebar_order_revision, message: message,
+                        nav: render_to_string(partial: "finance/shared/module_nav", formats: [:html]),
+                        customization: render_to_string(partial: "finance/feature_library/sidebar_customization", formats: [:html]),
+                        preview: render_to_string(partial: "finance/feature_library/sidebar_preview", formats: [:html])},
+            status: conflict ? :conflict : :ok
+        end
+        format.html { redirect_to finance_settings_path(anchor: "settings-sidebar"), status: :see_other, flash: {(conflict ? :alert : :notice) => message} }
       end
     end
 

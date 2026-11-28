@@ -9,15 +9,16 @@ class Finance::ModuleCatalogTest < ActiveSupport::TestCase
   CASES.each do |example|
     test "shared case: #{example["name"]}" do
       choices = Finance::ModuleCatalog.normalize(example["preferences"])
-      assert_equal example["sidebar"], Finance::ModuleCatalog.sidebar_modules(choices, surface: example["surface"]).map(&:id)
+      order = Finance::ModuleCatalog.normalize_preferences_order(example["preferences"])
+      assert_equal example["sidebar"], Finance::ModuleCatalog.sidebar_modules(choices, surface: example["surface"], order: order).map(&:id)
       assert_equal FIXTURE.dig("usable_by_surface", example["surface"]), Finance::ModuleCatalog.enabled_modules(surface: example["surface"]).map(&:id),
         "what can be used never depends on sidebar choices"
     end
   end
 
-  test "the catalog lists the approved modules; only Transactions and AI Insight start in the sidebar" do
+  test "the catalog lists the approved modules; five start in the sidebar (catalog version 3)" do
     assert_equal %w[transactions ai_assistant overview categories import receipts reports data_management ledgers accounts budgets recurring goals household forecast multi_currency], Finance::ModuleCatalog::IDS
-    assert_equal %w[transactions ai_assistant], Finance::ModuleCatalog::MODULES.select(&:default_sidebar_visible).map(&:id)
+    assert_equal %w[transactions ai_assistant overview categories accounts], Finance::ModuleCatalog::MODULES.select(&:default_sidebar_visible).map(&:id)
     refute Finance::ModuleCatalog::MODULES.first.respond_to?(:default_enabled), "sidebar defaults are not called 'enabled'"
     refute_includes Finance::ModuleCatalog::IDS, "settings"
     assert_equal ["settings"], Finance::ModuleCatalog::SCHEMA.fetch("system_entries").map { |entry| entry["id"] }
@@ -91,7 +92,7 @@ class Finance::ModuleCatalogTest < ActiveSupport::TestCase
     Finance::ModulePreference.insert_all!([{user_id: user.id, module_key: "reports", enabled: true, changed_at: Time.current, revision: 3, created_at: Time.current, updated_at: Time.current},
       {user_id: user.id, module_key: "ai_assistant", enabled: false, changed_at: Time.current, revision: 1, created_at: Time.current, updated_at: Time.current}])
     choices = Finance::ModuleCatalog.choices_for(user)
-    assert_equal %w[transactions reports], Finance::ModuleCatalog.sidebar_modules(choices).map(&:id)
+    assert_equal %w[transactions overview categories reports accounts], Finance::ModuleCatalog.sidebar_modules(choices).map(&:id)
     assert_equal 3, choices.dig("reports", "revision")
     assert Finance::ModuleCatalog.enabled?("ai_assistant"), "a hidden core module still works"
   end

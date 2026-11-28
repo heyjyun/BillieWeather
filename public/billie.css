@@ -1298,3 +1298,15 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-sidebar-bottom > .bw-account-shortcut { border-top: 1px solid var(--bw-color-sidebar-border); }
 @media (max-width: 760px) { .bw-sidebar-bottom > .bw-account-shortcut { display: none; } }
 @media (min-width: 761px) { html[data-sidebar="collapsed"] .bw-account-shortcut span { display: none; } }
+
+/* Settings › Sidebar customization (app/views/finance/feature_library/_sidebar_customization.html.erb) */
+.bw-sidebar-order, .bw-sidebar-add { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 6px; }
+.bw-sidebar-order-item, .bw-sidebar-add li { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--bw-color-border); border-radius: var(--bw-radius-md); background: var(--bw-color-surface); }
+.bw-sidebar-order-item[draggable="true"] { cursor: grab; }
+.bw-sidebar-order-item.is-dragging { opacity: 0.55; border-style: dashed; }
+.bw-sidebar-order-item.is-fixed { background: var(--bw-color-surface-muted); cursor: default; }
+.bw-sidebar-order-name { display: inline-flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.bw-sidebar-order-actions { display: inline-flex; align-items: center; gap: 4px; }
+.bw-sidebar-order-actions form, .bw-sidebar-add form { display: inline; margin: 0; }
+.bw-drag-handle { display: inline-flex; color: var(--bw-color-text-muted); }
+.bw-sidebar-customization[aria-busy="true"] .bw-sidebar-order { opacity: 0.7; }

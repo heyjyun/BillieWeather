@@ -1,6 +1,22 @@
 es:
   billie:
     modules:
+      sidebar:
+        title: "Personalizar la barra lateral"
+        intro: "Elige qué módulos aparecen en la barra lateral y en qué orden. Los módulos ocultos siguen funcionando: ábrelos desde Configuración o la Biblioteca de funciones. Configuración siempre queda abajo."
+        drag: "Arrastra para reordenar"
+        move_up: "Subir %{name}"
+        move_down: "Bajar %{name}"
+        hide: "Ocultar"
+        hide_label: "Ocultar %{name} de la barra lateral"
+        settings_fixed: "Siempre visible, siempre al final"
+        help: "Arrastra una entrada o usa las flechas para cambiar su posición. Los cambios aparecen en la barra lateral al instante."
+        add_heading: "Añadir a la barra lateral"
+        add: "Añadir"
+        add_label: "Añadir %{name} a la barra lateral"
+        nothing_to_add: "Todos los módulos disponibles ya están en la barra lateral."
+        saved: "Orden de la barra lateral guardado."
+        stale: "El orden de la barra lateral se cambió en otro dispositivo. Se muestra el orden actual; inténtalo de nuevo."
       nav:
         main: Navegación principal
         modules: Tus módulos

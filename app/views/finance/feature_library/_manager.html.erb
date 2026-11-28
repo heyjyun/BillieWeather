@@ -55,9 +55,11 @@
     <span><%= finance_icon "lock", size: 16 %> <%= t("billie.modules.library.always_shown") %></span>
   </div>
   <%= render "finance/feature_library/sidebar_preview" %>
-  <%= button_to t("billie.modules.library.reset"), finance_reset_feature_library_path,
-    params: (embedded ? {settings: "1"} : {}), form: {data: {turbo: false}, class: "bw-feature-reset"},
-    class: "bw-button bw-button-outline" %>
+  <%# In Settings, Restore defaults lives in Sidebar customization (one button per page). %>
+  <% unless embedded %>
+    <%= button_to t("billie.modules.library.reset"), finance_reset_feature_library_path,
+      form: {data: {turbo: false}, class: "bw-feature-reset"}, class: "bw-button bw-button-outline" %>
+  <% end %>
   <% if embedded %>
     <%= link_to t("billie.modules.library.open_library"), finance_feature_library_path, class: "bw-text-link", id: "open-feature-library" %>
   <% end %>

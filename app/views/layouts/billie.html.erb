@@ -59,7 +59,7 @@
         <% if controller.is_a?(Finance::BaseController) %>
         <%= render "finance/shared/module_nav" %>
         <% else %>
-        <%= render "finance/shared/module_nav", sidebar: Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(current_user)), active_module: nil %>
+        <%= render "finance/shared/module_nav", sidebar: Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(current_user), order: Finance::SidebarOrder.keys_for(current_user)), active_module: nil %>
         <% end %>
         <% end %>
         <div class="bw-sidebar-bottom">

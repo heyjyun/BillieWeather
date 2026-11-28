@@ -40,11 +40,12 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "a new person sees Transactions, AI Insight and Settings only, in both modes" do
+  test "a new person sees the five default entries and Settings, in order, in both modes" do
     get finance_dashboard_path
     assert_response :success
-    assert_equal ["Transactions", "AI Insight", "Settings"], sidebar_labels
-    assert_select "#module-nav a.is-active", text: "Transactions"
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Settings"], sidebar_labels
+    # The dashboard belongs to Financial Overview, which is a default entry since catalog version 3.
+    assert_select "#module-nav a.is-active", text: "Financial Overview"
     assert_select "#transactions-tabs .bw-tab", count: 3
     assert_select "#transactions-tabs .bw-tab.is-active", text: "Overview"
 
@@ -52,7 +53,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     get finance_transactions_path
     assert_response :success
     assert_select "#manual-mode-badge"
-    assert_equal ["Transactions", "AI Insight", "Settings"], sidebar_labels, "the mode does not change the module list"
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Settings"], sidebar_labels, "the mode does not change the module list"
     assert_select "#transactions-tabs .bw-tab.is-active", text: "All Transactions"
   end
 
@@ -61,7 +62,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     Finance::Budget.create!(user: @user, period: "month", amount: "100.00")
     before = finance_fingerprint
     get finance_dashboard_path
-    assert_equal ["Transactions", "AI Insight", "Settings"], sidebar_labels
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Settings"], sidebar_labels
     get finance_transactions_path
     assert_select "body", /SYNTHETIC GROCER/
     assert_equal before, finance_fingerprint
@@ -74,7 +75,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
       get path
       assert_module_page(id)
     end
-    assert_equal ["Transactions", "AI Insight", "Settings"], sidebar_labels, "visiting pages does not change the sidebar"
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Settings"], sidebar_labels, "visiting pages does not change the sidebar"
     assert_empty Finance::ModulePreference.where(user: @user), "nothing had to be switched on"
   end
 
@@ -88,7 +89,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     assert_equal before, finance_fingerprint, "turning on changes no financial record"
     assert_redirected_to finance_feature_library_path
     follow_redirect!
-    assert_equal ["Transactions", "AI Insight", "Budgets", "Settings"], sidebar_labels
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Budgets", "Settings"], sidebar_labels
     get finance_budgets_path
     assert_response :success
     assert_select "#module-disabled", count: 0
@@ -96,7 +97,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
 
     toggle("budgets", false)
     get finance_dashboard_path
-    assert_equal ["Transactions", "AI Insight", "Settings"], sidebar_labels
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Settings"], sidebar_labels
     assert_equal before, finance_fingerprint, "a sidebar choice never changes financial records"
 
     get finance_budgets_path
@@ -141,8 +142,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
   end
 
   test "core modules can be hidden from the sidebar and still work; Settings always stays" do
-    toggle("transactions", false)
-    toggle("ai_assistant", false)
+    %w[transactions ai_assistant overview categories accounts].each { |id| toggle(id, false) }
     get finance_settings_path
     assert_response :success
     assert_equal ["Settings"], sidebar_labels
@@ -156,11 +156,11 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
 
   test "a module that is not in the sidebar opens directly from Settings and from the Feature Library" do
     get finance_settings_path
-    assert_select "#settings-feature-library #module-accounts[data-sidebar=false] a[href=?]", finance_accounts_path
+    assert_select "#settings-feature-library #module-budgets[data-sidebar=false] a[href=?]", finance_budgets_path
     get finance_feature_library_path
-    assert_select "#module-accounts[data-sidebar=false] a[href=?]", finance_accounts_path
-    get finance_accounts_path
-    assert_module_page("accounts")
+    assert_select "#module-budgets[data-sidebar=false] a[href=?]", finance_budgets_path
+    get finance_budgets_path
+    assert_module_page("budgets")
   end
 
   test "writes to a module that is not in the sidebar work" do
@@ -224,15 +224,15 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     get finance_feature_library_path(filter: "unavailable")
     assert_select ".bw-library-card:not([hidden])", count: 4
     get finance_feature_library_path(filter: "sidebar")
-    assert_select ".bw-library-card:not([hidden])", count: 2
+    assert_select ".bw-library-card:not([hidden])", count: 5
     get finance_feature_library_path(filter: "hidden")
-    assert_select ".bw-library-card:not([hidden])", {count: 10}, "all available modules outside the default sidebar"
+    assert_select ".bw-library-card:not([hidden])", {count: 7}, "all available modules outside the default sidebar"
   end
 
   test "Settings renders switches, locked Settings, preview, and the Web data manager" do
     get finance_settings_path(locale: "zh-CN")
     assert_select "#settings-feature-library h2", text: "功能管理"
-    assert_select "[data-sidebar-preview] li", count: 3
+    assert_select "[data-sidebar-preview] li", count: 6
     assert_select "#module-data_management [role=switch][aria-checked=false]"
     assert_select ".bw-feature-locked", /始终显示/
     patch finance_feature_library_module_path("data_management"), params: {sidebar_visible: "1", settings: "1"}, as: :json
@@ -271,7 +271,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
   test "sidebar choices saved before the rename are kept" do
     Finance::ModulePreference.insert_all!([{user_id: @user.id, module_key: "reports", enabled: true, changed_at: Time.current, revision: 1, created_at: Time.current, updated_at: Time.current}])
     get finance_dashboard_path
-    assert_equal ["Transactions", "AI Insight", "Reports", "Settings"], sidebar_labels
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Reports", "Accounts & Assets", "Settings"], sidebar_labels
   end
 
   test "preferences persist across sessions" do
@@ -279,7 +279,7 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     sign_out @user
     sign_in @user
     get finance_dashboard_path
-    assert_equal ["Transactions", "AI Insight", "Cash Flow Forecast", "Settings"], sidebar_labels
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Cash Flow Forecast", "Settings"], sidebar_labels
   end
 
   test "no dead ends: pages that had their own sidebar link are reachable from their module's tabs" do
@@ -296,5 +296,60 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     assert_select "#transactions-tabs a[href='#{finance_activity_path}']"
     get finance_add_sync_path
     %w[statements receipts reconciliation].each { |page| assert_select "#transactions-tabs a[href='/app/#{page}']" }
+  end
+
+  test "Settings has a Sidebar customization section with the entries in order, Settings fixed last" do
+    get finance_settings_path
+    assert_response :success
+    assert_select "#settings-index a[href='#settings-sidebar']"
+    ids = css_select("#settings-sidebar [data-sidebar-order] li").map { |li| li["data-module-key"] }
+    assert_equal %w[transactions ai_assistant overview categories accounts settings], ids
+    assert_select "#settings-sidebar [data-module-key='settings'] form", count: 0
+    assert_select "#settings-sidebar [data-module-key='settings'][draggable]", count: 0
+    assert_select "#settings-sidebar [data-sidebar-add] [data-module-key='budgets'] form"
+    # One Restore defaults button on the page (in this section).
+    assert_select "form[action='#{finance_reset_feature_library_path}']", count: 1
+  end
+
+  test "the arrow buttons move an entry without JavaScript and the sidebar follows" do
+    patch finance_sidebar_order_path, params: {move: "accounts", direction: "up", expected_revision: 0}
+    assert_redirected_to finance_settings_path(anchor: "settings-sidebar")
+    follow_redirect!
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Accounts & Assets", "Categories & Tags"], sidebar_labels.first(5)
+    assert_equal %w[transactions ai_assistant overview accounts categories], Finance::SidebarOrder.keys_for(@user)
+  end
+
+  test "a drag saves the whole order as JSON and returns the new sidebar and section" do
+    patch finance_sidebar_order_path, params: {module_keys: %w[categories transactions], expected_revision: 0}, as: :json
+    assert_response :success
+    body = response.parsed_body
+    assert_equal %w[categories transactions ai_assistant overview accounts], body["order"]
+    assert_equal 1, body["revision"]
+    assert_includes body["nav"], "module-nav"
+    assert_includes body["customization"], "data-sidebar-customization"
+    # A second drag based on the old revision is a conflict and changes nothing.
+    patch finance_sidebar_order_path, params: {module_keys: %w[accounts], expected_revision: 0}, as: :json
+    assert_response :conflict
+    assert_equal %w[categories transactions], Finance::SidebarOrder.keys_for(@user)
+  end
+
+  test "an order with a module that is not available on the website, or a duplicate, is refused" do
+    [%w[goals], %w[accounts accounts], %w[nope]].each do |keys|
+      patch finance_sidebar_order_path, params: {module_keys: keys}, as: :json
+      assert_response :unprocessable_entity, keys.inspect
+    end
+    assert_equal 0, Finance::SidebarOrder.count
+  end
+
+  test "adding a module from Sidebar customization puts it after the arranged entries; restore resets order and choices" do
+    Finance::SidebarOrder.set!(user: @user, module_keys: %w[accounts transactions])
+    patch finance_feature_library_module_path("budgets"), params: {sidebar_visible: "1", settings: "sidebar", expected_revision: 0}
+    assert_redirected_to finance_settings_path(anchor: "settings-sidebar")
+    follow_redirect!
+    assert_equal ["Accounts & Assets", "Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Budgets", "Settings"], sidebar_labels
+    post finance_reset_feature_library_path, params: {settings: "sidebar"}
+    assert_redirected_to finance_settings_path(anchor: "settings-sidebar")
+    follow_redirect!
+    assert_equal ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Settings"], sidebar_labels
   end
 end

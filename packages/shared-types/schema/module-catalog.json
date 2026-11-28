@@ -1,6 +1,6 @@
 {
-  "$comment": "The Feature Library's single source of truth, read by the website (app/models/finance/module_catalog.rb) and the apps (packages/shared-types/src/modules.ts). Names and descriptions are translation keys (config/locales/billie_modules.*.yml, clients/universal/src/i18n/modules.ts). Three separate questions, never mixed: (1) AVAILABILITY, per surface ('web' is the Rails website; 'app' is the universal client on macOS, Windows, iOS and Android): 'available' = built and its essential journey works there; 'coming_soon' = not built yet; 'unsupported' = built on another surface but not on this one. (2) ENABLED = can be used. It is derived, not stored: every module that is available on a surface is enabled there, for every account, new or old. There is no per-person switch that disables a feature. (3) SIDEBAR VISIBILITY = whether the module has a sidebar entry. Only this is a personal choice (Settings > Feature Library); 'default_sidebar_visible' applies until the person chooses. Hiding a module from the sidebar never blocks its pages, never changes or deletes data, and never stops processing (e.g. recurring entries still post). Settings is a system entry, not a module: always in the sidebar, never stored. Financial services removed from the product scope are not listed here and must not be added back.",
-  "version": 2,
+  "$comment": "The Feature Library's single source of truth, read by the website (app/models/finance/module_catalog.rb) and the apps (packages/shared-types/src/modules.ts). Names and descriptions are translation keys (config/locales/billie_modules.*.yml, clients/universal/src/i18n/modules.ts). Three separate questions, never mixed: (1) AVAILABILITY, per surface ('web' is the Rails website; 'app' is the universal client on macOS, Windows, iOS and Android): 'available' = built and its essential journey works there; 'coming_soon' = not built yet; 'unsupported' = built on another surface but not on this one. (2) ENABLED = can be used. It is derived, not stored: every module that is available on a surface is enabled there, for every account, new or old. There is no per-person switch that disables a feature. (3) SIDEBAR VISIBILITY = whether the module has a sidebar entry. Only this is a personal choice (Settings > Feature Library); 'default_sidebar_visible' applies until the person chooses. (4) SIDEBAR ORDER: 'order' is the default position; a person may save their own order of sidebar entries (stored as one list per account). Entries the saved list does not mention follow it in catalog order, so a new module never reorders an existing choice. Default sidebar since version 3 (2026-11-28): Transactions, AI Insight, Financial Overview, Categories, Accounts & Assets, then Settings. Hiding a module from the sidebar never blocks its pages, never changes or deletes data, and never stops processing (e.g. recurring entries still post). Settings is a system entry, not a module: always in the sidebar, never stored. Financial services removed from the product scope are not listed here and must not be added back.",
+  "version": 3,
   "preference_format": 1,
   "surfaces": ["web", "app"],
   "availability_states": ["available", "coming_soon", "unsupported"],
@@ -22,7 +22,7 @@
       "depends_on": []
     },
     {
-      "id": "overview", "core": false, "default_sidebar_visible": false, "order": 21, "icon": "chart",
+      "id": "overview", "core": false, "default_sidebar_visible": true, "order": 21, "icon": "chart",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_dashboard", "app": "dashboard" },
       "depends_on": []
@@ -52,13 +52,13 @@
       "depends_on": []
     },
     {
-      "id": "accounts", "core": false, "default_sidebar_visible": false, "order": 40, "icon": "wallet",
+      "id": "accounts", "core": false, "default_sidebar_visible": true, "order": 40, "icon": "wallet",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_accounts", "app": "accounts" },
       "depends_on": []
     },
     {
-      "id": "categories", "core": false, "default_sidebar_visible": false, "order": 22, "icon": "tag",
+      "id": "categories", "core": false, "default_sidebar_visible": true, "order": 22, "icon": "tag",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_categories", "app": "categories" },
       "depends_on": []

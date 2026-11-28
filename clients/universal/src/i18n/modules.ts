@@ -31,6 +31,7 @@ export const modulesEn = {
   },
   status: { available: "Available", comingSoon: "Coming soon", unsupported: "Not in the app yet", inSidebar: "In sidebar", hidden: "Hidden", core: "Core" },
   sections: { overview: "Overview", allTransactions: "All Transactions", addSync: "Add & Sync", import: "Import statements", receipt: "Scan & Capture", manual: "Manual bookkeeping" },
+  sidebar: { title: "Sidebar customization", intro: "Choose which modules appear in the sidebar and in what order. Hidden modules keep working: open them from Settings or the Feature Library. Settings always stays at the bottom.", drag: "Drag to reorder", move_up: "Move {name} up", move_down: "Move {name} down", hide: "Hide", hide_label: "Hide {name} from the sidebar", settings_fixed: "Always shown, always last", help: "Drag an entry, or use the arrows, to change its position. Changes appear in the sidebar right away.", add_heading: "Add to the sidebar", add: "Add", add_label: "Add {name} to the sidebar", nothing_to_add: "Every available module is already in the sidebar.", saved: "Sidebar order saved.", stale: "The sidebar order was changed on another device. The current order is shown; try again." },
   library: {
     management: "Feature Management", preview: "Live sidebar preview", alwaysShown: "Always shown", account: "My Account", sidebarIntro: "Choose what appears in the sidebar. All available features remain usable.",
     reset: "Restore default sidebar", resetSaved: "Default sidebar restored.",
@@ -108,6 +109,7 @@ export const modulesZhCN: ModulesMessages = {
   },
   status: { available: "可用", comingSoon: "即将推出", unsupported: "应用暂不支持", inSidebar: "在侧边栏", hidden: "已隐藏", core: "核心" },
   sections: { overview: "总览", allTransactions: "全部交易", addSync: "添加与同步", import: "导入账单", receipt: "扫描与采集", manual: "手动记账" },
+  sidebar: { title: "侧边栏自定义", intro: "选择哪些模块显示在侧边栏，以及它们的顺序。隐藏的模块照常可用：可以从“设置”或功能库打开。“设置”始终在最下方。", drag: "拖动以调整顺序", move_up: "将{name}上移", move_down: "将{name}下移", hide: "隐藏", hide_label: "从侧边栏隐藏{name}", settings_fixed: "始终显示，始终在最后", help: "拖动条目或使用箭头调整位置。更改会立即反映在侧边栏中。", add_heading: "添加到侧边栏", add: "添加", add_label: "将{name}添加到侧边栏", nothing_to_add: "所有可用模块都已在侧边栏中。", saved: "侧边栏顺序已保存。", stale: "侧边栏顺序已在另一台设备上更改。现在显示的是当前顺序，请再试一次。" },
   library: {
     management: "功能管理", preview: "实时侧边栏预览", alwaysShown: "始终显示", account: "我的账户", sidebarIntro: "自定义侧边栏显示的功能，不影响功能本身的可用性。",
     reset: "恢复默认显示", resetSaved: "已恢复默认侧边栏。",
@@ -183,6 +185,7 @@ export const modulesZhTW: ModulesMessages = {
   },
   status: { available: "可用", comingSoon: "即將推出", unsupported: "應用程式暫不支援", inSidebar: "在側邊欄", hidden: "已隱藏", core: "核心" },
   sections: { overview: "總覽", allTransactions: "全部交易", addSync: "新增與同步", import: "匯入帳單", receipt: "掃描與擷取", manual: "手動記帳" },
+  sidebar: { title: "側邊欄自訂", intro: "選擇哪些模組顯示在側邊欄，以及它們的順序。隱藏的模組照常可用：可以從「設定」或功能庫開啟。「設定」始終在最下方。", drag: "拖曳以調整順序", move_up: "將{name}上移", move_down: "將{name}下移", hide: "隱藏", hide_label: "從側邊欄隱藏{name}", settings_fixed: "始終顯示，始終在最後", help: "拖曳項目或使用箭頭調整位置。變更會立即反映在側邊欄中。", add_heading: "新增到側邊欄", add: "新增", add_label: "將{name}新增到側邊欄", nothing_to_add: "所有可用模組都已在側邊欄中。", saved: "側邊欄順序已儲存。", stale: "側邊欄順序已在另一台裝置上變更。現在顯示的是目前順序，請再試一次。" },
   library: {
     management: "功能管理", preview: "即時側邊欄預覽", alwaysShown: "始終顯示", account: "我的帳戶", sidebarIntro: "自訂側邊欄顯示的功能，不影響功能本身的可用性。",
     reset: "恢復預設顯示", resetSaved: "已恢復預設側邊欄。",
@@ -258,6 +261,7 @@ export const modulesJa: ModulesMessages = {
   },
   status: { available: "利用可能", comingSoon: "近日公開", unsupported: "アプリ未対応", inSidebar: "サイドバーに表示", hidden: "非表示", core: "基本" },
   sections: { overview: "概要", allTransactions: "すべての取引", addSync: "追加と同期", import: "明細の取り込み", receipt: "スキャンと取り込み", manual: "手動記帳" },
+  sidebar: { title: "サイドバーのカスタマイズ", intro: "サイドバーに表示するモジュールとその順序を選びます。非表示のモジュールも引き続き使えます（設定や機能ライブラリから開けます）。設定は常にいちばん下に表示されます。", drag: "ドラッグして並べ替え", move_up: "{name}を上へ移動", move_down: "{name}を下へ移動", hide: "非表示", hide_label: "{name}をサイドバーから非表示にする", settings_fixed: "常に表示、常に最後", help: "項目をドラッグするか矢印を使って位置を変えます。変更はすぐにサイドバーに反映されます。", add_heading: "サイドバーに追加", add: "追加", add_label: "{name}をサイドバーに追加", nothing_to_add: "利用できるモジュールはすべてサイドバーにあります。", saved: "サイドバーの順序を保存しました。", stale: "サイドバーの順序が別のデバイスで変更されました。現在の順序を表示しています。もう一度お試しください。" },
   library: {
     management: "機能管理", preview: "サイドバーのプレビュー", alwaysShown: "常に表示", account: "マイアカウント", sidebarIntro: "サイドバーに表示する機能を選べます。利用できる機能は引き続き使えます。",
     reset: "既定のサイドバーに戻す", resetSaved: "既定のサイドバーに戻しました。",
@@ -333,6 +337,7 @@ export const modulesKo: ModulesMessages = {
   },
   status: { available: "사용 가능", comingSoon: "출시 예정", unsupported: "앱 미지원", inSidebar: "사이드바에 표시", hidden: "숨김", core: "기본" },
   sections: { overview: "개요", allTransactions: "전체 거래", addSync: "추가 및 동기화", import: "명세서 가져오기", receipt: "스캔 및 캡처", manual: "직접 기록" },
+  sidebar: { title: "사이드바 사용자 지정", intro: "사이드바에 표시할 모듈과 순서를 선택하세요. 숨긴 모듈도 계속 사용할 수 있으며 설정이나 기능 라이브러리에서 열 수 있습니다. 설정은 항상 맨 아래에 있습니다.", drag: "끌어서 순서 변경", move_up: "{name} 위로 이동", move_down: "{name} 아래로 이동", hide: "숨기기", hide_label: "사이드바에서 {name} 숨기기", settings_fixed: "항상 표시, 항상 마지막", help: "항목을 끌거나 화살표를 사용해 위치를 바꾸세요. 변경 사항은 사이드바에 바로 반영됩니다.", add_heading: "사이드바에 추가", add: "추가", add_label: "사이드바에 {name} 추가", nothing_to_add: "사용 가능한 모든 모듈이 이미 사이드바에 있습니다.", saved: "사이드바 순서를 저장했습니다.", stale: "다른 기기에서 사이드바 순서가 변경되었습니다. 현재 순서를 표시합니다. 다시 시도하세요." },
   library: {
     management: "기능 관리", preview: "사이드바 미리 보기", alwaysShown: "항상 표시", account: "내 계정", sidebarIntro: "사이드바에 표시할 기능을 선택하세요. 사용 가능한 기능은 계속 사용할 수 있습니다.",
     reset: "기본 사이드바 복원", resetSaved: "기본 사이드바를 복원했습니다.",
@@ -408,6 +413,7 @@ export const modulesEs: ModulesMessages = {
   },
   status: { available: "Disponible", comingSoon: "Próximamente", unsupported: "Aún no en la aplicación", inSidebar: "En la barra lateral", hidden: "Oculto", core: "Básico" },
   sections: { overview: "Resumen", allTransactions: "Todos los movimientos", addSync: "Añadir y sincronizar", import: "Importar extractos", receipt: "Escanear y capturar", manual: "Contabilidad manual" },
+  sidebar: { title: "Personalizar la barra lateral", intro: "Elige qué módulos aparecen en la barra lateral y en qué orden. Los módulos ocultos siguen funcionando: ábrelos desde Configuración o la Biblioteca de funciones. Configuración siempre queda abajo.", drag: "Arrastra para reordenar", move_up: "Subir {name}", move_down: "Bajar {name}", hide: "Ocultar", hide_label: "Ocultar {name} de la barra lateral", settings_fixed: "Siempre visible, siempre al final", help: "Arrastra una entrada o usa las flechas para cambiar su posición. Los cambios aparecen en la barra lateral al instante.", add_heading: "Añadir a la barra lateral", add: "Añadir", add_label: "Añadir {name} a la barra lateral", nothing_to_add: "Todos los módulos disponibles ya están en la barra lateral.", saved: "Orden de la barra lateral guardado.", stale: "El orden de la barra lateral se cambió en otro dispositivo. Se muestra el orden actual; inténtalo de nuevo." },
   library: {
     management: "Gestión de funciones", preview: "Vista previa de la barra lateral", alwaysShown: "Siempre visible", account: "Mi cuenta", sidebarIntro: "Elige qué aparece en la barra lateral. Todas las funciones disponibles se pueden seguir usando.",
     reset: "Restaurar la barra lateral predeterminada", resetSaved: "Se restauró la barra lateral predeterminada.",

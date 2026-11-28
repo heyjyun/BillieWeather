@@ -5,7 +5,7 @@ module Finance
     before_action :require_usage_region, unless: -> { %w[settings feature_library].include?(controller_name) }
     before_action :load_finance_profile
     before_action :require_available_module
-    helper_method :finance_today, :manual_mode?, :module_enabled?, :module_in_sidebar?, :sidebar_modules, :hidden_modules, :current_module_id, :module_revision
+    helper_method :finance_today, :manual_mode?, :module_enabled?, :module_in_sidebar?, :sidebar_modules, :hidden_modules, :current_module_id, :module_revision, :sidebar_order_revision
     after_action :prevent_financial_page_caching
     after_action :preserve_flash_for_turbo_reload
 
@@ -30,7 +30,13 @@ module Finance
 
     def module_revision(id) = module_choices.dig(id, "revision") || 0
 
-    def sidebar_modules = ModuleCatalog.sidebar_modules(module_choices)
+    def sidebar_order
+      @sidebar_order ||= SidebarOrder.keys_for(current_user)
+    end
+
+    def sidebar_order_revision = SidebarOrder.revision_for(current_user)
+
+    def sidebar_modules = ModuleCatalog.sidebar_modules(module_choices, order: sidebar_order)
 
     def hidden_modules = ModuleCatalog.hidden_modules(module_choices)
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_26_000300) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_28_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -561,6 +561,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_000300) do
     t.check_constraint "frequency::text = ANY (ARRAY['daily'::character varying::text, 'weekly'::character varying::text, 'monthly'::character varying::text, 'yearly'::character varying::text])", name: "finance_recurring_frequency"
   end
 
+  create_table "finance_sidebar_orders", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.jsonb "module_keys", default: [], null: false
+    t.bigint "revision", default: 1, null: false
+    t.datetime "changed_at", null: false
+    t.uuid "updated_by_device_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_finance_sidebar_orders_on_user_id", unique: true
+    t.check_constraint "jsonb_typeof(module_keys) = 'array'::text", name: "finance_sidebar_orders_keys_array"
+    t.check_constraint "revision > 0", name: "finance_sidebar_orders_revision"
+  end
+
   create_table "finance_statement_drafts", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "filename", null: false
@@ -1043,6 +1056,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_000300) do
   add_foreign_key "finance_receipts", "finance_transactions", column: ["transaction_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_finance_receipts_transaction_id_owner"
   add_foreign_key "finance_receipts", "users"
   add_foreign_key "finance_recurring_rules", "users"
+  add_foreign_key "finance_sidebar_orders", "users", on_delete: :cascade
   add_foreign_key "finance_statement_drafts", "finance_bank_accounts", column: ["bank_account_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_statement_drafts_bank_account_owner"
   add_foreign_key "finance_statement_drafts", "users"
   add_foreign_key "finance_statements", "finance_bank_accounts", column: ["bank_account_id", "user_id"], primary_key: ["id", "user_id"], name: "fk_statements_bank_account_owner"

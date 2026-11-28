@@ -16,6 +16,7 @@ import type { ModuleDefinition } from "@billie/shared-types";
 import { AccountSection, AppearanceSection, RulesSection } from "./accountSections";
 import { DataSection, DatabaseSection, SyncSection } from "./dataSections";
 import { AutomationSection, FeatureLibrarySection, ModuleSettingsSection } from "./featureSections";
+import { SidebarCustomizationSection } from "./SidebarCustomization";
 
 export type SettingsArea = "features" | "database" | "data" | "sync" | "account" | "appearance" | "rules" | "modules";
 export const AREAS: readonly SettingsArea[] = ["features", "database", "data", "sync", "account", "appearance", "rules", "modules"];
@@ -41,6 +42,7 @@ export interface SettingsSection {
 }
 
 export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
+  { id: "sidebar", area: "features", render: (props) => <SidebarCustomizationSection {...props} /> },
   { id: "feature-library", area: "features", render: (props) => <FeatureLibrarySection {...props} /> },
   { id: "database", area: "database", render: (props) => <DatabaseSection {...props} /> },
   { id: "data", area: "data", needsShell: true, render: (props) => <DataSection {...props} /> },

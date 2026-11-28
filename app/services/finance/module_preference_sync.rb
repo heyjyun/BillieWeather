@@ -8,6 +8,10 @@ module Finance
   # Wire contract (format 2): a choice is `sidebar_visible`. Apps released before 2026-11-26 send and
   # read the same value under the legacy name `enabled`, so both names are accepted and both are
   # returned; they always carry the same value. Neither name ever means "the feature is switched off".
+  #
+  # Sidebar order (2026-11-28): the snapshot reports `sidebar_order` (null when none is saved) and a
+  # request may carry `sidebar_order: {module_keys, expected_revision}`, with or without module changes.
+  # Its revision joins the account revision. Apps that do not know it never send it and ignore it.
   class ModulePreferenceSync
     FORMAT = 2
     MAX_CHANGES = 20
@@ -25,12 +29,12 @@ module Finance
     end
 
     def snapshot
-      @user.with_lock { snapshot_for(choices) }
+      @user.with_lock { snapshot_for(choices, SidebarOrder.find_by(user_id: @user.id)) }
     end
 
     def apply(request)
-      device, mutation, base_revision, changes = parse(request)
-      digest = Digest::SHA256.hexdigest(JSON.generate([device, base_revision, changes]))
+      device, mutation, base_revision, changes, order = parse(request)
+      digest = Digest::SHA256.hexdigest(JSON.generate([device, base_revision, changes, order].compact))
       @user.with_lock do
         prior = ModulePreferenceMutation.find_by(user_id: @user.id, mutation_id: mutation)
         if prior
@@ -39,6 +43,17 @@ module Finance
         end
 
         rows = choices
+        order_row = SidebarOrder.find_by(user_id: @user.id)
+        order_result = {}
+        if order
+          keys, expected = order
+          if (order_row&.revision || 0) == expected
+            order_row = SidebarOrder.write!(user: @user, record: order_row, module_keys: keys, device_id: device)
+            order_result = {order_applied: true, order_conflict: nil}
+          else
+            order_result = {order_applied: false, order_conflict: {proposed_module_keys: keys, current: order_row && order_choice(order_row)}}
+          end
+        end
         applied = []
         conflicts = []
         changes.each do |id, visible, expected|
@@ -53,7 +68,7 @@ module Finance
           end
         end
 
-        result = snapshot_for(rows).merge(applied: applied, conflicts: conflicts).deep_stringify_keys
+        result = snapshot_for(rows, order_row).merge(applied: applied, conflicts: conflicts, **order_result).deep_stringify_keys
         ModulePreferenceMutation.create!(user: @user, mutation_id: mutation, device_id: device, request_hash: digest, result: result)
         result
       end
@@ -65,11 +80,16 @@ module Finance
       ModulePreference.where(user_id: @user.id).index_by(&:module_key)
     end
 
-    def snapshot_for(rows)
+    def snapshot_for(rows, order_row)
       {
-        format: FORMAT, account_id: @user.finance_owner_uid, server_revision: rows.values.sum(&:revision),
-        modules: rows.transform_values { |record| choice(record) }, defaults_version: ModuleCatalog::SCHEMA.fetch("version")
+        format: FORMAT, account_id: @user.finance_owner_uid, server_revision: rows.values.sum(&:revision) + (order_row&.revision || 0),
+        modules: rows.transform_values { |record| choice(record) }, defaults_version: ModuleCatalog::SCHEMA.fetch("version"),
+        sidebar_order: order_row && order_choice(order_row)
       }
+    end
+
+    def order_choice(record)
+      {module_keys: record.module_keys, revision: record.revision, changed_at: record.changed_at.utc.iso8601(6), updated_by_device_id: record.updated_by_device_id}
     end
 
     def choice(record)
@@ -88,7 +108,9 @@ module Finance
       base_revision = request["base_server_revision"]
       raw = request["changes"]
       raise Invalid unless request["format"] == FORMAT && uuid?(device) && uuid?(mutation) && revision?(base_revision)
-      raise Invalid unless raw.is_a?(Array) && (1..MAX_CHANGES).cover?(raw.length)
+      order = parse_order(request["sidebar_order"])
+      minimum = order ? 0 : 1 # an order-only request carries no module change
+      raise Invalid unless raw.is_a?(Array) && (minimum..MAX_CHANGES).cover?(raw.length)
 
       changes = raw.map do |item|
         raise Invalid unless item.is_a?(Hash)
@@ -99,7 +121,17 @@ module Finance
         [id, visible, expected]
       end
       raise Invalid unless changes.map(&:first).uniq.length == changes.length
-      [device, mutation, base_revision, changes.sort_by(&:first)]
+      [device, mutation, base_revision, changes.sort_by(&:first), order]
+    end
+
+    # nil when absent; [keys, expected_revision] when valid. Keys: modules the apps can show, each once.
+    def parse_order(raw)
+      return nil if raw.nil?
+      raise Invalid unless raw.is_a?(Hash)
+      keys, expected = raw.values_at("module_keys", "expected_revision")
+      raise Invalid unless keys.is_a?(Array) && keys.length <= ModuleCatalog::IDS.length && revision?(expected)
+      raise Invalid unless keys.all? { |id| id.is_a?(String) && ModuleCatalog.find(id)&.available?("app") } && keys.uniq.length == keys.length
+      [keys, expected]
     end
 
     # `sidebar_visible`, or the legacy `enabled` from older apps. Both present and different: invalid.

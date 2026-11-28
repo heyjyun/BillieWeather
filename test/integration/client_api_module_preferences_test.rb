@@ -184,4 +184,66 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
     assert_equal ["transactions"], reply["applied"]
     assert_equal records, [Finance::Transaction.find(tx.id).attributes, Finance::Statement.where(user: @user).count]
   end
+
+  def order_body(keys, expected, device: DEVICE_A, id: SecureRandom.uuid, changes: [])
+    {format: 2, device_id: device, mutation_id: id, base_server_revision: 0, changes: changes, sidebar_order: {module_keys: keys, expected_revision: expected}}
+  end
+
+  test "sidebar order: reported as null until saved, then synced with its own revision" do
+    get PATH, headers: @auth
+    assert_nil response.parsed_body.fetch("sidebar_order")
+
+    reply = send_update(order_body(%w[accounts transactions], 0))
+    assert_response :success
+    assert_equal true, reply["order_applied"]
+    assert_equal %w[accounts transactions], reply.dig("sidebar_order", "module_keys")
+    assert_equal 1, reply.dig("sidebar_order", "revision")
+    assert_equal DEVICE_A, reply.dig("sidebar_order", "updated_by_device_id")
+    assert_equal 1, reply["server_revision"]
+
+    # Another device sees it; the website applies it too.
+    get PATH, headers: @auth
+    assert_equal %w[accounts transactions], response.parsed_body.dig("sidebar_order", "module_keys")
+    assert_equal %w[accounts transactions ai_assistant overview categories], Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user), order: Finance::SidebarOrder.keys_for(@user)).map(&:id)
+    # Other accounts are untouched.
+    get PATH, headers: headers_for(@other)
+    assert_nil response.parsed_body.fetch("sidebar_order")
+  end
+
+  test "sidebar order: a stale revision is a conflict that keeps the newer order" do
+    send_update(order_body(%w[accounts], 0, device: DEVICE_B))
+    reply = send_update(order_body(%w[overview], 0))
+    assert_response :success
+    assert_equal false, reply["order_applied"]
+    assert_equal %w[overview], reply.dig("order_conflict", "proposed_module_keys")
+    assert_equal %w[accounts], reply.dig("order_conflict", "current", "module_keys")
+    assert_equal %w[accounts], Finance::SidebarOrder.keys_for(@user)
+  end
+
+  test "sidebar order: a retry with the same mutation id is answered once; order and choices can go together" do
+    id = SecureRandom.uuid
+    first = send_update(order_body(%w[categories], 0, id: id, changes: [change("budgets", true)]))
+    again = send_update(order_body(%w[categories], 0, id: id, changes: [change("budgets", true)]))
+    assert_equal first, again
+    assert_equal ["budgets"], first["applied"]
+    assert_equal 1, Finance::SidebarOrder.revision_for(@user)
+    assert_equal 2, first["server_revision"]
+  end
+
+  test "sidebar order: invalid lists are refused and nothing is stored" do
+    [%w[accounts accounts], %w[forecast], %w[crypto_wallets], %w[goals], "accounts", [1]].each do |keys|
+      put PATH, params: order_body(keys, 0), as: :json, headers: @auth
+      assert_response :unprocessable_entity, keys.inspect
+    end
+    put PATH, params: request_body.merge(changes: []), as: :json, headers: @auth
+    assert_response :unprocessable_entity, "no change and no order"
+    assert_equal 0, Finance::SidebarOrder.count
+  end
+
+  test "older apps that never send an order keep working and see the new field as extra data" do
+    reply = send_update(request_body(legacy_change("budgets", true)))
+    assert_equal ["budgets"], reply["applied"]
+    assert_nil reply["order_applied"]
+    assert reply.key?("sidebar_order")
+  end
 end

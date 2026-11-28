@@ -67,11 +67,11 @@ it("with every module in the sidebar, the same page opens from the sidebar", asy
   expect(document.getElementById("page-context")).toBeNull();
 });
 
-it("outside the app shell, pages see the catalog defaults: a minimal sidebar, every built module usable", () => {
+it("outside the app shell, pages see the catalog defaults: the five default entries, every built module usable", () => {
   function Probe() {
     const { usable, inSidebar, sidebarList } = useModules();
-    return <p data-testid="probe">{sidebarList.map((module) => module.id).join(",")}|{String(inSidebar("categories"))}|{String(usable("categories"))}|{String(usable("ledgers"))}</p>;
+    return <p data-testid="probe">{sidebarList.map((module) => module.id).join(",")}|{String(inSidebar("budgets"))}|{String(usable("budgets"))}|{String(usable("ledgers"))}</p>;
   }
   render(<I18nProvider initial="en"><Probe /></I18nProvider>);
-  expect(screen.getByTestId("probe").textContent).toBe("transactions,ai_assistant|false|true|false");
+  expect(screen.getByTestId("probe").textContent).toBe("transactions,ai_assistant,overview,categories,accounts|false|true|false");
 });

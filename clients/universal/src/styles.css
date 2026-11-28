@@ -737,3 +737,16 @@ button.bw-dropzone { width: 100%; font: inherit; }
 .bw-page-context .bw-link-button { padding: 0 4px; margin-left: -4px; }
 .bw-page-context strong { color: var(--ink); font-weight: var(--bw-font-weight-semibold); }
 .bw-page-context .bw-caption::before { content: "·"; margin-right: 8px; }
+
+/* Settings › Sidebar customization (settings/SidebarCustomization.tsx; same as the website) */
+.bw-sidebar-order, .bw-sidebar-add { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 6px; }
+.bw-sidebar-order-item, .bw-sidebar-add li { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--bw-color-border); border-radius: var(--bw-radius-md); background: var(--bw-color-surface); }
+.bw-sidebar-order-item[draggable="true"] { cursor: grab; }
+.bw-sidebar-order-item.is-dragging { opacity: 0.55; border-style: dashed; }
+.bw-sidebar-order-item.is-fixed { background: var(--bw-color-surface-muted); cursor: default; }
+.bw-sidebar-order-name { display: inline-flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.bw-sidebar-order-actions { display: inline-flex; align-items: center; gap: 4px; }
+.bw-drag-handle { display: inline-flex; color: var(--bw-color-text-muted); }
+.bw-sidebar-order-actions .bw-icon-button { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 36px; padding: 4px; border: none; border-radius: var(--bw-radius-md); background: none; color: var(--bw-color-text-muted); cursor: pointer; }
+.bw-sidebar-order-actions .bw-icon-button:hover:not(:disabled) { color: var(--bw-color-text); background: var(--bw-color-surface-muted); }
+.bw-sidebar-order-actions .bw-icon-button:disabled { opacity: 0.35; cursor: default; }

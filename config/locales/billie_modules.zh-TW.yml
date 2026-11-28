@@ -1,6 +1,22 @@
 zh-TW:
   billie:
     modules:
+      sidebar:
+        title: "側邊欄自訂"
+        intro: "選擇哪些模組顯示在側邊欄，以及它們的順序。隱藏的模組照常可用：可以從「設定」或功能庫開啟。「設定」始終在最下方。"
+        drag: "拖曳以調整順序"
+        move_up: "將%{name}上移"
+        move_down: "將%{name}下移"
+        hide: "隱藏"
+        hide_label: "從側邊欄隱藏%{name}"
+        settings_fixed: "始終顯示，始終在最後"
+        help: "拖曳項目或使用箭頭調整位置。變更會立即反映在側邊欄中。"
+        add_heading: "新增到側邊欄"
+        add: "新增"
+        add_label: "將%{name}新增到側邊欄"
+        nothing_to_add: "所有可用模組都已在側邊欄中。"
+        saved: "側邊欄順序已儲存。"
+        stale: "側邊欄順序已在另一台裝置上變更。現在顯示的是目前順序，請再試一次。"
       nav:
         main: 主導覽
         modules: 你的模組

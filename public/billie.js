@@ -744,6 +744,7 @@
     document.querySelectorAll("[data-local-manage]").forEach(setupLocalManage);
     document.querySelectorAll("[data-feature-library]").forEach(setupFeatureLibrary);
     document.querySelectorAll("details[data-category-expand-url]").forEach(setupCategoryExpand);
+    document.querySelectorAll("[data-sidebar-customization]").forEach(setupSidebarOrder);
   }
 
   // Category tree (docs/architecture/category-hierarchy.md): opening or closing a category's
@@ -760,6 +761,75 @@
         headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token ? token.content : "" },
         body: JSON.stringify({ expanded: details.open })
       }).catch(function () {});
+    });
+  }
+
+  // Settings › Sidebar customization: drag the sidebar entries into a new order. The arrow buttons do
+  // the same without JavaScript. The new order is saved (PATCH, FeatureLibraryController#reorder) and
+  // the sidebar and this section are replaced with what the server returns, so they always agree.
+  function setupSidebarOrder(root) {
+    if (root.dataset.sidebarOrderReady) return;
+    root.dataset.sidebarOrderReady = "1";
+    var list = root.querySelector("[data-sidebar-order]");
+    var status = root.querySelector("[data-sidebar-status]");
+    if (!list || !window.fetch) return;
+    var dragged = null;
+    function items() { return Array.prototype.slice.call(list.querySelectorAll("li[draggable=true]")); }
+    function save(keys) {
+      var token = document.querySelector('meta[name="csrf-token"]');
+      root.setAttribute("aria-busy", "true");
+      fetch(root.dataset.orderUrl, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-Token": token ? token.content : "" },
+        body: JSON.stringify({ module_keys: keys, expected_revision: Number(root.dataset.orderRevision || 0) })
+      }).then(function (response) {
+        return response.json().then(function (data) { return { ok: response.ok || response.status === 409, data: data }; });
+      }).then(function (result) {
+        root.removeAttribute("aria-busy");
+        if (!result.ok) { if (status) status.textContent = result.data.message || ""; return; }
+        var holder = document.createElement("div");
+        var nav = document.getElementById("module-nav");
+        if (nav && result.data.nav) {
+          holder.innerHTML = result.data.nav;
+          var freshNav = holder.querySelector("#module-nav");
+          if (freshNav) nav.replaceWith(freshNav);
+        }
+        var preview = document.querySelector("[data-sidebar-preview]");
+        if (preview && result.data.preview) {
+          holder.innerHTML = result.data.preview;
+          var freshPreview = holder.querySelector("[data-sidebar-preview]");
+          if (freshPreview) preview.replaceWith(freshPreview);
+        }
+        if (result.data.customization) {
+          holder.innerHTML = result.data.customization;
+          var fresh = holder.querySelector("[data-sidebar-customization]");
+          if (fresh) {
+            root.replaceWith(fresh);
+            setupSidebarOrder(fresh);
+            var freshStatus = fresh.querySelector("[data-sidebar-status]");
+            if (freshStatus) freshStatus.textContent = result.data.message || "";
+          }
+        }
+      }).catch(function () { root.removeAttribute("aria-busy"); });
+    }
+    items().forEach(function (item) {
+      item.addEventListener("dragstart", function (event) {
+        dragged = item;
+        item.classList.add("is-dragging");
+        if (event.dataTransfer) { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", item.dataset.moduleKey); }
+      });
+      item.addEventListener("dragend", function () { item.classList.remove("is-dragging"); dragged = null; });
+      item.addEventListener("dragover", function (event) {
+        if (!dragged || dragged === item) return;
+        event.preventDefault();
+        var box = item.getBoundingClientRect();
+        list.insertBefore(dragged, event.clientY < box.top + box.height / 2 ? item : item.nextSibling);
+      });
+      item.addEventListener("drop", function (event) {
+        event.preventDefault();
+        save(items().map(function (entry) { return entry.dataset.moduleKey; }));
+      });
     });
   }
 

@@ -1,6 +1,22 @@
 en:
   billie:
     modules:
+      sidebar:
+        title: "Sidebar customization"
+        intro: "Choose which modules appear in the sidebar and in what order. Hidden modules keep working: open them from Settings or the Feature Library. Settings always stays at the bottom."
+        drag: "Drag to reorder"
+        move_up: "Move %{name} up"
+        move_down: "Move %{name} down"
+        hide: "Hide"
+        hide_label: "Hide %{name} from the sidebar"
+        settings_fixed: "Always shown, always last"
+        help: "Drag an entry, or use the arrows, to change its position. Changes appear in the sidebar right away."
+        add_heading: "Add to the sidebar"
+        add: "Add"
+        add_label: "Add %{name} to the sidebar"
+        nothing_to_add: "Every available module is already in the sidebar."
+        saved: "Sidebar order saved."
+        stale: "The sidebar order was changed on another device. The current order is shown; try again."
       nav:
         main: Main navigation
         modules: Your modules

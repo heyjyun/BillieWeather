@@ -1,13 +1,13 @@
 // Feature Library state: which modules are in the sidebar. Whether a module can be used never depends
 // on it (isModuleEnabled: every module available in the app works). Independent of the interface mode
 // and the active ledger.
-import { enabledModules, hiddenModules, isInSidebar, isModuleEnabled, sidebarModules, type ModuleDefinition, type ModulePreferences } from "@billie/shared-types";
+import { enabledModules, hiddenModules, isInSidebar, isModuleEnabled, setSidebarOrder as orderPreferences, sidebarModules, type ModuleDefinition, type ModulePreferences } from "@billie/shared-types";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { ModulePreferenceRequestError, fetchModulePreferences, putModulePreferences } from "../services/modulePreferenceApi";
 import { chooseSidebar, loadModulePreferences, saveModulePreferences } from "../services/modulePreferences";
 import {
-  acknowledgeMutation, canSyncChoice, displayedPreferences, enqueuePreference, freezeMutation, isSnapshot, loadReplica,
-  observeSnapshot, resolvePreference, restoreReplicaDefaults, saveReplica, serverVisible, type ModuleConflict, type ModuleReplica,
+  acknowledgeMutation, acknowledgeOrder, canSyncChoice, canSyncOrder, displayedPreferences, enqueueOrder, enqueuePreference, freezeMutation, freezeOrder,
+  isSnapshot, loadReplica, observeSnapshot, resolvePreference, restoreReplicaDefaults, saveReplica, serverVisible, type ModuleConflict, type ModuleReplica,
 } from "../services/moduleSync";
 
 type SyncStatus = "local" | "synced" | "pending" | "error" | "storage_error";
@@ -18,11 +18,13 @@ interface ModulesContextValue {
   usable: (id: string) => boolean;
   /** Whether the module has a sidebar entry. */
   inSidebar: (id: string) => boolean;
-  /** The sidebar entries, in catalog order (Settings follows them, always). */
+  /** The sidebar entries, in the person's order (Settings follows them, always). */
   sidebarList: ModuleDefinition[];
   /** Usable modules without a sidebar entry (opened from Settings or the Feature Library). */
   hiddenList: ModuleDefinition[];
   setSidebarVisible: (id: string, visible: boolean) => void;
+  /** Saves the order of the sidebar entries (ids as the person arranged them). */
+  setSidebarOrder: (ids: string[]) => void;
   restoreSidebarDefaults: () => void;
   status: SyncStatus;
   conflicts: Record<string, ModuleConflict>;
@@ -47,7 +49,7 @@ const usable = (id: string) => isModuleEnabled(id, "app");
 const fallback: ModulesContextValue = {
   preferences: { format: 1, modules: {} }, usable, inSidebar: (id) => isInSidebar(id, null, "app"),
   sidebarList: sidebarModules(null, "app"), hiddenList: hiddenModules(null, "app"),
-  setSidebarVisible: () => undefined, restoreSidebarDefaults: () => undefined, status: "local", conflicts: {}, serverInSidebar: (id) => isInSidebar(id, null, "app"), resolve: () => undefined,
+  setSidebarVisible: () => undefined, setSidebarOrder: () => undefined, restoreSidebarDefaults: () => undefined, status: "local", conflicts: {}, serverInSidebar: (id) => isInSidebar(id, null, "app"), resolve: () => undefined,
 };
 const noToken = () => null;
 const SYNC_BUILD_ENABLED = import.meta.env.VITE_BILLIE_MODULE_SYNC !== "0";
@@ -80,13 +82,27 @@ export function ModulesProvider({ ownerKey, accountId, getToken = noToken, offli
     wake.current?.();
   };
 
+  const setSidebarOrder = (ids: string[]) => {
+    const state = current.current;
+    if (!state) {
+      return setLocal((previous) => {
+        const next = orderPreferences(previous, ids, "app");
+        saveModulePreferences(ownerKey, next);
+        return next;
+      });
+    }
+    const next = enqueueOrder(state, orderPreferences(displayedPreferences(state), ids, "app").order ?? []);
+    if (commit(next)) setStatus(canSyncOrder(next) ? "pending" : status);
+    wake.current?.();
+  };
+
   const restoreSidebarDefaults = () => {
     const state = current.current;
     if (!state) {
       setLocal((previous) => {
         const choices = { ...previous.modules };
         for (const module of enabledModules("app")) delete choices[module.id];
-        const next = { ...previous, modules: choices };
+        const next = { format: previous.format, modules: choices };
         saveModulePreferences(ownerKey, next);
         return next;
       });
@@ -141,7 +157,7 @@ export function ModulesProvider({ ownerKey, accountId, getToken = noToken, offli
           if (!isSnapshot(remote, owner)) throw new Error("Wrong module preference account");
           state = observeSnapshot(current.current!, remote);
           if (!commit(state)) return;
-          if (!state.pending.length) {
+          if (!state.pending.length && !(state.orderPending.length && canSyncOrder(state))) {
             setStatus("synced");
             retryCount = 0;
             return;
@@ -156,11 +172,20 @@ export function ModulesProvider({ ownerKey, accountId, getToken = noToken, offli
           state = acknowledgeMutation(current.current!, item.id, reply);
           if (!commit(state)) return;
         }
+        while (state.orderPending.length && canSyncOrder(state) && active()) {
+          state = freezeOrder(state);
+          const item = state.orderPending[0];
+          if (!item?.request || !commit(state)) return;
+          const reply = await putModulePreferences(token, item.request, signal);
+          if (!active()) return;
+          state = acknowledgeOrder(current.current!, item.id, reply);
+          if (!commit(state)) return;
+        }
         const remote = await fetchModulePreferences(token, signal);
         if (!active()) return;
         if (!isSnapshot(remote, owner)) throw new Error("Wrong module preference account");
         state = observeSnapshot(current.current!, remote);
-        if (commit(state)) setStatus(state.pending.length ? "pending" : "synced");
+        if (commit(state)) setStatus(state.pending.length || (state.orderPending.length && canSyncOrder(state)) ? "pending" : "synced");
         retryCount = 0;
       } catch (error) {
         if (!active()) return;
@@ -205,7 +230,7 @@ export function ModulesProvider({ ownerKey, accountId, getToken = noToken, offli
   return (
     <ModulesContext.Provider value={{
       preferences, usable, inSidebar, sidebarList: sidebarModules(preferences, "app"), hiddenList: hiddenModules(preferences, "app"),
-      setSidebarVisible, restoreSidebarDefaults, status, conflicts: replica?.conflicts ?? {}, resolve, serverInSidebar,
+      setSidebarVisible, setSidebarOrder, restoreSidebarDefaults, status, conflicts: replica?.conflicts ?? {}, resolve, serverInSidebar,
     }}>
       {children}
     </ModulesContext.Provider>

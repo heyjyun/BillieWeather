@@ -1,6 +1,22 @@
 zh-CN:
   billie:
     modules:
+      sidebar:
+        title: "侧边栏自定义"
+        intro: "选择哪些模块显示在侧边栏，以及它们的顺序。隐藏的模块照常可用：可以从“设置”或功能库打开。“设置”始终在最下方。"
+        drag: "拖动以调整顺序"
+        move_up: "将%{name}上移"
+        move_down: "将%{name}下移"
+        hide: "隐藏"
+        hide_label: "从侧边栏隐藏%{name}"
+        settings_fixed: "始终显示，始终在最后"
+        help: "拖动条目或使用箭头调整位置。更改会立即反映在侧边栏中。"
+        add_heading: "添加到侧边栏"
+        add: "添加"
+        add_label: "将%{name}添加到侧边栏"
+        nothing_to_add: "所有可用模块都已在侧边栏中。"
+        saved: "侧边栏顺序已保存。"
+        stale: "侧边栏顺序已在另一台设备上更改。现在显示的是当前顺序，请再试一次。"
       nav:
         main: 主导航
         modules: 你的模块
