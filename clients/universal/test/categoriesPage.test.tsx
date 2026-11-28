@@ -83,13 +83,11 @@ it("adds a category, categorizes with AI after consent, and manages the category
 
   // Where the money goes: the dashboard splits spending by category and links to each one's details.
   await nav("Dashboard");
-  const mix = within(await screen.findByRole("list", { name: /^Spending split by category/ }));
-  const housing = mix.getByRole("listitem", { name: /^Housing: \$1,650\.00, \d+% of spending$/ });
-  expect(housing.className).toContain("bw-viz-0");
-  await act(async () => fireEvent.click(screen.getByRole("button", { name: "Housing" })));
-  await screen.findByRole("heading", { name: "Housing" });
-  expect(screen.getByRole("heading", { name: "Biggest merchants" })).toBeTruthy();
-  expect(screen.getByRole("list", { name: "Monthly spending in this category" }).children).toHaveLength(12);
+  const mix = within(await screen.findByRole("region", { name: "Spending breakdown" }));
+  expect(await mix.findByText("$1,650.00")).toBeTruthy();
+  await act(async () => fireEvent.click(await mix.findByRole("button", { name: "Housing" })));
+  expect(await screen.findByRole("heading", { name: "Transactions", level: 1 })).toBeTruthy();
+  expect(await screen.findByText(/Monthly rent - Oak Street Apartments/i)).toBeTruthy();
 
   await nav("Categories");
   await screen.findByRole("heading", { name: "All categories" });

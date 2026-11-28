@@ -3,7 +3,7 @@
 // balance (余额) as one adjustment entry.
 import { ACCOUNT_TYPES, formatMoney, isLiability, type AccountType } from "@billie/finance-core";
 import { CURRENCIES } from "@billie/shared-types";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useDraftState, useMode } from "../hooks/useMode";
 import { currencyOptions, SearchableSelect } from "../components/SearchableSelect";
 import { Empty, Money, PageHeading } from "../components/common";
@@ -140,12 +140,13 @@ function AdjustForm({ account, onDone, onCancel }: { account: Account; onDone: (
   );
 }
 
-export function Accounts() {
+export function Accounts({ create = false }: { create?: boolean } = {}) {
   const { m } = useI18n();
   const x = m.ledger.accounts;
   const { store, accounts, currency, refresh } = useFinance();
   // Which form is open is part of the draft too, so it reopens after a mode switch.
   const [editing, setEditing] = useDraftState<Account | "new" | null>("accounts-page", "editing", null);
+  useEffect(() => { if (create) setEditing(old => old ?? "new"); }, [create, setEditing]);
   const [adjusting, setAdjusting] = useState<Account | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [status, setStatus] = useState("");

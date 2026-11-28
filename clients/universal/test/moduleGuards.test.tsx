@@ -74,7 +74,7 @@ it("revisits sidebar destinations and uses desktop Back and Forward without writ
   const navigation = within(await screen.findByRole("navigation"));
   const pages = [
     ["Transactions", "Transactions"], ["AI Insight", "AI Insight"],
-    ["Financial Overview", /good (morning|afternoon|evening)/i], ["Categories", "Categories"],
+    ["Financial Overview", "Financial Overview"], ["Categories", "Categories"],
     ["Accounts & Assets", "Accounts"], ["Settings", "Settings & privacy"],
   ] as const;
   for (const [label, heading] of pages) {

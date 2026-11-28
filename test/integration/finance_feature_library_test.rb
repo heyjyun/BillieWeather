@@ -45,8 +45,8 @@ class FinanceFeatureLibraryTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal ["Financial Overview", "AI Insight", "Settings"], sidebar_labels
     assert_select "#module-nav a[href=?]", finance_dashboard_path, count: 1
-    assert_select "#transactions-tabs .bw-tab", count: 3
-    assert_select "#transactions-tabs .bw-tab.is-active", text: "Overview"
+    assert_select "#transactions-tabs", count: 0
+    assert_select "h1", text: "Financial Overview"
 
     patch finance_mode_path, params: {mode: "manual"}
     get finance_transactions_path

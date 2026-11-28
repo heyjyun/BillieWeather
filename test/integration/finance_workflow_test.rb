@@ -280,11 +280,8 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     csv = "Date,Description,Amount,Balance,Bank,Account Number,Account Type\n#{(Date.current - 1).iso8601},Coffee,-4.50,812.34,Chase,1111,Checking\n"
     upload_csv(csv) { |file| post finance_statements_path, params: {file: file} }
     get finance_dashboard_path
-    assert_select "#dashboard-balance strong", text: "$812.34"
-    assert_select "#dashboard-balance small", text: /Automatically totals/
-    assert_select "#dashboard-balance a", text: /View account balances/
-    assert_select "#dashboard-balance .bw-balance-age", text: /Balance is as of/
-    assert_select "#dashboard-balance a[href*='edit=1']", text: /Enter or edit balance/
+    get finance_dashboard_path(format: :json, section: "position")
+    assert_equal 81_234, JSON.parse(response.body).fetch("holdings").first.fetch("balance")
     get finance_forecast_path
     assert_select "#forecast-starting-balance", text: /The forecast starts today/
     assert_select "#forecast-starting-balance .bw-balance-age", text: /Balance is as of/
@@ -298,7 +295,8 @@ class FinanceWorkflowTest < ActionDispatch::IntegrationTest
     assert_redirected_to finance_forecast_path
     assert_equal "manual", @user.finance_profile.reload.balance_source
     get finance_dashboard_path
-    assert_select "#dashboard-balance small", text: /Entered by you/
+    get finance_dashboard_path(format: :json, section: "position")
+    assert_equal 100_000, JSON.parse(response.body).fetch("cashOverride")
     get finance_forecast_path
     assert_select "#balance form button", text: /automatic account total/i
 

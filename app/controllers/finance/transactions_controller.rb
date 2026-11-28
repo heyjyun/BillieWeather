@@ -10,9 +10,15 @@ module Finance
       @merchants = current_user.finance_merchants.ordered.to_a
       @projects = current_user.finance_projects.ordered.to_a
       @tags = current_user.finance_tags.ordered.to_a
-      @filters = params.permit(:search, :category, :kind, :start_date, :end_date, :account_id, :merchant_id, :project_id, :tag_id).to_h
+      @filters = params.permit(:search, :category, :currency, :activity, :kind, :start_date, :end_date, :account_id, :merchant_id, :project_id, :tag_id).to_h
       post_auto_recurring
       scope = current_user.finance_transactions.live.includes(:statement, :bank_account, :merchant, :project, :tags).order(booked_on: :desc, id: :desc)
+      scope = OverviewData.in_currency(scope, @filters["currency"], @profile.currency) if @filters["currency"].present?
+      case @filters["activity"]
+      when "income" then scope = scope.included.income_kind
+      when "spending" then scope = scope.included.expense_kind
+      when "counted" then scope = scope.included
+      end
       if params[:start_date].present? || params[:end_date].present?
         begin
           @date_range = DashboardPeriod.new(preset: "custom", start_date: params[:start_date], end_date: params[:end_date])
@@ -27,7 +33,7 @@ module Finance
         scope = scope.where("description ILIKE :term OR original_description ILIKE :term OR note ILIKE :term", term: term)
       end
       # A category means itself plus all its descendants (docs/architecture/category-hierarchy.md).
-      scope = scope.where(category: @category_tree.subtree(@filters["category"])) if @filters["category"].present? && @category_tree.include?(@filters["category"])
+      scope = scope.where(category: @category_tree.subtree(@filters["category"])) if @filters["category"].present? && (@category_tree.include?(@filters["category"]) || @filters["category"] == Transaction::UNCATEGORIZED)
       scope = scope.where(bank_account_id: @filters["account_id"]) if @accounts.any? { |a| a.id.to_s == @filters["account_id"] }
       scope = scope.where(merchant_id: @filters["merchant_id"]) if @merchants.any? { |m| m.id.to_s == @filters["merchant_id"] }
       scope = scope.where(project_id: @filters["project_id"]) if @projects.any? { |p| p.id.to_s == @filters["project_id"] }
@@ -130,7 +136,7 @@ module Finance
         rows << ["Date", "Description", "Amount", "Currency", "Category", "Tax review", "Excluded"]
         scope.find_each do |transaction|
           rows << [transaction.booked_on.iso8601, TransactionCsv.safe_text(transaction.description), transaction.amount.to_s("F"),
-            transaction.statement&.currency || currency, TransactionCsv.safe_text(transaction.category), transaction.tax_review, transaction.excluded]
+            transaction.statement&.currency || transaction.bank_account&.currency || currency, TransactionCsv.safe_text(transaction.category), transaction.tax_review, transaction.excluded]
         end
       end
       send_data csv, type: "text/csv; charset=utf-8", disposition: "attachment", filename: "billieweather-transactions-#{Date.current.iso8601}.csv"

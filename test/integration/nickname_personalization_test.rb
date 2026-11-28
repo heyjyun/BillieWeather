@@ -109,8 +109,8 @@ class NicknamePersonalizationTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_select "#nickname-prompt h2", text: "What should we call you?"
-    assert_select "h1#dashboard-greeting", text: /\AGood (morning|afternoon|evening)!\z/
-    refute_includes css_select("h1#dashboard-greeting").text, user.email
+    assert_select "#dashboard-greeting", text: /\AGood (morning|afternoon|evening)!\z/
+    refute_includes css_select("#dashboard-greeting").text, user.email
 
     post dismiss_nickname_prompt_finance_settings_path
     assert_redirected_to finance_dashboard_path
@@ -132,7 +132,7 @@ class NicknamePersonalizationTest < ActionDispatch::IntegrationTest
     assert_equal "Nice to meet you, 김윤!", flash[:notice]
     follow_redirect!
     assert_select "#nickname-prompt", count: 0
-    assert_select "h1#dashboard-greeting", text: /김윤/
+    assert_select "#dashboard-greeting", text: /김윤/
   end
 
   # ---- account settings ----------------------------------------------------------------------
@@ -157,18 +157,16 @@ class NicknamePersonalizationTest < ActionDispatch::IntegrationTest
     sign_in user
     travel_to Time.utc(2026, 11, 17, 23, 30) do # 08:30 in Tokyo
       get finance_dashboard_path, params: {locale: "en"}
-      assert_select "h1#dashboard-greeting[data-day-part='morning']", text: "Good morning, Jyun!"
-      # Nothing imported yet; the name is said once, in the greeting, not again underneath.
-      assert_select "#dashboard-greeting-subtitle", text: "Ready to understand your financial weather?"
-      assert_select "#dashboard-greeting .bw-greeting-glyph[aria-hidden='true']"
+      assert_select "#dashboard-greeting[data-day-part='morning']", text: "Good morning, Jyun!"
+      assert_select "h1", text: "Financial Overview"
     end
     travel_to Time.utc(2026, 11, 17, 5, 0) do # 14:00 in Tokyo
       get finance_dashboard_path, params: {locale: "zh-CN"}
-      assert_select "h1#dashboard-greeting", text: "下午好，Jyun！"
+      assert_select "#dashboard-greeting", text: "下午好，Jyun！"
     end
     travel_to Time.utc(2026, 11, 17, 11, 0) do # 20:00 in Tokyo
       get finance_dashboard_path, params: {locale: "ja"}
-      assert_select "h1#dashboard-greeting", text: "Jyunさん、こんばんは！"
+      assert_select "#dashboard-greeting", text: "Jyunさん、こんばんは！"
     end
   end
 

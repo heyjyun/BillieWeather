@@ -67,11 +67,11 @@ class FinanceReportExportTest < ActionDispatch::IntegrationTest
 
   test "dashboard figures shown on screen equal the exported ones" do
     sign_in @user
-    get finance_dashboard_path
-    income_on_screen = css_select("#dashboard-income strong").text.strip
+    get finance_dashboard_path(format: :json, section: "flow")
+    dashboard_income = JSON.parse(response.body).sum { |day| day["income"] }
     get download_finance_report_path(export_format: "xlsx")
     book = XlsxReader.new(response.body)
-    assert_equal "$2,500.00", income_on_screen
+    assert_equal 250_000, dashboard_income
     assert_in_delta 2500.0, book.lookup("Overview", "Total income"), 0.001
     assert_in_delta 912.40, book.lookup("Overview", "Total expenses"), 0.001
   end

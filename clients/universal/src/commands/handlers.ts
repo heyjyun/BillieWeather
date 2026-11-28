@@ -14,6 +14,9 @@ import { categoryEntities } from "./actions";
 export const MAX_BULK = 500;
 
 export interface TransactionFilter {
+  activity?: "income" | "spending" | "counted";
+  accountId?: number;
+  currency?: string;
   query?: string;
   category?: string;
   period?: DateRangeValue;

@@ -1,6 +1,7 @@
 <details class="bw-inline-edit">
   <summary class="bw-text-link"><%= t("billie.finance.ui.rename") %></summary>
   <%= form_with model: account, scope: :bank_account, url: finance_bank_account_path(account), method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
+    <%= hidden_field_tag :return_to, "accounts" %>
     <div class="bw-field">
       <%= form.label :custom_name, t("billie.finance.ui.name_for_this_account"), for: "bank_account_#{account.id}_custom_name" %>
       <%= form.text_field :custom_name, id: "bank_account_#{account.id}_custom_name", maxlength: 60, placeholder: account.auto_name %>

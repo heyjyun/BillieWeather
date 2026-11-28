@@ -23,11 +23,12 @@ module Finance
       Domain.occurrences(start_on, last, frequency, interval, 5000).select { |date| date >= from }.first(120)
     end
 
-    def upcoming(count = 3, from: Date.current)
+    def upcoming(count = 3, from: Date.current, through: nil)
       first = [next_on || start_on, from].max
       dates = []
       current = (first == start_on) ? start_on : Domain.next_occurrence(start_on, first - 1, frequency, interval)
-      while dates.length < count && (end_on.nil? || current <= end_on)
+      last = [end_on, through].compact.min
+      while dates.length < count && (last.nil? || current <= last)
         dates << current
         current = Domain.next_occurrence(start_on, current, frequency, interval)
       end

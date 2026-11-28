@@ -1,172 +1,125 @@
-import type { PeriodPreset } from "@billie/shared-types";
-import { buildSnapshot, localToday, resolvePeriod, rollUp, spendingMix, spendingPalette } from "@billie/finance-core";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CategoryBadge, Empty, Money, PeriodPicker } from "../components/common";
-import { GreetingHeader } from "../components/Greeting";
-import { IncomeMix, MonthlyCashFlow } from "../components/OverviewCharts";
+import { dayPart, personalize } from "../services/greeting";
+import { localToday } from "@billie/finance-core";
+import { useCallback, useEffect, useState } from "react";
 import { NicknamePrompt } from "../components/NicknamePrompt";
-import { SpendingMixChart } from "../components/SpendingCharts";
+import { useAccount } from "../hooks/useAccount";
 import { useFinance } from "../hooks/useFinance";
-import { useModules } from "../hooks/useModules";
-import { useI18n } from "../i18n";
-import { overviewCopy } from "../i18n/overview";
-import type { Page } from "../App";
+import { categoryLabel, useI18n } from "../i18n";
+import { Overview } from "../overview/Overview";
+import { localSources } from "../overview/local";
+import messages from "../overview/messages.json";
+import type { Action, Activity, Scope } from "../overview/model";
+import type { Page, TransactionIntent } from "../App";
+import type { TransactionFilter } from "../commands/handlers";
 
-export function Dashboard({ go }: { go: (page: Page, part?: string | null) => void }) {
-  const { m, locale, t } = useI18n();
+export function Dashboard({
+  go,
+}: {
+  go: (page: Page, part?: string | null, filter?: TransactionFilter, intent?: TransactionIntent) => void;
+}) {
   const finance = useFinance();
-  const { transactions, statements, currency, ownerKey, accounts, activeDatabaseId, databaseIds, databaseName, openStore, switchDatabase } = finance;
-  const { usable } = useModules();
-  const [period, setPeriod] = useState(() => resolvePeriod("all_time", { today: localToday() }));
-  const [dates, setDates] = useState({ startDate: "", endDate: "" });
-  const [dateError, setDateError] = useState(false);
-  const [bookChoice, setBookChoice] = useState<{ id: string; account: string } | null>(null);
+  const { account } = useAccount();
+  const { m, locale } = useI18n();
+  const c = messages[locale];
+  const { activeDatabaseId, databaseIds, databaseName, openStore, accounts, currency, ownerKey, statements } =
+    finance;
   const [names, setNames] = useState<Record<string, string | null>>({});
-  const [switching, setSwitching] = useState(false);
-  const [bookError, setBookError] = useState(false);
-  const cur = currency ?? "USD";
-  const selected = bookChoice?.id === activeDatabaseId ? bookChoice.account : "";
-  const accountId = accounts.find((account) => String(account.id) === selected)?.id;
-  const scoped = useMemo(() => accountId === undefined ? transactions : transactions.filter((tx) => tx.accountId === accountId), [accountId, transactions]);
-  const snap = useMemo(() => buildSnapshot({ transactions: scoped, statements, period, currency: cur }), [scoped, statements, period, cur]);
-  // Category charts group by top-level category (subcategories roll up into them).
-  const tree = finance.categoryTree;
-  const byRoot = useMemo(() => rollUp(scoped, tree), [scoped, tree]);
-  const grouped = useMemo(() => buildSnapshot({ transactions: byRoot, statements, period, currency: cur }), [byRoot, statements, period, cur]);
-  const palette = useMemo(() => spendingPalette(rollUp(transactions, tree)), [transactions, tree]);
-  const mix = useMemo(() => spendingMix(byRoot, palette, period), [byRoot, palette, period]);
-  const d = m.dashboard;
-  const copy = overviewCopy[locale];
-  const databaseList = databaseIds.join("|");
-
+  const list = databaseIds.join("|");
   useEffect(() => {
-    let active = true;
-    const ids = databaseList.split("|").filter((id) => id && id !== activeDatabaseId);
-    void Promise.all(ids.map(async (id) => {
-      try { return [id, await (await openStore(id)).databaseName()] as const; }
-      catch { return [id, null] as const; }
-    })).then((entries) => { if (active) setNames(Object.fromEntries(entries)); });
-    return () => { active = false; };
-  }, [activeDatabaseId, databaseList, openStore]);
-
-  async function changeLedger(id: string) {
-    setSwitching(true);
-    setBookError(false);
-    try {
-      await switchDatabase(id);
-      setBookChoice(null);
-    } catch {
-      setBookError(true);
-    } finally {
-      setSwitching(false);
+    let live = true;
+    const ids = list.split("|").filter((id) => id !== activeDatabaseId);
+    void Promise.all(
+      ids.map(async (id) => {
+        try {
+          return [id, await (await openStore(id)).databaseName()] as const;
+        } catch {
+          return [id, null] as const;
+        }
+      }),
+    ).then((entries) => {
+      if (live) setNames(Object.fromEntries(entries));
+    });
+    return () => {
+      live = false;
+    };
+  }, [list, activeDatabaseId, openStore]);
+  let today = localToday();
+  try {
+    if (account?.timeZone)
+      today = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: account.ianaTimeZone ?? account.timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
+  } catch {
+    /* Older accounts may have only a Rails display name. */
+  }
+  const sources = useCallback(
+    (scope: Scope) => localSources(finance, scope, today, (name) => categoryLabel(m, name)),
+    [finance, m, today],
+  );
+  const base = currency ?? accounts[0]?.currency ?? "USD";
+  const zone = account?.ianaTimeZone ?? account?.timeZone;
+  let part = dayPart();
+  try {
+    if (zone) {
+      const hour = Number(
+        new Intl.DateTimeFormat("en-GB", { timeZone: zone, hour: "numeric", hourCycle: "h23" }).format(new Date()),
+      );
+      part = hour >= 5 && hour < 12 ? "morning" : hour >= 12 && hour < 18 ? "afternoon" : "evening";
     }
+  } catch {
+    /* Use the device clock for legacy named zones. */
   }
-
-  function changePeriod(preset: PeriodPreset) {
-    setPeriod(resolvePeriod(preset, { today: localToday() }));
-    setDateError(false);
-  }
-
-  function applyDates(event: FormEvent) {
-    event.preventDefault();
-    try {
-      setPeriod(resolvePeriod("custom", { today: localToday(), ...dates }));
-      setDateError(false);
-    } catch {
-      setDateError(true);
-    }
-  }
-
-  const reset = () => {
-    setBookChoice(null);
-    setDates({ startDate: "", endDate: "" });
-    changePeriod("all_time");
+  const context = {
+    locale,
+    today,
+    greeting: personalize(m.personal.greeting[part], account?.nickname ?? null),
+    owner: ownerKey ?? "preview",
+    ledger: activeDatabaseId,
+    currency: base,
+    currencies: [
+      ...new Set([base, ...accounts.map((a) => a.currency), ...statements.map((s) => s.currency)].filter(Boolean)),
+    ],
+    accounts: accounts.map((a) => ({
+      id: String(a.id),
+      name: a.unassigned ? m.ledger.accounts.unassigned : a.name,
+      currency: a.currency ?? base,
+    })),
+    ledgers: databaseIds.map((id, i) => ({
+      id,
+      name:
+        (id === activeDatabaseId ? databaseName : names[id]) ||
+        c.device + (databaseIds.length > 1 ? " " + (i + 1) : ""),
+    })),
   };
-  const hasData = transactions.length > 0;
-
+  function navigate(action: Action, scope: Scope, category?: string, activity?: Activity) {
+    if (action === "transactions")
+      go("transactions", null, {
+        accountId: scope.account ? Number(scope.account) : undefined,
+        currency: scope.currency,
+        category,
+        activity,
+        period: { start: scope.period.startDate, end: scope.period.endDate },
+      });
+    else if (action === "addEntry") go("transactions", null, undefined, { entryKind: "expense" });
+    else if (action === "bills" || action === "budget") go("planning", action === "bills" ? "schedules" : null);
+    else if (action === "insight") go("assistant", "insights");
+    else if (action === "addAccount") go("accounts", "new");
+    else if (action === "report") go("reports");
+    else if (action !== "forecast") go(action);
+  }
   return (
     <>
-      <GreetingHeader eyebrow={d.eyebrow} hasData={hasData} needsAttention={snap.uncategorizedCount > 0} />
+      <Overview
+        key={context.owner + ":" + activeDatabaseId}
+        context={context}
+        sources={sources}
+        navigate={navigate}
+        switchLedger={finance.switchDatabase}
+      />
       <NicknamePrompt ownerKey={ownerKey} />
-      <section className="bw-panel bw-overview-filters" aria-label={m.periods.label}>
-        <div className="bw-overview-scope">
-          <label className="bw-field">
-            <span>{copy.ledger}</span>
-            <select value={activeDatabaseId} disabled={switching || databaseIds.length < 2} onChange={(event) => void changeLedger(event.target.value)}>
-              {databaseIds.map((id, index) => <option key={id} value={id}>
-                {(id === activeDatabaseId ? databaseName : names[id]) || copy.deviceLedger + (databaseIds.length > 1 ? " " + (index + 1) : "")}
-              </option>)}
-            </select>
-          </label>
-          <label className="bw-field">
-            <span>{copy.account}</span>
-            <select value={accountId === undefined ? "" : String(accountId)} disabled={switching} onChange={(event) =>
-              setBookChoice({ id: activeDatabaseId, account: event.target.value })}>
-              <option value="">{copy.allAccounts}</option>
-              {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
-            </select>
-          </label>
-        </div>
-        <PeriodPicker value={period.preset} onChange={changePeriod} />
-        <form className="bw-overview-dates" onSubmit={applyDates}>
-          <label className="bw-field"><span>{copy.startDate}</span><input type="date" value={dates.startDate} onChange={(event) => setDates({ ...dates, startDate: event.target.value })} /></label>
-          <label className="bw-field"><span>{copy.endDate}</span><input type="date" value={dates.endDate} onChange={(event) => setDates({ ...dates, endDate: event.target.value })} /></label>
-          <button className="bw-button bw-button-outline" type="submit">{copy.applyDates}</button>
-        </form>
-        {dateError && <p role="alert" className="bw-message bw-message-error">{copy.invalidDates}</p>}
-        {bookError && <p role="alert" className="bw-message bw-message-error">{copy.ledgerError}</p>}
-      </section>
-      {switching ? <p role="status">{copy.switching}</p> : !hasData ? (
-        <Empty title={d.emptyTitle} body={d.emptyBody} action={<button className="bw-button bw-button-dark" onClick={() => go("import")}>{d.emptyAction}</button>} />
-      ) : dateError ? null : (
-        <>
-          <section className={"bw-metrics bw-overview-metrics" + (accountId === undefined ? "" : " bw-overview-scoped")} aria-label={d.totals}>
-            <article className="bw-metric" id="dashboard-income"><span>{d.income}</span><strong><Money cents={snap.incomeCents} currency={cur} /></strong></article>
-            <article className="bw-metric" id="dashboard-expenses"><span>{d.spending}</span><strong><Money cents={snap.expensesCents} currency={cur} /></strong></article>
-            <article className="bw-metric bw-overview-net" id="dashboard-net"><span>{d.net}</span><strong><Money cents={snap.netCents} currency={cur} signed /></strong></article>
-            {accountId === undefined && <article className="bw-metric bw-metric-accent">
-              <span>{d.balance}</span>
-              <strong>{snap.balanceCents === null ? "—" : <Money cents={snap.balanceCents} currency={cur} />}</strong>
-              <small>{snap.balanceOn ? t("dashboard.asOf", { date: snap.balanceOn }) : d.noBalance}</small>
-            </article>}
-          </section>
-          {snap.transactionCount === 0 ? (
-            <Empty title={copy.noMatches} body="" action={<button className="bw-button bw-button-outline" onClick={reset}>{copy.reset}</button>} />
-          ) : (
-            <>
-              {snap.uncategorizedCount > 0 && <button className="bw-notice" onClick={() => go("transactions")}>{t("dashboard.needCategory", { count: snap.uncategorizedCount })}</button>}
-              <div className="bw-overview-analysis">
-                <MonthlyCashFlow months={snap.monthly} currency={cur} />
-                <section className="bw-panel" aria-labelledby="categories-heading" id="dashboard-spending-mix">
-                  <div className="bw-panel-top">
-                    <h2 id="categories-heading">{copy.spendingByCategory}</h2>
-                    {usable("categories") && <button type="button" className="bw-link-button" onClick={() => go("categories")}>{m.spending.allCategories}</button>}
-                  </div>
-                  <SpendingMixChart mix={mix} currency={cur} emptyText={d.noSpending}
-                    onOpen={usable("categories") ? (category) => go("categories", category) : undefined} />
-                </section>
-                <IncomeMix categories={grouped.incomeCategories} currency={cur} />
-              </div>
-              <section className="bw-panel" aria-labelledby="recent-heading">
-                <div className="bw-panel-top">
-                  <h2 id="recent-heading">{d.recent}</h2>
-                  <button type="button" className="bw-link-button" onClick={() => go("transactions")}>{copy.viewAll}</button>
-                </div>
-                <ul className="bw-tx-list">
-                  {snap.recentTransactions.map((tx) => (
-                    <li key={tx.id} className={tx.excluded ? "is-excluded" : ""}>
-                      <div><strong>{tx.description}</strong><small>{tx.bookedOn}</small></div>
-                      <CategoryBadge category={tx.category} />
-                      <Money cents={tx.amountCents} currency={cur} signed />
-                    </li>
-                  ))}
-                </ul>
-                <p className="bw-caption">{t("dashboard.notCounted", { transfers: snap.transferCount, excluded: snap.excludedCount })}</p>
-              </section>
-            </>
-          )}
-        </>
-      )}
     </>
   );
 }

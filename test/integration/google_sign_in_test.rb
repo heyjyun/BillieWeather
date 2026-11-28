@@ -139,7 +139,8 @@ class GoogleSignInTest < ActionDispatch::IntegrationTest
     assert_equal BigDecimal("777.77"), user.finance_profile.current_balance
     follow_redirect!
     assert_response :success
-    assert_select "#dashboard-balance strong", text: "$777.77"
+    get finance_dashboard_path(format: :json, section: "position")
+    assert_equal 77_777, JSON.parse(response.body).fetch("cashOverride")
   end
 
   test "matching an existing email requires its password before connecting Google" do

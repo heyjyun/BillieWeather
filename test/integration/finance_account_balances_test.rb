@@ -22,7 +22,8 @@ class FinanceAccountBalancesTest < ActionDispatch::IntegrationTest
     assert_equal BigDecimal("3500.00"), @user.finance_profile.reload.current_balance
     get finance_dashboard_path
     assert_response :success
-    assert_select "#dashboard-balance strong", text: "$3,500.00"
+    get finance_dashboard_path(format: :json, section: "position")
+    assert_equal 350_000, JSON.parse(response.body).fetch("holdings").sum { |a| a["balance"] }
 
     get finance_forecast_path
     assert_response :success
@@ -74,7 +75,8 @@ class FinanceAccountBalancesTest < ActionDispatch::IntegrationTest
     assert_nil @user.finance_profile.reload.balance_source
     get finance_dashboard_path
     assert_response :success
-    assert_select "#dashboard-balance strong", text: /\$0\.00/, count: 0
+    get finance_dashboard_path(format: :json, section: "position")
+    assert_empty JSON.parse(response.body).fetch("holdings")
     get finance_forecast_path
     assert_response :success
     assert_select "#unassigned-statements", text: /unidentified\.csv/

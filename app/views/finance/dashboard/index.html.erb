@@ -1,162 +1,29 @@
-<% content_for :title, t("billie.finance.ui.dashboard") %>
-<% greeting_time = personal_time %>
-<% day_part = Personalization.day_part(greeting_time) %>
-<div class="bw-page-heading bw-greeting-heading">
-  <div>
-    <span class="bw-eyebrow"><%= t("billie.finance.ui.your_money_in_focus") %></span>
-    <h1 class="bw-greeting" id="dashboard-greeting" data-day-part="<%= day_part %>">
-      <span class="bw-greeting-glyph bw-greeting-<%= day_part %>" aria-hidden="true"><%= finance_icon({morning: "sun", afternoon: "cloud-sun", evening: "moon"}.fetch(day_part), size: 22) %></span>
-      <span><%= personal_greeting(time: greeting_time) %></span>
-    </h1>
-    <p class="bw-greeting-subtitle" id="dashboard-greeting-subtitle"><%= Personalization.dashboard_subtitle(time: greeting_time,
-          has_transactions: @has_transactions, needs_attention: @snapshot.present? && @snapshot[:uncategorized_count].to_i.positive?) %></p>
-    <p>
-      <% if @filter_error %>
-        <%= @date_filter_error ? t("billie.finance.ui.date_range_not_applied") : t("billie.overview.invalid_account") %>
-      <% elsif @period.filtered? %>
-        <%= finance_date(@period.start_date) %> – <%= finance_date(@period.end_date) %>
-      <% else %>
-        <%= finance_period(@snapshot) %>
-      <% end %>
-      <span class="bw-dot-divider">·</span> <%= @profile.currency %>
-    </p>
-  </div>
-  <div class="bw-heading-actions">
-    <%# Export lives in Reports (optional); Settings › Privacy offers to turn it on. %>
-    <% unless @selected_account || @filter_error || !module_enabled?("reports") %>
-    <% export_period = @filter_values.except(:account_id).compact %>
-    <%= link_to finance_report_path(export_period), class: "bw-button bw-button-outline", id: "dashboard-export-report" do %>
-      <%= finance_icon "file", size: 17 %> <%= t("billie.export.button") %>
-    <% end %>
-    <% end %>
-    <%= link_to finance_statements_path, class: "bw-button bw-button-dark" do %>
-      <%= finance_icon "upload", size: 17 %> <%= t("billie.finance.ui.upload_statement") %>
-    <% end %>
-  </div>
-</div>
-
-<%= render "finance/dashboard/nickname_prompt" if show_nickname_prompt? %>
-
-<section class="bw-dashboard-period" aria-labelledby="dashboard-period-heading">
-  <div class="bw-dashboard-period-heading">
-    <h2 id="dashboard-period-heading"><%= t("billie.finance.ui.time_period") %></h2>
-    <p><%= t("billie.finance.ui.choose_the_dates_for_your_income_expenses_and_transactions") %></p>
-  </div>
-  <nav class="bw-period-presets" aria-label="<%= t("billie.finance.ui.dashboard_periods") %>">
-    <% [[t("billie.finance.ui.all_time"), "all_time"], [t("billie.finance.ui.this_month"), "this_month"], [t("billie.finance.ui.last_month"), "last_month"], [t("billie.finance.ui.last_30_days"), "last_30_days"], [t("billie.finance.ui.this_year"), "this_year"], [t("billie.finance.ui.last_year"), "last_year"]].each do |label, preset| %>
-      <%= link_to label, finance_dashboard_path(preset: preset, account_id: @selected_account&.id), class: "bw-period-preset#{' is-active' if @period.preset == preset}", aria: {current: (@period.preset == preset ? "true" : nil)} %>
-    <% end %>
-  </nav>
-  <%= form_with url: finance_dashboard_path, method: :get, class: "bw-period-custom", id: "dashboard-period-filter", local: true do %>
-    <%= hidden_field_tag :preset, "custom" %>
-    <%= hidden_field_tag :account_id, @selected_account.id, id: nil if @selected_account %>
-    <div class="bw-field">
-      <%= label_tag :start_date, t("billie.finance.ui.start_date") %>
-      <%= date_field_tag :start_date, @filter_values[:start_date], required: true, aria: {invalid: (@date_filter_error ? "true" : nil), describedby: ("dashboard-period-error" if @date_filter_error)} %>
-    </div>
-    <div class="bw-field">
-      <%= label_tag :end_date, t("billie.finance.ui.end_date") %>
-      <%= date_field_tag :end_date, @filter_values[:end_date], required: true, aria: {invalid: (@date_filter_error ? "true" : nil), describedby: ("dashboard-period-error" if @date_filter_error)} %>
-    </div>
-    <%= submit_tag t("billie.finance.ui.apply_dates"), class: "bw-button bw-button-dark", name: nil %>
-  <% end %>
-  <div class="bw-overview-scope">
-    <div class="bw-overview-ledger"><%= finance_icon "wallet", size: 18 %><span><%= t("billie.overview.ledger") %><strong><%= current_user.cloud_database_name.presence || t("billie.overview.web_ledger") %></strong></span></div>
-    <%= form_with url: finance_dashboard_path, method: :get, local: true, class: "bw-overview-account" do %>
-      <%= hidden_field_tag :preset, @period.preset, id: nil if @period.preset != "custom" || @period.start_date %>
-      <%= hidden_field_tag :start_date, @period.start_date.iso8601, id: nil if @period.start_date %>
-      <%= hidden_field_tag :end_date, @period.end_date.iso8601, id: nil if @period.end_date %>
-      <label for="dashboard-account"><%= t("billie.overview.account") %></label>
-      <%= select_tag :account_id, options_for_select(@accounts.map { |account| [account.display_name, account.id] }, @selected_account&.id),
-        include_blank: t("billie.overview.all_accounts"), id: "dashboard-account" %>
-      <%= submit_tag t("billie.overview.apply"), class: "bw-button bw-button-outline", name: nil %>
-    <% end %>
-  </div>
-  <% if @filter_error %>
-    <p class="bw-period-error" id="dashboard-period-error" role="alert"><%= @filter_error %></p>
-  <% end %>
-</section>
-
-<% unless @filter_error %>
-<div class="bw-metrics bw-overview-metrics<%= " bw-metrics-three" if @selected_account %>">
-  <article class="bw-metric" id="dashboard-income">
-    <span><%= t("billie.finance.ui.total_income") %> <i class="bw-metric-symbol bw-positive"><%= finance_icon "down", size: 18 %></i></span>
-    <strong><%= finance_money(@snapshot[:income], @profile.currency) %></strong>
-    <small><%= @period.filtered? ? t("billie.finance.ui.in_the_selected_period") : t("billie.finance.ui.across_imported_statement_dates") %></small>
-  </article>
-  <article class="bw-metric" id="dashboard-expenses">
-    <span><%= t("billie.finance.ui.total_expenses") %> <i class="bw-metric-symbol"><%= finance_icon "up", size: 18 %></i></span>
-    <strong><%= finance_money(@snapshot[:expenses], @profile.currency) %></strong>
-    <small><%= t("billie.finance.ui.transfers_and_excluded_items_omitted") %></small>
-  </article>
-  <article class="bw-metric" id="dashboard-net">
-    <span><%= t("billie.finance.ui.net_cash_flow") %> <i class="bw-metric-symbol"><%= finance_icon "transactions", size: 18 %></i></span>
-    <strong class="<%= 'bw-positive' if @snapshot[:net].to_d >= 0 %>"><%= finance_money(@snapshot[:net], @profile.currency) %></strong>
-    <small><%= t("billie.finance.ui.income_minus_expenses") %></small>
-  </article>
-  <% unless @selected_account %>
-  <article class="bw-metric bw-metric-mint" id="dashboard-balance">
-    <span><%= t("billie.finance.ui.cash_balance_from_statements") %> <i class="bw-metric-symbol"><%= finance_icon "wallet", size: 18 %></i></span>
-    <strong><%= finance_balance_display(@profile) %></strong>
-    <small><%= finance_balance_note(@profile) %></small>
-    <% age_note = finance_balance_age_note(@profile) %>
-    <% if age_note %><small class="bw-balance-age"><%= age_note %></small><% end %>
-    <% if @balance_summary && @balance_summary[:credit_total].present? %><small class="bw-credit-owed"><%= t("billie.finance.ui.owed_on_credit_cards") %> <strong><%= finance_money(@balance_summary[:credit_total], @profile.currency) %></strong> (<%= finance_count(@balance_summary[:credit_count], "card") %>)</small><% end %>
-    <%# Balances are edited on Cash Flow Forecast. Shown whether or not Forecast is in the sidebar. %>
-    <% if module_enabled?("forecast") %>
-    <%= link_to t("billie.finance.ui.view_account_balances"), finance_forecast_path(anchor: "account-balances"), class: "bw-metric-link" %>
-    <%= link_to t("billie.finance.ui.enter_or_edit_balance"), finance_forecast_path(edit: "1", anchor: "balance"), class: "bw-metric-link" %>
-    <% end %>
-  </article>
-  <% end %>
-</div>
-
-<% if !@has_transactions %>
-  <section class="bw-welcome-card">
-    <div class="bw-welcome-icon"><%= finance_icon "sun", size: 42 %></div>
-    <div>
-      <span class="bw-eyebrow"><%= t("billie.finance.ui.a_fresh_start") %></span>
-      <h2><%= t("billie.finance.ui.your_financial_story_starts_here") %></h2>
-      <p><%= t("billie.finance.ui.upload_your_first_csv_or_text_based_pdf_statement_to_see_income_spending_and_a_c") %></p>
-      <%= link_to t("billie.finance.ui.upload_your_first_statement"), finance_statements_path, class: "bw-button bw-button-dark" %>
-      <%= link_to t("billie.finance.ui.download_sample_csv"), sample_finance_statements_path(format: :csv), class: "bw-text-link" %>
-    </div>
-  </section>
-<% elsif @snapshot[:transaction_count].zero? %>
-  <section class="bw-panel bw-empty-state" id="dashboard-period-empty">
-    <span class="bw-empty-icon"><%= finance_icon "transactions", size: 28 %></span>
-    <h2><%= t("billie.finance.ui.no_transactions_in_this_period") %></h2>
-    <p><%= t("billie.finance.ui.choose_different_dates_or_view_all_your_imported_transactions") %></p>
-    <%= link_to t("billie.finance.ui.view_all_dates"), finance_dashboard_path(preset: "all_time", account_id: @selected_account&.id), class: "bw-button bw-button-outline" %>
-  </section>
+<% content_for :title, t("billie.modules.names.overview") %>
+<% if @filter_error %>
+  <h1><%= t("billie.modules.names.overview") %></h1>
+  <p id="dashboard-period-error" role="alert"><%= @filter_error %></p>
+  <%= link_to t("billie.finance.ui.view_all_dates"), finance_dashboard_path %>
 <% else %>
-  <%= render "finance/dashboard/analytics" %>
-<% end %>
-
-<div class="bw-two-column bw-two-column-bottom">
-  <section class="bw-panel bw-panel-flush">
-    <div class="bw-panel-heading">
-      <div><h2><%= t("billie.finance.ui.recent_transactions") %></h2><p><%= finance_count(@snapshot[:transaction_count], "transaction") %> <%= @period.filtered? ? t("billie.finance.ui.in_the_selected_period_2") : t("billie.finance.ui.in_your_financial_picture") %></p></div>
-      <%= link_to t("billie.finance.ui.view_all"), finance_transactions_path(start_date: @period.start_date&.iso8601, end_date: @period.end_date&.iso8601, account_id: @selected_account&.id), class: "bw-text-link" %>
-    </div>
-    <% if @recent_transactions.any? %>
-      <%= render "finance/shared/transactions_table", transactions: @recent_transactions, currency: @profile.currency %>
-    <% else %>
-      <div class="bw-small-empty"><%= finance_icon "transactions", size: 28 %><p><%= @has_transactions ? t("billie.finance.ui.no_transactions_match_these_dates") : t("billie.finance.ui.your_latest_transactions_will_appear_here") %></p></div>
-    <% end %>
-  </section>
-  <% if module_enabled?("ai_assistant") %>
-  <section class="bw-insight-promo">
-    <span class="bw-feature-icon"><%= finance_icon "insights", size: 26 %></span>
-    <span class="bw-eyebrow"><%= t("billie.finance.ui.a_fresh_perspective") %></span>
-    <h2><%= t("billie.finance.ui.let_your_numbers") %><br><%= t("billie.finance.ui.tell_you_more") %></h2>
-    <p><%= t("billie.finance.ui.explore_spending_observations_and_practical_next_steps_organize_transactions_tha") %></p>
-    <% if @period.filtered? || @selected_account %><p><%= t("billie.finance.ui.insights_use_your_full_imported_history") %></p><% end %>
-    <%= link_to finance_insights_path, class: "bw-button bw-button-dark" do %><%= t("billie.finance.ui.explore_insights") %> <%= finance_icon "arrow", size: 17 %><% end %>
-    <% if @snapshot[:uncategorized_count].positive? %><small><%= finance_count(@snapshot[:uncategorized_count], "transaction") %> <%= t("billie.finance.ui.still_need_a_category") %></small><% end %>
-  </section>
+  <% context = {
+    locale: I18n.locale, greeting: personal_greeting, today: finance_today, owner: current_user.finance_owner_uid,
+    ledger: "web", ledgers: [{id: "web", name: current_user.cloud_database_name.presence || t("billie.overview.web_ledger")}],
+    currency: @profile.currency, currencies: @currencies,
+    accounts: @accounts.map { |a| {id: a.id.to_s, name: a.display_name, currency: a.currency.presence || @profile.currency} },
+    initial: {currency: @currency, account: @account&.id.to_s, period: {preset: @period.preset, startDate: @period.start_date, endDate: @period.end_date}}
+  } %>
+  <% links = {
+    transactions: finance_transactions_path, categories: finance_categories_path, accounts: finance_accounts_path,
+    addSync: finance_add_sync_path, addAccount: new_finance_account_path, addEntry: new_finance_entry_path, import: finance_statements_path,
+    forecast: finance_forecast_path, insight: finance_insights_path, bills: finance_recurring_rules_path,
+    budget: finance_budgets_path, report: finance_report_path
+  } %>
+  <%= tag.div id: "financial-overview", data: {context: context.to_json, links: links.to_json, source: finance_dashboard_path(format: :json)} do %>
+    <h1><%= t("billie.modules.names.overview") %></h1>
+    <p id="dashboard-greeting" data-day-part="<%= Personalization.day_part(personal_time) %>"><%= personal_greeting %></p>
+    <%= link_to t("billie.export.button"), finance_report_path(preset: @period.preset, start_date: @period.start_date, end_date: @period.end_date), id: "dashboard-export-report" unless @account || @currency != @profile.currency %>
+    <%= link_to t("billie.modules.names.transactions"), finance_transactions_path %>
+    <%= link_to t("billie.finance.ui.upload_statement"), finance_statements_path %>
   <% end %>
-</div>
-
-<%= render "finance/dashboard/accounts" unless @selected_account %>
+  <%= render "finance/dashboard/nickname_prompt" if show_nickname_prompt? %>
+  <script src="/financial-overview.js" defer></script>
 <% end %>

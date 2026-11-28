@@ -220,7 +220,7 @@ it("keeps the active ledger visible when a website download finishes for the old
         expect(await home.driver.select("SELECT value FROM settings WHERE key = 'web_sync_version'")).toEqual([{ value: "v1" }]);
       });
     });
-    expect(ledger.value).toBe("2");
+    expect(screen.getByRole<HTMLSelectElement>("combobox", { name: "Ledger" }).value).toBe("2");
     expect(screen.getByText("FORGOTTEN ROW")).toBeTruthy();
     expect(screen.queryByText("LOCAL ONLY")).toBeNull();
   } finally {

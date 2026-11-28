@@ -20,8 +20,8 @@ class FinanceAccountsOverviewTest < ActionDispatch::IntegrationTest
     Finance::BankAccount.find_by!(user_id: @user.id, bank_name: bank)
   end
 
-  test "the dashboard groups cash accounts and credit cards with totals" do
-    get finance_dashboard_path
+  test "the accounts detail groups cash accounts and credit cards with totals" do
+    get finance_accounts_path
     assert_response :success
 
     assert_select "#cash-accounts li[data-account-kind='cash']", count: 2
@@ -53,7 +53,7 @@ class FinanceAccountsOverviewTest < ActionDispatch::IntegrationTest
     assert_equal "statement", profile.balance_source, "typing cash on hand must not switch the bank balance to manual"
     assert_equal BigDecimal("3500.00"), profile.current_balance
 
-    get finance_dashboard_path
+    get finance_accounts_path
     assert_select "#cash-on-hand .bw-account-amount", text: /\$125\.50/
     assert_select "#total-cash strong", text: "$3,625.50"
     assert_select "#cash-on-hand form input[name='finance_profile[cash_on_hand]']"
@@ -75,7 +75,7 @@ class FinanceAccountsOverviewTest < ActionDispatch::IntegrationTest
     sign_out @user
     sign_in other
     patch finance_profile_path, params: {finance_profile: {cash_on_hand: "75.00"}, return_to: "dashboard"}
-    get finance_dashboard_path
+    get finance_accounts_path
     assert_select "#total-cash strong", text: "$75.00"
     assert_select "#credit-accounts", text: /No credit cards identified yet/
   end
@@ -87,7 +87,7 @@ class FinanceAccountsOverviewTest < ActionDispatch::IntegrationTest
     assert_redirected_to finance_dashboard_path(anchor: "accounts")
     assert_equal "My main checking", chase.reload.custom_name
 
-    get finance_dashboard_path
+    get finance_accounts_path
     assert_select "#cash-accounts li[data-account-id='#{chase.id}'] .bw-account-main > strong", text: "My main checking"
     assert_select "#cash-accounts li[data-account-id='#{chase.id}']", text: /#{Regexp.escape(original)}/ # the detected name stays visible as a hint
     get finance_forecast_path
@@ -124,7 +124,7 @@ class FinanceAccountsOverviewTest < ActionDispatch::IntegrationTest
   test "names are shown as text, never as markup" do
     chase = account("Chase")
     patch finance_bank_account_path(chase), params: {bank_account: {custom_name: "<script>alert(1)</script>"}}
-    get finance_dashboard_path
+    get finance_accounts_path
     assert_not_includes response.body, "<script>alert(1)</script>"
     assert_includes response.body, "&lt;script&gt;alert(1)&lt;/script&gt;"
   end

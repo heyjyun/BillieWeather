@@ -225,7 +225,7 @@ function Shell() {
         <ConnectionStatus />
         <SyncStatus />
         <Suspense fallback={<div className="bw-boot" role="status">{m.boot.opening}</div>}>
-        {section && (
+        {section && page !== "dashboard" && (
           <div className="bw-section-tabs" id="transactions-tabs">
             <div className="bw-tabs" role="group" aria-label={m.modules.nav.sections}>
               {TRANSACTION_SECTIONS.map((item) => (
@@ -265,7 +265,7 @@ function Shell() {
         </>}
         {page === "manual" && <Manual go={go} />}
         {page === "transactions" && <Transactions key={`${transactionFilter?.key ?? 0}-${transactionIntent?.key ?? 0}`} preset={transactionFilter?.filter} intent={transactionIntent?.intent} />}
-        {page === "accounts" && <Accounts />}
+        {page === "accounts" && <Accounts create={focus === "new"} />}
         {page === "categories" && <Categories key={focus ?? ""} focus={focus} />}
         {page === "planning" && <Planning key={focus ?? ""} focus={focus} />}
         {page === "lists" && <Lists />}

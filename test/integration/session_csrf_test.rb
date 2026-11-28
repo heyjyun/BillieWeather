@@ -25,7 +25,7 @@ class SessionCsrfTest < ActionDispatch::IntegrationTest
     assert_equal before_count + 1, @user.reload.sign_in_count
     follow_redirect!
     assert_response :success
-    assert_select "#dashboard-balance"
+    assert_select "#financial-overview"
   end
 
   test "a missing CSRF token is rejected before valid credentials authenticate the user" do

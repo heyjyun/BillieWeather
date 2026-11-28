@@ -27,5 +27,5 @@
       "@testing-library/react": ["./node_modules/@testing-library/react/types/index.d.ts"]
     }
   },
-  "include": ["src", "test", "e2e", "vite.config.ts", "devServerSync.ts", "../../packages/*/src", "../../packages/*/test"]
+  "include": ["src", "web", "test", "e2e", "vite.config.ts", "devServerSync.ts", "../../packages/*/src", "../../packages/*/test"]
 }

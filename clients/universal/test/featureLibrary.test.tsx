@@ -58,13 +58,13 @@ async function openLibrary() {
 const switchFor = (name: string) => screen.getByRole("switch", { name: `Show ${name} in the sidebar` });
 const choicesSaved = () => Object.keys(localStorage).filter((key) => key.startsWith("billie.modules.v1:")).map((key) => localStorage.getItem(key));
 
-it("a new person sees the two default entries and Settings, in order; the tabs are Overview, All Transactions, Add & Sync", async () => {
+it("a new person sees the two default entries and Settings, in order; Overview opens as an independent module", async () => {
   mockAccount();
   render(<App />);
   await waitFor(async () => expect((await labels()).filter((label) => label !== "Collapse sidebar")).toEqual(["Financial Overview", "AI Insight", "Settings"]));
-  expect(screen.getByRole("button", { name: "Overview" }).getAttribute("aria-current")).toBe("page");
-  expect(screen.getByRole("button", { name: "All Transactions" })).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Add & Sync" })).toBeTruthy();
+  expect(document.querySelector("#transactions-tabs")).toBeNull();
+  expect(await screen.findByRole("heading", { name: "Financial Overview" })).toBeTruthy();
+  expect(await screen.findByRole("button", { name: "Add & Sync" })).toBeTruthy();
 });
 
 it("keeps Settings groups in catalog order while the sidebar moves across groups", async () => {

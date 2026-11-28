@@ -44,9 +44,10 @@ class FinanceDefaultModulesLinksTest < ActionDispatch::IntegrationTest
   test "the dashboard links to Reports, Forecast and Categories for a default account" do
     get finance_dashboard_path
     assert_select "#dashboard-export-report"
-    assert_select "a[href=?]", finance_forecast_path(edit: "1", anchor: "balance")
-    assert_select "#dashboard-spending-mix a[href=?]", finance_categories_path
-    assert_select "#dashboard-spending-mix .bw-mix-list a"
+    links = JSON.parse(css_select("#financial-overview").first["data-links"])
+    assert_equal finance_forecast_path, links.fetch("forecast")
+    assert_equal finance_categories_path, links.fetch("categories")
+    assert_equal finance_transactions_path, links.fetch("transactions")
   end
 
   test "showing those modules in the sidebar changes only the sidebar" do

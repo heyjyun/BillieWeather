@@ -28,148 +28,72 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
     sign_in @user
   end
 
-  test "dashboard defaults to all imported dates and preserves the saved current balance" do
-    # The spending-mix rows link to Categories & Tags, an optional module: turn it on like a person would.
-    show_in_sidebar!(@user, "categories")
-    get finance_dashboard_path
-
+  def section(name, **scope)
+    get finance_dashboard_path(format: :json), params: scope.merge(section: name)
     assert_response :success
-    assert_metric "income", "$4,500.00"
-    assert_metric "expenses", "$255.00"
-    assert_metric "net", "$4,245.00"
-    assert_metric "balance", "$2,500.00"
-    assert_select ".bw-page-heading p", text: /Dec 31, 2024.*Nov 1, 2026/
-    assert_not_includes response.body, "Private other-account payroll"
-    assert_select "#dashboard-spending-mix .bw-mix-part", count: 4
-    assert_select "#dashboard-spending-mix .bw-mix-part.bw-viz-0[aria-label=?]", "Food & dining: $120.00, 47% of spending"
-    assert_select "#dashboard-spending-mix .bw-mix-list a[href=?]", finance_categories_path(name: "Food & dining", anchor: "detail")
-    get finance_categories_path(name: "Food & dining")
-    assert_module_page("categories")
+    assert_includes response.headers.fetch("Cache-Control"), "no-store"
+    JSON.parse(response.body)
   end
 
-  test "a bookmarkable custom range filters all dashboard figures and transactions inclusively without changing records" do
-    before_records = Finance::Transaction.order(:id).map(&:attributes)
-    url = finance_dashboard_path(preset: "custom", start_date: "2026-10-01", end_date: "2026-10-31")
-
-    get url
-
-    assert_response :success
-    assert_metric "income", "$1,000.00"
-    assert_metric "expenses", "$150.00"
-    assert_metric "net", "$850.00"
-    assert_metric "balance", "$2,500.00"
-    assert_date_fields "2026-10-01", "2026-10-31"
-    assert_select ".bw-page-heading p", text: /Oct 1, 2026.*Oct 31, 2026/
-    assert_select ".bw-chart-details p", text: /Oct 2026: income \$1,000\.00.*expenses \$150\.00/
-    assert_select ".bw-chart-details p", count: 1
-    assert_select ".bw-mix-list li", text: /Food & dining.*80%.*\$120\.00/m
-    assert_select ".bw-mix-list li", text: /Utilities.*20%.*\$30\.00/m
-    assert_select ".bw-mix-list li", text: /Shopping|Housing|Transfers/, count: 0
-    assert_select "table tbody tr", count: 5
-    ["October salary", "October groceries", "October utilities", "October account transfer", "October excluded purchase"].each do |description|
-      assert_select "table strong", text: description
-    end
-    ["Previous year deposit", "Last year purchase", "September housing", "November salary", "Private other-account payroll"].each do |description|
-      assert_not_includes response.body, description
-    end
-
-    view_all_url = nil
-    assert_select "a", text: /\AView all/ do |links|
-      view_all_url = links.first["href"]
-    end
-    assert_match(/start_date=2026-10-01/, view_all_url)
-    assert_match(/end_date=2026-10-31/, view_all_url)
-    get view_all_url
-    assert_response :success
-    assert_select "table tbody tr", count: 5
-    assert_not_includes response.body, "November salary"
-    assert_not_includes response.body, "Private other-account payroll"
-
-    export_url = nil
-    assert_select "a", text: "Export CSV" do |links|
-      export_url = links.first["href"]
-    end
-    get export_url
-    assert_response :success
-    exported_rows = CSV.parse(response.body, headers: true)
-    assert_equal ["October account transfer", "October excluded purchase", "October groceries", "October salary", "October utilities"],
-      exported_rows.map { |row| row["Description"] }.sort
-    assert exported_rows.all? { |row| row["Date"].between?("2026-10-01", "2026-10-31") }
-    assert_equal before_records, Finance::Transaction.order(:id).map(&:attributes)
-    assert_equal BigDecimal("2500.00"), @profile.reload.current_balance
-  end
-
-  test "the heading shows the requested period even when transactions cover fewer days" do
-    get finance_dashboard_path, params: {preset: "custom", start_date: "2026-09-01", end_date: "2026-09-30"}
-
-    assert_response :success
-    assert_date_fields "2026-09-01", "2026-09-30"
-    assert_select ".bw-page-heading p", text: /Sep 1, 2026.*Sep 30, 2026/
-    assert_metric "expenses", "$80.00"
-    assert_select "table tbody tr", count: 1
-    assert_select "table strong", text: "September housing"
-  end
-
-  test "an empty selected period offers a reset without showing first-upload onboarding" do
-    get finance_dashboard_path, params: {preset: "custom", start_date: "2025-03-01", end_date: "2025-03-31"}
-
-    assert_response :success
-    assert_date_fields "2025-03-01", "2025-03-31"
-    assert_select ".bw-page-heading p", text: /Mar 1, 2025.*Mar 31, 2025/
-    assert_metric "income", "$0.00"
-    assert_metric "expenses", "$0.00"
-    assert_metric "balance", "$2,500.00"
-    assert_select "table tbody tr", count: 0
-    assert_match(/No transactions in this period/i, response.body)
-    assert_select "a", text: /all (?:imported )?(?:dates|transactions)|reset|clear (?:date )?filter/i
-    assert_not_includes response.body, "Upload your first statement"
-  end
-
-  test "invalid incomplete reversed and out-of-bounds custom dates fail visibly and retain their fields" do
-    # Establish the signed-in session before the first non-successful request.
+  test "default layout opens directly and only exposes the authenticated ledger" do
     get finance_dashboard_path
     assert_response :success
+    assert_select "#transactions-tabs", count: 0
+    assert_select "#financial-overview"
+    assert_select "h1", text: "Financial Overview"
+    days = section("flow")
+    assert_equal 450_000, days.sum { |d| d["income"] }
+    assert_equal 25_500, days.sum { |d| d["expenses"] }
+    assert_equal 250_000, section("position")["cashOverride"]
+    refute_includes section("recent").to_s, "Private other-account payroll"
+    assert_equal 4, section("spending").length
+  end
 
-    [
-      {start_date: "2026-02-30", end_date: "2026-03-31"},
-      {start_date: "2026-10-31", end_date: "2026-10-01"},
-      {start_date: "2026-10-01", end_date: ""},
-      {start_date: "1899-12-31", end_date: "2026-10-31"}
-    ].each do |dates|
-      get finance_dashboard_path, params: dates.merge(preset: "custom")
+  test "a bookmarkable range filters recent transactions and spending and keeps the previous period for comparison" do
+    dates = {preset: "custom", start_date: "2026-10-01", end_date: "2026-10-31"}
+    before_records = @user.finance_transactions.order(:id).map(&:attributes)
+    get finance_dashboard_path, params: dates
+    ctx = JSON.parse(css_select("#financial-overview").first["data-context"])
+    assert_equal dates[:start_date], ctx.dig("initial", "period", "startDate")
+    assert_equal dates[:end_date], ctx.dig("initial", "period", "endDate")
+    days = section("flow", **dates)
+    assert_equal "2026-09-30", days.first["date"]
+    october = days.select { |d| d["date"].start_with?("2026-10") }
+    assert_equal 100_000, october.sum { |d| d["income"] }
+    assert_equal 15_000, october.sum { |d| d["expenses"] }
+    names = section("recent", **dates).pluck("name")
+    assert_equal 5, names.size
+    assert_includes names, "October account transfer"
+    assert_includes names, "October excluded purchase"
+    assert_equal [3000, 12000], section("spending", **dates).pluck("amount").sort
+    get finance_transactions_path(format: :csv), params: dates
+    assert_equal names.sort, CSV.parse(response.body, headers: true).map { |r| r["Description"] }.sort
+    assert_equal before_records, @user.finance_transactions.order(:id).map(&:attributes)
+  end
 
+  test "empty, invalid and transfer only periods remain distinguishable" do
+    assert_empty section("recent", preset: "custom", start_date: "2025-03-01", end_date: "2025-03-31")
+    day = section("flow", preset: "custom", start_date: "2026-10-25", end_date: "2026-10-25").last
+    assert_equal({"date" => "2026-10-25", "income" => 0, "expenses" => 0, "counted" => false}, day)
+    [["2026-02-30", "2026-03-31"], ["2026-10-31", "2026-10-01"], ["2026-10-01", ""], ["1899-12-31", "2026-10-31"]].each do |from, to|
+      get finance_dashboard_path, params: {preset: "custom", start_date: from, end_date: to}
       assert_response :unprocessable_entity
-      assert_select "[role='alert']", minimum: 1
-      assert_date_fields dates[:start_date], dates[:end_date]
-      assert_select "table tbody tr", count: 0
-      assert_not_includes response.body, "November salary"
+      assert_select "[role=alert]"
+      assert_select "#financial-overview", count: 0
     end
   end
 
-  test "last month resolves to the entire previous calendar month" do
-    travel_to Time.find_zone!("Central Time (US & Canada)").local(2026, 11, 15, 12, 0, 0) do
-      get finance_dashboard_path, params: {preset: "last_month"}
-
-      assert_response :success
-      assert_date_fields "2026-10-01", "2026-10-31"
-      assert_select ".bw-page-heading p", text: /Oct 1, 2026.*Oct 31, 2026/
-      assert_metric "income", "$1,000.00"
-      assert_metric "expenses", "$150.00"
-      assert_metric "balance", "$2,500.00"
-      assert_select "table tbody tr", count: 5
-      assert_not_includes response.body, "November salary"
+  test "projection, saved insight and budget stay unavailable without supporting records" do
+    travel_to Time.zone.local(2030, 1, 1) do
+      assert_empty section("forecast")
+      assert_nil section("insight")
+      assert_nil section("budget")
+      Finance::Budget.create!(user: @user, period: "month", amount: 200)
+      assert_equal 20_000, section("budget")
+      Finance::Insight.create!(user: @user, kind: "general", source: "openai", generated_at: Time.current, content: {"summary" => "Synthetic saved summary"})
+      assert_equal "Synthetic saved summary", section("insight")["text"]
+      assert_nil section("insight", preset: "this_month")
     end
-  end
-
-  test "a transfer-only period retains its transactions while totals stay zero" do
-    get finance_dashboard_path, params: {preset: "custom", start_date: "2026-10-25", end_date: "2026-10-25"}
-    assert_response :success
-    assert_metric "income", "$0.00"
-    assert_metric "expenses", "$0.00"
-    assert_select "table tbody tr", count: 1
-    assert_select "table strong", text: "October account transfer"
-    assert_select "#dashboard-period-empty", count: 0
-    assert_not_includes response.body, "Upload your first statement"
   end
 
   test "invalid transaction date filters cannot display or export an unfiltered list" do
@@ -186,23 +110,6 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "October salary"
   end
 
-  test "last year resolves to the previous calendar year rather than a rolling year" do
-    travel_to Time.find_zone!("Central Time (US & Canada)").local(2026, 11, 15, 12, 0, 0) do
-      get finance_dashboard_path, params: {preset: "last_year"}
-
-      assert_response :success
-      assert_date_fields "2025-01-01", "2025-12-31"
-      assert_select ".bw-page-heading p", text: /Jan 1, 2025.*Dec 31, 2025/
-      assert_metric "income", "$0.00"
-      assert_metric "expenses", "$25.00"
-      assert_metric "balance", "$2,500.00"
-      assert_select "table tbody tr", count: 1
-      assert_select "table strong", text: "Last year purchase"
-      assert_not_includes response.body, "Previous year deposit"
-      assert_not_includes response.body, "October salary"
-    end
-  end
-
   test "account and date scope control all figures and drill-down without counting a card payment" do
     checking = Finance::BankAccount.create!(user: @user, manual: true, name: "Synthetic checking", account_type: "checking", currency: "USD")
     card = Finance::BankAccount.create!(user: @user, manual: true, name: "Synthetic card", account_type: "credit_card", currency: "USD")
@@ -213,23 +120,22 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
     ledger.create(kind: "transfer", account_id: checking.id, to_account_id: card.id, booked_on: "2026-10-08", amount: "50")
     dates = {preset: "custom", start_date: "2026-10-01", end_date: "2026-10-31"}
 
-    get finance_dashboard_path, params: dates.merge(account_id: card.id)
-    assert_response :success
-    assert_metric "income", "$0.00"
-    assert_metric "expenses", "$50.00"
-    assert_metric "net", "-$50.00"
-    assert_select "#dashboard-balance", count: 0
-    assert_select "#dashboard-month-2026-10 summary", text: /Oct 2026.*-\$50\.00/m
-    assert_select "#dashboard-income-mix", text: /No income/
-    assert_select "form#dashboard-period-filter input[name=account_id][value=?]", card.id.to_s
-    assert_not_includes response.body, "Scoped salary"
-
-    get finance_dashboard_path, params: dates.merge(account_id: checking.id)
-    assert_response :success
-    assert_metric "income", "$1,000.00"
-    assert_metric "expenses", "$0.00"
-    assert_select "#dashboard-income-mix a[href=?]", finance_transactions_path(kind: "income", category: "Income",
-      account_id: checking.id, start_date: dates[:start_date], end_date: dates[:end_date])
+    days = section("flow", **dates, account_id: card.id)
+    assert_equal 5000, days.sum { |d| d["expenses"] }
+    assert_equal 0, days.sum { |d| d["income"] }
+    assert_equal 100_000, section("flow", **dates, account_id: checking.id).sum { |d| d["income"] }
+    euro = Finance::BankAccount.create!(user: @user, manual: true, name: "Euro wallet", account_type: "cash", currency: "EUR", opening_balance: 10)
+    ledger.create(kind: "expense", account_id: euro.id, booked_on: "2026-10-06", amount: "3", category: "Shopping", description: "Euro fare")
+    assert_equal 300, section("flow", **dates, currency: "EUR").sum { |d| d["expenses"] }
+    assert_equal 700, section("position", currency: "EUR")["holdings"].first["balance"]
+    get finance_transactions_path, params: dates.merge(currency: "EUR", category: "Shopping")
+    assert_select "table tbody tr", count: 1
+    assert_select "table strong", text: "Euro fare"
+    assert_select "a[href*='transactions.csv'][href*='currency=EUR']"
+    get finance_transactions_path(format: :csv), params: dates.merge(currency: "USD", account_id: card.id, activity: "spending")
+    csv = CSV.parse(response.body, headers: true)
+    assert_equal 2, csv.length
+    assert_equal ["-80.0", "30.0"], csv.map { |row| row["Amount"] }.sort
   end
 
   test "invalid account scopes never expose a broader overview" do
@@ -249,18 +155,5 @@ class FinanceDashboardPeriodTest < ActionDispatch::IntegrationTest
   def transaction(booked_on, description, amount, category, excluded: false)
     Finance::Transaction.create!(user: @user, statement: @statement, booked_on: booked_on,
       description: description, amount: amount, category: category, excluded: excluded)
-  end
-
-  def assert_metric(name, amount)
-    assert_select "#dashboard-#{name} strong", text: amount
-  end
-
-  def assert_date_fields(start_date, end_date)
-    assert_select "input#start_date", count: 1 do |inputs|
-      assert_equal start_date, inputs.first["value"].to_s
-    end
-    assert_select "input#end_date", count: 1 do |inputs|
-      assert_equal end_date, inputs.first["value"].to_s
-    end
   end
 end

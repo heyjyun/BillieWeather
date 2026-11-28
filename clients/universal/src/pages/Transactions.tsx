@@ -1,6 +1,7 @@
 import type { Category, Transaction, TransactionKind } from "@billie/shared-types";
-import { allCategories, formatMoney, merchantKey, subtreeMatcher } from "@billie/finance-core";
+import { allCategories, isCounted, kindOf, formatMoney, merchantKey, subtreeMatcher } from "@billie/finance-core";
 import { formatRange } from "@nlae/core";
+import { currencyLookup } from "../overview/local";
 import { matchTransactions, type TransactionFilter } from "../commands/handlers";
 import { useEffect, useMemo, useState } from "react";
 import { categoryChoices, CategorySelect, ConfirmDelete, Empty, indented, Money, PageHeading } from "../components/common";
@@ -30,12 +31,12 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   const { manual } = useMode();
   const [toolsExpanded, setToolsExpanded] = useState(false);
   const manualTools = manual || toolsExpanded;
-  const { transactions, customCategories, categoryTree, currency, store, refresh, accounts } = useFinance();
+  const { transactions, customCategories, categoryTree, currency, store, refresh, accounts, statements } = useFinance();
   const categories = useMemo(() => allCategories(customCategories), [customCategories]);
   const [query, setQuery] = useState(preset?.query ?? "");
   const [filter, setFilter] = useState<Category | "all">(preset?.category ?? "all");
   const [kind, setKind] = useState<TransactionKind | "all">("all");
-  const [accountFilter, setAccountFilter] = useState<number | "all">("all");
+  const [accountFilter, setAccountFilter] = useState<number | "all">(preset?.accountId ?? "all");
   const [dimension, setDimension] = useState("");
   const [commandFilter, setCommandFilter] = useState<TransactionFilter | null>(preset && (preset.period || preset.amount || preset.query) ? preset : null);
   const [remember, setRemember] = useState(true);
@@ -55,6 +56,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
   // Deleting for good is confirmed in the page: entries (one row) or the whole trash.
   const [purging, setPurging] = useState<EntryDetail | "all" | null>(null);
   const [suspects, setSuspects] = useState<Awaited<ReturnType<typeof store.ledger.suspectIncome>>>([]);
+  const codeFor = useMemo(() => currencyLookup(accounts, statements, currency ?? "USD"), [accounts, statements, currency]);
   const cur = currency ?? accounts[0]?.currency ?? "USD";
   const x = m.transactions;
   const L = m.ledger.list;
@@ -73,15 +75,21 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
     return base.filter((transaction) => (commandFilter || inFilter === null || inFilter(transaction.category))
       && (commandFilter || !q || transaction.description.toLowerCase().includes(q) || (transaction.originalDescription ?? "").toLowerCase().includes(q) || (transaction.note ?? "").toLowerCase().includes(q))
       && (!manualTools || kind === "all" || transaction.kind === kind)
-      && (!manualTools || accountFilter === "all" || transaction.accountId === accountFilter)
+      && (accountFilter === "all" || transaction.accountId === accountFilter)
+      && (!commandFilter?.activity || (isCounted(transaction) && (commandFilter.activity === "counted" ||
+        (kindOf(transaction) === "income") === (commandFilter.activity === "income"))))
+      && (!commandFilter?.currency || codeFor(transaction) === commandFilter.currency)
       && (!manualTools || !d || [transaction.merchant, transaction.project, ...(transaction.tags ?? [])].some((value) => (value ?? "").toLowerCase().includes(d))));
-  }, [transactions, query, filter, commandFilter, kind, accountFilter, dimension, manualTools]);
+  }, [transactions, query, filter, commandFilter, kind, accountFilter, dimension, manualTools, codeFor]);
   // Back to the first rows whenever the filters change (not after editing a row).
   const filterKey = JSON.stringify([query, filter, kind, accountFilter, dimension, commandFilter, manualTools]);
   const [shown, setShown] = useState({ key: filterKey, rows: PAGE_ROWS });
   const rowLimit = shown.key === filterKey ? shown.rows : PAGE_ROWS;
   const hidden = visible.length - rowLimit;
   const commandSummary = commandFilter && [
+    commandFilter.currency,
+    commandFilter.accountId ? accountName.get(commandFilter.accountId) : null,
+    commandFilter.activity === "income" ? m.dashboard.income : commandFilter.activity === "spending" ? m.dashboard.spending : null,
     commandFilter.query ? `“${commandFilter.query}”` : null,
     commandFilter.period ? formatRange(commandFilter.period) : null,
     commandFilter.amount ? `${{ eq: "=", gt: ">", gte: "≥", lt: "<", lte: "≤" }[commandFilter.amount.comparator]} ${formatMoney(commandFilter.amount.amountMinor, commandFilter.amount.currency ?? cur)}` : null,
@@ -293,7 +301,7 @@ export function Transactions({ preset, intent }: { preset?: TransactionFilter; i
             {transaction.kind === "transfer" || transaction.kind === "card_payment" || transaction.kind === "adjustment"
               ? <span className="bw-tag bw-tag-muted">{m.ledger.kinds[transaction.kind]}</span>
               : <CategorySelect label={t("transactions.categoryFor", { description: transaction.description })} value={transaction.category} categories={categories} lazy onChange={(category) => change(transaction, category)} />}
-            <Money cents={transaction.amountCents} currency={cur} signed />
+            <Money cents={transaction.amountCents} currency={codeFor(transaction)} signed />
             <div className="bw-row-actions">
               {manualTools && <>
               <button type="button" className="bw-link-button" onClick={async () => setForm({ entry: await store.ledger.entry(transaction.id) })}>{m.ledger.common.edit}</button>

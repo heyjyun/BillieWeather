@@ -12,6 +12,7 @@ export interface Account {
   nickname: string | null;
   locale: string | null;
   timeZone: string | null;
+  ianaTimeZone?: string | null;
   usageRegion: string | null;
   registeredAt: string | null;
   badges: string[];
@@ -51,12 +52,12 @@ export class AccountError extends Error {
 }
 
 interface AccountJson {
-  email: string; nickname: string | null; locale: string | null; time_zone: string | null;
+  email: string; nickname: string | null; locale: string | null; time_zone: string | null; iana_time_zone?: string | null;
   usage_region: string | null; registered_at: string | null; badges?: string[]; owner_id?: string | null;
 }
 
 const toAccount = (json: AccountJson): Account => ({
-  email: json.email, nickname: json.nickname, locale: json.locale, timeZone: json.time_zone,
+  email: json.email, nickname: json.nickname, locale: json.locale, timeZone: json.time_zone, ianaTimeZone: json.iana_time_zone,
   usageRegion: json.usage_region, registeredAt: json.registered_at, badges: json.badges ?? [],
   ownerId: typeof json.owner_id === "string" && /^[0-9a-f-]{36}$/i.test(json.owner_id) ? json.owner_id.toLowerCase() : null,
 });

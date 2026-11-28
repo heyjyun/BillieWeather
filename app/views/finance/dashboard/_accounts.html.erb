@@ -26,7 +26,7 @@
                 <details class="bw-inline-edit">
                   <summary class="bw-text-link"><%= t("billie.finance.ui.enter_or_edit_amount") %></summary>
                   <%= form_with model: @profile, scope: :finance_profile, url: finance_profile_path, method: :patch, data: {turbo: false}, class: "bw-form" do |form| %>
-                    <%= hidden_field_tag :return_to, "dashboard" %>
+                    <%= hidden_field_tag :return_to, "accounts" %>
                     <div class="bw-field">
                       <%= form.label :cash_on_hand, t("billie.finance.ui.cash_on_hand_currency", currency: @profile.currency) %>
                       <%= form.number_field :cash_on_hand, step: "0.01", min: "0", required: true %>

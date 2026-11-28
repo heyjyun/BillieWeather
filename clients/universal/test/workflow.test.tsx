@@ -121,7 +121,7 @@ it("signs in, works with local data, switches language, and signs out", async ()
   await screen.findByText(/basic-amount\.csv: This statement has already been imported|basic-amount\.csv: .*already/i);
 
   await nav("Dashboard");
-  await screen.findByText("Monthly cash flow");
+  await screen.findByRole("region", { name: "Income and expense trends" });
   expect(document.querySelector("#dashboard-income strong")?.textContent).toBe("$6,000.00"); // 2 payrolls from the local file + 1,000 from the website
 
   await nav("All Transactions");

@@ -36,6 +36,15 @@ module Finance
       preset != "all_time"
     end
 
+    def previous_start
+      return unless start_date && end_date
+      case preset
+      when "this_month", "last_month" then start_date.prev_month
+      when "this_year", "last_year" then start_date.prev_year
+      else start_date - (end_date - start_date).to_i - 1
+      end
+    end
+
     private
 
     def parse_date(value)

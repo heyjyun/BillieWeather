@@ -15,6 +15,7 @@
     <%= stylesheet_link_tag "/billie.css" %>
     <%= stylesheet_link_tag "/searchable-select.css" %>
     <%= stylesheet_link_tag "/billie-overview.css" %>
+    <%= stylesheet_link_tag "/financial-overview.css" if controller_path == "finance/dashboard" %>
     <script src="/billie-theme.js"></script>
     <script src="/billie.js" defer></script>
   <% landing_page = controller_path == "public/home"; public_page = landing_page || devise_controller? || !user_signed_in?; admin_area = !public_page && controller_path.start_with?("admin/") %>
@@ -73,7 +74,7 @@
       <% unless public_page %><header class="bw-topbar"><div class="bw-breadcrumb"><%= admin_area ? t('billie.community.nav.support_admin') : t('billie.layout.workspace') %> <span>/</span> <strong><%= content_for?(:title) ? yield(:title) : t('billie.layout.overview') %></strong></div><% if command_bar %><div class="bw-command" data-smart-command data-locale="<%= I18n.locale %>" data-context-url="<%= finance_command_context_path %>" data-preview-url="<%= finance_command_preview_path %>" data-execute-url="<%= finance_command_execute_path %>" data-undo-url="<%= finance_command_undo_path %>"></div><% end %><div class="bw-topbar-actions"><%= render 'shared/billie_mode_switch', manual: manual_workspace if mode_switch %><% if manual_workspace %><span class="bw-sr-only" id="manual-mode-badge"><%= t('billie.ledger.mode.manual_on') %></span><% end %><%= render 'shared/billie_theme_switcher' %><%= render 'shared/billie_language_switcher' %></div></header><% end %>
       <main id="main-content" class="<%= 'bw-main' unless public_page %>">
         <%# Only messages are shown; other flash keys (e.g. ai_batch_id) carry data for the page. %><% flash.to_hash.slice("notice", "alert").each do |type, message| %><div class="bw-flash <%= 'bw-flash-error' if type.to_s == 'alert' %>" role="<%= type.to_s == 'alert' ? 'alert' : 'status' %>"><%= message %></div><% end %>
-        <% if controller.is_a?(Finance::BaseController) %><% module_id = controller.send(:current_module_id) %><% if Finance::ModuleCatalog::TRANSACTION_MODULES.include?(module_id) %><%= render "finance/shared/transactions_tabs" %><% elsif Finance::ModuleCatalog::WEB_TABS.key?(module_id) %><%= render "finance/shared/module_tabs" %><% end %><% end %>
+        <% if controller.is_a?(Finance::BaseController) %><% module_id = controller.send(:current_module_id) %><% if module_id != "overview" && Finance::ModuleCatalog::TRANSACTION_MODULES.include?(module_id) %><%= render "finance/shared/transactions_tabs" %><% elsif Finance::ModuleCatalog::WEB_TABS.key?(module_id) %><%= render "finance/shared/module_tabs" %><% end %><% end %>
         <%= yield %>
       </main>
       <% if public_page %><%= render "community/support_dialog", **support_dialog_locals %><% end %>

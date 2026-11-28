@@ -32,7 +32,7 @@ class FinanceManualModeTest < ActionDispatch::IntegrationTest
     # (this class turns every module on); Statements sits under Transactions › Add & Sync.
     assert_select "#module-nav a[href='#{finance_accounts_path}']"
     assert_select "#module-nav a[href='#{finance_budgets_path}']"
-    assert_select "#transactions-tabs a[href='#{finance_add_sync_path}']"
+    assert_equal finance_add_sync_path, JSON.parse(css_select("#financial-overview").first["data-links"])["addSync"]
 
     get finance_transactions_path
     assert_select "#add-entry", 0

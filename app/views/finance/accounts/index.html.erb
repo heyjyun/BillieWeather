@@ -56,3 +56,8 @@
   </section>
 <% end %>
 <div class="bw-info-line"><%= finance_icon "file", size: 18 %><p><%= t("billie.ledger.accounts.balance_note") %></p></div>
+
+<details class="bw-panel" id="statement-account-details" <%= "open" if params[:statement_details] == "1" %>>
+  <summary class="bw-text-link"><%= t("billie.finance.ui.cash_accounts") %> · <%= t("billie.finance.ui.cash_on_hand") %></summary>
+  <%= render "finance/dashboard/accounts" %>
+</details>

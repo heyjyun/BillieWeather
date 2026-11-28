@@ -29,6 +29,7 @@ module ClientApi
           nickname: user.nickname,
           locale: user.locale.presence,
           time_zone: user.time_zone.presence,
+          iana_time_zone: ActiveSupport::TimeZone[user.time_zone.to_s]&.tzinfo&.name,
           usage_region: user.usage_region,
           registered_at: user.created_at&.iso8601,
           badges: user.community_badges

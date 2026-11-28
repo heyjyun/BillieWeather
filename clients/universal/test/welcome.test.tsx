@@ -80,8 +80,8 @@ function launchAs(account: Partial<typeof who>) {
 const WELCOME_TITLE = /^Welcome to BillieWeather/;
 const welcomeHeading = () => screen.findByRole("heading", { level: 2, name: WELCOME_TITLE });
 const noWelcome = () => expect(screen.queryByRole("heading", { name: WELCOME_TITLE })).toBeNull();
-// The dashboard opens with a time-of-day greeting ("Good morning!", "Good evening, Billie!").
-const dashboard = () => screen.findByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening)/ });
+// Overview opens with its module title after onboarding.
+const dashboard = () => screen.findByRole("heading", { level: 1, name: "Financial Overview" });
 const welcomeKey = (ownerId: string) => `billie.welcome.id:${ownerId}`;
 let openSpy: ReturnType<typeof vi.spyOn>;
 

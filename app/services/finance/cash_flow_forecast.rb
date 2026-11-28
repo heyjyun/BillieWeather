@@ -21,6 +21,10 @@ module Finance
       raise InvalidScenario, I18n.t("billie.backend.invalid_scenario")
     end
 
+    def self.linear_points(today, days, opening, daily_net)
+      (0..days).map { |day| {date: today + day, balance: (opening + daily_net * day).round(2)} }
+    end
+
     def to_h
       today = Date.current
       balance_summary = BalanceSync.call(user: @user)
@@ -45,7 +49,7 @@ module Finance
       daily_income = history_days.positive? ? income / history_days * income_factor : BigDecimal(0)
       daily_expenses = history_days.positive? ? expenses / history_days * expense_factor : BigDecimal(0)
       daily_net = daily_income - daily_expenses
-      points = balance_available ? (0..@days).map { |day| {date: today + day, balance: (current_balance + daily_net * day).round(2)} } : []
+      points = balance_available ? self.class.linear_points(today, @days, current_balance, daily_net) : []
       method = :linear
       @model_notice = nil
 
