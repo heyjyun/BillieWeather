@@ -17,7 +17,6 @@
 .bw-password-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
 
 .bw-field input[aria-invalid="true"], .bw-field select[aria-invalid="true"] { border-color: var(--negative); }
-.bw-region-field .bw-region-search { margin-bottom: 2px; }
 
 .bw-code-input { font-size: 1.5rem !important; letter-spacing: 0.3em; text-align: center; font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 

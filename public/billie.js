@@ -6,81 +6,25 @@
     return (text || "").toString().normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
   }
 
-  // Region picker: a search box that filters the long region <select> as you type.
-  // Safari cannot hide <option>s, so matching options are rebuilt instead of hidden.
-  function setupRegionSearch(root) {
-    if (root.dataset.regionSearchReady) return;
-    var input = root.querySelector("[data-region-search-input]");
-    var select = root.querySelector("select");
-    var empty = root.querySelector("[data-region-search-empty]");
-    if (!input || !select) return;
-    root.dataset.regionSearchReady = "1";
+  var searchableSelects = new WeakMap();
 
-    var prompt = select.options[0] && select.options[0].value === "" ? select.options[0] : null;
-    var all = Array.prototype.slice.call(select.options).filter(function (option) { return option !== prompt; });
-    all.forEach(function (option) { option.dataset.match = normalize(option.dataset.search || option.text); });
-
-    // The last real choice survives searches that match nothing, so clearing the box restores it.
-    var lastValue = select.value;
-
-    function render(query) {
-      var selected = select.value || lastValue;
-      var terms = normalize(query).split(/\s+/).filter(Boolean);
-      var matches = terms.length === 0 ? all : all.filter(function (option) {
-        return terms.every(function (term) { return option.dataset.match.indexOf(term) !== -1; });
+  function setupSearchableSelects() {
+    var roots = document.querySelectorAll("[data-searchable-select]");
+    if (!roots.length) return;
+    import("./searchable-select.mjs").then(function (module) {
+      roots.forEach(function (root) {
+        if (root.isConnected && !searchableSelects.has(root)) {
+          searchableSelects.set(root, module.connectSearchableSelect(root));
+        }
       });
-      // Names that start with the query come first, so "ja" lists Japan before Azerbaijan.
-      if (terms.length) {
-        var first = terms[0];
-        matches = matches.slice().sort(function (a, b) {
-          return (normalize(a.text).indexOf(first) === 0 ? 0 : 1) - (normalize(b.text).indexOf(first) === 0 ? 0 : 1);
-        });
-      }
-      select.textContent = "";
-      if (prompt) select.appendChild(prompt);
-      matches.forEach(function (option) { select.appendChild(option); });
-
-      if (matches.some(function (option) { return option.value === selected; })) {
-        select.value = selected;
-      } else if (terms.length && matches.length) {
-        select.value = matches[0].value;
-      } else {
-        select.value = "";
-      }
-      if (select.value) lastValue = select.value;
-      // While searching, show the matches as an open list instead of a closed dropdown.
-      select.size = terms.length ? Math.max(2, Math.min(matches.length + (prompt ? 1 : 0), 7)) : 0;
-      if (empty) empty.hidden = !(terms.length && matches.length === 0);
-    }
-
-    var form = select.form;
-    if (form) form.addEventListener("submit", function () {
-      if (input.value) { input.value = ""; render(""); }
-    });
-
-    input.hidden = false;
-    input.addEventListener("input", function () { render(input.value); });
-    input.addEventListener("keydown", function (event) {
-      if (event.key === "ArrowDown" && input.value) {
-        event.preventDefault();
-        select.focus();
-      } else if (event.key === "Enter" && input.value) {
-        // Enter picks the highlighted match instead of submitting a half-finished form.
-        event.preventDefault();
-        if (select.value) { input.value = ""; render(""); select.focus(); }
-      } else if (event.key === "Escape" && input.value) {
-        input.value = "";
-        render("");
-      }
-    });
-    select.addEventListener("change", function () {
-      if (select.value) lastValue = select.value;
-      if (input.value && select.value) { input.value = ""; render(""); }
-    });
-    select.addEventListener("keydown", function (event) {
-      if (event.key === "Enter" && select.size > 1) { event.preventDefault(); input.value = ""; render(""); }
     });
   }
+
+  document.addEventListener("turbo:before-cache", function () {
+    document.querySelectorAll("[data-searchable-select]").forEach(function (root) {
+      searchableSelects.get(root)?.reset();
+    });
+  });
 
   // Support modal: a native <dialog>, so Esc, focus containment and returning focus
   // to the trigger come from the browser. Clicking the dimmed backdrop also closes it.
@@ -635,6 +579,23 @@
     refresh();
   }
 
+  function refreshSidebar(data) {
+    var nav = document.getElementById("module-nav");
+    if (!nav || data.sidebar_revision < Number(nav.dataset.revision || 0)) return;
+    var holder = document.createElement("div");
+    [["#module-nav", data.nav], ["[data-sidebar-preview]", data.preview],
+      ["[data-sidebar-customization]", data.customization]].forEach(function (fragment) {
+      var old = document.querySelector(fragment[0]);
+      if (!old || !fragment[1]) return;
+      holder.innerHTML = fragment[1];
+      var fresh = holder.querySelector(fragment[0]);
+      if (!fresh) return;
+      old.replaceWith(fresh);
+      if (fresh.id === "module-nav") fresh.dataset.revision = String(data.sidebar_revision);
+      if (fresh.hasAttribute("data-sidebar-customization")) setupSidebarOrder(fresh);
+    });
+  }
+
   // Settings › Feature Library: "show in sidebar" switches save without a page reload and swap in the
   // new sidebar the server rendered; filters show and hide cards in place. A switch only changes the
   // sidebar; every available module keeps its Open link. Without JavaScript the forms and filter
@@ -646,7 +607,6 @@
     var empty = root.querySelector("[data-library-empty]");
     var cards = Array.prototype.slice.call(root.querySelectorAll("[data-module]"));
     var filter = root.dataset.filter || "all";
-    var navRevision = -1;
     function visible(card) {
       if (filter === "sidebar") return card.dataset.sidebar === "true";
       if (filter === "hidden") return card.dataset.available === "true" && card.dataset.sidebar !== "true";
@@ -701,20 +661,7 @@
           card.classList.toggle("is-on", on);
           button.setAttribute("aria-checked", on ? "true" : "false");
           input.value = on ? "0" : "1";
-          var nav = document.getElementById("module-nav");
-          if (nav && result.data.nav && result.data.sidebar_revision >= navRevision) {
-            navRevision = result.data.sidebar_revision;
-            var holder = document.createElement("div");
-            holder.innerHTML = result.data.nav;
-            var fresh = holder.querySelector("#module-nav");
-            if (fresh) nav.replaceWith(fresh);
-            var preview = root.querySelector("[data-sidebar-preview]");
-            if (preview && result.data.preview) {
-              holder.innerHTML = result.data.preview;
-              var freshPreview = holder.querySelector("[data-sidebar-preview]");
-              if (freshPreview) preview.replaceWith(freshPreview);
-            }
-          }
+          refreshSidebar(result.data);
           if (status) status.textContent = result.data.message || "";
           applyFilter();
         }).catch(function () {
@@ -733,7 +680,7 @@
     document.querySelectorAll("[data-theme-menu]").forEach(setupThemeMenu);
     document.querySelectorAll("[data-sidebar-toggle]").forEach(setupSidebarToggle);
     setupMenuDismiss();
-    document.querySelectorAll("[data-region-search]").forEach(setupRegionSearch);
+    setupSearchableSelects();
     document.querySelectorAll("[data-dialog-open]").forEach(setupDialogTrigger);
     document.querySelectorAll("[data-copy-text]").forEach(setupCopyButton);
     document.querySelectorAll("form[data-confirm]").forEach(setupConfirmForm);
@@ -784,7 +731,7 @@
       var box = item.getBoundingClientRect();
       return event.clientY < box.top + box.height / 2;
     }
-    function save(keys) {
+    function save(keys, form) {
       var token = document.querySelector('meta[name="csrf-token"]');
       root.setAttribute("aria-busy", "true");
       fetch(root.dataset.orderUrl, {
@@ -797,31 +744,36 @@
       }).then(function (result) {
         root.removeAttribute("aria-busy");
         if (!result.ok) { if (status) status.textContent = result.data.message || ""; return; }
-        var holder = document.createElement("div");
-        var nav = document.getElementById("module-nav");
-        if (nav && result.data.nav) {
-          holder.innerHTML = result.data.nav;
-          var freshNav = holder.querySelector("#module-nav");
-          if (freshNav) nav.replaceWith(freshNav);
+        refreshSidebar(result.data);
+        if (form) {
+          var focusKey = form.closest("[data-module-key]").dataset.moduleKey;
+          var direction = form.dataset.sidebarMove;
+          var row = document.querySelector('[data-sidebar-order] [data-module-key="' + focusKey + '"]');
+          var next = row && (row.querySelector('[data-sidebar-move="' + direction + '"] button:not(:disabled)') || row.querySelector("button:not(:disabled)"));
+          if (next) next.focus();
         }
-        var preview = document.querySelector("[data-sidebar-preview]");
-        if (preview && result.data.preview) {
-          holder.innerHTML = result.data.preview;
-          var freshPreview = holder.querySelector("[data-sidebar-preview]");
-          if (freshPreview) preview.replaceWith(freshPreview);
-        }
-        if (result.data.customization) {
-          holder.innerHTML = result.data.customization;
-          var fresh = holder.querySelector("[data-sidebar-customization]");
-          if (fresh) {
-            root.replaceWith(fresh);
-            setupSidebarOrder(fresh);
-            var freshStatus = fresh.querySelector("[data-sidebar-status]");
-            if (freshStatus) freshStatus.textContent = result.data.message || "";
-          }
-        }
-      }).catch(function () { root.removeAttribute("aria-busy"); });
+        var freshStatus = document.querySelector("[data-sidebar-status]");
+        if (freshStatus) freshStatus.textContent = result.data.message || "";
+      }).catch(function () {
+        root.removeAttribute("aria-busy");
+        if (form) form.submit();
+      });
     }
+    list.querySelectorAll("form[data-sidebar-move]").forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        if (root.getAttribute("aria-busy") === "true") return;
+        var keys = items().map(function (entry) { return entry.dataset.moduleKey; });
+        var id = form.closest("[data-module-key]").dataset.moduleKey;
+        var direction = form.dataset.sidebarMove;
+        var from = keys.indexOf(id);
+        var to = from + (direction === "up" ? -1 : 1);
+        if (from < 0 || to < 0 || to >= keys.length) return;
+        keys.splice(from, 1);
+        keys.splice(to, 0, id);
+        save(keys, form);
+      });
+    });
     items().forEach(function (item) {
       item.addEventListener("dragstart", function (event) {
         if (root.getAttribute("aria-busy") === "true") { event.preventDefault(); return; }

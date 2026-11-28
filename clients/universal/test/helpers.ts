@@ -76,13 +76,13 @@ export function makePdf(pages: Array<Array<string | Array<[number, string]>>>): 
 const SHELL_ROUTES: Record<string, string[]> = {
   Import: ["Transactions", "Add & Sync", "Import statements"],
   Receipts: ["Transactions", "Add & Sync", "Scan & Capture"],
-  Dashboard: ["Transactions", "Overview"],
+  Dashboard: ["Financial Overview"],
   "All Transactions": ["Transactions", "All Transactions"],
   // Sidebar items renamed to their Feature Library module names.
-  Categories: ["Categories & Tags"],
+  Categories: ["Categories"],
   Accounts: ["Accounts & Assets"],
   "Budgets & schedules": ["Budgets"],
-  "Merchants & tags": ["Categories & Tags", "Merchants & tags"],
+  "Merchants & tags": ["Categories", "Merchants & tags"],
   "Manual home": ["Transactions", "Add & Sync", "Manual bookkeeping"],
   Data: ["Settings", "Open database manager"],
   数据管理: ["设置", "打开数据库管理"],
@@ -91,7 +91,7 @@ const SHELL_ROUTES: Record<string, string[]> = {
 
 /** Which Feature Library module (packages/shared-types/schema/module-catalog.json) shows each page. */
 const SHELL_MODULES: Record<string, string> = {
-  Import: "transactions", Receipts: "transactions", Dashboard: "transactions", "All Transactions": "transactions", "Manual home": "transactions",
+  Import: "transactions", Receipts: "transactions", Dashboard: "overview", "All Transactions": "transactions", "Manual home": "transactions",
   导入: "transactions", Categories: "categories", "Merchants & tags": "categories", Accounts: "accounts", "Budgets & schedules": "budgets",
   Reports: "reports",
 };

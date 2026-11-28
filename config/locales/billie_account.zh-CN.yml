@@ -23,7 +23,7 @@ zh-CN:
       send_password_link: 发送设置密码的邮件
       password_reset_sent: 设置密码的链接已发送至 %{email}。
       password_reset_failed: 暂时无法发送密码邮件，请稍后再试。
-      region_search_placeholder: 输入搜索，例如 日本 或 JP
+      region_search_placeholder: 搜索
       region_search_label: 搜索地区
       region_search_empty: 没有找到匹配的地区。
   activerecord:

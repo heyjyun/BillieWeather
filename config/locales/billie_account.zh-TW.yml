@@ -23,7 +23,7 @@ zh-TW:
       send_password_link: 寄送設定密碼的郵件
       password_reset_sent: 設定密碼的連結已寄至 %{email}。
       password_reset_failed: 暫時無法寄送密碼郵件，請稍後再試。
-      region_search_placeholder: 輸入搜尋，例如 日本 或 JP
+      region_search_placeholder: 搜尋
       region_search_label: 搜尋地區
       region_search_empty: 找不到符合的地區。
   activerecord:

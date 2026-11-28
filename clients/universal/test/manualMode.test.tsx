@@ -80,7 +80,7 @@ it("uses the same destinations and records in both accounting workflows", async 
   await screen.findByRole("heading", { name: "Manual bookkeeping" });
   expect(screen.getByRole("button", { name: "Manual Accounting" }).getAttribute("aria-pressed")).toBe("true");
   expect(badge()).toBeTruthy();
-  for (const shown of ["Transactions", "AI Insight", "Accounts & Assets", "Categories & Tags", "Budgets", "Recurring & Bills", "Reports", "Settings"]) expect(navigation().getByRole("button", { name: shown })).toBeTruthy();
+  for (const shown of ["Transactions", "AI Insight", "Accounts & Assets", "Categories", "Budgets", "Recurring Transactions & Bills", "Reports", "Settings"]) expect(navigation().getByRole("button", { name: shown })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Manual bookkeeping" }).getAttribute("aria-current")).toBe("page"); // Transactions › Add & Sync › Manual bookkeeping
 
   // 4. Create an account and an expense through the workspace.

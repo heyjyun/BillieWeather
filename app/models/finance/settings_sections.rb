@@ -10,8 +10,8 @@ module Finance
     end
 
     ALL = [
-      Section.new(id: "sidebar", area: "features", title_key: "billie.modules.sidebar.title", module_id: nil),
       Section.new(id: "feature_library", area: "features", title_key: "billie.modules.library.management", module_id: nil),
+      Section.new(id: "sidebar", area: "features", title_key: "billie.modules.sidebar.title", module_id: nil),
       Section.new(id: "automation", area: "automation", title_key: "billie.settings_hub.automation", module_id: nil),
       Section.new(id: "rules", area: "automation", title_key: "billie.settings_hub.rules", module_id: "categories"),
       Section.new(id: "data_tools", area: "data", title_key: "billie.settings_hub.data_tools", module_id: nil),

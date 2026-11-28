@@ -30,16 +30,23 @@ ja:
         receipts: レシート
         reconciliation: 照合
         review_history: 確認と履歴
+      groups:
+        intelligence: "概要とインサイト"
+        financial: "財務管理"
+        analytics: "分析と予測"
+        add_sync: "追加と同期"
+        system: "システム管理"
       names:
+        fixed_assets: "固定資産"
         overview: "財務概要"
-        import: "インポート"
-        receipts: "レシート"
+        import: "明細のインポート"
+        receipts: "レシートスキャン"
         data_management: "データ管理"
         transactions: 取引
         ai_assistant: "AI インサイト"
         ledgers: 帳簿
         accounts: 口座と資産
-        categories: カテゴリとタグ
+        categories: カテゴリ
         budgets: 予算
         reports: レポート
         recurring: 定期取引と請求
@@ -48,6 +55,7 @@ ja:
         forecast: キャッシュフロー予測
         multi_currency: 複数通貨
       descriptions:
+        fixed_assets: "固定資産の記録。"
         overview: "残高と支出の推移を確認します。"
         import: "明細をインポートして確認します。"
         receipts: "レシートを取り込み、照合結果を確認します。"
@@ -65,13 +73,14 @@ ja:
         forecast: 今後 30・60・90 日の予想残高。
         multi_currency: 複数通貨の口座をレポート用に換算。
       status:
+        unimplemented: "未実装"
         available: "利用可能"
         coming_soon: "近日公開"
         unsupported: "このプラットフォームは未対応"
         in_sidebar: "サイドバーに表示"
         hidden: "非表示"
-        core: "基本"
       library:
+        show_in_sidebar: "サイドバーに表示"
         management: "機能管理"
         preview: "サイドバーのプレビュー"
         always_shown: "常に表示"

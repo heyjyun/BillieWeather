@@ -23,7 +23,7 @@ es:
       send_password_link: Enviarme un enlace de contraseña
       password_reset_sent: Enviamos un enlace para establecer tu contraseña a %{email}.
       password_reset_failed: No se pudo enviar el correo de contraseña en este momento. Inténtalo más tarde.
-      region_search_placeholder: Escribe para buscar, p. ej. Japón o JP
+      region_search_placeholder: Buscar
       region_search_label: Buscar regiones
       region_search_empty: Ninguna región coincide con la búsqueda.
   activerecord:

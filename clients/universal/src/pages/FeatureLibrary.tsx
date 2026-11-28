@@ -3,7 +3,7 @@
 // opens and keeps working whether it is shown or hidden, and no financial record is touched.
 // Choices are kept on this device for this account and synchronized with the account
 // (services/modulePreferences.ts, services/moduleSync.ts).
-import { availabilityOf, isAvailable, MODULES, type ModuleDefinition } from "@billie/shared-types";
+import { availabilityOf, isAvailable, MODULE_GROUPS, MODULES, type ModuleDefinition } from "@billie/shared-types";
 import { useState } from "react";
 import { ModuleIcon } from "../components/ModuleIcon";
 import { websitePathFor } from "../components/ModuleUnavailable";
@@ -29,7 +29,8 @@ export function FeatureManager({ open, openLibrary, embedded = false }: {
   const [filter, setFilter] = useState<Filter>("all");
   const [status, setStatus] = useState("");
   const x = m.modules;
-  const shown = [...MODULES].sort((a, b) => Number(isAvailable(b, "app")) - Number(isAvailable(a, "app")) || a.order - b.order).filter((module) => {
+  const shown = MODULES.filter((module) => {
+    if (!module.group) return false;
     const available = isAvailable(module, "app");
     if (filter === "sidebar") return inSidebar(module.id);
     if (filter === "hidden") return available && !inSidebar(module.id);
@@ -42,6 +43,38 @@ export function FeatureManager({ open, openLibrary, embedded = false }: {
     const visible = !inSidebar(module.id);
     setSidebarVisible(module.id, visible);
     setStatus(t(visible ? "modules.library.savedShown" : "modules.library.savedHidden", { name: x.names[module.id] }));
+  }
+
+  function renderRow(module: ModuleDefinition) {
+    const state = availabilityOf(module, "app");
+    const available = state === "available";
+    const visible = inSidebar(module.id);
+    const name = x.names[module.id];
+    const web = websitePathFor(module);
+    return (
+      <li key={module.id} className={`bw-library-card${visible ? " is-on" : ""}${available ? "" : " is-coming-soon"}`} data-module={module.id} data-availability={state} data-sidebar={visible}>
+        <div className="bw-library-card-head">
+          <span className="bw-library-icon"><ModuleIcon name={module.icon} size={22} /></span>
+          <div className="bw-library-title">
+            <strong id={`module-${module.id}-name`}>{name}</strong>
+            {!available && <span className="bw-caption">{state === "unsupported" ? x.status.unsupported : x.status.unimplemented}</span>}
+          </div>
+          {available && open && <button type="button" className="bw-link-button bw-feature-open" aria-label={`${x.library.openModule} ${name}`} onClick={() => open(module)}>{x.library.openModule}</button>}
+          {web && <button type="button" className="bw-link-button bw-feature-open" onClick={() => openExternal(websiteUrl(web, locale))}>{x.library.openOnWeb} ↗</button>}
+          {available && (
+            <button type="button" className="bw-switch" role="switch" aria-checked={visible} disabled={!!conflicts[module.id]}
+              aria-label={t("modules.library.toggleLabel", { name })} aria-describedby={`module-${module.id}-desc`} title={t("modules.library.toggleLabel", { name })}
+              onClick={() => toggle(module)}>
+              <span className="bw-switch-track" aria-hidden="true"><span className="bw-switch-thumb" /></span>
+            </button>
+          )}
+        </div>
+        <p id={`module-${module.id}-desc`} className="bw-sr-only">
+          {x.descriptions[module.id]}
+          {!available && <span className="bw-library-note">{state === "unsupported" ? x.library.unsupportedNote : x.library.comingSoonNote}</span>}
+        </p>
+      </li>
+    );
   }
 
   return (
@@ -76,39 +109,21 @@ export function FeatureManager({ open, openLibrary, embedded = false }: {
       </div>}
       <p className="bw-sr-status" role="status" aria-live="polite">{status}</p>
       {shown.length === 0 ? <p className="bw-muted">{x.library.empty}</p> : (
-        <ul className="bw-feature-rows" role="list" id="feature-library">
-          {shown.map((module) => {
-            const state = availabilityOf(module, "app");
-            const available = state === "available";
-            const visible = inSidebar(module.id);
-            const name = x.names[module.id];
-            const web = websitePathFor(module);
+        <div id="feature-library">
+          <p className="bw-caption bw-visibility-heading">{x.library.showInSidebar}</p>
+          {MODULE_GROUPS.map((group) => {
+            const members = shown.filter((module) => module.group === group);
+            if (!members.length) return null;
             return (
-              <li key={module.id} className={`bw-library-card${visible ? " is-on" : ""}${available ? "" : " is-coming-soon"}`} data-module={module.id} data-availability={state} data-sidebar={visible}>
-                <div className="bw-library-card-head">
-                  <span className="bw-library-icon"><ModuleIcon name={module.icon} size={22} /></span>
-                  <div className="bw-library-title">
-                    <h2 id={`module-${module.id}-name`}>{name}</h2>
-                    {!available && <span className="bw-caption">{state === "unsupported" ? x.status.unsupported : x.status.comingSoon}</span>}
-                  </div>
-                  {available && open && <button type="button" className="bw-link-button bw-feature-open" aria-label={`${x.library.openModule} ${name}`} onClick={() => open(module)}>{x.library.openModule}</button>}
-                  {web && <button type="button" className="bw-link-button bw-feature-open" onClick={() => openExternal(websiteUrl(web, locale))}>{x.library.openOnWeb} ↗</button>}
-                  {available && (
-                    <button type="button" className="bw-switch" role="switch" aria-checked={visible} disabled={!!conflicts[module.id]}
-                      aria-label={t("modules.library.toggleLabel", { name })} aria-describedby={`module-${module.id}-desc`} title={t("modules.library.toggleLabel", { name })}
-                      onClick={() => toggle(module)}>
-                      <span className="bw-switch-track" aria-hidden="true"><span className="bw-switch-thumb" /></span>
-                    </button>
-                  )}
-                </div>
-                <p id={`module-${module.id}-desc`} className="bw-sr-only">
-                  {x.descriptions[module.id]}
-                  {!available && <span className="bw-library-note">{state === "unsupported" ? x.library.unsupportedNote : x.library.comingSoonNote}</span>}
-                </p>
-              </li>
+              <section key={group} className="bw-module-group" data-module-group={group} aria-labelledby={`group-${group}`}>
+                <h3 id={`group-${group}`}>{t(`modules.groups.${group}`)}</h3>
+                <ul className="bw-feature-rows">
+                  {members.map(renderRow)}
+                </ul>
+              </section>
             );
           })}
-        </ul>
+        </div>
       )}
       <div className="bw-feature-locked">
         <span>{x.nav.settings}</span>

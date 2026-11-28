@@ -38,10 +38,3 @@ export function regionOptions(locale: string, globalCitizen: string): RegionOpti
     .sort((a, b) => a.label.localeCompare(b.label, locale));
   return [{ code: GLOBAL_CITIZEN, label: globalCitizen }, { code: OTHER, label: regionLabel(OTHER, locale) }, ...standard];
 }
-
-/** Matches the name or the two-letter code, ignoring case and accents. */
-export function matchesRegion(option: RegionOption, query: string): boolean {
-  const fold = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-  const q = fold(query.trim());
-  return q === "" || fold(option.label).includes(q) || option.code.toLowerCase() === q;
-}

@@ -10,8 +10,7 @@ module Finance
   #   "unsupported" (built on another surface only).
   # - Enabled = can be used. Derived, never stored: every module available on the website is enabled
   #   for every account, new or existing. No personal choice disables a feature.
-  # - Sidebar visibility: a personal choice. Without one, the catalog default applies (Transactions,
-  #   AI Insight, Financial Overview, Categories, Accounts & Assets; catalog version 3, 2026-11-28).
+  # - Sidebar visibility: a personal choice. Without one, the catalog default applies (Financial Overview and AI Insight).
   # - Sidebar order: a personal choice too, one saved list per account (Finance::SidebarOrder). Entries
   #   the list does not name follow it in catalog order (order_sidebar), as in modules.ts.
   #
@@ -23,9 +22,10 @@ module Finance
     SCHEMA = JSON.parse(File.read(PATH)).freeze
     SURFACE = "web"
     PREFERENCE_FORMAT = SCHEMA.fetch("preference_format")
+    GROUPS = SCHEMA.fetch("groups").freeze
     ID_FORMAT = /\A[a-z_]{2,40}\z/
 
-    Definition = Data.define(:id, :core, :default_sidebar_visible, :order, :icon, :availability, :destination, :depends_on) do
+    Definition = Data.define(:id, :group, :default_sidebar_visible, :order, :icon, :availability, :destination, :depends_on) do
       def availability_on(surface = SURFACE) = availability.fetch(surface)
 
       def available?(surface = SURFACE) = availability_on(surface) == "available"
@@ -43,7 +43,7 @@ module Finance
     end
 
     MODULES = SCHEMA.fetch("modules").map do |raw|
-      Definition.new(id: raw.fetch("id"), core: raw.fetch("core"), default_sidebar_visible: raw.fetch("default_sidebar_visible"), order: raw.fetch("order"),
+      Definition.new(id: raw.fetch("id"), group: raw.fetch("group"), default_sidebar_visible: raw.fetch("default_sidebar_visible"), order: raw.fetch("order"),
         icon: raw.fetch("icon"), availability: raw.fetch("availability").freeze, destination: raw.fetch("destination").freeze, depends_on: raw.fetch("depends_on").freeze)
     end.sort_by(&:order).freeze
     IDS = MODULES.map(&:id).freeze
@@ -83,7 +83,7 @@ module Finance
 
     # Stored sidebar choices for a person: {"budgets" => {"sidebar_visible" => true, "changedAt" => "...", "revision" => 2}}.
     def choices_for(user)
-      ModulePreference.where(user_id: user.id).to_h { |row| [row.module_key, {"sidebar_visible" => row.sidebar_visible, "changedAt" => row.changed_at&.utc&.iso8601(3).to_s, "revision" => row.revision}] }
+      ModulePreference.for_sidebar(user).to_h { |row| [row.module_key, {"sidebar_visible" => row.effective_sidebar_visible, "changedAt" => row.changed_at&.utc&.iso8601(3).to_s, "revision" => row.revision}] }
     end
 
     # Same contract as normalizePreferences in modules.ts: bad data means "no choice", never an error.

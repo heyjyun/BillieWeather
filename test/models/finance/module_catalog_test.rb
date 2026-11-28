@@ -16,9 +16,9 @@ class Finance::ModuleCatalogTest < ActiveSupport::TestCase
     end
   end
 
-  test "the catalog lists the approved modules; five start in the sidebar (catalog version 3)" do
-    assert_equal %w[transactions ai_assistant overview categories import receipts reports data_management ledgers accounts budgets recurring goals household forecast multi_currency], Finance::ModuleCatalog::IDS
-    assert_equal %w[transactions ai_assistant overview categories accounts], Finance::ModuleCatalog::MODULES.select(&:default_sidebar_visible).map(&:id)
+  test "the catalog lists the approved modules; two start in the sidebar (catalog version 5)" do
+    assert_equal %w[overview ai_assistant transactions accounts fixed_assets categories budgets recurring reports forecast import receipts data_management ledgers goals household multi_currency], Finance::ModuleCatalog::IDS
+    assert_equal %w[overview ai_assistant], Finance::ModuleCatalog::MODULES.select(&:default_sidebar_visible).map(&:id)
     refute Finance::ModuleCatalog::MODULES.first.respond_to?(:default_enabled), "sidebar defaults are not called 'enabled'"
     refute_includes Finance::ModuleCatalog::IDS, "settings"
     assert_equal ["settings"], Finance::ModuleCatalog::SCHEMA.fetch("system_entries").map { |entry| entry["id"] }
@@ -32,11 +32,11 @@ class Finance::ModuleCatalogTest < ActiveSupport::TestCase
         assert_nil definition.route, definition.id
       end
     end
-    assert_equal %w[ledgers goals household multi_currency], Finance::ModuleCatalog::MODULES.select(&:coming_soon?).map(&:id)
+    assert_equal %w[fixed_assets ledgers goals household multi_currency], Finance::ModuleCatalog::MODULES.select(&:coming_soon?).map(&:id)
   end
 
   test "platform status: built modules are usable everywhere they are built; Forecast is website-only" do
-    assert_equal %w[transactions ai_assistant overview categories import receipts reports data_management accounts budgets recurring forecast], Finance::ModuleCatalog.enabled_modules.map(&:id)
+    assert_equal %w[overview ai_assistant transactions accounts categories budgets recurring reports forecast import receipts data_management], Finance::ModuleCatalog.enabled_modules.map(&:id)
     forecast = Finance::ModuleCatalog.find("forecast")
     assert forecast.available?("web")
     assert forecast.unsupported?("app"), "not built in the app: 'unsupported', not 'coming soon' and not switched off"
@@ -82,7 +82,7 @@ class Finance::ModuleCatalogTest < ActiveSupport::TestCase
     end
     choices = Finance::ModuleCatalog.choices_for(user)
     refute Finance::ModuleCatalog.sidebar_visible?("budgets", choices)
-    assert Finance::ModuleCatalog.sidebar_visible?("transactions", choices)
+    refute Finance::ModuleCatalog.sidebar_visible?("transactions", choices)
     assert Finance::ModuleCatalog.enabled?("budgets"), "hidden from the sidebar, still usable"
     assert_includes Finance::ModuleCatalog.hidden_modules(choices).map(&:id), "budgets"
   end
@@ -92,9 +92,9 @@ class Finance::ModuleCatalogTest < ActiveSupport::TestCase
     Finance::ModulePreference.insert_all!([{user_id: user.id, module_key: "reports", enabled: true, changed_at: Time.current, revision: 3, created_at: Time.current, updated_at: Time.current},
       {user_id: user.id, module_key: "ai_assistant", enabled: false, changed_at: Time.current, revision: 1, created_at: Time.current, updated_at: Time.current}])
     choices = Finance::ModuleCatalog.choices_for(user)
-    assert_equal %w[transactions overview categories reports accounts], Finance::ModuleCatalog.sidebar_modules(choices).map(&:id)
+    assert_equal %w[overview reports], Finance::ModuleCatalog.sidebar_modules(choices).map(&:id)
     assert_equal 3, choices.dig("reports", "revision")
-    assert Finance::ModuleCatalog.enabled?("ai_assistant"), "a hidden core module still works"
+    assert Finance::ModuleCatalog.enabled?("ai_assistant"), "a hidden module still works"
   end
 
   test "preferences are per person and go away with the account, not with 'delete my financial data'" do

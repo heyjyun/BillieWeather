@@ -3,6 +3,7 @@
 // accounts -> new expense -> edit -> trash -> restore -> transfer -> budget -> backup button. Synthetic data only.
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import initSqlJs from "sql.js";
+import { CURRENCIES } from "@billie/shared-types";
 import { migrate, openInShell, showAllModulesInSidebar } from "./helpers";
 import { sqljsDriver } from "../src/services/sqljsDriver";
 
@@ -52,7 +53,17 @@ it("keeps a complete book by hand: accounts, an expense, edit, trash and restore
   // Accounts: choose the book currency, add checking and a card.
   await nav("Accounts");
   await screen.findByRole("heading", { name: "Accounts" });
-  fireEvent.change(screen.getByLabelText(/^Book currency/), { target: { value: "USD" } });
+  const picker = screen.getByLabelText(/^Book currency/) as HTMLSelectElement;
+  expect([...picker.options].map((option) => option.value)).toEqual([...CURRENCIES]);
+  const search = screen.getByLabelText("Search currencies");
+  fireEvent.input(search, { target: { value: "日圓" } });
+  expect(picker.value).toBe("JPY");
+  fireEvent.input(search, { target: { value: "eUrO" } });
+  expect(picker.value).toBe("EUR");
+  fireEvent.input(search, { target: { value: "uSd" } });
+  expect(picker.value).toBe("USD");
+  fireEvent.keyDown(search, { key: "Enter" });
+  expect([...picker.options].map((option) => option.value)).toEqual([...CURRENCIES]);
   for (const [name, type0, opening] of [["ZXQ Checking", "checking", "1000"], ["ZXQ Card", "credit_card", "0"]]) {
     await click(screen.getByRole("button", { name: "Add account" }));
     const form = screen.getByRole("form", { name: "New account" });

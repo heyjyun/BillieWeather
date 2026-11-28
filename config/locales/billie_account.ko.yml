@@ -23,7 +23,7 @@ ko:
       send_password_link: 비밀번호 설정 링크 받기
       password_reset_sent: "%{email}(으)로 비밀번호 설정 링크를 보냈습니다."
       password_reset_failed: 지금은 비밀번호 이메일을 보낼 수 없습니다. 잠시 후 다시 시도하세요.
-      region_search_placeholder: '입력해서 검색 (예: 일본, JP)'
+      region_search_placeholder: 검색
       region_search_label: 지역 검색
       region_search_empty: 검색과 일치하는 지역이 없습니다.
   activerecord:

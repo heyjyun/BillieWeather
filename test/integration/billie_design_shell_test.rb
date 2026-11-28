@@ -20,6 +20,7 @@ class BillieDesignShellTest < ActionDispatch::IntegrationTest
 
   # Since the Feature Library (Phase 1a) the sidebar lists modules; Statements is a tab of Transactions › Add & Sync.
   test "the sidebar marks the current module and Statements is marked in the Transactions tabs" do
+    show_in_sidebar!(@user, ["transactions"])
     sign_in @user
     get finance_statements_path
     assert_response :success
@@ -40,6 +41,7 @@ class BillieDesignShellTest < ActionDispatch::IntegrationTest
   end
 
   test "shell controls are translated" do
+    show_in_sidebar!(@user, ["transactions"])
     sign_in @user
     {"zh-CN" => ["对账单", "收起侧边栏", "深色", "交易记录"], "zh-TW" => ["對帳單", "收合側邊欄", "深色", "交易紀錄"], "en" => ["Statements", "Collapse sidebar", "Dark", "Transactions"]}.each do |locale, (statements, collapse, dark, transactions)|
       get finance_statements_path(locale: locale)

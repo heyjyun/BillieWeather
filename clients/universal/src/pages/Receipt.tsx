@@ -7,6 +7,7 @@ import { allCategories, formatMoney, type MatchResult, type ReceiptExtraction, t
 import { CURRENCIES } from "@billie/shared-types";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { DocumentPicker } from "../components/DocumentPicker";
+import { currencyOptions, SearchableSelect } from "../components/SearchableSelect";
 import { categoryChoices, indented, InlineDialog, PageHeading } from "../components/common";
 import { useAccount } from "../hooks/useAccount";
 import { radioGroupKeys, useFocusWhenLost } from "../hooks/useFocus";
@@ -280,10 +281,8 @@ export function Receipt() {
             {field("time", (props) => <input {...props} type="time" value={values.time} onChange={(e) => change("time", e.target.value)} />)}
             {text("total", { inputMode: "decimal" })}
             {field("currency", (props) => (
-              <select {...props} value={values.currency} onChange={(e) => change("currency", e.target.value)}>
-                <option value="">—</option>
-                {[...new Set([...(values.currency ? [values.currency] : []), ...CURRENCIES])].map((code) => <option key={code} value={code}>{code}</option>)}
-              </select>
+              <SearchableSelect {...props} kind="currency" value={values.currency} onChange={(value) => change("currency", value)}
+                options={currencyOptions([...new Set([...(values.currency ? [values.currency] : []), ...CURRENCIES])], "—")} />
             ))}
             {text("tax", { inputMode: "decimal" })}
             {text("tip", { inputMode: "decimal" })}

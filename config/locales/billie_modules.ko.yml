@@ -30,16 +30,23 @@ ko:
         receipts: 영수증
         reconciliation: 대사
         review_history: 검토 및 기록
+      groups:
+        intelligence: "개요 및 인사이트"
+        financial: "재무 관리"
+        analytics: "분석 및 예측"
+        add_sync: "추가 및 동기화"
+        system: "시스템 관리"
       names:
+        fixed_assets: "고정자산"
         overview: "재무 개요"
-        import: "가져오기"
-        receipts: "영수증"
+        import: "명세서 가져오기"
+        receipts: "영수증 스캔"
         data_management: "데이터 관리"
         transactions: 거래
         ai_assistant: "AI 인사이트"
         ledgers: 장부
         accounts: 계좌 및 자산
-        categories: 카테고리 및 태그
+        categories: 카테고리
         budgets: 예산
         reports: 보고서
         recurring: 정기 거래 및 청구서
@@ -48,6 +55,7 @@ ko:
         forecast: 현금 흐름 예측
         multi_currency: 다중 통화
       descriptions:
+        fixed_assets: "고정자산 기록."
         overview: "잔액과 지출 추이를 확인합니다."
         import: "은행 명세서를 가져와 검토합니다."
         receipts: "영수증을 촬영하고 일치 결과를 검토합니다."
@@ -65,13 +73,14 @@ ko:
         forecast: 앞으로 30, 60, 90일의 예상 잔액.
         multi_currency: 여러 통화의 계좌를 보고서용으로 환산.
       status:
+        unimplemented: "미구현"
         available: "사용 가능"
         coming_soon: "출시 예정"
         unsupported: "이 플랫폼 미지원"
         in_sidebar: "사이드바에 표시"
         hidden: "숨김"
-        core: "기본"
       library:
+        show_in_sidebar: "사이드바에 표시"
         management: "기능 관리"
         preview: "사이드바 미리 보기"
         always_shown: "항상 표시"

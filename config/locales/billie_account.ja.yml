@@ -23,7 +23,7 @@ ja:
       send_password_link: パスワード設定リンクをメールで受け取る
       password_reset_sent: パスワード設定用のリンクを %{email} に送信しました。
       password_reset_failed: 現在パスワードのメールを送信できません。しばらくしてからもう一度お試しください。
-      region_search_placeholder: 入力して検索（例：日本、JP）
+      region_search_placeholder: 検索
       region_search_label: 地域を検索
       region_search_empty: 一致する地域がありません。
   activerecord:

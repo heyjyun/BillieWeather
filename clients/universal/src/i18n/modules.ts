@@ -4,13 +4,16 @@
 
 export const modulesEn = {
   nav: { settings: "Settings", sections: "Transactions sections" },
+  groups: { intelligence: "Overview & Intelligence", financial: "Financial Management", analytics: "Analysis & Forecasting", add_sync: "Add & Sync", system: "System Management" },
   names: {
-    overview: "Financial Overview", import: "Import", receipts: "Receipts", data_management: "Data Management",
-    transactions: "Transactions", ai_assistant: "AI Insight", ledgers: "Ledgers", accounts: "Accounts & Assets", categories: "Categories & Tags",
-    budgets: "Budgets", reports: "Reports", recurring: "Recurring & Bills", goals: "Goals & Planning", household: "Household",
+    fixed_assets: "Fixed Assets",
+    overview: "Financial Overview", import: "Import Statements", receipts: "Scan & Capture", data_management: "Data Management",
+    transactions: "Transactions", ai_assistant: "AI Insight", ledgers: "Ledgers", accounts: "Accounts & Assets", categories: "Categories",
+    budgets: "Budgets", reports: "Reports", recurring: "Recurring Transactions & Bills", goals: "Goals & Planning", household: "Household",
     forecast: "Cash Flow Forecast", multi_currency: "Multi-Currency",
   },
   descriptions: {
+    fixed_assets: "Fixed asset records.",
     overview: "View balances and spending trends.",
     import: "Import and review bank statements.",
     receipts: "Capture receipts and review matches.",
@@ -29,10 +32,11 @@ export const modulesEn = {
     forecast: "Your expected balance over the next 30, 60 or 90 days.",
     multi_currency: "Accounts in several currencies, converted for reports.",
   },
-  status: { available: "Available", comingSoon: "Coming soon", unsupported: "Not in the app yet", inSidebar: "In sidebar", hidden: "Hidden", core: "Core" },
+  status: { unimplemented: "Not implemented", available: "Available", comingSoon: "Coming soon", unsupported: "Not in the app yet", inSidebar: "In sidebar", hidden: "Hidden" },
   sections: { overview: "Overview", allTransactions: "All Transactions", addSync: "Add & Sync", import: "Import statements", receipt: "Scan & Capture", manual: "Manual bookkeeping" },
   sidebar: { title: "Sidebar customization", intro: "Choose which modules appear in the sidebar and in what order. Hidden modules keep working: open them from Settings or the Feature Library. Settings always stays at the bottom.", drag: "Drag to reorder", move_up: "Move {name} up", move_down: "Move {name} down", hide: "Hide", hide_label: "Hide {name} from the sidebar", settings_fixed: "Always shown, always last", help: "Drag an entry, or use the arrows, to change its position. Changes appear in the sidebar right away.", add_heading: "Add to the sidebar", add: "Add", add_label: "Add {name} to the sidebar", nothing_to_add: "Every available module is already in the sidebar.", saved: "Sidebar order saved.", stale: "The sidebar order was changed on another device. The current order is shown; try again." },
   library: {
+    showInSidebar: "Show in Sidebar",
     management: "Feature Management", preview: "Live sidebar preview", alwaysShown: "Always shown", account: "My Account", sidebarIntro: "Choose what appears in the sidebar. All available features remain usable.",
     reset: "Restore default sidebar", resetSaved: "Default sidebar restored.",
     eyebrow: "SETTINGS", title: "Feature Library", intro: "Everything BillieWeather can do. Every available feature works right away; choose which ones appear in your sidebar.",
@@ -82,13 +86,16 @@ export type ModulesMessages = typeof modulesEn;
 
 export const modulesZhCN: ModulesMessages = {
   nav: { settings: "设置", sections: "交易分区" },
+  groups: { intelligence: "总览与智能分析", financial: "财务管理", analytics: "分析与预测", add_sync: "添加与同步", system: "系统管理" },
   names: {
-    overview: "财务总览", import: "导入", receipts: "小票", data_management: "数据管理",
+    fixed_assets: "固定资产",
+    overview: "财务总览", import: "账单导入", receipts: "小票扫描", data_management: "数据管理",
     transactions: "交易记录", ai_assistant: "AI Insight", ledgers: "账本", accounts: "账户与资产", categories: "分类",
     budgets: "预算", reports: "报表", recurring: "周期记账与账单", goals: "目标与规划", household: "家庭共享",
     forecast: "现金流预测", multi_currency: "多币种",
   },
   descriptions: {
+    fixed_assets: "固定资产记录。",
     overview: "查看余额和支出趋势。",
     import: "导入并核对银行账单。",
     receipts: "采集收据并核对匹配结果。",
@@ -107,10 +114,11 @@ export const modulesZhCN: ModulesMessages = {
     forecast: "未来 30、60 或 90 天的预计余额。",
     multi_currency: "多种货币的账户，在报表中换算。",
   },
-  status: { available: "可用", comingSoon: "即将推出", unsupported: "应用暂不支持", inSidebar: "在侧边栏", hidden: "已隐藏", core: "核心" },
+  status: { unimplemented: "尚未实现", available: "可用", comingSoon: "即将推出", unsupported: "应用暂不支持", inSidebar: "在侧边栏", hidden: "已隐藏" },
   sections: { overview: "总览", allTransactions: "全部交易", addSync: "添加与同步", import: "导入账单", receipt: "扫描与采集", manual: "手动记账" },
   sidebar: { title: "侧边栏自定义", intro: "选择哪些模块显示在侧边栏，以及它们的顺序。隐藏的模块照常可用：可以从“设置”或功能库打开。“设置”始终在最下方。", drag: "拖动以调整顺序", move_up: "将{name}上移", move_down: "将{name}下移", hide: "隐藏", hide_label: "从侧边栏隐藏{name}", settings_fixed: "始终显示，始终在最后", help: "拖动条目或使用箭头调整位置。更改会立即反映在侧边栏中。", add_heading: "添加到侧边栏", add: "添加", add_label: "将{name}添加到侧边栏", nothing_to_add: "所有可用模块都已在侧边栏中。", saved: "侧边栏顺序已保存。", stale: "侧边栏顺序已在另一台设备上更改。现在显示的是当前顺序，请再试一次。" },
   library: {
+    showInSidebar: "在侧边栏显示",
     management: "功能管理", preview: "实时侧边栏预览", alwaysShown: "始终显示", account: "我的账户", sidebarIntro: "自定义侧边栏显示的功能，不影响功能本身的可用性。",
     reset: "恢复默认显示", resetSaved: "已恢复默认侧边栏。",
     eyebrow: "设置", title: "功能库", intro: "BillieWeather 的全部功能。所有可用功能都能直接使用；你可以选择哪些显示在侧边栏。",
@@ -158,13 +166,16 @@ export const modulesZhCN: ModulesMessages = {
 
 export const modulesZhTW: ModulesMessages = {
   nav: { settings: "設定", sections: "交易分區" },
+  groups: { intelligence: "總覽與智慧分析", financial: "財務管理", analytics: "分析與預測", add_sync: "新增與同步", system: "系統管理" },
   names: {
-    overview: "財務總覽", import: "匯入", receipts: "收據", data_management: "資料管理",
+    fixed_assets: "固定資產",
+    overview: "財務總覽", import: "帳單匯入", receipts: "收據掃描", data_management: "資料管理",
     transactions: "交易紀錄", ai_assistant: "AI Insight", ledgers: "帳本", accounts: "帳戶與資產", categories: "分類",
     budgets: "預算", reports: "報表", recurring: "週期記帳與帳單", goals: "目標與規劃", household: "家庭共享",
     forecast: "現金流預測", multi_currency: "多幣種",
   },
   descriptions: {
+    fixed_assets: "固定資產記錄。",
     overview: "查看餘額及支出趨勢。",
     import: "匯入並核對銀行對帳單。",
     receipts: "擷取收據並核對比對結果。",
@@ -183,10 +194,11 @@ export const modulesZhTW: ModulesMessages = {
     forecast: "未來 30、60 或 90 天的預估餘額。",
     multi_currency: "多種貨幣的帳戶，在報表中換算。",
   },
-  status: { available: "可用", comingSoon: "即將推出", unsupported: "應用程式暫不支援", inSidebar: "在側邊欄", hidden: "已隱藏", core: "核心" },
+  status: { unimplemented: "尚未實作", available: "可用", comingSoon: "即將推出", unsupported: "應用程式暫不支援", inSidebar: "在側邊欄", hidden: "已隱藏" },
   sections: { overview: "總覽", allTransactions: "全部交易", addSync: "新增與同步", import: "匯入帳單", receipt: "掃描與擷取", manual: "手動記帳" },
   sidebar: { title: "側邊欄自訂", intro: "選擇哪些模組顯示在側邊欄，以及它們的順序。隱藏的模組照常可用：可以從「設定」或功能庫開啟。「設定」始終在最下方。", drag: "拖曳以調整順序", move_up: "將{name}上移", move_down: "將{name}下移", hide: "隱藏", hide_label: "從側邊欄隱藏{name}", settings_fixed: "始終顯示，始終在最後", help: "拖曳項目或使用箭頭調整位置。變更會立即反映在側邊欄中。", add_heading: "新增到側邊欄", add: "新增", add_label: "將{name}新增到側邊欄", nothing_to_add: "所有可用模組都已在側邊欄中。", saved: "側邊欄順序已儲存。", stale: "側邊欄順序已在另一台裝置上變更。現在顯示的是目前順序，請再試一次。" },
   library: {
+    showInSidebar: "在側邊欄顯示",
     management: "功能管理", preview: "即時側邊欄預覽", alwaysShown: "始終顯示", account: "我的帳戶", sidebarIntro: "自訂側邊欄顯示的功能，不影響功能本身的可用性。",
     reset: "恢復預設顯示", resetSaved: "已恢復預設側邊欄。",
     eyebrow: "設定", title: "功能庫", intro: "BillieWeather 的所有功能。所有可用功能都能直接使用；你可以選擇哪些顯示在側邊欄。",
@@ -234,13 +246,16 @@ export const modulesZhTW: ModulesMessages = {
 
 export const modulesJa: ModulesMessages = {
   nav: { settings: "設定", sections: "取引のセクション" },
+  groups: { intelligence: "概要とインサイト", financial: "財務管理", analytics: "分析と予測", add_sync: "追加と同期", system: "システム管理" },
   names: {
-    overview: "財務概要", import: "インポート", receipts: "レシート", data_management: "データ管理",
-    transactions: "取引", ai_assistant: "AI インサイト", ledgers: "帳簿", accounts: "口座と資産", categories: "カテゴリとタグ",
+    fixed_assets: "固定資産",
+    overview: "財務概要", import: "明細のインポート", receipts: "レシートスキャン", data_management: "データ管理",
+    transactions: "取引", ai_assistant: "AI インサイト", ledgers: "帳簿", accounts: "口座と資産", categories: "カテゴリ",
     budgets: "予算", reports: "レポート", recurring: "定期取引と請求", goals: "目標と計画", household: "家族で共有",
     forecast: "キャッシュフロー予測", multi_currency: "複数通貨",
   },
   descriptions: {
+    fixed_assets: "固定資産の記録。",
     overview: "残高と支出の推移を確認します。",
     import: "明細をインポートして確認します。",
     receipts: "レシートを取り込み、照合結果を確認します。",
@@ -259,10 +274,11 @@ export const modulesJa: ModulesMessages = {
     forecast: "今後 30・60・90 日の予想残高。",
     multi_currency: "複数通貨の口座をレポート用に換算。",
   },
-  status: { available: "利用可能", comingSoon: "近日公開", unsupported: "アプリ未対応", inSidebar: "サイドバーに表示", hidden: "非表示", core: "基本" },
+  status: { unimplemented: "未実装", available: "利用可能", comingSoon: "近日公開", unsupported: "アプリ未対応", inSidebar: "サイドバーに表示", hidden: "非表示" },
   sections: { overview: "概要", allTransactions: "すべての取引", addSync: "追加と同期", import: "明細の取り込み", receipt: "スキャンと取り込み", manual: "手動記帳" },
   sidebar: { title: "サイドバーのカスタマイズ", intro: "サイドバーに表示するモジュールとその順序を選びます。非表示のモジュールも引き続き使えます（設定や機能ライブラリから開けます）。設定は常にいちばん下に表示されます。", drag: "ドラッグして並べ替え", move_up: "{name}を上へ移動", move_down: "{name}を下へ移動", hide: "非表示", hide_label: "{name}をサイドバーから非表示にする", settings_fixed: "常に表示、常に最後", help: "項目をドラッグするか矢印を使って位置を変えます。変更はすぐにサイドバーに反映されます。", add_heading: "サイドバーに追加", add: "追加", add_label: "{name}をサイドバーに追加", nothing_to_add: "利用できるモジュールはすべてサイドバーにあります。", saved: "サイドバーの順序を保存しました。", stale: "サイドバーの順序が別のデバイスで変更されました。現在の順序を表示しています。もう一度お試しください。" },
   library: {
+    showInSidebar: "サイドバーに表示",
     management: "機能管理", preview: "サイドバーのプレビュー", alwaysShown: "常に表示", account: "マイアカウント", sidebarIntro: "サイドバーに表示する機能を選べます。利用できる機能は引き続き使えます。",
     reset: "既定のサイドバーに戻す", resetSaved: "既定のサイドバーに戻しました。",
     eyebrow: "設定", title: "機能ライブラリ", intro: "BillieWeather のすべての機能です。利用可能な機能はすぐに使えます。サイドバーに表示するものを選んでください。",
@@ -310,13 +326,16 @@ export const modulesJa: ModulesMessages = {
 
 export const modulesKo: ModulesMessages = {
   nav: { settings: "설정", sections: "거래 영역" },
+  groups: { intelligence: "개요 및 인사이트", financial: "재무 관리", analytics: "분석 및 예측", add_sync: "추가 및 동기화", system: "시스템 관리" },
   names: {
-    overview: "재무 개요", import: "가져오기", receipts: "영수증", data_management: "데이터 관리",
-    transactions: "거래", ai_assistant: "AI 인사이트", ledgers: "장부", accounts: "계좌 및 자산", categories: "카테고리 및 태그",
+    fixed_assets: "고정자산",
+    overview: "재무 개요", import: "명세서 가져오기", receipts: "영수증 스캔", data_management: "데이터 관리",
+    transactions: "거래", ai_assistant: "AI 인사이트", ledgers: "장부", accounts: "계좌 및 자산", categories: "카테고리",
     budgets: "예산", reports: "보고서", recurring: "정기 거래 및 청구서", goals: "목표 및 계획", household: "가족 공유",
     forecast: "현금 흐름 예측", multi_currency: "다중 통화",
   },
   descriptions: {
+    fixed_assets: "고정자산 기록.",
     overview: "잔액과 지출 추이를 확인합니다.",
     import: "은행 명세서를 가져와 검토합니다.",
     receipts: "영수증을 촬영하고 일치 결과를 검토합니다.",
@@ -335,10 +354,11 @@ export const modulesKo: ModulesMessages = {
     forecast: "앞으로 30, 60, 90일의 예상 잔액.",
     multi_currency: "여러 통화의 계좌를 보고서용으로 환산.",
   },
-  status: { available: "사용 가능", comingSoon: "출시 예정", unsupported: "앱 미지원", inSidebar: "사이드바에 표시", hidden: "숨김", core: "기본" },
+  status: { unimplemented: "미구현", available: "사용 가능", comingSoon: "출시 예정", unsupported: "앱 미지원", inSidebar: "사이드바에 표시", hidden: "숨김" },
   sections: { overview: "개요", allTransactions: "전체 거래", addSync: "추가 및 동기화", import: "명세서 가져오기", receipt: "스캔 및 캡처", manual: "직접 기록" },
   sidebar: { title: "사이드바 사용자 지정", intro: "사이드바에 표시할 모듈과 순서를 선택하세요. 숨긴 모듈도 계속 사용할 수 있으며 설정이나 기능 라이브러리에서 열 수 있습니다. 설정은 항상 맨 아래에 있습니다.", drag: "끌어서 순서 변경", move_up: "{name} 위로 이동", move_down: "{name} 아래로 이동", hide: "숨기기", hide_label: "사이드바에서 {name} 숨기기", settings_fixed: "항상 표시, 항상 마지막", help: "항목을 끌거나 화살표를 사용해 위치를 바꾸세요. 변경 사항은 사이드바에 바로 반영됩니다.", add_heading: "사이드바에 추가", add: "추가", add_label: "사이드바에 {name} 추가", nothing_to_add: "사용 가능한 모든 모듈이 이미 사이드바에 있습니다.", saved: "사이드바 순서를 저장했습니다.", stale: "다른 기기에서 사이드바 순서가 변경되었습니다. 현재 순서를 표시합니다. 다시 시도하세요." },
   library: {
+    showInSidebar: "사이드바에 표시",
     management: "기능 관리", preview: "사이드바 미리 보기", alwaysShown: "항상 표시", account: "내 계정", sidebarIntro: "사이드바에 표시할 기능을 선택하세요. 사용 가능한 기능은 계속 사용할 수 있습니다.",
     reset: "기본 사이드바 복원", resetSaved: "기본 사이드바를 복원했습니다.",
     eyebrow: "설정", title: "기능 라이브러리", intro: "BillieWeather의 모든 기능입니다. 사용 가능한 기능은 바로 쓸 수 있으며, 사이드바에 표시할 항목을 선택하세요.",
@@ -386,13 +406,16 @@ export const modulesKo: ModulesMessages = {
 
 export const modulesEs: ModulesMessages = {
   nav: { settings: "Ajustes", sections: "Secciones de movimientos" },
+  groups: { intelligence: "Resumen e inteligencia", financial: "Gestión financiera", analytics: "Análisis y previsión", add_sync: "Añadir y sincronizar", system: "Gestión del sistema" },
   names: {
-    overview: "Resumen financiero", import: "Importar", receipts: "Recibos", data_management: "Gestión de datos",
-    transactions: "Movimientos", ai_assistant: "Perspectiva de IA", ledgers: "Libros", accounts: "Cuentas y activos", categories: "Categorías y etiquetas",
+    fixed_assets: "Activos fijos",
+    overview: "Resumen financiero", import: "Importar extractos", receipts: "Escanear y capturar", data_management: "Gestión de datos",
+    transactions: "Movimientos", ai_assistant: "Perspectiva de IA", ledgers: "Libros", accounts: "Cuentas y activos", categories: "Categorías",
     budgets: "Presupuestos", reports: "Informes", recurring: "Recurrentes y facturas", goals: "Metas y planificación", household: "Hogar",
     forecast: "Previsión de flujo de caja", multi_currency: "Varias monedas",
   },
   descriptions: {
+    fixed_assets: "Registro de activos fijos.",
     overview: "Consulta los saldos y las tendencias de gasto.",
     import: "Importa y revisa extractos bancarios.",
     receipts: "Captura recibos y revisa las coincidencias.",
@@ -411,10 +434,11 @@ export const modulesEs: ModulesMessages = {
     forecast: "Tu saldo previsto para los próximos 30, 60 o 90 días.",
     multi_currency: "Cuentas en varias monedas, convertidas para los informes.",
   },
-  status: { available: "Disponible", comingSoon: "Próximamente", unsupported: "Aún no en la aplicación", inSidebar: "En la barra lateral", hidden: "Oculto", core: "Básico" },
+  status: { unimplemented: "Sin implementar", available: "Disponible", comingSoon: "Próximamente", unsupported: "Aún no en la aplicación", inSidebar: "En la barra lateral", hidden: "Oculto" },
   sections: { overview: "Resumen", allTransactions: "Todos los movimientos", addSync: "Añadir y sincronizar", import: "Importar extractos", receipt: "Escanear y capturar", manual: "Contabilidad manual" },
   sidebar: { title: "Personalizar la barra lateral", intro: "Elige qué módulos aparecen en la barra lateral y en qué orden. Los módulos ocultos siguen funcionando: ábrelos desde Configuración o la Biblioteca de funciones. Configuración siempre queda abajo.", drag: "Arrastra para reordenar", move_up: "Subir {name}", move_down: "Bajar {name}", hide: "Ocultar", hide_label: "Ocultar {name} de la barra lateral", settings_fixed: "Siempre visible, siempre al final", help: "Arrastra una entrada o usa las flechas para cambiar su posición. Los cambios aparecen en la barra lateral al instante.", add_heading: "Añadir a la barra lateral", add: "Añadir", add_label: "Añadir {name} a la barra lateral", nothing_to_add: "Todos los módulos disponibles ya están en la barra lateral.", saved: "Orden de la barra lateral guardado.", stale: "El orden de la barra lateral se cambió en otro dispositivo. Se muestra el orden actual; inténtalo de nuevo." },
   library: {
+    showInSidebar: "Mostrar en la barra lateral",
     management: "Gestión de funciones", preview: "Vista previa de la barra lateral", alwaysShown: "Siempre visible", account: "Mi cuenta", sidebarIntro: "Elige qué aparece en la barra lateral. Todas las funciones disponibles se pueden seguir usando.",
     reset: "Restaurar la barra lateral predeterminada", resetSaved: "Se restauró la barra lateral predeterminada.",
     eyebrow: "AJUSTES", title: "Biblioteca de funciones", intro: "Todo lo que BillieWeather puede hacer. Cada función disponible funciona desde el primer momento; elige cuáles aparecen en tu barra lateral.",

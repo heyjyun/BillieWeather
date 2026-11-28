@@ -46,7 +46,7 @@ beforeEach(() => { localStorage.clear(); sessionStorage.clear(); files.clear(); 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 const sidebar = async () => within(await screen.findByRole("navigation"));
-const labels = async () => (await sidebar()).getAllByRole("button").map((button) => button.textContent?.trim()).filter((text) => text && text !== "My Account");
+const labels = async () => [...(await screen.findByRole("navigation")).querySelectorAll("#module-nav button, .bw-system-nav button")].map((button) => button.textContent?.trim());
 const click = async (element: HTMLElement) => act(async () => { fireEvent.click(element); });
 const fingerprint = async () => JSON.stringify(await files.get("billieweather.db")!.select("SELECT * FROM transactions ORDER BY id"));
 
@@ -58,13 +58,29 @@ async function openLibrary() {
 const switchFor = (name: string) => screen.getByRole("switch", { name: `Show ${name} in the sidebar` });
 const choicesSaved = () => Object.keys(localStorage).filter((key) => key.startsWith("billie.modules.v1:")).map((key) => localStorage.getItem(key));
 
-it("a new person sees the five default entries and Settings, in order; the tabs are Overview, All Transactions, Add & Sync", async () => {
+it("a new person sees the two default entries and Settings, in order; the tabs are Overview, All Transactions, Add & Sync", async () => {
   mockAccount();
   render(<App />);
-  await waitFor(async () => expect((await labels()).filter((label) => label !== "Collapse sidebar")).toEqual(["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Settings"]));
+  await waitFor(async () => expect((await labels()).filter((label) => label !== "Collapse sidebar")).toEqual(["Financial Overview", "AI Insight", "Settings"]));
   expect(screen.getByRole("button", { name: "Overview" }).getAttribute("aria-current")).toBe("page");
   expect(screen.getByRole("button", { name: "All Transactions" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Add & Sync" })).toBeTruthy();
+});
+
+it("keeps Settings groups in catalog order while the sidebar moves across groups", async () => {
+  mockAccount();
+  render(<App />);
+  await click((await sidebar()).getByRole("button", { name: "Settings" }));
+  await click(await screen.findByRole("switch", { name: "Show Transactions in the sidebar" }));
+  const navIds = () => [...document.querySelectorAll<HTMLElement>("#module-nav [data-module]")].map((node) => node.dataset.module);
+  expect(navIds()).toEqual(["overview", "ai_assistant", "transactions"]);
+  await click(screen.getByRole("button", { name: "Move Transactions up" }));
+  expect(navIds()).toEqual(["overview", "transactions", "ai_assistant"]);
+  const groups = [...document.querySelectorAll<HTMLElement>("#settings-feature-library [data-module-group]")];
+  expect(groups.map((group) => group.dataset.moduleGroup)).toEqual(["intelligence", "financial", "analytics", "add_sync", "system"]);
+  expect(groups.map((group) => [...group.querySelectorAll<HTMLElement>("[data-module]")].map((row) => row.dataset.module)))
+    .toEqual([["overview", "ai_assistant"], ["transactions", "accounts", "fixed_assets", "categories", "budgets", "recurring"],
+      ["reports", "forecast"], ["import", "receipts"], ["data_management"]]);
 });
 
 it("every built module opens for a new person from Settings, without changing the sidebar or any record", async () => {
@@ -72,7 +88,7 @@ it("every built module opens for a new person from Settings, without changing th
   render(<App />);
   await screen.findByRole("navigation");
   const before = await fingerprint();
-  const pages: Array<[string, string]> = [["Accounts & Assets", "Accounts"], ["Categories & Tags", "Categories"], ["Reports", "Reports"]];
+  const pages: Array<[string, string]> = [["Accounts & Assets", "Accounts"], ["Categories", "Categories"], ["Reports", "Reports"]];
   for (const [name, heading] of pages) {
     await click((await sidebar()).getByRole("button", { name: "Settings" }));
     await screen.findByRole("heading", { name: "Settings & privacy", level: 1 });
@@ -81,7 +97,7 @@ it("every built module opens for a new person from Settings, without changing th
     expect(await screen.findByRole("heading", { name: heading, level: 1 })).toBeTruthy();
     expect(document.getElementById("module-unavailable")).toBeNull();
   }
-  expect((await labels()).filter((label) => label !== "Collapse sidebar" && label !== "Settings")).toEqual(["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets"]);
+  expect((await labels()).filter((label) => label !== "Collapse sidebar" && label !== "Settings")).toEqual(["Financial Overview", "AI Insight"]);
   expect(choicesSaved().every((value) => !value || !value.includes("sidebarVisible\":true"))).toBe(true);
   expect(await fingerprint()).toBe(before);
 });
@@ -127,17 +143,17 @@ it("modules that are not built for the app say so, have no switch, and Settings 
   expect(forecast.dataset.availability).toBe("unsupported");
   expect(within(forecast).getByText("Not in the app yet")).toBeTruthy();
   expect(within(forecast).getByRole("button", { name: /Open on the website/ })).toBeTruthy();
-  const goals = document.querySelector<HTMLElement>('[data-module="goals"]')!;
-  expect(within(goals).getByText("Coming soon")).toBeTruthy();
-  expect(within(goals).queryAllByRole("button")).toHaveLength(0);
+  const fixedAssets = document.querySelector<HTMLElement>('[data-module="fixed_assets"]')!;
+  expect(within(fixedAssets).getByText("Not implemented")).toBeTruthy();
+  expect(within(fixedAssets).queryAllByRole("button")).toHaveLength(0);
   fireEvent.click(screen.getByRole("button", { name: "Not available yet" }));
-  expect(document.querySelectorAll("#feature-library > li")).toHaveLength(5);
+  expect(document.querySelectorAll("#feature-library li[data-module]")).toHaveLength(2);
   fireEvent.click(screen.getByRole("button", { name: "Hidden" }));
-  expect([...document.querySelectorAll<HTMLElement>("#feature-library > li")].map((item) => item.dataset.module)).toEqual(["import", "receipts", "reports", "data_management", "budgets", "recurring"]);
+  expect([...document.querySelectorAll<HTMLElement>("#feature-library li[data-module]")].map((item) => item.dataset.module)).toEqual(["transactions", "accounts", "categories", "budgets", "recurring", "reports", "import", "receipts", "data_management"]);
   expect(screen.getByText("Always shown")).toBeTruthy();
-  // Hiding every default entry, the core modules included, still leaves Settings.
+  // Hiding every default entry, still leaves Settings.
   fireEvent.click(screen.getByRole("button", { name: "All" }));
-  for (const name of ["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets"]) await click(switchFor(name));
+  for (const name of ["Financial Overview", "AI Insight"]) await click(switchFor(name));
   await waitFor(async () => expect((await labels()).filter((label) => label !== "Collapse sidebar")).toEqual(["Settings"]));
 });
 
@@ -154,16 +170,16 @@ it("keeps Settings open in both modes and restores the sidebar without changing 
   await click(screen.getByRole("button", { name: "Manual Accounting" }));
   expect(sectionIds()).toEqual(initial);
   const preview = within(screen.getByRole("region", { name: "Live sidebar preview" }));
-  expect(preview.getAllByRole("listitem").map((item) => item.textContent?.trim())).toEqual(["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Settings"]);
+  expect(preview.getAllByRole("listitem").map((item) => item.textContent?.trim())).toEqual(["Financial Overview", "AI Insight", "Settings"]);
   await click(switchFor("Data Management"));
   await click(switchFor("AI Insight"));
   expect(navigation.getByRole("button", { name: "Data Management" })).toBeTruthy();
-  expect(preview.getAllByRole("listitem").map((item) => item.textContent?.trim())).toEqual(["Transactions", "Financial Overview", "Categories & Tags", "Data Management", "Accounts & Assets", "Settings"]);
+  expect(preview.getAllByRole("listitem").map((item) => item.textContent?.trim())).toEqual(["Financial Overview", "Data Management", "Settings"]);
   expect(navigation.queryByRole("button", { name: "AI Insight" })).toBeNull();
   await click(screen.getByRole("button", { name: "Restore default sidebar" }));
   expect(navigation.queryByRole("button", { name: "Data Management" })).toBeNull();
   expect(navigation.getByRole("button", { name: "AI Insight" })).toBeTruthy();
-  expect(preview.getAllByRole("listitem").map((item) => item.textContent?.trim())).toEqual(["Transactions", "AI Insight", "Financial Overview", "Categories & Tags", "Accounts & Assets", "Settings"]);
+  expect(preview.getAllByRole("listitem").map((item) => item.textContent?.trim())).toEqual(["Financial Overview", "AI Insight", "Settings"]);
   expect(screen.getByRole("button", { name: "Manual Accounting" }).getAttribute("aria-pressed")).toBe("true");
   expect(await fingerprint()).toEqual(before);
 });
@@ -174,6 +190,8 @@ it("a module hidden from the sidebar still answers deep links, without a 'turned
   await screen.findByRole("navigation");
   const before = await fingerprint();
   await openLibrary();
+  await click(switchFor("Transactions"));
+  expect((await sidebar()).getByRole("button", { name: "Transactions" })).toBeTruthy();
   await click(switchFor("Transactions"));
   await waitFor(async () => expect((await sidebar()).queryByRole("button", { name: "Transactions" })).toBeNull());
   // A Siri / Shortcuts deep link targets a Transactions page.

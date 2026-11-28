@@ -13,7 +13,6 @@
     "skipLibCheck": true,
     "noEmit": true,
     "types": ["vitest/globals"],
-    "baseUrl": ".",
     "paths": {
       "@billie/shared-types": ["../../packages/shared-types/src/index.ts"],
       "@billie/finance-core": ["../../packages/finance-core/src/index.ts"],

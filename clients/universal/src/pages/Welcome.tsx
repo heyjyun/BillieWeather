@@ -22,23 +22,26 @@ function Glyph({ d, size = 22 }: { d: string; size?: number }) {
   return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
 }
 
-export function Welcome({ name, onStart, onExplore }: { name?: string | null; onStart: () => void; onExplore: () => void }) {
+export function Welcome({ name, onStart, onExplore, embedded = false }: { embedded?: boolean; name?: string | null; onStart: () => void; onExplore: () => void }) {
   const { m, t } = useI18n();
   const w = m.welcome;
   const heading = useRef<HTMLHeadingElement>(null);
   // Screen readers and keyboard users start at the headline, as on a newly opened screen.
-  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
+  useEffect(() => { if (!embedded) heading.current?.focus({ preventScroll: true }); }, [embedded]);
+  const Container = embedded ? "section" : "main";
+  const Title = embedded ? "h2" : "h1";
+  const StepTitle = embedded ? "h3" : "h2";
   const display = normalizeNickname(name);
   const welcome = m.personal.welcome;
 
   return (
-    <main className="bw-welcome" aria-labelledby="bw-welcome-title">
+    <Container className={embedded ? "bw-welcome bw-welcome-embedded" : "bw-welcome"} aria-labelledby="bw-welcome-title">
       <div className="bw-welcome-inner">
         <section className="bw-welcome-hero">
           <span className="bw-welcome-glow" aria-hidden="true" />
           <div className="bw-welcome-brand"><BrandMark /><span>BillieWeather</span></div>
           <p className="bw-welcome-greeting">{w.ready}</p>
-          <h1 id="bw-welcome-title" ref={heading} tabIndex={-1}>{personalize(welcome.title, display)}</h1>
+          <Title id="bw-welcome-title" ref={heading} tabIndex={-1}>{personalize(welcome.title, display)}</Title>
           <p className="bw-welcome-subtitle">{welcome.subtitle}</p>
         </section>
 
@@ -48,7 +51,7 @@ export function Welcome({ name, onStart, onExplore }: { name?: string | null; on
               <span className="bw-welcome-step-icon"><Glyph d={step.icon} /></span>
               <div>
                 <span className="bw-welcome-step-number">{t("welcome.step", { n: index + 1 })}</span>
-                <h2>{w.steps[step.id].title}</h2>
+                <StepTitle>{w.steps[step.id].title}</StepTitle>
                 <p>{w.steps[step.id].body}</p>
               </div>
             </li>
@@ -64,6 +67,6 @@ export function Welcome({ name, onStart, onExplore }: { name?: string | null; on
 
         <p className="bw-welcome-privacy"><Glyph d={icons.lock} size={16} /><span>{w.privacy}</span></p>
       </div>
-    </main>
+    </Container>
   );
 }

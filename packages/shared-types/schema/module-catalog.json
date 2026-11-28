@@ -1,106 +1,113 @@
 {
-  "$comment": "The Feature Library's single source of truth, read by the website (app/models/finance/module_catalog.rb) and the apps (packages/shared-types/src/modules.ts). Names and descriptions are translation keys (config/locales/billie_modules.*.yml, clients/universal/src/i18n/modules.ts). Three separate questions, never mixed: (1) AVAILABILITY, per surface ('web' is the Rails website; 'app' is the universal client on macOS, Windows, iOS and Android): 'available' = built and its essential journey works there; 'coming_soon' = not built yet; 'unsupported' = built on another surface but not on this one. (2) ENABLED = can be used. It is derived, not stored: every module that is available on a surface is enabled there, for every account, new or old. There is no per-person switch that disables a feature. (3) SIDEBAR VISIBILITY = whether the module has a sidebar entry. Only this is a personal choice (Settings > Feature Library); 'default_sidebar_visible' applies until the person chooses. (4) SIDEBAR ORDER: 'order' is the default position; a person may save their own order of sidebar entries (stored as one list per account). Entries the saved list does not mention follow it in catalog order, so a new module never reorders an existing choice. Default sidebar since version 3 (2026-11-28): Transactions, AI Insight, Financial Overview, Categories, Accounts & Assets, then Settings. Hiding a module from the sidebar never blocks its pages, never changes or deletes data, and never stops processing (e.g. recurring entries still post). Settings is a system entry, not a module: always in the sidebar, never stored. Financial services removed from the product scope are not listed here and must not be added back.",
-  "version": 3,
+  "$comment": "Shared Settings and navigation catalog. Groups and order organize modules. Availability describes working destinations. Only sidebar visibility and order are user preferences. Ungrouped legacy IDs remain readable for compatibility.",
+  "version": 5,
   "preference_format": 1,
   "surfaces": ["web", "app"],
   "availability_states": ["available", "coming_soon", "unsupported"],
   "system_entries": [
     { "id": "settings", "icon": "settings", "destination": { "web": "finance_settings", "app": "settings" } }
   ],
+  "groups": ["intelligence", "financial", "analytics", "add_sync", "system"],
   "modules": [
     {
-      "id": "transactions", "core": true, "default_sidebar_visible": true, "order": 10, "icon": "transactions",
+      "id": "overview", "group": "intelligence", "default_sidebar_visible": true, "order": 10, "icon": "chart",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_dashboard", "app": "dashboard" },
+      "depends_on": []
+    },
+    {
+      "id": "ai_assistant", "group": "intelligence", "default_sidebar_visible": true, "order": 20, "icon": "insights",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_insights", "app": "assistant" },
+      "depends_on": []
+    },
+    {
+      "id": "transactions", "group": "financial", "default_sidebar_visible": false, "order": 30, "icon": "transactions",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_transactions", "app": "transactions" },
       "sections": ["overview", "all_transactions", "add_sync"],
       "depends_on": []
     },
     {
-      "id": "ai_assistant", "core": true, "default_sidebar_visible": true, "order": 20, "icon": "insights",
-      "availability": { "web": "available", "app": "available" },
-      "destination": { "web": "finance_insights", "app": "assistant" },
-      "depends_on": []
-    },
-    {
-      "id": "overview", "core": false, "default_sidebar_visible": true, "order": 21, "icon": "chart",
-      "availability": { "web": "available", "app": "available" },
-      "destination": { "web": "finance_dashboard", "app": "dashboard" },
-      "depends_on": []
-    },
-    {
-      "id": "import", "core": false, "default_sidebar_visible": false, "order": 23, "icon": "upload",
-      "availability": { "web": "available", "app": "available" },
-      "destination": { "web": "finance_statements", "app": "import" },
-      "depends_on": []
-    },
-    {
-      "id": "receipts", "core": false, "default_sidebar_visible": false, "order": 24, "icon": "camera",
-      "availability": { "web": "available", "app": "available" },
-      "destination": { "web": "finance_receipts", "app": "receipt" },
-      "depends_on": []
-    },
-    {
-      "id": "data_management", "core": false, "default_sidebar_visible": false, "order": 26, "icon": "layers",
-      "availability": { "web": "available", "app": "available" },
-      "destination": { "web": "finance_data_management", "app": "data" },
-      "depends_on": []
-    },
-    {
-      "id": "ledgers", "core": false, "default_sidebar_visible": false, "order": 30, "icon": "layers",
-      "availability": { "web": "coming_soon", "app": "coming_soon" },
-      "destination": { "web": null, "app": null },
-      "depends_on": []
-    },
-    {
-      "id": "accounts", "core": false, "default_sidebar_visible": true, "order": 40, "icon": "wallet",
+      "id": "accounts", "group": "financial", "default_sidebar_visible": false, "order": 40, "icon": "wallet",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_accounts", "app": "accounts" },
       "depends_on": []
     },
     {
-      "id": "categories", "core": false, "default_sidebar_visible": true, "order": 22, "icon": "tag",
+      "id": "fixed_assets", "group": "financial", "default_sidebar_visible": false, "order": 50, "icon": "home",
+      "availability": { "web": "coming_soon", "app": "coming_soon" },
+      "destination": { "web": null, "app": null },
+      "depends_on": []
+    },
+    {
+      "id": "categories", "group": "financial", "default_sidebar_visible": false, "order": 60, "icon": "tag",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_categories", "app": "categories" },
       "depends_on": []
     },
     {
-      "id": "budgets", "core": false, "default_sidebar_visible": false, "order": 60, "icon": "check",
+      "id": "budgets", "group": "financial", "default_sidebar_visible": false, "order": 70, "icon": "check",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_budgets", "app": "planning" },
       "depends_on": []
     },
     {
-      "id": "reports", "core": false, "default_sidebar_visible": false, "order": 25, "icon": "chart",
-      "availability": { "web": "available", "app": "available" },
-      "destination": { "web": "finance_ledger_report", "app": "reports" },
-      "depends_on": []
-    },
-    {
-      "id": "recurring", "core": false, "default_sidebar_visible": false, "order": 80, "icon": "repeat",
+      "id": "recurring", "group": "financial", "default_sidebar_visible": false, "order": 80, "icon": "repeat",
       "availability": { "web": "available", "app": "available" },
       "destination": { "web": "finance_recurring_rules", "app": "planning" },
       "depends_on": []
     },
     {
-      "id": "goals", "core": false, "default_sidebar_visible": false, "order": 90, "icon": "target",
-      "availability": { "web": "coming_soon", "app": "coming_soon" },
-      "destination": { "web": null, "app": null },
+      "id": "reports", "group": "analytics", "default_sidebar_visible": false, "order": 90, "icon": "chart",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_ledger_report", "app": "reports" },
       "depends_on": []
     },
     {
-      "id": "household", "core": false, "default_sidebar_visible": false, "order": 100, "icon": "home",
-      "availability": { "web": "coming_soon", "app": "coming_soon" },
-      "destination": { "web": null, "app": null },
-      "depends_on": []
-    },
-    {
-      "id": "forecast", "core": false, "default_sidebar_visible": false, "order": 110, "icon": "forecast",
+      "id": "forecast", "group": "analytics", "default_sidebar_visible": false, "order": 100, "icon": "forecast",
       "availability": { "web": "available", "app": "unsupported" },
       "destination": { "web": "finance_forecast", "app": null },
       "depends_on": []
     },
     {
-      "id": "multi_currency", "core": false, "default_sidebar_visible": false, "order": 120, "icon": "globe",
+      "id": "import", "group": "add_sync", "default_sidebar_visible": false, "order": 110, "icon": "upload",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_statements", "app": "import" },
+      "depends_on": []
+    },
+    {
+      "id": "receipts", "group": "add_sync", "default_sidebar_visible": false, "order": 120, "icon": "camera",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_receipts", "app": "receipt" },
+      "depends_on": []
+    },
+    {
+      "id": "data_management", "group": "system", "default_sidebar_visible": false, "order": 130, "icon": "layers",
+      "availability": { "web": "available", "app": "available" },
+      "destination": { "web": "finance_data_management", "app": "data" },
+      "depends_on": []
+    },
+    {
+      "id": "ledgers", "group": null, "default_sidebar_visible": false, "order": 140, "icon": "layers",
+      "availability": { "web": "coming_soon", "app": "coming_soon" },
+      "destination": { "web": null, "app": null },
+      "depends_on": []
+    },
+    {
+      "id": "goals", "group": null, "default_sidebar_visible": false, "order": 150, "icon": "target",
+      "availability": { "web": "coming_soon", "app": "coming_soon" },
+      "destination": { "web": null, "app": null },
+      "depends_on": []
+    },
+    {
+      "id": "household", "group": null, "default_sidebar_visible": false, "order": 160, "icon": "home",
+      "availability": { "web": "coming_soon", "app": "coming_soon" },
+      "destination": { "web": null, "app": null },
+      "depends_on": []
+    },
+    {
+      "id": "multi_currency", "group": null, "default_sidebar_visible": false, "order": 170, "icon": "globe",
       "availability": { "web": "coming_soon", "app": "coming_soon" },
       "destination": { "web": null, "app": null },
       "depends_on": []

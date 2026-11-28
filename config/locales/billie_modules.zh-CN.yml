@@ -30,10 +30,17 @@ zh-CN:
         receipts: 小票
         reconciliation: 对账
         review_history: 复核与历史
+      groups:
+        intelligence: "总览与智能分析"
+        financial: "财务管理"
+        analytics: "分析与预测"
+        add_sync: "添加与同步"
+        system: "系统管理"
       names:
+        fixed_assets: "固定资产"
         overview: "财务总览"
-        import: "导入"
-        receipts: "小票"
+        import: "账单导入"
+        receipts: "小票扫描"
         data_management: "数据管理"
         transactions: "交易记录"
         ai_assistant: "AI Insight"
@@ -48,6 +55,7 @@ zh-CN:
         forecast: 现金流预测
         multi_currency: 多币种
       descriptions:
+        fixed_assets: "固定资产记录。"
         overview: "查看余额和支出趋势。"
         import: "导入并核对银行账单。"
         receipts: "采集收据并核对匹配结果。"
@@ -65,13 +73,14 @@ zh-CN:
         forecast: 未来 30、60 或 90 天的预计余额。
         multi_currency: 多种货币的账户，在报表中换算。
       status:
+        unimplemented: "尚未实现"
         available: "可用"
         coming_soon: "即将推出"
         unsupported: "当前平台不支持"
         in_sidebar: "在侧边栏"
         hidden: "已隐藏"
-        core: "核心"
       library:
+        show_in_sidebar: "在侧边栏显示"
         management: "功能管理"
         preview: "实时侧边栏预览"
         always_shown: "始终显示"

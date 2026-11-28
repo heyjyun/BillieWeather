@@ -24,21 +24,21 @@ describe("module catalog", () => {
     expect(ids(enabledModules(example.surface))).toEqual(FIXTURE.usable_by_surface[example.surface]);
   });
 
-  it("starts with the five default entries in the sidebar (catalog version 3); Settings is not a module", () => {
-    expect(ids(MODULES.filter((module) => module.defaultSidebarVisible))).toEqual(["transactions", "ai_assistant", "overview", "categories", "accounts"]);
-    expect(ids(sidebarModules(null, "app"))).toEqual(["transactions", "ai_assistant", "overview", "categories", "accounts"]);
-    expect(ids(sidebarModules(null, "web"))).toEqual(["transactions", "ai_assistant", "overview", "categories", "accounts"]);
+  it("starts with the two default entries in the sidebar (catalog version 5); Settings is not a module", () => {
+    expect(ids(MODULES.filter((module) => module.defaultSidebarVisible))).toEqual(["overview", "ai_assistant"]);
+    expect(ids(sidebarModules(null, "app"))).toEqual(["overview", "ai_assistant"]);
+    expect(ids(sidebarModules(null, "web"))).toEqual(["overview", "ai_assistant"]);
     expect(MODULES.map((module) => module.id)).not.toContain("settings");
     expect(catalog.modules.every((raw) => !("default_enabled" in raw))).toBe(true);
   });
 
   it("every built module is usable for a new account, in the sidebar or not", () => {
-    expect(ids(enabledModules("app"))).toEqual(["transactions", "ai_assistant", "overview", "categories", "import", "receipts", "reports", "data_management", "accounts", "budgets", "recurring"]);
+    expect(ids(enabledModules("app"))).toEqual(["overview", "ai_assistant", "transactions", "accounts", "categories", "budgets", "recurring", "reports", "import", "receipts", "data_management"]);
     for (const id of ["import", "receipts", "budgets", "reports", "recurring", "data_management"]) {
       expect(isModuleEnabled(id, "app"), id).toBe(true);
       expect(isInSidebar(id, null, "app"), id).toBe(false);
     }
-    expect(ids(hiddenModules(null, "app"))).toEqual(["import", "receipts", "reports", "data_management", "budgets", "recurring"]);
+    expect(ids(hiddenModules(null, "app"))).toEqual(["transactions", "accounts", "categories", "budgets", "recurring", "reports", "import", "receipts", "data_management"]);
   });
 
   it("platform status: Forecast is website-only, not 'coming soon' and not switched off", () => {
@@ -97,14 +97,14 @@ describe("sidebar preferences on this device", () => {
   it("read choices saved by earlier versions (key `enabled`) without losing them", () => {
     localStorage.setItem(preferencesKey("id:a"), JSON.stringify({ format: 1, modules: { reports: { enabled: true, changedAt: "2026-11-24T00:00:00Z" }, ai_assistant: { enabled: false, changedAt: "" } } }));
     const loaded = loadModulePreferences("id:a");
-    expect(ids(sidebarModules(loaded, "app"))).toEqual(["transactions", "overview", "categories", "reports", "accounts"]);
+    expect(ids(sidebarModules(loaded, "app"))).toEqual(["overview", "reports"]);
     expect(loaded.modules.reports).toEqual({ sidebarVisible: true, changedAt: "2026-11-24T00:00:00Z" });
     expect(isModuleEnabled("ai_assistant", "app")).toBe(true);
   });
 
   it("treat unreadable or foreign data as defaults instead of failing", () => {
     localStorage.setItem(preferencesKey("id:a"), "{not json");
-    expect(ids(sidebarModules(loadModulePreferences("id:a"), "app"))).toEqual(["transactions", "ai_assistant", "overview", "categories", "accounts"]);
+    expect(ids(sidebarModules(loadModulePreferences("id:a"), "app"))).toEqual(["overview", "ai_assistant"]);
     localStorage.setItem(preferencesKey("id:a"), JSON.stringify({ format: 7, modules: { reports: { sidebarVisible: true } } }));
     expect(isInSidebar("reports", loadModulePreferences("id:a"), "app")).toBe(false);
     expect(saveModulePreferences("id:a", normalizePreferences(null))).toBe(true);

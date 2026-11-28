@@ -82,7 +82,8 @@ function ModeSwitch({ mode, onChange }: { mode: Mode; onChange: (mode: Mode) => 
   );
 }
 
-function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage?: Page; initialRoute?: DeepLinkRoute | null }) {
+function Shell() {
+  const initialPage = "dashboard";
   const { m } = useI18n();
   const { account } = useAccount();
   const { mode, manual, setMode } = useMode();
@@ -139,7 +140,15 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   // Pages under Transactions keep their section tabs instead.
   const offSidebar: ModuleDefinition | null = blocked || section || PAGE_MODULES[page].length === 0 || PAGE_MODULES[page].some((id) => modules.inSidebar(id)) ? null
     : moduleById(page === "planning" && focus === "schedules" ? "recurring" : PAGE_MODULES[page][0]) ?? null;
-  const { persistent } = useFinance();
+  const { persistent, ownerKey, transactions, statements } = useFinance();
+  const [welcome, setWelcome] = useState(() => shouldShowWelcome({
+    ownerKey, registeredAt: account?.registeredAt ?? null, hasData: transactions.length > 0 || statements.length > 0,
+  }));
+  const finishWelcome = (target: Page) => {
+    if (ownerKey) markWelcomeDone(ownerKey);
+    setWelcome(false);
+    go(target);
+  };
   // billieweather:// links and #/capture/… open one screen; they never save or send anything.
   const goRef = useRef(go);
   const moveInHistoryRef = useRef(moveInHistory);
@@ -163,13 +172,11 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
     return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
   goRef.current = go;
-  useEffect(() => {
+  useLayoutEffect(() => {
     const open = (route: DeepLinkRoute) => {
       if (route === "capture/receipt") goRef.current("receipt");
       else if (route === "capture/expense") goRef.current("transactions", null, undefined, { entryKind: "expense" });
     };
-    // A link that arrived while the Welcome page was showing (see Home).
-    if (initialRoute) open(initialRoute);
     return subscribeDeepLinks(open);
   }, []); // the initial route is applied once, on mount
   const moduleButton = (module: ModuleDefinition) => {
@@ -198,18 +205,17 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
         {/* Sidebar: the modules the person shows (Feature Library), then Settings (always). The same in both modes.
             Modules not listed here still work; they open from Settings and the Feature Library. */}
         <ul id="module-nav">{modules.sidebarList.map(moduleButton)}</ul>
-        <ul className="bw-system-nav">
-          <li>
-            <button type="button" className={settingsActive ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? m.modules.nav.settings : undefined} aria-current={settingsActive ? "page" : undefined} onClick={() => go("settings")}>
-              <Icon d={icons.settings} /><span>{m.modules.nav.settings}</span>
-            </button>
-          </li>
-        </ul>
         <div className="bw-nav-bottom">
-          <button type="button" className="bw-nav-item bw-account-shortcut" title={collapsed ? m.modules.library.account : undefined} onClick={() => go("settings", "account")}>
-            <ModuleIcon name="users" /><span>{m.modules.library.account}</span>
-          </button>
-          {account && <p className="bw-nav-user"><strong>{account.nickname || account.email}</strong>{account.nickname && <small>{account.email}</small>}</p>}
+          <ul className="bw-system-nav">
+            <li>
+              <button type="button" className={settingsActive ? "bw-nav-item is-active" : "bw-nav-item"} title={collapsed ? m.modules.nav.settings : undefined} aria-current={settingsActive ? "page" : undefined} onClick={() => go("settings")}>
+                <Icon d={icons.settings} /><span>{m.modules.nav.settings}</span>
+              </button>
+            </li>
+          </ul>
+          {account && <button type="button" className="bw-nav-user" aria-label={m.modules.library.account} onClick={() => go("settings", "account")}>
+            <strong>{account.nickname || account.email}</strong>{account.nickname && <small>{account.email}</small>}
+          </button>}
         </div>
       </nav>
       <main className="bw-main" id="main" tabIndex={-1}>
@@ -253,7 +259,10 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
         )}
         {blocked ? <ModuleUnavailable module={blocked} openLibrary={() => go("features")} /> : (
         <>
-        {page === "dashboard" && <Dashboard go={go} />}
+        {page === "dashboard" && <>
+          <Dashboard go={go} />
+          {welcome && <Welcome embedded name={account?.nickname} onStart={() => finishWelcome("import")} onExplore={() => finishWelcome("dashboard")} />}
+        </>}
         {page === "manual" && <Manual go={go} />}
         {page === "transactions" && <Transactions key={`${transactionFilter?.key ?? 0}-${transactionIntent?.key ?? 0}`} preset={transactionFilter?.filter} intent={transactionIntent?.intent} />}
         {page === "accounts" && <Accounts />}
@@ -277,38 +286,6 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   );
 }
 
-/**
- * After sign-in (and naming a new device database): the Welcome page for a newly registered account,
- * otherwise straight to the app. Remounted per account by Gate, so switching accounts re-decides.
- */
-function Home() {
-  const { account } = useAccount();
-  const { ownerKey, transactions, statements } = useFinance();
-  // Decided once when the account's book opens; data synced in later does not yank the page away.
-  const [welcome, setWelcome] = useState(() => shouldShowWelcome({
-    ownerKey, registeredAt: account?.registeredAt ?? null, hasData: transactions.length > 0 || statements.length > 0,
-  }));
-  const [next, setNext] = useState<{ page: Page; route: DeepLinkRoute | null }>({ page: "dashboard", route: null });
-  // A billieweather:// link (Siri, Shortcuts) opens its screen even while the welcome shows. The
-  // welcome is not marked finished then, so it can show again next time. Layout effect: a link that
-  // launched the app is handled before the first paint, so the welcome does not flash.
-  useLayoutEffect(() => {
-    if (!welcome) return;
-    return subscribeDeepLinks((route) => {
-      if (route === "open") return;
-      setNext({ page: "dashboard", route });
-      setWelcome(false);
-    });
-  }, [welcome]);
-  if (!welcome) return <Shell initialPage={next.page} initialRoute={next.route} />;
-  const finish = (page: Page) => {
-    if (ownerKey) markWelcomeDone(ownerKey);
-    setNext({ page, route: null });
-    setWelcome(false);
-  };
-  return <Welcome name={account?.nickname} onStart={() => finish("import")} onExplore={() => finish("dashboard")} />;
-}
-
 function Gate() {
   const { status, account, getToken, offline } = useAccount();
   const { m } = useI18n();
@@ -330,7 +307,7 @@ function Gate() {
   if (status === "loading") return <div className="bw-boot">{m.boot.opening}</div>;
   if (status === "signedOut") return <SignedOut />;
   if (!keys || keys.identity !== identity) return <div className="bw-boot">{m.boot.opening}</div>;
-  return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><ModulesProvider key={keys.owner} ownerKey={keys.owner} accountId={ownerId} getToken={getToken} offline={offline}><ModeProvider><Home /></ModeProvider></ModulesProvider></FinanceProvider>;
+  return <FinanceProvider key={keys.owner} ownerKey={keys.owner} emailKey={keys.email}><ModulesProvider key={keys.owner} ownerKey={keys.owner} accountId={ownerId} getToken={getToken} offline={offline}><ModeProvider><Shell /></ModeProvider></ModulesProvider></FinanceProvider>;
 }
 
 export default function App() {

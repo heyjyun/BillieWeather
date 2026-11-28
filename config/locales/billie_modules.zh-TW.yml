@@ -30,10 +30,17 @@ zh-TW:
         receipts: 收據
         reconciliation: 對帳
         review_history: 複核與歷史
+      groups:
+        intelligence: "總覽與智慧分析"
+        financial: "財務管理"
+        analytics: "分析與預測"
+        add_sync: "新增與同步"
+        system: "系統管理"
       names:
+        fixed_assets: "固定資產"
         overview: "財務總覽"
-        import: "匯入"
-        receipts: "收據"
+        import: "帳單匯入"
+        receipts: "收據掃描"
         data_management: "資料管理"
         transactions: "交易紀錄"
         ai_assistant: "AI Insight"
@@ -48,6 +55,7 @@ zh-TW:
         forecast: 現金流預測
         multi_currency: 多幣種
       descriptions:
+        fixed_assets: "固定資產記錄。"
         overview: "查看餘額及支出趨勢。"
         import: "匯入並核對銀行對帳單。"
         receipts: "擷取收據並核對比對結果。"
@@ -65,13 +73,14 @@ zh-TW:
         forecast: 未來 30、60 或 90 天的預估餘額。
         multi_currency: 多種貨幣的帳戶，在報表中換算。
       status:
+        unimplemented: "尚未實作"
         available: "可用"
         coming_soon: "即將推出"
         unsupported: "目前平台不支援"
         in_sidebar: "在側邊欄"
         hidden: "已隱藏"
-        core: "核心"
       library:
+        show_in_sidebar: "在側邊欄顯示"
         management: "功能管理"
         preview: "即時側邊欄預覽"
         always_shown: "始終顯示"

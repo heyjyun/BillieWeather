@@ -46,7 +46,11 @@ class AccountSettingsTest < ActionDispatch::IntegrationTest
     assert_select "#settings-profile input[name='user[nickname]']"
     assert_select "#settings-password input[name='user[current_password]'][required]"
     assert_select "#settings-password input[name='user[password]'][required]"
-    assert_select "#settings-region [data-region-search] input[type='search'][aria-controls='user_usage_region']"
+    assert_select "#settings-region [data-searchable-select='region']" do
+      assert_select "input[type='search'][aria-controls='user_usage_region_matches'] + select#user_usage_region"
+      assert_select "input[name]", count: 0
+      assert_select "#user_usage_region_matches[role='listbox']"
+    end
     assert_select "#settings-region select#user_usage_region option[value='JP'][data-search*='Japan'][data-search*='JP']"
     assert_select "script[src='/billie.js']"
     # A saved region wins over the Global Citizen default.
@@ -58,7 +62,7 @@ class AccountSettingsTest < ActionDispatch::IntegrationTest
     sign_in @user
     get finance_settings_path, params: {locale: "zh-CN"}
     assert_select "select#user_usage_region option[value='JP'][data-search*='日本'][data-search*='Japan']"
-    assert_select "select#user_usage_region option[value='GB'][data-search*='uk']"
+    assert_select "select#user_usage_region option[value='CN'][data-search*='中国大陆'][data-search*='中國大陸']"
   end
 
   test "nickname can be changed and shown in the sidebar" do

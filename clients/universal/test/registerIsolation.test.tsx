@@ -107,6 +107,15 @@ it("a new account registered after signing out gets its own database and never s
   expect(screen.queryByText(/ALICE/)).toBeNull();
   expect(railsRequests.filter((request) => request.includes("/finance") || request.includes("/devices"))).toEqual([]);
 
+  fireEvent.change(screen.getByLabelText(en.dbName.label), { target: { value: "Bob device" } });
+  fireEvent.click(screen.getByRole("button", { name: en.dbName.create }));
+  const navigation = await screen.findByRole("navigation", { name: en.nav.main });
+  expect([...navigation.querySelectorAll("#module-nav button")].map((item) => item.textContent)).toEqual(["Financial Overview", "AI Insight"]);
+  expect(navigation.querySelector('#module-nav [aria-current="page"]')?.textContent).toBe("Financial Overview");
+  expect(navigation.querySelector(".bw-nav-bottom > .bw-system-nav + .bw-nav-user")).toBeTruthy();
+  expect(navigation.querySelector(".bw-system-nav button")?.textContent).toBe("Settings");
+  expect(await rowsIn("billieweather-2.db")).toEqual([]);
+
   // The identity service received sign-up details only.
   const sent = identityBodies.join("\n");
   expect(sent).not.toMatch(/ALICE|alice\.csv|Alice Mac|amount|transaction|statement/i);

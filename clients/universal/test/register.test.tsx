@@ -152,12 +152,48 @@ describe("validation", () => {
     expect(ja[1]).toEqual({ code: "XO", label: "その他" });
     expect(regionOptions("en", "Global Citizen").find((option) => option.code === "KR")?.label).toBe("Korea");
     show();
-    const search = screen.getByLabelText(en.regionSearch);
-    fireEvent.change(search, { target: { value: "japan" } });
-    expect((screen.getByLabelText(en.region) as HTMLSelectElement).value).toBe("JP"); // a single match is chosen
-    fireEvent.change(search, { target: { value: "zzzz" } });
+    const search = screen.getByLabelText(en.regionSearch) as HTMLInputElement;
+    const region = screen.getByLabelText(en.region) as HTMLSelectElement;
+    const allCodes = [...region.options].map((option) => option.value);
+    expect(allCodes).toEqual(expect.arrayContaining([...REGION_CODES, GLOBAL_CITIZEN, "XO"]));
+    expect(search.name).toBe("");
+    fireEvent.input(search, { target: { value: "jApAn" } });
+    expect(region.value).toBe("JP");
+    fireEvent.input(search, { target: { value: "中國大陸" } });
+    expect(region.value).toBe("CN");
+    fireEvent.input(search, { target: { value: "臺灣" } });
+    expect(region.value).toBe("TW");
+    fireEvent.input(search, { target: { value: "uS" } });
+    expect(region.value).toBe("US");
+    fireEvent.input(search, { target: { value: "zzzz" } });
     expect(screen.getByText(en.regionNoMatch)).toBeTruthy();
-    expect((screen.getByLabelText(en.region) as HTMLSelectElement).value).toBe("JP"); // the choice is kept
+    expect(region.value).toBe("US");
+    fireEvent.keyDown(search, { key: "Escape" });
+    expect([...region.options].map((option) => option.value)).toEqual(allCodes);
+    fireEvent.change(region, { target: { value: "AU" } });
+    expect(region.value).toBe("AU");
+  });
+
+  it("navigates filtered countries with the keyboard and confirms without submitting the form", () => {
+    show();
+    const search = screen.getByLabelText(en.regionSearch);
+    const region = screen.getByLabelText(en.region) as HTMLSelectElement;
+    search.focus();
+    fireEvent.input(search, { target: { value: "korea" } });
+    expect(region.value).toBe("KR");
+    fireEvent.input(search, { target: { value: "united" } });
+    const list = screen.getByRole("listbox");
+    const [first, second] = within(list).getAllByRole("option");
+    expect(region.value).toBe("KR");
+    fireEvent.keyDown(search, { key: "ArrowDown" });
+    expect(search.getAttribute("aria-activedescendant")).toBe(first.id);
+    fireEvent.keyDown(search, { key: "ArrowDown" });
+    expect(search.getAttribute("aria-activedescendant")).toBe(second.id);
+    expect(fireEvent.keyDown(search, { key: "Enter" })).toBe(false);
+    expect(region.selectedOptions[0].label).toBe(second.textContent);
+    expect(document.activeElement).toBe(region);
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(requests.some(({ path }) => path === "POST /v1/registrations")).toBe(false);
   });
 });
 

@@ -13,6 +13,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <%= stylesheet_link_tag "/billie-tokens.css" %>
     <%= stylesheet_link_tag "/billie.css" %>
+    <%= stylesheet_link_tag "/searchable-select.css" %>
     <%= stylesheet_link_tag "/billie-overview.css" %>
     <script src="/billie-theme.js"></script>
     <script src="/billie.js" defer></script>
@@ -63,8 +64,7 @@
         <% end %>
         <% end %>
         <div class="bw-sidebar-bottom">
-          <%= link_to finance_settings_path(anchor: "settings-profile"), class: "bw-nav-link bw-account-shortcut" do %><%= finance_icon "users" %><span><%= t("billie.modules.library.account") %></span><% end %>
-          <div class="bw-user" aria-label="<%= t('billie.account_access.signed_in_as', name: current_user.nickname.presence || current_user.email) %>"><div><span class="bw-user-kind"><%= t('billie.account_access.account_kind') %></span><strong><%= current_user.nickname.presence || t('billie.layout.your_account') %></strong><small title="<%= current_user.email %>"><%= current_user.email %></small></div><%= button_to destroy_user_session_path, method: :delete, class: "bw-icon-button", title: t('billie.layout.log_out'), form: {data: {turbo: false}}, "aria-label": t('billie.layout.log_out') do %><%= finance_icon "logout" %><% end %></div>
+          <div class="bw-user" aria-label="<%= t('billie.account_access.signed_in_as', name: current_user.nickname.presence || current_user.email) %>"><div><span class="bw-user-kind"><%= t('billie.account_access.account_kind') %></span><strong><%= link_to current_user.nickname.presence || t('billie.layout.your_account'), finance_settings_path(anchor: "settings-profile"), title: t("billie.modules.library.account") %></strong><small title="<%= current_user.email %>"><%= current_user.email %></small></div><%= button_to destroy_user_session_path, method: :delete, class: "bw-icon-button", title: t('billie.layout.log_out'), form: {data: {turbo: false}}, "aria-label": t('billie.layout.log_out') do %><%= finance_icon "logout" %><% end %></div>
           <%= button_to t('billie.account_access.switch_account'), destroy_user_session_path, method: :delete, params: {switch_account: 1}, class: "bw-sidebar-switch", id: "switch-account", form: {data: {turbo: false}} %>
         </div>
       </aside>

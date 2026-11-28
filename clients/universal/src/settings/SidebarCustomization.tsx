@@ -1,6 +1,5 @@
 // Settings › Sidebar customization: the sidebar entries in the person's order (drag them, or use the
-// arrow buttons, which also work from the keyboard), a way to hide each one or add any other
-// available module, and Restore defaults. Only navigation changes: a hidden module keeps working and
+// arrow buttons, which also work from the keyboard) and Restore defaults. Only navigation changes: a hidden module keeps working and
 // stays reachable from Settings and the Feature Library; no financial record is touched. Settings is
 // fixed at the bottom and cannot be moved or hidden. Order and visibility are saved per account and
 // synchronized (hooks/useModules.tsx, services/moduleSync.ts). The website has the same section
@@ -14,7 +13,7 @@ import type { SectionProps } from "./registry";
 export function SidebarCustomizationSection(_props: SectionProps) {
   const { m, t } = useI18n();
   const x = m.modules;
-  const { sidebarList, hiddenList, setSidebarOrder, setSidebarVisible, restoreSidebarDefaults, conflicts } = useModules();
+  const { sidebarList, setSidebarOrder, restoreSidebarDefaults } = useModules();
   const [status, setStatus] = useState("");
   const [dragging, setDragging] = useState<string | null>(null);
   // Where the dragged entry would land, shown as a line on that entry. The list itself is not
@@ -84,8 +83,6 @@ export function SidebarCustomizationSection(_props: SectionProps) {
               <span className="bw-sidebar-order-actions">
                 <button type="button" className="bw-icon-button" disabled={index === 0} aria-label={t("modules.sidebar.move_up", { name })} title={t("modules.sidebar.move_up", { name })} onClick={() => move(module.id, -1)}>↑</button>
                 <button type="button" className="bw-icon-button" disabled={index === entries.length - 1} aria-label={t("modules.sidebar.move_down", { name })} title={t("modules.sidebar.move_down", { name })} onClick={() => move(module.id, 1)}>↓</button>
-                <button type="button" className="bw-button bw-button-outline bw-button-small" disabled={!!conflicts[module.id]} aria-label={t("modules.sidebar.hide_label", { name })}
-                  onClick={() => { setSidebarVisible(module.id, false); setStatus(t("modules.library.savedHidden", { name })); }}>{x.sidebar.hide}</button>
               </span>
             </li>
           );
@@ -97,21 +94,6 @@ export function SidebarCustomizationSection(_props: SectionProps) {
         </li>
       </ol>
       <p className="bw-caption" id="sidebar-order-help">{x.sidebar.help}</p>
-      <h3>{x.sidebar.add_heading}</h3>
-      {hiddenList.length === 0 ? <p className="bw-muted">{x.sidebar.nothing_to_add}</p> : (
-        <ul className="bw-sidebar-add" data-sidebar-add>
-          {hiddenList.map((module) => {
-            const name = x.names[module.id];
-            return (
-              <li key={module.id} data-module-key={module.id}>
-                <span className="bw-sidebar-order-name"><ModuleIcon name={module.icon} size={18} /> {name}</span>
-                <button type="button" className="bw-button bw-button-outline bw-button-small" disabled={!!conflicts[module.id]} aria-label={t("modules.sidebar.add_label", { name })}
-                  onClick={() => { setSidebarVisible(module.id, true); setStatus(t("modules.library.savedShown", { name })); }}>{x.sidebar.add}</button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
       <button type="button" className="bw-button bw-button-outline bw-feature-reset" onClick={() => { restoreSidebarDefaults(); setStatus(x.library.resetSaved); }}>{x.library.reset}</button>
     </section>
   );

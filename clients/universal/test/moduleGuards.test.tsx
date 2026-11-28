@@ -53,10 +53,11 @@ it("openInShell opens a module that is not in the sidebar through the Feature Li
   expect(document.querySelector('#module-nav [data-module="reports"]')).toBeNull();
   fireEvent.click(within(context).getByRole("button", { name: "Settings" }));
   expect(document.getElementById("page-context")).toBeNull();
-  // Pages of sidebar modules open directly.
+  // A hidden Transactions page also remains reachable.
   await openInShell("All Transactions");
   expect(document.getElementById("module-unavailable")).toBeNull();
-  expect(document.getElementById("page-context")).toBeNull();
+  expect(document.querySelector('#module-nav [data-module="transactions"]')).toBeNull();
+  expect(screen.getByRole("heading", { name: "Transactions", level: 1 })).toBeTruthy();
 });
 
 it("with every module in the sidebar, the same page opens from the sidebar", async () => {
@@ -68,11 +69,12 @@ it("with every module in the sidebar, the same page opens from the sidebar", asy
 });
 
 it("revisits sidebar destinations and uses desktop Back and Forward without writing to the ledger", async () => {
+  showAllModulesInSidebar();
   render(<App />);
   const navigation = within(await screen.findByRole("navigation"));
   const pages = [
     ["Transactions", "Transactions"], ["AI Insight", "AI Insight"],
-    ["Financial Overview", /good (morning|afternoon|evening)/i], ["Categories & Tags", "Categories"],
+    ["Financial Overview", /good (morning|afternoon|evening)/i], ["Categories", "Categories"],
     ["Accounts & Assets", "Accounts"], ["Settings", "Settings & privacy"],
   ] as const;
   for (const [label, heading] of pages) {
@@ -91,11 +93,11 @@ it("revisits sidebar destinations and uses desktop Back and Forward without writ
   expect(screen.getByRole("button", { name: "Nothing to undo" }).getAttribute("aria-disabled")).toBe("true");
 });
 
-it("outside the app shell, pages see the catalog defaults: the five default entries, every built module usable", () => {
+it("outside the app shell, pages see the catalog defaults: the two default entries, every built module usable", () => {
   function Probe() {
     const { usable, inSidebar, sidebarList } = useModules();
     return <p data-testid="probe">{sidebarList.map((module) => module.id).join(",")}|{String(inSidebar("budgets"))}|{String(usable("budgets"))}|{String(usable("ledgers"))}</p>;
   }
   render(<I18nProvider initial="en"><Probe /></I18nProvider>);
-  expect(screen.getByTestId("probe").textContent).toBe("transactions,ai_assistant,overview,categories,accounts|false|true|false");
+  expect(screen.getByTestId("probe").textContent).toBe("overview,ai_assistant|false|true|false");
 });

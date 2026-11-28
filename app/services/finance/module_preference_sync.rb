@@ -77,7 +77,7 @@ module Finance
     private
 
     def choices
-      ModulePreference.where(user_id: @user.id).index_by(&:module_key)
+      ModulePreference.for_sidebar(@user).index_by(&:module_key)
     end
 
     def snapshot_for(rows, order_row)
@@ -93,8 +93,11 @@ module Finance
     end
 
     def choice(record)
-      {sidebar_visible: record.sidebar_visible, enabled: record.sidebar_visible, revision: record.revision,
-       changed_at: record.changed_at.utc.iso8601(6), updated_by_device_id: record.updated_by_device_id}
+      visible = record.effective_sidebar_visible
+      result = {sidebar_visible: visible, enabled: visible, revision: record.revision,
+                changed_at: record.changed_at.utc.iso8601(6), updated_by_device_id: record.updated_by_device_id}
+      result[:inherits_default] = true if record.inherited_sidebar_choice?
+      result
     end
 
     def default_choice(id)

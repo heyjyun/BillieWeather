@@ -69,13 +69,11 @@ module Finance
     end
 
     def render_choice(definition, message, conflict: false)
-      @module_choices = nil
       respond_to do |format|
         format.json do
+          read_sidebar_snapshot
           render json: {module: definition.id, sidebar_visible: module_in_sidebar?(definition.id), revision: module_revision(definition.id),
-                        message: message, sidebar_revision: module_choices.values.sum { |choice| choice.fetch("revision") },
-                        nav: render_to_string(partial: "finance/shared/module_nav", formats: [:html]),
-                        preview: render_to_string(partial: "finance/feature_library/sidebar_preview", formats: [:html])},
+                        message: message, **sidebar_fragments},
             status: conflict ? :conflict : :ok
         end
         format.html do
@@ -99,17 +97,32 @@ module Finance
     end
 
     def render_order(message, conflict: false)
-      @sidebar_order = nil
       respond_to do |format|
         format.json do
-          render json: {order: sidebar_modules.map(&:id), revision: sidebar_order_revision, message: message,
-                        nav: render_to_string(partial: "finance/shared/module_nav", formats: [:html]),
-                        customization: render_to_string(partial: "finance/feature_library/sidebar_customization", formats: [:html]),
-                        preview: render_to_string(partial: "finance/feature_library/sidebar_preview", formats: [:html])},
+          read_sidebar_snapshot
+          render json: {order: sidebar_modules.map(&:id), revision: sidebar_order_revision, message: message, **sidebar_fragments},
             status: conflict ? :conflict : :ok
         end
         format.html { redirect_to finance_settings_path(anchor: "settings-sidebar"), status: :see_other, flash: {(conflict ? :alert : :notice) => message} }
       end
+    end
+
+    # Read under the same account lock used by web and device writes. All fragments then
+    # describe exactly the revision used to discard out-of-order responses in the browser.
+    def read_sidebar_snapshot
+      current_user.with_lock do
+        @module_choices = ModuleCatalog.choices_for(current_user)
+        order = SidebarOrder.find_by(user_id: current_user.id)
+        @sidebar_order = order&.module_keys || []
+        @sidebar_order_revision = order&.revision || 0
+      end
+    end
+
+    def sidebar_fragments
+      {sidebar_revision: module_choices.values.sum { |choice| choice.fetch("revision") } + sidebar_order_revision,
+       nav: render_to_string(partial: "finance/shared/module_nav", formats: [:html]),
+       customization: render_to_string(partial: "finance/feature_library/sidebar_customization", formats: [:html]),
+       preview: render_to_string(partial: "finance/feature_library/sidebar_preview", formats: [:html])}
     end
 
     # "Show in sidebar" from another page returns there. Only this app's own pages (no host, no scheme).

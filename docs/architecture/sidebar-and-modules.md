@@ -1,7 +1,12 @@
 # Modules, the sidebar and Settings
 
-Status: implemented 2026-11-28 (catalog version 3). Applies to the website (Rails) and the universal
+Status: implemented 2026-11-28 (catalog version 5). Applies to the website (Rails) and the universal
 app (macOS, Windows, iOS, Android, browser preview).
+
+Financial Overview is the workspace landing page. The app shows first-use guidance within the
+overview after a new account names its database. Explicit capture links and saved web destinations
+continue to open their requested screens. On desktop the configurable list scrolls independently
+above the bottom Settings and account controls.
 
 ## Four separate questions
 
@@ -17,7 +22,7 @@ processing (recurring entries still post, receipts still match), and never hides
 workflows: commands and assistants check availability, not the sidebar. Every hidden module stays
 reachable from Settings (its section, and the Feature Library) and by direct link.
 
-**Settings** is a system entry, not a module: always shown, always last, never stored, never movable.
+**Settings** is a system entry, not a module: fixed above the account area, outside the configurable list.
 It is one control centre for the whole app; it is not split by Manual or AI-automatic mode.
 
 ## The catalog is the single source
@@ -29,15 +34,27 @@ keeps its own list. Both resolve preferences with the same rules and replay the 
 (`packages/shared-types/fixtures/module-preference-cases.json`, from `test/models/finance/module_catalog_test.rb`
 and `clients/universal/test/modules.test.ts`).
 
-Default sidebar since catalog version 3: **Transactions, AI Insight, Financial Overview, Categories
-(& Tags), Accounts & Assets**, then Settings. The order comes from the catalog `order` values
-(10, 20, 21, 22, 40), so no separate default list exists.
+The default sidebar shows **Financial Overview, AI Insight, Settings**. The shared catalog orders the
+five Settings groups and assigns each listed module a group. The group has no effect on routing
+or authorization. Fixed Assets has its own entry and is labelled "Not implemented" on both surfaces.
+Four earlier planned IDs are retained without a group for compatibility.
 
 ### Existing accounts
 
-Only explicit choices are stored. An account that never chose sees the new defaults; an explicit
-choice (shown or hidden) is kept exactly, from either catalog version, under the current key
-`sidebarVisible` or the legacy `enabled`.
+An absent choice inherits the current catalog default on every surface, including after upgrading.
+A stored order only ranks visible entries. Registration, onboarding, database seeds and native
+SQLite initialization create no visibility preferences. Older snapshots, local caches and offline
+queues retain explicit choices without filling in missing ones. Migration `20261128000200` previously materialized three older defaults for personalized accounts.
+The migration is retained as executed. PostgreSQL recorded its version and inserted tuples in the
+same transaction. `ModulePreference.for_sidebar` recognizes only original, unedited tuples from
+that transaction. They inherit the catalog and keep their revision in sync responses. No new
+migration or data rewrite is needed. An edit has a new revision and transaction and is explicit.
+If a restore or table rewrite has lost the transaction evidence, or an old offline cache has only
+booleans, its choices are preserved until an authoritative snapshot or a user reset. Restore Defaults
+resets the current sidebar for users who want to discard an earlier selection.
+
+Earlier phase audits, sprint instructions and release verification artifacts describe the defaults
+at their recorded revisions. The catalog above supersedes those historical definitions.
 
 ## Resolving the sidebar
 
@@ -74,7 +91,8 @@ that reset on every surface where they are supported.
   `server_revision`. A stale `expected_revision` returns `order_applied: false` and `order_conflict`
   with the current order: **the account's order wins**, the device drops its attempt (it never forces
   a write). First contact: the account's order wins; if the account has none, the device's order is
-  uploaded.
+  uploaded. An explicit offline reset made before first contact is applied against the first
+  observed revisions. Edits made after the reset are replayed over it.
 - **Compatibility**: apps released before this change never send an order and ignore the new field.
   An app connected to a server without order support keeps the order locally. When support becomes
   available, the app synchronizes using the first-contact rule. Saved replicas without `orderPending`
@@ -83,13 +101,13 @@ that reset on every surface where they are supported.
 ## Settings › Sidebar customization
 
 Same section on both surfaces (`app/views/finance/feature_library/_sidebar_customization.html.erb`,
-`clients/universal/src/settings/SidebarCustomization.tsx`), registered first in the "features" area
+`clients/universal/src/settings/SidebarCustomization.tsx`), registered after the grouped module manager in the "features" area
 (`Finance::SettingsSections`, `settings/registry.tsx`):
 
 - the entries in order, each with a drag handle and Move up / Move down buttons (the buttons work
-  without JavaScript on the website and from the keyboard in the app), and Hide;
+  without JavaScript on the website and from the keyboard in the app);
 - Settings, fixed last, without controls;
-- "Add to the sidebar" for every other available module;
+- the grouped module manager above it has the Open links and sidebar switches;
 - Restore defaults (visibility and order). The Feature Library embedded in Settings no longer has its
   own Restore button, so the page has one.
 
@@ -103,7 +121,7 @@ still guards file drops from outside the app.
 - Shared cases: `module-preference-cases.json` (defaults, order, legacy keys, unknown/duplicate ids,
   unsupported modules, choices made before version 3).
 - Website: `test/models/finance/sidebar_order_test.rb` (including preservation of existing visibility
-  choices through the migration), `module_catalog_test.rb`,
+  choices with sparse and order-only storage), `module_catalog_test.rb`,
   `test/integration/finance_feature_library_test.rb` (section, arrows without JavaScript, JSON drag,
   conflicts, refusal, add/hide/restore), `client_api_module_preferences_test.rb` (order sync,
   platform-specific entries, conflicts, retries, invalid lists, older apps).

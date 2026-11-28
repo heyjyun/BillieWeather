@@ -1,5 +1,5 @@
 # Feature Library: every available module works for every account; only the sidebar is personal
-# (Transactions, AI Insight, Financial Overview, Categories, Accounts & Assets by default). Tests that look at the sidebar with more modules in it
+# (Financial Overview and AI Insight by default). Tests that look at the sidebar with more modules in it
 # add them the way a person would in Settings › Feature Library. A test never needs to "turn a module
 # on" to use its pages. The default sidebar itself is covered by test/integration/finance_feature_library_test.rb.
 module BillieModules

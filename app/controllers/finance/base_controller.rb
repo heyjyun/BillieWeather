@@ -34,7 +34,7 @@ module Finance
       @sidebar_order ||= SidebarOrder.keys_for(current_user)
     end
 
-    def sidebar_order_revision = SidebarOrder.revision_for(current_user)
+    def sidebar_order_revision = @sidebar_order_revision ||= SidebarOrder.revision_for(current_user)
 
     def sidebar_modules = ModuleCatalog.sidebar_modules(module_choices, order: sidebar_order)
 

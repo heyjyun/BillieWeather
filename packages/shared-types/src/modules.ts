@@ -9,8 +9,7 @@
 //   2. Enabled = can be used. Derived, never stored: a module available on a surface is enabled there,
 //      for new and existing accounts alike. No personal choice disables a feature.
 //   3. Sidebar visibility = whether the module has a sidebar entry. A personal choice; without one
-//      the catalog default applies (Transactions, AI Insight, Financial Overview, Categories,
-//      Accounts & Assets; catalog version 3).
+//      the catalog default applies (Financial Overview and AI Insight).
 //   4. Sidebar order = the order of the sidebar entries. A personal choice too: one saved list of
 //      module ids; entries it does not mention follow it in catalog order (orderSidebar).
 //
@@ -22,11 +21,11 @@ export type Surface = "web" | "app";
 export type ModuleAvailability = "available" | "coming_soon" | "unsupported";
 export type ModuleId =
   | "transactions" | "ai_assistant" | "overview" | "import" | "receipts" | "data_management" | "ledgers" | "accounts" | "categories" | "budgets"
-  | "reports" | "recurring" | "goals" | "household" | "forecast" | "multi_currency";
+  | "fixed_assets" | "reports" | "recurring" | "goals" | "household" | "forecast" | "multi_currency";
 
 export interface ModuleDefinition {
   id: ModuleId;
-  core: boolean;
+  group: string | null;
   /** Whether the module is in the sidebar until the person chooses otherwise. Not about whether it works. */
   defaultSidebarVisible: boolean;
   order: number;
@@ -54,7 +53,7 @@ export const PREFERENCE_FORMAT = 1 as const;
 export const MODULES: readonly ModuleDefinition[] = catalog.modules
   .map((raw) => ({
     id: raw.id as ModuleId,
-    core: raw.core,
+    group: raw.group,
     defaultSidebarVisible: raw.default_sidebar_visible,
     order: raw.order,
     icon: raw.icon,
@@ -63,6 +62,8 @@ export const MODULES: readonly ModuleDefinition[] = catalog.modules
     dependsOn: raw.depends_on as ModuleId[],
   }))
   .sort((a, b) => a.order - b.order);
+
+export const MODULE_GROUPS = catalog.groups;
 
 export const SYSTEM_ENTRIES = catalog.system_entries;
 

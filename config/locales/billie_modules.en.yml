@@ -30,24 +30,32 @@ en:
         receipts: Receipts
         reconciliation: Reconciliation
         review_history: Review & history
+      groups:
+        intelligence: "Overview & Intelligence"
+        financial: "Financial Management"
+        analytics: "Analysis & Forecasting"
+        add_sync: "Add & Sync"
+        system: "System Management"
       names:
+        fixed_assets: "Fixed Assets"
         overview: "Financial Overview"
-        import: "Import"
-        receipts: "Receipts"
+        import: "Import Statements"
+        receipts: "Scan & Capture"
         data_management: "Data Management"
         transactions: Transactions
         ai_assistant: "AI Insight"
         ledgers: Ledgers
         accounts: Accounts & Assets
-        categories: Categories & Tags
+        categories: "Categories"
         budgets: Budgets
         reports: Reports
-        recurring: Recurring & Bills
+        recurring: "Recurring Transactions & Bills"
         goals: Goals & Planning
         household: Household
         forecast: Cash Flow Forecast
         multi_currency: Multi-Currency
       descriptions:
+        fixed_assets: "Fixed asset records."
         overview: "View balances and spending trends."
         import: "Import and review bank statements."
         receipts: "Capture receipts and review matches."
@@ -65,13 +73,14 @@ en:
         forecast: Your expected balance over the next 30, 60 or 90 days.
         multi_currency: Accounts in several currencies, converted for reports.
       status:
+        unimplemented: "Not implemented"
         available: "Available"
         coming_soon: "Coming soon"
         unsupported: "Not on this platform"
         in_sidebar: "In sidebar"
         hidden: "Hidden"
-        core: "Core"
       library:
+        show_in_sidebar: "Show in Sidebar"
         management: "Feature Management"
         preview: "Live sidebar preview"
         always_shown: "Always shown"

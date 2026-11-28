@@ -78,7 +78,7 @@ function launchAs(account: Partial<typeof who>) {
 
 // "Welcome to BillieWeather!" or, with a nickname, "Welcome to BillieWeather, Billie!".
 const WELCOME_TITLE = /^Welcome to BillieWeather/;
-const welcomeHeading = () => screen.findByRole("heading", { level: 1, name: WELCOME_TITLE });
+const welcomeHeading = () => screen.findByRole("heading", { level: 2, name: WELCOME_TITLE });
 const noWelcome = () => expect(screen.queryByRole("heading", { name: WELCOME_TITLE })).toBeNull();
 // The dashboard opens with a time-of-day greeting ("Good morning!", "Good evening, Billie!").
 const dashboard = () => screen.findByRole("heading", { level: 1, name: /^Good (morning|afternoon|evening)/ });
@@ -105,17 +105,21 @@ describe("new account", () => {
     fireEvent.click(screen.getByRole("button", { name: MESSAGES.en.login.submit }));
 
     expect(await welcomeHeading()).toBeTruthy();
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(MESSAGES.en.personal.welcome.title.plain);
+    expect(await dashboard()).toBeTruthy();
+    expect((await welcomeHeading()).textContent).toBe(MESSAGES.en.personal.welcome.title.plain);
     expect(screen.getByText(MESSAGES.en.personal.welcome.subtitle)).toBeTruthy();
     const steps = screen.getByRole("list", { name: MESSAGES.en.welcome.stepsLabel });
-    expect([...steps.querySelectorAll("h2")].map((h) => h.textContent)).toEqual([
+    expect([...steps.querySelectorAll("h3")].map((h) => h.textContent)).toEqual([
       "Bring your finances together", "Let AI organize the details", "See what's coming",
     ]);
     expect(steps.textContent).toContain("Import statements and receipts securely.");
     expect(steps.textContent).toContain("Review smart transaction categorization.");
     expect(steps.textContent).toContain("Explore your cash-flow forecast.");
-    // Full-screen: the app's navigation is not shown behind it.
-    expect(screen.queryByRole("navigation", { name: MESSAGES.en.nav.main })).toBeNull();
+    // A fresh account lands on Financial Overview with onboarding inside the page.
+    const nav = screen.getByRole("navigation", { name: MESSAGES.en.nav.main });
+    expect([...nav.querySelectorAll("#module-nav button")].map((node) => node.textContent)).toEqual(["Financial Overview", "AI Insight"]);
+    expect(nav.querySelector('#module-nav [aria-current="page"]')?.textContent).toBe("Financial Overview");
+    expect(nav.querySelector(".bw-nav-bottom > .bw-system-nav + .bw-nav-user")).toBeTruthy();
     expect(localStorage.getItem(welcomeKey(ALICE.owner_id))).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: MESSAGES.en.welcome.start }));
@@ -140,7 +144,7 @@ describe("new account", () => {
   it("greets by nickname when the account has one (and never shows the email)", async () => {
     launchAs({ nickname: "Billie" });
     expect(await welcomeHeading()).toBeTruthy();
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Welcome to BillieWeather, Billie!");
+    expect((await welcomeHeading()).textContent).toBe("Welcome to BillieWeather, Billie!");
     // The name appears once, in the headline, not in every line.
     expect(document.querySelector(".bw-welcome")!.textContent!.split("Billie!").length - 1).toBe(1);
     expect(document.querySelector(".bw-welcome")!.textContent).not.toContain(ALICE.email);

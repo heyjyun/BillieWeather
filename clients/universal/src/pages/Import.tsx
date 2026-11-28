@@ -9,6 +9,7 @@ import { DocumentPicker } from "../components/DocumentPicker";
 import { ImportPreview } from "../components/ImportPreview";
 import { PdfReview, usePdfMessages } from "../components/PdfReview";
 import { RegionNotice, useRegionName } from "../components/RegionNotice";
+import { currencyOptions, SearchableSelect } from "../components/SearchableSelect";
 import { useFocusWhenLost } from "../hooks/useFocus";
 import { useFinance } from "../hooks/useFinance";
 import { interpolate, useI18n } from "../i18n";
@@ -25,16 +26,14 @@ type History = Awaited<ReturnType<FinanceStore["importHistory"]>>;
 /** A file waiting for review. The region in effect is `context.categorizer.region`; `region` says how it was decided and what detection found. */
 type Waiting = { draft: ImportDraft; context: ImportContext; region: { source: RegionSource | null; detection: RegionDetection } };
 
+const importCurrencies = currencyOptions(CURRENCIES);
+
 /** The optional Country / Region dropdown. "" means Not specified. */
-function RegionSelect({ value, onChange, disabled, label }: { value: string; onChange: (code: string) => void; disabled?: boolean; label: string }) {
+function RegionSelect({ id, value, onChange, disabled, label }: { id?: string; value: string; onChange: (code: string) => void; disabled?: boolean; label: string }) {
   const { m } = useI18n();
   const name = useRegionName();
-  return (
-    <select aria-label={label} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)}>
-      <option value="">{m.universal.region.none}</option>
-      {STATEMENT_REGIONS.map((code) => <option key={code} value={code}>{name(code)}</option>)}
-    </select>
-  );
+  const options = [{ value: "", label: m.universal.region.none }, ...STATEMENT_REGIONS.map((code) => ({ value: code, label: name(code) }))];
+  return <SearchableSelect id={id} aria-label={label} kind="region" options={options} value={value} disabled={disabled} onChange={onChange} />;
 }
 
 export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
@@ -304,16 +303,18 @@ export function Import({ onReceipt }: { onReceipt?: () => void } = {}) {
       ) : (
         <section className="bw-panel bw-import">
           <p>{x.intro}</p>
-          <label className="bw-field"><span>{x.currency}</span>
-            <select value={deviceCurrency ?? currency} disabled={Boolean(deviceCurrency)} onChange={(e) => setCurrency(e.target.value as Currency)}>
-              {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-            {deviceCurrency && <small>{x.currencyLocked}</small>}
-          </label>
-          <label className="bw-field"><span>{u.region.label}</span>
-            <RegionSelect label={u.region.label} value={region} disabled={busy} onChange={setRegion} />
+          <div className="bw-field">
+            <label htmlFor="import-currency">{x.currency}</label>
+            <SearchableSelect id="import-currency" kind="currency" options={importCurrencies} value={deviceCurrency ?? currency}
+              disabled={Boolean(deviceCurrency)} onChange={(value) => setCurrency(value as Currency)}
+              aria-describedby={deviceCurrency ? "import-currency-help" : undefined} />
+            {deviceCurrency && <small id="import-currency-help">{x.currencyLocked}</small>}
+          </div>
+          <div className="bw-field">
+            <label htmlFor="import-region">{u.region.label}</label>
+            <RegionSelect id="import-region" label={u.region.label} value={region} disabled={busy} onChange={setRegion} />
             <small>{u.region.help}</small>
-          </label>
+          </div>
           <DocumentPicker extensions={statementExtensions} accept={UNIVERSAL_ACCEPT + ",.pdf,application/pdf"} multiple busy={busy}
             label={recognition ? u.ocr.reading : busy ? x.importing : u.choose} help={u.requirements} onChoose={onFiles}
             onError={() => setMessage({ tone: "error", text: x.genericError })} />

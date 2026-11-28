@@ -1,14 +1,14 @@
-# Cross-platform client (clients/universal + packages/*). Independent of the Rails
+# Cross-platform client and shared UI. Independent of the Rails
 # CI/CD and the Render deploy: it only runs when client code changes, builds
 # unsigned artifacts for download, and never publishes to any store.
 name: Universal client
 
 on:
   pull_request:
-    paths: ["clients/**", "packages/**", ".github/workflows/universal-client.yml"]
+    paths: ["clients/**", "packages/**", "public/searchable-select.*", ".github/workflows/universal-client.yml"]
   push:
     branches: [main]
-    paths: ["clients/**", "packages/**", ".github/workflows/universal-client.yml"]
+    paths: ["clients/**", "packages/**", "public/searchable-select.*", ".github/workflows/universal-client.yml"]
   workflow_dispatch:
     inputs:
       mobile:

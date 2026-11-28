@@ -1,6 +1,6 @@
 require "test_helper"
 
-# A person with the default sidebar (Transactions and AI Insight) can still use every built module:
+# A person with the default sidebar (Financial Overview and AI Insight) can still use every built module:
 # links on the dashboard and in Settings lead to real pages, and export is one link away.
 class FinanceDefaultModulesLinksTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
@@ -17,10 +17,10 @@ class FinanceDefaultModulesLinksTest < ActionDispatch::IntegrationTest
   end
 
   test "every link on the dashboard and in settings opens a working page for a default account" do
-    assert_equal %w[transactions ai_assistant overview categories accounts], Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user)).map(&:id)
+    assert_equal %w[overview ai_assistant], Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user)).map(&:id)
     hrefs = [finance_dashboard_path, finance_settings_path].flat_map do |page|
       get page
-      assert_module_page("transactions") if page == finance_dashboard_path
+      assert_module_page("overview") if page == finance_dashboard_path
       css_select("a[href^='/app']").map { |link| link["href"].split("#").first }
     end.uniq
     assert_operator hrefs.size, :>, 5, "the crawl found the pages' links"

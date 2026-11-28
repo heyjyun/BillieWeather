@@ -10,10 +10,12 @@
 // the same mutation format with no module changes. A server that does not report `sidebar_order`
 // predates it: the order then stays on this device only. On a revision conflict the account's order
 // wins (another device reordered first); this device's attempt is dropped, never forced.
-import { enabledModules, isAvailable, moduleById, normalizeOrder, type ModulePreferences } from "@billie/shared-types";
+import { enabledModules, isAvailable, moduleById, normalizeOrder, normalizePreferences, type ModulePreferences } from "@billie/shared-types";
 import { randomId } from "./ids";
 
 export interface ServerChoice {
+  /** Proven legacy system insert. Retain its revision, but inherit the local catalog. */
+  inherits_default?: boolean;
   sidebar_visible?: boolean;
   /** Legacy name of `sidebar_visible` (servers before 2026-11-26). */
   enabled?: boolean;
@@ -97,6 +99,8 @@ export interface ModuleReplica {
   deviceId: string;
   snapshot: ModuleSnapshot | null;
   initial: ModulePreferences;
+  /** Restore was requested offline before this device had observed the account. */
+  restoreOnFirstSync?: boolean;
   pending: PendingChoice[];
   conflicts: Record<string, ModuleConflict>;
   /** Sidebar order changes not yet acknowledged by the account (oldest first). */
@@ -200,7 +204,9 @@ export function loadReplica(accountId: string, initial: ModulePreferences): Modu
         // Replicas saved before sidebar order existed have no orderPending: nothing was queued.
         const orderPending = (Array.isArray(saved.orderPending) ? saved.orderPending : []).map((item) => readPendingOrder(item, saved.deviceId));
         if (pending.every((item) => item !== null) && conflicts.every(([, conflict]) => conflict !== null) && orderPending.every((item) => item !== null)) {
-          return { ...saved, initial, pending: pending as PendingChoice[], conflicts: Object.fromEntries(conflicts) as Record<string, ModuleConflict>, orderPending: orderPending as PendingOrder[] };
+          const prior = saved.snapshot ? initial : normalizePreferences(saved.initial);
+          const remembered = saved.restoreOnFirstSync === true ? prior : { ...prior, ...initial, modules: { ...prior.modules, ...initial.modules } };
+          return { ...saved, initial: remembered, pending: pending as PendingChoice[], conflicts: Object.fromEntries(conflicts) as Record<string, ModuleConflict>, orderPending: orderPending as PendingOrder[] };
         }
       }
     }
@@ -221,7 +227,7 @@ export function saveReplica(state: ModuleReplica): boolean {
 
 export function displayedPreferences(state: ModuleReplica): ModulePreferences {
   const remembered = Object.entries(state.initial.modules).filter(([id]) => !state.snapshot || !canSyncChoice(id));
-  const remote = Object.entries(state.snapshot?.modules ?? {}).map(([id, choice]) =>
+  const remote = Object.entries(state.snapshot?.modules ?? {}).filter(([, choice]) => !choice.inherits_default).map(([id, choice]) =>
     [id, { sidebarVisible: serverVisible(choice), changedAt: choice.changed_at ?? "" }] as const);
   const modules: ModulePreferences["modules"] = Object.fromEntries([...remembered, ...remote]);
   for (const [id, conflict] of Object.entries(state.conflicts)) {
@@ -245,6 +251,14 @@ export function observeSnapshot(state: ModuleReplica, snapshot: ModuleSnapshot):
   if (state.snapshot) {
     const orderPending = canSyncOrder(state) ? state.orderPending : firstSyncOrder(state, snapshot);
     return { ...state, snapshot, orderPending };
+  }
+  if (state.restoreOnFirstSync === true) {
+    // The first snapshot supplies the revisions needed to apply the explicit reset safely.
+    // Replay any later offline edits over that reset, including an order chosen after it.
+    let next = restoreReplicaDefaults({ ...state, restoreOnFirstSync: false, snapshot, pending: [], orderPending: [], conflicts: {} });
+    for (const item of state.pending) next = enqueuePreference(next, item.moduleKey, item.visible);
+    const lastOrder = state.orderPending[state.orderPending.length - 1];
+    return lastOrder ? enqueueOrder(next, lastOrder.keys) : next;
   }
   const firstOrder = firstSyncOrder(state, snapshot);
 
@@ -308,6 +322,11 @@ export function enqueuePreference(state: ModuleReplica, id: string, visible: boo
 
 /** Restore the defaults for this surface using the regular revision-checked write queue. */
 export function restoreReplicaDefaults(state: ModuleReplica): ModuleReplica {
+  if (!state.snapshot) {
+    const modules = Object.fromEntries(Object.entries(state.initial.modules).filter(([id]) => !canSyncChoice(id)));
+    const order = normalizeOrder(state.initial.order).filter((id) => !canSyncChoice(id));
+    return { ...state, initial: { format: 1, modules, order }, restoreOnFirstSync: true, pending: [], orderPending: [], conflicts: {} };
+  }
   const ordered = displayedOrder(state).some(canSyncChoice) ? enqueueOrder(state, []) : state;
   return enabledModules("app").reduce((next, module) => {
     const id = module.id;

@@ -9,13 +9,6 @@ module ApplicationHelper
     GoogleSignIn.configured?
   end
 
-  # Common short names people type that are not part of the region's display name.
-  USAGE_REGION_SEARCH_ALIASES = {
-    "US" => "usa america", "GB" => "uk britain england scotland wales", "AE" => "uae emirates",
-    "KR" => "korea south", "CN" => "prc", "NL" => "holland", "CZ" => "czechia",
-    "RU" => "russia", "VN" => "vietnam", "TR" => "turkiye"
-  }.freeze
-
   def usage_region_options
     standard = UsageRegion::STANDARD_CODES.map { |code| usage_region_option(code) }
       .sort_by { |label, _code, _data| label.downcase }
@@ -23,23 +16,29 @@ module ApplicationHelper
     [usage_region_option(UsageRegion::GLOBAL_CITIZEN_CODE), usage_region_option(UsageRegion::OTHER_CODE)] + standard
   end
 
-  # A searchable region picker. Without JavaScript it is the plain required select;
-  # with /billie.js a search box filters the list as the person types.
   def usage_region_select(form, html_options = {})
     html_options = html_options.dup
     search_class = html_options.delete(:search_class)
-    select_id = html_options[:id] || "#{form.object_name}_usage_region"
+    select_id = html_options.fetch(:id) { form.field_id(:usage_region) }
     select = form.select(:usage_region, usage_region_options,
-      # Global Citizen is preselected until the person picks a specific region.
-      # There is always a selection, so the field needs no blank option or `required` attribute;
-      # the model still rejects a missing or unknown region.
       {selected: form.object.usage_region.presence || UsageRegion::GLOBAL_CITIZEN_CODE},
       {autocomplete: "country", "aria-describedby": "user_usage_region_help"}.merge(html_options).merge(id: select_id))
-    search = tag.input(type: "search", class: ["bw-region-search", search_class].compact.join(" "), hidden: true,
-      placeholder: t("billie.account.region_search_placeholder"), "aria-label": t("billie.account.region_search_label"),
-      "aria-controls": select_id, autocomplete: "off", spellcheck: false, data: {region_search_input: ""})
-    empty = tag.small(t("billie.account.region_search_empty"), hidden: true, role: "status", data: {region_search_empty: ""})
-    tag.div(safe_join([search, select, empty]), class: "bw-region-picker", data: {region_search: ""})
+    searchable_select(select, id: select_id, type: "region", search_class: search_class,
+      label: t("billie.account.region_search_label"), placeholder: t("billie.account.region_search_placeholder"),
+      no_match: t("billie.account.region_search_empty"), disabled: html_options[:disabled])
+  end
+
+  # Without JavaScript the original select remains available at full width.
+  def searchable_select(select, id:, label:, placeholder:, no_match:, type: "", search_class: nil, disabled: false)
+    search_id = "#{id}_search"
+    list_id = "#{id}_matches"
+    search = tag.input(type: "search", id: search_id, class: search_class, hidden: true, disabled: disabled,
+      placeholder: placeholder, role: "combobox", "aria-label": label,
+      "aria-controls": list_id, "aria-expanded": "false", "aria-autocomplete": "list",
+      autocomplete: "off", spellcheck: false)
+    list = tag.ul(id: list_id, hidden: true, role: "listbox", "aria-labelledby": search_id)
+    empty = tag.small(no_match, hidden: true, role: "status")
+    tag.div(safe_join([search, select, list, empty]), class: "bw-searchable-select", data: {searchable_select: type})
   end
 
   def billie_language_path(locale)
@@ -65,7 +64,8 @@ module ApplicationHelper
 
   def usage_region_option(code)
     label = t("usage_regions.#{code}")
-    terms = [label, t("usage_regions.#{code}", locale: :en), code, USAGE_REGION_SEARCH_ALIASES[code]].compact.uniq.join(" ")
+    terms = [:en, :"zh-CN", :"zh-TW"].map { |locale| t("usage_regions.#{code}", locale: locale) }
+    terms = [label, *terms, code].uniq.join(" ")
     [label, code, {data: {search: terms}}]
   end
 end

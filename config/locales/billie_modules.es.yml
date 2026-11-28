@@ -30,16 +30,23 @@ es:
         receipts: Recibos
         reconciliation: Conciliación
         review_history: Revisión e historial
+      groups:
+        intelligence: "Resumen e inteligencia"
+        financial: "Gestión financiera"
+        analytics: "Análisis y previsión"
+        add_sync: "Añadir y sincronizar"
+        system: "Gestión del sistema"
       names:
+        fixed_assets: "Activos fijos"
         overview: "Resumen financiero"
-        import: "Importar"
-        receipts: "Recibos"
+        import: "Importar extractos"
+        receipts: "Escanear y capturar"
         data_management: "Gestión de datos"
         transactions: Movimientos
         ai_assistant: "Perspectiva de IA"
         ledgers: Libros
         accounts: Cuentas y activos
-        categories: Categorías y etiquetas
+        categories: Categorías
         budgets: Presupuestos
         reports: Informes
         recurring: Recurrentes y facturas
@@ -48,6 +55,7 @@ es:
         forecast: Previsión de flujo de caja
         multi_currency: Varias monedas
       descriptions:
+        fixed_assets: "Registro de activos fijos."
         overview: "Consulta los saldos y las tendencias de gasto."
         import: "Importa y revisa extractos bancarios."
         receipts: "Captura recibos y revisa las coincidencias."
@@ -65,13 +73,14 @@ es:
         forecast: Tu saldo previsto para los próximos 30, 60 o 90 días.
         multi_currency: Cuentas en varias monedas, convertidas para los informes.
       status:
+        unimplemented: "Sin implementar"
         available: "Disponible"
         coming_soon: "Próximamente"
         unsupported: "No disponible en esta plataforma"
         in_sidebar: "En la barra lateral"
         hidden: "Oculto"
-        core: "Básico"
       library:
+        show_in_sidebar: "Mostrar en la barra lateral"
         management: "Gestión de funciones"
         preview: "Vista previa de la barra lateral"
         always_shown: "Siempre visible"

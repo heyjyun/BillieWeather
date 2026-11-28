@@ -5,9 +5,10 @@
 // Nothing financial is read or sent here.
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { BrandMark } from "../components/BrandMark";
+import { SearchableSelect } from "../components/SearchableSelect";
 import { useAccount } from "../hooks/useAccount";
 import { interpolate, LanguageSelect, useI18n } from "../i18n";
-import { GLOBAL_CITIZEN, matchesRegion, OTHER, regionOptions, REGION_CODES } from "../services/regions";
+import { GLOBAL_CITIZEN, OTHER, regionOptions, REGION_CODES } from "../services/regions";
 import {
   cancelGoogle, completeGoogle, confirmRegistration, fetchIdentityConfig, googleStatus, IDENTITY_ORIGIN, linkGoogle, type MailDelivery, RegistrationError, resendCode,
   startGoogle, startRegistration, type GoogleFlow, type GoogleStatus, type PendingRegistration,
@@ -557,28 +558,13 @@ function RegionField({ value, onChange, field, errors, disabled }: Omit<FieldBas
   const { m, locale } = useI18n();
   const r = m.register;
   const id = useId();
-  const [query, setQuery] = useState("");
-  const options = useMemo(() => regionOptions(locale, r.globalCitizen), [locale, r.globalCitizen]);
-  const shown = useMemo(() => {
-    const matching = options.filter((option) => matchesRegion(option, query));
-    // Keep the current choice visible so the select never shows an option that isn't selected.
-    return matching.some((option) => option.code === value) ? matching : [...options.filter((option) => option.code === value), ...matching];
-  }, [options, query, value]);
-  const none = query.trim() !== "" && !options.some((option) => matchesRegion(option, query));
+  const options = useMemo(() => regionOptions(locale, r.globalCitizen)
+    .map(({ code, label }) => ({ value: code, label })), [locale, r.globalCitizen]);
   return (
-    <div className="bw-field bw-region-field">
+    <div className="bw-field">
       <label htmlFor={id}>{r.region}</label>
-      <input type="search" className="bw-region-search" value={query} onChange={(event) => {
-        const next = event.target.value;
-        setQuery(next);
-        const matches = options.filter((option) => matchesRegion(option, next));
-        if (next.trim() && matches.length === 1) onChange(matches[0].code);
-      }} placeholder={r.regionSearchPlaceholder} aria-label={r.regionSearch} aria-controls={id} autoComplete="off" spellCheck={false} disabled={disabled} />
-      <select id={id} data-field={field} value={value} onChange={(event) => onChange(event.target.value)} autoComplete="country" disabled={disabled}
-        aria-invalid={errors.length > 0 || undefined} aria-describedby={describedBy(id, r.regionHelp, errors)}>
-        {shown.map((option) => <option key={option.code} value={option.code}>{option.label}</option>)}
-      </select>
-      {none && <small role="status">{r.regionNoMatch}</small>}
+      <SearchableSelect id={id} kind="region" options={options} data-field={field} value={value} onChange={onChange} autoComplete="country"
+        disabled={disabled} aria-invalid={errors.length > 0 || undefined} aria-describedby={describedBy(id, r.regionHelp, errors)} />
       <FieldMessages id={id} help={r.regionHelp} errors={errors} />
     </div>
   );

@@ -38,7 +38,7 @@ Apply the region migrations before running this version, then restart Rails. Pro
 
 ## Customize the sidebar
 
-New accounts see **Transactions**, **AI Insight**, **Financial Overview**, **Categories**, and **Accounts & Assets** in that order, followed by **Settings**. In **Settings → Sidebar customization**, drag a module or use the arrows to move it. Use **Hide** and **Add** to choose what appears, or **Restore default sidebar** to reset the list and its order. Settings stays fixed at the bottom. Hidden modules still open from Settings and the Feature Library.
+New accounts see **Financial Overview** and **AI Insight** in that order, followed by **Settings**. In **Settings → Sidebar customization**, drag a module or use the arrows to move it. Use the switches in **Feature Management** to choose what appears, or **Restore default sidebar** to reset the list and its order. Settings stays fixed at the bottom. Hidden modules still open from Settings and the Feature Library.
 
 Sidebar preferences follow the signed-in account across the website and apps when account sync is enabled. Installed apps keep edits locally while offline and synchronize when they reconnect. The [sidebar architecture](docs/architecture/sidebar-and-modules.md) describes platform support, upgrades, and conflicting edits.
 

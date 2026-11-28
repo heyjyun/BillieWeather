@@ -193,18 +193,18 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
     get PATH, headers: @auth
     assert_nil response.parsed_body.fetch("sidebar_order")
 
-    reply = send_update(order_body(%w[accounts transactions], 0))
+    reply = send_update(order_body(%w[accounts ai_assistant], 0))
     assert_response :success
     assert_equal true, reply["order_applied"]
-    assert_equal %w[accounts transactions], reply.dig("sidebar_order", "module_keys")
+    assert_equal %w[accounts ai_assistant], reply.dig("sidebar_order", "module_keys")
     assert_equal 1, reply.dig("sidebar_order", "revision")
     assert_equal DEVICE_A, reply.dig("sidebar_order", "updated_by_device_id")
     assert_equal 1, reply["server_revision"]
 
     # Another device sees it; the website applies it too.
     get PATH, headers: @auth
-    assert_equal %w[accounts transactions], response.parsed_body.dig("sidebar_order", "module_keys")
-    assert_equal %w[accounts transactions ai_assistant overview categories], Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user), order: Finance::SidebarOrder.keys_for(@user)).map(&:id)
+    assert_equal %w[accounts ai_assistant], response.parsed_body.dig("sidebar_order", "module_keys")
+    assert_equal %w[ai_assistant overview], Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user), order: Finance::SidebarOrder.keys_for(@user)).map(&:id)
     # Other accounts are untouched.
     get PATH, headers: headers_for(@other)
     assert_nil response.parsed_body.fetch("sidebar_order")
@@ -222,6 +222,7 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
 
   test "reordering and restoring in the app preserve the website-only module's choices" do
     sign_in @user
+    show_in_sidebar!(@user, %w[transactions accounts overview categories])
     patch finance_feature_library_module_path("forecast"), params: {sidebar_visible: "1", expected_revision: 0}, as: :json
     assert_response :ok
     patch finance_sidebar_order_path, params: {module_keys: %w[accounts forecast transactions ai_assistant overview categories], expected_revision: 0}, as: :json
@@ -239,7 +240,7 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
     assert_equal true, reply["order_applied"]
     assert_equal ["forecast"], reply.dig("sidebar_order", "module_keys")
     assert_equal true, reply.dig("modules", "forecast", "sidebar_visible")
-    assert_equal %w[transactions ai_assistant overview categories accounts],
+    assert_equal %w[overview ai_assistant transactions accounts categories],
       Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user), surface: "app", order: Finance::SidebarOrder.keys_for(@user)).map(&:id)
 
     post finance_reset_feature_library_path

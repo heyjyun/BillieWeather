@@ -88,7 +88,7 @@ export default defineConfig({
     strictPort: true,
     host: host || false,
     hmr: host ? { protocol: "ws", host, port: 1421 } : undefined,
-    fs: { allow: [".", packages] },
+    fs: { allow: [".", packages, fileURLToPath(new URL("../../public", import.meta.url))] },
     // All of src-tauri except its migrations, which the browser preview builds its database from:
     // ignoring them too left a running server on an old migration list (devServerSync.ts).
     watch: { ignored: [ignoreTauriExceptMigrations] },

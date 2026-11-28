@@ -5,11 +5,14 @@ import { ACCOUNT_TYPES, formatMoney, isLiability, type AccountType } from "@bill
 import { CURRENCIES } from "@billie/shared-types";
 import { useState, type FormEvent } from "react";
 import { useDraftState, useMode } from "../hooks/useMode";
+import { currencyOptions, SearchableSelect } from "../components/SearchableSelect";
 import { Empty, Money, PageHeading } from "../components/common";
 import { parseAmount } from "../components/EntryForm";
 import { useFinance } from "../hooks/useFinance";
 import { useI18n } from "../i18n";
 import { LedgerError, type Account, type AccountInput } from "../services/ledger";
+
+const bookCurrencies = currencyOptions(CURRENCIES);
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -185,11 +188,12 @@ export function Accounts() {
       <p className="bw-sr-status" role="status" aria-live="polite">{status}</p>
       {status && <p className="bw-message bw-message-ok">{status}</p>}
       {!currency && accounts.length === 0 && (
-        <label className="bw-field">
-          <span>{x.currency}</span>
-          <select value={bookCurrency} onChange={(e) => setBookCurrency(e.target.value)}>{CURRENCIES.map((code) => <option key={code} value={code}>{code}</option>)}</select>
-          <small>{x.currencyHelp}</small>
-        </label>
+        <div className="bw-field">
+          <label htmlFor="accounts-book-currency">{x.currency}</label>
+          <SearchableSelect id="accounts-book-currency" kind="currency" options={bookCurrencies} value={bookCurrency}
+            onChange={setBookCurrency} aria-describedby="accounts-book-currency-help" />
+          <small id="accounts-book-currency-help">{x.currencyHelp}</small>
+        </div>
       )}
       <div className="bw-metrics">
         <div className="bw-metric"><span>{x.assets}</span><strong><Money cents={assets} currency={cur} /></strong></div>

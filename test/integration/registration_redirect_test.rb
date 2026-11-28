@@ -6,6 +6,10 @@ class RegistrationRedirectTest < ActionDispatch::IntegrationTest
     post user_registration_path, params: registration_params("ordinary-signup@example.com")
 
     assert_redirected_to finance_dashboard_path
+    follow_redirect!
+    assert_response :success
+    assert_equal ["Financial Overview", "AI Insight", "Settings"], css_select("#module-nav a").map { |link| link.text.strip }
+    assert_empty Finance::ModulePreference.where(user: User.find_by!(email: "ordinary-signup@example.com"))
   end
 
   test "signup from a team invitation returns to the invitation and accepts its membership" do

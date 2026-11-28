@@ -14,5 +14,7 @@
       <%= finance_nav t("billie.modules.names.#{definition.id}"), public_send("#{definition.route}_path"), definition.icon, active: active_module == definition.id && !settings_active %>
     <% end %>
   </div>
-  <%= finance_nav t('billie.modules.nav.settings'), finance_settings_path, "settings", active: settings_active %>
+  <div class="bw-system-nav">
+    <%= finance_nav t('billie.modules.nav.settings'), finance_settings_path, "settings", active: settings_active %>
+  </div>
 </nav>

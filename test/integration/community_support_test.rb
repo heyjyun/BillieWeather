@@ -267,12 +267,13 @@ class CommunitySupportTest < ActionDispatch::IntegrationTest
     assert_not @stranger.reload.supporter_recognition_public?
   end
 
-  test "the app sidebar keeps only core features: no Membership or admin links, even for admins" do
+  test "the app sidebar keeps only the configured modules and Settings: no Membership or admin links, even for admins" do
     with_admin do
       [@stranger, @admin].each do |user|
         sign_in user
         get finance_settings_path, params: {locale: "en"}
-        assert_select "#module-nav a[href='#{finance_transactions_path}']", text: "Transactions"
+        assert_select "#module-nav a[href='#{finance_dashboard_path}']", text: "Financial Overview"
+        assert_select "#module-nav a[href='#{finance_transactions_path}']", count: 0
         assert_select "#module-nav a[href='#{finance_insights_path}']", text: "AI Insight"
         assert_select "#module-nav a[href='#{finance_settings_path}']", text: "Settings"
         assert_select ".bw-nav a[href='#{billie_features_path}']", count: 0

@@ -84,7 +84,7 @@ class FinanceCategoriesTest < ActionDispatch::IntegrationTest
     Finance::Category.create_for!(@user, name: "Party supplies")
     get finance_categories_path
     assert_response :success
-    assert_select "a.bw-nav-link.is-active", text: "Categories & Tags"
+    assert_select "a.bw-nav-link.is-active", text: "Categories"
     # Every category in tree order (defaults, their own) plus Uncategorized.
     assert_select ".bw-table tbody tr", count: 84 + 1 + 1
     assert_select ".bw-table tbody tr", text: /Party supplies/

@@ -11,6 +11,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { categoryLabel, interpolate, useI18n } from "../i18n";
 import { categoryChoices, indented } from "./common";
+import { currencyOptions, SearchableSelect } from "./SearchableSelect";
 import { useOptionalCategoryTree } from "../hooks/useFinance";
 
 const ROW_LIMIT = 300;
@@ -183,8 +184,12 @@ export function ImportPreview(props: {
             (["ymd", "dmy", "mdy"] as const).map((order) => [order, u.orders[order]]), (value) => setConvention({ dateOrder: value as Conventions["dateOrder"] }), need.has("dateOrder"), "u-date")}
           {select(u.decimal, conventions.decimal ?? (need.has("decimal") ? "" : draft.effective.decimal),
             [[".", u.decimals.point], [",", u.decimals.comma]], (value) => setConvention({ decimal: value as Conventions["decimal"] }), need.has("decimal"), "u-decimal")}
-          {select(u.currency, currency ?? "", [...new Set([...(currency ? [currency] : []), ...CURRENCIES])].map((code) => [code, code]),
-            (value) => setConvention({ currency: value }), need.has("currency"), "u-currency")}
+          <div className={`bw-field${need.has("currency") ? " is-needed" : ""}`}>
+            <label htmlFor="u-currency">{u.currency}</label>
+            <SearchableSelect id="u-currency" kind="currency" value={currency ?? ""} aria-invalid={need.has("currency") || undefined}
+              options={currencyOptions([...new Set([...(currency ? [currency] : []), ...CURRENCIES])], currency ? undefined : u.pick)}
+              onChange={(value) => setConvention({ currency: value })} />
+          </div>
           {draft.format !== "ofx" && select(u.accountKind, conventions.accountKind,
             (["unknown", "checking", "savings", "credit_card", "loan"] as const).map((kind) => [kind, u.kinds[kind]]), (value) => setConvention({ accountKind: value as Conventions["accountKind"] }), false, "u-kind")}
           {ocr?.scriptVariants && select(u.ocr.script, conventions.ocrScript ?? "", (["zh-Hans", "zh-Hant"] as const).map((script) => [script, u.ocr.scripts[script]]),

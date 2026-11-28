@@ -1,11 +1,9 @@
 <%# Settings › Sidebar customization: the sidebar entries in the person's order (drag them, or use the
-    arrow buttons, which work without JavaScript), a way to hide each one or add any other available
-    module, and Restore defaults. Only navigation changes: a hidden module keeps working and stays in
+    arrow buttons, which work without JavaScript) and Restore defaults. Only navigation changes: a hidden module keeps working and stays in
     Settings and the Feature Library. Settings itself is fixed at the bottom. public/billie.js adds
     drag and drop and saves without a reload (FeatureLibraryController#reorder returns the new
     sidebar). The apps have the same section (clients/universal/src/settings/SidebarCustomization.tsx). %>
 <% entries = sidebar_modules %>
-<% others = hidden_modules %>
 <section class="bw-panel bw-sidebar-customization" id="settings-sidebar" aria-labelledby="sidebar-customization-title"
   data-sidebar-customization data-order-url="<%= finance_sidebar_order_path %>" data-order-revision="<%= sidebar_order_revision %>">
   <h2 id="sidebar-customization-title"><%= t("billie.modules.sidebar.title") %></h2>
@@ -24,10 +22,6 @@
           <%= button_to finance_sidebar_order_path, method: :patch, params: {move: definition.id, direction: "down", expected_revision: sidebar_order_revision},
             form: {data: {turbo: false, sidebar_move: "down"}}, class: "bw-icon-button", disabled: index == entries.length - 1,
             aria: {label: t("billie.modules.sidebar.move_down", name: name)}, title: t("billie.modules.sidebar.move_down", name: name) do %>↓<% end %>
-          <%= button_to t("billie.modules.sidebar.hide"), finance_feature_library_module_path(definition.id), method: :patch,
-            params: {sidebar_visible: "0", settings: "sidebar", expected_revision: module_revision(definition.id)},
-            form: {data: {turbo: false}}, class: "bw-button bw-button-outline bw-button-small",
-            aria: {label: t("billie.modules.sidebar.hide_label", name: name)} %>
         </span>
       </li>
     <% end %>
@@ -38,23 +32,6 @@
     </li>
   </ol>
   <p class="bw-caption" id="sidebar-order-help"><%= t("billie.modules.sidebar.help") %></p>
-  <h3><%= t("billie.modules.sidebar.add_heading") %></h3>
-  <% if others.empty? %>
-    <p class="bw-muted"><%= t("billie.modules.sidebar.nothing_to_add") %></p>
-  <% else %>
-    <ul class="bw-sidebar-add" data-sidebar-add>
-      <% others.each do |definition| %>
-        <% name = t("billie.modules.names.#{definition.id}") %>
-        <li data-module-key="<%= definition.id %>">
-          <span class="bw-sidebar-order-name"><%= finance_icon definition.icon, size: 18 %> <%= name %></span>
-          <%= button_to t("billie.modules.sidebar.add"), finance_feature_library_module_path(definition.id), method: :patch,
-            params: {sidebar_visible: "1", settings: "sidebar", expected_revision: module_revision(definition.id)},
-            form: {data: {turbo: false}}, class: "bw-button bw-button-outline bw-button-small",
-            aria: {label: t("billie.modules.sidebar.add_label", name: name)} %>
-        </li>
-      <% end %>
-    </ul>
-  <% end %>
   <%= button_to t("billie.modules.library.reset"), finance_reset_feature_library_path, params: {settings: "sidebar"},
     form: {data: {turbo: false}, class: "bw-feature-reset"}, class: "bw-button bw-button-outline" %>
 </section>

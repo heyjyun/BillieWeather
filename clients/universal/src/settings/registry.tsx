@@ -42,8 +42,8 @@ export interface SettingsSection {
 }
 
 export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
-  { id: "sidebar", area: "features", render: (props) => <SidebarCustomizationSection {...props} /> },
   { id: "feature-library", area: "features", render: (props) => <FeatureLibrarySection {...props} /> },
+  { id: "sidebar", area: "features", render: (props) => <SidebarCustomizationSection {...props} /> },
   { id: "database", area: "database", render: (props) => <DatabaseSection {...props} /> },
   { id: "data", area: "data", needsShell: true, render: (props) => <DataSection {...props} /> },
   { id: "sync", area: "sync", render: (props) => <SyncSection {...props} /> },
