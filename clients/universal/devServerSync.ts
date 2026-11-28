@@ -18,6 +18,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, isAbsolute, relative, resolve } from "node:path";
 import type { Plugin, ViteDevServer } from "vite";
+import { migrationManifest } from "./src/services/migrationManifest";
 
 export interface DevServerSyncOptions {
   /** The app folder (clients/universal). */
@@ -28,6 +29,8 @@ export interface DevServerSyncOptions {
   importers: string[];
   /** Absolute paths whose change needs `npm ci` and a restart. */
   dependencyFiles: string[];
+  /** Shared catalog used by both the native client and Rails. */
+  catalogFile?: string;
 }
 
 export interface DevServerStatus {
@@ -37,6 +40,8 @@ export interface DevServerStatus {
   startedHead: string | null;
   head: string | null;
   migrations: number[];
+  migrationDigest: string;
+  catalog: { version: number; digest: string } | null;
   dependenciesChanged: boolean;
   stale: boolean;
   reasons: string[];
@@ -50,9 +55,17 @@ export function ignoreTauriExceptMigrations(path: string): boolean {
   return /[\\/]src-tauri[\\/](?!migrations(?:[\\/]|$))/.test(path);
 }
 
-export function migrationVersions(dir: string): number[] {
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir).filter((name) => /^\d{4}_.+\.sql$/.test(name)).map((name) => Number(name.slice(0, 4))).sort((a, b) => a - b);
+const digest = (value: string) => createHash("sha256").update(value).digest("hex");
+
+function readInputs(dir: string, catalogFile?: string) {
+  const names = readdirSync(dir).filter((name) => /^\d{4}_.+\.sql$/.test(name)).sort();
+  const sources = Object.fromEntries(names.map((name) => [name, readFileSync(resolve(dir, name), "utf8")]));
+  const catalog = catalogFile ? JSON.parse(readFileSync(catalogFile, "utf8")) : null;
+  return {
+    migrations: names.map((name) => Number(name.slice(0, 4))),
+    migrationDigest: digest(migrationManifest(sources)),
+    catalog: catalog ? { version: catalog.version as number, digest: digest(JSON.stringify(catalog)) } : null,
+  };
 }
 
 function gitHead(cwd: string): string | null {
@@ -71,6 +84,7 @@ function fingerprint(files: readonly string[]): string {
 
 export function devServerSync(options: DevServerSyncOptions): Plugin {
   const migrationsDir = resolve(options.migrationsDir);
+  const catalogFile = options.catalogFile && resolve(options.catalogFile);
   const dependencyFiles = options.dependencyFiles.map((file) => resolve(file));
   const isMigration = (file: string) => {
     const rel = relative(migrationsDir, resolve(file));
@@ -85,25 +99,40 @@ export function devServerSync(options: DevServerSyncOptions): Plugin {
       const startedHead = gitHead(options.root);
       const startedDependencies = fingerprint(dependencyFiles);
       const log = server.config.logger;
+      let served = readInputs(migrationsDir, catalogFile);
 
       const status = (): DevServerStatus => {
         const dependenciesChanged = fingerprint(dependencyFiles) !== startedDependencies;
         const reasons = dependenciesChanged ? ["package.json or package-lock.json changed since this server started: run `npm ci` in clients/universal, then restart it"] : [];
-        return { pid: process.pid, root: options.root, startedAt, startedHead, head: gitHead(options.root), migrations: migrationVersions(migrationsDir), dependenciesChanged, stale: reasons.length > 0, reasons };
+        let current = { migrations: [], migrationDigest: "", catalog: null } as ReturnType<typeof readInputs>;
+        try {
+          current = readInputs(migrationsDir, catalogFile);
+          if (current.migrationDigest !== served.migrationDigest || current.catalog?.digest !== served.catalog?.digest) {
+            reasons.push("migration or module catalog changes have not been reloaded");
+          }
+        } catch {
+          reasons.push("cannot read the migration folder or module catalog");
+        }
+        return { pid: process.pid, root: options.root, startedAt, startedHead, head: gitHead(options.root), ...current, dependenciesChanged, stale: reasons.length > 0, reasons };
       };
 
       // A rename arrives as unlink + add, and a pull may bring several files: reload once.
       let reload: ReturnType<typeof setTimeout> | undefined;
       const changes = new Set<string>();
       const onMigration = (event: string) => (file: string) => {
-        if (!isMigration(file)) return;
+        if (!isMigration(file) && resolve(file) !== catalogFile) return;
         for (const importer of options.importers) {
           for (const module of server.moduleGraph.getModulesByFile(resolve(importer)) ?? []) server.moduleGraph.invalidateModule(module);
         }
         changes.add(`${basename(file)} ${event}`);
         clearTimeout(reload);
         reload = setTimeout(() => {
-          log.info(`[billie] migration ${[...changes].join(", ")}: reloading the browser preview so it rebuilds its database`, { timestamp: true });
+          try {
+            served = readInputs(migrationsDir, catalogFile);
+          } catch {
+            log.warn("[billie] cannot read the migration folder or module catalog; check the files and retry", { timestamp: true });
+          }
+          log.info(`[billie] ${[...changes].join(", ")}: reloading the browser preview`, { timestamp: true });
           changes.clear();
           server.ws.send({ type: "full-reload", path: "*" });
         }, 150);
@@ -121,7 +150,7 @@ export function devServerSync(options: DevServerSyncOptions): Plugin {
         server.ws.send({ type: "error", err: { message, stack: "", plugin: "billie-dev-server-sync" } });
       };
 
-      server.watcher.add([migrationsDir, ...dependencyFiles]);
+      server.watcher.add([migrationsDir, ...dependencyFiles, ...(catalogFile ? [catalogFile] : [])]);
       server.watcher.on("add", onMigration("added"));
       server.watcher.on("change", onMigration("changed"));
       server.watcher.on("unlink", onMigration("removed"));

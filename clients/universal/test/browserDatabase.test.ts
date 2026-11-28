@@ -136,7 +136,7 @@ describe("native books: schema version and required tables", () => {
     migrate(db);
     expect(db.exec("SELECT description, amount_cents FROM transactions")[0].values).toEqual([["ZXQ SYNTHETIC", -500]]);
     await expect(checkRequiredTables(select(db))).resolves.toBeUndefined();
-    const versions = async () => [{ version: LOCAL_SCHEMA_VERSION, applied: LOCAL_SCHEMA_VERSION }];
+    const versions = async () => [{ version: LOCAL_SCHEMA_VERSION, first_version: 1, total: LOCAL_SCHEMA_VERSION, applied: LOCAL_SCHEMA_VERSION }];
     await expect(checkSchemaVersion(versions)).resolves.toBeUndefined();
   });
 

@@ -11,6 +11,8 @@
 import type { Database, SqlJsStatic } from "sql.js";
 import { migrationVersions } from "./migrations";
 import { missingTables } from "./schemaChecks";
+import { migrationManifest } from "./migrationManifest";
+import type { PreviewInputs } from "./devServerStatus";
 
 export interface BrowserMigration { version: number; name: string; sql: string }
 
@@ -45,6 +47,23 @@ export function checkServedMigrations(modules: Record<string, string>, onDisk: r
   if (onDisk === null) throw new Error(`${PREVIEW_STALE}: the development server does not report its migration files, so it was started before it could follow them. ${RESTART}`);
   if (served.length !== onDisk.length || served.some((version, index) => version !== onDisk[index])) {
     throw new Error(`${PREVIEW_STALE}: this page has migration versions ${list(served)}, but the migrations folder has ${list(onDisk)}. ${RESTART}`);
+  }
+}
+
+async function digest(value: string): Promise<string> {
+  const bytes = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export async function checkPreviewInputs(modules: Record<string, string>, catalog: { version: number }, inputs: PreviewInputs | null): Promise<void> {
+  checkServedMigrations(modules, inputs?.migrations ?? null);
+  if (!inputs) return;
+  if (!globalThis.crypto?.subtle) throw new Error(`${PREVIEW_STALE}: use localhost or HTTPS to verify the development server's files.`);
+  if (inputs.stale || await digest(migrationManifest(modules)) !== inputs.migrationDigest) {
+    throw new Error(`${PREVIEW_STALE}: the development server and browser have different migration contents or dependencies. ${RESTART}`);
+  }
+  if (catalog.version !== inputs.catalog.version || await digest(JSON.stringify(catalog)) !== inputs.catalog.digest) {
+    throw new Error(`${PREVIEW_STALE}: the development server and browser have different module catalogs. ${RESTART}`);
   }
 }
 

@@ -5,6 +5,7 @@
 import type { SqlDriver, SqlStatement } from "./store";
 import { LOCAL_SCHEMA_VERSION, MIGRATION_SOURCES } from "./migrations";
 import { missingTables } from "./schemaChecks";
+import catalog from "../../../../packages/shared-types/schema/module-catalog.json";
 
 export const isTauri = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -38,7 +39,7 @@ export async function openDatabase(file = "billieweather.db"): Promise<{ driver:
       },
     };
   }
-  const [{ default: initSqlJs }, { default: wasmUrl }, { sqljsDriver }, { openPreviewDatabase }, { devServerMigrations }] = await Promise.all([
+  const [{ default: initSqlJs }, { default: wasmUrl }, { sqljsDriver }, { openPreviewDatabase, checkPreviewInputs }, { devServerInputs }] = await Promise.all([
     import("sql.js"),
     import("sql.js/dist/sql-wasm.wasm?url"),
     import("./sqljsDriver"),
@@ -48,9 +49,9 @@ export async function openDatabase(file = "billieweather.db"): Promise<{ driver:
   // The dev server refreshes MIGRATION_SOURCES when a migration file is added, changed, renamed or
   // removed, and reloads the page (devServerSync.ts). In case it did not (a server started before it
   // could follow them), the list is compared with the server's own reading of the folder first.
-  const onDisk = import.meta.env.DEV ? await devServerMigrations() : undefined;
+  if (import.meta.env.DEV) await checkPreviewInputs(MIGRATION_SOURCES, catalog, await devServerInputs());
   const SQL = await initSqlJs({ locateFile: () => wasmUrl });
-  return { driver: sqljsDriver(await openPreviewDatabase(SQL, MIGRATION_SOURCES, onDisk)), persistent: false };
+  return { driver: sqljsDriver(await openPreviewDatabase(SQL, MIGRATION_SOURCES)), persistent: false };
 }
 
 /** Refuses a book that lacks a table this build reads (named in the message, which openFailure() maps to "incomplete"). */
@@ -66,11 +67,13 @@ export async function checkRequiredTables(select: (sql: string) => Promise<unkno
  * migrator ("previously applied but is missing"), so the person sees the "made by a newer version" message.
  */
 export async function checkSchemaVersion(select: (sql: string) => Promise<unknown[]>, expected = LOCAL_SCHEMA_VERSION): Promise<void> {
-  const [row] = (await select("SELECT COALESCE(MAX(version), 0) AS version, COUNT(*) AS applied FROM _sqlx_migrations WHERE success = 1")) as Array<{ version?: unknown; applied?: unknown }>;
+  const [row] = (await select("SELECT MAX(version) AS version, MIN(version) AS first_version, COUNT(*) AS total, COUNT(CASE WHEN success = 1 THEN 1 END) AS applied FROM _sqlx_migrations")) as Array<{ version?: unknown; first_version?: unknown; total?: unknown; applied?: unknown }>;
   const version = Number(row?.version ?? 0);
   const applied = Number(row?.applied ?? 0);
   if (version > expected) throw new Error(`migration ${version} was previously applied but is missing in the resolved migrations`);
-  if (version !== expected || applied !== expected) throw new Error(`the local database schema is incomplete (version ${version}, ${applied} of ${expected} migrations)`);
+  if (version !== expected || Number(row?.first_version) !== 1 || applied !== expected || Number(row?.total) !== expected) {
+    throw new Error(`the local database schema is incomplete (version ${version}, ${applied} of ${expected} migrations)`);
+  }
 }
 
 /**

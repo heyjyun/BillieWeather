@@ -7,7 +7,7 @@ import { LOCAL_SCHEMA_VERSION } from "../src/services/backup";
 import { MAX_DATABASES, openFailure } from "../src/services/databases";
 import { MIGRATIONS_DIR } from "./helpers";
 
-const answer = (version: number, applied: number) => async () => [{ version, applied }];
+const answer = (version: number, applied: number, first_version = 1, total = applied) => async () => [{ version, applied, first_version, total }];
 
 describe("schema version gate", () => {
   it("accepts a book at exactly this build's version", async () => {
@@ -23,6 +23,8 @@ describe("schema version gate", () => {
   it("refuses a book whose migrations were skipped or only partly applied", async () => {
     await expect(checkSchemaVersion(answer(LOCAL_SCHEMA_VERSION - 1, LOCAL_SCHEMA_VERSION - 1))).rejects.toThrow(/incomplete/);
     await expect(checkSchemaVersion(answer(LOCAL_SCHEMA_VERSION, LOCAL_SCHEMA_VERSION - 1))).rejects.toThrow(/incomplete/);
+    await expect(checkSchemaVersion(answer(LOCAL_SCHEMA_VERSION, LOCAL_SCHEMA_VERSION, 0))).rejects.toThrow(/incomplete/);
+    await expect(checkSchemaVersion(answer(LOCAL_SCHEMA_VERSION, LOCAL_SCHEMA_VERSION, 1, LOCAL_SCHEMA_VERSION + 1))).rejects.toThrow(/incomplete/);
     await expect(checkSchemaVersion(async () => [])).rejects.toThrow(/incomplete/);
     const error = await checkSchemaVersion(answer(LOCAL_SCHEMA_VERSION - 1, LOCAL_SCHEMA_VERSION - 1)).catch((caught: Error) => caught);
     expect(openFailure((error as Error).message)).toBe("incomplete");

@@ -29,6 +29,7 @@ Rails.application.routes.draw do
     end
   end
   get "/up", to: "rails/health#show", as: :billie_health
+  get "/__billie/dev-status", to: "dev_runtime#show" if Rails.env.development?
   get "/users/google/region", to: "google_regions#new", as: :new_google_region
   post "/users/google/region", to: "google_regions#create", as: :google_region
 

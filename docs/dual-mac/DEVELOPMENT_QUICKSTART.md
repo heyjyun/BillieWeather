@@ -56,21 +56,24 @@ Browser preview (the same UI in a browser; its SQLite database lives in memory a
 
 ```sh
 ops/dev-services.sh preview start     # Vite :1420 against the isolated stack, or set BILLIE_PREVIEW_API_URL /
-                                      # BILLIE_PREVIEW_IDENTITY_URL; a restart keeps the running server's URLs
+                                      # BILLIE_PREVIEW_IDENTITY_URL; a restart keeps both URLs and VITE_BILLIE_MODULE_SYNC
 ops/dev-services.sh preview status    # up to date, or STALE with the reason
-ops/dev-services.sh preview restart   # only ever stops the Vite started from this checkout
+ops/dev-services.sh preview restart   # restarts a preview previously started by this script in this checkout
+ops/dev-services.sh check             # inspect the preview, live Rails schema/catalog/API and Identity readiness
 ```
 
 A running server follows migration changes by itself: adding, changing, renaming or removing a file in
 `src-tauri/migrations` reloads the page, which rebuilds the database (`clients/universal/devServerSync.ts`).
-Before building it, the page compares its migration list with the server's own reading of the folder
-(`/__billie/dev-status`), so a server that missed a change is reported instead of used.
-What it cannot follow is new dependencies. `ops/git-sync.sh pull` and `ops/sync-dev-mac.sh` therefore run
-`ops/dev-services.sh preview check --restart-if-stale`, which restarts a stale preview (after `npm ci` if
-`node_modules` no longer matches `package-lock.json`). They also name any server on :38530, :38531, :3000
-or :8100 that started before the checkout last changed commit; restart those by hand if the pull touched
-their code. If the page still says "browser preview migrations are out of date", the server predates
-this check: run `ops/dev-services.sh preview restart`.
+Before opening the in-memory database, the page compares the migration numbers, SQL contents and shared
+module catalog with the server's readings at `/__billie/dev-status`. Use localhost or HTTPS for the
+fingerprint check. Saving a catalog edit reloads the preview too.
+
+`ops/git-sync.sh pull` and `ops/sync-dev-mac.sh` check the live services against the fast-forwarded checkout.
+They restart a stale managed Vite preview and refresh its dependencies when needed. Start and stop a
+manually launched Vite, Rails or Identity process using its original command. The checks identify
+applicable backend changes, schema or catalog mismatches and edits to previously committed migrations.
+Apply pending Rails migrations explicitly against the development database. A sync leaves existing
+development dotenv files in place and rebuilds the installed Dev app only when its client sources differ.
 
 Stop or start clean:
 

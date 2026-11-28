@@ -2,7 +2,7 @@
 // before 0011_category_hierarchy.sql existed kept serving 0001–0010, because vite.config.ts ignored all
 // of src-tauri). These tests start a real Vite dev server on a throwaway folder and add, change, rename
 // and remove migrations while it runs. Synthetic files only; nothing in the repository is touched.
-import { mkdtempSync, mkdirSync, realpathSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer, type ViteDevServer } from "vite";
@@ -63,6 +63,7 @@ describe("a dev server that is already running", () => {
     writeFileSync(join(root, "src", "main.ts"), 'export const migrations = import.meta.glob("../src-tauri/migrations/*.sql", { query: "?raw", import: "default", eager: true });\n');
     writeFileSync(join(root, "package.json"), '{"name":"devsync-fixture","private":true}');
     writeFileSync(join(root, "package-lock.json"), '{"lockfileVersion":3}');
+    writeFileSync(join(root, "catalog.json"), '{"version":3,"modules":[]}');
     write("0001_initial.sql");
     write("0002_second.sql");
     server = await createServer({
@@ -78,6 +79,7 @@ describe("a dev server that is already running", () => {
         migrationsDir: migrations(),
         importers: [join(root, "src", "main.ts")],
         dependencyFiles: [join(root, "package.json"), join(root, "package-lock.json")],
+        catalogFile: join(root, "catalog.json"),
       })],
     });
     sent = [];
@@ -105,10 +107,23 @@ describe("a dev server that is already running", () => {
   }, 20_000);
 
   it("reloads when a migration changes, and serves the new text", async () => {
+    const before = await status();
     write("0002_second.sql", "CREATE TABLE changed_text (id INTEGER);");
     await until(reloads, (count) => count >= 1);
     const code = await until(async () => (await fetch(`${base()}/src-tauri/migrations/0002_second.sql?raw`)).text(), (text) => text.includes("changed_text"));
     expect(code).toContain("changed_text");
+    const after = await until(status, (current) => !current.stale && current.migrationDigest !== before.migrationDigest);
+    expect(after.migrations).toEqual(before.migrations);
+  }, 20_000);
+
+  it("reloads a catalog edit even when the version number is unchanged", async () => {
+    const before = await status();
+    writeFileSync(join(root, "catalog.json"), '{"version":3,"modules":["transactions"]}');
+    await until(reloads, (count) => count >= 1);
+    const after = await status();
+    expect(after.catalog?.version).toBe(3);
+    expect(after.catalog?.digest).not.toBe(before.catalog?.digest);
+    expect(after.stale).toBe(false);
   }, 20_000);
 
   it("follows a rename and a removal", async () => {
@@ -132,6 +147,16 @@ describe("a dev server that is already running", () => {
     const page = Object.fromEntries((await served()).map((name) => [`../src-tauri/migrations/${name}`, ""]));
     const onDisk = (await status()).migrations;
     expect(() => checkServedMigrations(page, onDisk)).toThrow(/browser preview migrations are out of date/);
+  }, 20_000);
+
+  it("refuses stale SQL with an unchanged migration number", async () => {
+    const catalog = { version: 3, modules: [] };
+    const files = Object.fromEntries(["0001_initial.sql", "0002_second.sql"].map((name) => [name, readFileSync(join(migrations(), name), "utf8")]));
+    const { checkPreviewInputs } = await import("../src/services/browserDatabase");
+    const before = await status();
+    await expect(checkPreviewInputs(files, catalog, { ...before, catalog: before.catalog! })).resolves.toBeUndefined();
+    await expect(checkPreviewInputs({ ...files, "0002_second.sql": "SELECT 2;" }, catalog, { ...before, catalog: before.catalog! })).rejects.toThrow(/different migration contents/);
+    await expect(checkPreviewInputs(files, { ...catalog, version: 4 }, { ...before, catalog: before.catalog! })).rejects.toThrow(/different module catalogs/);
   }, 20_000);
 
   it("ignores the rest of src-tauri (no reload for Rust build output)", async () => {

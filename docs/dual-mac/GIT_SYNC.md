@@ -48,7 +48,7 @@ rejects it if `main` moved in the meantime; fetch and repeat the table.
 ## Daily flow (either Mac)
 
 ```sh
-ops/git-sync.sh pull                              # fast-forward main to origin/main; restarts a stale browser preview
+ops/git-sync.sh pull                              # fast-forward main, check live services and restart a stale managed preview
 git switch -c feature/x                           # optional; small changes may go straight on main
 #  … commit …
 ops/doctor.sh --tests                             # on the Mac mini (the MacBook may not have the full toolchain)
@@ -61,6 +61,9 @@ git branch -d feature/x                           # -d refuses if not merged; ne
 
 A feature branch may be pushed for review (`ops/git-sync.sh push feature/x`, or a PR); delete the
 remote copy only after it is merged.
+
+If the runtime check reports a problem after the fast-forward, `git` has already moved to the new
+commit. Recheck with `ops/dev-services.sh check` after resolving the reported service or schema issue.
 
 ## Rules
 

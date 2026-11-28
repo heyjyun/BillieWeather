@@ -60,6 +60,7 @@ export default defineConfig({
       migrationsDir: `${appRoot}src-tauri/migrations`,
       importers: [`${appRoot}src/services/migrations.ts`],
       dependencyFiles: [`${appRoot}package.json`, `${appRoot}package-lock.json`],
+      catalogFile: `${packages}/shared-types/schema/module-catalog.json`,
     }),
   ],
   resolve: {
