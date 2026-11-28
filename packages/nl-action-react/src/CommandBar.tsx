@@ -194,14 +194,16 @@ export function CommandBar(props: CommandBarProps) {
     <div className={`nlae ${props.className ?? ""}`.trim()}>
       <form className="nlae-form" role="search" onSubmit={(e) => { e.preventDefault(); submit(); }}>
         <label className="nlae-visually-hidden" htmlFor={`${id}-input`}>{labels.inputLabel}</label>
-        <input
-          ref={input} id={`${id}-input`} className="nlae-input" type="text" autoComplete="off" spellCheck={false} value={text} placeholder={labels.placeholder}
-          role="combobox" aria-autocomplete="list" aria-expanded={open && suggestions.length > 0} aria-controls={listId}
-          aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined}
-          onChange={(e) => { setText(e.target.value); setOpen(true); setActive(-1); }}
-          onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 120)} onKeyDown={onKeyDown}
-        />
-        <kbd className="nlae-hint" aria-hidden="true">⌘K</kbd>
+        <div className="nlae-field">
+          <input
+            ref={input} id={`${id}-input`} className="nlae-input" type="text" autoComplete="off" spellCheck={false} value={text} placeholder={labels.placeholder}
+            role="combobox" aria-autocomplete="list" aria-expanded={open && suggestions.length > 0} aria-controls={listId}
+            aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined}
+            onChange={(e) => { setText(e.target.value); setOpen(true); setActive(-1); }}
+            onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 120)} onKeyDown={onKeyDown}
+          />
+          <kbd className="nlae-hint" aria-hidden="true">⌘K</kbd>
+        </div>
         <button type="submit" className="nlae-button nlae-primary" disabled={!text.trim() || view.kind === "busy"}>{labels.submit}</button>
         {open && suggestions.length > 0 && (
           <ul className="nlae-suggestions" id={listId} role="listbox" aria-label={labels.suggestions}>
