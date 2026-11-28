@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# BillieWeather is main-only: refuse to create any local branch other than `main`.
+# Owner-authorized exceptions: one branch name per line in
+#   $(git rev-parse --git-common-dir)/billie-coordination/allowed-branches
+# Activated with: git config core.hooksPath .githooks   (docs/dual-mac/GIT_SYNC.md)
+[[ "${1:-}" == prepared ]] || exit 0
+allowed="$(git rev-parse --git-common-dir)/billie-coordination/allowed-branches"
+status=0
+while read -r old new ref; do
+  [[ "$ref" == refs/heads/* && "$ref" != refs/heads/main ]] || continue
+  [[ "$old" =~ ^0+$ && ! "$new" =~ ^0+$ ]] || continue   # only creations; updates and deletions pass
+  name="${ref#refs/heads/}"
+  [[ -f "$allowed" ]] && grep -qxF "$name" "$allowed" && continue
+  echo "BillieWeather main-only policy: refusing to create branch '$name'. Commit on main" >&2
+  echo "(see docs/dual-mac/GIT_SYNC.md). Owner-authorized exceptions go in $allowed." >&2
+  status=1
+done
+exit $status

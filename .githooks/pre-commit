@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# BillieWeather is main-only: commits go on `main`, never on detached HEAD or another branch.
+# Owner-authorized exceptions: one branch name per line in
+#   $(git rev-parse --git-common-dir)/billie-coordination/allowed-branches
+branch="$(git symbolic-ref --quiet --short HEAD || true)"
+[[ "$branch" == main ]] && exit 0
+allowed="$(git rev-parse --git-common-dir)/billie-coordination/allowed-branches"
+[[ -n "$branch" && -f "$allowed" ]] && grep -qxF "$branch" "$allowed" && exit 0
+echo "BillieWeather main-only policy: refusing to commit on ${branch:-detached HEAD}." >&2
+echo "Switch to main and commit there (ops/main-commit.sh); see docs/dual-mac/GIT_SYNC.md." >&2
+exit 1

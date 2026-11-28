@@ -10,7 +10,7 @@ set -euo pipefail
 
 REPO_URL="${BILLIE_REPO_URL:-https://github.com/heyjyun/BillieWeather.git}"
 DEV_ROOT="${BILLIE_DEV_ROOT:-$HOME/Developer/BillieWeather}"
-BRANCH="${BILLIE_DEV_BRANCH:-main}"
+BRANCH=main   # BillieWeather is main-only (AGENTS.md)
 CHECK_ONLY=0; [[ "${1:-}" == "--check" ]] && CHECK_ONLY=1
 
 ok()   { printf '  \033[32mok\033[0m   %s\n' "$*"; }
@@ -51,6 +51,8 @@ if [[ -e "$DEV_ROOT/.git" ]]; then
   if git rev-parse --verify --quiet "$BRANCH" >/dev/null; then ok "branch $BRANCH"
   elif git rev-parse --verify --quiet "origin/$BRANCH" >/dev/null; then act "branch $BRANCH" "git checkout -b $BRANCH origin/$BRANCH"
   else miss "branch $BRANCH is not on GitHub yet — push it from the MacBook (docs/dual-mac/GIT_SYNC.md)"; fi
+  if [[ "$(git config --get core.hooksPath)" == .githooks ]]; then ok "main-only hooks"
+  else act "main-only hooks" "git config core.hooksPath .githooks"; fi
   for f in .env .env.local .env.development .env.development.local .env.test; do
     [[ -e "$f" ]] && miss "$f exists: bin/billie-local refuses to run beside live dotenv files; move it out"; done
 fi

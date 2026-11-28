@@ -1,0 +1,22 @@
+name: Main-only policy
+
+# BillieWeather develops on `main` only (AGENTS.md). A push of any other branch fails loudly so it is
+# noticed and folded back into main; nothing here deploys.
+on:
+  push:
+    branches-ignore: [main]
+  create:
+
+permissions:
+  contents: read
+
+jobs:
+  refuse-non-main-branch:
+    if: github.ref_type == 'branch' && github.ref_name != 'main'
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          echo "::error::Branch '$BRANCH' violates the main-only policy. Commit on main instead (AGENTS.md, docs/dual-mac/GIT_SYNC.md)."
+          exit 1

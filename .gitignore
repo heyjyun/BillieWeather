@@ -92,6 +92,8 @@ erd.pdf
 # AI things
 /.claude
 CLAUDE.md
+# The project's own agent instructions (main-only policy) are versioned.
+!/CLAUDE.md
 
 # 🚅 add your files to ignore here.
 .env

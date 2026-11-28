@@ -22,7 +22,7 @@ die() { printf 'agent-run: %s\n' "$*" >&2; exit 1; }
 [[ "$(cat "$HOME_DIR/role" 2>/dev/null)" == devbox ]] || die "not the development Mac (echo devbox > ~/.billieweather-dev/role on the Mac mini only)"
 command -v claude >/dev/null || die "claude CLI not found"
 
-CHECKPOINT_RULE='Work in small verified steps. After each step, commit to the current development branch and update docs/audits/TASK-checkpoint.md with: goal, done, in progress, next step, how to verify, open questions. Never push, never touch production services, never open the shipped app (com.billieweather.client); use ops/dev-services.sh and QA builds only. If you are resumed, read that checkpoint file first and continue from "next step".'
+CHECKPOINT_RULE='Work in small verified steps. After each step, commit only your own files on main with ops/main-commit.sh commit billie-TASK -m <msg> <paths> (BillieWeather is main-only: never create branches or worktrees, never stage or commit changes made by other sessions; claim files first with ops/main-commit.sh claim billie-TASK <paths>; see AGENTS.md) and update docs/audits/TASK-checkpoint.md with: goal, done, in progress, next step, how to verify, open questions. Never push, never touch production services, never open the shipped app (com.billieweather.client); use ops/dev-services.sh and QA builds only. If you are resumed, read that checkpoint file first and continue from "next step".'
 
 run_once() {  # $1 task, $2 first|resume
   local t="$1" d="$AG/$1" sid out rc

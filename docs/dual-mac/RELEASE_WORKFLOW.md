@@ -11,7 +11,7 @@ Two separate pipelines start from `main`:
 
 | Stage | Command (Mac mini) | Gate |
 | --- | --- | --- |
-| 1. Develop | on `main` or a temporary branch merged into `main` after review ([GIT_SYNC.md](GIT_SYNC.md)) | commits only, reviewed; fetch and divergence check before any push |
+| 1. Develop | directly on `main` (main-only; [GIT_SYNC.md](GIT_SYNC.md), [AGENTS.md](../../AGENTS.md)) | commits only, reviewed; fetch and divergence check before any push |
 | 2. Automated tests | `ops/doctor.sh --tests` | Rails, vitest, typecheck, cargo test, identity-api pytest, all on the isolated cluster |
 | 3. Native QA | `node scripts/qa.mjs build <suffix>` + acceptance scripts (upgrade from the previous release's schema, undo/redo, failed migration, rollback) | evidence in `docs/audits/evidence/<date>-<phase>/`, report in `docs/audits/` |
 | 4. Version | bump `src-tauri/Cargo.toml` + `tauri.conf.json`; write `docs/releases/<version>.md`; commit on `main`; `git tag -a v<version>` | versions agree with the tag |

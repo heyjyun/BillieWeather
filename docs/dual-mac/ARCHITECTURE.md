@@ -7,7 +7,7 @@ which each Mac reaches with its own Neon sign-in. No `.env` file, Keychain item 
 | | Mac mini — main development | MacBook Air — daily use + occasional development |
 | --- | --- | --- |
 | Purpose | engineering, full tests, native GUI QA, builds, DMG packaging, overnight agents | the stable BillieWeather app and the person's own books; small source changes |
-| Source | clone of `main` + short-lived branches/worktrees | clone of `main` + short-lived branches/worktrees |
+| Source | clone of `main` (main-only; no other branches) | clone of `main` (main-only; no other branches) |
 | Toolchain | Ruby 4.0.3, Node 24, Rust ≥1.94, uv/Python, PostgreSQL 18, CLT | whatever the change needs; the full suite runs on the mini |
 | Databases | Neon branch `development` (shared, synthetic) or the isolated cluster (`bin/billie-local`, socket only) + QA SQLite under `com.billieweather.client.qa.*` | the app's SQLite under `com.billieweather.client`; development servers on the Neon branch `development` |
 | Apps | QA builds only (`com.billieweather.client.qa.<suffix>`), dev builds (`…client.dev`) | `/Applications/BillieWeather.app` (`com.billieweather.client`) |
@@ -16,7 +16,7 @@ which each Mac reaches with its own Neon sign-in. No `.env` file, Keychain item 
 
 ```
   Mac mini ─┐                                   ┌─ MacBook
-  fetch,    │   feature/* (optional, reviewed)   │  fetch,
+  fetch,    │   commits directly on main         │  fetch,
   ff-only   ├──────────► origin/main ◄───────────┤  ff-only
   push      │                │                   │  push
             │                ├──► tag vX.Y.Z ──► ops/release-build.sh (mini) ──► ~/BillieWeather-Releases/X.Y.Z/
@@ -30,15 +30,17 @@ Auto-Deploy is Off; a person starts each production deploy). See
 
 ## Branches and tags
 
-- `main` — the single long-lived shared branch and the source of releases. Both Macs fetch it,
-  fast-forward to it, and push to it without force after checking for divergence.
-- `feature/*`, `fix/*`, `infra/*`, `audit/*` — temporary, one task each, often in their own worktree.
-  Reviewed, merged into `main`, then deleted once nothing unique remains.
-- No other permanent branch. GitHub holds only `main`. The integration, audit, release and rollback
-  branches of November 2026 were consolidated into `main` and deleted on 2026-11-26.
+- `main` — the only branch, the place all development happens, and the source of every environment.
+  Both Macs fetch it, fast-forward to it, and push to it without force after checking for divergence.
+- No other branch, temporary or permanent (main-only policy since 2026-11-28; see
+  [AGENTS.md](../../AGENTS.md)). Concurrent sessions are coordinated with `ops/main-commit.sh` (file
+  claims and a serialized commit lock), not with branches. GitHub holds only `main`. The integration, audit, release and rollback
+  branches of November 2026 were consolidated into `main` and deleted on 2026-11-26, and the `dev/*`
+  branches on 2026-11-28.
 - Rollback targets are commits in `main`'s history, not branches: the session-safe rollback release
   `dbd85e7` is reachable from `main` through a content-free merge (see RELEASE_WORKFLOW.md).
-- `vX.Y.Z[-pre]` annotated tags — a release; `ops/release-build.sh` only builds at a tag.
+- `vX.Y.Z[-pre]` annotated tags on `main` — a release; `ops/release-build.sh` only builds at a tag.
+  Development, QA, Dev app, Stable app and production each run a specific `main` commit or tag.
 - `archive/<date>/*` tags — local-only markers of retired branch tips (not on GitHub). New archive tags
   are not created: anything worth keeping is merged into `main` before a branch is deleted.
 - `checkpoint/*` tags — local safety points before risky work; not pushed unless asked.
