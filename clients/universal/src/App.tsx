@@ -64,6 +64,8 @@ const ADD_SYNC_TABS: Array<{ key: "import" | "receipt" | "manual"; page: Page }>
 /** What to open on the Transactions page: a new entry of a kind, or the trash / review list. */
 export interface TransactionIntent { entryKind?: TransactionKind; entryDraft?: QuickEntry; view?: "trash" | "review" | "organize" }
 
+interface PageLocation { page: Page; part: string | null }
+
 function Icon({ d }: { d: string }) {
   return <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
 }
@@ -85,17 +87,35 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   const { account } = useAccount();
   const { mode, manual, setMode } = useMode();
   const modules = useModules();
-  const [page, setPage] = useState<Page>(initialPage);
+  const [{ page, part: focus }, setLocation] = useState<PageLocation>({ page: initialPage, part: null });
+  const navigation = useRef<{ current: PageLocation; back: PageLocation[]; forward: PageLocation[] }>({
+    current: { page: initialPage, part: null }, back: [], forward: [],
+  });
   const [transactionIntent, setTransactionIntent] = useState<{ key: number; intent: TransactionIntent } | null>(null);
-  // A part of a page to bring into view after navigating (e.g. the sync panel on the Data page).
-  const [focus, setFocus] = useState<string | null>(null);
   // A filter set by a typed command ("show coffee last month"); `key` remounts the page with it.
   const [transactionFilter, setTransactionFilter] = useState<{ key: number; filter: TransactionFilter } | null>(null);
-  const go = (next: Page, part: string | null = null, filter?: TransactionFilter, intent?: TransactionIntent) => {
-    setFocus(part);
+  const openLocation = (location: PageLocation, filter?: TransactionFilter, intent?: TransactionIntent) => {
+    navigation.current.current = location;
+    if (!location.part && document.scrollingElement) document.scrollingElement.scrollTop = 0;
     setTransactionFilter(filter ? { key: Date.now(), filter } : null);
     setTransactionIntent(intent ? { key: Date.now(), intent } : null);
-    setPage(next);
+    setLocation(location);
+  };
+  const go = (next: Page, part: string | null = null, filter?: TransactionFilter, intent?: TransactionIntent) => {
+    const history = navigation.current;
+    if (history.current.page !== next || history.current.part !== part) {
+      history.back.push(history.current);
+      history.forward = [];
+    }
+    openLocation({ page: next, part }, filter, intent);
+  };
+  const moveInHistory = (direction: "back" | "forward") => {
+    const history = navigation.current;
+    const previous = history[direction].pop();
+    if (!previous) return false;
+    history[direction === "back" ? "forward" : "back"].push(history.current);
+    openLocation(previous);
+    return true;
   };
   const pageOpen = (target: Page) => PAGE_MODULES[target].length === 0 || PAGE_MODULES[target].some((id) => modules.usable(id));
   // The module whose page this is, when none of its modules is built for the app (a guard: today every mapped module is).
@@ -122,14 +142,25 @@ function Shell({ initialPage = "dashboard", initialRoute = null }: { initialPage
   const { persistent } = useFinance();
   // billieweather:// links and #/capture/… open one screen; they never save or send anything.
   const goRef = useRef(go);
+  const moveInHistoryRef = useRef(moveInHistory);
+  moveInHistoryRef.current = moveInHistory;
   useEffect(() => {
-    function quickEntry(event: KeyboardEvent) {
-      if (event.repeat || event.isComposing || event.altKey || !(event.metaKey || event.ctrlKey) || !event.shiftKey || event.key.toLowerCase() !== "e") return;
-      event.preventDefault();
-      goRef.current("transactions", null, undefined, { entryKind: "expense" });
+    function handleShortcut(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.repeat || event.isComposing) return;
+      if (!event.altKey && (event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === "e") {
+        event.preventDefault();
+        goRef.current("transactions", null, undefined, { entryKind: "expense" });
+        return;
+      }
+      if (event.shiftKey || event.ctrlKey || (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable]"))) return;
+      const macHistory = event.metaKey && !event.altKey;
+      const altHistory = event.altKey && !event.metaKey;
+      const back = (macHistory && event.key === "[") || (altHistory && event.key === "ArrowLeft");
+      const forward = (macHistory && event.key === "]") || (altHistory && event.key === "ArrowRight");
+      if ((back || forward) && moveInHistoryRef.current(back ? "back" : "forward")) event.preventDefault();
     }
-    window.addEventListener("keydown", quickEntry);
-    return () => window.removeEventListener("keydown", quickEntry);
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
   goRef.current = go;
   useEffect(() => {

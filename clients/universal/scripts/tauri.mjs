@@ -79,6 +79,12 @@ export function buildNumber(count) {
   return String(count);
 }
 export const commitCount = (cwd) => buildNumber(spawnSync("git", ["rev-list", "--count", "HEAD"], { cwd, encoding: "utf8" }).stdout?.trim());
+function sourceRevision(cwd) {
+  const commit = spawnSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" });
+  const status = spawnSync("git", ["status", "--porcelain"], { cwd, encoding: "utf8" });
+  if (commit.status !== 0 || status.status !== 0) return "unrecorded";
+  return commit.stdout.trim() + (status.stdout.trim() ? "-dirty" : "");
+}
 /** Release builds carry the commit's build number; `dev` keeps the version. */
 export const bundleVersion = (number) => ({ macOS: { bundleVersion: number } });
 
@@ -106,12 +112,13 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   }
   console.log(`BillieWeather${variant === "dev" ? " Dev" : ""} servers for this ${process.argv[2] ?? "run"}: API ${origin}, identity ${identity}`);
   const base = JSON.parse(readFileSync(join(root, "src-tauri/tauri.conf.json"), "utf8"));
+  const revision = process.env.BILLIE_SOURCE_REVISION ?? sourceRevision(root);
   const overridePath = join(root, "src-tauri/tauri.api.conf.json");
   writeFileSync(overridePath, JSON.stringify({ ...developmentIdentity(process.argv[2], variant), ...(process.argv[2] === "build" ? { bundle: bundleVersion(commitCount(root)) } : {}), app: { ...(developmentIdentity(process.argv[2], variant).identifier ? { windows: base.app.windows.map((window) => ({ ...window, title: "BillieWeather Dev" })) } : {}), security: { csp: cspWithOrigin(base.app.security.csp, origin, identity) } } }, null, 2) + "\n");
   const result = spawnSync("npx", ["tauri", ...process.argv.slice(2), "--config", overridePath], {
     cwd: root,
     stdio: "inherit",
-    env: { ...process.env, VITE_BILLIE_API_URL: origin, VITE_BILLIE_IDENTITY_URL: identity },
+    env: { ...process.env, BILLIE_SOURCE_REVISION: revision, VITE_BILLIE_API_URL: origin, VITE_BILLIE_IDENTITY_URL: identity },
   });
   process.exit(result.status ?? 1);
 }

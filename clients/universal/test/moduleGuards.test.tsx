@@ -67,6 +67,30 @@ it("with every module in the sidebar, the same page opens from the sidebar", asy
   expect(document.getElementById("page-context")).toBeNull();
 });
 
+it("revisits sidebar destinations and uses desktop Back and Forward without writing to the ledger", async () => {
+  render(<App />);
+  const navigation = within(await screen.findByRole("navigation"));
+  const pages = [
+    ["Transactions", "Transactions"], ["AI Insight", "AI Insight"],
+    ["Financial Overview", /good (morning|afternoon|evening)/i], ["Categories & Tags", "Categories"],
+    ["Accounts & Assets", "Accounts"], ["Settings", "Settings & privacy"],
+  ] as const;
+  for (const [label, heading] of pages) {
+    const button = navigation.getByRole("button", { name: label });
+    expect((button as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(button);
+    expect(await screen.findByRole("heading", { name: heading, level: 1 })).toBeTruthy();
+  }
+
+  fireEvent.keyDown(window, { key: "[", metaKey: true });
+  expect(await screen.findByRole("heading", { name: "Accounts", level: 1 })).toBeTruthy();
+  fireEvent.keyDown(window, { key: "ArrowRight", altKey: true });
+  expect(await screen.findByRole("heading", { name: "Settings & privacy", level: 1 })).toBeTruthy();
+  fireEvent.click(navigation.getByRole("button", { name: "Transactions" }));
+  expect(await screen.findByRole("heading", { name: "Transactions", level: 1 })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Nothing to undo" }).getAttribute("aria-disabled")).toBe("true");
+});
+
 it("outside the app shell, pages see the catalog defaults: the five default entries, every built module usable", () => {
   function Probe() {
     const { usable, inSidebar, sidebarList } = useModules();

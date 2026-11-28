@@ -42,6 +42,8 @@ New accounts see **Transactions**, **AI Insight**, **Financial Overview**, **Cat
 
 Sidebar preferences follow the signed-in account across the website and apps when account sync is enabled. Installed apps keep edits locally while offline and synchronize when they reconnect. The [sidebar architecture](docs/architecture/sidebar-and-modules.md) describes platform support, upgrades, and conflicting edits.
 
+On macOS, use **⌘[** and **⌘]** to go back or forward between pages. On Windows, use **Alt+←** and **Alt+→**. Select a sidebar entry again to return to the top of that page.
+
 ## Design system
 
 The website and the desktop/mobile apps share one set of design tokens in [`packages/design-tokens`](packages/design-tokens/README.md): a deep-purple navigation sidebar, a pink brand accent, light content surfaces, semantic colors for income, spending, warnings and estimates, and light/dark themes that follow the system or a per-browser/per-device choice. Edit `packages/design-tokens/src/tokens.ts`, then run `node packages/design-tokens/scripts/generate.ts` to regenerate `public/billie-tokens.css` (website) and `packages/design-tokens/dist/tokens.css` (apps). The token tests check the generated files, WCAG contrast and icon parity. No JavaScript build is needed for the website.
