@@ -100,7 +100,9 @@ preview() {
           else echo "         fix: ops/dev-services.sh preview restart"; fi ;;
       esac
       for port in $API_PORT $ID_PORT 3000 8100; do   # servers that do not reload every change by themselves
-        local pid; pid="$(pid_on $port)"; [[ -n "$pid" ]] || continue
+        local pid cwd; pid="$(pid_on $port)"; [[ -n "$pid" ]] || continue
+        cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)"
+        [[ "$cwd" == "$PWD" || "$cwd" == "$PWD"/* || "$cwd" == "$(cat "$STATE/local-root" 2>/dev/null)"/* ]] || continue   # another checkout's server
         (( $(started_epoch "$pid") < $(head_moved) )) && echo "note     the server on :$port (pid $pid) started before this checkout last changed commit; restart it if the pull touched its code"
       done
       return 0 ;;
