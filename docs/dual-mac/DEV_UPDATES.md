@@ -7,16 +7,22 @@ covered: they still need the owner's explicit approval for each release.
 
 ## How it works
 
-The launchd job `com.billieweather.dev-update` runs `ops/dev-update.sh run`:
+Two triggers work together:
 
-- whenever `refs/heads/main` moves,
-- every 5 minutes, and
-- at login.
+- **New commits:** the `.githooks/reference-transaction` hook starts a detached
+  `ops/dev-update.sh run` whenever `refs/heads/main` moves through a commit, a `git-sync` pull, or a
+  merge. The run uses the access of the session that moved `main`. It never blocks the Git command,
+  and it runs at `nice 10`. Set `BILLIE_DEV_UPDATE_DISABLE=1` to suppress it for one Git command.
+- **Upkeep:** the launchd job `com.billieweather.dev-update` runs `tick` every 5 minutes and at login,
+  at background priority. It finishes a deferred Dev.app install and restarts the deployed
+  Development services if they are down, for example after a reboot. It runs a copy of the script
+  in `~/.billieweather-dev/dev-update/bin/` and never reads the repository, because macOS privacy
+  protection (TCC) does not let launchd jobs read `~/Documents`.
 
-It runs at background priority (`Nice`, `LowPriorityIO`, `ProcessType=Background`). A run with
-nothing new exits in about a second. Runs are serialized by a lock, so concurrent commits or agents
-never start two builds. A commit that has already been deployed, or one that has already failed, is
-not rebuilt.
+A run with nothing new exits in about a second. Runs are serialized by a lock, so concurrent commits
+or agents never start two builds. A commit that has already been deployed, or one that has already
+failed, is not rebuilt. If several commits land during a build, the next trigger builds the newest
+one.
 
 Each run takes the exact commit of `refs/heads/main`, never the working tree. Uncommitted or
 unfinished work from concurrent sessions is therefore never built, served, or installed. No branch,

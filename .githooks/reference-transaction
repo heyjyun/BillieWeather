@@ -3,6 +3,16 @@
 # Owner-authorized exceptions: one branch name per line in
 #   $(git rev-parse --git-common-dir)/billie-coordination/allowed-branches
 # Activated with: git config core.hooksPath .githooks   (docs/dual-mac/GIT_SYNC.md)
+if [[ "${1:-}" == committed ]]; then
+  # Automatic Development update (docs/dual-mac/DEV_UPDATES.md): when main moves, start a detached
+  # ops/dev-update.sh run. It builds from the committed snapshot, never blocks this Git command, and
+  # runs with the access of the session that committed (launchd may not read ~/Documents).
+  if grep -q ' refs/heads/main$' && [[ -z "${BILLIE_DEV_UPDATE_DISABLE:-}" ]]; then
+    top="$(git rev-parse --show-toplevel 2>/dev/null)"
+    [[ -x "$top/ops/dev-update.sh" ]] && (cd / && nohup nice -n 10 "$top/ops/dev-update.sh" run >/dev/null 2>&1 &)
+  fi
+  exit 0
+fi
 [[ "${1:-}" == prepared ]] || exit 0
 allowed="$(git rev-parse --git-common-dir)/billie-coordination/allowed-branches"
 status=0

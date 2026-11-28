@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- Automatic Development updates (docs/dual-mac/DEV_UPDATES.md). Install with: ops/dev-update.sh install-agent
-     Runs when refs/heads/main moves, every 5 minutes (deferred installs, service health) and at login.
-     A run with nothing new exits immediately. Background priority so it does not compete with the person using the Mac. -->
+     New commits are built by the .githooks/reference-transaction trigger. This job runs `tick` from a copy outside
+     the repository, because launchd jobs may not read ~/Documents. Every 5 minutes and at login it finishes a
+     deferred Dev.app install and restarts the deployed Development services if they are down (for example after
+     a reboot). Background priority so it does not compete with the person using the Mac. -->
 <plist version="1.0">
 <dict>
   <key>Label</key><string>com.billieweather.dev-update</string>
   <key>ProgramArguments</key>
-  <array><string>/bin/bash</string><string>-lc</string><string>"__REPO__/ops/dev-update.sh" run</string></array>
-  <key>WatchPaths</key>
-  <array><string>__GITDIR__/refs/heads/main</string><string>__GITDIR__/packed-refs</string></array>
+  <array><string>/bin/bash</string><string>__BIN__</string><string>tick</string></array>
   <key>StartInterval</key><integer>300</integer>
   <key>RunAtLoad</key><true/>
-  <key>ThrottleInterval</key><integer>30</integer>
   <key>AbandonProcessGroup</key><true/>
   <key>ProcessType</key><string>Background</string>
   <key>LowPriorityIO</key><true/>

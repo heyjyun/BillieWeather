@@ -3,8 +3,13 @@
 #
 #   ops/dev-update.sh run [--force]    update to the current committed main (no-op when already there)
 #   ops/dev-update.sh status           deployed commit, installed Dev.app build/commit, services, last failure
-#   ops/dev-update.sh install-agent    install/refresh the launchd job that runs `run` automatically
+#   ops/dev-update.sh tick             finish a deferred install; restart the deployed services if down
+#   ops/dev-update.sh install-agent    install/refresh the launchd job that runs `tick` (and enable the trigger)
 #   ops/dev-update.sh remove-agent     unload and delete that job
+#
+# Triggers: the .githooks/reference-transaction hook starts `run` whenever refs/heads/main moves (commit,
+# pull, merge), with the access of the committing session. The launchd job only runs `tick` from a copy
+# outside the repository, because macOS privacy protection does not let launchd jobs read ~/Documents.
 #
 # Every run builds from a `git archive` snapshot of refs/heads/main — never the working tree — so
 # uncommitted work from concurrent sessions is never built, served or installed. No branch, worktree or
@@ -47,7 +52,15 @@ FAIL_STAGE=""
 fail() {  # $1 stage, $2 reason — keeps the last working build and services
   setstate failed-sha "${SHA:-?}"; setstate failed-reason "$1: $2 ($(date '+%F %T'), log ${LOG:-?})"
   say "FAILED at $1: $2"; notify "Update to ${SHA:0:8} failed" "$1: $2. The previous Dev build stays installed."
+  again
   exit 1
+}
+again() {  # main moved while this run held the lock (its trigger was skipped): go again for the newest commit
+  [[ "${MODE:-}" == run && -n "${SHA:-}" ]] || return 0
+  local now; now="$(git -C "$REPO" rev-parse --verify refs/heads/main 2>/dev/null || true)"
+  [[ -n "$now" && "$now" != "$SHA" ]] || return 0
+  rm -rf "$BASE/lock.d"; say "main moved to ${now:0:12} during this run; updating again"
+  (cd / && nohup nice -n 10 "$REPO/ops/dev-update.sh" run >/dev/null 2>&1 &)
 }
 
 acquire() {
@@ -251,6 +264,18 @@ run() {
   ls -1d "$RUNTIMES"/*/ 2>/dev/null | sed 's:/$::' | grep -v -e "$rt\$" -e "${prev:-NONE}\$" | while read -r d; do rm -rf "$d"; done || true
   say "Development is at $short: Web from $rt, Dev.app build $BUILD"
   [[ -n "$(state staged-build)" ]] || notify "Updated to build $BUILD" "Development Web and BillieWeather Dev run commit ${SHA:0:8}."
+  again
+}
+
+tick() {  # no repository access: only the deployed snapshot and staged bundle
+  acquire
+  finish_staged
+  local rt; rt="$(readlink "$RUNTIMES/current" 2>/dev/null || true)"
+  [[ -n "$rt" && -d "$rt" ]] || exit 0
+  healthy "$rt" && exit 0
+  SHA="$(cat "$rt/REVISION" 2>/dev/null)"; LOG="$LOGS/agent.log"
+  say "Development services are down; restarting from ${rt##*/}"; start_services "$rt"
+  healthy "$rt" || fail services "services for ${rt##*/} do not come up after a restart"
 }
 
 status() {
@@ -262,15 +287,17 @@ status() {
   echo "Web :3000:          $(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/up 2>/dev/null || echo down) from $(cwd_of "$(pid_on 3000)" 2>/dev/null)"
   echo "identity :8100:     $(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:8100/health 2>/dev/null || echo down)"
   echo "last failure:       $(state failed-reason | sed 's/^$/none/')"
-  echo "agent:              $(launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1 && echo loaded || echo 'not loaded')"
+  echo "agent (tick):       $(launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1 && echo loaded || echo 'not loaded')"
+  echo "commit trigger:     $([[ "$(git -C "$REPO" config --get core.hooksPath)" == .githooks ]] && echo 'on (.githooks/reference-transaction)' || echo off)"
   echo "Stable (untouched): $(plist "$STABLE_APP" CFBundleShortVersionString) build $(plist "$STABLE_APP" CFBundleVersion)"
 }
 
 install_agent() {
-  local dst="$HOME/Library/LaunchAgents/$LABEL.plist" common
-  common="$(cd "$(git -C "$REPO" rev-parse --git-common-dir)" && pwd)"
-  mkdir -p "$HOME/Library/LaunchAgents"
-  sed -e "s#__REPO__#$REPO#g" -e "s#__HOME__#$HOME#g" -e "s#__GITDIR__#$common#g" \
+  local dst="$HOME/Library/LaunchAgents/$LABEL.plist"
+  [[ "$(git -C "$REPO" config --get core.hooksPath)" == .githooks ]] || git -C "$REPO" config core.hooksPath .githooks
+  mkdir -p "$HOME/Library/LaunchAgents" "$BASE/bin"
+  cp "$REPO/ops/dev-update.sh" "$BASE/bin/dev-update.sh"; chmod 700 "$BASE/bin/dev-update.sh"
+  sed -e "s#__BIN__#$BASE/bin/dev-update.sh#g" -e "s#__HOME__#$HOME#g" \
     "$REPO/ops/launchd/$LABEL.plist.template" >"$dst"
   plutil -lint "$dst" >/dev/null
   launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
@@ -279,7 +306,8 @@ install_agent() {
 }
 
 case "${1:-status}" in
-  run) run "${2:-}" ;;
+  run) MODE=run; run "${2:-}" ;;
+  tick) tick ;;
   status) status ;;
   install-agent) install_agent ;;
   remove-agent) launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true; rm -f "$HOME/Library/LaunchAgents/$LABEL.plist"; echo removed ;;
