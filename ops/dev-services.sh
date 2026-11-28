@@ -33,7 +33,7 @@ pid_on() { lsof -nP -t -iTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -1 || true; } 
 # restart keeps the running server's VITE_BILLIE_* URLs; a first start uses BILLIE_PREVIEW_API_URL /
 # BILLIE_PREVIEW_IDENTITY_URL, else the isolated stack above. Nothing here touches any database: the
 # preview's SQLite is in memory and is rebuilt from src-tauri/migrations on every page load.
-APP="$PWD/clients/universal"; PREVIEW_PORT=1420
+APP="$PWD/clients/universal"; PREVIEW_PORT="${BILLIE_PREVIEW_PORT:-1420}"   # another port only for tests of this script
 started_epoch() { LC_ALL=C date -j -f "%a %b %d %T %Y" "$(LC_ALL=C ps -o lstart= -p "$1" | sed 's/  */ /g;s/^ //')" +%s 2>/dev/null || echo 0; }
 head_moved() { git log -g -1 --format=%ct HEAD 2>/dev/null || echo 0; }   # when this checkout last changed commit
 preview_pid() {   # the Vite on :1420, only if it runs from this checkout
@@ -73,7 +73,7 @@ preview_start() {
   [[ -z "$(pid_on $PREVIEW_PORT)" ]] || { echo "port $PREVIEW_PORT is in use (pid $(pid_on $PREVIEW_PORT))" >&2; return 1; }
   if deps_outdated; then echo "installing clients/universal dependencies (npm ci)…"; (cd "$APP" && npm ci --no-audit --no-fund >>"$STATE/logs/vite.log" 2>&1); fi
   # Detached from this script's stdin/stdout, so a caller that pipes the output (… | tail) is not held open.
-  (cd "$APP" && VITE_BILLIE_API_URL="$api" VITE_BILLIE_IDENTITY_URL="$identity" exec nohup npx vite) </dev/null >>"$STATE/logs/vite.log" 2>&1 &
+  (cd "$APP" && VITE_BILLIE_API_URL="$api" VITE_BILLIE_IDENTITY_URL="$identity" exec nohup npx vite --port "$PREVIEW_PORT" --strictPort) </dev/null >>"$STATE/logs/vite.log" 2>&1 &
   for _ in $(seq 1 60); do curl -fs -o /dev/null --max-time 2 "http://localhost:$PREVIEW_PORT/__billie/dev-status" && break; sleep 0.5; done
   echo "preview  http://localhost:$PREVIEW_PORT  api $api  identity $identity  (log $STATE/logs/vite.log)"
 }
