@@ -72,7 +72,7 @@ The new page keeps EUR on its own and labels it "not converted".
 | Rails finance regression: finance integration, models, services, controllers | 630 tests, 29,147 assertions, 0 failures, 1 skip already present |
 | Rails accounts, dashboard and localization re-run on the final code | 53 tests, 24,872 assertions, 0 failures |
 | SQLite smoke, `scripts/accounts-smoke.mjs`, in headless Chromium and WebKit | Passed in both engines. It covers: creating the brief's example (Chase •••• 4821, $5,200; American Express, $830 owed) through review and confirmation; manual creation; groups; totals; search; filters; sort; hidden balances; hidden columns; collapsed groups surviving a reload; updating a balance; archiving with the in-page confirmation; and keyboard opening |
-| Universal client suite | See the final report. The Apple Vision OCR test is excluded because of its known 25-second timeout, unrelated to this work |
+| Universal client suite, TypeScript plus Vitest with the Chrome channel | 101 files, 1,307 tests passed. The real Apple Vision OCR test was left out: it already times out after 25 seconds, unrelated to this work |
 
 ## Reproduce
 
