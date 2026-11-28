@@ -220,6 +220,34 @@ class ClientApiModulePreferencesTest < ActionDispatch::IntegrationTest
     assert_equal %w[accounts], Finance::SidebarOrder.keys_for(@user)
   end
 
+  test "reordering and restoring in the app preserve the website-only module's choices" do
+    sign_in @user
+    patch finance_feature_library_module_path("forecast"), params: {sidebar_visible: "1", expected_revision: 0}, as: :json
+    assert_response :ok
+    patch finance_sidebar_order_path, params: {module_keys: %w[accounts forecast transactions ai_assistant overview categories], expected_revision: 0}, as: :json
+    assert_response :ok
+
+    app_order = %w[categories transactions accounts ai_assistant overview]
+    reply = send_update(order_body(app_order, 1))
+    assert_equal true, reply["order_applied"]
+    assert_equal %w[categories forecast transactions accounts ai_assistant overview], reply.dig("sidebar_order", "module_keys")
+    get finance_settings_path
+    assert_select "#settings-sidebar [data-sidebar-order] li", 7
+    assert_equal %w[categories forecast transactions accounts ai_assistant overview settings], css_select("#settings-sidebar [data-sidebar-order] li").map { |item| item["data-module-key"] }
+
+    reply = send_update(order_body([], 2, device: DEVICE_B))
+    assert_equal true, reply["order_applied"]
+    assert_equal ["forecast"], reply.dig("sidebar_order", "module_keys")
+    assert_equal true, reply.dig("modules", "forecast", "sidebar_visible")
+    assert_equal %w[transactions ai_assistant overview categories accounts],
+      Finance::ModuleCatalog.sidebar_modules(Finance::ModuleCatalog.choices_for(@user), surface: "app", order: Finance::SidebarOrder.keys_for(@user)).map(&:id)
+
+    post finance_reset_feature_library_path
+    get PATH, headers: @auth
+    assert_equal [], response.parsed_body.dig("sidebar_order", "module_keys")
+    assert_equal false, response.parsed_body.dig("modules", "forecast", "sidebar_visible")
+  end
+
   test "sidebar order: a retry with the same mutation id is answered once; order and choices can go together" do
     id = SecureRandom.uuid
     first = send_update(order_body(%w[categories], 0, id: id, changes: [change("budgets", true)]))

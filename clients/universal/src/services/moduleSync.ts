@@ -242,7 +242,10 @@ function displayedOrder(state: ModuleReplica): string[] {
 
 export function observeSnapshot(state: ModuleReplica, snapshot: ModuleSnapshot): ModuleReplica {
   if (!isSnapshot(snapshot, state.accountId) || (state.snapshot && state.snapshot.server_revision > snapshot.server_revision)) return state;
-  if (state.snapshot) return { ...state, snapshot };
+  if (state.snapshot) {
+    const orderPending = canSyncOrder(state) ? state.orderPending : firstSyncOrder(state, snapshot);
+    return { ...state, snapshot, orderPending };
+  }
   const firstOrder = firstSyncOrder(state, snapshot);
 
   const conflicts: ModuleReplica["conflicts"] = {};
@@ -264,7 +267,7 @@ export function observeSnapshot(state: ModuleReplica, snapshot: ModuleSnapshot):
 function firstSyncOrder(state: ModuleReplica, snapshot: ModuleSnapshot): PendingOrder[] {
   if (!("sidebar_order" in snapshot)) return state.orderPending;
   if (snapshot.sidebar_order) return [];
-  const local = displayedOrder(state);
+  const local = displayedOrder(state).filter(canSyncChoice);
   return local.length ? [{ id: randomId(), keys: local, expected: 0 }] : [];
 }
 
@@ -305,7 +308,7 @@ export function enqueuePreference(state: ModuleReplica, id: string, visible: boo
 
 /** Restore the defaults for this surface using the regular revision-checked write queue. */
 export function restoreReplicaDefaults(state: ModuleReplica): ModuleReplica {
-  const ordered = displayedOrder(state).length ? enqueueOrder(state, []) : state;
+  const ordered = displayedOrder(state).some(canSyncChoice) ? enqueueOrder(state, []) : state;
   return enabledModules("app").reduce((next, module) => {
     const id = module.id;
     const visible = module.defaultSidebarVisible;

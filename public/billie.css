@@ -1304,6 +1304,8 @@ small { font-size: max(var(--bw-font-size-xs), 0.85em); }
 .bw-sidebar-order-item, .bw-sidebar-add li { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--bw-color-border); border-radius: var(--bw-radius-md); background: var(--bw-color-surface); }
 .bw-sidebar-order-item[draggable="true"] { cursor: grab; }
 .bw-sidebar-order-item.is-dragging { opacity: 0.55; border-style: dashed; }
+.bw-sidebar-order-item.is-drop-before { box-shadow: inset 0 3px 0 var(--bw-color-accent-strong, currentColor); }
+.bw-sidebar-order-item.is-drop-after { box-shadow: inset 0 -3px 0 var(--bw-color-accent-strong, currentColor); }
 .bw-sidebar-order-item.is-fixed { background: var(--bw-color-surface-muted); cursor: default; }
 .bw-sidebar-order-name { display: inline-flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
 .bw-sidebar-order-actions { display: inline-flex; align-items: center; gap: 4px; }

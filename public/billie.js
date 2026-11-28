@@ -774,7 +774,16 @@
     var status = root.querySelector("[data-sidebar-status]");
     if (!list || !window.fetch) return;
     var dragged = null;
+    var target = null;
     function items() { return Array.prototype.slice.call(list.querySelectorAll("li[draggable=true]")); }
+    function clearTarget() {
+      if (target) target.classList.remove("is-drop-before", "is-drop-after");
+      target = null;
+    }
+    function beforeMiddle(event, item) {
+      var box = item.getBoundingClientRect();
+      return event.clientY < box.top + box.height / 2;
+    }
     function save(keys) {
       var token = document.querySelector('meta[name="csrf-token"]');
       root.setAttribute("aria-busy", "true");
@@ -815,20 +824,38 @@
     }
     items().forEach(function (item) {
       item.addEventListener("dragstart", function (event) {
+        if (root.getAttribute("aria-busy") === "true") { event.preventDefault(); return; }
         dragged = item;
         item.classList.add("is-dragging");
         if (event.dataTransfer) { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", item.dataset.moduleKey); }
       });
-      item.addEventListener("dragend", function () { item.classList.remove("is-dragging"); dragged = null; });
+      item.addEventListener("dragend", function () {
+        item.classList.remove("is-dragging");
+        dragged = null;
+        clearTarget();
+      });
+      item.addEventListener("dragenter", function (event) { if (dragged) event.preventDefault(); });
       item.addEventListener("dragover", function (event) {
-        if (!dragged || dragged === item) return;
+        if (!dragged) return;
         event.preventDefault();
-        var box = item.getBoundingClientRect();
-        list.insertBefore(dragged, event.clientY < box.top + box.height / 2 ? item : item.nextSibling);
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        if (target !== item) clearTarget();
+        if (dragged === item) return;
+        target = item;
+        var before = beforeMiddle(event, item);
+        item.classList.toggle("is-drop-before", before);
+        item.classList.toggle("is-drop-after", !before);
       });
       item.addEventListener("drop", function (event) {
+        if (!dragged) return;
         event.preventDefault();
-        save(items().map(function (entry) { return entry.dataset.moduleKey; }));
+        if (dragged === item) return;
+        var original = items();
+        var order = original.filter(function (entry) { return entry !== dragged; });
+        order.splice(order.indexOf(item) + (beforeMiddle(event, item) ? 0 : 1), 0, dragged);
+        if (order.some(function (entry, index) { return entry !== original[index]; })) {
+          save(order.map(function (entry) { return entry.dataset.moduleKey; }));
+        }
       });
     });
   }

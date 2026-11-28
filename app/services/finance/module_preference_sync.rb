@@ -48,7 +48,7 @@ module Finance
         if order
           keys, expected = order
           if (order_row&.revision || 0) == expected
-            order_row = SidebarOrder.write!(user: @user, record: order_row, module_keys: keys, device_id: device)
+            order_row = SidebarOrder.write!(user: @user, record: order_row, module_keys: keys, surface: "app", device_id: device)
             order_result = {order_applied: true, order_conflict: nil}
           else
             order_result = {order_applied: false, order_conflict: {proposed_module_keys: keys, current: order_row && order_choice(order_row)}}

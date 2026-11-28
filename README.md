@@ -36,6 +36,12 @@ Internal OAuth service principals share the users table but are not human regist
 
 Apply the region migrations before running this version, then restart Rails. Production migration requires explicit authorization for the production database.
 
+## Customize the sidebar
+
+New accounts see **Transactions**, **AI Insight**, **Financial Overview**, **Categories**, and **Accounts & Assets** in that order, followed by **Settings**. In **Settings → Sidebar customization**, drag a module or use the arrows to move it. Use **Hide** and **Add** to choose what appears, or **Restore default sidebar** to reset the list and its order. Settings stays fixed at the bottom. Hidden modules still open from Settings and the Feature Library.
+
+Sidebar preferences follow the signed-in account across the website and apps when account sync is enabled. Installed apps keep edits locally while offline and synchronize when they reconnect. The [sidebar architecture](docs/architecture/sidebar-and-modules.md) describes platform support, upgrades, and conflicting edits.
+
 ## Design system
 
 The website and the desktop/mobile apps share one set of design tokens in [`packages/design-tokens`](packages/design-tokens/README.md): a deep-purple navigation sidebar, a pink brand accent, light content surfaces, semantic colors for income, spending, warnings and estimates, and light/dark themes that follow the system or a per-browser/per-device choice. Edit `packages/design-tokens/src/tokens.ts`, then run `node packages/design-tokens/scripts/generate.ts` to regenerate `public/billie-tokens.css` (website) and `packages/design-tokens/dist/tokens.css` (apps). The token tests check the generated files, WCAG contrast and icon parity. No JavaScript build is needed for the website.

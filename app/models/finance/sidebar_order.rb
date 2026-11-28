@@ -26,9 +26,17 @@ module Finance
     end
 
     # Call only while holding the user's write lock.
-    def self.write!(user:, record:, module_keys:, now: Time.current, device_id: nil)
+    def self.write!(user:, record:, module_keys:, surface: ModuleCatalog::SURFACE, now: Time.current, device_id: nil)
       record ||= new(user: user, revision: 0)
-      record.assign_attributes(module_keys: ModuleCatalog.normalize_order(module_keys), changed_at: now, revision: record.revision + 1)
+      keys = ModuleCatalog.normalize_order(module_keys)
+      # A surface submits only its own order. Keep entries it cannot see in their previous slots.
+      record.module_keys.each_with_index do |id, index|
+        definition = ModuleCatalog.find(id)
+        next unless definition && !definition.available?(surface) && !keys.include?(id)
+
+        keys.insert([index, keys.length].min, id)
+      end
+      record.assign_attributes(module_keys: keys, changed_at: now, revision: record.revision + 1)
       record.updated_by_device_id = device_id
       record.save!
       record

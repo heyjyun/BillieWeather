@@ -139,9 +139,27 @@ it("replica: a server without sidebar order keeps the order on this device and n
   expect(loadReplica(A, { format: 1, modules: {} }).orderPending).toEqual([]);
 });
 
+it("replica: a server upgrade uploads the saved local order when the account has none", () => {
+  const local = { format: 1 as const, modules: {}, order: ["accounts", "forecast", "categories"] };
+  const state = observeSnapshot(loadReplica(A, local), snapshot(undefined));
+  const upgraded = observeSnapshot(state, snapshot(null));
+  expect(ids(displayedPreferences(upgraded)).slice(0, 2)).toEqual(["accounts", "categories"]);
+  expect(freezeOrder(upgraded).orderPending[0].request?.sidebar_order).toEqual({ module_keys: ["accounts", "categories"], expected_revision: 0 });
+
+  const alreadySaved = observeSnapshot(state, snapshot(order(["overview"])));
+  expect(alreadySaved.orderPending).toEqual([]);
+  expect(ids(displayedPreferences(alreadySaved))[0]).toBe("overview");
+});
+
 it("replica: restore defaults also queues the catalog order", () => {
   const state = restoreReplicaDefaults(observeSnapshot(loadReplica(A, { format: 1, modules: {} }), snapshot(order(["accounts"]))));
   expect(state.orderPending.map((item) => item.keys)).toEqual([[]]);
+  expect(ids(displayedPreferences(state))).toEqual(DEFAULT);
+});
+
+it("replica: restoring app defaults leaves a website-only order alone", () => {
+  const state = observeSnapshot(loadReplica(A, { format: 1, modules: {} }), snapshot(order(["forecast"])));
+  expect(restoreReplicaDefaults(state).orderPending).toEqual([]);
   expect(ids(displayedPreferences(state))).toEqual(DEFAULT);
 });
 

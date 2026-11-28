@@ -16,6 +16,20 @@ class Finance::SidebarOrderTest < ActiveSupport::TestCase
     assert_equal %w[transactions ai_assistant overview categories accounts], sidebar
   end
 
+  test "adding the order table preserves existing explicit visibility choices" do
+    require Rails.root.join("db/migrate/20261128000100_create_finance_sidebar_orders.rb").to_s
+    preference = Finance::ModulePreference.set!(user: @user, module_key: "accounts", sidebar_visible: false)
+    migration = CreateFinanceSidebarOrders.new
+    migration.verbose = false
+
+    migration.migrate(:down)
+    refute Finance::SidebarOrder.connection.table_exists?(:finance_sidebar_orders)
+    migration.migrate(:up)
+    assert_equal false, preference.reload.sidebar_visible
+    assert_equal 1, preference.revision
+    assert_equal %w[transactions ai_assistant overview categories], sidebar
+  end
+
   test "a saved order is applied, each revision checked, and a stale write refused" do
     Finance::SidebarOrder.set!(user: @user, module_keys: %w[accounts transactions], expected_revision: 0)
     assert_equal %w[accounts transactions ai_assistant overview categories], sidebar
