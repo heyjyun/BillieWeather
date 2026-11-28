@@ -69,6 +69,14 @@ module Finance
       }
     end
 
+    def self.reconciliation_evidence(user)
+      summary(user: user)[:accounts].select do |row|
+        account = row[:account]
+        row[:status] == "known" && !account.archived? && (!account.balance_snapshot? || account.opening_balance_on <= row[:as_of]) &&
+          (!account.currency || account.currency == row[:statement].currency) && account.balance(as_of: row[:as_of]) != row[:balance]
+      end.index_by { |row| row[:account].id }
+    end
+
     def self.observation_date(statement)
       statement.balance_observed_on || statement.closing_balance_on
     end

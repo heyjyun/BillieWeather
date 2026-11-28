@@ -4,6 +4,7 @@ export * from "./currency";
 export * from "./dates";
 export * from "./detect";
 export * from "./mapping";
+export * from "./institution";
 export * from "./normalize";
 export * from "./ocr";
 export * from "./ofx";

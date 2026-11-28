@@ -1,9 +1,14 @@
-<%= form_with model: account, url: account.persisted? ? finance_account_path(account) : finance_accounts_path, scope: :finance_bank_account, data: {turbo: false, draft_key: account.persisted? ? "account-#{account.id}" : "account-new"}, class: "bw-form" do |form| %>
+<%= form_with model: account, url: account.persisted? ? finance_account_path(account) : finance_accounts_path, scope: :finance_bank_account, data: {turbo: false, manual_assistant: {copy: assistant_copy, region: current_user.usage_region}.to_json, draft_key: account.persisted? ? "account-#{account.id}" : "account-new"}, class: "bw-form" do |form| %>
+  <%= hidden_field_tag :amount_as_owed, "1" %>
   <% if account.errors.any? %><div class="bw-flash bw-flash-error" role="alert"><%= account.errors.full_messages.to_sentence %></div><% end %>
   <div class="bw-form-grid">
-    <div class="bw-field"><%= form.label :custom_name, t("billie.ledger.accounts.name") %><%= form.text_field :custom_name, value: account.custom_name || (account.manual? ? account.name : nil), maxlength: 60, required: account.manual?, placeholder: account.manual? ? t("billie.ledger.accounts.name_placeholder") : account.auto_name %></div>
+    <div class="bw-field"><%= form.label :custom_name, t("billie.ledger.accounts.name") %><%= form.text_field :custom_name, value: account.custom_name || (account.manual? ? account.name : nil), maxlength: 60, list: "suggested-account-names", placeholder: account.manual? ? t("billie.ledger.accounts.name_placeholder") : account.auto_name %><datalist id="suggested-account-names" data-name-options></datalist></div>
     <div class="bw-field"><%= form.label :account_type, t("billie.ledger.accounts.type") %><%= form.select :account_type, Finance::BankAccount::TYPES.map { |type| ["#{t("billie.ledger.account_types.#{type}")} (#{t("billie.ledger.accounts.#{Finance::Domain.account_class(type)}")})", type] } %></div>
-    <div class="bw-field"><%= form.label :opening_balance, t("billie.ledger.accounts.opening_balance") %><%= form.text_field :opening_balance, value: account.opening_balance&.to_s("F"), inputmode: "decimal", pattern: "-?[0-9,]+(\\.[0-9]{1,2})?" %><small><%= t("billie.ledger.accounts.opening_balance_help") %></small></div>
+    <div class="bw-field"><%= form.label :bank_name, assistant_copy["institution"] %><%= form.text_field :bank_name, list: "account-institutions", maxlength: 60 %><datalist id="account-institutions"></datalist></div>
+    <div class="bw-field"><%= form.label :opening_balance, (account.liability? ? assistant_copy["owed"] : assistant_copy["balance"]), data: {amount_label: true} %><%= form.text_field :opening_balance, value: ((account.liability? ? -account.opening_balance : account.opening_balance).to_s("F") if account.persisted? && !account.balance_pending?), placeholder: assistant_copy["unknown"], inputmode: "decimal", pattern: "-?[0-9,]+(\\.[0-9]{1,2})?" %></div>
+  </div>
+  <details><summary><%= assistant_copy["advanced"] %></summary><div class="bw-form-grid">
+    <div class="bw-field"><%= form.label :last4, assistant_copy["last4"] %><%= form.text_field :last4, maxlength: 4, pattern: "[0-9]{4}" %></div>
     <div class="bw-field"><%= form.label :opening_balance_on, t("billie.ledger.accounts.opening_balance_on") %><%= form.date_field :opening_balance_on %></div>
     <div class="bw-field"><%= form.label :credit_limit, t("billie.ledger.accounts.credit_limit") %><%= form.text_field :credit_limit, value: account.credit_limit&.to_s("F"), inputmode: "decimal" %><small><%= t("billie.ledger.accounts.card_only") %></small></div>
     <div class="bw-field"><%= form.label :statement_day, t("billie.ledger.accounts.statement_day") %><%= form.number_field :statement_day, min: 1, max: 31 %></div>
@@ -11,5 +16,6 @@
   </div>
   <div class="bw-field"><%= form.label :note, t("billie.ledger.fields.note") %><%= form.text_area :note, rows: 2, maxlength: 500 %></div>
   <label class="bw-checkbox-card"><%= form.check_box :include_in_net_worth %><span><strong><%= t("billie.ledger.accounts.include_in_net_worth") %></strong><small><%= t("billie.ledger.accounts.include_in_net_worth_help") %></small></span></label>
+  </details>
   <div class="bw-form-footer"><%= link_to t("billie.finance.ui.cancel"), finance_accounts_path, class: "bw-text-link" %><%= form.submit t("billie.ledger.save"), class: "bw-button bw-button-dark" %></div>
 <% end %>

@@ -10,11 +10,12 @@
 // - Deleting is a soft delete into the trash; every change writes an audit event with undo data.
 // - Placeholders are `?` (positional in both sql.js and sqlx), never out-of-order `$n`.
 import {
-  accountClass, adjustmentFor, budgetStatus, categoryKindFor, entryProblems, isAccountType, isLiability, isTransactionKind, netWorth, nextOccurrence,
+  accountKey, accountClass, adjustmentFor, isIsoDate, localToday, budgetStatus, categoryKindFor, entryProblems, isAccountType, isLiability, isTransactionKind, netWorth, nextOccurrence,
   occurrences, periodBounds, signedAmount, totals, transferKind, transferLegs, type AccountType, type BudgetPeriod, type BudgetStatus, type CategoryKind,
   type EntryProblem, type Frequency, type LedgerAccount, type LedgerEntry, type TransactionKind, FREQUENCIES,
   normalizeCategoryName, CategoryTree, flatDefaultCategories, rollUpGroup, rollUpName, SYSTEM_KEYS, UNCATEGORIZED, type CategoryKindName, type CategoryNode, type CategoryRow,
 } from "@billie/finance-core";
+import { CURRENCIES } from "@billie/shared-types";
 import { randomId } from "./ids";
 import type { SqlDriver, SqlStatement } from "./store";
 
@@ -51,6 +52,7 @@ export interface Account {
   accountKey: string | null;
   openingBalanceCents: number;
   openingBalanceOn: string | null;
+  balanceSnapshot?: boolean;
   openingBalanceSource: "user" | "statement" | "unknown";
   creditLimitCents: number | null;
   statementDay: number | null;
@@ -72,7 +74,8 @@ export interface AccountInput {
   currency?: string;
   institution?: string | null;
   last4?: string | null;
-  openingBalanceCents?: number;
+  openingBalanceCents?: number | null;
+  balanceSnapshot?: boolean;
   openingBalanceOn?: string | null;
   creditLimitCents?: number | null;
   statementDay?: number | null;
@@ -250,7 +253,7 @@ const toAccount = (row: Row): Account => {
   return {
     id: Number(row.id), uuid: String(row.uuid), name: String(row.name), type, accountClass: accountClass(type), currency: String(row.currency),
     institution: str(row.institution), last4: str(row.last4), accountKey: str(row.account_key), openingBalanceCents: Number(row.opening_balance_cents ?? 0),
-    openingBalanceOn: str(row.opening_balance_on), openingBalanceSource: (str(row.opening_balance_source) ?? "user") as Account["openingBalanceSource"],
+    openingBalanceOn: str(row.opening_balance_on), balanceSnapshot: Boolean(row.balance_snapshot), openingBalanceSource: (str(row.opening_balance_source) ?? "user") as Account["openingBalanceSource"],
     creditLimitCents: num(row.credit_limit_cents), statementDay: num(row.statement_day), dueDay: num(row.due_day),
     includeInNetWorth: Number(row.include_in_net_worth ?? 1) === 1, note: str(row.note), sortOrder: Number(row.sort_order ?? 0), archived: row.archived_at !== null && row.archived_at !== undefined,
     balanceCents: Number(row.opening_balance_cents ?? 0) + Number(row.movement ?? 0), entryCount: Number(row.entry_count ?? 0), unassigned: row.account_key === UNASSIGNED_ACCOUNT_KEY,
@@ -424,7 +427,7 @@ export class LedgerStore {
 
   async accounts(options: { includeArchived?: boolean } = {}): Promise<Account[]> {
     const rows = await this.db.select<Row>(`SELECT a.*,
-        (SELECT COALESCE(SUM(t.amount_cents), 0) FROM transactions t WHERE t.account_id = a.id AND t.deleted_at IS NULL) AS movement,
+        (SELECT COALESCE(SUM(t.amount_cents), 0) FROM transactions t WHERE t.account_id = a.id AND t.deleted_at IS NULL AND (a.balance_snapshot=0 OR t.booked_on>a.opening_balance_on)) AS movement,
         (SELECT COUNT(*) FROM transactions t WHERE t.account_id = a.id AND t.deleted_at IS NULL) AS entry_count
       FROM accounts a ${options.includeArchived ? "" : "WHERE a.archived_at IS NULL"} ORDER BY a.archived_at IS NOT NULL, a.sort_order, a.id`);
     return rows.map(toAccount);
@@ -437,27 +440,72 @@ export class LedgerStore {
   }
 
   async createAccount(input: AccountInput, actor = "user"): Promise<Account> {
-    const name = cleanName(input.name);
-    if (!name) throw new LedgerError("invalid_name", "Give the account a name.");
-    if (!isAccountType(input.type)) throw new LedgerError("invalid_account_type", "Unknown account type.");
-    const currency = input.currency ?? (await this.bookCurrency());
-    if (!currency) throw new LedgerError("currency_unknown", "Choose this book's currency first.");
-    await this.checkAccountName(name);
-    const [{ next }] = await this.db.select<Row>("SELECT COALESCE(MAX(sort_order), 0) + 1 AS next FROM accounts");
+    const [account] = await this.createAccounts([input], actor);
+    return account;
+  }
+
+  async createAccounts(inputs: AccountInput[], actor = "user", batch?: { key: string; source: "text" | "screenshot"; origins?: Record<string,string>[] }): Promise<Account[]> {
+    const book = await this.bookCurrency();
+    const currency = book || inputs[0]?.currency;
+    if (!currency || inputs.some(input => input.currency && input.currency !== currency)) throw new LedgerError("currency_unknown", "Confirm the book currency.");
+    if (batch && (!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(batch.key) || !["text","screenshot"].includes(batch.source))) throw new LedgerError("invalid_entry","Review the account batch.");
+    if (inputs.length < 1 || inputs.length > 20) throw new LedgerError("invalid_entry", "Review up to twenty accounts.");
     const stamp = now();
-    const uuid = randomId();
-    await this.db.transaction([
-      {
-        sql: `INSERT INTO accounts (uuid, name, account_type, currency, institution, last4, opening_balance_cents, opening_balance_on, opening_balance_source, credit_limit_cents,
-        statement_day, due_day, include_in_net_worth, note, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?, ?, ?, ?, ?, ?, ?)`,
-        params: [uuid, name, input.type, currency, input.institution?.trim() || null, input.last4?.trim() || null, Math.trunc(input.openingBalanceCents ?? 0), input.openingBalanceOn ?? null,
-          input.creditLimitCents ?? null, input.statementDay ?? null, input.dueDay ?? null, input.includeInNetWorth === false ? 0 : 1, input.note?.trim() || null, Number(next), stamp, stamp],
-      },
-      { sql: "INSERT INTO settings (key, value) VALUES ('currency', ?) ON CONFLICT (key) DO NOTHING", params: [currency] },
-      this.auditStatement({ actor, action: "create", subjectType: "account", subjectId: uuid, summary: name, changes: { name: [null, name], type: [null, input.type], openingBalanceCents: [null, input.openingBalanceCents ?? 0] } }),
-    ]);
-    const [row] = await this.db.select<Row>("SELECT id FROM accounts WHERE uuid = ?", [uuid]);
-    return this.account(Number(row.id));
+    const plan: SqlStatement[] = [];
+    const uuids = inputs.map(() => randomId());
+    const origins = batch?.origins;
+    if (origins && (origins.length !== inputs.length || origins.some(fields => Object.entries(fields).some(([field,value]) =>
+      !["name","type","institution","currency","amount","date","last4"].includes(field) || ![batch!.source,"suggested","edited","unknown"].includes(value))))) {
+      throw new LedgerError("invalid_entry","Review the account field evidence.");
+    }
+    const signature = JSON.stringify([batch?.source,inputs,origins]);
+    const receiptKey = batch ? "account_capture:" + batch.key : null;
+    const replay = async () => {
+      const receipt = receiptKey && await this.setting(receiptKey);
+      if (!receipt) return null;
+      const saved = JSON.parse(receipt) as { signature: string; uuids: string[] };
+      if (saved.signature !== signature) throw new LedgerError("invalid_entry", "This review has changed.");
+      const records = (await this.accounts({ includeArchived: true })).filter(a => saved.uuids.includes(a.uuid));
+      if (records.length !== saved.uuids.length) throw new LedgerError("invalid_entry","The original reviewed batch has changed.");
+      return records;
+    };
+    if (batch && !(CURRENCIES as readonly string[]).includes(currency)) throw new LedgerError("currency_unknown","Confirm the book currency.");
+    const prior = await replay();
+    if (prior) return prior;
+    if (receiptKey) plan.push({ sql: "INSERT INTO settings (key,value) VALUES (?,?)", params: [receiptKey, JSON.stringify({ signature, uuids })] });
+    const names = new Set<string>();
+    for (const [i, input] of inputs.entries()) {
+      const name = cleanName(input.name);
+      if (!name || input.name.trim().length > 60) throw new LedgerError("invalid_name", "Give this account a name.");
+      if (!isAccountType(input.type)) throw new LedgerError("invalid_account_type", "Unknown account type.");
+      if ((input.openingBalanceOn && !isIsoDate(input.openingBalanceOn)) || (batch && ((input.openingBalanceCents != null && !input.openingBalanceOn) || (input.openingBalanceOn && input.openingBalanceOn > localToday())))) throw new LedgerError("invalid_entry","Choose a valid balance date.",["date_invalid"]);
+      if (input.last4 && !/^\d{4}$/.test(input.last4)) throw new LedgerError("invalid_entry", "Check the last four digits.");
+      if (input.openingBalanceCents != null && (!Number.isSafeInteger(input.openingBalanceCents) || Math.abs(input.openingBalanceCents) >= 1e15)) throw new LedgerError("invalid_entry", "Check the balance.");
+      if (names.has(name.toLowerCase())) throw new LedgerError("name_taken", "Duplicate account name.");
+      names.add(name.toLowerCase());
+      await this.checkAccountName(name);
+      const activeName = batch ? "" : " AND archived_at IS NULL";
+      const kind = input.type === "checking" || input.type === "savings" || input.type === "loan" || input.type === "credit_card" ? input.type : null;
+      const identity = kind && input.institution && input.last4 ? accountKey(input.institution, input.last4, kind) : null;
+      // Guard again inside the write transaction so simultaneous previews cannot both create the same account.
+      plan.push({ sql: `INSERT INTO accounts (uuid,name,account_type,currency,institution,last4,account_key,opening_balance_cents,opening_balance_on,opening_balance_source,
+        credit_limit_cents,statement_day,due_day,include_in_net_worth,note,sort_order,created_at,updated_at,balance_snapshot)
+        VALUES (?,CASE WHEN EXISTS(SELECT 1 FROM accounts WHERE lower(name)=lower(?)${activeName}) THEN NULL ELSE ? END,?,?,?,?,?,?,?,?,?,?,?,?,?,
+        (SELECT COALESCE(MAX(sort_order),0)+1 FROM accounts),?,?,?)`,
+        params: [uuids[i], name, name, input.type, currency, input.institution?.trim() || null, input.last4 || null, identity, input.openingBalanceCents ?? 0,
+          input.openingBalanceOn || null, (input.openingBalanceCents === null || (batch && input.openingBalanceCents === undefined)) ? "unknown" : "user", input.creditLimitCents ?? null, input.statementDay ?? null,
+          input.dueDay ?? null, input.includeInNetWorth === false ? 0 : 1, input.note?.trim() || null, stamp, stamp, input.openingBalanceOn && (batch || input.balanceSnapshot) && input.openingBalanceCents != null ? 1 : 0] },
+        this.auditStatement({ actor, action: "create", subjectType: "account", subjectId: uuids[i], batchId: batch?.key, summary: name,
+          changes: { name: [null, name], type: [null, input.type], openingBalanceCents: [null,input.openingBalanceCents], source: [null,batch?.source ?? "manual"], ...(origins ? {origins:[null,origins[i]]} : {}) } }));
+    }
+    plan.push({ sql: "INSERT INTO settings (key,value) VALUES ('currency',?) ON CONFLICT(key) DO UPDATE SET value=CASE WHEN value=excluded.value THEN value ELSE NULL END", params: [currency] });
+    try { await this.db.transaction(plan); }
+    catch (error) {
+      const completed = await replay();
+      if (completed) return completed;
+      throw error;
+    }
+    return (await this.accounts()).filter(account => uuids.includes(account.uuid));
   }
 
   private async checkAccountName(name: string, except?: number): Promise<void> {
@@ -480,7 +528,8 @@ export class LedgerStore {
     }
     if (patch.institution !== undefined) fields.institution = patch.institution?.trim() || null;
     if (patch.last4 !== undefined) fields.last4 = patch.last4?.trim() || null;
-    if (patch.openingBalanceCents !== undefined) { fields.opening_balance_cents = Math.trunc(patch.openingBalanceCents); fields.opening_balance_source = "user"; }
+    if (patch.openingBalanceCents !== undefined) { fields.opening_balance_cents = Math.trunc(patch.openingBalanceCents ?? 0); fields.opening_balance_source = patch.openingBalanceCents === null ? "unknown" : "user"; }
+    if (patch.balanceSnapshot !== undefined || patch.openingBalanceOn === null || patch.openingBalanceCents === null) fields.balance_snapshot = patch.balanceSnapshot ? 1 : 0;
     if (patch.openingBalanceOn !== undefined) fields.opening_balance_on = patch.openingBalanceOn;
     if (patch.creditLimitCents !== undefined) fields.credit_limit_cents = patch.creditLimitCents;
     if (patch.statementDay !== undefined) fields.statement_day = patch.statementDay;
@@ -533,7 +582,15 @@ export class LedgerStore {
   /** Records a balance check (余额): one adjustment entry so the computed balance equals what the person sees. Returns the entry id, or null when nothing changes. */
   async adjustBalance(accountId: number, targetCents: number, occurredOn: string, note: string | null = null, actor = "user"): Promise<number | null> {
     const account = await this.account(accountId);
-    const delta = adjustmentFor(account.balanceCents, Math.trunc(targetCents));
+    if (!isIsoDate(occurredOn) || (account.balanceSnapshot && account.openingBalanceOn && occurredOn < account.openingBalanceOn)) throw new LedgerError("invalid_entry","Choose a valid balance date.",["date_invalid"]);
+    if (account.openingBalanceSource === "unknown" || (account.balanceSnapshot && account.openingBalanceOn === occurredOn)) {
+      await this.updateAccount(accountId, {openingBalanceCents: targetCents, openingBalanceOn: occurredOn, balanceSnapshot: true}, actor);
+      return null;
+    }
+    const [movement] = await this.db.select<{total:number}>(
+      "SELECT COALESCE(SUM(amount_cents),0) AS total FROM transactions WHERE account_id=? AND deleted_at IS NULL AND booked_on<=? AND (? IS NULL OR booked_on>?)",
+      [accountId,occurredOn,account.balanceSnapshot ? account.openingBalanceOn : null,account.balanceSnapshot ? account.openingBalanceOn : null]);
+    const delta = adjustmentFor(account.openingBalanceCents + movement.total, Math.trunc(targetCents));
     if (delta === 0) return null;
     const [id] = await this.createEntry({ kind: "adjustment", amountCents: delta, occurredOn, accountId, category: await this.transferCategory(), description: "Balance adjustment", note }, actor);
     return id;
@@ -1448,7 +1505,7 @@ export class LedgerStore {
   }
 
   async ledgerAccounts(): Promise<LedgerAccount[]> {
-    return (await this.accounts({ includeArchived: true })).map((account) => ({ id: account.id, type: account.type, openingBalanceMinor: account.openingBalanceCents, includeInNetWorth: account.includeInNetWorth, archived: account.archived }));
+    return (await this.accounts({ includeArchived: true })).map((account) => ({ id: account.id, type: account.type, observedOn: account.balanceSnapshot ? account.openingBalanceOn : null, openingBalanceMinor: account.openingBalanceCents, includeInNetWorth: account.includeInNetWorth && account.openingBalanceSource !== "unknown", archived: account.archived }));
   }
 
   async netWorth(asOf?: string | null) {

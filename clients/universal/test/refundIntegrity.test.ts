@@ -103,9 +103,11 @@ describe("refund guard does not depend on insert-time helpers", () => {
     const db = new SQL.Database();
     migrate(db, 8);
     const store = new FinanceStore(sqljsDriver(db));
-    const account = await store.ledger.createAccount({ name: "Synthetic card", type: "credit_card", currency: "USD" });
-    const [purchase] = await store.ledger.createEntry({ kind: "expense", amountCents: 8000, occurredOn: "2026-10-01", accountId: account.id, category: "Shopping" });
-    const [refund] = await store.ledger.createEntry({ kind: "refund", amountCents: 5000, occurredOn: "2026-10-02", accountId: account.id, category: "Shopping", refundOf: purchase });
+    // Recreate a v8 book with its historical columns, before running current code.
+    db.run("INSERT INTO accounts(id,uuid,name,account_type,currency,created_at,updated_at) VALUES(10,'card','Synthetic card','credit_card','USD','2026-10-01','2026-10-01')");
+    db.run("INSERT INTO statements(id,filename,currency,sha256,transaction_count,imported_at) VALUES(10,'demo.csv','USD','demo',2,'2026-10-01')");
+    const purchase = 10, refund = 11;
+    db.run("INSERT INTO transactions(id,statement_id,booked_on,description,amount_cents,category,updated_at,account_id,kind,link_hint,link_target_id) VALUES (10,10,'2026-10-01','Purchase',-8000,'Shopping','2026-10-01',10,'expense',NULL,NULL),(11,10,'2026-10-02','Refund',5000,'Shopping','2026-10-02',10,'refund','refund_of',10)");
     // Version 8 state: a leftover helper, and a link amount written before links followed their refund.
     db.run("DROP TRIGGER transactions_refund_relink");
     db.run("UPDATE transactions SET link_hint = 'refund_of', link_target_id = ? WHERE id = ?", [purchase, refund]);

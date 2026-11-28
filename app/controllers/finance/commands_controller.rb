@@ -60,7 +60,7 @@ module Finance
 
     def page_paths
       {
-        "dashboard" => finance_dashboard_path, "import" => finance_statements_path, "transactions" => finance_transactions_path,
+        "accounts" => finance_accounts_path, "dashboard" => finance_dashboard_path, "import" => finance_statements_path, "transactions" => finance_transactions_path,
         "categories" => finance_categories_path, "forecast" => finance_forecast_path, "insights" => finance_insights_path,
         "tax" => finance_tax_preparation_path, "reports" => finance_report_path, "settings" => finance_settings_path
       }
@@ -68,7 +68,7 @@ module Finance
 
     def page_labels
       {
-        "dashboard" => t("billie.layout.dashboard"), "import" => t("billie.layout.statements"), "transactions" => t("billie.layout.transactions"),
+        "accounts" => t("billie.ledger.accounts.title"), "dashboard" => t("billie.layout.dashboard"), "import" => t("billie.layout.statements"), "transactions" => t("billie.layout.transactions"),
         "categories" => t("billie.categories.nav"), "forecast" => t("billie.layout.forecast"), "insights" => t("billie.layout.insights"),
         "tax" => t("billie.layout.tax_preparation"), "reports" => t("billie.export.title"), "settings" => t("billie.region.nav")
       }

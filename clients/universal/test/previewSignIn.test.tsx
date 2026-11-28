@@ -66,7 +66,7 @@ describe("signing in to the browser preview", () => {
   });
 
   it("reproduces the original failure with the old, unchecked browser branch", async () => {
-    served = Object.fromEntries(Object.entries(all).filter(([path]) => !path.includes(`/${latest}_`)));
+    served = Object.fromEntries(Object.entries(all).filter(([path]) => Number(path.split("/").at(-1)!.slice(0,4)) <= 10));
     legacy = true;
     signIn();
     expect((await screen.findByRole("alert", undefined, { timeout: 5000 })).textContent).toMatch(/no such table: categories/);

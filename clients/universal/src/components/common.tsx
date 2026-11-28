@@ -97,13 +97,13 @@ export function PeriodPicker({ value, onChange }: { value: PeriodPreset; onChang
 export function PageHeading({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
   const heading = useFocusWhenLost<HTMLHeadingElement>(title);
   return (
-    <header className="bw-page-heading">
+    <><header className="bw-page-heading">
       <div>
         <span className="bw-eyebrow">{eyebrow}</span>
         <h1 ref={heading} tabIndex={-1}>{title}</h1>
       </div>
       {children}
-    </header>
+    </header><div className="bw-next-slot" data-next-slot /></>
   );
 }
 

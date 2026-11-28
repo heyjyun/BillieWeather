@@ -47,6 +47,20 @@
               ]
             },
             {
+              "value": "accounts",
+              "aliases": [
+                "my accounts",
+                "account assistant",
+                "add accounts",
+                "账户",
+                "账户助手",
+                "帳戶",
+                "口座",
+                "계좌",
+                "cuentas"
+              ]
+            },
+            {
               "value": "import",
               "aliases": [
                 "upload",

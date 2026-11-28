@@ -84,7 +84,7 @@ ja:
         choose_account: 口座を選択
         choose_account_type: 口座の種類を選択
         choose_different_dates_or_view_all_your_imported_transactions: 別の期間を選択するか、取り込んだすべての取引を表示してください。
-        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: 銀行から出力した CSV またはテキスト形式の PDF を1つ以上選択してください。
+        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: 銀行から出力した CSV/XLSX またはテキスト形式の PDF を1つ以上選択してください。
         choose_statements_from_your_bank: 銀行の明細を選択
         choose_the_account_type: 口座の種類を選択 →
         choose_the_dates_for_your_income_expenses_and_transactions: 収入・支出・取引を確認する期間を選択してください。
@@ -163,7 +163,7 @@ ja:
         import_a_statement_first_so_billie_has_something_to_review: Billie が確認できるよう、まず明細を取り込んでください。
         import_a_statement_first_to_generate_an_analysis: 分析を作成するには、まず明細を取り込んでください。
         import_a_statement_to_see_your_income_and_expenses_in_one_place: 明細を取り込むと、収入と支出をまとめて確認できます。
-        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: CSV やテキスト形式の PDF の銀行明細をまとめて取り込めます。取引を整理し、家計の全体像を表示します。
+        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: CSV/XLSX やテキスト形式の PDF の銀行明細をまとめて取り込めます。取引を整理し、家計の全体像を表示します。
         import_statements: 明細を取り込む
         imported: 取り込み済み
         in_days: "%{days} 日後"
@@ -290,7 +290,7 @@ ja:
         starting_cash_balance: 開始時の現金残高
         statement: 明細
         statement_account_name: 明細から読み取った名前：%{name}。この名前を使う場合は空欄にしてください。
-        statement_csv_or_pdf_files: 明細の CSV または PDF ファイル
+        statement_csv_or_pdf_files: 明細の CSV/XLSX または PDF ファイル
         statement_currency: 明細の通貨：
         statement_history: 明細履歴
         statements_from_the_same_account_contribute_only_the_latest_balance_removing_a_s: 同じ口座の明細は、最新の残高だけを合計します。明細を削除すると関連する取引も削除され、口座合計を再計算します。
@@ -335,7 +335,7 @@ ja:
         uncategorized: 未分類：
         understand_patterns_consider_practical_actions_and_get_your_records_ready_for_ta: 収支の傾向を知り、できることを検討し、申告に向けて記録を整理しましょう。
         united_states: 米国
-        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: 最大10ファイル · 1ファイル2 MB · 合計10 MB · CSV・テキスト形式 PDF
+        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: 最大10ファイル · 1ファイル2 MB · 合計10 MB · CSV/XLSX・テキスト形式 PDF
         update_forecast: 予測を更新
         upload_a_statement: 明細をアップロード
         upload_a_statement_review_your_categories_then_generate_your_first_analysis: 明細をアップロードし、カテゴリを確認して、最初の分析を作成しましょう。

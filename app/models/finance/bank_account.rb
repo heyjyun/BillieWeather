@@ -12,7 +12,7 @@ module Finance
     has_many :statement_drafts, class_name: "Finance::StatementDraft", dependent: :nullify
     has_many :transactions, class_name: "Finance::Transaction", dependent: :restrict_with_error
 
-    validates :identity_key, format: {with: /\A[0-9a-f]{64}\z/}, uniqueness: {scope: :user_id}, unless: :manual?
+    validates :identity_key, format: {with: /\A[0-9a-f]{64}\z/}, uniqueness: {scope: :user_id}, if: -> { !manual? || identity_key.present? }
     validates :bank_name, presence: true, length: {maximum: 100}, unless: :manual?
     validates :bank_name, length: {maximum: 100}, allow_nil: true
     validates :name, presence: true, length: {maximum: 100}
@@ -32,9 +32,19 @@ module Finance
     scope :active, -> { where(archived_at: nil) }
     scope :ordered, -> { order(:sort_order, :id) }
 
+    def self.statement_key(bank, suffix, type)
+      kind = case type
+      when "checking", "savings" then "cash"
+      when "credit_card", "loan" then "credit"
+      end
+      return unless bank.present? && suffix.present? && kind
+      StatementAccountIdentity.from_details(bank_name: bank, account_last4: suffix, account_kind: kind)[:account_key]
+    end
+
     def self.resolve(user:, identity:)
       return unless identity && identity[:account_key].present?
       find_or_create_by!(user_id: user.id, identity_key: identity[:account_key]) do |account|
+        account.balance_pending = true
         account.bank_name = identity[:bank_name]
         account.name = identity[:account_name].to_s.sub(/\s*•+\d{4}\z/, "").presence || "Account"
         account.last4 = identity[:account_last4]
@@ -70,16 +80,18 @@ module Finance
 
     # Opening balance plus every live entry up to `as_of` (inclusive). Excluded rows still move money.
     def balance(as_of: nil)
+      return if balance_pending? || (balance_snapshot? && as_of && opening_balance_on > as_of)
       scope = transactions.live
+      scope = scope.where("booked_on > ?", opening_balance_on) if balance_snapshot?
       scope = scope.where("booked_on <= ?", as_of) if as_of
       opening_balance + scope.sum(:amount)
     end
 
     def self.balances_for(user, as_of: nil)
-      sums = Transaction.live.where(user_id: user.id).where.not(bank_account_id: nil)
+      sums = Transaction.live.joins(:bank_account).where(user_id: user.id).where("NOT finance_bank_accounts.balance_snapshot OR booked_on > finance_bank_accounts.opening_balance_on")
       sums = sums.where("booked_on <= ?", as_of) if as_of
       totals = sums.group(:bank_account_id).sum(:amount)
-      where(user_id: user.id).to_h { |account| [account.id, account.opening_balance + (totals[account.id] || 0)] }
+      where(user_id: user.id).to_h { |account| [account.id, (account.opening_balance + (totals[account.id] || 0) unless account.balance_pending? || (account.balance_snapshot? && as_of && account.opening_balance_on > as_of))] }
     end
 
     # Assets, liabilities (positive amount owed) and net worth over accounts included in net worth.

@@ -84,7 +84,7 @@ ko:
         choose_account: 계좌 선택
         choose_account_type: 계좌 유형 선택
         choose_different_dates_or_view_all_your_imported_transactions: 다른 기간을 선택하거나 가져온 모든 거래를 확인하세요.
-        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: 은행에서 내보낸 CSV 또는 텍스트 기반 PDF를 하나 이상 선택하세요.
+        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: 은행에서 내보낸 CSV/XLSX 또는 텍스트 기반 PDF를 하나 이상 선택하세요.
         choose_statements_from_your_bank: 은행 명세서를 선택하세요
         choose_the_account_type: 계좌 유형 선택 →
         choose_the_dates_for_your_income_expenses_and_transactions: 수입·지출·거래를 확인할 기간을 선택하세요.
@@ -163,7 +163,7 @@ ko:
         import_a_statement_first_so_billie_has_something_to_review: Billie가 검토할 수 있도록 먼저 명세서를 가져오세요.
         import_a_statement_first_to_generate_an_analysis: 분석을 생성하려면 먼저 명세서를 가져오세요.
         import_a_statement_to_see_your_income_and_expenses_in_one_place: 명세서를 가져와 수입과 지출을 한곳에서 확인하세요.
-        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: CSV 또는 텍스트 기반 PDF 은행 명세서를 함께 가져오세요. 거래를 정리해 재무 현황을 보여드립니다.
+        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: CSV/XLSX 또는 텍스트 기반 PDF 은행 명세서를 함께 가져오세요. 거래를 정리해 재무 현황을 보여드립니다.
         import_statements: 명세서 가져오기
         imported: 가져옴
         in_days: "%{days}일 후"
@@ -290,7 +290,7 @@ ko:
         starting_cash_balance: 시작 현금 잔액
         statement: 명세서
         statement_account_name: '명세서에서 읽은 이름: %{name}. 이 이름을 사용하려면 비워 두세요.'
-        statement_csv_or_pdf_files: 명세서 CSV 또는 PDF 파일
+        statement_csv_or_pdf_files: 명세서 CSV/XLSX 또는 PDF 파일
         statement_currency: '명세서 통화:'
         statement_history: 명세서 내역
         statements_from_the_same_account_contribute_only_the_latest_balance_removing_a_s: 같은 계좌의 명세서는 최신 잔액만 반영합니다. 명세서를 삭제하면 연결된 거래도 삭제되며 계좌 합계가 다시 계산됩니다.
@@ -335,7 +335,7 @@ ko:
         uncategorized: '미분류:'
         understand_patterns_consider_practical_actions_and_get_your_records_ready_for_ta: 패턴을 파악하고 실천할 방법을 검토하며 세금 신고를 위한 기록을 준비하세요.
         united_states: 미국
-        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: 최대 10개 파일 · 파일당 2 MB · 총 10 MB · CSV 및 텍스트 기반 PDF
+        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: 최대 10개 파일 · 파일당 2 MB · 총 10 MB · CSV/XLSX 및 텍스트 기반 PDF
         update_forecast: 예측 업데이트
         upload_a_statement: 명세서 업로드
         upload_a_statement_review_your_categories_then_generate_your_first_analysis: 명세서를 업로드하고 분류를 확인한 다음 첫 분석을 생성하세요.

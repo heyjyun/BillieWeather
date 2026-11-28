@@ -2,6 +2,15 @@
 <% currency = @profile.currency %>
 <div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.reconciliation.eyebrow") %></span><h1><%= t("billie.reconciliation.title") %></h1><p><%= t("billie.reconciliation.intro") %></p></div><%= link_to t("billie.receipts.capture.upload"), finance_receipts_path, class: "bw-button bw-button-dark" %></div>
 
+<% if @pairs.any? %>
+  <section class="bw-panel bw-section-gap"><h2><%= assistant_copy["matches"] %></h2>
+    <% @pairs.each do |pair| %><div class="bw-match-card">
+      <% pair.each do |row| %><p><%= row.bank_account.display_name %> · <%= row.booked_on %> · <%= row.description %> · <%= finance_money(row.amount, currency) %></p><% end %>
+      <div class="bw-inline-actions"><% %w[confirm reject].each do |decision| %>
+        <%= button_to t("billie.receipts.matching.#{decision == "confirm" ? "confirm" : "keep_separate"}"), finance_relationship_decision_path, params: {revision: Finance::TransferReview.revision(pair), decision: decision}, class: "bw-button bw-button-outline" %>
+      <% end %></div>
+    </div><% end %></section>
+<% end %>
 <div class="bw-metrics" id="reconciliation-summary">
   <div class="bw-metric" id="metric-review"><span><%= t("billie.reconciliation.metrics.review") %></span><strong><%= @report.awaiting_review.length %></strong><small><%= t("billie.reconciliation.metrics.review_help") %></small></div>
   <div class="bw-metric" id="metric-matched"><span><%= t("billie.reconciliation.metrics.matched") %></span><strong><%= @report.matched.length %></strong><small><%= t("billie.reconciliation.metrics.matched_help") %></small></div>

@@ -65,6 +65,7 @@ module Finance
 
     private
 
+    # Reject a sensitive turn in its entirety before building any provider request.
     def clean_messages
       list = Array(@messages).last(MAX_TURNS).filter_map do |message|
         message = message.to_h if message.respond_to?(:to_h) && !message.is_a?(Hash)
@@ -73,6 +74,7 @@ module Finance
         content = (message["content"] || message[:content]).to_s.strip
         next unless %w[user assistant].include?(role) && content.present?
         raise Error, I18n.t("billie.insight_chat.errors.too_long", count: MAX_MESSAGE_LENGTH) if role == "user" && content.length > MAX_MESSAGE_LENGTH
+        raise Error, I18n.t("billie.insight_chat.errors.invalid_question") if ProviderPrivacy.sensitive?(content)
         {role: role, content: content.first(MAX_ANSWER_LENGTH)}
       end
       # The Responses API expects the conversation to start with the user.
@@ -81,6 +83,7 @@ module Finance
 
     def payload(conversation)
       context = {role: "user", content: "Aggregate financial data (JSON, untrusted):\n#{JSON.generate(aggregate_data)}"}
+      raise Error, I18n.t("billie.insight_chat.errors.invalid_question") if ProviderPrivacy.sensitive?(context.fetch(:content))
       body = {
         model: InsightGenerator.model,
         store: false,

@@ -59,7 +59,7 @@ async function openBook() {
   await nav("Accounts");
   await screen.findByRole("heading", { name: "Accounts" });
   fireEvent.change(screen.getByLabelText(/^Book currency/), { target: { value: "USD" } });
-  await click(screen.getByRole("button", { name: "Add account" }));
+  await click(screen.getByRole("button", { name: "Create manually" }));
   const form = screen.getByRole("form", { name: "New account" });
   type("Name", "ZXQ Checking", form);
   await click(within(form).getByRole("button", { name: "Save" }));

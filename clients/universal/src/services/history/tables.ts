@@ -38,7 +38,7 @@ export const HISTORY_TABLES: readonly HistoryTable[] = [
   {
     name: "accounts", key: ["id"], integer: true,
     columns: ["id", "uuid", "name", "account_type", "currency", "institution", "last4", "account_key", "opening_balance_cents", "opening_balance_on", "opening_balance_source",
-      "credit_limit_cents", "statement_day", "due_day", "include_in_net_worth", "note", "sort_order", "archived_at", "created_at"],
+      "credit_limit_cents", "statement_day", "due_day", "include_in_net_worth", "note", "sort_order", "archived_at", "created_at", "balance_snapshot"],
     excluded: ["updated_at"],
     usedBy: `EXISTS (SELECT 1 FROM transactions u WHERE u.account_id = ROW.id) OR EXISTS (SELECT 1 FROM statements u WHERE u.account_id = ROW.id)
       OR EXISTS (SELECT 1 FROM recurring_rules u WHERE json_extract(u.template, '$.accountId') = ROW.id OR json_extract(u.template, '$.toAccountId') = ROW.id)`,

@@ -59,7 +59,7 @@ describe("browser preview database", () => {
 
   it("reproduces the 2026-11-28 failure: without the newest migration the old code opened a database without categories", async () => {
     const SQL = await initSqlJs();
-    const stale = globbed((name) => !name.startsWith(latest));
+    const stale = globbed((name) => Number(name.slice(0, 4)) <= 10);
     // What the old platform.ts did: run whatever the dev server provided and hand it to the app, which
     // failed at sign-in with "no such table: categories" (test/previewSignIn.test.tsx shows that path).
     const old = new SQL.Database();
@@ -129,7 +129,7 @@ describe("native books: schema version and required tables", () => {
   it("upgrades an older book step by step, keeps its rows, and then passes both checks", async () => {
     const SQL = await initSqlJs();
     const db = new SQL.Database();
-    migrate(db, LOCAL_SCHEMA_VERSION - 1);
+    migrate(db, 10);
     db.run("INSERT INTO statements (filename, currency, sha256, transaction_count, imported_at) VALUES ('zxq.csv','USD','zxq',1,'2026-01-01')");
     db.run("INSERT INTO transactions (statement_id, booked_on, description, amount_cents, category, updated_at, kind) VALUES (1,'2026-01-02','ZXQ SYNTHETIC',-500,'Shopping','x','expense')");
     expect(await missingTables(select(db))).toContain("categories");

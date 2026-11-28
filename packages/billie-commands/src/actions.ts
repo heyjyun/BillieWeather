@@ -24,6 +24,7 @@ export const TRANSACTION_WORDS = [
 export const PAGE_ALIASES: Record<string, string[]> = {
   dashboard: ["home", "overview", "summary page", "首页", "主页", "仪表盘", "概览", "总览"],
   transactions: ["transaction list", "交易", "交易记录", "流水", "明细"],
+  accounts: ["my accounts", "account assistant", "add accounts", "账户", "账户助手", "帳戶", "口座", "계좌", "cuentas"],
   categories: ["category", "category page", "类别", "分类", "类别页"],
   import: ["upload", "imports", "导入", "上传", "导入页"],
   reports: ["report", "export", "exports", "报表", "报告", "导出"],
@@ -39,8 +40,8 @@ const WEB_PAGE_EXTRA_ALIASES: Record<string, string[]> = {
   import: ["statements", "statement", "bank statements", "对账单", "银行对账单"],
 };
 
-export const UNIVERSAL_PAGES = ["dashboard", "transactions", "categories", "import", "reports", "data", "settings"] as const;
-export const WEB_PAGES = ["dashboard", "import", "transactions", "categories", "forecast", "insights", "tax", "reports", "settings"] as const;
+export const UNIVERSAL_PAGES = ["dashboard", "accounts", "transactions", "categories", "import", "reports", "data", "settings"] as const;
+export const WEB_PAGES = ["dashboard", "accounts", "import", "transactions", "categories", "forecast", "insights", "tax", "reports", "settings"] as const;
 export type UniversalPage = (typeof UNIVERSAL_PAGES)[number];
 export type WebPage = (typeof WEB_PAGES)[number];
 

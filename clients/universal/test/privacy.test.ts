@@ -42,7 +42,7 @@ describe("data isolation", () => {
   // devServerStatus.ts: development only, the browser preview asks its own dev server (same origin) which
   // migration files exist, so a stale server is reported instead of used. GET, no body, imports nothing.
   const DEV_STATUS = join(ROOT, "src/services/devServerStatus.ts");
-  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI, RECEIPT, REGISTRATION, MODULE_PREFS, DEV_STATUS];
+  const NETWORK_FILES = [ACCOUNT, WEB_SYNC, CLOUD, MANAGE, UPLOAD, REPORT, AI, RECEIPT, REGISTRATION, MODULE_PREFS, DEV_STATUS, join(ROOT, "src/services/assistantPreferences.ts")];
 
   it("the dev-server check stays local and read-only: one same-origin GET, development only, no body, no imports", () => {
     const source = readFileSync(DEV_STATUS, "utf8");

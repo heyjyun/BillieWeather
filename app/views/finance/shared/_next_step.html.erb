@@ -1,0 +1,7 @@
+<% page = {"dashboard" => "dashboard", "accounts" => "accounts", "transactions" => "transactions", "statements" => "import", "categories" => "categories", "budgets" => "budgets", "reports" => "reports", "ledger_reports" => "reports", "recurring_rules" => "recurring", "forecast" => "forecast", "insights" => "assistant", "reconciliation" => "accounts", "reviews" => "transactions"}[controller_name] %>
+<% if page && %w[index show duplicates].include?(action_name) && @profile&.assistant_state&.fetch("enabled", true) %>
+  <% urls = {account: finance_accounts_path, import: finance_statements_path(account_review: 1), classify: finance_transactions_path(category: Finance::Transaction::UNCATEGORIZED), duplicates: finance_review_duplicates_path,
+    reconcile: edit_finance_account_path("ACCOUNT_ID", anchor: "adjust-balance"), discover: finance_accounts_path, budget: finance_budgets_path,
+    recurring: new_finance_recurring_rule_path, report: finance_report_path, forecast: finance_forecast_path, matches: finance_reconciliation_path} %>
+  <%= tag.div data: {next_step_options: {url: finance_next_steps_path, urls: urls, page: page, copy: assistant_copy}.to_json} %>
+<% end %>

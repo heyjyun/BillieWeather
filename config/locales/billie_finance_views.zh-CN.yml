@@ -85,7 +85,7 @@ zh-CN:
         choose_account: 选择账户
         choose_account_type: 选择账户类型
         choose_different_dates_or_view_all_your_imported_transactions: 请选择其他日期，或查看全部已导入交易。
-        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: 选择一份或多份银行导出的 CSV 或文本型 PDF 文件。
+        choose_one_or_more_csv_exports_or_text_based_pdfs_from_your_bank: 选择一份或多份银行导出的 CSV/XLSX 或文本型 PDF 文件。
         choose_statements_from_your_bank: 选择银行提供的账单
         choose_the_account_type: 选择账户类型 →
         choose_the_dates_for_your_income_expenses_and_transactions: 选择要查看的收入、支出和交易日期。
@@ -165,7 +165,7 @@ zh-CN:
         import_a_statement_first_so_billie_has_something_to_review: 请先导入账单，以便 Billie 进行分析。
         import_a_statement_first_to_generate_an_analysis: 请先导入账单，再生成分析。
         import_a_statement_to_see_your_income_and_expenses_in_one_place: 导入账单，即可在一处查看所有收入和支出。
-        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: 可一起导入 CSV 或文本型 PDF 银行账单，我们会整理其中的交易，呈现您的财务全貌。
+        import_csv_or_text_based_pdf_bank_statements_together_we_ll_organize_the_transac: 可一起导入 CSV/XLSX 或文本型 PDF 银行账单，我们会整理其中的交易，呈现您的财务全貌。
         import_statements: 导入账单
         imported: 已导入
         in_days: '%{days} 天后'
@@ -296,7 +296,7 @@ zh-CN:
         starting_cash_balance: 起始现金余额
         statement: 账单
         statement_account_name: 账单中识别的名称：%{name}。留空即可使用该名称。
-        statement_csv_or_pdf_files: CSV 或 PDF 账单文件
+        statement_csv_or_pdf_files: CSV/XLSX 或 PDF 账单文件
         statement_currency: 账单币种：
         statement_history: 账单历史
         statements_from_the_same_account_contribute_only_the_latest_balance_removing_a_s: 同一账户仅计入最新余额。删除账单时，也会删除其中的交易并重新计算账户合计。
@@ -342,7 +342,7 @@ zh-CN:
         uncategorized: 未分类：
         understand_patterns_consider_practical_actions_and_get_your_records_ready_for_ta: 了解收支规律，考虑可行的行动，并为报税季整理资料。
         united_states: 美国
-        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: 最多 10 个文件 · 每个 2 MB · 合计 10 MB · 支持 CSV
+        up_to_10_files_2_mb_per_file_10_mb_total_csv_and_text_based_pdf: 最多 10 个文件 · 每个 2 MB · 合计 10 MB · 支持 CSV/XLSX
           和文本型 PDF
         update_forecast: 更新预测
         upload_a_statement: 上传账单

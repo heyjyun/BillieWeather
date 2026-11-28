@@ -1,7 +1,7 @@
 <% content_for :title, t("billie.ledger.entries.new_title") %>
 <div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.entries.eyebrow") %></span><h1><%= t("billie.ledger.entries.new_title") %></h1><p><%= t("billie.ledger.entries.intro") %></p></div><%= link_to t("billie.finance.ui.back_to_transactions"), finance_transactions_path, class: "bw-text-link" %></div>
 <% if @accounts.empty? %>
-  <section class="bw-panel"><div class="bw-empty-state"><h3><%= t("billie.ledger.entries.no_accounts_title") %></h3><p><%= t("billie.ledger.entries.no_accounts_body") %></p><%= link_to t("billie.ledger.accounts.new"), new_finance_account_path, class: "bw-button bw-button-dark" %></div></section>
+  <section class="bw-panel"><div class="bw-empty-state"><h3><%= t("billie.ledger.entries.no_accounts_title") %></h3><p><%= t("billie.ledger.entries.no_accounts_body") %></p><%= link_to t("billie.ledger.accounts.new"), finance_accounts_path, class: "bw-button bw-button-dark" %></div></section>
 <% else %>
   <nav class="bw-period-presets" aria-label="<%= t("billie.ledger.entries.kind_nav") %>" id="kind-tabs">
     <% Finance::Ledger::MANUAL_KINDS.each do |kind| %>

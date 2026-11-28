@@ -352,7 +352,10 @@ export function Overview(host: Host) {
   const [editing, setEditing] = useState(false);
   const editButton = useRef<HTMLButtonElement>(null);
   const src = useMemo(() => host.sources(scope), [host.sources, scope]);
-  const shown = (id: Widget) => !layout.hidden.includes(id);
+  const shown = (id: Widget) => id === host.focusWidget || !layout.hidden.includes(id);
+  useEffect(() => {
+    if (host.focusWidget) document.querySelector('[data-widget="' + host.focusWidget + '"]')?.scrollIntoView?.({ block: "start" });
+  }, [host.focusWidget]);
   const has = (...ids: Metric[]) => ids.some((id) => layout.cards.includes(id));
   const flow = useResource(src.flow, shown("trend") || has("income", "expenses", "net", "savings"));
   const balances = useResource(
@@ -623,6 +626,7 @@ export function Overview(host: Host) {
           {c.customize}
         </button>
       </header>
+      <div className="bw-next-slot" data-next-slot />
       <ScopeToolbar
         ctx={ctx}
         scope={scope}

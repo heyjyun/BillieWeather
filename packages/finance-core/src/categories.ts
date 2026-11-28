@@ -60,6 +60,7 @@ export function allCategories(names: readonly string[]): Category[] {
  * merchant words are left. Same result as Finance::AiCategorizer.clean_text.
  */
 export function cleanForAi(description: string): string | null {
+  if (/-----BEGIN [A-Z ]*PRIVATE KEY-----|\bBearer\s+\S+|\b(?:sk-[\w-]{12,}|gh[pousr]_\w{16,}|AKIA[A-Z0-9]{16})\b|\beyJ[\w-]+\.[\w-]+\.[\w-]+|(?:password|passcode|api[_ -]?key|access[_ -]?token|client[_ -]?secret|cvv|cvc|密码|密碼|パスワード|비밀번호|contraseña)\s*(?:[=:：]|is\b|es\b|\s)\s*\S+/i.test(description)) return null;
   const text = description
     .replace(/\S*@\S+/gu, " ")
     .replace(/[#*]?[0-9][0-9\-/.:]*/gu, " ")

@@ -1,14 +1,17 @@
 <% content_for :title, @account.display_name %>
-<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.account_types.#{@account.account_type}") %></span><h1><%= @account.display_name %></h1><p><%= t("billie.ledger.accounts.current_balance", amount: finance_money(@balance, @profile.currency)) %></p></div><%= link_to t("billie.ledger.accounts.back"), finance_accounts_path, class: "bw-text-link" %></div>
+<div class="bw-page-heading"><div><span class="bw-eyebrow"><%= t("billie.ledger.account_types.#{@account.account_type}") %></span><h1><%= @account.display_name %></h1><p><%= t("billie.ledger.accounts.current_balance", amount: (@account.balance_pending? ? assistant_copy["unknown"] : finance_money(@balance, @profile.currency))) %></p></div><%= link_to t("billie.ledger.accounts.back"), finance_accounts_path, class: "bw-text-link" %></div>
 <div class="bw-two-column">
   <section class="bw-panel"><%= render "form", account: @account %></section>
   <aside class="bw-settings-stack">
     <section class="bw-panel bw-panel-soft" id="adjust-balance">
       <h2><%= t("billie.ledger.accounts.adjust_title") %></h2>
       <p><%= t("billie.ledger.accounts.adjust_body") %></p>
+      <% if @observation %><p><%= assistant_copy["observed"] %> · <%= @observation[:statement].filename %> · <%= @observation[:as_of] %> · <%= finance_money(@observation[:balance], @profile.currency) %></p><% end %>
       <%= form_with url: adjust_finance_account_path(@account), data: {turbo: false}, class: "bw-form" do |form| %>
-        <div class="bw-field"><%= form.label :balance, t("billie.ledger.accounts.actual_balance") %><%= form.text_field :balance, required: true, inputmode: "decimal", value: @balance.to_s("F") %></div>
-        <div class="bw-field"><%= form.label :on, t("billie.ledger.fields.date") %><%= form.date_field :on, value: finance_today %></div>
+        <%= hidden_field_tag :amount_as_owed, "1" if @account.liability? %>
+        <% suggested = @observation&.dig(:balance) || @balance %>
+        <div class="bw-field"><%= form.label :balance, @account.liability? ? assistant_copy["owed"] : t("billie.ledger.accounts.actual_balance") %><%= form.text_field :balance, required: true, inputmode: "decimal", value: (suggested && (@account.liability? ? -suggested : suggested).to_s("F")) %></div>
+        <div class="bw-field"><%= form.label :on, t("billie.ledger.fields.date") %><%= form.date_field :on, value: @observation&.dig(:as_of) || finance_today, min: (@account.opening_balance_on if @account.balance_snapshot?) %></div>
         <div class="bw-field"><%= form.label :note, t("billie.ledger.fields.note") %><%= form.text_field :note, maxlength: 200 %></div>
         <%= form.submit t("billie.ledger.accounts.adjust"), class: "bw-button bw-button-outline" %>
       <% end %>

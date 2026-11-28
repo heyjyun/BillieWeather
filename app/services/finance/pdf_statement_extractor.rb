@@ -81,7 +81,8 @@ module Finance
         StatementDraft.create!(user: @user, filename: filename, sha256: checksum, currency: @currency,
           rows: rows, warnings: warnings, expires_at: 30.minutes.from_now,
           closing_balance: @closing_balance, closing_balance_on: @closing_balance_on,
-          bank_account: BankAccount.resolve(user: @user, identity: @account_identity),
+          account_identity: (@account_identity || {}).slice(:bank_name, :account_key, :account_last4, :account_kind, :account_name),
+          bank_account: (@user.finance_bank_accounts.find_by(identity_key: @account_identity[:account_key]) if @account_identity&.dig(:account_key)),
           balance_observed_on: @balance_observed_on)
       end
     rescue ExtractionTimeout

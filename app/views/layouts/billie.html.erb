@@ -15,9 +15,11 @@
     <%= stylesheet_link_tag "/billie.css" %>
     <%= stylesheet_link_tag "/searchable-select.css" %>
     <%= stylesheet_link_tag "/billie-overview.css" %>
+    <%= stylesheet_link_tag "/finance-assistant.css" %>
     <%= stylesheet_link_tag "/financial-overview.css" if controller_path == "finance/dashboard" %>
     <script src="/billie-theme.js"></script>
     <script src="/billie.js" defer></script>
+    <% if controller.is_a?(Finance::BaseController) %><script type="module" src="/finance-assistant-web.mjs"></script><% end %>
   <% landing_page = controller_path == "public/home"; public_page = landing_page || devise_controller? || !user_signed_in?; admin_area = !public_page && controller_path.start_with?("admin/") %>
   <%# The command bar (public/billie-command.*, built from packages/billie-commands) only on the signed-in finance pages. %>
   <% command_bar = !public_page && !admin_area && controller_path.start_with?("finance/") && !current_user.needs_usage_region? %>
@@ -76,6 +78,7 @@
         <%# Only messages are shown; other flash keys (e.g. ai_batch_id) carry data for the page. %><% flash.to_hash.slice("notice", "alert").each do |type, message| %><div class="bw-flash <%= 'bw-flash-error' if type.to_s == 'alert' %>" role="<%= type.to_s == 'alert' ? 'alert' : 'status' %>"><%= message %></div><% end %>
         <% if controller.is_a?(Finance::BaseController) %><% module_id = controller.send(:current_module_id) %><% if module_id != "overview" && Finance::ModuleCatalog::TRANSACTION_MODULES.include?(module_id) %><%= render "finance/shared/transactions_tabs" %><% elsif Finance::ModuleCatalog::WEB_TABS.key?(module_id) %><%= render "finance/shared/module_tabs" %><% end %><% end %>
         <%= yield %>
+        <%= render "finance/shared/next_step" if controller.is_a?(Finance::BaseController) %>
       </main>
       <% if public_page %><%= render "community/support_dialog", **support_dialog_locals %><% end %>
       <% if public_page %><footer class="bw-public-footer"><span class="bw-brand">BillieWeather</span><p><%= t("billie.auth.home.disclaimer") %></p></footer><% end %>

@@ -99,10 +99,12 @@ class Finance::BalanceSyncTest < ActiveSupport::TestCase
     draft = Finance::PdfStatementExtractor.new(user: @user, file: file, currency: "USD").call
     assert_equal BigDecimal("1234.56"), draft.closing_balance
     assert_equal Date.new(2025, 10, 31), draft.closing_balance_on
-    assert_equal "cash", draft.bank_account.kind
+    assert_nil draft.bank_account
+    assert_empty @user.finance_bank_accounts
+    assert_equal "cash", draft.account_identity["account_kind"]
     statement = Finance::DraftImport.new(user: @user, draft: draft).call
     assert_equal BigDecimal("1234.56"), statement.closing_balance
-    assert_equal draft.bank_account_id, statement.bank_account_id
+    assert_equal "cash", statement.bank_account.kind
     assert_equal BigDecimal("1234.56"), @profile.reload.current_balance
     assert_equal Date.new(2025, 10, 31), @profile.balance_as_of
   end

@@ -46,7 +46,7 @@ module Finance
       type: ["type", "transaction type", "debit credit", "credit debit"]
     }.freeze
 
-    def initialize(user:, file:, currency: "USD", source_sha256: nil, source_filename: nil, date_column: nil, closing_balance: nil, closing_balance_on: nil, bank_account: nil, balance_observed_on: nil)
+    def initialize(user:, file:, currency: "USD", source_sha256: nil, source_filename: nil, date_column: nil, closing_balance: nil, closing_balance_on: nil, bank_account: nil, balance_observed_on: nil, draft: nil)
       @user = user
       @file = file
       @currency = currency.to_s.strip.upcase
@@ -55,6 +55,7 @@ module Finance
       @requested_date_column = normalize_header(date_column).presence
       @categorizer = Categorizer.new(user: user)
       @given_closing = closing_balance.nil? ? nil : [closing_balance, closing_balance_on]
+      @draft_id = draft&.id
       @given_bank_account = bank_account
       @given_observed_on = balance_observed_on
     end
@@ -84,7 +85,7 @@ module Finance
 
       filename = @file.respond_to?(:original_filename) ? @file.original_filename.to_s : "statement.csv"
       filename = File.basename(filename.tr("\\", "/"))
-      unless File.extname(filename).downcase == ".csv"
+      unless %w[.csv .xlsx].include?(File.extname(filename).downcase)
         raise ImportError, I18n.t("billie.backend.require_csv")
       end
       raise ImportError, I18n.t("billie.backend.filename_too_long") if filename.length > 255
@@ -106,6 +107,7 @@ module Finance
         checksum = @source_sha256
         filename = source_filename
       end
+      raw = StatementWorkbook.csv(raw) if File.extname(filename).downcase == ".xlsx"
       text = raw.dup.force_encoding(Encoding::UTF_8)
       unless text.valid_encoding?
         raise ImportError, I18n.t("billie.backend.csv_encoding")
@@ -121,11 +123,16 @@ module Finance
         if profile.currency != @currency
           raise ImportError, I18n.t("billie.backend.currency_mismatch", currency: profile.currency)
         end
+        draft = @user.finance_statement_drafts.active.find(@draft_id) if @draft_id
+        if draft
+          @account_identity = draft.account_identity.symbolize_keys
+          @given_bank_account = draft.bank_account
+        end
         if (existing = Statement.find_by(user_id: @user.id, sha256: checksum))
           # Uploading the same file again fills in what an earlier import could not read
           # (for example before account or balance columns were recognized). Nothing is
           # imported twice, and details that are already saved are never replaced.
-          next refresh_missing_details(existing)
+          next refresh_missing_details(existing).tap { draft&.destroy! }
         end
 
         closing_balance, closing_balance_on = @given_closing || detected_closing_balance
@@ -145,6 +152,7 @@ module Finance
         # avoid thousands of round trips to the external Neon database, while
         # the enclosing transaction keeps every batch atomic.
         plan.insert!(statement)
+        draft&.destroy!
         statement
       end
     rescue CSV::MalformedCSVError

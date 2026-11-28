@@ -87,11 +87,12 @@ it("uses the same destinations and records in both accounting workflows", async 
   await nav("Accounts & Assets");
   await screen.findByRole("heading", { name: "Accounts" });
   fireEvent.change(screen.getByLabelText(/^Book currency/), { target: { value: "USD" } });
-  await click(screen.getByRole("button", { name: "Add account" }));
+  if (screen.queryByText("Add account", {selector:"summary"})) await click(screen.getByText("Add account", {selector:"summary"}));
+    await click(screen.getByRole("button", { name: "Create manually" }));
   let form = screen.getByRole("form", { name: "New account" });
   type("Name", "ZXQ Wallet", form);
   fireEvent.change(within(form).getByLabelText("Type"), { target: { value: "cash" } });
-  type(/^Opening balance/, "100", form);
+  type(/^How much/, "100", form);
   await click(within(form).getByRole("button", { name: "Save" }));
   await screen.findByText("ZXQ Wallet");
 
@@ -133,7 +134,8 @@ it("keeps unfinished input when switching modes, and can discard it", async () =
   await nav("Accounts & Assets");
   await screen.findByRole("heading", { name: "Accounts" });
   fireEvent.change(screen.getByLabelText(/^Book currency/), { target: { value: "USD" } });
-  await click(screen.getByRole("button", { name: "Add account" }));
+  if (screen.queryByText("Add account", {selector:"summary"})) await click(screen.getByText("Add account", {selector:"summary"}));
+    await click(screen.getByRole("button", { name: "Create manually" }));
   let form = screen.getByRole("form", { name: "New account" });
   type("Name", "ZXQ Half-typed", form);
   const before = await counts();

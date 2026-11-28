@@ -58,6 +58,16 @@ class Finance::InsightChatTest < ActiveSupport::TestCase
     refute_includes http.requests.first.body, @user.email
   end
 
+  test "sensitive chat input is rejected before a provider request" do
+    with_ai_configuration do
+      stub_method(Net::HTTP, :new, ->(*) { flunk "Sensitive text must stay local" }) do
+        ["my test card is 4111 1111 1111 1111", "password: synthetic-only"].each do |text|
+          assert_raises(Finance::InsightChat::Error) { Finance::InsightChat.new(user: @user,consent:true,messages:[{role:"user",content:text}]).call }
+        end
+      end
+    end
+  end
+
   test "requires consent and configuration before any request" do
     stub_method(Net::HTTP, :new, ->(*) { flunk "No consent must mean no external request" }) do
       with_ai_configuration do

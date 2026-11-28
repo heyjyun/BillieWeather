@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_28_000200) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_28_001200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -172,6 +172,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_28_000200) do
     t.datetime "archived_at"
     t.boolean "manual", default: false, null: false
     t.uuid "uuid", default: -> { "gen_random_uuid()" }, null: false
+    t.boolean "balance_pending", default: false, null: false
+    t.boolean "balance_snapshot", default: false, null: false
     t.index ["id", "user_id"], name: "index_finance_bank_accounts_on_id_and_owner", unique: true
     t.index ["user_id", "identity_key"], name: "index_finance_bank_accounts_on_user_id_and_identity_key", unique: true
     t.index ["uuid"], name: "index_finance_bank_accounts_on_uuid", unique: true
@@ -438,6 +440,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_28_000200) do
     t.date "balance_as_of"
     t.decimal "cash_on_hand", precision: 15, scale: 2, default: "0.0", null: false
     t.date "cash_on_hand_on"
+    t.jsonb "assistant_state", default: {}, null: false
     t.index ["user_id"], name: "index_finance_profiles_on_user_id", unique: true
   end
 
@@ -588,6 +591,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_28_000200) do
     t.date "closing_balance_on"
     t.bigint "bank_account_id"
     t.date "balance_observed_on"
+    t.jsonb "account_identity", default: {}, null: false
     t.index ["bank_account_id"], name: "index_finance_statement_drafts_on_bank_account_id"
     t.index ["expires_at"], name: "index_finance_statement_drafts_on_expires_at"
     t.index ["user_id"], name: "index_finance_statement_drafts_on_user_id"

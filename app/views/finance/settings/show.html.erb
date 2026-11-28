@@ -15,6 +15,15 @@
   </ul>
 </nav>
 <div class="bw-settings-stack">
+  <section class="bw-panel"><h2><%= assistant_copy["next"] %></h2>
+    <%= form_with url: finance_next_steps_path, method: :patch, data: {turbo: false} do |f| %>
+      <% Finance::AssistantFeedback::PREFERENCES.each do |key| %>
+        <label class="bw-checkbox-card"><%= f.check_box key, checked: @profile.assistant_state.fetch(key,true) %> <%= assistant_copy[key] %></label>
+      <% end %>
+      <p class="bw-caption"><%= assistant_copy["controlNotice"] %></p>
+      <%= f.submit t("billie.ledger.save"), class: "bw-button bw-button-outline" %>
+    <% end %>
+  </section>
   <%= render "finance/feature_library/manager", embedded: true, filter: "all" %>
   <%= render "finance/feature_library/sidebar_customization" %>
   <%= render "finance/settings/workspace_tools" %>

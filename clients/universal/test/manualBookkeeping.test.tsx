@@ -65,11 +65,12 @@ it("keeps a complete book by hand: accounts, an expense, edit, trash and restore
   fireEvent.keyDown(search, { key: "Enter" });
   expect([...picker.options].map((option) => option.value)).toEqual([...CURRENCIES]);
   for (const [name, type0, opening] of [["ZXQ Checking", "checking", "1000"], ["ZXQ Card", "credit_card", "0"]]) {
-    await click(screen.getByRole("button", { name: "Add account" }));
+    if (screen.queryByText("Add account", {selector:"summary"})) await click(screen.getByText("Add account", {selector:"summary"}));
+    await click(screen.getByRole("button", { name: "Create manually" }));
     const form = screen.getByRole("form", { name: "New account" });
     type("Name", name, form);
     fireEvent.change(within(form).getByLabelText("Type"), { target: { value: type0 } });
-    type(/^Opening balance/, opening, form);
+    type(/^How much/, opening, form);
     await click(within(form).getByRole("button", { name: "Save" }));
     await screen.findByText(name);
   }
@@ -148,7 +149,7 @@ it("waits for Save after a typed entry preview and opens a blank manual form by 
   render(<App />);
   await screen.findByRole("navigation");
   await nav("Accounts");
-  await click(await screen.findByRole("button", { name: "Add account" }));
+  await click(await screen.findByRole("button", { name: "Create manually" }));
   const accountForm = screen.getByRole("form", { name: "New account" });
   type("Name", "Synthetic Quick Add cash", accountForm);
   await click(within(accountForm).getByRole("button", { name: "Save" }));

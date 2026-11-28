@@ -106,6 +106,7 @@ export interface Sources {
 }
 export type Activity = "income" | "spending" | "counted";
 export interface Host {
+  focusWidget?: Widget;
   context: Context;
   sources: (scope: Scope) => Sources;
   navigate: (action: Action, scope: Scope, category?: string, activity?: Activity) => void;

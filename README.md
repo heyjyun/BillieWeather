@@ -2,6 +2,10 @@
 
 A personal finance workspace built with [Bullet Train](https://bullettrain.co/), Rails, and PostgreSQL. The first release focuses on U.S. personal finances and tax-record preparation.
 
+## Assisted finance workflows
+
+Accounts & Assets accepts account descriptions, screenshots and statements. Each proposed account is editable before confirmation. The same recommendation policy drives Financial Overview, Accounts, Transactions, Categories, planning, Reports and AI Insight. Settings controls which proactive suggestions appear. Manual entry and fixed asset management remain available. [Architecture, privacy boundaries and validation](docs/architecture/ai-native-finance.md)
+
 ## Local development
 
 Use the Ruby version in `.ruby-version` and Node version in `.nvmrc`. This checkout uses mise for Ruby. PostgreSQL and Redis must be available locally; short Active Job tasks run inline, with no separate Sidekiq worker.
@@ -55,7 +59,8 @@ The website and the desktop/mobile apps share one set of design tokens in [`pack
 | `/` | Landing page with registration and login links |
 | `/users/sign_up`, `/users/sign_in` | Bullet Train / Devise registration, login, logout |
 | `/app` | Income, spending, categories, monthly totals, recent transactions, date presets and custom periods |
-| `/app/statements` | CSV import, PDF review, duplicate-file checks, deletion |
+| `/app/accounts` | Reviewed account capture, manual accounts, balances and reconciliation |
+| `/app/statements` | CSV and single-sheet XLSX import, PDF review, duplicate checks and deletion |
 | `/app/transactions` | Search, filters, pagination, CSV export, classification and corrections |
 | `/app/categories` | Category details (counts, money in/out, share of spending, transactions per category), custom categories, one-click AI categorization |
 | `/app/forecast` | Choose Prophet, Chronos-2, or historical-average projections and percentage scenarios |

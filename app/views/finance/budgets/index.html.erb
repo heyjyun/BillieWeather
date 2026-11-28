@@ -5,7 +5,7 @@
   <%= form_with url: finance_budgets_path, scope: :budget, data: {turbo: false}, class: "bw-form bw-form-grid" do |form| %>
     <div class="bw-field"><%= form.label :scope, t("billie.ledger.budgets.scope") %><%= form.select :scope, scope_options %></div>
     <div class="bw-field"><%= form.label :period, t("billie.ledger.budgets.period") %><%= form.select :period, Finance::Domain::BUDGET_PERIODS.map { |p| [t("billie.ledger.budgets.periods.#{p}"), p] } %></div>
-    <div class="bw-field"><%= form.label :amount, t("billie.ledger.budgets.limit") %><%= form.text_field :amount, required: true, inputmode: "decimal" %></div>
+    <div class="bw-field"><%= form.label :amount, t("billie.ledger.budgets.limit") %><%= form.text_field :amount, value: ((params[:suggestion].to_i / 100.0) if params[:suggestion].to_s.match?(/\A\d{1,15}\z/)), required: true, inputmode: "decimal" %></div>
     <div class="bw-field"><%= form.label :alert_percent, t("billie.ledger.budgets.alert") %><%= form.number_field :alert_percent, value: 90, min: 1, max: 100 %></div>
     <%= form.submit t("billie.ledger.budgets.add"), class: "bw-button bw-button-dark" %>
   <% end %>

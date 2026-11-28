@@ -53,6 +53,7 @@ module Finance
     # Removes digit runs (card, reference, phone and store numbers) and noise characters,
     # keeping the merchant words. Returns nil when nothing meaningful is left.
     def self.clean_text(description)
+      return if ProviderPrivacy::CREDENTIAL.match?(description.to_s)
       text = description.to_s.gsub(/\S*@\S+/, " ").gsub(/[#*]?\d[\d\-\/.:]*/, " ").gsub(/[^\p{L}\p{N}&'.\- ]/, " ").squeeze(" ").strip
       text = text.first(MAX_TEXT).strip
       text.match?(/\p{L}{2,}/) ? text : nil
@@ -92,6 +93,8 @@ module Finance
 
       allowed = legacy ? offered_categories(categories) : Array(categories).uniq
       allowed |= [UNCATEGORIZED]
+      fields = allowed + items.flat_map { |item| item.values_at(:key,:text) }
+      raise Error, :unavailable if fields.compact.any? { |text| ProviderPrivacy.sensitive?(text.to_s) }
       by_reference = {}
       allowed.each do |ref|
         by_reference[ref] = leaf(ref)

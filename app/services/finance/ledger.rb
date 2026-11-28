@@ -229,10 +229,20 @@ module Finance
     # Sets an account to the balance the person sees with an adjustment entry (余额).
     def adjust_balance(account, target, on: Date.current, note: nil)
       target = money!(target, allow_negative: true, allow_zero: true)
-      current = account.balance(as_of: on)
-      delta = target - current
-      raise Invalid, "no_change" if delta.zero?
-      create({kind: "adjustment", amount: delta.to_s("F"), booked_on: on.iso8601, account_id: account.id, note: note})
+      locked do
+        account = @user.finance_bank_accounts.find(account.id)
+        raise Invalid, "date_invalid" if account.balance_snapshot? && on < account.opening_balance_on
+        current = account.balance(as_of: on)
+        delta = current.nil? ? target : target - current
+        raise Invalid, "no_change" if current && delta.zero?
+        if account.balance_pending? || (account.balance_snapshot? && on == account.opening_balance_on)
+          account.update!(opening_balance: target, opening_balance_on: on, balance_pending: false, balance_snapshot: true)
+          AuditEvent.record!(user: @user, action: "update", subject: account, changes: {before: current&.to_s("F"), balance_confirmed: target.to_s("F"), date: on.iso8601})
+          Struct.new(:amount).new(delta)
+        else
+          create({kind: "adjustment", amount: delta.to_s("F"), booked_on: on.iso8601, account_id: account.id, note: note})
+        end
+      end
     end
 
     private

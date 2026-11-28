@@ -33,8 +33,10 @@ module Finance
         .distinct.pluck(:bank_account_id)
       observed = (scoped.any? { |a| !a.manual? }) ? BalanceSync.summary(user: @user)[:accounts].index_by { |row| row[:account].id } : {}
       holdings = scoped.map do |a|
-        amount = if mixed_accounts.include?(a.id) || (a.opening_balance_on && a.opening_balance_on > @today)
+        amount = if (a.balance_pending? && a.manual?) || mixed_accounts.include?(a.id) || (a.opening_balance_on && a.opening_balance_on > @today)
           nil
+        elsif a.balance_snapshot?
+          a.balance(as_of: @today)
         elsif a.manual? || a.opening_balance_on.present?
           a.opening_balance + movements.fetch(a.id, 0)
         else

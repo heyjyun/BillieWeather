@@ -58,10 +58,10 @@ module Finance
         # Include post-import categorization in this file's atomic transaction.
         statement = Statement.transaction { importer.call }
         if importer.refreshed?
-          result(file, "imported", date_column: importer.date_column_used,
+          result(file, "imported", statement: statement, date_column: importer.date_column_used,
             message: I18n.t("billie.backend.import_details_refreshed"))
         else
-          result(file, "imported", transaction_count: statement.transaction_count, date_column: importer.date_column_used,
+          result(file, "imported", statement: statement, transaction_count: statement.transaction_count, date_column: importer.date_column_used,
             message: I18n.t("billie.backend.import_success"))
         end
       end
@@ -85,7 +85,7 @@ module Finance
 
       # Draft deletion and the imported rows must succeed together.
       statement = Statement.transaction { DraftImport.new(user: @user, draft: draft).call }
-      result(file, "imported", transaction_count: statement.transaction_count,
+      result(file, "imported", statement: statement, transaction_count: statement.transaction_count,
         message: I18n.t("billie.backend.pdf_auto_imported"))
     rescue StatementImporter::ImportError => error
       if draft&.persisted?
@@ -95,10 +95,10 @@ module Finance
       end
     end
 
-    def result(file, status, message:, transaction_count: nil, date_column: nil, draft: nil)
+    def result(file, status, message:, transaction_count: nil, date_column: nil, draft: nil, statement: nil)
       filename = File.basename(file.original_filename.to_s.tr("\\", "/"))
       {filename: filename, status: status, message: message, transaction_count: transaction_count,
-       date_column: date_column, draft: draft}
+       date_column: date_column, draft: draft, statement: statement}
     end
 
     def monotonic_time

@@ -10,6 +10,7 @@ import { SignedOut } from "./pages/SignedOut";
 import { ModeProvider, useMode, type Mode } from "./hooks/useMode";
 import { SyncStatus } from "./components/SyncStatus";
 import { ConnectionStatus } from "./components/ConnectionStatus";
+import { NextStep } from "./components/NextStep";
 import { HistoryControls } from "./components/HistoryControls";
 import { CommandCenter } from "./components/CommandCenter";
 import type { TransactionFilter } from "./commands/handlers";
@@ -260,12 +261,12 @@ function Shell() {
         {blocked ? <ModuleUnavailable module={blocked} openLibrary={() => go("features")} /> : (
         <>
         {page === "dashboard" && <>
-          <Dashboard go={go} />
+          <Dashboard go={go} focus={focus} />
           {welcome && <Welcome embedded name={account?.nickname} onStart={() => finishWelcome("import")} onExplore={() => finishWelcome("dashboard")} />}
         </>}
         {page === "manual" && <Manual go={go} />}
         {page === "transactions" && <Transactions key={`${transactionFilter?.key ?? 0}-${transactionIntent?.key ?? 0}`} preset={transactionFilter?.filter} intent={transactionIntent?.intent} />}
-        {page === "accounts" && <Accounts create={focus === "new"} />}
+        {page === "accounts" && <Accounts suggestion={focus?.startsWith("discover-") ? focus.slice(9) : undefined} create={focus === "new"} adjustId={focus?.startsWith("adjust-") ? Number(focus.slice(7)) : undefined} onStatement={() => go("import")} />}
         {page === "categories" && <Categories key={focus ?? ""} focus={focus} />}
         {page === "planning" && <Planning key={focus ?? ""} focus={focus} />}
         {page === "lists" && <Lists />}
@@ -277,6 +278,7 @@ function Shell() {
         {page === "features" && <FeatureLibrary open={openModule} />}
         {page === "addSync" && <AddSync openImport={() => go("import")} openReceipt={() => go("receipt")} openEntry={(entryDraft) => go("transactions", null, undefined, { entryKind: entryDraft?.kind ?? "expense", entryDraft })} openManual={() => go("manual")} />}
         {page === "assistant" && <Assistant />}
+        {["dashboard","transactions","accounts","categories","planning","reports","assistant","settings","import"].includes(page) && <NextStep page={page} focus={focus} go={go} />}
         </>
         )}
         </Suspense>

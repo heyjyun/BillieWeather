@@ -24,7 +24,7 @@ export function Planning({ focus = null }: { focus?: string | null } = {}) {
   const [monthStart, setMonthStart] = useState(1);
   const [status, setStatus] = useState("");
   // Unsaved budget and schedule forms are drafts, kept across a mode switch.
-  const [budgetForm, setBudgetForm] = useDraftState("planning-page", "budget", { period: "month" as "month" | "year", scope: "", amount: "", alert: "90" });
+  const [budgetForm, setBudgetForm] = useDraftState("planning-page", "budget", { period: "month" as "month" | "year", scope: "", amount: focus?.startsWith("budget-") && /^\d+$/.test(focus.slice(7)) ? (Number(focus.slice(7)) / 100).toFixed(2) : "", alert: "90" });
   const [ruleForm, setRuleForm] = useDraftState<null | { id?: number; name: string; kind: TransactionKind; amount: string; accountId: string; toAccountId: string; category: string; frequency: Frequency; interval: string; startOn: string; endOn: string; autoPost: boolean }>("planning-page", "schedule", null);
   const live = accounts.filter((a) => !a.archived && !a.unassigned);
   const categories = allCategories(customCategories).filter((c) => categoryTree.kindOf(c) !== "transfer");

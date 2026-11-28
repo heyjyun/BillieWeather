@@ -218,12 +218,14 @@ module Finance
     end
 
     def ai_content
+      input = JSON.generate(aggregate_data)
+      raise Error, I18n.t("billie.backend.ai_invalid_result", hint: retry_hint) if ProviderPrivacy.sensitive?(input)
       payload = {
         model: self.class.model,
         store: false,
         max_output_tokens: 3500,
         instructions: (tax? ? TAX_INSTRUCTIONS : INSTRUCTIONS) + "\nWrite all user-facing JSON string values in #{OUTPUT_LANGUAGES.fetch(I18n.locale.to_s, "English")}. Keep the schema keys unchanged.",
-        input: [{role: "user", content: JSON.generate(aggregate_data)}],
+        input: [{role: "user", content: input}],
         text: {format: {type: "json_schema", name: tax? ? "billie_tax_preparation" : "billieweather_insights", strict: true, schema: tax? ? TAX_OUTPUT_SCHEMA : OUTPUT_SCHEMA}}
       }
       payload[:reasoning] = {effort: self.class.reasoning_effort} if self.class.reasoning_effort.present?

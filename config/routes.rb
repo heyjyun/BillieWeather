@@ -37,6 +37,7 @@ Rails.application.routes.draw do
     get "/", to: "dashboard#index", as: :dashboard
     resources :statements, only: [:index, :create, :update, :destroy] do
       get :sample, on: :collection
+      post :preview, on: :collection
     end
     resources :statement_drafts, only: [:show, :destroy] do
       post :confirm, on: :member
@@ -58,6 +59,7 @@ Rails.application.routes.draw do
     end
     patch "receipts/matches/:match_id/:decision", to: "receipts#decide", as: :receipt_match_decision, constraints: {decision: /confirm|reject|undo|reconsider/}
     resources :capture_tokens, only: [:create, :destroy]
+    post "reconciliation/relationships", to: "reconciliation#decide", as: :relationship_decision
     get "reconciliation", to: "reconciliation#show", as: :reconciliation
     # Default Mode / Manual Mode (progressive disclosure; see Finance::ManualWorkspace).
     patch "mode", to: "modes#update", as: :mode
@@ -65,6 +67,10 @@ Rails.application.routes.draw do
     patch "manual/book", to: "manual#update_book", as: :manual_book
     # Manual bookkeeping (docs/architecture/finance-domain-spec.md): accounts, entries of every kind,
     # trash, operation log, review lists, dimensions, budgets, recurring entries and reports.
+    resource :next_steps, only: [:show, :update], controller: :next_steps
+    post "accounts/capture/undo", to: "account_captures#undo", as: :undo_account_capture
+    post "accounts/capture", to: "account_captures#create", as: :account_capture
+    post "accounts/screenshot", to: "account_captures#screenshot", as: :account_screenshot
     resources :accounts, only: [:index, :new, :create, :edit, :update, :destroy] do
       member do
         patch :archive
@@ -202,6 +208,7 @@ Rails.application.routes.draw do
     post "session/revocations", to: "sessions#revoke_by_digest", as: :session_revocations
     delete "sessions", to: "sessions#destroy_others", as: :other_sessions
     resource :account, only: [:show, :update]
+    resource :assistant_preferences, only: [:show, :update], controller: :assistant_preferences
     resource :module_preferences, only: [:show, :update], controller: :module_preferences
     # Read-only copy of the person's web financial data for the app's local database.
     # One-way metadata from the app about its local databases (names, sizes, counts; never financial

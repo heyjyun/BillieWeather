@@ -20,12 +20,10 @@ module Finance
       end
       stream = StringIO.new(csv)
       stream.define_singleton_method(:original_filename) { "reviewed-transactions.csv" }
-      statement = StatementImporter.new(user: @user, file: stream, currency: @draft.currency,
+      StatementImporter.new(user: @user, file: stream, currency: @draft.currency,
         source_sha256: @draft.sha256, source_filename: @draft.filename,
         closing_balance: @draft.closing_balance, closing_balance_on: @draft.closing_balance_on,
-        bank_account: @draft.bank_account, balance_observed_on: @draft.balance_observed_on).call
-      @draft.destroy!
-      statement
+        draft: @draft, balance_observed_on: @draft.balance_observed_on).call
     end
   end
 end

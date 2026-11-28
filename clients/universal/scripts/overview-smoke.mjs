@@ -17,6 +17,7 @@ try {
     viewport: { width: 1280, height: 900 },
   });
   const errors = [];
+  const feedback = {};
   await ctx.addInitScript(() => {
     sessionStorage.setItem("billie.token", "overview-synthetic");
     localStorage.setItem("billie.locale", "en");
@@ -27,7 +28,7 @@ try {
     if (url.origin === origin) return route.continue();
     const headers = {
       "access-control-allow-origin": origin,
-      "access-control-allow-methods": "GET,OPTIONS",
+      "access-control-allow-methods": "GET,PUT,OPTIONS",
       "access-control-allow-headers": "authorization,content-type",
     };
     if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
@@ -61,6 +62,7 @@ try {
     }));
     const replies = {
       account: { account },
+      assistant_preferences: {},
       module_preferences: { format: 2, modules: {}, sidebar_order: null },
       finance: {
         currency: "USD",
@@ -88,6 +90,14 @@ try {
       rules: { rules: [] },
       categories: { categories: [] },
     };
+    if (url.pathname.endsWith("/assistant_preferences")) {
+      if (req.method() === "PUT") {
+        const body = req.postDataJSON();
+        assert.ok(["enabled","planning","organization","account","import"].includes(body.key));
+        feedback[body.key] = body.value;
+      }
+      return route.fulfill({status:200,contentType:"application/json",headers,body:JSON.stringify(feedback)});
+    }
     const result = replies[url.pathname.split("/").at(-1)];
     if (!result || req.method() !== "GET") {
       errors.push(req.method() + " " + url.pathname);
@@ -138,6 +148,44 @@ try {
       .click();
     await p.getByRole("heading", { name: "Transactions", exact: true }).waitFor();
     assert.equal(await p.getByText("Payroll", { exact: true }).count(), 0);
+  }
+  if (process.env.ASSISTANT_SMOKE === "1") {
+    assert.equal(populated,false);
+    await p.getByText("Add your first account to organize your financial records.").waitFor();
+    await p.getByRole("button",{name:"Review",exact:true}).click();
+    if (process.env.ASSISTANT_OCR === "1") {
+      const bank = await ctx.newPage();
+      await bank.setContent('<body style="background:white;color:black;font:32px Arial;padding:30px"><p>Chase credit card</p><p>Current balance $50.00</p><p>Credit limit $900.00</p></body>');
+      const pixels = await bank.screenshot({clip:{x:0,y:0,width:680,height:340}});
+      await bank.close();
+      await p.locator('input[type="file"][accept*="image/png"]').setInputFiles({name:"synthetic-card.png",mimeType:"image/png",buffer:pixels});
+      const card = p.locator("fieldset").first();
+      await card.waitFor({timeout:90000});
+      assert.equal(await card.getByLabel("How much do you currently owe?").inputValue(),"50.00");
+      assert.equal(await card.getByLabel("Institution",{exact:true}).inputValue(),"Chase");
+      assert.equal(await card.getByLabel("Balance date").inputValue(),"");
+    }
+    await p.getByLabel(/Describe your accounts/).fill("A Chase credit card with $500 outstanding, a WeChat wallet, and a PayPal wallet");
+    await p.getByRole("button",{name:"Review proposed accounts"}).click();
+    const proposals = p.locator("fieldset").filter({has:p.getByLabel("Include account")});
+    assert.equal(await proposals.count(),3);
+    await proposals.last().getByRole("button",{name:"Remove proposal"}).click();
+    assert.equal(await proposals.count(),2);
+    await p.setViewportSize({width:390,height:844});
+    assert.ok(await proposals.first().evaluate(el => el.getBoundingClientRect().right <= innerWidth + 1),"Preview must fit a narrow screen");
+    if (process.env.ASSISTANT_SCREENSHOT) await p.screenshot({path:process.env.ASSISTANT_SCREENSHOT,fullPage:true});
+    await p.setViewportSize({width:1280,height:900});
+    await proposals.first().getByLabel("Account name").fill("Synthetic QA card");
+    await proposals.first().getByLabel("Balance date").fill("2026-11-01");
+    await p.getByRole("button",{name:"Confirm selected accounts"}).click();
+    await p.getByText("Synthetic QA card",{exact:true}).waitFor();
+    await p.getByText("Balance pending confirmation",{exact:true}).waitFor();
+    await p.getByText(/Your accounts are ready/).waitFor();
+    await p.getByRole("button",{name:"Dismiss",exact:true}).click();
+    await p.getByText(/Your accounts are ready/).waitFor({state:"detached"});
+    await p.reload();
+    await p.getByRole("navigation").waitFor();
+    assert.equal(await p.getByText(/Your accounts are ready/).count(),0);
   }
   assert.deepEqual(errors, []);
   console.log(

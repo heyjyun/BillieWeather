@@ -180,6 +180,7 @@ export interface LedgerAccount {
   id: number | string;
   type: AccountType;
   openingBalanceMinor: number;
+  observedOn?: string | null;
   includeInNetWorth?: boolean;
   archived?: boolean;
 }
@@ -223,10 +224,15 @@ export function totals(entries: readonly LedgerEntry[], range: { from?: string |
  */
 export function balances(accounts: readonly LedgerAccount[], entries: readonly LedgerEntry[], asOf?: string | null): Map<LedgerAccount["id"], number> {
   const result = new Map<LedgerAccount["id"], number>();
-  for (const account of accounts) result.set(account.id, account.openingBalanceMinor);
+  const anchors = new Map(accounts.map(a => [a.id, a.observedOn]));
+  for (const account of accounts) {
+    if (!asOf || !account.observedOn || account.observedOn <= asOf) result.set(account.id, account.openingBalanceMinor);
+  }
   for (const entry of entries) {
     if (!isLive(entry) || entry.accountId === null || !result.has(entry.accountId)) continue;
     if (asOf && entry.occurredOn > asOf) continue;
+    const observed = anchors.get(entry.accountId);
+    if (observed && entry.occurredOn <= observed) continue;
     result.set(entry.accountId, result.get(entry.accountId)! + entry.amountMinor);
   }
   return result;

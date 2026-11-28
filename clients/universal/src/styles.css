@@ -7,6 +7,7 @@
  */
 @import "../../../packages/design-tokens/dist/tokens.css";
 @import "../../../public/billie-overview.css";
+@import "../../../public/finance-assistant.css";
 
 /* Short aliases used throughout this file and by older component markup. */
 :root {

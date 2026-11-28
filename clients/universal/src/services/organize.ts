@@ -10,11 +10,11 @@ import type { FinanceStore, SqlDriver } from "./store";
 
 type Row = Record<string, unknown>;
 
-export async function organizeRows(db: SqlDriver): Promise<OrganizeRow[]> {
+export async function organizeRows(db: SqlDriver, limit = -1): Promise<OrganizeRow[]> {
   const rows = await db.select<Row>(`SELECT t.id, t.account_id, a.account_type, t.booked_on, t.amount_cents, t.kind, t.category, t.description, t.original_description, m.name AS merchant,
       t.user_locked_fields, t.entry_origin,
       EXISTS (SELECT 1 FROM transaction_links l WHERE (l.from_transaction_id = t.id OR l.to_transaction_id = t.id) AND l.status = 'confirmed' AND l.link_type IN ('transfer', 'card_payment', 'refund_of')) AS linked
-    FROM transactions t LEFT JOIN accounts a ON a.id = t.account_id LEFT JOIN merchants m ON m.id = t.merchant_id WHERE t.deleted_at IS NULL AND t.excluded = 0`);
+    FROM transactions t LEFT JOIN accounts a ON a.id = t.account_id LEFT JOIN merchants m ON m.id = t.merchant_id WHERE t.deleted_at IS NULL AND t.excluded = 0 ORDER BY t.booked_on DESC,t.id DESC LIMIT ?`, [limit]);
   return rows.map((row) => {
     let locked: string[] = [];
     try { locked = JSON.parse(String(row.user_locked_fields ?? "[]")) as string[]; } catch { locked = []; }

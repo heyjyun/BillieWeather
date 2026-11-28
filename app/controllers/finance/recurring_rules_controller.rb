@@ -12,7 +12,7 @@ module Finance
     end
 
     def new
-      @rule = current_user.finance_recurring_rules.new(frequency: "monthly", interval: 1, start_on: finance_today, template: {"kind" => "expense"})
+      @rule = current_user.finance_recurring_rules.new(name: params[:suggestion].to_s.first(60).presence, frequency: "monthly", interval: 1, start_on: finance_today, template: {"kind" => "expense"})
     end
 
     def create

@@ -70,6 +70,7 @@ it("signs in, works with local data, switches language, and signs out", async ()
     const url = String(input);
     requests.push({ url, init: init ?? {} });
     const path = url.replace(`${API_ORIGIN}/api/client/v1/finance`, "");
+    if (url === API_ORIGIN + "/api/client/v1/assistant_preferences") return respond({});
     if (path === "") return respond({ currency: "USD", version: "web-v1", statement_count: 1, transaction_count: 2 });
     if (path === "/statements") return respond({ statements: [{ id: 501, filename: "web-checking.csv", currency: "USD", sha256: "f".repeat(64), transaction_count: 2, closing_balance: null, closing_balance_on: null, imported_at: "2026-03-01T00:00:00Z" }] });
     if (path === "/rules") return respond({ rules: [] });
@@ -175,8 +176,9 @@ it("signs in, works with local data, switches language, and signs out", async ()
   expect(requests.length).toBeGreaterThan(0);
   const finance = requests.filter(({ url }) => url.startsWith(`${API_ORIGIN}/api/client/v1/finance`));
   const metadata = requests.filter(({ url }) => url.startsWith(`${API_ORIGIN}/api/client/v1/devices/`));
-  expect(finance.length + metadata.length).toBe(requests.length);
-  for (const { init } of finance) {
+  const preferences = requests.filter(({ url }) => url === API_ORIGIN + "/api/client/v1/assistant_preferences");
+  expect(finance.length + metadata.length + preferences.length).toBe(requests.length);
+  for (const { init } of [...finance,...preferences]) {
     expect(init.method).toBe("GET");
     expect(init.body).toBeUndefined();
   }

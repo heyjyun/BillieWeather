@@ -16,7 +16,7 @@ export const RECORDED_STORE: Recorded<FinanceStore> = {
 };
 
 export const RECORDED_LEDGER: Recorded<LedgerStore> = {
-  createAccount: "account", updateAccount: "account", setAccountArchived: "account", deleteAccount: "account", reorderAccounts: "account", adjustBalance: "balance",
+  createAccount: "account", createAccounts: "account", updateAccount: "account", setAccountArchived: "account", deleteAccount: "account", reorderAccounts: "account", adjustBalance: "balance",
   createDimension: "label_list", renameDimension: "label_list", setDimensionArchived: "label_list", mergeDimension: "label_list", deleteDimension: "label_list",
   setCategoryMeta: "category_list", reorderCategories: "category_list", moveCategoryStep: "category_list",
   createEntry: "create", updateEntry: "edit", duplicateEntry: "duplicate", deleteEntries: "delete", restoreEntries: "restore",

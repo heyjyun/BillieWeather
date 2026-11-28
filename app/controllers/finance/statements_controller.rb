@@ -4,6 +4,12 @@ module Finance
       load_statement_lists
     end
 
+    def preview
+      render json: reviewed_import.call
+    rescue StatementImporter::ImportError => error
+      render json: {error: error.message}, status: :unprocessable_entity
+    end
+
     def create
       return import_batch if params.key?(:files)
 
@@ -101,9 +107,17 @@ module Finance
       @pending_drafts = current_user.finance_statement_drafts.active.order(created_at: :desc)
     end
 
+    def reviewed_import
+      ReviewedStatementImport.new(user: current_user, files: params[:files], currency: @profile.currency, date_column: params[:date_column])
+    end
+
     def import_batch
-      @import_results = BatchStatementImport.new(user: current_user, files: params[:files],
-        currency: @profile.currency, date_column: params[:date_column]).call
+      @import_results = if params[:account_review] == "1"
+        raise StatementImporter::ImportError, I18n.t("billie.backend.pdf_review_confirm") if params[:review_token].blank?
+        reviewed_import.call(token: params[:review_token])
+      else
+        BatchStatementImport.new(user: current_user, files: params[:files], currency: @profile.currency, date_column: params[:date_column]).call
+      end
       @profile.touch if @import_results.any? { |result| result[:status] == "imported" }
       load_statement_lists
       accepted = @import_results.any? { |result| result[:status] != "failed" }

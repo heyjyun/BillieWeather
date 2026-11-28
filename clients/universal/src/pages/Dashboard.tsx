@@ -13,8 +13,9 @@ import type { Page, TransactionIntent } from "../App";
 import type { TransactionFilter } from "../commands/handlers";
 
 export function Dashboard({
-  go,
+  go, focus,
 }: {
+  focus?: string | null;
   go: (page: Page, part?: string | null, filter?: TransactionFilter, intent?: TransactionIntent) => void;
 }) {
   const finance = useFinance();
@@ -106,7 +107,7 @@ export function Dashboard({
     else if (action === "addEntry") go("transactions", null, undefined, { entryKind: "expense" });
     else if (action === "bills" || action === "budget") go("planning", action === "bills" ? "schedules" : null);
     else if (action === "insight") go("assistant", "insights");
-    else if (action === "addAccount") go("accounts", "new");
+    else if (action === "addAccount") go("accounts");
     else if (action === "report") go("reports");
     else if (action !== "forecast") go(action);
   }
@@ -114,6 +115,7 @@ export function Dashboard({
     <>
       <Overview
         key={context.owner + ":" + activeDatabaseId}
+        focusWidget={focus === "forecast" ? "forecast" : undefined}
         context={context}
         sources={sources}
         navigate={navigate}

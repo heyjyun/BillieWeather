@@ -10,6 +10,8 @@ module Finance
 
     def index
       accounts = current_user.finance_bank_accounts.ordered.to_a
+      @last_capture = current_user.finance_command_executions.where(action_id: AccountCapture::ACTION, idempotency_key: session[:last_account_capture], undone_at: nil)
+        .where("undo_expires_at > ?",Time.current).pick(:idempotency_key) if session[:last_account_capture]
       @balances = BankAccount.balances_for(current_user)
       @active = accounts.reject(&:archived?)
       @archived = accounts.select(&:archived?)
@@ -27,6 +29,7 @@ module Finance
       @account = current_user.finance_bank_accounts.new(account_params.merge(manual: true, currency: @profile.currency,
         sort_order: (current_user.finance_bank_accounts.maximum(:sort_order) || 0) + 1))
       @account.name = @account.custom_name.presence || I18n.t("billie.ledger.account_types.#{@account.account_type}", default: "Account")
+      @account.identity_key = BankAccount.statement_key(@account.bank_name, @account.last4, @account.account_type)
       if @account.save
         audit!("create", @account, {}, audit_values(@account, FIELDS))
         redirect_to finance_accounts_path, notice: I18n.t("billie.ledger.accounts.created", name: @account.display_name)
@@ -36,6 +39,7 @@ module Finance
     end
 
     def edit
+      @observation = BalanceSync.reconciliation_evidence(current_user)[@account.id]
       @balance = @account.balance
     end
 
@@ -85,7 +89,12 @@ module Finance
     # Records a balance adjustment (余额): the difference between the computed and the real balance.
     def adjust
       on = params[:on].present? ? Date.iso8601(params[:on]) : finance_today
-      entry = ledger.adjust_balance(@account, params[:balance], on: on, note: params[:note])
+      value = params[:balance].to_s.strip.delete(",")
+      if params[:amount_as_owed] == "1" && @account.liability?
+        raise Ledger::Invalid, "amount_required" unless value.match?(/\A-?\d+(?:\.\d{1,2})?\z/)
+        value = (-BigDecimal(value)).to_s("F")
+      end
+      entry = ledger.adjust_balance(@account, value, on: on, note: params[:note])
       redirect_to finance_accounts_path, notice: I18n.t("billie.ledger.accounts.adjusted", name: @account.display_name, amount: helpers.finance_money(entry.amount, @profile.currency))
     rescue Ledger::Invalid, Date::Error => error
       redirect_to edit_finance_account_path(@account), alert: ledger_errors(error.respond_to?(:codes) ? error.codes : "date_invalid")
@@ -118,12 +127,22 @@ module Finance
     end
 
     def account_params
-      permitted = params.require(:finance_bank_account).permit(:custom_name, :account_type, :opening_balance, :opening_balance_on, :credit_limit,
+      permitted = params.require(:finance_bank_account).permit(:custom_name, :bank_name, :last4, :account_type, :opening_balance, :opening_balance_on, :credit_limit,
         :statement_day, :due_day, :include_in_net_worth, :note)
-      permitted[:opening_balance] = permitted[:opening_balance].to_s.delete(",").presence || "0" if permitted.key?(:opening_balance)
+      if permitted.key?(:opening_balance) || action_name == "create"
+        value = permitted[:opening_balance].to_s.delete(",").strip
+        permitted[:balance_pending] = value.empty?
+        # The assisted form asks for debt owed. Older callers still submit a signed ledger value.
+        type = permitted[:account_type] || @account&.account_type
+        if params[:amount_as_owed] == "1" && Domain.liability?(type) && value.match?(/\A-?\d+(?:\.\d{1,2})?\z/)
+          value = (-BigDecimal(value)).to_s("F")
+        end
+        permitted[:opening_balance] = value.presence || "0"
+      end
       permitted[:credit_limit] = permitted[:credit_limit].to_s.delete(",").presence if permitted.key?(:credit_limit)
       permitted[:statement_day] = permitted[:statement_day].presence if permitted.key?(:statement_day)
       permitted[:due_day] = permitted[:due_day].presence if permitted.key?(:due_day)
+      permitted[:balance_snapshot] = false if permitted[:balance_pending] || (permitted.key?(:opening_balance_on) && permitted[:opening_balance_on].blank?)
       permitted[:opening_balance_on] = permitted[:opening_balance_on].presence if permitted.key?(:opening_balance_on)
       permitted
     end
