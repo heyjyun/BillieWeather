@@ -32,6 +32,19 @@ describe("drop guard", () => {
     }
   });
 
+  it("leaves drags that start inside the app to their own handlers, and guards again after they end", () => {
+    document.body.insertAdjacentHTML("beforeend", '<ol><li id="a" draggable="true">A</li><li id="b" draggable="true">B</li></ol>');
+    const a = document.getElementById("a")!;
+    const b = document.getElementById("b")!;
+    a.dispatchEvent(new Event("dragstart", { bubbles: true }));
+    expect(dropOn(b, "dragover")).toBe(false);
+    expect(dropOn(b, "drop")).toBe(false);
+    a.dispatchEvent(new Event("dragend", { bubbles: true }));
+    // A file (or text) dragged in from outside has no dragstart in this page: cancelled as before.
+    expect(dropOn(b, "dragover")).toBe(true);
+    expect(dropOn(document.getElementById("name")!, "drop")).toBe(true);
+  });
+
   it("can be removed", () => {
     uninstall();
     expect(dropOn(document.getElementById("text")!, "drop")).toBe(false);

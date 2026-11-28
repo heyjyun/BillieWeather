@@ -5,7 +5,7 @@
 // fixed at the bottom and cannot be moved or hidden. Order and visibility are saved per account and
 // synchronized (hooks/useModules.tsx, services/moduleSync.ts). The website has the same section
 // (app/views/finance/feature_library/_sidebar_customization.html.erb).
-import { useState, type DragEvent } from "react";
+import { useRef, useState, type DragEvent } from "react";
 import { ModuleIcon } from "../components/ModuleIcon";
 import { useModules } from "../hooks/useModules";
 import { useI18n } from "../i18n";
@@ -15,13 +15,16 @@ export function SidebarCustomizationSection(_props: SectionProps) {
   const { m, t } = useI18n();
   const x = m.modules;
   const { sidebarList, hiddenList, setSidebarOrder, setSidebarVisible, restoreSidebarDefaults, conflicts } = useModules();
-  const [draft, setDraft] = useState<string[] | null>(null);
-  const [dragging, setDragging] = useState<string | null>(null);
   const [status, setStatus] = useState("");
-  const ids = draft ?? sidebarList.map((module) => module.id);
-  const byId = new Map(sidebarList.map((module) => [module.id as string, module]));
-  const entries = ids.map((id) => byId.get(id)).filter((module) => module !== undefined);
-
+  const [dragging, setDragging] = useState<string | null>(null);
+  // Where the dragged entry would land, shown as a line on that entry. The list itself is not
+  // rearranged during the drag: moving DOM nodes under the pointer makes browsers cancel the drop.
+  const [marker, setMarker] = useState<{ id: string; before: boolean } | null>(null);
+  // Refs as well as state: a browser sends the first dragenter/dragover before React re-renders after
+  // dragstart, and an event that is not prevented means the drop never comes.
+  const dragRef = useRef<string | null>(null);
+  const markerRef = useRef<{ id: string; before: boolean } | null>(null);
+  const entries = sidebarList;
   const save = (order: string[]) => {
     setSidebarOrder(order);
     setStatus(x.sidebar.saved);
@@ -34,20 +37,33 @@ export function SidebarCustomizationSection(_props: SectionProps) {
     [order[from], order[to]] = [order[to], order[from]];
     save(order);
   };
+  const endDrag = () => {
+    dragRef.current = null;
+    markerRef.current = null;
+    setMarker(null);
+    setDragging(null);
+  };
   const dragOver = (event: DragEvent<HTMLLIElement>, id: string) => {
-    if (!dragging || dragging === id) return;
-    event.preventDefault();
-    const order = ids.filter((entry) => entry !== dragging);
+    const moving = dragRef.current;
+    if (!moving) return;
+    event.preventDefault(); // allows the drop, also over the entry being moved
     const box = event.currentTarget.getBoundingClientRect();
-    const index = order.indexOf(id) + (event.clientY < box.top + box.height / 2 ? 0 : 1);
-    order.splice(index, 0, dragging);
-    setDraft(order);
+    const next = { id, before: event.clientY < box.top + box.height / 2 };
+    if (markerRef.current?.id !== next.id || markerRef.current.before !== next.before) {
+      markerRef.current = next;
+      setMarker(next);
+    }
   };
   const drop = (event: DragEvent<HTMLLIElement>) => {
     event.preventDefault();
-    if (draft) save(draft);
-    setDraft(null);
-    setDragging(null);
+    const moving = dragRef.current;
+    const target = markerRef.current;
+    if (moving && target && target.id !== moving) {
+      const order = entries.map((module) => module.id as string).filter((id) => id !== moving);
+      order.splice(order.indexOf(target.id) + (target.before ? 0 : 1), 0, moving);
+      save(order);
+    }
+    endDrag();
   };
 
   return (
@@ -59,9 +75,10 @@ export function SidebarCustomizationSection(_props: SectionProps) {
         {entries.map((module, index) => {
           const name = x.names[module.id];
           return (
-            <li key={module.id} className={`bw-sidebar-order-item${dragging === module.id ? " is-dragging" : ""}`} draggable data-module-key={module.id}
-              onDragStart={(event) => { setDragging(module.id); event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", module.id); }}
-              onDragOver={(event) => dragOver(event, module.id)} onDrop={drop} onDragEnd={() => { setDraft(null); setDragging(null); }}>
+            <li key={module.id} className={`bw-sidebar-order-item${dragging === module.id ? " is-dragging" : ""}${marker?.id === module.id && dragging !== module.id ? (marker.before ? " is-drop-before" : " is-drop-after") : ""}`} draggable data-module-key={module.id}
+              onDragStart={(event) => { dragRef.current = module.id; setDragging(module.id); event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", module.id); }}
+              onDragEnter={(event) => { if (dragRef.current) event.preventDefault(); }}
+              onDragOver={(event) => dragOver(event, module.id)} onDrop={drop} onDragEnd={endDrag}>
               <span className="bw-drag-handle" aria-hidden="true" title={x.sidebar.drag}><ModuleIcon name="grip" size={16} /></span>
               <span className="bw-sidebar-order-name"><ModuleIcon name={module.icon} size={18} /> {name}</span>
               <span className="bw-sidebar-order-actions">

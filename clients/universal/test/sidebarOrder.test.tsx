@@ -13,6 +13,7 @@ import {
   type ModuleMutation, type ModuleSnapshot, type ServerOrder,
 } from "../src/services/moduleSync";
 import { SidebarCustomizationSection } from "../src/settings/SidebarCustomization";
+import { installDropGuard } from "../src/services/dropGuard";
 
 const A = "cc32ddab-f1c4-4598-bc48-1c280a110110";
 const DEFAULT = ["transactions", "ai_assistant", "overview", "categories", "accounts"];
@@ -56,7 +57,9 @@ it("moves entries with the arrow buttons and keeps the order across a restart", 
   expect(entries()).toEqual(["ai_assistant", "transactions", "overview", "accounts", "categories", "settings"]);
 });
 
-it("reorders by drag and drop and shows it in the sidebar at once", () => {
+it("reorders by drag and drop and shows it in the sidebar at once, with the app's file-drop guard installed", () => {
+  // The guard (installed by the app at startup) once cancelled every drop, in-app ones included.
+  const uninstall = installDropGuard(document);
   mount();
   const item = (id: string) => document.querySelector<HTMLElement>(`[data-sidebar-order] [data-module-key="${id}"]`)!;
   const data = { effectAllowed: "", setData: () => undefined };
@@ -66,6 +69,7 @@ it("reorders by drag and drop and shows it in the sidebar at once", () => {
   fireEvent.drop(item("transactions"), { dataTransfer: data });
   expect(entries()).toEqual(["transactions", "accounts", "ai_assistant", "overview", "categories", "settings"]);
   expect(loadModulePreferences("id:zxq").order).toEqual(["transactions", "accounts", "ai_assistant", "overview", "categories"]);
+  uninstall();
 });
 
 it("adds any available module, hides one without making it unusable, and restores the defaults", () => {

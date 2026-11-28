@@ -750,3 +750,5 @@ button.bw-dropzone { width: 100%; font: inherit; }
 .bw-sidebar-order-actions .bw-icon-button { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 36px; padding: 4px; border: none; border-radius: var(--bw-radius-md); background: none; color: var(--bw-color-text-muted); cursor: pointer; }
 .bw-sidebar-order-actions .bw-icon-button:hover:not(:disabled) { color: var(--bw-color-text); background: var(--bw-color-surface-muted); }
 .bw-sidebar-order-actions .bw-icon-button:disabled { opacity: 0.35; cursor: default; }
+.bw-sidebar-order-item.is-drop-before { box-shadow: inset 0 3px 0 var(--bw-color-accent-strong, currentColor); }
+.bw-sidebar-order-item.is-drop-after { box-shadow: inset 0 -3px 0 var(--bw-color-accent-strong, currentColor); }
